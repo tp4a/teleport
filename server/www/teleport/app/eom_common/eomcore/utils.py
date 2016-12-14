@@ -1,0 +1,170 @@
+# -*- coding: utf-8 -*-
+
+import os
+import threading
+import time
+import datetime
+import hashlib
+import stat
+
+
+def make_dir(path):
+    """
+    创建目录
+
+    如果父目录不存在，则同时也创建之，目标是保证整个目录层次都存在，如果指定的目录已经存在，则视为成功（目的就是让这个目录存在）
+
+    :param path: str
+    :return: boolean
+    """
+    abs_path = os.path.abspath(path)
+
+    if os.path.exists(abs_path):
+        if os.path.isdir(abs_path):
+            return True
+        else:
+            # log.e(u'An object named "%s" already exists. Can not create such directory.\n' % abs_path)
+            return False
+
+    base_name = os.path.basename(abs_path)
+    parent_path = abs_path[:len(abs_path) - len(base_name)]
+    if parent_path == path:
+        return False
+
+    if not os.path.exists(parent_path):
+        # log.v('make_dir: %s\n' % parent_path)
+        if not make_dir(parent_path):
+            return False
+        os.mkdir(abs_path)
+        # os.mkdir(abs_path, 0o777)
+        os.chmod(abs_path, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
+    else:
+        if os.path.isdir(parent_path):
+            os.mkdir(abs_path)
+            # os.mkdir(abs_path, 0o777)
+            os.chmod(abs_path, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
+        else:
+            # log.e(u'An object named "%s" already exists. Can not create such directory.\n' % parent_path)
+            return False
+
+    return True
+
+
+def gen_random(n):
+    """
+    产生n字节的随机数，然后输出为16进制字符串
+
+    :param n: int
+    :return : str
+    """
+    ret = ''
+    data = os.urandom(n)
+    for i in data:
+        ret += '%02X' % i
+    return ret
+
+
+def bytes2human(n):
+    """
+    将字节数转换为易读的字符串
+
+    http://code.activestate.com/recipes/578019
+    bytes2human(10000)        '9.8K'
+    bytes2human(100001221)    '95.4M'
+
+    :type n: int
+    :rtype : str
+    """
+    symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+    prefix = {}
+    for i, s in enumerate(symbols):
+        prefix[s] = 1 << (i + 1) * 10
+    for s in reversed(symbols):
+        if n >= prefix[s]:
+            value = float(n) / prefix[s]
+            return '%.1f%s' % (value, s)
+    return "%sB" % n
+
+
+def second2human(n):
+    """
+    将经过的时间（秒）转换为易读的字符串
+
+    :type n: int
+    :rtype : str
+    """
+    _sec = n
+
+    ret = ''
+    d = int(_sec / 86400)  # 86400 = 24*60*60秒 一天
+    if d > 0:
+        ret = '%dd' % d
+
+    _sec %= 86400
+    h = int(_sec / 3600)  # 3600 = 60*60秒 一小时
+    if h > 0:
+        if len(ret) > 0:
+            ret = '%s %dh' % (ret, h)
+        else:
+            ret = '%dh' % h
+
+    _sec %= 3600
+    m = int(_sec / 60)  # 3600 = 60*60秒 一小时
+    if len(ret) > 0:
+        ret = '%s %dm' % (ret, m)
+    elif m > 0:
+        ret = '%dm' % m
+
+    _sec %= 60
+    if len(ret) > 0:
+        ret = '%s %ds' % (ret, _sec)
+    else:
+        ret = '%ds' % _sec
+
+    return ret
+
+
+def timestamp_local_to_utc(t):
+    return int(datetime.datetime.utcfromtimestamp(time.mktime(time.localtime(t))).timestamp())
+
+
+def bytes_to_string(b, encode='utf8'):
+    l = len(b)
+    for c in range(l):
+        if b[c] == 0:
+            ret = b[0:c].decode(encode)
+            return ret
+
+    return b.decode(encode)
+
+
+def md5file(file_name):
+    if not os.path.exists(file_name) or not os.path.isfile(file_name):
+        raise ValueError
+
+    f = open(file_name, 'rb')
+    m = hashlib.md5()
+
+    while 1:
+        x = f.read(4096)
+        m.update(x)
+        if len(x) < 4096:
+            break
+
+    f.close()
+    return m.hexdigest()
+
+
+class UniqueId():
+    def __init__(self):
+        self._id = int(datetime.datetime.utcnow().timestamp())
+        self._locker = threading.RLock()
+
+    def generate(self):
+        with self._locker:
+            self._id += 1
+            return self._id
+
+unique_id = UniqueId()
+del UniqueId
+

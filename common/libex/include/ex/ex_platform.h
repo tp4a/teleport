@@ -3,20 +3,12 @@
 
 #if defined(_WIN32) || defined(WIN32)
 #	define EX_OS_WIN32
-// #	define EX_OS_NAME	L"windows"
-// #	ifdef _CONSOLE
-// #		define EX_CONSOLE
-// #	endif
 #elif defined(__linux__)
 #	define EX_OS_LINUX
 #	define EX_OS_UNIX
-// #	define EX_OS_NAME	L"linux"
-// #	define EX_CONSOLE
 #elif defined(__APPLE__)
 #	define EX_OS_MACOS
 #	define EX_OS_UNIX
-// #	define EX_OS_NAME	L"macos"
-// #	define PYS_CONSOLE
 #else
 #	error unsupported platform.
 #endif
@@ -109,8 +101,6 @@
 #		define UNUSED(x) (void)(x)
 #	endif
 #endif
-
-
 
 #ifdef EX_OS_WIN32
 #	pragma comment(lib, "shlwapi.lib")

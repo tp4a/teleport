@@ -36,6 +36,10 @@ bool ex_dirname(ex_wstr& inout_filename);
 bool ex_path_join(ex_wstr& inout_path, bool auto_abspath, ...);
 bool ex_abspath_to(const ex_wstr& base_abs_path, const ex_wstr& relate_path, ex_wstr& out_path);
 bool ex_mkdirs(const ex_wstr& in_path);
+
+// 获取文件名中的扩展名部分（不包括.，例如abc.py，返回 py）
+bool ex_path_ext_name(const ex_wstr& in_filename, ex_wstr& out_ext);
+
 #endif
 
 #endif // __LIB_EX_PATH_H__

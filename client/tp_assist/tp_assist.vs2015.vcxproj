@@ -90,9 +90,12 @@
   <ItemGroup>
     <ClInclude Include="..\..\common\libex\include\ex.h" />
     <ClInclude Include="..\..\common\libex\include\ex\ex_const.h" />
+    <ClInclude Include="..\..\common\libex\include\ex\ex_ini.h" />
+    <ClInclude Include="..\..\common\libex\include\ex\ex_log.h" />
     <ClInclude Include="..\..\common\libex\include\ex\ex_path.h" />
     <ClInclude Include="..\..\common\libex\include\ex\ex_platform.h" />
     <ClInclude Include="..\..\common\libex\include\ex\ex_str.h" />
+    <ClInclude Include="..\..\common\libex\include\ex\ex_thread.h" />
     <ClInclude Include="..\..\common\libex\include\ex\ex_types.h" />
     <ClInclude Include="..\..\common\libex\include\ex\ex_util.h" />
     <ClInclude Include="..\..\external\mongoose\mongoose.h" />
@@ -106,18 +109,27 @@
     <ClInclude Include="ts_const.h" />
     <ClInclude Include="ts_env.h" />
     <ClInclude Include="ts_http_rpc.h" />
-    <ClInclude Include="ts_ini.h" />
-    <ClInclude Include="ts_log.h" />
     <ClInclude Include="ts_network.h" />
-    <ClInclude Include="ts_thread.h" />
     <ClInclude Include="ts_ver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\common\libex\src\ex_ini.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_log.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\..\common\libex\src\ex_path.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\..\common\libex\src\ex_str.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_thread.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -151,12 +163,7 @@
     <ClCompile Include="ts_cfg.cpp" />
     <ClCompile Include="ts_env.cpp" />
     <ClCompile Include="ts_http_rpc.cpp" />
-    <ClCompile Include="ts_ini.cpp" />
-    <ClCompile Include="ts_log.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="ts_network.cpp" />
-    <ClCompile Include="ts_thread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="tp_assist.rc" />

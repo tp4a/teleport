@@ -1,0 +1,519 @@
+// YWL-Base-Settings
+@import "_color";
+
+@font-family-normal: "Open Sans", "Helvetica Neue", "Microsoft YaHei", "微软雅黑", Helvetica, Arial, sans-serif;
+@font-family-mono: Consolas, Lucida Console, Monaco, Courier, 'Courier New', monospace;
+
+body {
+	font-family: @font-family-normal;
+	//font-family: "微软雅黑", "Microsoft YaHei", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 13px;
+	background-color: @page-bg;
+	color: @page-color;
+}
+
+html, body {
+	height: 100%;
+}
+
+#page-container {
+	min-width: 1260px;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:link {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: none;
+}
+
+a:active {
+	text-decoration: none;
+}
+
+a:visited {
+	text-decoration: none;
+}
+
+select {
+	outline: none;
+}
+
+label {
+	font-weight: normal;
+}
+
+.clear-float {
+	clear: both;
+}
+
+.bigger {
+	font-size: 120%;
+}
+
+.normal-text {
+	font-size: 13px;
+	color: @page-color;
+}
+
+.mono {
+	font-family:@font-family-mono;
+}
+
+hr.hr-sm {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+//==============================================
+// 重载bootstrap的样式
+//==============================================
+.btn-group-sm > .btn, .btn-sm {
+	padding: 2px 5px;
+	//margin-bottom: 2px;
+}
+
+.btn.btn-sm {
+	padding: 3px 8px;
+}
+
+.btn.btn-icon {
+	padding: 3px 6px;
+	&.btn-sm {
+		//padding:1px 3px;
+		padding: 0;
+		font-size: 14px;
+		height: 24px;
+		width: 24px;
+		line-height: 24px;
+		border-radius: 0;
+	}
+}
+
+.form-group-sm .input-group .input-group-btn > .btn {
+	height: 30px;
+	padding: 0 8px;
+}
+
+.pop-menu-backdrop {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 1040;
+}
+
+//.modal {
+.form-group {
+	margin-bottom: 5px;
+}
+
+//}
+
+.badge {
+	display: inline-block;
+
+	min-width: 8px;
+	padding: 5px 10px;
+	border-radius: 10px;
+
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: middle;
+
+	font-size: 13px;
+	font-weight: 400;
+	line-height: 1em;
+
+	background-color: @color-bg-default;
+	color: @color-text-on-dark-bg;
+	text-shadow: 1px 1px 0 @color-text-shadow-on-dark-bg;
+
+	&.badge-plain {
+		text-shadow: none;
+	}
+
+	&.badge-sm {
+		font-size: 11px;
+		padding: 3px 6px;
+		margin-top: 0;
+		border-radius: 8px;
+		text-shadow: none;
+	}
+
+	&.badge-sup {
+		margin-left: -6px;
+		margin-top: -16px;
+	}
+
+	&.badge-ignore {
+		background-color: @color-bg-ignore;
+		color: @color-text-ignore;
+		text-shadow: none;
+	}
+	&.badge-info {
+		background-color: @color-bg-info;
+	}
+	&.badge-primary {
+		background-color: @color-bg-primary;
+	}
+
+	&.badge-success {
+		background-color: @color-bg-success;
+	}
+	&.badge-warning {
+		background-color: @color-bg-warning;
+	}
+	&.badge-danger {
+		background-color: @color-bg-danger;
+	}
+}
+
+.label {
+	display: inline-block;
+
+	min-width: 8px;
+	padding: 5px 10px;
+	border-radius: 5px;
+
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: middle;
+
+	font-size: 13px;
+	font-weight: 400;
+	line-height: 1em;
+
+	background-color: @color-bg-default;
+	color: @color-text-on-dark-bg;
+	text-shadow: 1px 1px 0 @color-text-shadow-on-dark-bg;
+
+	&.label-plain {
+		text-shadow: none;
+	}
+
+	&.label-sm {
+		font-size: 11px;
+		padding: 3px 8px;
+		margin-top: 0;
+		border-radius: 5px;
+		text-shadow: none;
+	}
+
+	&.label-ignore {
+		background-color: @color-bg-ignore;
+		color: @color-text-ignore;
+		text-shadow: none;
+	}
+	&.label-info {
+		background-color: @color-bg-info;
+	}
+	&.label-primary {
+		background-color: @color-bg-primary;
+	}
+
+	&.label-success {
+		background-color: @color-bg-success;
+	}
+	&.label-warning {
+		background-color: @color-bg-warning;
+	}
+	&.label-danger {
+		background-color: @color-bg-danger;
+	}
+}
+
+// 表格页面中的一些小部件
+.progress.progress-sm {
+	height: 18px;
+	margin-bottom: 2px;
+	background-color: #aaa;
+	&.button {
+		cursor: pointer;
+	}
+
+	.progress-bar {
+		display: block;
+		font-size: 11px;
+		float: none;
+	}
+}
+
+.alert-sm {
+	padding: 5px;
+	margin-bottom: 10px;
+}
+
+.modal-dialog-sm {
+	.modal-header {
+		padding: 10px;
+	}
+	.modal-body {
+		padding: 10px;
+	}
+	.modal-footer {
+		padding: 10px;
+	}
+
+	.form-horizontal .form-group {
+		margin-right: -5px;
+		margin-left: -5px;
+	}
+	.col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11 {
+		padding-right: 5px;
+		padding-left: 5px;
+	}
+}
+
+.btn-single-line {
+	white-space: nowrap;
+	.btn {
+		&:first-child {
+			border-top-left-radius: 3px;
+			border-bottom-left-radius: 3px;
+		}
+		&:last-child {
+			border-top-right-radius: 3px;
+			border-bottom-right-radius: 3px;
+		}
+	}
+}
+
+.remote-action-group {
+	margin-bottom: 3px;
+	height: 28px;
+	min-width: 390px;
+
+	ul {
+		display: block;
+		height: 28px;
+		margin: 0;
+		padding: 0;
+
+		li {
+			float: left;
+			position: relative;
+			display: block;
+			height: 28px;
+			padding: 4px 5px;
+
+			background-color: #eee;
+			border-top: 1px solid #ccc;
+			border-right: 1px solid #ccc;
+			border-bottom: 1px solid #ccc;
+
+			&.remote-action-btn {
+				background: none;
+				padding: 0;
+				border: none;
+			}
+
+			&.remote-action-input {
+				background: none;
+				padding: 4px 0;
+
+				select {
+					border: none;
+				}
+			}
+
+			&.remote-action-chk-protocol {
+				width: 86px;
+			}
+
+			&.remote-action-username, &.remote-action-name, &.remote-action-protocol {
+				width: 96px;
+				text-align: center;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			&.remote-action-username {
+				font-size: 90%;
+				color: #999;
+			}
+			&.remote-action-name, &.remote-action-protocol, &.remote-action-chk-protocol {
+				color: #000;
+			}
+			&.remote-action-name, &.remote-action-chk-protocol {
+				font-weight:bold;
+			}
+
+			&.remote-action-password, &.remote-action-sshkey, &.remote-action-noauth {
+				text-align: center;
+				padding: 4px 8px;
+				width:45px;
+			}
+			&.remote-action-password {
+				background-color: #e3ffe3;
+				color: #999;
+			}
+			&.remote-action-sshkey {
+				background-color: #fbe9c8;
+				color: #666;
+			}
+			&.remote-action-noauth {
+				background-color: #e0e0e0;
+				color: #666;
+			}
+
+			.btn {
+				line-height: 1.5;
+				margin: 0;
+				padding: 4px 8px;
+				font-size: 12px;
+				border-radius: 0;
+			}
+
+			label {
+				padding: 0;
+				display: block;
+				float: left;
+				margin-top: 1px;
+				cursor: pointer;
+			}
+			input[type=checkbox] {
+				display: block;
+				float: left;
+				margin: 3px 5px 0 0;
+			}
+			select {
+				margin-top: -3px;
+			}
+
+			&:first-child {
+				border-left: 1px solid #ccc;
+				border-top-left-radius: 4px;
+				border-bottom-left-radius: 4px;
+
+				.btn {
+					border-top-left-radius: 4px;
+					border-bottom-left-radius: 4px;
+				}
+			}
+
+			&:last-child {
+				border-top-right-radius: 4px;
+				border-bottom-right-radius: 4px;
+
+				.btn {
+					border-top-right-radius: 4px;
+					border-bottom-right-radius: 4px;
+				}
+			}
+		}
+	}
+}
+
+hr.small {
+	margin: 5px 0;
+}
+
+.dlg-protocol-group {
+	margin-bottom: 3px;
+
+	ul {
+		display: block;
+		height: 28px;
+		margin: 0;
+		padding: 0;
+
+		li {
+			float: left;
+			position: relative;
+			display: block;
+			height: 28px;
+			padding: 4px 5px;
+
+			background-color: #eee;
+			border-top: 1px solid #ccc;
+			border-right: 1px solid #ccc;
+			border-bottom: 1px solid #ccc;
+
+			&.item-name {
+				width: 120px;
+				//font-size: 90%;
+				//color: #999;
+				//text-align: center;
+				//white-space: nowrap;
+				//overflow: hidden;
+				//text-overflow: ellipsis;
+			}
+
+			&.item-btn {
+				background: none;
+				padding: 0;
+				border: none;
+			}
+
+			&.item-input {
+				background: none;
+				border: none;
+				padding: 0;
+			}
+
+			.form-control {
+				line-height: 1.5;
+				margin: 0;
+				padding: 4px 5px;
+				font-size: 12px;
+				height: 28px;
+				border-radius: 0;
+				border-left: none;
+				width: 100px;
+			}
+
+			label {
+				padding: 0;
+				display: block;
+				float: left;
+				margin-top: 1px;
+				cursor: pointer;
+			}
+			input[type=checkbox] {
+				display: block;
+				float: left;
+				margin: 3px 5px 0 0;
+			}
+			//select {
+			//	margin-top: -3px;
+			//}
+
+			&:first-child {
+				border-left: 1px solid #ccc;
+				border-top-left-radius: 4px;
+				border-bottom-left-radius: 4px;
+
+				.btn, .form-control {
+					border-top-left-radius: 4px;
+					border-bottom-left-radius: 4px;
+				}
+			}
+
+			&:last-child {
+				border-top-right-radius: 4px;
+				border-bottom-right-radius: 4px;
+
+				.btn, .form-control {
+					border-top-right-radius: 4px;
+					border-bottom-right-radius: 4px;
+				}
+			}
+		}
+	}
+}
+
+.col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12 {
+	padding-right: 5px;
+	padding-left: 5px;
+}
+
+.form-group-sm .form-control-static {
+	padding: 6px 0;
+}

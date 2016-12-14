@@ -184,7 +184,7 @@ wchar_t** ex_make_wargv(int argc, char** argv)
 
 	for (i = 0; i < argc; ++i)
 	{
-		ret[i] = ex_str2wcs_alloc(argv[i], EX_CODEPAGE_ACP);
+		ret[i] = ex_str2wcs_alloc(argv[i], EX_CODEPAGE_DEFAULT);
 		if (NULL == ret[i])
 			goto err;
 	}
@@ -223,12 +223,12 @@ EX_BOOL ex_wcs_only_white_space(const char* src)
 
 
 #ifdef __cplusplus
-bool ex_wstr2astr(const ex_wstr& in_str, ex_astr& out_str, int code_page/* = EX_CODEPAGE_ACP*/)
+bool ex_wstr2astr(const ex_wstr& in_str, ex_astr& out_str, int code_page/* = EX_CODEPAGE_DEFAULT*/)
 {
 	return ex_wstr2astr(in_str.c_str(), out_str, code_page);
 }
 
-bool ex_wstr2astr(const wchar_t* in_str, ex_astr& out_str, int code_page/* = EX_CODEPAGE_ACP*/)
+bool ex_wstr2astr(const wchar_t* in_str, ex_astr& out_str, int code_page/* = EX_CODEPAGE_DEFAULT*/)
 {
 	char* astr = ex_wcs2str_alloc(in_str, code_page);
 	if (NULL == astr)
@@ -239,12 +239,12 @@ bool ex_wstr2astr(const wchar_t* in_str, ex_astr& out_str, int code_page/* = EX_
 	return true;
 }
 
-bool ex_astr2wstr(const ex_astr& in_str, ex_wstr& out_str, int code_page/* = EX_CODEPAGE_ACP*/)
+bool ex_astr2wstr(const ex_astr& in_str, ex_wstr& out_str, int code_page/* = EX_CODEPAGE_DEFAULT*/)
 {
 	return ex_astr2wstr(in_str.c_str(), out_str, code_page);
 }
 
-bool ex_astr2wstr(const char* in_str, ex_wstr& out_str, int code_page/* = EX_CODEPAGE_ACP*/)
+bool ex_astr2wstr(const char* in_str, ex_wstr& out_str, int code_page/* = EX_CODEPAGE_DEFAULT*/)
 {
 	wchar_t* wstr = ex_str2wcs_alloc(in_str, code_page);
 	if (NULL == wstr)

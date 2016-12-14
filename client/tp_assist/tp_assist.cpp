@@ -55,11 +55,16 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 		WSACleanup();
 		return 0;
 	}
+
 	g_env.init();
-// 	ex_astr temp;
-// 	ex_wstr2astr(g_env.m_log_path, temp);
-// 	TSLOG_INIT(TS_LOG_LEVEL_DEBUG, "tp_assist.log", temp.c_str());
-	TSLOG_INIT(TS_LOG_LEVEL_DEBUG, L"tp_assist.log", g_env.m_log_path.c_str());
+
+#ifdef EX_DEBUG
+	EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
+#else
+	EXLOG_LEVEL(EX_LOG_LEVEL_INFO);
+#endif
+
+	EXLOG_FILE(L"tp_assist.log", g_env.m_log_path.c_str(), 1024, 2);
 
 	g_cfgSSH.init();
 	g_cfgScp.init();

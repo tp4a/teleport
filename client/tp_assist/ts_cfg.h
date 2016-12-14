@@ -13,7 +13,7 @@ struct client_set
 	ex_wstr path;
 	ex_wstr commandline;
 	ex_wstr desc;
-	int default;
+	bool is_default;
 };
 
 typedef std::map<ex_wstr, client_set> clientsetmap;
@@ -35,7 +35,7 @@ protected:
 	bool _init(void);
 
 protected:
-	TsIniFile m_ini;
+	ExIniFile m_ini;
 };
 
 class TsCfgSSH : public TsClientCfgBase

@@ -4,7 +4,12 @@
 #include "ex_types.h"
 
 #define EX_CODEPAGE_ACP		0
-#define EX_CODEPAGE_UTF8	1
+#define EX_CODEPAGE_UTF8		1
+#ifdef EX_OS_WIN32
+#	define EX_CODEPAGE_DEFAULT	EX_CODEPAGE_ACP
+#else
+#	define EX_CODEPAGE_DEFAULT	EX_CODEPAGE_UTF8
+#endif
 
 #define EX_RSC_BEGIN	0x01
 #define EX_RSC_END		0x02
@@ -53,10 +58,10 @@ typedef std::wstring ex_wstr;
 typedef std::vector<ex_astr> ex_astrs;
 typedef std::vector<ex_wstr> ex_wstrs;
 
-bool ex_wstr2astr(const ex_wstr& in_str, ex_astr& out_str, int code_page = EX_CODEPAGE_ACP);
-bool ex_wstr2astr(const wchar_t* in_str, ex_astr& out_str, int code_page = EX_CODEPAGE_ACP);
-bool ex_astr2wstr(const ex_astr& in_str, ex_wstr& out_str, int code_page = EX_CODEPAGE_ACP);
-bool ex_astr2wstr(const char* in_str, ex_wstr& out_str, int code_page = EX_CODEPAGE_ACP);
+bool ex_wstr2astr(const ex_wstr& in_str, ex_astr& out_str, int code_page = EX_CODEPAGE_DEFAULT);
+bool ex_wstr2astr(const wchar_t* in_str, ex_astr& out_str, int code_page = EX_CODEPAGE_DEFAULT);
+bool ex_astr2wstr(const ex_astr& in_str, ex_wstr& out_str, int code_page = EX_CODEPAGE_DEFAULT);
+bool ex_astr2wstr(const char* in_str, ex_wstr& out_str, int code_page = EX_CODEPAGE_DEFAULT);
 
 bool ex_only_white_space(const ex_astr& str_check);
 bool ex_only_white_space(const ex_wstr& str_check);

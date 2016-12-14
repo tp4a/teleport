@@ -106,6 +106,7 @@ bool ex_dirname(ex_wstr& inout_filename)
 	{
 		*match = EX_NULL_END;
 		inout_filename = ret;
+		ex_free(ret);
 		return true;
 	}
 	else
@@ -113,7 +114,6 @@ bool ex_dirname(ex_wstr& inout_filename)
 		ex_free(ret);
 		inout_filename = EX_CURRENT_DIR_STR;
 		return true;
-		//return ex_wcsdup(EX_CURRENT_DIR_STR);
 	}
 
 	ex_free(ret);
@@ -341,7 +341,6 @@ bool ex_path_join(ex_wstr& inout_path, bool auto_abspath, ...)
 		if (!ex_abspath(_path))
 			return false;
 
-	//return ex_wcsdup(_path.c_str());
 	inout_path = _path;
 	return true;
 }
@@ -403,11 +402,11 @@ bool ex_mkdirs(const ex_wstr& in_path)
 
 	ex_astr _path;
 #ifdef EX_OS_WIN32
-	ex_wstr2astr(in_path, _path, EX_CODEPAGE_ACP);
+	ex_wstr2astr(in_path, _path);
 	if (0 == _mkdir(_path.c_str()))
 		return true;
 #else
-	ex_wstr2astr(in_path, _path, EX_CODEPAGE_UTF8);
+	ex_wstr2astr(in_path, _path);
 	int status = mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	if (0 != status)
 		return false;
@@ -416,3 +415,14 @@ bool ex_mkdirs(const ex_wstr& in_path)
 	return true;
 }
 
+bool ex_path_ext_name(const ex_wstr& in_filename, ex_wstr& out_ext)
+{
+	ex_wstr::size_type pos_dot = in_filename.rfind(L'.');
+	ex_wstr::size_type pos_sep = in_filename.rfind(EX_SEP);
+
+	if (pos_dot == ex_wstr::npos || pos_dot <= pos_sep)
+		return false;
+
+	out_ext.assign(in_filename, pos_dot + 1, in_filename.length() - pos_dot - 1);
+	return true;
+}

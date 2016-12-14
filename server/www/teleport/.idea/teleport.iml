@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$/../../share/etc" />
+    <content url="file://$MODULE_DIR$/../packages/packages-common">
+      <sourceFolder url="file://$MODULE_DIR$/../packages/packages-common" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../packages/packages-windows/x64">
+      <sourceFolder url="file://$MODULE_DIR$/../packages/packages-windows/x64" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/app" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="myDocStringFormat" value="Google" />
+  </component>
+  <component name="TemplatesService">
+    <option name="templateFileTypes">
+      <list>
+        <option value="HTML" />
+        <option value="XHTML" />
+        <option value="XML" />
+        <option value="JavaScript" />
+      </list>
+    </option>
+    <option name="TEMPLATE_CONFIGURATION" value="Mako" />
+    <option name="TEMPLATE_FOLDERS">
+      <list>
+        <option value="$MODULE_DIR$/view" />
+      </list>
+    </option>
+  </component>
+  <component name="TestRunnerService">
+    <option name="PROJECT_TEST_RUNNER" value="Unittests" />
+  </component>
+</module>

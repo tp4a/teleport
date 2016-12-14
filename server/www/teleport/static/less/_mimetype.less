@@ -1,0 +1,144 @@
+// YWL-MimeType
+
+.icon {
+	display:inline-block;
+}
+
+.icon16 {
+	width:16px;
+	height:16px;
+	line-height:16px;
+
+	margin-right: 3px;
+    margin-top: 0 !important;
+    margin-bottom: -2px !important;
+    vertical-align: top;
+
+
+	background-image:url("img/desktop/mimetype-16.png") !important;
+
+	&.icon-disk { background-position:0 0 !important; }
+	&.icon-folder { background-position:-16px 0 !important; }
+
+	&.icon-file { background-position:0 -16px !important; }
+	&.icon-txt { background-position:-16px -16px !important; }
+	&.icon-help { background-position:-32px -16px !important; }
+	&.icon-sys { background-position:-48px -16px !important; }
+	&.icon-exe { background-position:-64px -16px !important; }
+
+	&.icon-office { background-position:0 -32px !important; }
+	&.icon-word { background-position:-16px -32px !important; }
+	&.icon-excel { background-position:-32px -32px !important; }
+	&.icon-ppt { background-position:-48px -32px !important; }
+	&.icon-access { background-position:-64px -32px !important; }
+	&.icon-visio { background-position:-80px -32px !important; }
+
+	&.icon-audio { background-position:0 -48px !important; }
+	&.icon-video { background-position:-16px -48px !important; }
+	&.icon-pic { background-position:-32px -48px !important; }
+	&.icon-pdf { background-position:-48px -48px !important; }
+	&.icon-font { background-position:-64px -48px !important; }
+
+	&.icon-script { background-position:0 -64px !important; }
+	&.icon-html { background-position:-16px -64px !important; }
+	&.icon-py { background-position:-32px -64px !important; }
+	&.icon-h { background-position:-48px -64px !important; }
+	&.icon-c { background-position:-64px -64px !important; }
+	&.icon-cpp { background-position:-80px -64px !important; }
+	&.icon-cs { background-position:-96px -64px !important; }
+	&.icon-php { background-position:-112px -64px !important; }
+	&.icon-ruby { background-position:-128px -64px !important; }
+	&.icon-java { background-position:-144px -64px !important; }
+	&.icon-vs { background-position:-160px -64px !important; }
+	&.icon-js { background-position:-176px -64px !important; }
+
+	&.icon-archive { background-position:0 -80px !important; }
+	&.icon-rar { background-position:-16px -80px !important; }
+	&.icon-zip { background-position:-32px -80px !important; }
+	&.icon-7z { background-position:-48px -80px !important; }
+	&.icon-tar { background-position:-64px -80px !important; }
+	&.icon-gz { background-position:-80px -80px !important; }
+	&.icon-jar { background-position:-96px -80px !important; }
+	&.icon-bz2 { background-position:-112px -80px !important; }
+
+}
+
+.icon24 {
+	width:24px;
+	height:24px;
+	line-height:24px;
+
+	margin-right: 3px;
+    margin-top: 0 !important;
+    margin-bottom: -2px !important;
+    vertical-align: top;
+
+	background-image:url("img/desktop/icons-tree-24x24.png") !important;
+
+	&.icon-disk { background-position:0 0 !important; }
+	&.icon-folder { background-position:-24px 0 !important; }
+	&.icon-folder-open { background-position:-48px 0 !important; }
+
+}
+
+
+
+.os-icon-windows:after {
+	color: #00bcf6;
+	content: "\f17a";
+	font-size: 18px;
+	width: 24px;
+	height: 24px;
+	line-height: 24px;
+	display: inline-block;
+	font-family: 'FontAwesome';
+}
+
+.os-icon-linux:after {
+	color: #fff;
+	content: "\f17c";
+	font-size: 18px;
+	width: 24px;
+	height: 24px;
+	line-height: 24px;
+	background-color: #333;
+	border-radius: 50%;
+	display: inline-block;
+	font-family: 'FontAwesome';
+}
+
+.os-icon-macos:after {
+	color: #a7a7a7;
+	content: "\f179";
+	font-size: 20px;
+	width: 24px;
+	height: 24px;
+	line-height: 24px;
+	display: inline-block;
+	font-family: 'FontAwesome';
+}
+
+
+.os-icon-ubuntu:after, .os-icon-debian:after, .os-icon-centos:after, .os-icon-redhat:after {
+	content: " ";
+	width: 24px;
+	height: 24px;
+	line-height: 24px;
+	display: inline-block;
+}
+
+.os-icon-ubuntu:after {
+	background: url(../img/os-icon/ubuntu-24x24.png) no-repeat;
+}
+
+.os-icon-debian:after {
+	background: url(../img/os-icon/debian-24x24.png) no-repeat;
+}
+
+.os-icon-centos:after {
+	background: url(../img/os-icon/centos-24x24.png) no-repeat;
+}
+
+.os-icon-redhat:after {
+	background: url(../img/os-icon/redhat-24x24.png) no-repeat;
+}

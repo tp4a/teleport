@@ -1,0 +1,48 @@
+# for Visual Studio
+.vs
+*.opensdf
+*.sdf
+*.user
+*.ncb
+*.vc.db
+*.vc.opendb
+*.aps
+**/ipch
+
+# for Python
+__pycache__
+*.pyc
+
+
+# for pyCharm
+**/.idea/workspace.xml
+**/.idea/misc.xml
+**/.idea/modules.xml
+**/.idea/dictionaries
+**/.idea/watcherTasks.xml
+**/.idea/codeStyleSettings.xml
+**/.idea/inspectionProfiles
+
+# for tmp folder or files.
+/out
+/external/_download_
+/external/jsoncpp
+/external/mongoose
+/external/openssl
+/external/python
+
+# for dist folder
+/dist/*.zip
+/dist/*.tar.gz
+/dist/installer/linux/server/_tmp_
+**/_tmp_
+
+/server/share/data/ts_db.db
+/server/share/data/replay
+/server/www/teleport/.idea/vcs.xml
+/server/www/teleport/static/js/var.js
+/server/www/packages/packages-windows/x64
+
+# for not finished code
+/common/libex/test
+/server/tp_core

@@ -1,0 +1,134 @@
+// YWL-Table
+
+
+// 表格
+.table {
+	margin-bottom: 10px;
+}
+
+.table > thead > tr > th {
+	padding: 5px 5px;
+	outline: none;
+	white-space: nowrap;
+	font-weight: normal;
+	text-align: center;
+	background-color: #ededed;
+}
+
+.table > tbody > tr > td {
+	padding: 5px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.table > tbody > tr > td .nowrap {
+	white-space: nowrap;
+}
+
+.table.table-data thead .sorting, .table.table-data thead .sorting_asc, .table.table-data thead .sorting_desc {
+	cursor: pointer;
+	position: relative;
+}
+
+.table.table-data thead .sorting > span:after, .table.table-data thead .sorting_asc > span:after, .table.table-data thead .sorting_desc > span:after {
+	bottom: 4px;
+	padding-left: 5px;
+	display: inline-block;
+	font-family: 'FontAwesome';
+	opacity: .8;
+}
+
+.table.table-data thead .sorting > span:after {
+	opacity: .2;
+	content: "\f0dc";
+}
+
+.table.table-data thead .sorting_asc > span:after {
+	content: "\f0de";
+}
+
+.table.table-data thead .sorting_desc > span:after {
+	content: "\f0dd";
+}
+
+
+
+
+.host-id {
+	display: block;
+	// line-height: 14px;
+	font-size: 16px;
+	font-family: @font-family-mono;
+	//font-weight: bold;
+	color:#333;
+
+	&.not-active {
+		font-size: 14px;
+		font-weight: 400;
+		//.text-color-ignore;
+		color: @color-text-ignore;
+	}
+}
+
+.host-desc {
+	font-size: 12px;
+	color: #999;
+	display: inline-block;
+	white-space: nowrap;
+	//width: 9em;
+	//width:200px;
+	width:160px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+a.host-desc:hover:before {
+	display: inline-block;
+	padding-right: 3px;
+	line-height: 12px;
+	content: "\f040";
+	font-family: 'FontAwesome';
+}
+
+.td-ip-list {
+	padding-right: 20px;
+	padding-left: 5px;
+}
+
+.td-ip-show-more {
+	font-size: 14px;
+	width: 12px;
+	float: right;
+	display: block;
+}
+
+.td-ip-item {
+	min-width: 12em;
+	width: 12em;
+	height: 18px;
+	padding: 2px 4px;
+	margin: 1px 0;
+
+	color: #333;
+	text-align: center;
+	white-space: nowrap;
+	border-radius: 9px;
+	line-height: 11px;
+	font-size: 11px;
+	background: #dfdfdf !important;
+}
+
+.td-ip-item span {
+	display: inline-block;
+	font-family: @font-family-mono;
+	font-size: 11px;
+	font-weight: 400;
+
+}
+
+.td-ip-item a {
+	display: inline-block;
+	width: 14px;
+	float: right;
+	font-size: 14px;
+}

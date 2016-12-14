@@ -37,4 +37,21 @@
 #define EX_CURRENT_DIR_STR  L"."
 #define EX_NULL_END         L'\0'
 
+
+
+//====================================================
+// error code.
+//====================================================
+#define EXRV_OK				0
+#define EXRV_SYS_ERR			1		// 系统错误，可以使用GetLastError或者errno来获取具体错误值
+#define EXRV_FAILED			2		// 操作失败
+
+//#define EXRV_CANNOT_FOUND	9
+#define EXRV_CANNOT_CREATE	10
+#define EXRV_CANNOT_OPEN		11
+#define EXRV_CANNOT_SET		12
+#define EXRV_CANNOT_REMOVE	13
+#define EXRV_NOT_START		14
+#define EXRV_NOT_EXISTS		14
+
 #endif // __LIB_EX_CONST_H__

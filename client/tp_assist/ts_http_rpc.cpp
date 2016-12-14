@@ -96,16 +96,16 @@ void http_rpc_main_loop(void)
 {
 	if (!g_http_interface.init(TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT))
 	{
-		TSLOGE("[ERROR] can not start HTTP-RPC listener, maybe port %d is already in use.\n", TS_HTTP_RPC_PORT);
+		EXLOGE("[ERROR] can not start HTTP-RPC listener, maybe port %d is already in use.\n", TS_HTTP_RPC_PORT);
 		return;
 	}
 
-	TSLOGV("======================================================\n");
-	TSLOGV("[rpc] TeleportAssist-HTTP-RPC ready on %s:%d\n", TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT);
+	EXLOGV("======================================================\n");
+	EXLOGV("[rpc] TeleportAssist-HTTP-RPC ready on %s:%d\n", TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT);
 
 	g_http_interface.run();
 
-	TSLOGV("[prc] main loop end.\n");
+	EXLOGV("[prc] main loop end.\n");
 }
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
@@ -185,7 +185,7 @@ bool TsHttpRpc::init(const char* ip, int port)
 	nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
 	if (nc == NULL)
 	{
-		TSLOGE("[rpc] TsHttpRpc::init %s:%d\n", ip, port);
+		EXLOGE("[rpc] TsHttpRpc::init %s:%d\n", ip, port);
 		return false;
 	}
 	nc->user_data = this;
@@ -225,7 +225,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 	TsHttpRpc* _this = (TsHttpRpc*)nc->user_data;
 	if (NULL == _this)
 	{
-		TSLOGE("[ERROR] invalid http request.\n");
+		EXLOGE("[ERROR] invalid http request.\n");
 		return;
 	}
 
@@ -249,7 +249,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		else
 			dbg_method = "UNSUPPORTED-HTTP-METHOD";
 
-		TSLOGV("[rpc] got %s request: %s\n", dbg_method, uri.c_str());
+		EXLOGV("[rpc] got %s request: %s\n", dbg_method, uri.c_str());
 #endif
 		ex_astr ret_buf;
 		bool b_is_index = false;
@@ -328,7 +328,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		unsigned int rv = _this->_parse_request(hm, method, json_param);
 		if (0 != rv)
 		{
-			TSLOGE("[ERROR] http-rpc got invalid request.\n");
+			EXLOGE("[ERROR] http-rpc got invalid request.\n");
 			_this->_create_json_ret(ret_buf, rv);
 		}
 		else
@@ -432,7 +432,7 @@ unsigned int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_c
 		func_args = &sztmp[0];
 	}
 
-	TSLOGV("[rpc] method=%s, json_param=%s\n", func_cmd.c_str(), func_args.c_str());
+	EXLOGV("[rpc] method=%s, json_param=%s\n", func_cmd.c_str(), func_args.c_str());
 
 	return TSR_OK;
 }
@@ -469,7 +469,7 @@ void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func
 	}
 	else
 	{
-		TSLOGE("[rpc] got unknown command: %s\n", func_cmd.c_str());
+		EXLOGE("[rpc] got unknown command: %s\n", func_cmd.c_str());
 		_create_json_ret(buf, TSR_NO_SUCH_METHOD);
 	}
 }
@@ -851,7 +851,7 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 
 	if (!CreateProcess(NULL, (wchar_t *)w_exe_path.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
 	{
-		TSLOGE(_T("CreateProcess() failed. Error=0x%08X.\n  %s\n"), GetLastError(), w_exe_path.c_str());
+		EXLOGE(_T("CreateProcess() failed. Error=0x%08X.\n  %s\n"), GetLastError(), w_exe_path.c_str());
 		root_ret["code"] = TSR_CREATE_PROCESS_ERROR;
 		_create_json_ret(buf, root_ret);
 		return;
@@ -1109,7 +1109,7 @@ void TsHttpRpc::_rpc_func_ts_rdp_play(const ex_astr& func_args, ex_astr& buf)
 	ZeroMemory(&pi, sizeof(pi));
 	if (!CreateProcess(NULL, (wchar_t *)w_exe_path.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
 	{
-		TSLOGE(_T("CreateProcess() failed. Error=0x%08X.\n  %s\n"), GetLastError(), w_exe_path.c_str());
+		EXLOGE(_T("CreateProcess() failed. Error=0x%08X.\n  %s\n"), GetLastError(), w_exe_path.c_str());
 		root_ret["code"] = TSR_CREATE_PROCESS_ERROR;
 		_create_json_ret(buf, root_ret);
 		return;
@@ -1165,7 +1165,7 @@ void TsHttpRpc::_rpc_func_get_config(const ex_astr& func_args, ex_astr& buf)
 			ex_wstr2astr(it->second.desc, temp, EX_CODEPAGE_UTF8);
 			config["desc"] = temp;
 
-			config["build_in"] = it->second.default;
+			config["build_in"] = it->second.is_default ? 1 : 0;
 			if (it->first == g_cfgSSH.m_current_client)
 			{
 				config["current"] = 1;
@@ -1211,7 +1211,7 @@ void TsHttpRpc::_rpc_func_get_config(const ex_astr& func_args, ex_astr& buf)
 			ex_wstr2astr(it->second.alias_name, temp, EX_CODEPAGE_UTF8);
 			config["alias_name"] = temp;
 
-			config["build_in"] = it->second.default;
+			config["build_in"] = it->second.is_default ? 1 : 0;
 
 			if (it->first == g_cfgScp.m_current_client)
 				config["current"] = 1;
@@ -1252,7 +1252,7 @@ void TsHttpRpc::_rpc_func_get_config(const ex_astr& func_args, ex_astr& buf)
 			ex_wstr2astr(it->second.alias_name, temp, EX_CODEPAGE_UTF8);
 			config["alias_name"] = temp;
 
-			config["build_in"] = it->second.default;
+			config["build_in"] = it->second.is_default ? 1 : 0;
 
 			if (it->first == g_cfgTelnet.m_current_client)
 				config["current"] = 1;
@@ -1318,7 +1318,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
 			return;
 		}
-		if (it->second.default == 1)
+		if (it->second.is_default)
 		{
 			g_cfgSSH.set(_T("common"), _T("current_client"), w_name);
 			g_cfgSSH.save();
@@ -1343,7 +1343,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
 			return;
 		}
-		if (it->second.default == 1)
+		if (it->second.is_default)
 		{
 			g_cfgScp.set(_T("common"), _T("current_client"), w_name);
 			g_cfgScp.save();
@@ -1367,7 +1367,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
 			return;
 		}
-		if (it->second.default == 1)
+		if (it->second.is_default)
 		{
 			g_cfgTelnet.set(_T("common"), _T("current_client"), w_name);
 			g_cfgTelnet.save();

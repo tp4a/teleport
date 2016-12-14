@@ -13,19 +13,10 @@
     <ClCompile Include="ts_http_rpc.cpp">
       <Filter>main app</Filter>
     </ClCompile>
-    <ClCompile Include="ts_log.cpp">
-      <Filter>main app</Filter>
-    </ClCompile>
-    <ClCompile Include="ts_thread.cpp">
-      <Filter>main app</Filter>
-    </ClCompile>
     <ClCompile Include="ts_network.cpp">
       <Filter>main app</Filter>
     </ClCompile>
     <ClCompile Include="msocketx.cpp">
-      <Filter>main app</Filter>
-    </ClCompile>
-    <ClCompile Include="ts_ini.cpp">
       <Filter>main app</Filter>
     </ClCompile>
     <ClCompile Include="ts_env.cpp">
@@ -55,6 +46,15 @@
     <ClCompile Include="..\..\common\libex\src\ex_path.cpp">
       <Filter>libex\src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_ini.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_log.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_thread.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -75,16 +75,7 @@
     <ClInclude Include="ts_http_rpc.h">
       <Filter>main app</Filter>
     </ClInclude>
-    <ClInclude Include="ts_log.h">
-      <Filter>main app</Filter>
-    </ClInclude>
-    <ClInclude Include="ts_thread.h">
-      <Filter>main app</Filter>
-    </ClInclude>
     <ClInclude Include="ts_network.h">
-      <Filter>main app</Filter>
-    </ClInclude>
-    <ClInclude Include="ts_ini.h">
       <Filter>main app</Filter>
     </ClInclude>
     <ClInclude Include="ts_env.h">
@@ -125,6 +116,15 @@
     </ClInclude>
     <ClInclude Include="ts_ver.h">
       <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_ini.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_log.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_thread.h">
+      <Filter>libex\header</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
