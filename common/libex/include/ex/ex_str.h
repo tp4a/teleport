@@ -44,6 +44,10 @@ void ex_free_wargv(int argc, wchar_t** argv);
 EX_BOOL ex_str_only_white_space(const wchar_t* src);
 EX_BOOL ex_wcs_only_white_space(const char* src);
 
+
+int ex_strformat(char* out_buf, size_t buf_size, const char* fmt, ...);
+int ex_wcsformat(wchar_t* out_buf, size_t buf_size, const wchar_t* fmt, ...);
+
 //=================================================
 // C++ Interface
 //=================================================

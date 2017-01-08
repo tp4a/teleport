@@ -49,6 +49,7 @@
 #	define _CSTRING_
 #	define _CWCHAR_
 #	include <strsafe.h>
+#	include <WinSock2.h>
 #else
 #	include <locale.h>
 #   include <string.h>

@@ -33,4 +33,12 @@ typedef std::vector<char> ex_chars;
 
 typedef ex_u32 ex_rv;
 
+
+#if defined(EX_OS_WIN32)
+#	define EX_DYLIB_HANDLE		HINSTANCE
+#else
+#	define EX_DYLIB_HANDLE		void*
+#endif
+
+
 #endif // __LIB_EX_TYPE_H__

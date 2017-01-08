@@ -17,14 +17,13 @@
 
 <div class="page-content">
     <div ng-controller="TerminalRecordCtrl">
-        <button id="btn-stop"  type="button" class="btn btn-danger btn-sm" ><i class="glyphicon glyphicon-stop"></i> 暂停</button>
-        <button id="btn-conitune"  type="button" class="btn btn-primary btn-sm" ><i class="glyphicon glyphicon-send"></i> 继续</button>
-        <button id="btn-restart"  type="button" class="btn btn-success btn-sm" ><i class="glyphicon glyphicon-refresh"></i> 重新播放</button>
+        <button id="btn-play" type="button" class="btn btn-primary btn-sm"><i class="fa fa-pause"> 暂停</i></button>
+        <button id="btn-restart" type="button" class="btn btn-success btn-sm"><i class="fa fa-refresh"> 重新播放</i></button>
 
-        <button id="btn-speed"  type="button" class="btn btn-warning btn-sm" ><i class="glyphicon glyphicon-fast-forward"></i> 正常</button>
+        <button id="btn-speed" type="button" class="btn btn-warning btn-sm">正常速度</button>
         <span id="play-status" class="badge badge-danger" style="margin-left:5px;">状态:正在获取数据</span>
         <span id="play-time" class="badge badge-success" style="margin-left:5px;">总时长:未知</span>
-        <input id="process" type="range" value="0" min=0 max=100 style="margin-top: 10px;"/>
+        <input id="progress" type="range" value="0" min=0 max=100 style="margin-top: 10px;"/>
         <div id="terminal" style="margin-top: 10px;"></div>
 
     </div>

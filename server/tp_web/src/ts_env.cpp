@@ -17,6 +17,7 @@ bool TsEnv::init(void)
 	m_exec_path = m_exec_file;
 	ex_dirname(m_exec_path);
 
+	// 定位 log, etc, www 路径
 	// 默认情况下，以上三个目录均位于本可执行程序的 ../ 相对位置，
 	// 如果不存在，则可能是开发调试模式，则尝试从源代码仓库根目录下的share目录中查找。
 	ex_wstr base_path = m_exec_path;
@@ -28,7 +29,7 @@ bool TsEnv::init(void)
 	if (ex_is_file_exists(conf_file.c_str()))
 	{
 		m_www_path = base_path;
-		ex_path_join(conf_file, false, L"www", NULL);
+		ex_path_join(m_www_path, false, L"www", NULL);
 	}
 	else
 	{

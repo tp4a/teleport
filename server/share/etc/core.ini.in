@@ -1,0 +1,43 @@
+; codec: utf-8
+
+[common]
+; 'log-file' define the log file location. if not set, default location
+; to $INSTDIR%/log/tpcore.log
+;log-file=/var/log/teleport/tpcore.log
+
+# log-level can be 0 ~ 4, default value is 2.
+# LOG_LEVEL_DEBUG     0   log every-thing.
+# LOG_LEVEL_VERBOSE   1   log every-thing but without debug message.
+# LOG_LEVEL_INFO      2   log infomation/warning/error message.
+# LOG_LEVEL_WARN      3   log warning and error message.
+# LOG_LEVEL_ERROR     4   log error message only.
+log-level=0
+
+; 'replay-path' define the replay file location. if not set, default location
+; to $INSTDIR%/data/replay/
+;replay-path=/usr/local/eom/teleport/data/replay
+
+[rpc]
+; Request by web server. `bind-ip` should be the ip of core server. If
+; web server and core server running at the same machine, it should be
+; 127.0.0.1
+bind-ip=127.0.0.1
+bind-port=52080
+
+[protocol-ssh]
+enabled=true
+lib=tpssh
+bind-ip=0.0.0.0
+bind-port=52189
+
+[protocol-rdp]
+enabled=false
+lib=rdp
+bind-ip=0.0.0.0
+bind-port=52089
+
+[protocol-telnet]
+enabled=false
+lib=telnet
+bind-ip=0.0.0.0
+bind-port=52389

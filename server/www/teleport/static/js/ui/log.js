@@ -26,7 +26,7 @@ ywl.on_init = function (cb_stack, cb_args) {
 			type: 'ajax-post',
 			url: '/log/list'
 		},
-		column_default: {sort: true, header_align: 'center', cell_align: 'center'},
+		column_default: {sort: false, header_align: 'center', cell_align: 'center'},
 		columns: [
 			{
 				title: '<input type="checkbox" id="host-select-all" value="">',
@@ -37,15 +37,15 @@ ywl.on_init = function (cb_stack, cb_args) {
 				fields: {id: 'id'}
 			},
 			{title: "ID", key: "id"},
-			{title: "Session", key: "session_id"},
-			{title: "用户名", key: "account_name"},
-			{title: "系统用户名", key: "user_name"},
+//			{title: "Session", key: "session_id"},
+			{title: "操作者", key: "account_name"},
+			{title: "系统用户", key: "user_name"},
 			{title: "协议", key: "protocol", render: 'protocol', fields: {protocol: 'protocol'}},
 			{title: "系统", key: "sys_type", width: 40, render: 'sys_type', fields: {sys_type: 'sys_type'}},
 			{title: "远程主机地址", key: "host_ip", render: 'server_info', fields: {host_ip: 'host_ip', host_port: 'host_port'}},
 			{title: "开始时间", key: "log_time", width: 160, render: 'log_time', fields: {log_time: 'log_time'}},
 			{title: "耗时", key: "cost_time", render: 'cost_time', fields: {cost_time: 'cost_time', ret_code: 'ret_code'}},
-			{title: "返回", key: "ret_code", render: 'ret_code', fields: {ret_code: 'ret_code'}},
+			{title: "状态", key: "ret_code", render: 'ret_code', fields: {ret_code: 'ret_code'}},
 			{
 				title: "操作",
 				key: "action",

@@ -45,4 +45,10 @@ __pycache__
 
 # for not finished code
 /common/libex/test
-/server/tp_core
+/external/mbedtls
+/external/sqlite
+/server/share/etc/core.ini
+/server/share/etc/web.ini
+/client/tp_rdp
+/external/libssh-win-static/lib
+/server/share/log

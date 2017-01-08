@@ -1,7 +1,6 @@
 #ifndef __TS_ENV_H__
 #define __TS_ENV_H__
 
-//#include "ts_common.h"
 #include <ex.h>
 
 class TsEnv

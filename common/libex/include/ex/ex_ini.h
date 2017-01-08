@@ -83,6 +83,8 @@ public:
 	bool LoadFromFile(const ex_wstr& strFileName, bool bClearOld = true);
 	bool LoadFromMemory(const ex_wstr& strData, bool bClearOld = true);
 
+	ex_ini_sections& GetAllSections(void) { return m_secs; }
+
 	ExIniSection* GetSection(const ex_wstr& strName, bool bCreateIfNotExists = false);
 	ExIniSection* GetDumySection(void) { return &m_dumy_sec; }
 

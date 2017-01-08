@@ -2,6 +2,7 @@
 #define __EX_LOG_H__
 
 #include "ex_types.h"
+#include "ex_thread.h"
 
 #define EX_LOG_LEVEL_DEBUG		0
 #define EX_LOG_LEVEL_VERBOSE		1
@@ -12,6 +13,52 @@
 #define EX_LOG_FILE_MAX_SIZE 1024*1024*10
 #define EX_LOG_FILE_MAX_COUNT 10
 
+class ExLogger
+{
+public:
+	ExLogger();
+	~ExLogger();
+
+	bool set_log_file(const ex_wstr& log_path, const ex_wstr& log_name, ex_u32 max_filesize, ex_u8 max_count);
+	void log_a(int level, const char* fmt, va_list valist);
+	void log_w(int level, const wchar_t* fmt, va_list valist);
+	bool write(const char* buf);
+	bool write(const wchar_t* buf);
+
+protected:
+	bool _open_file();
+	bool _rotate_file(void);		// 将现有日志文件改名备份，然后新开一个日志文件
+
+public:
+	ExThreadLock lock;
+	int min_level;
+	bool debug_mode;
+	bool to_console;
+
+#ifdef EX_OS_WIN32
+	HANDLE console_handle;
+#endif
+
+protected:
+	ex_u32 m_filesize;
+	ex_u32  m_max_filesize;
+	ex_u8  m_max_count;
+	ex_wstr m_path;
+	ex_wstr m_filename;
+	ex_wstr m_fullname;
+
+#ifdef EX_OS_WIN32
+	HANDLE m_file;
+#else
+	FILE* m_file;
+#endif
+};
+
+extern ExLogger g_ex_logger;
+
+// extern void* ex_logger;
+
+void EXLOG_USE_EXTERNAL_LOGGER(ExLogger* logger);
 
 void EXLOG_LEVEL(int min_level);
 

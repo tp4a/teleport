@@ -17,3 +17,12 @@ teleport项目用到的第三方库
   https://github.com/cesanta/mongoose
   mongoose 6.6
   注意：teleport项目使用源代码直接编译，因此解压缩源代码到此即可。
+- sqlite3
+  http://sqlite.org/download.html
+  sqlite3-amalgamation-3150200
+  注意：teleport项目使用源代码直接编译，因此解压缩源代码到此即可。
+- mbedtls
+  https://github.com/ARMmbed/mbedtls
+  mbedtls-mbedtls-2.2.1
+  注意：teleport项目使用源代码直接编译，因此解压缩源代码到此即可。
+

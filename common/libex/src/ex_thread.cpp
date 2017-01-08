@@ -7,38 +7,30 @@
 
 
 #ifdef EX_OS_WIN32
-unsigned int WINAPI ExThreadBase::_thread_func(LPVOID lpParam)
-{
-	ExThreadBase* p = (ExThreadBase*)lpParam;
-	p->m_is_running = true;
-	p->_thread_loop();
-	p->m_is_running = false;
-	//_endthreadex(0);
-	if(!p->m_stop_by_request)
-		p->m_thread_manager->_remove_thread(p);
-	return 0;
-}
+unsigned int WINAPI ExThreadBase::_thread_func(LPVOID pParam)
 #else
 void* ExThreadBase::_thread_func(void* pParam)
+#endif
 {
 	ExThreadBase* p = (ExThreadBase*)pParam;
+	ex_astr thread_name = p->m_thread_name;
 	p->m_is_running = true;
 	p->_thread_loop();
 	p->m_is_running = false;
-	if(!p->m_stop_by_request)
-		p->m_thread_manager->_remove_thread(p);
-	return NULL;
-}
-#endif
+// 	if(!p->m_stop_by_request)
+// 		p->m_thread_manager->_remove_thread(p);
 
-ExThreadBase::ExThreadBase(ExThreadManager* tm, const char* thread_name) :
-	m_thread_manager(tm),
+	EXLOGV("  # thread [%s] end.\n", thread_name.c_str());
+
+	return 0;
+}
+
+ExThreadBase::ExThreadBase(const char* thread_name) :
 	m_handle(0),
 	m_is_running(false),
-	m_stop_by_request(false)
+	m_stop_flag(false)
 {
 	m_thread_name = thread_name;
-	m_thread_manager->_add_thread(this);
 }
 
 ExThreadBase::~ExThreadBase()
@@ -47,7 +39,7 @@ ExThreadBase::~ExThreadBase()
 
 bool ExThreadBase::start(void)
 {
-	EXLOGV(" -- thread [%s] starting.\n", m_thread_name.c_str());
+	EXLOGV("  . thread [%s] starting.\n", m_thread_name.c_str());
 #ifdef WIN32
 	HANDLE h = (HANDLE)_beginthreadex(NULL, 0, _thread_func, (void*)this, 0, NULL);
 
@@ -72,11 +64,10 @@ bool ExThreadBase::start(void)
 
 bool ExThreadBase::stop(void)
 {
-	EXLOGV(" . try to stop thread [%s].\n", m_thread_name.c_str());
-	m_stop_by_request = true;
+	EXLOGV("[thread] try to stop thread [%s].\n", m_thread_name.c_str());
 	_set_stop_flag();
 
-	EXLOGV(" . wait thread [%s] end.\n", m_thread_name.c_str());
+	EXLOGV("[thread] wait thread [%s] end.\n", m_thread_name.c_str());
 
 #ifdef EX_OS_WIN32
 	if (WaitForSingleObject(m_handle, INFINITE) != WAIT_OBJECT_0)
@@ -89,7 +80,7 @@ bool ExThreadBase::stop(void)
 		return false;
 	}
 #endif
-	EXLOGV(" ## thread [%s] end.\n", m_thread_name.c_str());
+// 	EXLOGV("  # thread [%s] end.\n", m_thread_name.c_str());
 
 	return true;
 }
@@ -142,12 +133,12 @@ void ExThreadManager::stop_all(void)
 	for (; it != m_threads.end(); ++it)
 	{
 		(*it)->stop();
-		delete (*it);
+		//delete (*it);
 	}
 	m_threads.clear();
 }
 
-void ExThreadManager::_add_thread(ExThreadBase* tb)
+void ExThreadManager::add(ExThreadBase* tb)
 {
 	ExThreadSmartLock locker(m_lock);
 
@@ -164,7 +155,7 @@ void ExThreadManager::_add_thread(ExThreadBase* tb)
 	m_threads.push_back(tb);
 }
 
-void ExThreadManager::_remove_thread(ExThreadBase* tb)
+void ExThreadManager::remove(ExThreadBase* tb)
 {
 	ExThreadSmartLock locker(m_lock);
 
@@ -173,7 +164,7 @@ void ExThreadManager::_remove_thread(ExThreadBase* tb)
 	{
 		if ((*it) == tb)
 		{
-			delete (*it);
+			//delete (*it);
 			m_threads.erase(it);
 			return;
 		}
@@ -257,3 +248,11 @@ int ex_atomic_dec(volatile int* pt)
 }
 
 
+ex_u64 ex_get_thread_id(void)
+{
+#ifdef EX_OS_WIN32
+	return GetCurrentThreadId();
+#else
+	return pthread_self();
+#endif
+}

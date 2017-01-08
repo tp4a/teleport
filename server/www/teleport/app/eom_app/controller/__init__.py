@@ -9,11 +9,11 @@ from . import pwd
 from . import set
 from . import group
 from . import index
+from . import record
 import tornado.web
 
 from eom_app.app.configs import app_cfg
-# from . import error
-# from . import support
+
 cfg = app_cfg()
 
 __all__ = ['controllers']
@@ -43,15 +43,15 @@ controllers = [
 
     # add another path to static-path
     (r"/log/replay/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
-    (r'/log/list', user.LogList),
-    (r'/log/record/(.*)/(.*)', user.RecordHandler),
-    (r'/log/command-log/(.*)/(.*)', user.ComandLogHandler),
-    (r'/log/get-record-header', user.RecordGetHeader),
-    (r'/log/get-record-file-info', user.RecordGetInfo),
-    (r'/log/delete-log', user.DeleteLog),
-    (r'/log/play-rdp/(.*)/(.*)', user.PlayRdpHandler),
-    (r'/log/', user.LogHandler),
-    (r'/log', user.LogHandler),
+    (r'/log/list', record.LogList),
+    (r'/log/record/(.*)/(.*)', record.RecordHandler),
+    (r'/log/command-log/(.*)/(.*)', record.ComandLogHandler),
+    (r'/log/get-record-header', record.RecordGetHeader),
+    (r'/log/get-record-file-info', record.RecordGetInfo),
+    (r'/log/delete-log', record.DeleteLog),
+    # (r'/log/play-rdp/(.*)/(.*)', record.PlayRdpHandler),
+    (r'/log/', record.LogHandler),
+    (r'/log', record.LogHandler),
 
     (r'/exit', auth.LogoutHandler),
 
@@ -66,7 +66,6 @@ controllers = [
     (r'/user/delete-host', user.DeleteHost),
     (r'/user/delete-host-user', user.DeleteHostUser),
     (r'/user/auth/(.*)', user.AuthHandler),
-
 
     (r'/host/list', host.GetListHandler),
     (r'/host/add-host', host.AddHost),
@@ -102,9 +101,6 @@ controllers = [
     (r'/set/', set.IndexHandler),
     (r'/set', set.IndexHandler),
 
-    # (r'/dl/', index.DownloadHandler),
-    # (r'/dl', index.DownloadHandler),
-
+    # 通过访问一个特殊URL来停止WEB服务，仅用于开发阶段，生产系统中请删除下一行
     (r'/EXIT-4E581FEFD7AB497D833D71A51C61D898', index.ExitHandler),
-
 ]

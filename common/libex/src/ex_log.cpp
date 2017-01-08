@@ -16,102 +16,27 @@
 
 #define EX_LOG_CONTENT_MAX_LEN 2048
 
-typedef enum EX_COLORS
+//typedef std::deque<unsigned long long> log_file_deque;
+
+ExLogger g_ex_logger;
+static ExLogger* g_exlog = &g_ex_logger;
+
+void EXLOG_USE_EXTERNAL_LOGGER(ExLogger* logger)
 {
-	EX_COLOR_BLACK = 0,
-	EX_COLOR_BLUE = 1,
-	EX_COLOR_GREEN = 2,
-	EX_COLOR_CYAN = 3,
-	EX_COLOR_RED = 4,
-	EX_COLOR_MAGENTA = 5,
-	EX_COLOR_YELLOW = 6,
-	EX_COLOR_LIGHT_GRAY = 7,
-	EX_COLOR_GRAY = 8,
-	EX_COLOR_LIGHT_BLUE = 9,
-	EX_COLOR_LIGHT_GREEN = 10,
-	EX_COLOR_LIGHT_CYAN = 11,
-	EX_COLOR_LIGHT_RED = 12,
-	EX_COLOR_LIGHT_MAGENTA = 13,
-	EX_COLOR_LIGHT_YELLOW = 14,
-	EX_COLOR_WHITE = 15,
-
-	EX_COLOR_NORMAL = 0xFF,
-}EX_COLORS;
-
-ExThreadLock g_log_lock;
-
-typedef std::deque<unsigned long long> log_file_deque;
-
-class ExLogFile
-{
-public:
-	ExLogFile() {
-		m_hFile = NULL;
-		m_filesize = 0;
-	}
-	~ExLogFile() {}
-
-	bool init(const ex_wstr& log_path, const ex_wstr& log_name, ex_u32 max_filesize, ex_u8 max_count);
-
-	//bool write(int level, char* buf, int len);
-	bool write(int level, const char* buf);
-	bool write(int level, const wchar_t* buf);
-
-protected:
-	bool _open_file();
-	//bool _backup_file();
-	bool _rotate_file(void);		// 将现有日志文件改名备份，然后新开一个日志文件
-	//bool _load_file_list();
-
-protected:
-	FILE* m_hFile;
-	ex_u32 m_filesize;
-
-	ex_u32  m_max_filesize;
-	ex_u8  m_max_count;
-	ex_wstr m_path;
-	ex_wstr m_filename;
-	ex_wstr m_fullname;
-	log_file_deque m_log_file_list;
-private:
-
-};
-
-
-typedef struct EX_LOG_CFG
-{
-	EX_LOG_CFG()
-	{
-		min_level = EX_LOG_LEVEL_INFO;
-		debug_mode = false;
-		to_console = true;
-
-#ifdef EX_OS_WIN32
-		console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-#endif
-	}
-
-	int min_level;
-	bool debug_mode;
-	bool to_console;
-
-#ifdef EX_OS_WIN32
-	HANDLE console_handle;
-#endif
-
-	ExLogFile logfile;
-}EX_LOG_CFG;
-
-static EX_LOG_CFG g_log_cfg;
+	if (NULL == logger)
+		g_exlog = &g_ex_logger;
+	else
+		g_exlog = logger;
+}
 
 void EXLOG_LEVEL(int min_level)
 {
-	g_log_cfg.min_level = min_level;
+	g_exlog->min_level = min_level;
 }
 
 void EXLOG_CONSOLE(bool output_to_console)
 {
-	g_log_cfg.to_console = output_to_console;
+	g_exlog->to_console = output_to_console;
 }
 
 void EXLOG_FILE(const wchar_t* log_file, const wchar_t* log_path /*= NULL*/, ex_u32 max_filesize /*= EX_LOG_FILE_MAX_SIZE*/, ex_u8 max_filecount /*= EX_LOG_FILE_MAX_COUNT*/)
@@ -128,147 +53,131 @@ void EXLOG_FILE(const wchar_t* log_file, const wchar_t* log_path /*= NULL*/, ex_
 		_path = log_path;
 	}
 
-	g_log_cfg.logfile.init(_path, log_file, max_filesize, max_filecount);
+	g_exlog->set_log_file(_path, log_file, max_filesize, max_filecount);
 }
 
-static void _ts_printf_a(int level, EX_COLORS clrBackGround, const char* fmt, va_list valist)
+ExLogger::ExLogger()
+{
+#ifdef EX_OS_WIN32
+	console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
+
+	min_level = EX_LOG_LEVEL_INFO;
+	debug_mode = false;
+	to_console = true;
+
+	m_file = NULL;
+	m_filesize = 0;
+}
+ExLogger::~ExLogger()
+{
+	if (NULL != m_file)
+	{
+#ifdef EX_OS_WIN32
+		CloseHandle(m_file);
+#else
+		fclose(m_file);
+#endif
+		m_file = NULL;
+	}
+}
+
+void ExLogger::log_a(int level, const char* fmt, va_list valist)
 {
 	if (NULL == fmt)
 		return;
-
-	if (g_log_cfg.min_level > level)
-		return;
-
-	EX_COLORS clrForeGround = EX_COLOR_NORMAL;
-	switch (level)
-	{
-	case EX_LOG_LEVEL_DEBUG:
-		if (!g_log_cfg.debug_mode)
-			return;
-		clrForeGround = EX_COLOR_GRAY;
-		break;
-	case EX_LOG_LEVEL_VERBOSE:
-		clrForeGround = EX_COLOR_LIGHT_GRAY;
-		break;
-	case EX_LOG_LEVEL_INFO:
-		clrForeGround = EX_COLOR_LIGHT_MAGENTA;
-		break;
-	case EX_LOG_LEVEL_WARN:
-		clrForeGround = EX_COLOR_LIGHT_RED;
-		break;
-	case EX_LOG_LEVEL_ERROR:
-		clrForeGround = EX_COLOR_LIGHT_RED;
-		break;
-	}
-
-	if (EX_COLOR_NORMAL == clrForeGround)
-		clrForeGround = EX_COLOR_LIGHT_GRAY;
-	if (EX_COLOR_NORMAL == clrBackGround)
-		clrBackGround = EX_COLOR_BLACK;
 
 	if (0 == strlen(fmt))
 		return;
 
 	char szTmp[4096] = { 0 };
+	int offset = 0;
+
+	if (level == EX_LOG_LEVEL_ERROR)
+	{
+		szTmp[0] = '[';
+		szTmp[1] = 'E';
+		szTmp[2] = ']';
+		szTmp[3] = ' ';
+		offset = 4;
+	}
 
 #ifdef EX_OS_WIN32
-	vsnprintf_s(szTmp, 4096, 4095, fmt, valist);
-	if (NULL != g_log_cfg.console_handle)
+	vsnprintf_s(szTmp+offset, 4096-offset, 4095-offset, fmt, valist);
+	if (NULL != console_handle)
 	{
-		SetConsoleTextAttribute(g_log_cfg.console_handle, (WORD)((clrBackGround << 4) | clrForeGround));
 		printf_s("%s", szTmp);
 		fflush(stdout);
-		SetConsoleTextAttribute(g_log_cfg.console_handle, EX_COLOR_GRAY);
 	}
 	else
 	{
 		OutputDebugStringA(szTmp);
 	}
 #else
-	vsnprintf(szTmp, 4095, fmt, valist);
+	vsnprintf(szTmp+offset, 4095-offset, fmt, valist);
 	printf("%s", szTmp);
 	fflush(stdout);
 #endif
 
-	// #ifdef LOG_TO_FILE
-	// 	g_log_file.WriteData(level, szTmp, strlen(szTmp));
-	// #endif
-	g_log_cfg.logfile.write(level, szTmp);
+	write(szTmp);
 }
 
-static void _ts_printf_w(int level, EX_COLORS clrBackGround, const wchar_t* fmt, va_list valist)
+void ExLogger::log_w(int level, const wchar_t* fmt, va_list valist)
 {
 	if (NULL == fmt || 0 == wcslen(fmt))
 		return;
-	if (g_log_cfg.min_level > level)
-		return;
-
-	EX_COLORS clrForeGround = EX_COLOR_NORMAL;
-	switch (level)
-	{
-	case EX_LOG_LEVEL_DEBUG:
-		if (!g_log_cfg.debug_mode)
-			return;
-		clrForeGround = EX_COLOR_GRAY;
-		break;
-	case EX_LOG_LEVEL_VERBOSE:
-		clrForeGround = EX_COLOR_LIGHT_GRAY;
-		break;
-	case EX_LOG_LEVEL_INFO:
-		clrForeGround = EX_COLOR_LIGHT_MAGENTA;
-		break;
-	case EX_LOG_LEVEL_WARN:
-		clrForeGround = EX_COLOR_LIGHT_RED;
-		break;
-	case EX_LOG_LEVEL_ERROR:
-		clrForeGround = EX_COLOR_LIGHT_RED;
-		break;
-	}
-
-	if (EX_COLOR_NORMAL == clrForeGround)
-		clrForeGround = EX_COLOR_LIGHT_GRAY;
-	if (EX_COLOR_NORMAL == clrBackGround)
-		clrBackGround = EX_COLOR_BLACK;
 
 	wchar_t szTmp[4096] = { 0 };
+	int offset = 0;
+
+	if (level == EX_LOG_LEVEL_ERROR)
+	{
+		szTmp[0] = L'[';
+		szTmp[1] = L'E';
+		szTmp[2] = L']';
+		szTmp[3] = L' ';
+		offset = 4;
+	}
 
 #ifdef EX_OS_WIN32
-	_vsnwprintf_s(szTmp, 4096, 4095, fmt, valist);
-	if (NULL != g_log_cfg.console_handle)
+	_vsnwprintf_s(szTmp+offset, 4096-offset, 4095-offset, fmt, valist);
+	if (NULL != console_handle)
 	{
-		SetConsoleTextAttribute(g_log_cfg.console_handle, (WORD)((clrBackGround << 4) | clrForeGround));
 		wprintf_s(_T("%s"), szTmp);
 		fflush(stdout);
-		SetConsoleTextAttribute(g_log_cfg.console_handle, EX_COLOR_GRAY);
 	}
 	else
 	{
 		OutputDebugStringW(szTmp);
 	}
 #else
-	vswprintf(szTmp, 4095, fmt, valist);
+	vswprintf(szTmp+offset, 4095-offset, fmt, valist);
 	wprintf(L"%s", szTmp);
 	fflush(stdout);
 #endif
 
-	g_log_cfg.logfile.write(level, szTmp);
+	write(szTmp);
 }
 
 #define EX_PRINTF_X(fn, level) \
 void fn(const char* fmt, ...) \
 { \
-	ExThreadSmartLock locker(g_log_lock); \
+	if (g_exlog->min_level > level) \
+		return; \
+	ExThreadSmartLock locker(g_exlog->lock); \
 	va_list valist; \
 	va_start(valist, fmt); \
-	_ts_printf_a(level, EX_COLOR_BLACK, fmt, valist); \
+	g_exlog->log_a(level, fmt, valist); \
 	va_end(valist); \
 } \
 void fn(const wchar_t* fmt, ...) \
 { \
-	ExThreadSmartLock locker(g_log_lock); \
+	if (g_exlog->min_level > level) \
+		return; \
+	ExThreadSmartLock locker(g_exlog->lock); \
 	va_list valist; \
 	va_start(valist, fmt); \
-	_ts_printf_w(level, EX_COLOR_BLACK, fmt, valist); \
+	g_exlog->log_w(level, fmt, valist); \
 	va_end(valist); \
 }
 
@@ -282,11 +191,33 @@ EX_PRINTF_X(ex_printf_e, EX_LOG_LEVEL_ERROR)
 #ifdef EX_OS_WIN32
 void ex_printf_e_lasterror(const char* fmt, ...)
 {
-	ExThreadSmartLock locker(g_log_lock);
+	ExThreadSmartLock locker(g_exlog->lock);
 
 	va_list valist;
 	va_start(valist, fmt);
-	_ts_printf_a(EX_COLOR_LIGHT_RED, EX_COLOR_BLACK, fmt, valist);
+	g_exlog->log_a(EX_LOG_LEVEL_ERROR, fmt, valist);
+	va_end(valist);
+
+	//=========================================
+
+	LPVOID lpMsgBuf;
+	DWORD dw = GetLastError();
+
+	FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPSTR)&lpMsgBuf, 0, NULL);
+
+	ex_printf_e(" - WinErr(%d): %s\n", dw, (LPSTR)lpMsgBuf);
+	LocalFree(lpMsgBuf);
+}
+
+void ex_printf_e_lasterror(const wchar_t* fmt, ...)
+{
+	ExThreadSmartLock locker(g_exlog->lock);
+
+	va_list valist;
+	va_start(valist, fmt);
+	g_exlog->log_w(EX_LOG_LEVEL_ERROR, fmt, valist);
 	va_end(valist);
 
 	//=========================================
@@ -305,14 +236,14 @@ void ex_printf_e_lasterror(const char* fmt, ...)
 
 void ex_printf_bin(const ex_u8* bin_data, size_t bin_size, const char* fmt, ...)
 {
-	if (!g_log_cfg.debug_mode)
+	if (!g_exlog->debug_mode)
 		return;
 
-	ExThreadSmartLock locker(g_log_lock);
+	ExThreadSmartLock locker(g_exlog->lock);
 
 	va_list valist;
 	va_start(valist, fmt);
-	_ts_printf_a(EX_COLOR_GRAY, EX_COLOR_BLACK, fmt, valist);
+	g_exlog->log_a(EX_LOG_LEVEL_DEBUG, fmt, valist);
 	va_end(valist);
 
 	ex_printf_d(" (%d/0x%02x Bytes)\n", bin_size, bin_size);
@@ -370,7 +301,7 @@ void ex_printf_bin(const ex_u8* bin_data, size_t bin_size, const char* fmt, ...)
 	fflush(stdout);
 }
 
-bool ExLogFile::init(const ex_wstr& log_path, const ex_wstr& log_name, ex_u32 max_filesize, ex_u8 max_count)
+bool ExLogger::set_log_file(const ex_wstr& log_path, const ex_wstr& log_name, ex_u32 max_filesize, ex_u8 max_count)
 {
 	m_max_filesize = max_filesize;
 	m_max_count = max_count;
@@ -387,42 +318,59 @@ bool ExLogFile::init(const ex_wstr& log_path, const ex_wstr& log_name, ex_u32 ma
 }
 
 
-bool ExLogFile::_open_file()
+bool ExLogger::_open_file()
 {
-	if (m_hFile)
+	if (m_file)
 	{
-		fclose(m_hFile);
-		m_hFile = NULL;
+#ifdef EX_OS_WIN32
+		CloseHandle(m_file);
+#else
+		fclose(m_file);
+#endif
+		m_file = NULL;
 	}
 
+#ifdef EX_OS_WIN32
+	// 注意：这里必须使用 CreateFile() 来打开日志文件，使用FILE指针无法传递给动态库进行操作。
+	m_file = CreateFileW(m_fullname.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (INVALID_HANDLE_VALUE == m_file)
+	{
+		m_file = NULL;
+		return false;
+	}
+
+	SetFilePointer(m_file, 0, NULL, FILE_END);
+	m_filesize = GetFileSize(m_file, NULL);
+#else
 	ex_astr _fullname;
 	ex_wstr2astr(m_fullname, _fullname);
-#ifdef EX_OS_WIN32
-	// 注意：这里必须使用 _fsopen 来指定共享读方式打开日志文件，否则进程退出前别的进程无法查看日志文件内容。
-	m_hFile = _fsopen(_fullname.c_str(), "a", _SH_DENYWR);
-#else
-	m_hFile = fopen(_fullname.c_str(), "a");
-#endif
+	m_file = fopen(_fullname.c_str(), "a");
 
-	if (NULL == m_hFile)
+	if (NULL == m_file)
 	{
 		return false;
-}
-	fseek(m_hFile, 0, SEEK_END);
-	m_filesize = ftell(m_hFile);
+	}
+
+	fseek(m_file, 0, SEEK_END);
+	m_filesize = ftell(m_file);
+#endif
 
 	return _rotate_file();
 }
 
-bool ExLogFile::_rotate_file(void)
+bool ExLogger::_rotate_file(void)
 {
 	if (m_filesize < m_max_filesize)
 		return true;
 
-	if (m_hFile)
+	if (m_file)
 	{
-		fclose(m_hFile);
-		m_hFile = NULL;
+#ifdef EX_OS_WIN32
+		CloseHandle(m_file);
+#else
+		fclose(m_file);
+#endif
+		m_file = NULL;
 	}
 
 	//if (!_backup_file())
@@ -564,9 +512,9 @@ bool ExLogFile::_backup_file()
 }
 #endif // if 0
 
-bool ExLogFile::write(int level, const char* buf)
+bool ExLogger::write(const char* buf)
 {
-	if (NULL == m_hFile)
+	if (NULL == m_file)
 		return false;
 
 	size_t len = strlen(buf);
@@ -579,6 +527,13 @@ bool ExLogFile::write(int level, const char* buf)
 	SYSTEMTIME st;
 	GetLocalTime(&st);
 	sprintf_s(szTime, 100, "[%04d-%02d-%02d %02d:%02d:%02d] ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+	int lenTime = strlen(szTime);
+	DWORD dwWritten = 0;
+	WriteFile(m_file, szTime, lenTime, &dwWritten, NULL);
+	m_filesize += lenTime;
+	WriteFile(m_file, buf, len, &dwWritten, NULL);
+	m_filesize += len;
 #else
 	time_t timep;
 	struct tm *p;
@@ -586,25 +541,24 @@ bool ExLogFile::write(int level, const char* buf)
 	p = localtime(&timep);
 	if (p == NULL)
 		return false;
-	sprintf(szTime, "[%04d-%02d-%02d %02d:%02d:%02d] , p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
-#endif
+	sprintf(szTime, "[%04d-%02d-%02d %02d:%02d:%02d] ", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
 
 	int lenTime = strlen(szTime);
-	fwrite(szTime, lenTime, 1, m_hFile);
+	fwrite(szTime, lenTime, 1, m_file);
 	m_filesize += lenTime;
-	fwrite(buf, len, 1, m_hFile);
+	fwrite(buf, len, 1, m_file);
 	m_filesize += len;
+#endif
 
-	fflush(m_hFile);
 
 	return _rotate_file();
 }
 
-bool ExLogFile::write(int level, const wchar_t* buf)
+bool ExLogger::write(const wchar_t* buf)
 {
 	ex_astr _buf;
 	ex_wstr2astr(buf, _buf, EX_CODEPAGE_UTF8);
-	return write(level, _buf.c_str());
+	return write(_buf.c_str());
 }
 
 
@@ -613,7 +567,7 @@ bool ExLogFile::_load_file_list()
 {
 #ifdef EX_OS_WIN32
 	struct _finddata_t data;
-	std::string log_match = m_log_file_dir;
+	ex_astr log_match = m_log_file_dir;
 	log_match += "\\*.log";
 	//log_match += "*.log";
 	long hnd = _findfirst(log_match.c_str(), &data);    // find the first file match `*.log`

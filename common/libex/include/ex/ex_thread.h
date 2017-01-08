@@ -19,7 +19,7 @@ class ExThreadManager;
 class ExThreadBase
 {
 public:
-	ExThreadBase(ExThreadManager* tm, const char* thread_name);
+	ExThreadBase(const char* thread_name);
 	virtual ~ExThreadBase();
 
 	bool is_running(void) { return m_is_running; }
@@ -47,11 +47,10 @@ protected:
 	// void _sleep_ms(int ms);
 
 protected:
-	ExThreadManager* m_thread_manager;
 	ex_astr m_thread_name;
 	EX_THREAD_HANDLE m_handle;
 	bool m_is_running;
-	bool m_stop_by_request;
+	bool m_stop_flag;
 };
 
 
@@ -102,9 +101,9 @@ public:
 
 	void stop_all(void);
 
-private:
-	void _add_thread(ExThreadBase* tb);
-	void _remove_thread(ExThreadBase* tb);
+//private:
+	void add(ExThreadBase* tb);
+	void remove(ExThreadBase* tb);
 
 private:
 	ExThreadLock m_lock;
@@ -116,5 +115,8 @@ private:
 int ex_atomic_add(volatile int* pt, int t);
 int ex_atomic_inc(volatile int* pt);
 int ex_atomic_dec(volatile int* pt);
+
+// 线程相关操作
+ex_u64 ex_get_thread_id(void);
 
 #endif // __EX_THREAD_H__

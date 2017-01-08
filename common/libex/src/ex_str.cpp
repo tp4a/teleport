@@ -221,6 +221,38 @@ EX_BOOL ex_wcs_only_white_space(const char* src)
 		return EX_FALSE;
 }
 
+int ex_strformat(char* out_buf, size_t buf_size, const char* fmt, ...)
+{
+	int ret = 0;
+	va_list valist;
+	va_start(valist, fmt);
+	//_ts_printf_a(level, EX_COLOR_BLACK, fmt, valist);
+#ifdef EX_OS_WIN32
+	ret = vsnprintf(out_buf, buf_size, fmt, valist);
+#else
+	ret = vsprintf(out_buf, fmt, valist);
+#endif
+	va_end(valist);
+	return ret;
+}
+
+int ex_wcsformat(wchar_t* out_buf, size_t buf_size, const wchar_t* fmt, ...)
+{
+	int ret = 0;
+	va_list valist;
+	va_start(valist, fmt);
+	//_ts_printf_a(level, EX_COLOR_BLACK, fmt, valist);
+#ifdef EX_OS_WIN32
+	//ret = vsnprintf(out_buf, buf_size, fmt, valist);
+	ret = _vsnwprintf_s(out_buf, buf_size, buf_size, fmt, valist);
+#else
+	//ret = vsprintf(out_buf, fmt, valist);
+	ret = vswprintf(out_buf, buf_size, fmt, valist);
+#endif
+	va_end(valist);
+	return ret;
+}
+
 
 #ifdef __cplusplus
 bool ex_wstr2astr(const ex_wstr& in_str, ex_astr& out_str, int code_page/* = EX_CODEPAGE_DEFAULT*/)
