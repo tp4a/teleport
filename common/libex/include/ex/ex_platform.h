@@ -50,6 +50,7 @@
 #	define _CWCHAR_
 #	include <strsafe.h>
 #	include <WinSock2.h>
+#	include <direct.h>
 #else
 #	include <locale.h>
 #   include <string.h>
@@ -58,6 +59,10 @@
 #	include <stdarg.h>	// va_start()
 #	include <unistd.h>	// readlink()
 #	include <wchar.h>
+#	include <sys/stat.h>
+#	include <sys/types.h>
+#	include <sys/socket.h>
+#	include <netinet/in.h>
 #endif
 
 

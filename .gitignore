@@ -9,6 +9,9 @@
 *.aps
 **/ipch
 
+# for CMake
+CMakeFiles
+
 # for Python
 __pycache__
 *.pyc
@@ -26,10 +29,12 @@ __pycache__
 # for tmp folder or files.
 /out
 /external/_download_
+/external/linux
 /external/jsoncpp
 /external/mongoose
 /external/openssl
 /external/python
+
 
 # for dist folder
 /dist/*.zip

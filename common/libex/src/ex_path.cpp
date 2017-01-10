@@ -2,9 +2,11 @@
 #include <ex/ex_const.h>
 #include <ex/ex_util.h>
 
-#ifdef EX_OS_WIN32
-#	include <direct.h>
-#endif
+//#ifdef EX_OS_WIN32
+//#	include <direct.h>
+//#else
+//#   include <sys/stat.h>
+//#endif
 
 static void _wstr_replace(ex_wstr& inout_str, const wchar_t* sfrom, const wchar_t* sto)
 {
@@ -130,7 +132,9 @@ EX_BOOL ex_is_dir_exists(const wchar_t* in_path)
 		return false;
 #else
 	struct stat si;
-	if (0 != stat(in_path, &si))
+    ex_astr _in_path;
+    ex_wstr2astr(in_path, _in_path);
+	if (0 != stat(_in_path.c_str(), &si))
 		return false;
 	if (!S_ISDIR(si.st_mode))
 		return false;
@@ -147,7 +151,9 @@ EX_BOOL ex_is_file_exists(const wchar_t* in_file)
 		return false;
 #else
 	struct stat si;
-	if (0 != stat(in_file, &si))
+    ex_astr _in_file;
+    ex_wstr2astr(in_file, _in_file);
+	if (0 != stat(_in_file.c_str(), &si))
 		return false;
 	if (!S_ISREG(si.st_mode))
 		return false;

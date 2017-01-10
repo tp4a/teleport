@@ -5,6 +5,10 @@
 
 // #include <vld.h>
 
+#ifndef EX_OS_WIN32
+#   include <dlfcn.h>
+#endif
+
 EX_BOOL ex_initialize(const char* lc_ctype)
 {
 #ifdef EX_OS_UNIX

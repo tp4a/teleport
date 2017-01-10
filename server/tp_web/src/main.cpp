@@ -417,9 +417,10 @@ VOID WINAPI service_main(DWORD argc, wchar_t** argv)
 
 #else
 // not EX_OS_WIN32
-#include "ts_util.h"
+//#include "ts_util.h"
 #include <fcntl.h>
 #include <signal.h>
+#include <sys/stat.h>
 
 static void _sig_handler(int signum, siginfo_t* info, void* ptr);
 //static int _daemon(int nochdir, int noclose);

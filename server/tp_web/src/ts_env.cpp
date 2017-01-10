@@ -62,7 +62,7 @@ bool TsEnv::init(void)
 	if (!ps->GetStr(L"log_file", log_file))
 	{
 		ex_wstr log_path = base_path;
-		ex_path_join(log_path, false, _T("log"), NULL);
+		ex_path_join(log_path, false, L"log", NULL);
 		EXLOG_FILE(L"tpweb.log", log_path.c_str());
 	}
 	else

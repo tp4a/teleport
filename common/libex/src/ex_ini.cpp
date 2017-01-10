@@ -1,5 +1,6 @@
 #include <ex/ex_ini.h>
 #include <ex/ex_log.h>
+#include <ex/ex_util.h>
 
 ExIniSection::ExIniSection(const ex_wstr& strSectionName)
 {
@@ -10,7 +11,7 @@ ExIniSection::ExIniSection(const ex_wstr& strSectionName)
 ExIniSection::ExIniSection()
 {
 	m_kvs.clear();
-	m_strName = _T("N/A");
+	m_strName = L"N/A";
 }
 
 ExIniSection::~ExIniSection()
@@ -54,7 +55,9 @@ void ExIniSection::GetInt(const ex_wstr& strKey, int& iValue, int iDefault)
 #ifdef EX_OS_WIN32
 	iValue = _wtoi(it->second.c_str());
 #else
-	iValue = atoi(it->second.c_str());
+    ex_astr tmp;
+    ex_wstr2astr(it->second, tmp);
+	iValue = atoi(tmp.c_str());
 #endif
 }
 
@@ -67,7 +70,9 @@ bool ExIniSection::GetInt(const ex_wstr& strKey, int& iValue)
 #ifdef EX_OS_WIN32
 	iValue = _wtoi(it->second.c_str());
 #else
-	iValue = atoi(it->second.c_str());
+    ex_astr tmp;
+    ex_wstr2astr(it->second, tmp);
+	iValue = atoi(tmp.c_str());
 #endif
 
 	return true;
@@ -83,11 +88,11 @@ void ExIniSection::GetBool(const ex_wstr& strKey, bool& bValue, bool bDefault)
 	}
 
 	if (
-		it->second == _T("1")
+		it->second == L"1"
 #ifdef EX_OS_WIN32
-		|| 0 == _wcsicmp(it->second.c_str(), _T("true"))
+		|| 0 == _wcsicmp(it->second.c_str(), L"true")
 #else
-		|| 0 == strcasecmp(it->second.c_str(), _T("true"))
+		|| 0 == wcscasecmp(it->second.c_str(), L"true")
 #endif
 		)
 		bValue = true;
@@ -102,11 +107,11 @@ bool ExIniSection::GetBool(const ex_wstr& strKey, bool& bValue)
 		return false;
 
 	if (
-		it->second == _T("1")
+		it->second == L"1"
 #ifdef EX_OS_WIN32
 		|| 0 == _wcsicmp(it->second.c_str(), _T("true"))
 #else
-		|| 0 == strcasecmp(it->second.c_str(), _T("true"))
+		|| 0 == wcscasecmp(it->second.c_str(), L"true")
 #endif
 		)
 		bValue = true;
@@ -147,9 +152,9 @@ void ExIniSection::Save(FILE* file, int codepage)
 	{
 		ex_wstr temp;
 		temp += it->first.c_str();
-		temp += _T("=");
+		temp += L"=";
 		temp += it->second.c_str();
-		temp += _T("\n");
+		temp += L"\n";
 		ex_astr temp2;
 		ex_wstr2astr(temp, temp2, codepage);
 		fwrite(temp2.c_str(), temp2.size(), 1, file);
@@ -207,7 +212,9 @@ bool ExIniFile::LoadFromFile(const ex_wstr& strFileName, bool bClearOld)
 	m_file_path = strFileName;
 #else
 	FILE* f = NULL;
-	f = fopen(strFileName.c_str(), "rb");
+    ex_astr _fname;
+    ex_wstr2astr(strFileName, _fname);
+	f = fopen(_fname.c_str(), "rb");
 	if(f == NULL)
 		return false;
 	fseek(f, 0L, SEEK_END);
@@ -254,17 +261,17 @@ bool ExIniFile::LoadFromMemory(const ex_wstr& strData, bool bClearOld)
 		if (bClearOld)
 			ClearUp();
 
-		ex_wstr strKey(_T(""));
-		ex_wstr strValue(_T(""));
+		ex_wstr strKey(L"");
+		ex_wstr strValue(L"");
 
-		ex_wstr strLine(_T(""));
+		ex_wstr strLine(L"");
 		ex_wstr::size_type pos = ex_wstr::npos;
 		for (;;)
 		{
-			pos = strAll.find(_T("\r\n"));
+			pos = strAll.find(L"\r\n");
 			if (ex_wstr::npos == pos)
 			{
-				pos = strAll.find(_T('\n'));
+				pos = strAll.find(L'\n');
 				if (ex_wstr::npos == pos)
 				{
 					if (strAll.empty())
@@ -302,12 +309,13 @@ bool ExIniFile::LoadFromMemory(const ex_wstr& strData, bool bClearOld)
 
 void ExIniFile::Save(int codepage/* = EX_CODEPAGE_UTF8*/)
 {
-	ex_astr temp;
-	ex_wstr2astr(m_file_path, temp);
+	//ex_astr temp;
+	//ex_wstr2astr(m_file_path, temp);
 
-	FILE* file = NULL;
+	//FILE* file = NULL;
 	//fopen(temp.c_str(), "wt");
-	fopen_s(&file, temp.c_str(), "wt");
+	//fopen_s(&file, temp.c_str(), "wt");
+    FILE* file = ex_fopen(m_file_path, L"wt");
 
 	if (file == NULL)
 	{
@@ -321,11 +329,11 @@ void ExIniFile::Save(int codepage/* = EX_CODEPAGE_UTF8*/)
 	ex_ini_sections::iterator it = m_secs.begin();
 	for (; it != m_secs.end(); ++it)
 	{
-		EXLOGD(_T("{%s}\n"), it->first.c_str());
+		EXLOGD(L"{%s}\n", it->first.c_str());
 		ex_wstr temp;
-		temp += _T("[");
+		temp += L"[";
 		temp += it->first.c_str();
-		temp += _T("]\n");
+		temp += L"]\n";
 		ex_astr temp2;
 		ex_wstr2astr(temp, temp2, codepage);
 		fwrite(temp2.c_str(), temp2.size(), 1, file);

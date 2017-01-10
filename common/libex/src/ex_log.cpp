@@ -352,7 +352,7 @@ bool ExLogger::_open_file()
 	}
 
 	fseek(m_file, 0, SEEK_END);
-	m_filesize = ftell(m_file);
+	m_filesize = (ex_u32)ftell(m_file);
 #endif
 
 	return _rotate_file();
@@ -392,7 +392,8 @@ bool ExLogger::_rotate_file(void)
 	if (p == NULL)
 		return false;
 
-	swprintf(_tmpname, L"%s.%04d%02d%02d%02d%02d%02d.bak", m_filename.c_str(), p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
+	//swprintf(_tmpname, L"%ls.%04d%02d%02d%02d%02d%02d.bak", m_filename.c_str(), p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
+	ex_wcsformat(_tmpname, 64, L"%ls.%04d%02d%02d%02d%02d%02d.bak", m_filename.c_str(), p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
 	// 	sprintf(szBaseNewFileLogName, "%04d%02d%02d%02d%02d%02d",
 	// 		p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
 #endif
