@@ -302,7 +302,7 @@ VOID WINAPI service_main(DWORD argc, wchar_t** argv)
 
 #else
 // not EX_OS_WIN32
-#include "ts_util.h"
+//#include "ts_util.h"
 #include <fcntl.h>
 #include <signal.h>
 
@@ -317,10 +317,10 @@ int main(int argc, char** argv)
 	act.sa_flags = SA_SIGINFO;
 	sigaction(SIGINT, &act, NULL);
 
-	wchar_t** wargv = ts_make_argv(argc, argv);
+	wchar_t** wargv = ex_make_wargv(argc, argv);
 	int ret = _app_main(argc, wargv);
 
-	ts_free_argv(argc, wargv);
+	ex_free_wargv(argc, wargv);
 
 	return ret;
 }

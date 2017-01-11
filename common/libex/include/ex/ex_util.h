@@ -11,6 +11,7 @@
 // #include <direct.h>
 #else
 // #include <dirent.h>
+#   include <dlfcn.h>
 #	include <sys/time.h>
 #endif
 

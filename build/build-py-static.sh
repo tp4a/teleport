@@ -16,7 +16,7 @@ VER_PYTHON_LIB="${VER_PYTHON_SHORT}m"
 
 FILE_PYTHON_STATIC_LIB="libpython${VER_PYTHON_LIB}.a"
 
-PATH_ROOT=$(cd "$(dirname "$0")"/../..; pwd)
+PATH_ROOT=$(cd "$(dirname "$0")"/..; pwd)
 PATH_EXT=${PATH_ROOT}/external
 PATH_DOWNLOAD=${PATH_EXT}/_download_
 PATH_TMP=${PATH_EXT}/linux/tmp

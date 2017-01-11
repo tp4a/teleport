@@ -77,7 +77,9 @@
 #	endif
 #	define PATH_MAX 1024
 #elif defined(EX_OS_LINUX)
-#   define PATH_MAX 1024
+#   ifndef PATH_MAX
+#      define PATH_MAX 1024
+#   endif
 #elif defined(EX_OS_MACOS)
 #	define PATH_MAX 1024  /* Recommended value for OSX. */
 #endif

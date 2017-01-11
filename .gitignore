@@ -11,6 +11,9 @@
 
 # for CMake
 CMakeFiles
+cmake_install.cmake
+Makefile
+cmake-build
 
 # for Python
 __pycache__

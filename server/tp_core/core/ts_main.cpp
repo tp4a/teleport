@@ -3,50 +3,62 @@
 #include "ts_http_rpc.h"
 #include "ts_db.h"
 #include "ts_env.h"
-#include "ts_http_client.h"
-#include "ts_ver.h"
-#include "ts_crypto.h"
+//#include "ts_http_client.h"
+//#include "ts_ver.h"
+//#include "ts_crypto.h"
 
-#include "../common/protocol_interface.h"
+//#include "../common/protocol_interface.h"
 
+//#if defined(MBEDTLS_PLATFORM_C)
+//#include "mbedtls/platform.h"
+////#else
+////#include <stdio.h>
+////#include <stdlib.h>
+////#define mbedtls_time       time
+////#define mbedtls_time_t     time_t
+////#define mbedtls_fprintf    fprintf
+////#define mbedtls_printf     printf
+//#endif
+
+#include <mbedtls/platform.h>
 #include <mbedtls/debug.h>
-#include <list>
+//#include <list>
 
 bool g_exit_flag = false;
 
-static unsigned char ToHex(unsigned char x)
-{
-	return  x > 9 ? x + 55 : x + 48;
-}
-
-ex_astr UrlEncode(const ex_astr& str)
-{
-	ex_astr strTemp = "";
-	size_t length = str.length();
-	for (size_t i = 0; i < length; i++)
-	{
-		if (isalnum((unsigned char)str[i]) ||
-			(str[i] == '-') ||
-			(str[i] == '_') ||
-			(str[i] == '.') ||
-			(str[i] == '~'))
-		{
-			strTemp += str[i];
-		}
-		else if (str[i] == ' ')
-		{
-			strTemp += "+";
-		}
-		else
-		{
-			strTemp += '%';
-			strTemp += ToHex((unsigned char)str[i] >> 4);
-			strTemp += ToHex((unsigned char)str[i] % 16);
-		}
-	}
-
-	return strTemp;
-}
+//static unsigned char ToHex(unsigned char x)
+//{
+//	return  x > 9 ? x + 55 : x + 48;
+//}
+//
+//ex_astr UrlEncode(const ex_astr& str)
+//{
+//	ex_astr strTemp = "";
+//	size_t length = str.length();
+//	for (size_t i = 0; i < length; i++)
+//	{
+//		if (isalnum((unsigned char)str[i]) ||
+//			(str[i] == '-') ||
+//			(str[i] == '_') ||
+//			(str[i] == '.') ||
+//			(str[i] == '~'))
+//		{
+//			strTemp += str[i];
+//		}
+//		else if (str[i] == ' ')
+//		{
+//			strTemp += "+";
+//		}
+//		else
+//		{
+//			strTemp += '%';
+//			strTemp += ToHex((unsigned char)str[i] >> 4);
+//			strTemp += ToHex((unsigned char)str[i] % 16);
+//		}
+//	}
+//
+//	return strTemp;
+//}
 
 bool tpp_take_session(const ex_astr& sid, TS_SESSION_INFO& info)
 {
@@ -134,9 +146,15 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 		return false;
 	}
 
+#ifdef EX_OS_WIN32
 	lib->init = (TPP_INIT_FUNC)GetProcAddress(lib->dylib, "tpp_init");
 	lib->start = (TPP_START_FUNC)GetProcAddress(lib->dylib, "tpp_start");
 	lib->stop = (TPP_STOP_FUNC)GetProcAddress(lib->dylib, "tpp_stop");
+#else
+    lib->init = (TPP_INIT_FUNC)dlsym(lib->dylib, "tpp_init");
+    lib->start = (TPP_START_FUNC)dlsym(lib->dylib, "tpp_start");
+    lib->stop = (TPP_STOP_FUNC)dlsym(lib->dylib, "tpp_stop");
+#endif
 
 	if (lib->init == NULL || lib->start == NULL || lib->stop == NULL)
 	{

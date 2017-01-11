@@ -1,7 +1,6 @@
 #ifndef __EX_THREAD_H__
 #define __EX_THREAD_H__
 
-//#include "ts_common.h"
 #include <ex/ex_str.h>
 
 #include <list>
@@ -42,9 +41,6 @@ protected:
 #else
 	static void* _thread_func(void * pParam);
 #endif
-
-	// Ïß³Ì¹ÒÆðmsºÁÃë
-	// void _sleep_ms(int ms);
 
 protected:
 	ex_astr m_thread_name;

@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+OPENSSL_VER = '1.0.2h'
+LIBUV_VER = '1.9.1'
+MBEDTLS_VER = '2.3.0'
+SQLITE_VER = '3160200'
+
+
+# ============================================
+# for windows
+# ============================================
+
+# if not set nsis path, builder will try to get it by read register.
+nsis = 'C:\\Program Files (x86)\\NSIS\\Unicode\\makensis.exe'
+
+
+# ============================================
+# for linux
+# ============================================
+
+cmake = '/opt/cmake/bin/cmake'
+# pyexec = os.path.join(ROOT_PATH, 'external', 'linux', 'release', 'bin', 'python3.4')

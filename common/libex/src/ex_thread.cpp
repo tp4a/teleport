@@ -80,7 +80,6 @@ bool ExThreadBase::stop(void)
 		return false;
 	}
 #endif
-// 	EXLOGV("  # thread [%s] end.\n", m_thread_name.c_str());
 
 	return true;
 }
@@ -93,21 +92,6 @@ bool ExThreadBase::terminate(void)
 	return pthread_cancel(m_handle) == 0 ? true : false;
 #endif
 }
-
-// void ExThreadBase::_thread_loop(void)
-// {
-// 	EXLOGE("--------thread-loop-not-impl-------\n");
-// }
-
-// void ExThreadBase::_sleep_ms(int ms)
-// {
-// #ifdef EX_OS_WIN32
-// 	Sleep(ms);
-// #else
-// 	usleep(ms * 1000);
-// #endif
-// }
-
 
 //=========================================================
 //
@@ -133,7 +117,6 @@ void ExThreadManager::stop_all(void)
 	for (; it != m_threads.end(); ++it)
 	{
 		(*it)->stop();
-		//delete (*it);
 	}
 	m_threads.clear();
 }

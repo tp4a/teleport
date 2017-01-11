@@ -19,9 +19,9 @@ bool TsEnv::init(void)
 	ex_dirname(m_exec_path);
 
 
-	// ¶¨Î» log, etc Â·¾¶
-	// Ä¬ÈÏÇé¿öÏÂ£¬ÒÔÉÏÈý¸öÄ¿Â¼¾ùÎ»ÓÚ±¾¿ÉÖ´ÐÐ³ÌÐòµÄ ../ Ïà¶ÔÎ»ÖÃ£¬
-	// Èç¹û²»´æÔÚ£¬Ôò¿ÉÄÜÊÇ¿ª·¢µ÷ÊÔÄ£Ê½£¬Ôò³¢ÊÔ´ÓÔ´´úÂë²Ö¿â¸ùÄ¿Â¼ÏÂµÄshareÄ¿Â¼ÖÐ²éÕÒ¡£
+	// ï¿½ï¿½Î» log, etc Â·ï¿½ï¿½
+	// Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½Î»ï¿½Ú±ï¿½ï¿½ï¿½Ö´ï¿½Ð³ï¿½ï¿½ï¿½ï¿½ ../ ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Ô´ï¿½ï¿½ï¿½ï¿½Ö¿ï¿½ï¿½Ä¿Â¼ï¿½Âµï¿½shareÄ¿Â¼ï¿½Ð²ï¿½ï¿½Ò¡ï¿½
 	ex_wstr base_path = m_exec_path;
 	ex_path_join(base_path, true, L"..", NULL);
 
@@ -61,7 +61,7 @@ bool TsEnv::init(void)
 	if (!ps->GetStr(L"log-file", log_file))
 	{
 		ex_wstr log_path = base_path;
-		ex_path_join(log_path, false, _T("log"), NULL);
+		ex_path_join(log_path, false, L"log", NULL);
 		EXLOG_FILE(L"tpcore.log", log_path.c_str());
 	}
 	else

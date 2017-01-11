@@ -274,7 +274,7 @@ bool TsDB::get_host_count(int& count)
 	if (sql_exec == NULL)
 		return false;
 
-	char* szSQL = "select count(*) from ts_host_info;";
+	const char* szSQL = "select count(*) from ts_host_info;";
 
 	result = sqlite3_get_table(sql_exec, szSQL, &dbResult, &nRow, &nColumn, &errmsg);
 	if (result != 0)
@@ -308,7 +308,7 @@ bool TsDB::update_reset_log()
 	if (sql_exec == NULL)
 		return false;
 
-	char* szSQL = "UPDATE ts_log SET ret_code=7 WHERE ret_code=0;";
+	const char* szSQL = "UPDATE ts_log SET ret_code=7 WHERE ret_code=0;";
 	result = sqlite3_exec(sql_exec, szSQL, NULL, NULL, &errmsg);
 	if (result != 0)
 	{
@@ -428,7 +428,7 @@ bool TsDB::get_auth_id_list_by_all(AuthInfo2Vec& auth_info_list)
 		return false;
 	}
 
-	char* szSQL = "SELECT auth_id,a.host_id as host_id, \
+	const char* szSQL = "SELECT auth_id,a.host_id as host_id, \
 host_ip,host_pro_type as pro_type,host_lock,host_auth_mode as auth_mode \
 FROM ts_auth as a LEFT JOIN ts_host_info as b ON a.host_id = b.host_id";
 
@@ -578,7 +578,7 @@ bool TsDB::get_auth_info_list_by_all(AuthInfo3Vec& auth_info_list)
 	if (sql_exec == NULL)
 		return false;
 
-	char* szSQL =
+	const char* szSQL =
 		"SELECT host_id ,host_ip,host_user_name, \
 host_user_pwd, host_auth_mode as auth_mode,a.cert_id as cert_id, \
 cert_pri,cert_name,cert_pub  from ts_host_info as a LEFT JOIN ts_cert as b \
@@ -598,7 +598,7 @@ ON a.cert_id = b.cert_id;";
 		mapStringKey mapstringKey;
 		for (j = 0; j < nColumn; j++)
 		{
-			ex_astr temp = dbResult[j];
+			//ex_astr temp = dbResult[j];
 			if (dbResult[index] == NULL)
 				mapstringKey[dbResult[j]] = "";
 			else
@@ -608,7 +608,7 @@ ON a.cert_id = b.cert_id;";
 		}
 
 		TS_DB_AUTH_INFO_3 info;
-		mapStringKey::iterator  it = mapstringKey.find("host_id");
+		mapStringKey::iterator it = mapstringKey.find("host_id");
 		if (it != mapstringKey.end())
 			info.host_id = atoi(it->second.c_str());
 

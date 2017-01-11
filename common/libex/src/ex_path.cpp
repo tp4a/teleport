@@ -2,12 +2,6 @@
 #include <ex/ex_const.h>
 #include <ex/ex_util.h>
 
-//#ifdef EX_OS_WIN32
-//#	include <direct.h>
-//#else
-//#   include <sys/stat.h>
-//#endif
-
 static void _wstr_replace(ex_wstr& inout_str, const wchar_t* sfrom, const wchar_t* sto)
 {
 	ex_wstr::size_type pos = 0;
