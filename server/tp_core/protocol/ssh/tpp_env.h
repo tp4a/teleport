@@ -17,6 +17,6 @@ private:
 	bool _on_init(TPP_INIT_ARGS* args);
 };
 
-extern TppEnv g_env;
+extern TppEnv g_ssh_env;
 
 #endif // __TPP_ENV_H__

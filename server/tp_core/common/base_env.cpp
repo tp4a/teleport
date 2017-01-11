@@ -14,7 +14,7 @@ bool TppEnvBase::init(TPP_INIT_ARGS* args)
 		return false;
 	}
 
-	EXLOG_USE_EXTERNAL_LOGGER(args->logger);
+	EXLOG_USE_LOGGER(args->logger);
 
 	exec_path = args->exec_path;
 	etc_path = args->etc_path;

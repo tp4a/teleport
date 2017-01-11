@@ -6,41 +6,48 @@
 #include <algorithm>
 
 #ifdef EX_OS_WIN32
-#include <io.h>
-#include <stdio.h>
-#include <direct.h>
+#   include <io.h>
+#   include <stdio.h>
+#   include <direct.h>
 #else
-#include <dirent.h>
-#include <sys/time.h>
+#   include <dirent.h>
+#   include <sys/time.h>
 #endif
 
 #define EX_LOG_CONTENT_MAX_LEN 2048
 
 //typedef std::deque<unsigned long long> log_file_deque;
 
-ExLogger g_ex_logger;
-static ExLogger* g_exlog = &g_ex_logger;
+//ExLogger g_ex_logger;
+static ExLogger* g_exlog = NULL;//&g_ex_logger;
 
-void EXLOG_USE_EXTERNAL_LOGGER(ExLogger* logger)
+void EXLOG_USE_LOGGER(ExLogger* logger)
 {
-	if (NULL == logger)
-		g_exlog = &g_ex_logger;
-	else
-		g_exlog = logger;
+//	if (NULL == logger)
+//		g_exlog = &g_ex_logger;
+//	else
+//		g_exlog = logger;
+
+    g_exlog = logger;
 }
 
 void EXLOG_LEVEL(int min_level)
 {
-	g_exlog->min_level = min_level;
+    if(NULL != g_exlog)
+    	g_exlog->min_level = min_level;
 }
 
 void EXLOG_CONSOLE(bool output_to_console)
 {
-	g_exlog->to_console = output_to_console;
+    if(NULL != g_exlog)
+    	g_exlog->to_console = output_to_console;
 }
 
 void EXLOG_FILE(const wchar_t* log_file, const wchar_t* log_path /*= NULL*/, ex_u32 max_filesize /*= EX_LOG_FILE_MAX_SIZE*/, ex_u8 max_filecount /*= EX_LOG_FILE_MAX_COUNT*/)
 {
+    if(NULL == g_exlog)
+        return;
+
 	ex_wstr _path;
 	if (NULL == log_path)
 	{
@@ -69,6 +76,7 @@ ExLogger::ExLogger()
 	m_file = NULL;
 	m_filesize = 0;
 }
+
 ExLogger::~ExLogger()
 {
 	if (NULL != m_file)
@@ -162,6 +170,8 @@ void ExLogger::log_w(int level, const wchar_t* fmt, va_list valist)
 #define EX_PRINTF_X(fn, level) \
 void fn(const char* fmt, ...) \
 { \
+    if(NULL == g_exlog) \
+        return; \
 	if (g_exlog->min_level > level) \
 		return; \
 	ExThreadSmartLock locker(g_exlog->lock); \
@@ -172,6 +182,8 @@ void fn(const char* fmt, ...) \
 } \
 void fn(const wchar_t* fmt, ...) \
 { \
+    if(NULL == g_exlog) \
+        return; \
 	if (g_exlog->min_level > level) \
 		return; \
 	ExThreadSmartLock locker(g_exlog->lock); \
@@ -236,6 +248,8 @@ void ex_printf_e_lasterror(const wchar_t* fmt, ...)
 
 void ex_printf_bin(const ex_u8* bin_data, size_t bin_size, const char* fmt, ...)
 {
+    if(NULL == g_exlog)
+        return;
 	if (!g_exlog->debug_mode)
 		return;
 
@@ -549,6 +563,7 @@ bool ExLogger::write(const char* buf)
 	m_filesize += lenTime;
 	fwrite(buf, len, 1, m_file);
 	m_filesize += len;
+    fflush(m_file);
 #endif
 
 

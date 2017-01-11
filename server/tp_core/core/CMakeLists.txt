@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(tpcore)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${Project_SOURCE_DIR}/../out/server/x64/bin")
 
 
@@ -15,6 +16,8 @@ ADD_DEFINITIONS(
         -DDISABLE_MD5
 )
 
+set(CMAKE_EXE_LINKER_FLAGS "-export-dynamic")
+
 aux_source_directory(. DIR_SRCS)
 aux_source_directory(../../../common/libex/src DIR_SRCS)
 aux_source_directory(../../../external/mongoose DIR_SRCS)
@@ -27,8 +30,6 @@ include_directories(
         ../../../external/mongoose
         ../../../external/jsoncpp/include
         ../../../external/linux/release/include
-#        ../../pyshell/pys/include
-#        ../../py-static/release/include/python3.4m
 )
 
 link_directories(../../../external/linux/release/lib)

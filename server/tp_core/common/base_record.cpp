@@ -146,17 +146,17 @@ void base_record::record(unsigned char* buf, int len, int cmd)
 	bool bRet = cached_buffer(&replay_header, buf, len);
 	if (!bRet)
 	{
-		//»º´æÒÑÂú£¬°Ñ»º´æ´æÎÄ¼þ£¬²¢ÇÒÇå¿Õ»º´æ
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ»ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½
 		save_buffer_to_file(int(internal_time));
 
-		//´ò¿ªÏÂ¸öÎÄ¼þ
+		//ï¿½ï¿½ï¿½Â¸ï¿½ï¿½Ä¼ï¿½
 		open_next_file();
 
 		bRet = cached_buffer(&replay_header, buf, len);
 
 		if (!bRet)
 		{
-			//Èç¹û»¹ÊÇÌ«´ó£¬²»ÄÜ»º´æ£¬Ö±½Ó´æÎÄ¼þ
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì«ï¿½ó£¬²ï¿½ï¿½Ü»ï¿½ï¿½æ£¬Ö±ï¿½Ó´ï¿½ï¿½Ä¼ï¿½
 			save_to_file(ex_u32(internal_time), &replay_header, buf, len);
 			open_next_file();
 		}
@@ -171,7 +171,7 @@ bool base_record::cached_buffer(ts_replay_data_header* header, unsigned char* bu
 		return false;
 	}
 
-	//³¤¶È¹»³¤Ö±½Ó´æ»º´æ
+	//ï¿½ï¿½ï¿½È¹ï¿½ï¿½ï¿½Ö±ï¿½Ó´æ»ºï¿½ï¿½
 	memcpy(m_buf + m_buf_offset, header, header_len);
 	m_buf_offset += header_len;
 
@@ -208,7 +208,7 @@ bool base_record::save_buffer_to_file(int internal_time)
 	if(NULL == m_current_file)
 		return false;
 
-	int ret = fwrite(m_buf, m_buf_offset, 1, m_current_file); /* Ð´µÄstructÎÄ¼þ*/
+	int ret = fwrite(m_buf, m_buf_offset, 1, m_current_file); /* Ð´ï¿½ï¿½structï¿½Ä¼ï¿½*/
 	m_totol_size += m_buf_offset;
 
 	m_buf_offset = 0;

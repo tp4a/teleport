@@ -26,8 +26,8 @@ SshProxy::~SshProxy()
 
 bool SshProxy::init(void)
 {
-	m_host_ip = g_env.bind_ip;
-	m_host_port = g_env.bind_port;
+	m_host_ip = g_ssh_env.bind_ip;
+	m_host_port = g_ssh_env.bind_port;
 
 
 	m_bind = ssh_bind_new();
@@ -48,15 +48,11 @@ bool SshProxy::init(void)
 		return false;
 	}
 
-#ifdef EX_OS_WIN32
-	ex_wstr _key_file = g_env.etc_path;
-	ex_path_join(_key_file, false, _T("tp_ssh_server.key"), NULL);
+	ex_wstr _key_file = g_ssh_env.etc_path;
+	ex_path_join(_key_file, false, L"tp_ssh_server.key", NULL);
 	ex_astr key_file;
 	ex_wstr2astr(_key_file, key_file);
-#else
-	ex_str key_file = g_env.m_etc_path;
-	g_env.path_join(key_file, 0, _T("ts_ssh_server.key"), NULL);
-#endif
+
 	EXLOGV("[ssh] try to load ssh-server-key: %s\n", key_file.c_str());
 	if (SSH_OK != ssh_bind_options_set(m_bind, SSH_BIND_OPTIONS_RSAKEY, key_file.c_str()))
 	{

@@ -126,9 +126,9 @@ function step_prepare_source()
 	# 	tar -zxvf "${PATH_DOWNLOAD}/psutil-${VER_PSUTIL}.tar.gz" -C "${PATH_TMP}"
 	# fi
 
-	# cp -r "${PATH_TMP}/psutil-${VER_PSUTIL}/psutil" "${PATH_TMP}/Python-${VER_PYTHON}/Modules/." 
-	cp -r "${PATH_TMP}/sqlite-autoconf-${VER_SQLITE}" "${PATH_TMP}/Python-${VER_PYTHON}/Modules/_sqlite/sqlite3" 
-	cp -r "${PATH_FIX}/Python-${VER_PYTHON}" "${PATH_TMP}" 
+	# cp -r "${PATH_TMP}/psutil-${VER_PSUTIL}/psutil" "${PATH_TMP}/Python-${VER_PYTHON}/Modules/."
+	cp -r "${PATH_TMP}/sqlite-autoconf-${VER_SQLITE}" "${PATH_TMP}/Python-${VER_PYTHON}/Modules/_sqlite/sqlite3"
+	cp -r "${PATH_FIX}/Python-${VER_PYTHON}" "${PATH_TMP}"
 }
 
 function step_build_openssl()
@@ -138,7 +138,7 @@ function step_build_openssl()
 	if [ ! -f "${PATH_RELEASE}/lib/libssl.a" ] || [ ! -f "${PATH_RELEASE}/lib/libcrypto.a" ]; then
 		echo ""
 		cd "${OSSL_PATH_SRC}"
-		./config --prefix=${PATH_RELEASE} --openssldir=${PATH_RELEASE}/openssl no-zlib no-shared
+		./config -fPIC --prefix=${PATH_RELEASE} --openssldir=${PATH_RELEASE}/openssl no-zlib no-shared
 		make
 		make install
 		cd "${PATH_ROOT}"
@@ -184,7 +184,7 @@ function step_finalize()
 	fi
 
 
-	# cp -r "${PATH_FIX}/psutil-${VER_PSUTIL}/psutil" "${PATH_RELEASE}/lib/python${VER_PYTHON_SHORT}/site-packages/psutil" 
+	# cp -r "${PATH_FIX}/psutil-${VER_PSUTIL}/psutil" "${PATH_RELEASE}/lib/python${VER_PYTHON_SHORT}/site-packages/psutil"
 }
 
 

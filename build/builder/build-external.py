@@ -134,7 +134,8 @@ class BuilderLinux(BuilderBase):
 
         old_p = os.getcwd()
         os.chdir(self.OPENSSL_PATH_SRC)
-        os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        os.system('./config --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
         os.system('make')
         os.system('make install')
         os.chdir(old_p)
@@ -362,8 +363,8 @@ def main():
     if builder is None:
         builder = gen_builder(ctx.host_os)
 
-    builder.build_openssl()
-    builder.build_libuv()
+    # builder.build_openssl()
+    ####builder.build_libuv()
     builder.build_mbedtls()
     builder.build_libssh()
     builder.build_sqlite()

@@ -55,10 +55,6 @@ def main():
                 ctx.set_target(TARGET_DEBUG)
             elif 'release' == argv[i]:
                 ctx.set_target(TARGET_RELEASE)
-            # elif 'x86' == argv[i]:
-            #     ctx.set_bits(BITS_32)
-            # elif 'x64' == argv[i]:
-            #     ctx.set_bits(BITS_64)
             elif argv[i] in ctx.dist_all:
                 ctx.set_dist(argv[i])
             else:
@@ -122,11 +118,8 @@ def clean_all():
 
 def do_opt(opt):
     cc.v(opt)
-    # PY_EXEC = cfg[opt['bits']]['PY_EXEC']
 
     arg = ''
-    # if 'pysbase' == opt['name']:
-    #     script = 'build-pysbase.py'
 
     if 'ver' == opt['name']:
         script = 'build-version.py'
@@ -137,9 +130,6 @@ def do_opt(opt):
     elif 'external' == opt['name']:
         script = 'build-external.py'
 
-    # elif 'agent-runtime' == opt['name']:
-    #     script = 'build-agent.py'
-    #     arg = '%s %s runtime' % (ctx.target_path, opt['bits'])
     elif 'server' == opt['name']:
         script = 'build-server.py'
         arg = '%s %s server' % (ctx.target_path, opt['bits'])
@@ -163,17 +153,10 @@ def do_opt(opt):
         script = 'build-assist.py'
         arg = '%s %s installer' % (ctx.dist, opt['bits'])
 
-    # elif 'server' == opt['name']:
-    #     script = 'build-server.py'
-    #     # arg = 'installer'
-    #     # arg = '%s %s' % (ctx.dist, ctx.bits_path)
-    #     arg = '%s' % (opt['bits'])
-
     else:
         cc.e('unknown option: ', opt['name'])
         return
 
-    # cmd = '%s "%s" %s' % (PY_EXEC, arg, ex_arg)
     cmd = '"%s" -B "%s/%s" %s' % (utils.cfg.py_exec, BUILDER_PATH, script, arg)
     cc.i(cmd)
     cc.v('')
@@ -220,11 +203,8 @@ def add_split():
 def make_options():
     global options, options_idx, cfg
 
-    # options = [{'name': 'config', 'disp': 'Configure'}]
-
     options = list()
     options_idx = 0
-    # add_option(None, 'config', 'Configure')
 
     if ctx.host_os == 'windows':
         add_option('x86', 'ver', 'Update version setting')
@@ -242,9 +222,9 @@ def make_options():
         add_option('x64', 'pysrt', 'Make Python-Runtime for python%s-x64' % (utils.cfg.py_ver_str))
         add_option('x64', 'external', 'Build external for Teleport-Server')
         add_split()
-        add_option('x64', 'server', 'Teleport Server [%s]' % ctx.target_path)
+        add_option('x64', 'server', 'Build server app [%s]' % ctx.target_path)
         add_split()
-        add_option('x64', 'installer', 'Teleport Installer for %s' % ctx.host_os)
+        add_option('x64', 'installer', 'Make server installer for %s' % ctx.host_os)
 
 
 def get_input(msg, log_func=cc.w):

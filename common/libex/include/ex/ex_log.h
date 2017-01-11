@@ -41,8 +41,8 @@ public:
 
 protected:
 	ex_u32 m_filesize;
-	ex_u32  m_max_filesize;
-	ex_u8  m_max_count;
+	ex_u32 m_max_filesize;
+	ex_u8 m_max_count;
 	ex_wstr m_path;
 	ex_wstr m_filename;
 	ex_wstr m_fullname;
@@ -54,11 +54,11 @@ protected:
 #endif
 };
 
-extern ExLogger g_ex_logger;
+//extern ExLogger g_ex_logger;
 
 // extern void* ex_logger;
 
-void EXLOG_USE_EXTERNAL_LOGGER(ExLogger* logger);
+void EXLOG_USE_LOGGER(ExLogger* logger);
 
 void EXLOG_LEVEL(int min_level);
 

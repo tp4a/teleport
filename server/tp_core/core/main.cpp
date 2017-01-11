@@ -12,6 +12,7 @@
 //   --version  打印版本号然后退出
 //   start       以服务方式运行
 //
+ExLogger g_ex_logger;
 
 bool g_is_debug = false;
 
@@ -115,6 +116,8 @@ static int _main_loop(void)
 
 int _app_main(int argc, wchar_t** argv)
 {
+	EXLOG_USE_LOGGER(&g_ex_logger);
+
 	if (!_process_cmd_line(argc, argv))
 		return 1;
 
@@ -302,12 +305,10 @@ VOID WINAPI service_main(DWORD argc, wchar_t** argv)
 
 #else
 // not EX_OS_WIN32
-//#include "ts_util.h"
 #include <fcntl.h>
 #include <signal.h>
 
 static void _sig_handler(int signum, siginfo_t* info, void* ptr);
-//static int _daemon(int nochdir, int noclose);
 
 int main(int argc, char** argv)
 {
@@ -329,7 +330,7 @@ void _sig_handler(int signum, siginfo_t* info, void* ptr)
 {
 	if (signum == SIGINT || signum == SIGTERM)
 	{
-		printf("[ts] received signal SIGINT, exit now.\n");
+		EXLOGW("[core] received signal SIGINT, exit now.\n");
 		exit(1);
 	}
 }
@@ -339,7 +340,7 @@ static bool _run_daemon(void)
 	pid_t pid = fork();
 	if (pid < 0)
 	{
-		printf("[ERROR] can not fork daemon.\n");
+		EXLOGE("[core] can not fork daemon.\n");
 		exit(EXIT_FAILURE);
 	}
 	else if (pid > 0)
@@ -350,7 +351,7 @@ static bool _run_daemon(void)
 	// now I'm first children.
 	if (setsid() == -1)
 	{
-		printf("setsid() failed.\n");
+		EXLOGE("[core] setsid() failed.\n");
 		assert(0);
 		exit(EXIT_FAILURE);
 	}
@@ -360,7 +361,7 @@ static bool _run_daemon(void)
 	pid = fork();
 	if (pid < 0)
 	{
-		printf("[ERROR] can not fork daemon.\n");
+		EXLOGE("[core] can not fork daemon.\n");
 		exit(EXIT_FAILURE);
 	}
 	else if (pid > 0)

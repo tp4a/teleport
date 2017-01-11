@@ -3,7 +3,7 @@
 
 TPP_API ex_rv tpp_init(TPP_INIT_ARGS* init_args)
 {
-	if (!g_env.init(init_args))
+	if (!g_ssh_env.init(init_args))
 		return TSR_FAILED;
 
 	return 0;

@@ -21,7 +21,7 @@
 //   script-file.py   被执行的脚本文件
 //   ...              剩余的所有参数均传递给Python脚本
 
-
+ExLogger g_ex_logger;
 bool g_is_debug = false;
 static ex_wstrs g_py_args;
 
@@ -232,6 +232,8 @@ static int _main_loop(void)
 
 int _app_main(int argc, wchar_t** argv)
 {
+	EXLOG_USE_LOGGER(&g_ex_logger);
+
 	if (!_process_cmd_line(argc, argv))
 		return 1;
 
@@ -445,7 +447,7 @@ void _sig_handler(int signum, siginfo_t* info, void* ptr)
 {
 	if (signum == SIGINT || signum == SIGTERM)
 	{
-		printf("[ts] received signal SIGINT, exit now.\n");
+		EXLOGW("[tpweb] received signal SIGINT, exit now.\n");
 		exit(1);
 	}
 }
@@ -455,7 +457,7 @@ static bool _run_daemon(void)
 	pid_t pid = fork();
 	if (pid < 0)
 	{
-		printf("[ERROR] can not fork daemon.\n");
+		EXLOGE("[tpweb] can not fork daemon.\n");
 		exit(EXIT_FAILURE);
 	}
 	else if (pid > 0)
@@ -466,7 +468,7 @@ static bool _run_daemon(void)
 	// now I'm first children.
 	if (setsid() == -1)
 	{
-		printf("setsid() failed.\n");
+		EXLOGE("[tpweb] setsid() failed.\n");
 		assert(0);
 		exit(EXIT_FAILURE);
 	}
@@ -476,7 +478,7 @@ static bool _run_daemon(void)
 	pid = fork();
 	if (pid < 0)
 	{
-		printf("[ERROR] can not fork daemon.\n");
+		EXLOGE("[tpweb] can not fork daemon.\n");
 		exit(EXIT_FAILURE);
 	}
 	else if (pid > 0)

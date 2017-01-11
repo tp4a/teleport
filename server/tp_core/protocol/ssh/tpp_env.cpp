@@ -1,6 +1,6 @@
 #include "tpp_env.h"
 
-TppEnv g_env;
+TppEnv g_ssh_env;
 
 TppEnv::TppEnv()
 {}

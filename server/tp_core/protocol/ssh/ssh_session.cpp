@@ -73,13 +73,13 @@ void SshSession::_set_stop_flag(void) {
 
 bool SshSession::_on_session_begin(TS_SESSION_INFO& info)
 {
-	if (!g_env.session_begin(info, m_db_id))
+	if (!g_ssh_env.session_begin(info, m_db_id))
 	{
 		EXLOGD("[ssh] session_begin error. %d\n", m_db_id);
 		return false;
 	}
 
-	m_rec.begin(g_env.replay_path.c_str(), L"tp-ssh", m_db_id, info);
+	m_rec.begin(g_ssh_env.replay_path.c_str(), L"tp-ssh", m_db_id, info);
 
 	return true;
 }
@@ -94,7 +94,7 @@ bool SshSession::_on_session_end(void)
 		if (m_retcode == SESS_STAT_RUNNING)
 			m_retcode = SESS_STAT_END;
 
-		g_env.session_end(m_db_id, m_retcode);
+		g_ssh_env.session_end(m_db_id, m_retcode);
 	}
 
 	return true;
@@ -232,7 +232,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	bool bRet = true;
 	TS_SESSION_INFO sess_info;
 	//bRet = _this->m_proxy->get_session_mgr()->take_session(_this->m_sid, sess_info);
-	bRet = g_env.take_session(_this->m_sid, sess_info);
+	bRet = g_ssh_env.take_session(_this->m_sid, sess_info);
 
 	if (!bRet) {
 		EXLOGW("[ssh] try to get login-info from ssh-sftp-session.\n");

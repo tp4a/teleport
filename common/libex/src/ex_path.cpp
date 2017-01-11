@@ -256,8 +256,14 @@ bool ex_abspath(ex_wstr& inout_path)
 		}
 		else
 		{
+#ifndef EX_OS_WIN32
+//            if(_tmp == _str)
+//                paths.push_back(L"/");
+#endif
+
 			_tmp[0] = EX_NULL_END;
-			paths.push_back(_str);
+//            if(wcslen(_str) > 0)
+    			paths.push_back(_str);
 			_str = _tmp + 1;
 		}
 	}
@@ -297,10 +303,11 @@ bool ex_abspath(ex_wstr& inout_path)
 		{
 #ifdef EX_OS_WIN32
 			if ((*it)[1] != L':')
-#else
-			if ((*it)[0] != L'/')
-#endif
 				return false;
+#else
+//			if ((*it)[0] != L'/')
+#endif
+//				return false;
 		}
 
 		if (!is_first)

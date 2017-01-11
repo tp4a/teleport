@@ -9,4 +9,4 @@ cmake_minimum_required(VERSION 3.5)
 
 add_subdirectory(tp_web/src)
 add_subdirectory(tp_core/core)
-#add_subdirectory(tp_core/protocol/ssh)
+add_subdirectory(tp_core/protocol/ssh)

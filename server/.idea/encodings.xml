@@ -10,8 +10,13 @@
     <file url="file://$PROJECT_DIR$/../common/libex/src/ex_util.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/core/main.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/core/ts_db.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/tp_core/core/ts_env.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/core/ts_http_rpc.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/core/ts_main.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/tp_core/protocol/ssh/ssh_proxy.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/tp_core/protocol/ssh/ssh_recorder.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/tp_core/protocol/ssh/ssh_session.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/tp_core/protocol/ssh/ssh_session.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_web/src/main.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_web/src/ts_env.cpp" charset="GBK" />
   </component>
