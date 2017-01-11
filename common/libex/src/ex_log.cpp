@@ -325,6 +325,8 @@ bool ExLogger::set_log_file(const ex_wstr& log_path, const ex_wstr& log_name, ex
 	m_path = log_path;
 	ex_abspath(m_path);
 
+	ex_mkdirs(m_path);
+
 	m_fullname = m_path;
 	ex_path_join(m_fullname, false, log_name.c_str(), NULL);
 
@@ -549,6 +551,7 @@ bool ExLogger::write(const char* buf)
 	m_filesize += lenTime;
 	WriteFile(m_file, buf, len, &dwWritten, NULL);
 	m_filesize += len;
+	FlushFileBuffers(m_file);
 #else
 	time_t timep;
 	struct tm *p;

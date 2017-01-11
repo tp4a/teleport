@@ -9,6 +9,8 @@
 #define WMU_INSTANCE_EXIT		(WM_USER + 2)
 #define WMU_SHOW_EXIST_DLGUI	(WM_USER + 3)
 
+static ExLogger g_ex_logger;
+
 static ATOM MyRegisterClass();
 static BOOL InitInstance();
 static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -38,6 +40,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nShowCmd)
 {
+	EXLOG_USE_LOGGER(&g_ex_logger);
 
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -64,7 +67,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 	EXLOG_LEVEL(EX_LOG_LEVEL_INFO);
 #endif
 
-	EXLOG_FILE(L"tp_assist.log", g_env.m_log_path.c_str(), 1024, 2);
+	EXLOG_FILE(L"tp_assist.log", g_env.m_log_path.c_str(), EX_LOG_FILE_MAX_SIZE, EX_LOG_FILE_MAX_COUNT);
 
 	g_cfgSSH.init();
 	g_cfgScp.init();
