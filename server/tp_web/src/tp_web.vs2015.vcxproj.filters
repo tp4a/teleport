@@ -69,7 +69,6 @@
     <ClInclude Include="ts_env.h">
       <Filter>main app</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h" />
     <ClInclude Include="..\..\..\common\libex\include\ex\ex_const.h">
       <Filter>libex\header</Filter>
     </ClInclude>
@@ -114,6 +113,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\common\pyshell\include\pys.h">
       <Filter>pyshell\header</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

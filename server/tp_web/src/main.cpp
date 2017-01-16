@@ -40,6 +40,10 @@ static ex_u8 g_run_type = RUN_UNKNOWN;
 
 static bool _run_daemon(void);
 
+// 导出函数给Python脚本使用（主要是为了记录日志）
+//   Windows平台上，tp_web程序打开日志文件写之后，Python脚本尝试写入方式打开此日志文件时会失败。
+PyObject* init_web_builtin_module(void);
+
 #ifdef EX_OS_WIN32
 static int service_install()
 {
@@ -226,6 +230,13 @@ static int _main_loop(void)
 	{
 		pys_add_arg(pysh, it->c_str());
 	}
+
+	if (!pys_add_builtin_module(pysh, "tpweb", init_web_builtin_module))
+	{
+		EXLOGE("[tpweb] can not add builtin module for python script.\n");
+		return 1;
+	}
+
 
 	return pys_run(pysh);
 }
@@ -417,9 +428,9 @@ VOID WINAPI service_main(DWORD argc, wchar_t** argv)
 	}
 }
 
-#else
-// not EX_OS_WIN32
-//#include "ts_util.h"
+//======================================================
+#else // Linux or MacOS
+
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/stat.h>
@@ -500,3 +511,130 @@ static bool _run_daemon(void)
 }
 
 #endif
+
+
+
+
+
+//===============================================================
+// 演示如何加入内建模块供脚本调用
+//===============================================================
+PyObject* _py_log_output(PyObject* self, PyObject* args)
+{
+// 	UNUSED(self);
+// 	UNUSED(args);
+
+	int level = 0;
+	const char* msg = NULL;
+	if (!pylib_PyArg_ParseTuple(args, "is", &level, &msg))
+	{
+		EXLOGE("invalid args for _py_log_output().\n");
+		PYLIB_RETURN_FALSE;
+	}
+
+	ex_wstr tmp;
+	ex_astr2wstr(msg, tmp, EX_CODEPAGE_UTF8);
+
+	//EXLOGV(msg);
+	switch (level)
+	{
+	case EX_LOG_LEVEL_DEBUG:
+		ex_printf_d(tmp.c_str());
+		break;
+	case EX_LOG_LEVEL_VERBOSE:
+		ex_printf_v(tmp.c_str());
+		break;
+	case EX_LOG_LEVEL_INFO:
+		ex_printf_i(tmp.c_str());
+		break;
+	case EX_LOG_LEVEL_WARN:
+		ex_printf_w(tmp.c_str());
+		break;
+	case EX_LOG_LEVEL_ERROR:
+		ex_printf_e(tmp.c_str());
+		break;
+	default:
+		PYLIB_RETURN_FALSE;
+		break;
+	}
+
+	//return pylib_PyLong_FromLong(0x010001);
+	PYLIB_RETURN_TRUE;
+}
+
+PyObject* _py_log_level(PyObject* self, PyObject* args)
+{
+	int level = 0;
+	if (!pylib_PyArg_ParseTuple(args, "i", &level))
+	{
+		EXLOGE("invalid args for _py_log_level().\n");
+		PYLIB_RETURN_FALSE;
+	}
+
+	EXLOG_LEVEL(level);
+
+	PYLIB_RETURN_TRUE;
+}
+
+PyObject* _py_log_console(PyObject* self, PyObject* args)
+{
+	bool to_console = false;
+	if (!pylib_PyArg_ParseTuple(args, "p", &to_console))
+	{
+		EXLOGE("invalid args for _py_log_console().\n");
+		PYLIB_RETURN_FALSE;
+	}
+
+	EXLOG_CONSOLE(to_console);
+
+	PYLIB_RETURN_TRUE;
+}
+
+PYS_BUILTIN_FUNC _demo_funcs[] = {
+	{
+		"log_output",			// 脚本函数名，在脚本中使用
+		_py_log_output,		// 对应的C代码函数名
+		PYS_TRUE,		// 函数的基本信息（是否需要参数，等等）
+		"write log."	// 函数的说明文档，可选（可以是空字符串）
+	},
+
+	{
+		"log_level",
+		_py_log_level,
+		PYS_TRUE,
+		"set log level."
+	},
+
+	{
+		"log_console",
+		_py_log_console,
+		PYS_TRUE,
+		"set log to console or not."
+	},
+
+	// 最后一组，第一个成员为空指针，表示结束
+	{ NULL, NULL, 0, NULL }
+};
+
+PyObject* init_web_builtin_module(void)
+{
+	PyObject* mod = NULL;
+
+	mod = pys_create_module("_tpweb", _demo_funcs);
+
+	pys_builtin_const_long(mod, "EX_LOG_LEVEL_DEBUG", EX_LOG_LEVEL_DEBUG);
+	pys_builtin_const_long(mod, "EX_LOG_LEVEL_VERBOSE", EX_LOG_LEVEL_VERBOSE);
+	pys_builtin_const_long(mod, "EX_LOG_LEVEL_INFO", EX_LOG_LEVEL_INFO);
+	pys_builtin_const_long(mod, "EX_LOG_LEVEL_WARN", EX_LOG_LEVEL_WARN);
+	pys_builtin_const_long(mod, "EX_LOG_LEVEL_ERROR", EX_LOG_LEVEL_ERROR);
+
+// 	pys_builtin_const_bool(mod, "DEMO_CONST_2", PYS_TRUE);
+// 	//pys_builtin_const_wcs(mod, "DEMO_CONST_3", L"STRING 中文测试 this is string.");
+// 	pys_builtin_const_wcs(mod, "DEMO_CONST_3", L"STRING this is string.");
+// 	pys_builtin_const_utf8(mod, "DEMO_CONST_4", "this is string.");
+//
+// 	ex_u8 test_buf[12] = { 0x01, 0x02, 0x03, 0x04, 0x0a, 0x0b, 0x0c, 0x0d, 0x12, 0x34, 0xab, 0xcd };
+// 	pys_builtin_const_bin(mod, "DEMO_CONST_5", test_buf, 12);
+
+	return mod;
+}

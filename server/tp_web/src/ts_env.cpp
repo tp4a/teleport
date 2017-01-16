@@ -24,7 +24,7 @@ bool TsEnv::init(void)
 	ex_path_join(base_path, true, L"..", NULL);
 
 	ex_wstr conf_file = base_path;
-	ex_path_join(conf_file, false, L"etc", L"web.conf", NULL);
+	ex_path_join(conf_file, false, L"etc", L"web.ini", NULL);
 
 	if (ex_is_file_exists(conf_file.c_str()))
 	{
@@ -38,7 +38,7 @@ bool TsEnv::init(void)
 		ex_path_join(base_path, true, L"..", L"..", L"..", L"..", L"server", L"share", NULL);
 
 		conf_file = base_path;
-		ex_path_join(conf_file, false, L"etc", L"web.conf", NULL);
+		ex_path_join(conf_file, false, L"etc", L"web.ini", NULL);
 
 		m_www_path = m_exec_path;
 		ex_path_join(m_www_path, true, L"..", L"..", L"..", L"..", L"server", L"www", NULL);
@@ -53,7 +53,7 @@ bool TsEnv::init(void)
 	ExIniFile cfg;
 	if (!cfg.LoadFromFile(conf_file))
 	{
-		EXLOGE("[tpweb] can not load web.conf.\n");
+		EXLOGE("[tpweb] can not load web.ini.\n");
 		return false;
 	}
 

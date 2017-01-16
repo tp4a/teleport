@@ -7,7 +7,6 @@ import tornado.ioloop
 import tornado.netutil
 import tornado.process
 import tornado.web
-# from eom_app.controller import controllers
 
 # from eom_common.eomcore.eom_mysql import get_mysql_pool
 from eom_common.eomcore.eom_sqlite import get_sqlite_pool
@@ -15,6 +14,7 @@ import eom_common.eomcore.utils as utils
 from eom_common.eomcore.logger import log
 from .configs import app_cfg
 from .session import swx_session
+
 cfg = app_cfg()
 
 
@@ -28,10 +28,16 @@ class SwxCore:
 
         cfg.dev_mode = options['dev_mode']
 
-        if 'log_path' not in options:
+        if not self._load_config(options):
             return False
-        else:
-            cfg.log_path = options['log_path']
+
+        if cfg.log_file is None:
+            if 'log_path' not in options:
+                return False
+            else:
+                cfg.log_path = options['log_path']
+
+            cfg.log_file = os.path.join(cfg.log_path, 'tpweb.log')
 
         if not os.path.exists(cfg.log_path):
             utils.make_dir(cfg.log_path)
@@ -39,13 +45,12 @@ class SwxCore:
                 log.e('Can not create log path.\n')
                 return False
 
+        log.set_attribute(filename=cfg.log_file)
+
         if 'app_path' not in options:
             return False
         else:
             cfg.app_path = options['app_path']
-
-        if not self._load_config(options):
-            return False
 
         if 'static_path' in options:
             cfg.static_path = options['static_path']
@@ -92,7 +97,7 @@ class SwxCore:
         else:
             _cfg_path = os.path.join(options['app_path'], 'conf')
 
-        _cfg_file = os.path.join(_cfg_path, 'web.conf')
+        _cfg_file = os.path.join(_cfg_path, 'web.ini')
         if not cfg.load(_cfg_file):
             return False
 
@@ -238,9 +243,9 @@ class SwxCore:
             log.e('Can not listen on port {}, maybe it been used by another application.\n'.format(cfg.server_port))
             return 0
 
-        if not cfg.dev_mode:
-            log_file = os.path.join(cfg.log_path, 'ts-web.log')
-            log.set_attribute(console=False, filename=log_file)
+        # if not cfg.dev_mode:
+        #     log_file = os.path.join(cfg.log_path, 'ts-web.log')
+        #     log.set_attribute(console=False, filename=log_file)
 
         tornado.ioloop.IOLoop.instance().start()
         return 0

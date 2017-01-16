@@ -27,13 +27,30 @@ class BuilderWin(BuilderBase):
         super().__init__()
 
     def build_server(self):
-        cc.n('build eom_ts...')
-        sln_file = os.path.join(ROOT_PATH, 'teleport-server', 'src', 'eom_ts.vs2015.sln')
-        out_file = os.path.join(ROOT_PATH, 'out', 'eom_ts', ctx.bits_path, ctx.target_path, 'eom_ts.exe')
+        cc.n('build web server ...')
+        sln_file = os.path.join(ROOT_PATH, 'server', 'tp_web', 'src', 'tp_web.vs2015.sln')
+        out_file = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_web.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
-        utils.msvc_build(sln_file, 'eom_ts', ctx.target_path, ctx.bits_path, False)
+        utils.msvc_build(sln_file, 'tp_web', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
+
+        cc.n('build core server ...')
+        sln_file = os.path.join(ROOT_PATH, 'server', 'tp_core', 'core', 'tp_core.vs2015.sln')
+        out_file = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_core.exe')
+        if os.path.exists(out_file):
+            utils.remove(out_file)
+        utils.msvc_build(sln_file, 'tp_core', ctx.target_path, ctx.bits_path, False)
+        utils.ensure_file_exists(out_file)
+
+        cc.n('build SSH protocol ...')
+        sln_file = os.path.join(ROOT_PATH, 'server', 'tp_core', 'protocol', 'ssh', 'tpssh.vs2015.sln')
+        out_file = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, ctx.target_path, 'tpssh.dll')
+        if os.path.exists(out_file):
+            utils.remove(out_file)
+        utils.msvc_build(sln_file, 'tpssh', ctx.target_path, ctx.bits_path, False)
+        utils.ensure_file_exists(out_file)
+
         #
         # s = os.path.join(ROOT_PATH, 'out', 'console', ctx.bits_path, ctx.target_path, 'console.exe')
         # t = os.path.join(ROOT_PATH, 'out', 'eom_agent', ctx.target_path, ctx.dist_path, 'eom_agent.com')

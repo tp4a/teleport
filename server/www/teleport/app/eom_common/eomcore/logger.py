@@ -10,11 +10,25 @@ __all__ = ['log',
            'CR_DEBUG', 'CR_VERBOSE', 'CR_INFO', 'CR_WARN', 'CR_ERROR',
            'LOG_DEBUG', 'LOG_VERBOSE', 'LOG_INFO', 'LOG_WARN', 'LOG_ERROR', 'TRACE_ERROR_NONE', 'TRACE_ERROR_FULL']
 
-LOG_DEBUG = 1
-LOG_VERBOSE = 10
-LOG_INFO = 20
-LOG_WARN = 30
-LOG_ERROR = 99
+LOG_DEBUG = 0
+LOG_VERBOSE = 1
+LOG_INFO = 2
+LOG_WARN = 3
+LOG_ERROR = 4
+
+USE_TPWEB_LOG = True
+
+try:
+    import tpweb
+
+    LOG_DEBUG = tpweb.EX_LOG_LEVEL_DEBUG
+    LOG_VERBOSE = tpweb.EX_LOG_LEVEL_VERBOSE
+    LOG_INFO = tpweb.EX_LOG_LEVEL_INFO
+    LOG_WARN = tpweb.EX_LOG_LEVEL_WARN
+    LOG_ERROR = tpweb.EX_LOG_LEVEL_ERROR
+except ImportError:
+    print('can not import tpweb.')
+    USE_TPWEB_LOG = False
 
 TRACE_ERROR_NONE = 0
 TRACE_ERROR_FULL = 999999
@@ -71,9 +85,6 @@ COLORS = {
 }
 
 
-# env = eomcore.env.get_env()
-
-
 class EomLogger:
     """
     日志记录模块，支持输出到控制台及文件。
@@ -83,7 +94,12 @@ class EomLogger:
     """
 
     def __init__(self):
+        atexit.register(self.finalize)
+
         self._locker = threading.RLock()
+
+        # self._sep = ' '
+        # self._end = '\n'
 
         self._min_level = LOG_INFO  # 大于等于此值的日志信息才会记录
         self._trace_error = TRACE_ERROR_NONE  # 记录错误信息时，是否追加记录调用栈
@@ -93,16 +109,19 @@ class EomLogger:
 
         self._win_color = None
 
-        self.d = self._func_debug
-        self.v = self._func_verbose
-        self.i = self._func_info
-        self.w = self._func_warn
-        self.e = self._func_error
+        if USE_TPWEB_LOG:
+            self._do_log = self._do_log_tpweb
+        else:
+            self._do_log = self._do_log_local
+
+        # self.d = self._log_debug
+        # self.v = self._log_verbose
+        # self.i = self._log_info
+        # self.w = self._log_warn
+        # self.e = self._log_error
 
         self._set_console(True)
         self._set_level(self._min_level)
-
-        atexit.register(self.finalize)
 
     def initialize(self):
         pass
@@ -138,28 +157,28 @@ class EomLogger:
         return True
 
     def _set_level(self, level):
-        self.d = self._func_debug
-        self.v = self._func_verbose
-        self.i = self._func_info
-        self.w = self._func_warn
-        # self.e = self._func_error
+        self.d = self._log_debug
+        self.v = self._log_verbose
+        self.i = self._log_info
+        self.w = self._log_warn
+        self.e = self._log_error
 
         if LOG_DEBUG == level:
             pass
         elif LOG_VERBOSE == level:
-            self.d = self._func_pass
+            self.d = self._log_pass
         elif LOG_INFO == level:
-            self.d = self._func_pass
-            self.v = self._func_pass
+            self.d = self._log_pass
+            self.v = self._log_pass
         elif LOG_WARN == level:
-            self.d = self._func_pass
-            self.v = self._func_pass
-            self.i = self._func_pass
+            self.d = self._log_pass
+            self.v = self._log_pass
+            self.i = self._log_pass
         elif LOG_ERROR == level:
-            self.d = self._func_pass
-            self.v = self._func_pass
-            self.i = self._func_pass
-            self.w = self._func_pass
+            self.d = self._log_pass
+            self.v = self._log_pass
+            self.i = self._log_pass
+            self.w = self._log_pass
             pass
         else:
             pass
@@ -218,33 +237,92 @@ class EomLogger:
 
         return True
 
+    def _log_pass(self, *args, **kwargs):
+        pass
+
+    def _log_debug(self, *args, **kwargs):
+        self._do_log(LOG_DEBUG, *args, **kwargs)
+
+    def _log_verbose(self, *args, **kwargs):
+        self._do_log(LOG_VERBOSE, *args, **kwargs)
+
+    def _log_info(self, *args, **kwargs):
+        self._do_log(LOG_INFO, *args, **kwargs)
+
+    def _log_warn(self, *args, **kwargs):
+        self._do_log(LOG_WARN, *args, **kwargs)
+
+    def _log_error(self, *args, **kwargs):
+        self._do_log(LOG_ERROR, *args, **kwargs)
+
+    def _do_log_tpweb(self, level, *args, **kwargs):
+        # sep = kwargs['sep'] if 'sep' in kwargs else self._sep
+        # end = kwargs['end'] if 'end' in kwargs else self._end
+
+        # first = True
+        for x in args:
+            # if not first:
+            #     tpweb.log_output(level, sep)
+
+            first = False
+            if isinstance(x, str):
+                tpweb.log_output(level, x)
+                continue
+
+            else:
+                tpweb.log_output(level, x.__str__())
+
+        # tpweb.log_output(level, end)
+
+    def _do_log_local(self, level, *args, **kwargs):
+        if level < self._min_level:
+            return
+
+        # sep = kwargs['sep'] if 'sep' in kwargs else self._sep
+        # end = kwargs['end'] if 'end' in kwargs else self._end
+        # first = True
+        for x in args:
+            # if not first:
+            #     sys.stdout.writelines(sep)
+
+            first = False
+            if isinstance(x, str):
+                sys.stdout.writelines(x)
+                continue
+
+            else:
+                sys.stdout.writelines(x.__str__())
+
+        # sys.stdout.writelines(end)
+        sys.stdout.flush()
+
     def log(self, msg, color=None):
         """
         自行指定颜色，输出到控制台（不会输出到日志文件），且输出时不含时间信息
         """
         self._do_log(msg, color=color, show_datetime=False)
 
-    def _func_pass(self, msg, color=None):
-        # do nothing.
-        pass
+    # def _func_pass(self, msg, color=None):
+    #     # do nothing.
+    #     pass
+    #
+    # def _func_debug(self, msg):
+    #     # 调试输出的数据，在正常运行中不会输出
+    #     self._do_log(msg, CR_DEBUG)
 
-    def _func_debug(self, msg):
-        # 调试输出的数据，在正常运行中不会输出
-        self._do_log(msg, CR_DEBUG)
-
-    # 普通的日志数据
-    def _func_verbose(self, msg):
-        # pass
-        self._do_log(msg, None)
-
-    # 重要信息
-    def _func_info(self, msg):
-        self._do_log(msg, CR_INFO)
-
-    # 警告
-    def _func_warn(self, msg):
-        self._do_log(msg, CR_WARN)
-
+    # # 普通的日志数据
+    # def _func_verbose(self, msg):
+    #     # pass
+    #     self._do_log(msg, None)
+    #
+    # # 重要信息
+    # def _func_info(self, msg):
+    #     self._do_log(msg, CR_INFO)
+    #
+    # # 警告
+    # def _func_warn(self, msg):
+    #     self._do_log(msg, CR_WARN)
+    #
     def _func_error(self, msg):
         """错误
         """
@@ -315,7 +393,7 @@ class EomLogger:
                     m += '.'
 
             m += '\n'
-            self.log(m, CR_DEBUG)
+            self._log_debug(m)
 
         if loop > 0:
             x += 1
@@ -342,25 +420,25 @@ class EomLogger:
                     m += '.'
 
             m += '\n'
-            self.log(m, CR_DEBUG)
+            self._log_debug(m)
 
-    def _do_log(self, msg, color=None, show_datetime=True):
-        with self._locker:
-            now = time.localtime(time.time())
-            _log_time = '[{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}] '.format(now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
-
-            try:
-                if show_datetime and self._log_datetime:
-                    msg = '{}{}'.format(_log_time, msg)
-                    self._log_console(msg, color)
-                else:
-                    self._log_console(msg, color)
-                    msg = '{}{}'.format(_log_time, msg)
-
-                self._log_file(msg)
-
-            except IOError:
-                pass
+    # def _do_log(self, msg, color=None, show_datetime=True):
+    #     with self._locker:
+    #         now = time.localtime(time.time())
+    #         _log_time = '[{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}] '.format(now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
+    #
+    #         try:
+    #             if show_datetime and self._log_datetime:
+    #                 msg = '{}{}'.format(_log_time, msg)
+    #                 self._log_console(msg, color)
+    #             else:
+    #                 self._log_console(msg, color)
+    #                 msg = '{}{}'.format(_log_time, msg)
+    #
+    #             self._log_file(msg)
+    #
+    #         except IOError:
+    #             pass
 
     def _console_default(self, msg, color=None):
         """
@@ -482,46 +560,6 @@ class EomLogger:
         self._set_level(LOG_DEBUG)
         self._trace_error = TRACE_ERROR_FULL
 
-        self.log('###################', CR_NORMAL)
-        self.log(' CR_NORMAL\n')
-        self.log('###################', CR_BLACK)
-        self.log(' CR_BLACK\n')
-        self.log('###################', CR_LIGHT_GRAY)
-        self.log(' CR_LIGHT_GRAY\n')
-        self.log('###################', CR_GRAY)
-        self.log(' CR_GRAY\n')
-        self.log('###################', CR_WHITE)
-        self.log(' CR_WHITE\n')
-        self.log('###################', CR_RED)
-        self.log(' CR_RED\n')
-        self.log('###################', CR_GREEN)
-        self.log(' CR_GREEN\n')
-        self.log('###################', CR_YELLOW)
-        self.log(' CR_YELLOW\n')
-        self.log('###################', CR_BLUE)
-        self.log(' CR_BLUE\n')
-        self.log('###################', CR_MAGENTA)
-        self.log(' CR_MAGENTA\n')
-        self.log('###################', CR_CYAN)
-        self.log(' CR_CYAN\n')
-        self.log('###################', CR_LIGHT_RED)
-        self.log(' CR_LIGHT_RED\n')
-        self.log('###################', CR_LIGHT_GREEN)
-        self.log(' CR_LIGHT_GREEN\n')
-        self.log('###################', CR_LIGHT_YELLOW)
-        self.log(' CR_LIGHT_YELLOW\n')
-        self.log('###################', CR_LIGHT_BLUE)
-        self.log(' CR_LIGHT_BLUE\n')
-        self.log('###################', CR_LIGHT_MAGENTA)
-        self.log(' CR_LIGHT_MAGENTA\n')
-        self.log('###################', CR_LIGHT_CYAN)
-        self.log(' CR_LIGHT_CYAN\n')
-        data = b'This is a test string and you can see binary format data here.'
-        self.bin('Binary Data:\n', data)
-        data = b''
-        self.bin('Empty binary\n', data)
-        self.bin('This is string\n\n', 'data')
-
         self.d('This is DEBUG message.\n')
         self.v('This is VERBOSE message.\n')
         self.i('This is INFORMATION message.\n')
@@ -529,6 +567,12 @@ class EomLogger:
         self.e('This is ERROR message.\n')
 
         self.v('test auto\nsplited lines.\nYou should see\nmulti-lines.\n')
+
+        data = b'This is a test string and you can see binary format data here.'
+        self.bin('Binary Data:\n', data)
+        data = b''
+        self.bin('Empty binary\n', data)
+        self.bin('This is string\n\n', 'data')
 
 
 class Win32DebugView:
@@ -614,6 +658,8 @@ class Win32ColorConsole:
 
 log = EomLogger()
 del EomLogger
+
+log._test()
 
 import builtins
 

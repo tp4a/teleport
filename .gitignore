@@ -38,6 +38,7 @@ __pycache__
 /external/openssl
 /external/python
 
+/build/config.py
 
 # for dist folder
 /dist/*.zip
@@ -60,3 +61,4 @@ __pycache__
 /client/tp_rdp
 /external/libssh-win-static/lib
 /server/share/log
+/config.ini

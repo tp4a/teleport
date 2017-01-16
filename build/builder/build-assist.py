@@ -31,8 +31,8 @@ class BuilderWin(BuilderBase):
 
     def build_exe(self):
         cc.n('build tp_assist...')
-        sln_file = os.path.join(ROOT_PATH, 'tp_assist', 'tp_assist.vs2015.sln')
-        out_file = os.path.join(ROOT_PATH, 'out', 'tp_assist', ctx.bits_path, ctx.target_path, 'tp_assist.exe')
+        sln_file = os.path.join(ROOT_PATH, 'client', 'tp_assist', 'tp_assist.vs2015.sln')
+        out_file = os.path.join(ROOT_PATH, 'out', 'client', ctx.bits_path, ctx.target_path, 'tp_assist.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
         utils.msvc_build(sln_file, 'tp_assist', ctx.target_path, ctx.bits_path, False)

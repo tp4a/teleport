@@ -8,6 +8,7 @@ import platform
 import sys
 
 THIS_PATH = os.path.abspath(os.path.dirname(__file__))
+ROOT_PATH = os.path.abspath(os.path.join(THIS_PATH, '..'))
 BUILDER_PATH = os.path.join(THIS_PATH, 'builder')
 
 sys.path.append(os.path.join(BUILDER_PATH))
@@ -139,16 +140,12 @@ def do_opt(opt):
         # arg = 'installer'
         arg = '%s %s installer' % (ctx.dist, opt['bits'])
 
-    elif 'installer-ubuntu' == opt['name']:
-        script = 'build-installer.py'
-        arg = '%s %s installer' % ('ubuntu', opt['bits'])
-
     elif 'assist-exe' == opt['name']:
         script = 'build-assist.py'
         arg = '%s %s exe' % (ctx.target_path, opt['bits'])
-    elif 'assist-rdp' == opt['name']:
-        script = 'build-assist.py'
-        arg = '%s rdp' % (opt['bits'])
+    # elif 'assist-rdp' == opt['name']:
+    #     script = 'build-assist.py'
+    #     arg = '%s rdp' % (opt['bits'])
     elif 'assist-installer' == opt['name']:
         script = 'build-assist.py'
         arg = '%s %s installer' % (ctx.dist, opt['bits'])
@@ -157,9 +154,8 @@ def do_opt(opt):
         cc.e('unknown option: ', opt['name'])
         return
 
-    cmd = '"%s" -B "%s/%s" %s' % (utils.cfg.py_exec, BUILDER_PATH, script, arg)
-    cc.i(cmd)
-    cc.v('')
+    # cmd = '"%s" -B "%s" %s' % (utils.cfg.py_exec, os.path.join(BUILDER_PATH, script), arg)
+    cmd = '%s -B %s %s' % (utils.cfg.py_exec, os.path.join(BUILDER_PATH, script), arg)
     os.system(cmd)
 
 
@@ -176,13 +172,13 @@ def select_option_by_name(name):
     return None
 
 
-def select_option_by_id(id):
+def select_option_by_id(_id):
     global options
 
     for o in range(len(options)):
         if options[o] is None:
             continue
-        if options[o]['id'] == id:
+        if options[o]['id'] == _id:
             return options[o]
     return None
 

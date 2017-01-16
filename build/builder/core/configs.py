@@ -3,12 +3,13 @@
 import os
 import sys
 import platform
+import configparser
 from . import colorconsole as cc
 
 __all__ = ['cfg']
 
 
-class TpDict(dict):
+class AttrDict(dict):
     """
     可以像属性一样访问字典的 Key，var.key 等同于 var['key']
     """
@@ -24,17 +25,11 @@ class TpDict(dict):
         self[name] = val
 
 
-class ConfigFile(TpDict):
+class ConfigFile(AttrDict):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # self.__file_name = None
-        # self.__save_indent = 0
-        # self.__loaded = False
 
     def init(self, cfg_file):
-        if not self.load(cfg_file, True):
-            return False
-
         self['ROOT_PATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
         self['py_exec'] = sys.executable
@@ -55,69 +50,46 @@ class ConfigFile(TpDict):
 
         _os = platform.system().lower()
 
+        self['is_win'] = False
+        self['is_linux'] = False
+        self['is_macos'] = False
         self['dist'] = ''
         if _os == 'windows':
+            self['is_win'] = True
             self['dist'] = 'windows'
         elif _os == 'linux':
+            self['is_linux'] = True
             self['dist'] = 'linux'
         elif _os == 'darwin':
+            self['is_macos'] = True
             self['dist'] = 'macos'
         else:
             cc.e('not support this OS: {}'.format(platform.system()))
             return False
 
-        return True
-
-    def load_str(self, module, code):
-        m = type(sys)(module)
-        m.__module_class__ = type(sys)
-        m.__file__ = module
-
-        try:
-            exec(compile(code, module, 'exec'), m.__dict__)
-        except Exception as e:
-            cc.e('%s\n' % str(e))
-            # print(str(e))
-            # if eom_dev_conf.debug:
-            #     raise
+        _cfg = configparser.ConfigParser()
+        _cfg.read(cfg_file)
+        if 'external_ver' not in _cfg.sections() or 'toolchain' not in _cfg.sections():
+            cc.e('invalid configuration file: need `external_ver` and `toolchain` section.')
             return False
 
-        for y in m.__dict__:
-            if '__' == y[:2]:
-                continue
-            if isinstance(m.__dict__[y], dict):
-                self[y] = TpDict()
-                self._assign_dict(m.__dict__[y], self[y])
-            else:
-                self[y] = m.__dict__[y]
-
-        return True
-
-    def load(self, full_path, must_exists=True):
-        try:
-            f = open(full_path, encoding='utf8')
-            code = f.read()
-            f.close()
-            self.__loaded = True
-        except IOError:
-            if must_exists:
-                cc.e('Can not load config file: %s\n' % full_path)
+        _tmp = _cfg['external_ver']
+        if 'libuv' not in _tmp or 'mbedtls' not in _tmp or 'sqlite' not in _tmp:
+            cc.e('invalid configuration file: external version not set.')
             return False
 
-        module = os.path.basename(full_path)
-        if not self.load_str(module, code):
-            return False
+        self['ver'] = AttrDict()
+        for k in _tmp:
+            self['ver'][k] = _tmp[k]
 
-        self.__file_name = full_path
+        _tmp = _cfg['toolchain']
+        if self.is_win:
+            self['nsis'] = _tmp.get('nsis', None)
+            self['msbuild'] = None  # msbuild always read from register.
+        else:
+            self['cmake'] = _tmp.get('cmake', '/usr/bin/cmake')
+
         return True
-
-    def _assign_dict(self, _from, _to):
-        for y in _from:
-            if isinstance(_from[y], dict):
-                _to[y] = TpDict()
-                self._assign_dict(_from[y], _to[y])
-            else:
-                _to[y] = _from[y]
 
 
 cfg = ConfigFile()

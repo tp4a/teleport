@@ -11,17 +11,14 @@ import time
 from . import colorconsole as cc
 
 from .configs import cfg
+
 try:
-    CONFIG_FILE = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')), 'config.py')
+    CONFIG_FILE = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')), 'config.ini')
     if not cfg.init(CONFIG_FILE):
         sys.exit(1)
 except:
     cc.e('can not load configuration.\n\nplease copy `config.py.in` into `config.py` and modify it to fit your condition and try again.')
     sys.exit(1)
-
-# PY_VER = platform.python_version_tuple()
-#IS_PY2 = sys.version_info[0] == 2
-#IS_PY3 = sys.version_info[0] == 3
 
 if cfg.is_py2:
     import imp
@@ -222,13 +219,9 @@ def python_exec():
     return sys.executable
 
 
-g_msbuild_path = None
-
-
 def msbuild_path():
-    global g_msbuild_path
-    if g_msbuild_path is not None:
-        return g_msbuild_path
+    if cfg.msbuild is not None:
+        return cfg.msbuild
 
     # 14.0 = VS2015
     # 12.0 = VS2012
@@ -248,21 +241,13 @@ def msbuild_path():
     if not os.path.exists(msb):
         raise RuntimeError('Can not locate MSBuild at {}'.format(msp))
 
-    g_msbuild_path = msb
+    cfg.msbuild = msb
     return msb
 
 
-g_nsis_path = None
-
-
 def nsis_path():
-    global g_nsis_path
-    if g_nsis_path is not None:
-        return g_nsis_path
-
-    if 'nsis' in cfg:
-        g_nsis_path = cfg['nsis']
-        return g_nsis_path
+    if cfg.nsis is not None:
+        return cfg.nsis
 
     p = winreg_read_wow64_32(r'SOFTWARE\NSIS\Unicode', '')
     if p is None:
@@ -272,7 +257,7 @@ def nsis_path():
     if not os.path.exists(p):
         raise RuntimeError('Can not locate NSIS at {}'.format(p))
 
-    g_nsis_path = p
+    cfg.nsis = p
     return p
 
 
@@ -355,7 +340,7 @@ def nsis_build(nsi_file, _define=''):
 def cmake(work_path, target, force_rebuild, cmake_define=''):
     # because cmake v2.8 shipped with Ubuntu 14.04LTS, but we need 3.5.
     # so we copy a v3.5 cmake from CLion and put to $WORK/eomsoft/toolchain/cmake.
-    #CMAKE = os.path.abspath(os.path.join(root_path(), 'toolchain', 'cmake', 'bin', 'cmake'))
+    # CMAKE = os.path.abspath(os.path.join(root_path(), 'toolchain', 'cmake', 'bin', 'cmake'))
     if 'cmake' not in cfg:
         raise RuntimeError('please set `cmake` path.')
     if not os.path.exists(cfg['cmake']):

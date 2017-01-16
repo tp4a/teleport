@@ -1,0 +1,5 @@
+@echo off
+
+SET PYEXEC=C:\Python\Python34-x86\python.exe
+
+%PYEXEC% -B build/build.py %1 %2 %3 %4 %5
