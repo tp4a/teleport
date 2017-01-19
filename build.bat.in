@@ -1,5 +1,11 @@
 @echo off
 
-SET PYEXEC=C:\Python\Python34-x86\python.exe
+rem ============================================
+rem 请调整以下路径，以适配您自己的的系统环境。
+rem 注意：必须使用Pyhont 3.4，32位版本！！
+rem ============================================
+SET PYEXEC=C:\Program Files\Python\python.exe
+
+
 
 %PYEXEC% -B build/build.py %1 %2 %3 %4 %5

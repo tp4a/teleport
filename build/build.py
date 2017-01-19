@@ -113,13 +113,9 @@ def main():
 def clean_all():
     cc.v('remove compiler out path...')
     utils.remove(os.path.join(ROOT_PATH, 'out'))
-    utils.remove(os.path.join(ROOT_PATH, 'waf_build'))
-    utils.remove(os.path.join(ROOT_PATH, '.lock-waf_linux_build'))
 
 
 def do_opt(opt):
-    cc.v(opt)
-
     arg = ''
 
     if 'ver' == opt['name']:
@@ -233,13 +229,12 @@ def get_input(msg, log_func=cc.w):
 
 def show_logo():
     cc.v('[]=======================================================[]')
-    cc.o((cc.CR_VERBOSE, ' | '), (cc.CR_INFO, 'Teleport Projects Builder'), (cc.CR_VERBOSE, '                                  |'))
+    cc.o((cc.CR_VERBOSE, ' | '), (cc.CR_INFO, 'Teleport Projects Builder'), (cc.CR_VERBOSE, '                             |'))
     cc.v(' | auth: apexliu@eomsoft.net                             |')
     cc.v('[]=======================================================[]')
 
 
 def show_menu():
-    # cc.v(cfg)
     cc.v('')
     cc.v('=========================================================')
     for o in range(len(options)):

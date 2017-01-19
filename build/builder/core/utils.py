@@ -306,7 +306,8 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
 
         if direct_output:
             # cc.v(line.decode(output_codec))
-            cc.v(line, end='')
+            # cc.d(line, end='')
+            cc.o((cc.CR_GRAY, line), end='')
 
         output += line
 

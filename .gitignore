@@ -62,3 +62,4 @@ __pycache__
 /external/libssh-win-static/lib
 /server/share/log
 /config.ini
+/build.bat

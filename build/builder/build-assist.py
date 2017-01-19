@@ -30,7 +30,7 @@ class BuilderWin(BuilderBase):
         super().__init__()
 
     def build_exe(self):
-        cc.n('build tp_assist...')
+        cc.i('build tp_assist...')
         sln_file = os.path.join(ROOT_PATH, 'client', 'tp_assist', 'tp_assist.vs2015.sln')
         out_file = os.path.join(ROOT_PATH, 'out', 'client', ctx.bits_path, ctx.target_path, 'tp_assist.exe')
         if os.path.exists(out_file):
@@ -48,7 +48,7 @@ class BuilderWin(BuilderBase):
     #     utils.ensure_file_exists(out_file)
 
     def build_installer(self):
-        cc.n('build assist package for website...')
+        cc.i('build assist package for website...')
 
         name = 'teleport-assist-windows-{}-{}'.format(ctx.bits_path, VER_TELEPORT_ASSIST)
         utils.remove(os.path.join(ROOT_PATH, 'dist', '{}.zip'.format(name)))

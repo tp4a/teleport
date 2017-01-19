@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+import platform
 import atexit
 import sys
 import threading
@@ -114,12 +116,6 @@ class EomLogger:
         else:
             self._do_log = self._do_log_local
 
-        # self.d = self._log_debug
-        # self.v = self._log_verbose
-        # self.i = self._log_info
-        # self.w = self._log_warn
-        # self.e = self._log_error
-
         self._set_console(True)
         self._set_level(self._min_level)
 
@@ -187,33 +183,56 @@ class EomLogger:
 
     def _set_console(self, is_enabled):
         if not is_enabled:
-            self._log_console = self._func_pass
+            self._log_console = self._log_pass
             return
 
-        if sys.platform == 'linux' or sys.platform == 'darwin':
-            self._log_console = self._console_linux
-        elif sys.platform == 'win32':
+        # if sys.platform == 'linux' or sys.platform == 'darwin':
+        #     self._log_console = self._console_linux
+        # elif sys.platform == 'win32':
+        #
+        #     if sys.stdout is None:
+        #         self._dbg_view = Win32DebugView()
+        #         if self._dbg_view.available():
+        #             self._log_console = self._dbg_view.output
+        #
+        #         self.log('use DebugView as logger output.\n')
+        #         # self._log_console = self._func_pass
+        #
+        #
+        #     else:
+        #         # if 'TERM' in os.environ and 'emacs' != os.environ['TERM']:
+        #         #     self._log_console = self._console_linux
+        #
+        #         # self._win_color = Win32ColorConsole()
+        #         # if self._win_color.available():
+        #         #     self._log_console = self._console_win
+        #         # else:
+        #         #     self._log_console = self._console_linux
+        #
+        #         self._log_console = self._console_linux
 
-            if sys.stdout is None:
-                self._dbg_view = Win32DebugView()
-                if self._dbg_view.available():
-                    self._log_console = self._dbg_view.output
+        # python2.7 on Ubuntu, sys.platform is 'linux2', so we use platform.system() instead.
 
-                self.log('use DebugView as logger output.\n')
-                # self._log_console = self._func_pass
+        _platform = platform.system().lower()
 
+        if _platform == 'linux' or _platform == 'darwin':
+            self._console_set_color = self._console_set_color_linux
+            self._console_restore_color = self._console_restore_color_linux
+        elif _platform == 'windows':
+            # print(os.environ)
+            if 'TERM' in os.environ and os.environ['TERM'] in ['xterm', 'emacs']:
+                self._console_set_color = self._console_set_color_linux
+                self._console_restore_color = self._console_restore_color_linux
 
             else:
-                # if 'TERM' in os.environ and 'emacs' != os.environ['TERM']:
-                #     self._log_console = self._console_linux
+                self._win_color = Win32ColorConsole()
+                if self._win_color.available():
+                    self._console_set_color = self._console_set_color_win
+                    self._console_restore_color = self._console_restore_color_win
 
-                # self._win_color = Win32ColorConsole()
-                # if self._win_color.available():
-                #     self._log_console = self._console_win
-                # else:
-                #     self._log_console = self._console_linux
-
-                self._log_console = self._console_linux
+                else:
+                    self._console_set_color = self._log_pass
+                    self._console_restore_color = self._log_pass
 
     def _set_filename(self, base_filename):
 
@@ -241,19 +260,51 @@ class EomLogger:
         pass
 
     def _log_debug(self, *args, **kwargs):
+        self._console_set_color(CR_DEBUG)
         self._do_log(LOG_DEBUG, *args, **kwargs)
+        self._console_restore_color()
 
     def _log_verbose(self, *args, **kwargs):
+        self._console_set_color(CR_VERBOSE)
         self._do_log(LOG_VERBOSE, *args, **kwargs)
+        self._console_restore_color()
 
     def _log_info(self, *args, **kwargs):
+        self._console_set_color(CR_INFO)
         self._do_log(LOG_INFO, *args, **kwargs)
+        self._console_restore_color()
 
     def _log_warn(self, *args, **kwargs):
+        self._console_set_color(CR_WARN)
         self._do_log(LOG_WARN, *args, **kwargs)
+        self._console_restore_color()
 
     def _log_error(self, *args, **kwargs):
-        self._do_log(LOG_ERROR, *args, **kwargs)
+        self._console_set_color(CR_ERROR)
+        # self._do_log(LOG_ERROR, *args, **kwargs)
+
+        self._do_log(LOG_ERROR, '[ERROR] ', *args, **kwargs)
+
+        if self._trace_error == TRACE_ERROR_NONE:
+            return
+
+        s = traceback.extract_stack()
+        c = len(s)
+        for i in range(c - 1):
+            if i >= self._trace_error:
+                break
+            if s[c - 2 - i][0].startswith('<frozen '):
+                continue
+            self._do_log(LOG_ERROR, '  %s(%d)\n' % (s[c - 2 - i][0], s[c - 2 - i][1]))
+
+        _type, _value, _tb = sys.exc_info()
+        if _type is not None:
+            x = traceback.format_exception_only(_type, _value)
+            self._do_log(LOG_ERROR, '[EXCEPTION] %s' % x[0])
+            x = traceback.extract_tb(_tb)
+            self._do_log(LOG_ERROR, '  %s(%d): %s\n' % (x[-1][0], x[-1][1], x[-1][3]))
+
+        self._console_restore_color()
 
     def _do_log_tpweb(self, level, *args, **kwargs):
         # sep = kwargs['sep'] if 'sep' in kwargs else self._sep
@@ -272,7 +323,7 @@ class EomLogger:
             else:
                 tpweb.log_output(level, x.__str__())
 
-        # tpweb.log_output(level, end)
+                # tpweb.log_output(level, end)
 
     def _do_log_local(self, level, *args, **kwargs):
         if level < self._min_level:
@@ -293,59 +344,29 @@ class EomLogger:
             else:
                 sys.stdout.writelines(x.__str__())
 
-        # sys.stdout.writelines(end)
+                # sys.stdout.writelines(end)
+                # sys.stdout.flush()
+
+    def _console_set_color_win(self, cr=None):
+        if cr is None:
+            return
+        self._win_color.set_color(COLORS[cr][1])
         sys.stdout.flush()
 
-    def log(self, msg, color=None):
-        """
-        自行指定颜色，输出到控制台（不会输出到日志文件），且输出时不含时间信息
-        """
-        self._do_log(msg, color=color, show_datetime=False)
-
-    # def _func_pass(self, msg, color=None):
-    #     # do nothing.
-    #     pass
-    #
-    # def _func_debug(self, msg):
-    #     # 调试输出的数据，在正常运行中不会输出
-    #     self._do_log(msg, CR_DEBUG)
-
-    # # 普通的日志数据
-    # def _func_verbose(self, msg):
-    #     # pass
-    #     self._do_log(msg, None)
-    #
-    # # 重要信息
-    # def _func_info(self, msg):
-    #     self._do_log(msg, CR_INFO)
-    #
-    # # 警告
-    # def _func_warn(self, msg):
-    #     self._do_log(msg, CR_WARN)
-    #
-    def _func_error(self, msg):
-        """错误
-        """
-        self._do_log('[ERROR] %s' % msg, CR_ERROR)
-
-        if self._trace_error == TRACE_ERROR_NONE:
+    def _console_set_color_linux(self, cr=None):
+        if cr is None:
             return
+        sys.stdout.writelines('\x1B')
+        sys.stdout.writelines(COLORS[cr][0])
+        sys.stdout.flush()
 
-        s = traceback.extract_stack()
-        c = len(s)
-        for i in range(c - 1):
-            if i >= self._trace_error:
-                break
-            if s[c - 2 - i][0].startswith('<frozen '):
-                continue
-            self._do_log('  %s(%d)\n' % (s[c - 2 - i][0], s[c - 2 - i][1]), CR_RED)
+    def _console_restore_color_win(self):
+        self._win_color.set_color(COLORS[CR_NORMAL][1])
+        sys.stdout.flush()
 
-        _type, _value, _tb = sys.exc_info()
-        if _type is not None:
-            x = traceback.format_exception_only(_type, _value)
-            self._do_log('[EXCEPTION] %s' % x[0], CR_ERROR)
-            x = traceback.extract_tb(_tb)
-            self._do_log('  %s(%d): %s\n' % (x[-1][0], x[-1][1], x[-1][3]), CR_RED)
+    def _console_restore_color_linux(self):
+        sys.stdout.writelines('\x1B[0m')
+        sys.stdout.flush()
 
     def bin(self, msg, data):
         # 二进制日志格式（一行16字节数据）：
@@ -393,7 +414,7 @@ class EomLogger:
                     m += '.'
 
             m += '\n'
-            self._log_debug(m)
+            self.d(m)
 
         if loop > 0:
             x += 1
@@ -420,7 +441,7 @@ class EomLogger:
                     m += '.'
 
             m += '\n'
-            self._log_debug(m)
+            self.d(m)
 
     # def _do_log(self, msg, color=None, show_datetime=True):
     #     with self._locker:
@@ -531,19 +552,19 @@ class EomLogger:
         first = True
         for x in args:
             if not first:
-                log._do_log(sep, show_datetime=show_datetime)
+                log._do_log(LOG_VERBOSE, sep, show_datetime=show_datetime)
 
             first = False
             if isinstance(x, str):
-                log._do_log(x, show_datetime=show_datetime)
+                log._do_log(LOG_VERBOSE, x, show_datetime=show_datetime)
                 show_datetime = False
                 continue
 
             else:
-                log._do_log(x.__str__(), show_datetime=show_datetime)
+                log._do_log(LOG_VERBOSE, x.__str__(), show_datetime=show_datetime)
                 show_datetime = False
 
-        log._do_log(end, show_datetime=show_datetime)
+        log._do_log(LOG_VERBOSE, end, show_datetime=show_datetime)
 
         # s = traceback.extract_stack()
         # c = len(s)
@@ -573,23 +594,6 @@ class EomLogger:
         data = b''
         self.bin('Empty binary\n', data)
         self.bin('This is string\n\n', 'data')
-
-
-class Win32DebugView:
-    def __init__(self):
-        from ctypes import WINFUNCTYPE, windll
-        from ctypes.wintypes import LPCSTR, LPVOID
-
-        self._OutputDebugStringA = WINFUNCTYPE(LPVOID, LPCSTR)(("OutputDebugStringA", windll.kernel32))
-
-    def available(self):
-        if self._OutputDebugStringA is None:
-            return False
-        else:
-            return True
-
-    def output(self, msg, color=None):
-        self._OutputDebugStringA(msg.encode('gbk'))
 
 
 class Win32ColorConsole:
@@ -659,7 +663,8 @@ class Win32ColorConsole:
 log = EomLogger()
 del EomLogger
 
-log._test()
+# log._test()
+# print('test built-in `print` function.')
 
 import builtins
 
