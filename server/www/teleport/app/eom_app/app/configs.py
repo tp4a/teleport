@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
+# import sys
 import configparser
 
-from eom_common.eomcore.logger import log
+from eom_common.eomcore.logger import *
 
 __all__ = ['app_cfg']
 
@@ -25,23 +25,6 @@ class AttrDict(dict):
         self[name] = val
 
 
-# def attr_dict(obj):
-#     """
-#     将一个对象中的dict转变为AttrDict类型
-#     """
-#     if isinstance(obj, dict):
-#         ret = AttrDict()
-#         for k in obj:
-#             # ret[k] = obj[k]
-#             if isinstance(obj[k], dict):
-#                 ret[k] = attr_dict(obj[k])
-#             else:
-#                 ret[k] = obj[k]
-#     else:
-#         ret = obj
-#     return ret
-
-
 class ConfigFile(AttrDict):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -51,17 +34,17 @@ class ConfigFile(AttrDict):
 
     def load(self, cfg_file):
         if not os.path.exists(cfg_file):
-            log.e('configuration file does not exists.')
+            log.e('configuration file does not exists: [{}]\n'.format(cfg_file))
             return False
         try:
             _cfg = configparser.ConfigParser()
             _cfg.read(cfg_file)
         except:
-            log.e('can not load configuration file.')
+            log.e('can not load configuration file: [{}]\n'.format(cfg_file))
             return False
 
         if 'common' not in _cfg:
-            log.e('invalid configuration file.')
+            log.e('invalid configuration file: [{}]\n'.format(cfg_file))
             return False
 
         _comm = _cfg['common']
@@ -70,59 +53,23 @@ class ConfigFile(AttrDict):
         if self['log_file'] is not None:
             self['log_path'] = os.path.dirname(self['log_file'])
 
-        return True
+        _level = _comm.getint('log-level', 2)
+        if _level == 0:
+            self['log_level'] = LOG_DEBUG
+        elif _level == 1:
+            self['log_level'] = LOG_VERBOSE
+        elif _level == 2:
+            self['log_level'] = LOG_INFO
+        elif _level == 3:
+            self['log_level'] = LOG_WARN
+        elif _level == 4:
+            self['log_level'] = LOG_ERROR
+        else:
+            self['log_level'] = LOG_VERBOSE
 
-    # def load_str(self, module, code):
-    #     m = type(sys)(module)
-    #     m.__module_class__ = type(sys)
-    #     m.__file__ = module
-    #
-    #     try:
-    #         exec(compile(code, module, 'exec'), m.__dict__)
-    #     except Exception as e:
-    #         log.e('%s\n' % str(e))
-    #         # print(str(e))
-    #         # if eom_dev_conf.debug:
-    #         #     raise
-    #         return False
-    #
-    #     for y in m.__dict__:
-    #         if '__' == y[:2]:
-    #             continue
-    #         if isinstance(m.__dict__[y], dict):
-    #             self[y] = AttrDict()
-    #             self._assign_dict(m.__dict__[y], self[y])
-    #         else:
-    #             self[y] = m.__dict__[y]
-    #
-    #     return True
-    #
-    # def _load(self, full_path, must_exists=True):
-    #     try:
-    #         f = open(full_path, encoding='utf8')
-    #         code = f.read()
-    #         f.close()
-    #         self.__loaded = True
-    #     except IOError:
-    #         if must_exists:
-    #             log.e('Can not load config file: %s\n' % full_path)
-    #         return False
-    #
-    #     module = os.path.basename(full_path)
-    #     if not self.load_str(module, code):
-    #         return False
-    #
-    #     self.__file_name = full_path
-    #     return True
-    #
-    # def _assign_dict(self, _from, _to):
-    #     for y in _from:
-    #         if isinstance(_from[y], dict):
-    #             _to[y] = AttrDict()
-    #             self._assign_dict(_from[y], _to[y])
-    #         else:
-    #             _to[y] = _from[y]
-    #
+        log.set_attribute(min_level=self['log_level'])
+
+        return True
 
 _g_cfg = ConfigFile()
 del ConfigFile

@@ -88,8 +88,8 @@ bool TsEnv::init(void)
 		EXLOG_LEVEL(log_level);
 	}
 
-	EXLOGI("==============================\n");
-	EXLOGI("[tpweb] start...\n");
+//	EXLOGI("==============================\n");
+//	EXLOGI("[tpweb] start...\n");
 
 	return true;
 }

@@ -83,11 +83,12 @@ class ConfigFile(AttrDict):
             self['ver'][k] = _tmp[k]
 
         _tmp = _cfg['toolchain']
+        self['toolchain'] = AttrDict()
         if self.is_win:
-            self['nsis'] = _tmp.get('nsis', None)
-            self['msbuild'] = None  # msbuild always read from register.
+            self['toolchain']['nsis'] = _tmp.get('nsis', None)
+            self['toolchain']['msbuild'] = None  # msbuild always read from register.
         else:
-            self['cmake'] = _tmp.get('cmake', '/usr/bin/cmake')
+            self['toolchain']['cmake'] = _tmp.get('cmake', '/usr/bin/cmake')
 
         return True
 

@@ -17,7 +17,7 @@ try:
     if not cfg.init(CONFIG_FILE):
         sys.exit(1)
 except:
-    cc.e('can not load configuration.\n\nplease copy `config.py.in` into `config.py` and modify it to fit your condition and try again.')
+    cc.e('can not load configuration.\n\nplease copy `config.ini.in` into `config.ini` and modify it to fit your condition and try again.')
     sys.exit(1)
 
 if cfg.is_py2:
@@ -340,14 +340,16 @@ def nsis_build(nsi_file, _define=''):
 
 def cmake(work_path, target, force_rebuild, cmake_define=''):
     # because cmake v2.8 shipped with Ubuntu 14.04LTS, but we need 3.5.
-    # so we copy a v3.5 cmake from CLion and put to $WORK/eomsoft/toolchain/cmake.
-    # CMAKE = os.path.abspath(os.path.join(root_path(), 'toolchain', 'cmake', 'bin', 'cmake'))
-    if 'cmake' not in cfg:
+    # I copy a v3.5 cmake from CLion.
+    print(cfg)
+    if 'cmake' not in cfg.toolchain:
         raise RuntimeError('please set `cmake` path.')
-    if not os.path.exists(cfg['cmake']):
-        raise RuntimeError('`cmake` does not exists, please check your config.py and try again.')
 
-    CMAKE = cfg['cmake']
+    print(cfg.toolchain.cmake)
+    if not os.path.exists(cfg.toolchain.cmake):
+        raise RuntimeError('`cmake` does not exists, please check your configuration and try again.')
+
+    CMAKE = cfg.toolchain.cmake
 
     cc.n('make by cmake', target, sep=': ')
     old_p = os.getcwd()

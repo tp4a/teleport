@@ -38,8 +38,6 @@ __pycache__
 /external/openssl
 /external/python
 
-/build/config.py
-
 # for dist folder
 /dist/*.zip
 /dist/*.tar.gz

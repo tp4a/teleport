@@ -234,17 +234,16 @@ class SwxCore:
         # else:
         #     log.set_attribute(console=False, filename='/var/log/eom_ts/ts-backend.log')
 
-        log.v('Web Server start on http://127.0.0.1:{}\n'.format(cfg.server_port))
-
         server = tornado.httpserver.HTTPServer(web_app)
         try:
             server.listen(cfg.server_port)
+            log.i('works on [http://127.0.0.1:{}]\n'.format(cfg.server_port))
         except:
             log.e('Can not listen on port {}, maybe it been used by another application.\n'.format(cfg.server_port))
             return 0
 
         # if not cfg.dev_mode:
-        #     log_file = os.path.join(cfg.log_path, 'ts-web.log')
+        #     log_file = os.path.join(cfg.log_path, 'tpweb.log')
         #     log.set_attribute(console=False, filename=log_file)
 
         tornado.ioloop.IOLoop.instance().start()

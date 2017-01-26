@@ -160,7 +160,7 @@ void ExLogger::log_w(int level, const wchar_t* fmt, va_list valist)
 	}
 #else
 	vswprintf(szTmp+offset, 4095-offset, fmt, valist);
-	wprintf(L"%s", szTmp);
+	wprintf(L"%ls", szTmp);
 	fflush(stdout);
 #endif
 

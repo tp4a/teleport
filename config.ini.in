@@ -4,10 +4,10 @@
 #============================================
 
 # if not set nsis path, default to get it by register.
-#nsis = "C:\Program Files (x86)\NSIS\Unicode\makensis.exe"
+#nsis = C:\Program Files (x86)\NSIS\Unicode\makensis.exe
 
 # if not set msbuild path, default to get it by register.
-#msbuild = "C:\Program Files (x86)\MSBuild\14.0\bin\MSBuild.exe"
+#msbuild = C:\Program Files (x86)\MSBuild\14.0\bin\MSBuild.exe
 
 
 # ============================================
@@ -15,11 +15,11 @@
 # ============================================
 
 # if not set cmake path, default to '/usr/bin/cmake'
-cmake = "/opt/cmake/bin/cmake"
+cmake = /opt/cmake/bin/cmake
 
 
 [external_ver]
-# openssl = 1.0.2h
+openssl = 1.0.2h
 libuv = 1.9.1
 mbedtls = 2.3.0
 sqlite = 3160200

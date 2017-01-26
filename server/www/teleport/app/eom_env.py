@@ -33,10 +33,14 @@ path_of_this_file = os.path.abspath(os.path.dirname(__file__))
 PATH_APP_ROOT = os.path.abspath(os.path.join(path_of_this_file, '..'))
 
 # 如果没有打包，可能是开发版本，也可能是发布源代码版本，需要进一步判断
-if os.path.exists(os.path.join(PATH_APP_ROOT, '..', 'packages', 'packages-common')):
+if os.path.exists(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'etc')):
     DEV_MODE = True
-else:
+elif os.path.exists(os.path.join(PATH_APP_ROOT, '..', '..', 'etc')):
     DEV_MODE = False
+else:
+    print('invalid installation.\n')
+    sys.exit(1)
+
 
 if DEV_MODE:
     # 开发调试模式
@@ -54,39 +58,14 @@ if DEV_MODE:
     PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'data'))
 
 else:
-    # 未打包的发布路径（发布源代码）
-    #   web_root
-    #     |- app
-    #     |   |- eom_common
-    #     |   \- eom_app
-    #     |- static
-    #     |- view
-    #     \- packages
-    #          |- packages-common
-    #          \- packages-windows   or   packages-linux
-    # --------------------------------------------------------------
-    # 打包后的发布路径
-    #   web_root
-    #     |- app.zip
-    #     |- static
-    #     |- view
-    #     \- packages
-    #          |- packages-common
-    #          \- packages-windows   or   packages-linux
-
-    _ext_path = os.path.abspath(os.path.join(PATH_APP_ROOT, 'packages', 'packages-common'))
+    _ext_path = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', 'packages', 'packages-common'))
     if _ext_path not in sys.path:
         sys.path.append(_ext_path)
-        # print('add path: ', _ext_path)
 
-    _ext_path = os.path.abspath(os.path.join(PATH_APP_ROOT, 'packages', 'packages-{}'.format(PLATFORM), BITS))
+    _ext_path = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', 'packages', 'packages-{}'.format(PLATFORM), BITS))
     if _ext_path not in sys.path:
         sys.path.append(_ext_path)
-        # print('add path: ', _ext_path)
 
     PATH_LOG = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'log'))
     PATH_CONF = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'etc'))
     PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'data'))
-
-# if PLATFORM == 'linux':
-#     PATH_LOG = '/var/log/eom/teleport'

@@ -28,7 +28,7 @@ PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'config-3.4m-x86_64-linux-gnu', 
 
 class PYSBase:
     def __init__(self):
-        self.base_path = os.path.join(ROOT_PATH, 'out', 'pysrt')#, ctx.dist_path)
+        self.base_path = os.path.join(ROOT_PATH, 'out', 'pysrt', ctx.dist_path)
 
         self.py_dll_path = ''
         self.py_lib_path = ''

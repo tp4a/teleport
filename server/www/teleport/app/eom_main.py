@@ -4,9 +4,9 @@ import os
 import sys
 from eom_env import *
 import eom_app.app as app
-from eom_common.eomcore.logger import *
+# from eom_common.eomcore.logger import *
 
-log.set_attribute(min_level=LOG_DEBUG, trace_error=TRACE_ERROR_FULL)
+# log.set_attribute(min_level=LOG_INFO, trace_error=TRACE_ERROR_NONE)
 
 
 def main():

@@ -17,24 +17,28 @@ PATH_TARGET=/usr/local/eom
 
 if [ ! -d "${PATH_TARGET}" ]; then
 	mkdir -p "${PATH_TARGET}"
-else
-	if [ -f /etc/init.d/eom_ts ]; then
-		service eom_ts stop
-		rm -rf /etc/init.d/eom_ts
-	fi
-	if [ -f /etc/rc2.d/S50eom_ts ]; then
-		rm -rf /etc/rc2.d/S50eom_ts
-	fi
-
-	if [ -f /etc/init.d/teleport ]; then
-		service teleport stop
-		rm -rf /etc/init.d/teleport
-	fi
-	if [ -f /etc/rc2.d/S50teleport ]; then
-		rm -rf /etc/rc2.d/S50teleport
-	fi
 fi
 
+if [ -f /etc/init.d/eom_ts ]; then
+	service eom_ts stop
+	rm -rf /etc/init.d/eom_ts
+fi
+rm -rf /etc/rc2.d/S50eom_ts
+rm -rf /etc/rc3.d/S50eom_ts
+rm -rf /etc/rc4.d/S50eom_ts
+rm -rf /etc/rc5.d/S50eom_ts
+
+
+if [ -f /etc/init.d/teleport ]; then
+	service teleport stop
+	rm -rf /etc/init.d/teleport
+fi
+rm -rf /etc/rc2.d/S50teleport
+rm -rf /etc/rc3.d/S50teleport
+rm -rf /etc/rc4.d/S50teleport
+rm -rf /etc/rc5.d/S50teleport
+
+sleep 1
 echo ""
 echo "Installing EOM Teleport Server..."
 
@@ -72,10 +76,10 @@ chmod +x "${PATH_TARGET}/teleport/status.sh"
 cp "${PATH_ROOT}/data/daemon" /etc/init.d/teleport
 chmod +x /etc/init.d/teleport
 
-if [ -f /etc/rc2.d/S50teleport ]; then
-	rm -rf /etc/rc2.d/S50teleport
-fi
 ln -s /etc/init.d/teleport /etc/rc2.d/S50teleport
+ln -s /etc/init.d/teleport /etc/rc3.d/S50teleport
+ln -s /etc/init.d/teleport /etc/rc4.d/S50teleport
+ln -s /etc/init.d/teleport /etc/rc5.d/S50teleport
 
 # Upgrade database...
 "${PATH_TARGET}/teleport/bin/tp_web" --py "${PATH_TARGET}/teleport/www/teleport/app/eom_upgrade.py"

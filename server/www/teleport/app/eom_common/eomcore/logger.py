@@ -5,7 +5,7 @@ import platform
 import atexit
 import sys
 import threading
-import time
+# import time
 import traceback
 
 __all__ = ['log',
@@ -107,7 +107,6 @@ class EomLogger:
         self._trace_error = TRACE_ERROR_NONE  # 记录错误信息时，是否追加记录调用栈
         self._log_datetime = True  # 是否记录日志时间
         self._file_handle = None  # 日志文件的句柄，为None时表示不记录到文件
-        self._log_console = self._console_default  # 输出到控制台的方式，为None时表示不输出到控制台
 
         self._win_color = None
 
@@ -186,31 +185,6 @@ class EomLogger:
             self._log_console = self._log_pass
             return
 
-        # if sys.platform == 'linux' or sys.platform == 'darwin':
-        #     self._log_console = self._console_linux
-        # elif sys.platform == 'win32':
-        #
-        #     if sys.stdout is None:
-        #         self._dbg_view = Win32DebugView()
-        #         if self._dbg_view.available():
-        #             self._log_console = self._dbg_view.output
-        #
-        #         self.log('use DebugView as logger output.\n')
-        #         # self._log_console = self._func_pass
-        #
-        #
-        #     else:
-        #         # if 'TERM' in os.environ and 'emacs' != os.environ['TERM']:
-        #         #     self._log_console = self._console_linux
-        #
-        #         # self._win_color = Win32ColorConsole()
-        #         # if self._win_color.available():
-        #         #     self._log_console = self._console_win
-        #         # else:
-        #         #     self._log_console = self._console_linux
-        #
-        #         self._log_console = self._console_linux
-
         # python2.7 on Ubuntu, sys.platform is 'linux2', so we use platform.system() instead.
 
         _platform = platform.system().lower()
@@ -219,7 +193,6 @@ class EomLogger:
             self._console_set_color = self._console_set_color_linux
             self._console_restore_color = self._console_restore_color_linux
         elif _platform == 'windows':
-            # print(os.environ)
             if 'TERM' in os.environ and os.environ['TERM'] in ['xterm', 'emacs']:
                 self._console_set_color = self._console_set_color_linux
                 self._console_restore_color = self._console_restore_color_linux
@@ -281,9 +254,7 @@ class EomLogger:
 
     def _log_error(self, *args, **kwargs):
         self._console_set_color(CR_ERROR)
-        # self._do_log(LOG_ERROR, *args, **kwargs)
-
-        self._do_log(LOG_ERROR, '[ERROR] ', *args, **kwargs)
+        self._do_log(LOG_ERROR, *args, **kwargs)
 
         if self._trace_error == TRACE_ERROR_NONE:
             return
@@ -315,7 +286,7 @@ class EomLogger:
             # if not first:
             #     tpweb.log_output(level, sep)
 
-            first = False
+            # first = False
             if isinstance(x, str):
                 tpweb.log_output(level, x)
                 continue
@@ -329,14 +300,7 @@ class EomLogger:
         if level < self._min_level:
             return
 
-        # sep = kwargs['sep'] if 'sep' in kwargs else self._sep
-        # end = kwargs['end'] if 'end' in kwargs else self._end
-        # first = True
         for x in args:
-            # if not first:
-            #     sys.stdout.writelines(sep)
-
-            first = False
             if isinstance(x, str):
                 sys.stdout.writelines(x)
                 continue
@@ -344,20 +308,17 @@ class EomLogger:
             else:
                 sys.stdout.writelines(x.__str__())
 
-                # sys.stdout.writelines(end)
-                # sys.stdout.flush()
-
     def _console_set_color_win(self, cr=None):
-        if cr is None:
+        if cr is None or USE_TPWEB_LOG:
             return
         self._win_color.set_color(COLORS[cr][1])
-        sys.stdout.flush()
 
     def _console_set_color_linux(self, cr=None):
         if cr is None:
             return
-        sys.stdout.writelines('\x1B')
-        sys.stdout.writelines(COLORS[cr][0])
+        if not USE_TPWEB_LOG:
+            sys.stdout.writelines('\x1B')
+            sys.stdout.writelines(COLORS[cr][0])
         sys.stdout.flush()
 
     def _console_restore_color_win(self):
@@ -461,79 +422,79 @@ class EomLogger:
     #         except IOError:
     #             pass
 
-    def _console_default(self, msg, color=None):
-        """
-        Log to console without color.
-        """
-        if not self._log_console:
-            return
-        if msg is None:
-            return
+    # def _console_default(self, msg, color=None):
+    #     """
+    #     Log to console without color.
+    #     """
+    #     if not self._log_console:
+    #         return
+    #     if msg is None:
+    #         return
+    #
+    #     sys.stdout.writelines(msg)
+    #     sys.stdout.flush()
 
-        sys.stdout.writelines(msg)
-        sys.stdout.flush()
-
-    def _console_win(self, msg, color=None):
-        if not self._log_console:
-            return
-        if msg is None:
-            msg = ''
-
-        # 这里的问题很复杂，日常使用没有问题，但是当在工作机上使用时，部分内容是捕获另一个脚本执行的结果再输出
-        # 如果结果中有中文，这里就会显示乱码。如果尝试编码转换，会抛出异常。目前暂时采用显示乱码的方式了。
-
-        # if CONSOLE_WIN_CMD == self.console_type:
-        # 	try:
-        # 		_msg = unicode(msg, 'utf-8')
-        # 	except:
-        # 		_msg = msg
-        # else:
-        # 	_msg = msg
-        # _msg = None
-        # if isinstance(msg, unicode):
-        #     _msg = msg
-        # else:
-        #     # _msg = unicode(msg, 'utf-8')
-        #     try:
-        #         _msg = unicode(msg, 'utf-8')
-        #     except:
-        #         _msg = unicode(msg, 'gb2312')
-        #         # _msg = msg
-        #
-        #         # if CONSOLE_WIN_CMD == self.console_type:
-        #         # 	sys.stdout.writelines(msg.encode('gb2312'))
-        #         # else:
-        #         # 	sys.stdout.writelines(msg.encode('utf-8'))
-        #
-        #
-        #         # try:
-        #         #	_msg = unicode(msg, 'utf-8')
-        #         # except:
-        # _msg = msg
-
-        if color is None:
-            sys.stdout.writelines(msg)
-        else:
-            self._win_color.set_color(COLORS[color][1])
-            sys.stdout.writelines(msg)
-            sys.stdout.flush()
-            self._win_color.set_color(COLORS[CR_NORMAL][1])
-
-        sys.stdout.flush()
-
-    def _console_linux(self, msg, cr=None):
-        if not self._log_console:
-            return
-        if msg is None:
-            return
-
-        if cr is None:
-            sys.stdout.writelines(msg)
-        else:
-            sys.stdout.writelines('\x1B%s%s\x1B[0m' % (COLORS[cr][0], msg))
-            # sys.stdout.writelines('\[%s%s\[[0m' % (COLORS[cr][0], msg))
-
-        sys.stdout.flush()
+    # def _console_win(self, msg, color=None):
+    #     if not self._log_console:
+    #         return
+    #     if msg is None:
+    #         msg = ''
+    #
+    #     # 这里的问题很复杂，日常使用没有问题，但是当在工作机上使用时，部分内容是捕获另一个脚本执行的结果再输出
+    #     # 如果结果中有中文，这里就会显示乱码。如果尝试编码转换，会抛出异常。目前暂时采用显示乱码的方式了。
+    #
+    #     # if CONSOLE_WIN_CMD == self.console_type:
+    #     # 	try:
+    #     # 		_msg = unicode(msg, 'utf-8')
+    #     # 	except:
+    #     # 		_msg = msg
+    #     # else:
+    #     # 	_msg = msg
+    #     # _msg = None
+    #     # if isinstance(msg, unicode):
+    #     #     _msg = msg
+    #     # else:
+    #     #     # _msg = unicode(msg, 'utf-8')
+    #     #     try:
+    #     #         _msg = unicode(msg, 'utf-8')
+    #     #     except:
+    #     #         _msg = unicode(msg, 'gb2312')
+    #     #         # _msg = msg
+    #     #
+    #     #         # if CONSOLE_WIN_CMD == self.console_type:
+    #     #         # 	sys.stdout.writelines(msg.encode('gb2312'))
+    #     #         # else:
+    #     #         # 	sys.stdout.writelines(msg.encode('utf-8'))
+    #     #
+    #     #
+    #     #         # try:
+    #     #         #	_msg = unicode(msg, 'utf-8')
+    #     #         # except:
+    #     # _msg = msg
+    #
+    #     if color is None:
+    #         sys.stdout.writelines(msg)
+    #     else:
+    #         self._win_color.set_color(COLORS[color][1])
+    #         sys.stdout.writelines(msg)
+    #         sys.stdout.flush()
+    #         self._win_color.set_color(COLORS[CR_NORMAL][1])
+    #
+    #     sys.stdout.flush()
+    #
+    # def _console_linux(self, msg, cr=None):
+    #     if not self._log_console:
+    #         return
+    #     if msg is None:
+    #         return
+    #
+    #     if cr is None:
+    #         sys.stdout.writelines(msg)
+    #     else:
+    #         sys.stdout.writelines('\x1B%s%s\x1B[0m' % (COLORS[cr][0], msg))
+    #         # sys.stdout.writelines('\[%s%s\[[0m' % (COLORS[cr][0], msg))
+    #
+    #     sys.stdout.flush()
 
     def _log_file(self, msg):
         if self._file_handle is None:
@@ -544,7 +505,7 @@ class EomLogger:
         self._file_handle.write(msg)
         self._file_handle.flush()
 
-    def _log_print(self, *args, **kwargs):
+    def log_print(self, *args, **kwargs):
         sep = kwargs['sep'] if 'sep' in kwargs else ' '
         end = kwargs['end'] if 'end' in kwargs else '\n'
 
@@ -668,4 +629,4 @@ del EomLogger
 
 import builtins
 
-builtins.__dict__['print'] = log._log_print
+builtins.__dict__['print'] = log.log_print

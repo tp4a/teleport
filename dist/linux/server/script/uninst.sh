@@ -19,17 +19,20 @@ if [ -f /etc/init.d/eom_ts ]; then
 	service eom_ts stop
 	rm -rf /etc/init.d/eom_ts
 fi
-if [ -f /etc/rc2.d/S50eom_ts ]; then
-	rm -rf /etc/rc2.d/S50eom_ts
-fi
+rm -rf /etc/rc2.d/S50eom_ts
+rm -rf /etc/rc3.d/S50eom_ts
+rm -rf /etc/rc4.d/S50eom_ts
+rm -rf /etc/rc5.d/S50eom_ts
+
 
 if [ -f /etc/init.d/teleport ]; then
 	service teleport stop
 	rm -rf /etc/init.d/teleport
 fi
-if [ -f /etc/rc2.d/S50teleport ]; then
-	rm -rf /etc/rc2.d/S50teleport
-fi
+rm -rf /etc/rc2.d/S50teleport
+rm -rf /etc/rc3.d/S50teleport
+rm -rf /etc/rc4.d/S50teleport
+rm -rf /etc/rc5.d/S50teleport
 
 
 if [ -d /usr/local/eom/teleport ]; then

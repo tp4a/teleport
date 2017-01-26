@@ -14,10 +14,10 @@ ROOT_PATH = utils.cfg.ROOT_PATH
 PATH_EXTERNAL = os.path.join(ROOT_PATH, 'external')
 PATH_DOWNLOAD = os.path.join(PATH_EXTERNAL, '_download_')
 
-OPENSSL_VER = utils.cfg.OPENSSL_VER
-LIBUV_VER = utils.cfg.LIBUV_VER
-MBEDTLS_VER = utils.cfg.MBEDTLS_VER
-SQLITE_VER = utils.cfg.SQLITE_VER
+OPENSSL_VER = utils.cfg.ver.openssl
+LIBUV_VER = utils.cfg.ver.libuv
+MBEDTLS_VER = utils.cfg.ver.mbedtls
+SQLITE_VER = utils.cfg.ver.sqlite
 
 
 class BuilderBase:
