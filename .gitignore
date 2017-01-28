@@ -61,3 +61,4 @@ __pycache__
 /server/share/log
 /config.ini
 /build.bat
+/dist/windows/client/assist/apps
