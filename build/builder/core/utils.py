@@ -220,8 +220,8 @@ def python_exec():
 
 
 def msbuild_path():
-    if cfg.msbuild is not None:
-        return cfg.msbuild
+    if cfg.toolchain.msbuild is not None:
+        return cfg.toolchain.msbuild
 
     # 14.0 = VS2015
     # 12.0 = VS2012
@@ -241,13 +241,13 @@ def msbuild_path():
     if not os.path.exists(msb):
         raise RuntimeError('Can not locate MSBuild at {}'.format(msp))
 
-    cfg.msbuild = msb
+    cfg.toolchain.msbuild = msb
     return msb
 
 
 def nsis_path():
-    if cfg.nsis is not None:
-        return cfg.nsis
+    if cfg.toolchain.nsis is not None:
+        return cfg.toolchain.nsis
 
     p = winreg_read_wow64_32(r'SOFTWARE\NSIS\Unicode', '')
     if p is None:
@@ -257,7 +257,7 @@ def nsis_path():
     if not os.path.exists(p):
         raise RuntimeError('Can not locate NSIS at {}'.format(p))
 
-    cfg.nsis = p
+    cfg.toolchain.nsis = p
     return p
 
 

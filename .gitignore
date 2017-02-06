@@ -62,3 +62,4 @@ __pycache__
 /config.ini
 /build.bat
 /dist/windows/client/assist/apps
+/dist/windows/client/assist/cfg

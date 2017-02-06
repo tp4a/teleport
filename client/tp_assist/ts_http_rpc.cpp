@@ -100,12 +100,12 @@ void http_rpc_main_loop(void)
 		return;
 	}
 
-	EXLOGV("======================================================\n");
-	EXLOGV("[rpc] TeleportAssist-HTTP-RPC ready on %s:%d\n", TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT);
+	EXLOGW("======================================================\n");
+	EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on %s:%d\n", TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT);
 
 	g_http_interface.run();
 
-	EXLOGV("[prc] main loop end.\n");
+	EXLOGW("[prc] main loop end.\n");
 }
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
