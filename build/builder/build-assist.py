@@ -50,9 +50,14 @@ class BuilderWin(BuilderBase):
     def build_installer(self):
         cc.i('build assist package for website...')
 
-        name = 'tp-assist-{}'.format(VER_TELEPORT_ASSIST)
-        out_file = os.path.join(ROOT_PATH, 'dist', '{}.exe'.format(name))
+        name = 'teleport-assist-{}'.format(VER_TELEPORT_ASSIST)
+
+        out_path = os.path.join(ROOT_PATH, 'out', 'installer')
+        utils.makedirs(out_path)
+
+        out_file = os.path.join(out_path, '{}.exe'.format(name))
         utils.remove(out_file)
+
         self._build_installer()
 
         # last_ver = 'teleport-assist-last-win.zip'
