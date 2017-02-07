@@ -290,21 +290,21 @@ def get_group_list():
     return ret
 
 
-def get_config_list():
-    try:
-        sql_exec = get_db_con()
-        field_a = ['name', 'value']
-        string_sql = 'SELECT {} FROM ts_config as a ;'.format(','.join(['a.{}'.format(i) for i in field_a]))
-        db_ret = sql_exec.ExecProcQuery(string_sql)
-        h = dict()
-        for item in db_ret:
-            x = DbItem()
-            x.load(item, ['a_{}'.format(i) for i in field_a])
-            h[x.a_name] = x.a_value
-
-        return h
-    except:
-        return None
+# def get_config_list():
+#     try:
+#         sql_exec = get_db_con()
+#         field_a = ['name', 'value']
+#         string_sql = 'SELECT {} FROM ts_config as a ;'.format(','.join(['a.{}'.format(i) for i in field_a]))
+#         db_ret = sql_exec.ExecProcQuery(string_sql)
+#         h = dict()
+#         for item in db_ret:
+#             x = DbItem()
+#             x.load(item, ['a_{}'.format(i) for i in field_a])
+#             h[x.a_name] = x.a_value
+#
+#         return h
+#     except:
+#         return None
 
 
 def update(host_id, kv):

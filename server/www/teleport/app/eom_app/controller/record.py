@@ -32,10 +32,10 @@ class LogHandler(SwxAdminHandler):
         user_list = user.get_user_list()
         total_size, free_size = get_free_space_mb(cfg.data_path)
 
-        config_list = host.get_config_list()
+        # config_list = host.get_config_list()
         ts_server = dict()
-        ts_server['ip'] = config_list['ts_server_ip']
-        ts_server['port'] = cfg.server_port
+        ts_server['ip'] = cfg.core.rpc.ip #config_list['ts_server_ip']
+        ts_server['port'] = cfg.core.rpc.port #cfg.server_port
 
         self.render('log/index.mako', user_list=user_list, total_size=int(total_size), free_size=int(free_size), ts_server=ts_server)
 

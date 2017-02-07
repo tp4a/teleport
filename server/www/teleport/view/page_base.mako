@@ -81,7 +81,7 @@
 </div>
 
 	<%block name="extend_content" />
-<script type="text/javascript" src="${ static_url('js/var.js') }"></script>
+## <script type="text/javascript" src="${ static_url('js/var.js') }"></script>
 <script type="text/javascript" src="${ static_url('plugins/underscore/underscore.js') }"></script>
 <script type="text/javascript" src="${ static_url('plugins/jquery/jquery.min.js') }"></script>
 <script type="text/javascript" src="${ static_url('plugins/jquery/ajaxfileupload.js') }"></script>

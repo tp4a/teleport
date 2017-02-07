@@ -269,7 +269,7 @@ int ts_main(void)
 	// 	}
 	// 	//TS_DB_AUTH_INFO info;
 	// 	//g_db.get_auth_info(17, info);
-	// 	g_db.update_reset_log();
+	g_db.update_reset_log();
 
 	//mbedtls_debug_set_threshold(9999);
 

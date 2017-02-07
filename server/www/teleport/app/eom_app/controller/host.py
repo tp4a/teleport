@@ -7,6 +7,8 @@ import urllib
 import urllib.parse
 import urllib.request
 
+from eom_app.app.configs import app_cfg
+from eom_app.module import set
 from eom_app.module import host
 from eom_app.module.common import *
 from eom_common.eomcore.logger import *
@@ -21,22 +23,30 @@ class IndexHandler(SwxAuthHandler):
         if _user is None:
             return self.write(-1)
 
-        static_path = cfg.static_path
-        var_js = os.path.join(static_path, 'js', 'var.js')
+        # static_path = cfg.static_path
+        # var_js = os.path.join(static_path, 'js', 'var.js')
         try:
-            f = open(var_js, 'w')
+            # f = open(var_js, 'w')
             _type = _user['type']
-            config_list = host.get_config_list()
+            config_list = set.get_config_list()
             ts_server = dict()
-            ts_server['ip'] = config_list['ts_server_ip']
-            ts_server['ssh_port'] = config_list['ts_server_ssh_port']
-            ts_server['rdp_port'] = config_list['ts_server_rdp_port']
-            ts_server['telnet_port'] = config_list['ts_server_telnet_port']
-            f.write("\"use strict\";\nvar teleport_ip = \"{}\";\n".format(ts_server['ip']))
+            # ts_server['ip'] = config_list['ts_server_ip']
+            # ts_server['ip'] = cfg['ts_server_ip']
+            # ts_server['ip'] = '0.0.0.0'
+
+            # ts_server['ssh_port'] = config_list['ts_server_ssh_port']
+            # ts_server['rdp_port'] = config_list['ts_server_rdp_port']
+            # ts_server['telnet_port'] = config_list['ts_server_telnet_port']
+
+            ts_server['ssh_port'] = cfg.core.ssh.port
+            ts_server['rdp_port'] = cfg.core.rdp.port
+            ts_server['telnet_port'] = cfg.core.telnet.port
+
+            # f.write("\"use strict\";\nvar teleport_ip = \"{}\";\n".format(ts_server['ip']))
         except Exception as e:
             return self.write(-1)
-        finally:
-            f.close()
+        # finally:
+        #     f.close()
 
         if _type >= 100:
             group_list = host.get_group_list()
@@ -805,14 +815,16 @@ class GetSessionId(SwxAuthJsonHandler):
             return
         auth_id = args['auth_id']
 
-        config_list = host.get_config_list()
-        ts_server_rpc_ip = '127.0.0.1'
-
-        if 'ts_server_rpc_ip' in config_list:
-            ts_server_rpc_ip = config_list['ts_server_rpc_ip']
-        ts_server_rpc_port = 52080
-        if 'ts_server_rpc_port' in config_list:
-            ts_server_rpc_port = config_list['ts_server_rpc_port']
+        # config_list = host.get_config_list()
+        # ts_server_rpc_ip = '127.0.0.1'
+        #
+        # if 'ts_server_rpc_ip' in config_list:
+        #     ts_server_rpc_ip = config_list['ts_server_rpc_ip']
+        # ts_server_rpc_port = 52080
+        # if 'ts_server_rpc_port' in config_list:
+        #     ts_server_rpc_port = config_list['ts_server_rpc_port']
+        ts_server_rpc_ip = cfg.core.rpc.ip
+        ts_server_rpc_port = cfg.core.rpc.port
 
         url = 'http://{}:{}/request_session'.format(ts_server_rpc_ip, ts_server_rpc_port)
         values['auth_id'] = auth_id
@@ -856,14 +868,16 @@ class AdminGetSessionId(SwxAuthJsonHandler):
             return
         values['account'] = 'admin'
 
-        config_list = host.get_config_list()
-        ts_server_rpc_ip = '127.0.0.1'
-
-        if 'ts_server_rpc_ip' in config_list:
-            ts_server_rpc_ip = config_list['ts_server_rpc_ip']
-        ts_server_rpc_port = 52080
-        if 'ts_server_rpc_port' in config_list:
-            ts_server_rpc_port = config_list['ts_server_rpc_port']
+        # config_list = host.get_config_list()
+        # ts_server_rpc_ip = '127.0.0.1'
+        #
+        # if 'ts_server_rpc_ip' in config_list:
+        #     ts_server_rpc_ip = config_list['ts_server_rpc_ip']
+        # ts_server_rpc_port = 52080
+        # if 'ts_server_rpc_port' in config_list:
+        #     ts_server_rpc_port = config_list['ts_server_rpc_port']
+        ts_server_rpc_ip = cfg.core.rpc.ip
+        ts_server_rpc_port = cfg.core.rpc.port
 
         url = 'http://{}:{}/request_session'.format(ts_server_rpc_ip, ts_server_rpc_port)
         # values['auth_id'] = auth_id
@@ -947,14 +961,16 @@ class AdminFastGetSessionId(SwxAuthJsonHandler):
 
         values['account'] = 'admin'
 
-        config_list = host.get_config_list()
-        ts_server_rpc_ip = '127.0.0.1'
-
-        if 'ts_server_rpc_ip' in config_list:
-            ts_server_rpc_ip = config_list['ts_server_rpc_ip']
-        ts_server_rpc_port = 52080
-        if 'ts_server_rpc_port' in config_list:
-            ts_server_rpc_port = config_list['ts_server_rpc_port']
+        # config_list = host.get_config_list()
+        # ts_server_rpc_ip = '127.0.0.1'
+        #
+        # if 'ts_server_rpc_ip' in config_list:
+        #     ts_server_rpc_ip = config_list['ts_server_rpc_ip']
+        # ts_server_rpc_port = 52080
+        # if 'ts_server_rpc_port' in config_list:
+        #     ts_server_rpc_port = config_list['ts_server_rpc_port']
+        ts_server_rpc_ip = cfg.core.rpc.ip
+        ts_server_rpc_port = cfg.core.rpc.port
 
         url = 'http://{}:{}/request_session'.format(ts_server_rpc_ip, ts_server_rpc_port)
         # values['auth_id'] = auth_id

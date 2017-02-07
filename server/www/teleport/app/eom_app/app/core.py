@@ -79,15 +79,15 @@ class SwxCore:
         # db_path = os.path.join(cfg.data_path, 'ts_db.db')
         get_sqlite_pool().init(cfg.data_path)
 
-        var_js = os.path.join(cfg.static_path, 'js', 'var.js')
-        try:
-            # if not os.path.exists(var_js):
-            f = open(var_js, 'w')
-            f.write("\"use strict\";\nvar teleport_ip = \"{}\";\n".format(get_sqlite_pool().get_config_server_ip()))
-            f.close()
-        except Exception:
-            log.e('can not load config: server_ip.\n')
-            return False
+        # var_js = os.path.join(cfg.static_path, 'js', 'var.js')
+        # try:
+        #     # if not os.path.exists(var_js):
+        #     f = open(var_js, 'w')
+        #     f.write("\"use strict\";\nvar teleport_ip = \"{}\";\n".format(get_sqlite_pool().get_config_server_ip()))
+        #     f.close()
+        # except Exception:
+        #     log.e('can not load config: server_ip.\n')
+        #     return False
 
         return True
 
@@ -98,7 +98,11 @@ class SwxCore:
             _cfg_path = os.path.join(options['app_path'], 'conf')
 
         _cfg_file = os.path.join(_cfg_path, 'web.ini')
-        if not cfg.load(_cfg_file):
+        if not cfg.load_web(_cfg_file):
+            return False
+
+        _cfg_file = os.path.join(_cfg_path, 'core.ini')
+        if not cfg.load_core(_cfg_file):
             return False
 
         cfg.cfg_path = _cfg_path

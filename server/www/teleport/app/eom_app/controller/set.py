@@ -47,38 +47,46 @@ class IndexHandler(SwxAdminHandler):
 
         # f = None
 
-        try:
-            config_list = host.get_config_list()
-            ts_server = dict()
-            ts_server['ip'] = config_list['ts_server_ip']
-            ts_server['ssh_port'] = config_list['ts_server_ssh_port']
-            ts_server['rdp_port'] = config_list['ts_server_rdp_port']
-            ts_server['telnet_port'] = config_list['ts_server_telnet_port']
-            # f = open(var_js, 'w')
-            # f.write("\"use strict\";\nvar teleport_ip = \"{}\";\n".format(ts_server['ip']))
-        except Exception:
-            return self.write(-1)
-        finally:
-            # if f is not None:
-            #     f.close()
-            pass
+        # try:
+        #     config_list = host.get_config_list()
+        #     ts_server = dict()
+        #     ts_server['ip'] = config_list['ts_server_ip']
+        #     ts_server['ssh_port'] = config_list['ts_server_ssh_port']
+        #     ts_server['rdp_port'] = config_list['ts_server_rdp_port']
+        #     ts_server['telnet_port'] = config_list['ts_server_telnet_port']
+        #     # f = open(var_js, 'w')
+        #     # f.write("\"use strict\";\nvar teleport_ip = \"{}\";\n".format(ts_server['ip']))
+        # except Exception:
+        #     return self.write(-1)
+        # finally:
+        #     # if f is not None:
+        #     #     f.close()
+        #     pass
 
-        config_list = set.get_config_list()
-        if 'ts_server_ip' in config_list:
-            ip_list = get_local_ip()
-            if not isinstance(ip_list, list):
-                ip_list = [ip_list, ]
+        # config_list = set.get_config_list()
+        # if 'ts_server_ip' in config_list:
+        #     ip_list = get_local_ip()
+        #     if not isinstance(ip_list, list):
+        #         ip_list = [ip_list, ]
+        #
+        #     # ip_list.append(config_list['ts_server_ip'])
+        #     if config_list['ts_server_ip'] not in ip_list:
+        #         ip_list.append(config_list['ts_server_ip'])
+        #
+        #     # if isinstance(temp, list):
+        #     #     ip_list.extend(temp)
+        #
+        #     config_list['_ip_list'] = ip_list
 
-            # ip_list.append(config_list['ts_server_ip'])
-            if config_list['ts_server_ip'] not in ip_list:
-                ip_list.append(config_list['ts_server_ip'])
+        cfg_list = dict()
+        cfg_list['ts_server_ssh_port'] = cfg.core.ssh.port
+        cfg_list['ts_server_ssh_enabled'] = 1 if cfg.core.ssh.enabled else 0
+        cfg_list['ts_server_rdp_port'] = cfg.core.rdp.port
+        cfg_list['ts_server_rdp_enabled'] = 1 if cfg.core.rdp.enabled else 0
+        cfg_list['ts_server_telnet_port'] = cfg.core.telnet.port
+        cfg_list['ts_server_telnet_enabled'] = 1 if cfg.core.telnet.enabled else 0
 
-            # if isinstance(temp, list):
-            #     ip_list.extend(temp)
-
-            config_list['_ip_list'] = ip_list
-
-        self.render('set/index.mako', config_list=config_list)
+        self.render('set/index.mako', config_list=cfg_list)
 
 
 def _restart_func():

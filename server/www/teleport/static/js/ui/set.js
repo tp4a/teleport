@@ -13,8 +13,8 @@ ywl.on_init = function (cb_stack, cb_args) {
 
 	var config_list = ywl.page_options.config_list;
 
-	var ts_server_ip = config_list['ts_server_ip'];
-	$("#current-ts-server-ip").val(ts_server_ip);
+//	var ts_server_ip = config_list['ts_server_ip'];
+//	$("#current-ts-server-ip").val(ts_server_ip);
 
 //	var ts_server_rpc_ip = config_list['ts_server_rpc_ip'];
 //	$("#current-rpc-ip").val(ts_server_rpc_ip);
@@ -31,11 +31,11 @@ ywl.on_init = function (cb_stack, cb_args) {
     var ts_server_telnet_port = config_list['ts_server_telnet_port'];
 	$("#current-telnet-port").val(ts_server_telnet_port);
     
-	var ip_html = [];
-	for (var i = 0; i < config_list['_ip_list'].length; i++) {
-		ip_html.push('<li><a href="javascript:;">' + config_list['_ip_list'][i] + '</a></li>');
-	}
-	$('#select-ip').html(ip_html.join(''));
+//	var ip_html = [];
+//	for (var i = 0; i < config_list['_ip_list'].length; i++) {
+//		ip_html.push('<li><a href="javascript:;">' + config_list['_ip_list'][i] + '</a></li>');
+//	}
+//	$('#select-ip').html(ip_html.join(''));
 
 	$('#select-ip li a').click(function () {
 		$("#current-ts-server-ip").val($(this).text());
