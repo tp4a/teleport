@@ -60,7 +60,7 @@ ywl.create_assist = function () {
             '<div class="alert alert-info" role="alert">',
             '<p>需要TELEPORT助手来辅助远程连接，请确认本机运行了TELEPORT助手！</p>',
             '</div>',
-            '<p>如果您尚未运行TELEPORT助手，请 <a href="http://teleport.eomsoft.net/static/download/teleport-assist-last-win.zip"><strong>下载最新版TELEPORT助手</strong></a>，解压缩并运行<strong>tp_assist.exe</strong>。一旦运行了TELEPORT助手，即可重新进行远程连接。</p>',
+            '<p>如果您尚未运行TELEPORT助手，请 <a href="http://teleport.eomsoft.net/download" target="_blank"><strong>下载最新版TELEPORT助手</strong></a> 并安装。一旦运行了TELEPORT助手，即可重新进行远程连接。</p>',
 //			'<p>如果您已经运行了TELEPORT助手，仍然出现此提示，请 <a href="https://127.0.0.1:50022/" target="_blank"><strong>诊断TELEPORT助手状态</strong></a>，如果浏览器提示连接不安全，请添加安全例外，确保可以与TELEPORT正常通讯！</p>',
 //			'<ul>',
 //			'<li>Chrome浏览器：点击“高级”，然后点击“<strong>继续前往127.0.0.1</strong>”。</li>',
