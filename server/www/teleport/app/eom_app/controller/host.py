@@ -83,7 +83,7 @@ class LoadFile(SwxAuthJsonHandler):
         """
         ret = dict()
         ret['code'] = 0
-        ret['msg'] = list()     # 记录跳过的行（格式不正确，或者数据重复等）
+        ret['msg'] = list()  # 记录跳过的行（格式不正确，或者数据重复等）
         csv_filename = ''
 
         try:
@@ -136,7 +136,7 @@ class LoadFile(SwxAuthJsonHandler):
 
                     # 格式错误则记录在案，然后继续
                     if len(csv_recorder) != 13:
-                        ret['msg'].append({'reason':'格式错误', 'line':', '.join(csv_recorder)})
+                        ret['msg'].append({'reason': '格式错误', 'line': ', '.join(csv_recorder)})
                         continue
 
                     # pro_type = int(line[6])
@@ -201,7 +201,7 @@ class LoadFile(SwxAuthJsonHandler):
                             ret['msg'].append({'reason': '添加登录账号失败，账号已存在', 'line': ', '.join(csv_recorder)})
                         else:
                             ret['msg'].append({'reason': '添加登录账号失败，操作数据库失败', 'line': ', '.join(csv_recorder)})
-                        # log.e('sys_user_add() failed.\n')
+                            # log.e('sys_user_add() failed.\n')
 
             ret = json.dumps(ret).encode('utf8')
             self.write(ret)
@@ -215,7 +215,7 @@ class LoadFile(SwxAuthJsonHandler):
             if os.path.exists(csv_filename):
                 os.remove(csv_filename)
 
-            # self.write_json(0)
+                # self.write_json(0)
 
 
 class GetListHandler(SwxAuthJsonHandler):
@@ -409,7 +409,7 @@ class ExportHost(SwxAuthJsonHandler):
         limit = dict()
         limit['page_index'] = 0
         limit['per_page'] = 999999
-        _total, _hosts = host.get_all_host_info_list(dict(), order, limit,True)
+        _total, _hosts = host.get_all_host_info_list(dict(), order, limit, True)
         export_file = os.path.join(cfg.static_path, 'download', 'export_csv_data.csv')
         if os.path.exists(export_file):
             os.remove(export_file)
@@ -809,7 +809,6 @@ class GetSessionId(SwxAuthJsonHandler):
             # ret = {'code':-1}
             self.write_json(-1)
             return
-        values = dict()
         if 'auth_id' not in args:
             self.write_json(-1)
             return
@@ -826,9 +825,9 @@ class GetSessionId(SwxAuthJsonHandler):
         ts_server_rpc_ip = cfg.core.rpc.ip
         ts_server_rpc_port = cfg.core.rpc.port
 
-        url = 'http://{}:{}/request_session'.format(ts_server_rpc_ip, ts_server_rpc_port)
-        values['auth_id'] = auth_id
-        return_data = post_http(url, values)
+        url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
+        req = {'method': 'request_session', 'param': {'authid': auth_id}}
+        return_data = post_http(url, req)
         if return_data is None:
             return self.write_json(-1)
         return_data = json.loads(return_data)
@@ -1113,7 +1112,6 @@ class SysUserDelete(SwxAuthJsonHandler):
             return
 
         if host.sys_user_delete(host_auth_id):
-             return self.write_json(0)
+            return self.write_json(0)
 
         return self.write_json(-1)
-

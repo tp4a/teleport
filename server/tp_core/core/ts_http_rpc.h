@@ -47,22 +47,20 @@ protected:
 	void _set_stop_flag(void);
 
 private:
-	ex_rv _parse_request(struct http_message* req, ex_astr& func_cmd, ex_astr& func_args);
-	void _process_js_request(const ex_astr& func_cmd, const ex_astr& func_args, ex_astr& buf);
+	ex_rv _parse_request(struct http_message* req, ex_astr& func_cmd, Json::Value& json_param);
+	void _process_request(const ex_astr& func_cmd, const Json::Value& json_param, ex_astr& buf);
 
-	void _create_json_ret(ex_astr& buf, Json::Value& jr_root);
+	//void _create_json_ret(ex_astr& buf, Json::Value& jr_root);
+	void _create_json_ret(ex_astr& buf, int errcode, const Json::Value& jr_root);
 	void _create_json_ret(ex_astr& buf, int errcode);
+	void _create_json_ret(ex_astr& buf, int errcode, const char* message);
 
 	// 请求一个会话ID
-	void _rpc_func_request_session(const ex_astr& func_args, ex_astr& buf);
+	void _rpc_func_request_session(const Json::Value& json_param, ex_astr& buf);
 	// 加密一个字符串（返回的是密文的BASE64编码）
-	void _rpc_func_enc(const ex_astr& func_args, ex_astr& buf);
-
-// 	void _rpc_func_get_auth_id(const ex_astr& func_args, ex_astr& buf);
-// 	void _rpc_func_get_auth_info(const ex_astr& func_args, ex_astr& buf);
-
-	// 要求整个TS退出
-	void _rpc_func_exit(const ex_astr& func_args, ex_astr& buf);
+	void _rpc_func_enc(const Json::Value& json_param, ex_astr& buf);
+	// 要求整个核心服务退出
+	void _rpc_func_exit(const Json::Value& json_param, ex_astr& buf);
 
 	static void _mg_event_handler(struct mg_connection *nc, int ev, void *ev_data);
 

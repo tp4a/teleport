@@ -113,11 +113,11 @@ var to_teleport = function (url, args, func_success, func_error) {
 					}
 				});
 			} else {
-				func_error(TP_ERR_CORE_SRV, 'Web:远程连接请求失败，可能teleport核心服务尚未启动！');
+				func_error(TP_ERR_CORE_SRV, '远程连接请求失败，可能teleport核心服务尚未启动！');
 			}
 		},
 		error: function () {
-			func_error(TP_ERR_NETWORK, 'Web:远程网络通讯失败！');
+			func_error(TP_ERR_NETWORK, '远程网络通讯失败！');
 		}
 	});
 };
@@ -162,11 +162,11 @@ var to_admin_teleport = function (url, args, func_success, func_error) {
 					}
 				});
 			} else {
-				func_error(TP_ERR_CORE_SRV, 'Web:远程连接请求失败，可能teleport核心服务尚未启动！');
+				func_error(TP_ERR_CORE_SRV, '远程连接请求失败，可能teleport核心服务尚未启动！');
 			}
 		},
 		error: function () {
-			func_error(TP_ERR_NETWORK, 'Web:远程网络通讯失败！');
+			func_error(TP_ERR_NETWORK, '远程网络通讯失败！');
 		}
 	});
 };
@@ -214,11 +214,11 @@ var to_admin_fast_teleport = function (url, args, func_success, func_error) {
 					}
 				});
 			} else {
-				func_error(TP_ERR_CORE_SRV, 'Web:远程连接请求失败，可能teleport核心服务尚未启动！');
+				func_error(TP_ERR_CORE_SRV, '远程连接请求失败，可能teleport核心服务尚未启动！');
 			}
 		},
 		error: function () {
-			func_error(TP_ERR_NETWORK, 'Web:远程网络通讯失败！');
+			func_error(TP_ERR_NETWORK, '远程网络通讯失败！');
 		}
 	});
 };
@@ -241,7 +241,7 @@ var start_rdp_replay = function (args, func_success, func_error) {
 			console.log('ret', ret);
 		},
 		error: function () {
-			func_error(TP_ERR_NETWORK, 'Web:远程网络通讯失败！');
+			func_error(TP_ERR_NETWORK, '远程网络通讯失败！');
 		}
 	});
 };

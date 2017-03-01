@@ -73,7 +73,6 @@ void TsHttpRpc::_set_stop_flag(void)
 	m_stop_flag = true;
 }
 
-
 bool TsHttpRpc::init(void)
 {
 	struct mg_connection* nc = NULL;
@@ -118,35 +117,42 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 	{
 	case MG_EV_HTTP_REQUEST:
 	{
-#ifdef EX_DEBUG
-		const char* dbg_method = NULL;
-		if (hm->method.len == 3 && 0 == memcmp(hm->method.p, "GET", hm->method.len))
-			dbg_method = "GET";
-		else if (hm->method.len == 4 && 0 == memcmp(hm->method.p, "POST", hm->method.len))
-			dbg_method = "POST";
-		else
-			dbg_method = "UNSUPPORTED-HTTP-METHOD";
-
-		ex_chars dbg_uri;
-		dbg_uri.resize(hm->uri.len + 1);
-		memset(&dbg_uri[0], 0, hm->uri.len + 1);
-		memcpy(&dbg_uri[0], hm->uri.p, hm->uri.len);
-		EXLOGV("[core-rpc] got %s request: %s\n", dbg_method, &dbg_uri[0]);
-#endif
 		ex_astr ret_buf;
 
-		ex_astr method;
-		ex_astr json_param;
-		ex_rv rv = _this->_parse_request(hm, method, json_param);
-		if (TSR_OK != rv)
+		//const char* dbg_method = NULL;
+// 		ex_chars _uri;
+// 		_uri.resize(hm->uri.len + 1);
+// 		memset(&_uri[0], 0, hm->uri.len + 1);
+// 		memcpy(&_uri[0], hm->uri.p, hm->uri.len);
+// 		ex_astr uri = &_uri[0];
+		ex_astr uri;
+		uri.assign(hm->uri.p, hm->uri.len);
+
+		EXLOGV("got request: %s\n", uri.c_str());
+
+		if (uri == "/rpc")
 		{
-			EXLOGE("[core-rpc] got invalid request.\n");
-			_this->_create_json_ret(ret_buf, rv);
+			ex_astr method;
+			Json::Value json_param;
+
+			ex_rv rv = _this->_parse_request(hm, method, json_param);
+			if (TSR_OK != rv)
+			{
+				EXLOGE("[core-rpc] got invalid request.\n");
+				_this->_create_json_ret(ret_buf, rv);
+			}
+			else
+			{
+				_this->_process_request(method, json_param, ret_buf);
+			}
 		}
 		else
 		{
-			_this->_process_js_request(method, json_param, ret_buf);
+			EXLOGE("[core-rpc] got invalid request: not `rpc` uri.\n");
+			_this->_create_json_ret(ret_buf, TSR_INVALID_REQUEST, "not a `rpc` request.");
 		}
+
+
 
 		mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: application/json\r\n\r\n%s", (int)ret_buf.size() - 1, &ret_buf[0]);
 		nc->flags |= MG_F_SEND_AND_CLOSE;
@@ -157,7 +163,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 	}
 }
 
-ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_astr& func_args)
+ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Json::Value& json_param)
 {
 	if (NULL == req)
 		return TSR_INVALID_REQUEST;
@@ -170,94 +176,59 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_
 	else
 		return TSR_INVALID_REQUEST;
 
-	std::vector<ex_astr> strs;
+	ex_astr json_str;
+	if (is_get)
+		json_str.assign(req->query_string.p, req->query_string.len);
+	else
+		json_str.assign(req->body.p, req->body.len);
 
-	size_t pos_start = 1;	// 跳过第一个字节，一定是 '/'
-
-	size_t i = 0;
-	for (i = pos_start; i < req->uri.len; ++i)
-	{
-		if (req->uri.p[i] == '/')
-		{
-			if (i - pos_start > 0)
-			{
-				ex_astr tmp_uri;
-				tmp_uri.assign(req->uri.p + pos_start, i - pos_start);
-				strs.push_back(tmp_uri);
-			}
-			pos_start = i + 1;	// 跳过当前找到的分隔符
-		}
-	}
-	if (pos_start < req->uri.len)
-	{
-		ex_astr tmp_uri;
-		tmp_uri.assign(req->uri.p + pos_start, req->uri.len - pos_start);
-		strs.push_back(tmp_uri);
-	}
-
-	if(0 == strs.size())
+	if (0 == json_str.length())
 		return TSR_INVALID_REQUEST;
 
-	if (is_get)
-	{
-		if (1 == strs.size())
-		{
-			func_cmd = strs[0];
-		}
-		else if (2 == strs.size())
-		{
-			func_cmd = strs[0];
-			func_args = strs[1];
-		}
-		else
-		{
-			return TSR_INVALID_REQUEST;
-		}
-	}
-	else
-	{
-		if (1 == strs.size())
-		{
-			func_cmd = strs[0];
-		}
-		else
-		{
-			return TSR_INVALID_REQUEST;
-		}
+	// 将参数进行 url-decode 解码
+	int len = json_str.length() * 2;
+	ex_chars sztmp;
+	sztmp.resize(len);
+	memset(&sztmp[0], 0, len);
+	if (-1 == ts_url_decode(json_str.c_str(), json_str.length(), &sztmp[0], len, 0))
+		return TSR_INVALID_URL_ENCODE;
 
-		if (req->body.len > 0)
-		{
-			func_args.assign(req->body.p, req->body.len);
-		}
-	}
+	json_str = &sztmp[0];
 
-	if (func_args.length()>0)
-	{
-		// 将参数进行 url-decode 解码
-		int len = func_args.length() * 2;
-		ex_chars sztmp;
-		sztmp.resize(len);
-		memset(&sztmp[0], 0, len);
-		if (-1 == ts_url_decode(func_args.c_str(), func_args.length(), &sztmp[0], len, 0))
-			return TSR_INVALID_URL_ENCODE;
 
-		func_args = &sztmp[0];
-	}
 
-	//EXLOGV("[rpc] method=%s, json_param=%s\n", func_cmd.c_str(), func_args.c_str());
+	Json::Reader jreader;
+
+	if (!jreader.parse(json_str.c_str(), json_param))
+		return TSR_INVALID_JSON_FORMAT;
+
+	if (json_param.isArray())
+		return TSR_INVALID_JSON_PARAM;
+
+	if (json_param["method"].isNull() || !json_param["method"].isString())
+		return TSR_INVALID_JSON_PARAM;
+
+	func_cmd = json_param["method"].asCString();
+	json_param = json_param["param"];
 
 	return TSR_OK;
 }
 
-void TsHttpRpc::_create_json_ret(ex_astr& buf, Json::Value& jr_root)
+void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode, const Json::Value& jr_data)
 {
+	// 返回： {"code":errcode, "data":{jr_data}}
+
 	Json::FastWriter jr_writer;
+	Json::Value jr_root;
+
+	jr_root["code"] = errcode;
+	jr_root["data"] = jr_data;
 	buf = jr_writer.write(jr_root);
 }
 
 void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode)
 {
-	// 返回： {"code":123}
+	// 返回： {"code":errcode}
 
 	Json::FastWriter jr_writer;
 	Json::Value jr_root;
@@ -266,27 +237,31 @@ void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode)
 	buf = jr_writer.write(jr_root);
 }
 
-void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func_args, ex_astr& buf)
+void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode, const char* message)
+{
+	// 返回： {"code":errcode, "message":message}
+
+	Json::FastWriter jr_writer;
+	Json::Value jr_root;
+
+	jr_root["code"] = errcode;
+	jr_root["message"] = message;
+	buf = jr_writer.write(jr_root);
+}
+
+void TsHttpRpc::_process_request(const ex_astr& func_cmd, const Json::Value& json_param, ex_astr& buf)
 {
 	if (func_cmd == "request_session")
 	{
-		_rpc_func_request_session(func_args, buf);
+		_rpc_func_request_session(json_param, buf);
 	}
 	else if (func_cmd == "enc")
 	{
-		_rpc_func_enc(func_args, buf);
+		_rpc_func_enc(json_param, buf);
 	}
-// 	else if (func_cmd == "get_auth_id")
-// 	{
-// 		_rpc_func_get_auth_id(func_args, buf);
-// 	}
-// 	else if (func_cmd == "get_auth_info")
-// 	{
-// 		_rpc_func_get_auth_info(func_args, buf);
-// 	}
 	else if (func_cmd == "exit")
 	{
-		_rpc_func_exit(func_args, buf);
+		_rpc_func_exit(json_param, buf);
 	}
 	else
 	{
@@ -296,183 +271,211 @@ void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func
 }
 
 extern bool g_exit_flag;	// 要求整个TS退出的标志（用于停止各个工作线程）
-void TsHttpRpc::_rpc_func_exit(const ex_astr& func_args, ex_astr& buf)
+void TsHttpRpc::_rpc_func_exit(const Json::Value& json_param, ex_astr& buf)
 {
 	// 设置一个全局退出标志
 	g_exit_flag = true;
 	_create_json_ret(buf, TSR_OK);
-	return;
 }
 
-void TsHttpRpc::_rpc_func_request_session(const ex_astr& func_args, ex_astr& buf)
+void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr& buf)
 {
-	// 申请一个会话ID
-	// 入参: 两种模式
-	// MODE A: 已知目标服务器信息及认证信息
-	// 示例: {"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2,"enc":0}
-	//   ip: 目标服务器IP地址
-	//   port: 目标服务器端口
-	//   uname: 目标服务器认证所用的用户名
-	//   uauth: 目标服务器认证所用的密码或私钥
-	//   authmode: 1=password, 2=private-key
-	//   protocol: 1=rdp, 2=ssh
-	//   enc: 1=uauth中的内容是加密的，0=uauth中的内容是明文（仅用于开发测试阶段）
-	// MODE B: 认证ID，需要根据这个ID到数据库中取得目标服务器信息及认证信息
-	// 示例: {"authid":123456}
-	// 返回：
-	//   SSH返回： {"code":0, "data":{"sid":"0123abcde"}}
-	//   RDP返回： {"code":0, "data":{"sid":"0123abcde0A"}}
-	//   错误返回： {"code":1234}
+	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#request_session
 
-	Json::Reader jreader;
-	Json::Value jsRoot;
+	int authid = 0;
 
-	if (!jreader.parse(func_args.c_str(), jsRoot))
-	{
-		_create_json_ret(buf, TSR_INVALID_JSON_FORMAT);
-		return;
-	}
-	if (jsRoot.isArray())
-	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
-		return;
-	}
-
-	ex_astr host_ip;
-	int host_port = 0;
-	int sys_type = 0;
-	ex_astr user_name;
-	ex_astr user_auth;
-	ex_astr user_param;
-	
-	ex_astr account_name;
-	int auth_mode = 0;
-	int protocol = 0;
-	int is_enc = 1;
-	int auth_id = 0;
-	// 入参模式
-	if (!jsRoot["auth_id"].isNull())
+	if (!json_param["authid"].isNull())
 	{
 		// 使用认证ID的方式申请SID
-		if (!jsRoot["auth_id"].isNumeric())
+		if (!json_param["authid"].isNumeric())
 		{
 			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
 			return;
 		}
-		auth_id = jsRoot["auth_id"].asUInt();
+		authid = json_param["authid"].asUInt();
+
+
 		TS_DB_AUTH_INFO ts_auth_info;
-		if (!g_db.get_auth_info(auth_id, ts_auth_info))
+		if (!g_db.get_auth_info(authid, ts_auth_info))
 		{
 			_create_json_ret(buf, TSR_GETAUTH_INFO_ERROR);
 			return;
 		}
-		if (ts_auth_info.host_lock !=0 )
-		{
-			_create_json_ret(buf, TSR_HOST_LOCK_ERROR);
-			return;
-		}
-		if (ts_auth_info.account_lock != 0)
-		{
-			_create_json_ret(buf, TSR_ACCOUNT_LOCK_ERROR);
-			return;
-		}
-		host_ip = ts_auth_info.host_ip;
-		host_port = ts_auth_info.host_port;
-		sys_type = ts_auth_info.sys_type;
-		user_name = ts_auth_info.user_name;
-		user_auth = ts_auth_info.user_auth;
-		user_param = ts_auth_info.user_param;
-		auth_mode = ts_auth_info.auth_mode;
-		protocol = ts_auth_info.protocol;
-		is_enc = ts_auth_info.is_encrypt;
-		account_name = ts_auth_info.account_name;
-	}
-	else
-	{
-		// 判断参数是否正确
-		if (jsRoot["ip"].isNull() || !jsRoot["ip"].isString()
-			|| jsRoot["port"].isNull() || !jsRoot["port"].isNumeric()
-			|| jsRoot["systype"].isNull() || !jsRoot["systype"].isNumeric()
-			|| jsRoot["account"].isNull() || !jsRoot["account"].isString()
-			|| jsRoot["uname"].isNull() || !jsRoot["uname"].isString()
-			|| jsRoot["uauth"].isNull() || !jsRoot["uauth"].isString()
-			|| jsRoot["authmode"].isNull() || !jsRoot["authmode"].isNumeric()
-			|| jsRoot["protocol"].isNull() || !jsRoot["protocol"].isNumeric()
-			|| jsRoot["enc"].isNull() || !jsRoot["enc"].isNumeric()
-			)
-		{
-			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
-			return;
-		}
-
-		host_ip = jsRoot["ip"].asCString();
-		host_port = jsRoot["port"].asUInt();
-		sys_type = jsRoot["systype"].asUInt();
-		account_name = jsRoot["account"].asCString();
-		user_name = jsRoot["uname"].asCString();
-		user_auth = jsRoot["uauth"].asCString();
-		if (jsRoot["uparam"].isNull())
-		{
-			user_param = "";
-		}
-		else 
-		{
-			user_param = jsRoot["uparam"].asCString();
-		}
-		
-		auth_mode = jsRoot["authmode"].asUInt();
-		protocol = jsRoot["protocol"].asUInt();
-		is_enc = jsRoot["enc"].asUInt();
 	}
 
-	// 进一步判断参数是否合法
-	if (host_ip.length() == 0 || host_port >= 65535 || account_name.length() == 0 
-		|| !(auth_mode == TS_AUTH_MODE_NONE || auth_mode == TS_AUTH_MODE_PASSWORD || auth_mode == TS_AUTH_MODE_PRIVATE_KEY)
-		|| !(protocol == TS_PROXY_PROTOCOL_RDP || protocol == TS_PROXY_PROTOCOL_SSH || protocol == TS_PROXY_PROTOCOL_TELNET)
-		|| !(is_enc == 0 || is_enc == 1)
-		)
-	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
-		return;
-	}
-
-	if(is_enc)
-	{
-		if (user_auth.length() > 0)
-		{
-			ex_astr _auth;
-			if (!ts_db_field_decrypt(user_auth, _auth))
-			{
-				_create_json_ret(buf, TSR_FAILED);
-				return;
-			}
-
-			user_auth = _auth;
-		}
-	}
-
-	// 生成一个session-id（内部会避免重复）
-	ex_astr sid;
-	ex_rv rv = g_session_mgr.request_session(sid, account_name, auth_id, 
-		host_ip, host_port, sys_type, protocol, 
-		user_name, user_auth, user_param, auth_mode);
-	if (rv != TSR_OK)
-	{
-		_create_json_ret(buf, rv);
-		return;
-	}
-
-	EXLOGD("[core-rpc] new session-id: %s\n", sid.c_str());
-
-	Json::Value jr_root;
-	jr_root["code"] = TSR_OK;
-	jr_root["data"]["sid"] = sid;
-
-	_create_json_ret(buf, jr_root);
+	_create_json_ret(buf, TSR_FAILED);
 }
 
-void TsHttpRpc::_rpc_func_enc(const ex_astr& func_args, ex_astr& buf)
+// void TsHttpRpc::_rpc_func_request_session(const ex_astr& func_args, ex_astr& buf)
+// {
+// 	// 申请一个会话ID
+// 	// 入参: 两种模式
+// 	// MODE A: 已知目标服务器信息及认证信息
+// 	// 示例: {"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2,"enc":0}
+// 	//   ip: 目标服务器IP地址
+// 	//   port: 目标服务器端口
+// 	//   uname: 目标服务器认证所用的用户名
+// 	//   uauth: 目标服务器认证所用的密码或私钥
+// 	//   authmode: 1=password, 2=private-key
+// 	//   protocol: 1=rdp, 2=ssh
+// 	//   enc: 1=uauth中的内容是加密的，0=uauth中的内容是明文（仅用于开发测试阶段）
+// 	// MODE B: 认证ID，需要根据这个ID到数据库中取得目标服务器信息及认证信息
+// 	// 示例: {"authid":123456}
+// 	// 返回：
+// 	//   SSH返回： {"code":0, "data":{"sid":"0123abcde"}}
+// 	//   RDP返回： {"code":0, "data":{"sid":"0123abcde0A"}}
+// 	//   错误返回： {"code":1234}
+// 
+// 	Json::Reader jreader;
+// 	Json::Value jsRoot;
+// 
+// 	if (!jreader.parse(func_args.c_str(), jsRoot))
+// 	{
+// 		_create_json_ret(buf, TSR_INVALID_JSON_FORMAT);
+// 		return;
+// 	}
+// 	if (jsRoot.isArray())
+// 	{
+// 		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+// 		return;
+// 	}
+// 
+// 	ex_astr host_ip;
+// 	int host_port = 0;
+// 	int sys_type = 0;
+// 	ex_astr user_name;
+// 	ex_astr user_auth;
+// 	ex_astr user_param;
+// 	
+// 	ex_astr account_name;
+// 	int auth_mode = 0;
+// 	int protocol = 0;
+// 	int is_enc = 1;
+// 	int auth_id = 0;
+// 	// 入参模式
+// 	if (!jsRoot["auth_id"].isNull())
+// 	{
+// 		// 使用认证ID的方式申请SID
+// 		if (!jsRoot["auth_id"].isNumeric())
+// 		{
+// 			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+// 			return;
+// 		}
+// 		auth_id = jsRoot["auth_id"].asUInt();
+// 		TS_DB_AUTH_INFO ts_auth_info;
+// 		if (!g_db.get_auth_info(auth_id, ts_auth_info))
+// 		{
+// 			_create_json_ret(buf, TSR_GETAUTH_INFO_ERROR);
+// 			return;
+// 		}
+// 		if (ts_auth_info.host_lock !=0 )
+// 		{
+// 			_create_json_ret(buf, TSR_HOST_LOCK_ERROR);
+// 			return;
+// 		}
+// 		if (ts_auth_info.account_lock != 0)
+// 		{
+// 			_create_json_ret(buf, TSR_ACCOUNT_LOCK_ERROR);
+// 			return;
+// 		}
+// 		host_ip = ts_auth_info.host_ip;
+// 		host_port = ts_auth_info.host_port;
+// 		sys_type = ts_auth_info.sys_type;
+// 		user_name = ts_auth_info.user_name;
+// 		user_auth = ts_auth_info.user_auth;
+// 		user_param = ts_auth_info.user_param;
+// 		auth_mode = ts_auth_info.auth_mode;
+// 		protocol = ts_auth_info.protocol;
+// 		is_enc = ts_auth_info.is_encrypt;
+// 		account_name = ts_auth_info.account_name;
+// 	}
+// 	else
+// 	{
+// 		// 判断参数是否正确
+// 		if (jsRoot["ip"].isNull() || !jsRoot["ip"].isString()
+// 			|| jsRoot["port"].isNull() || !jsRoot["port"].isNumeric()
+// 			|| jsRoot["systype"].isNull() || !jsRoot["systype"].isNumeric()
+// 			|| jsRoot["account"].isNull() || !jsRoot["account"].isString()
+// 			|| jsRoot["uname"].isNull() || !jsRoot["uname"].isString()
+// 			|| jsRoot["uauth"].isNull() || !jsRoot["uauth"].isString()
+// 			|| jsRoot["authmode"].isNull() || !jsRoot["authmode"].isNumeric()
+// 			|| jsRoot["protocol"].isNull() || !jsRoot["protocol"].isNumeric()
+// 			|| jsRoot["enc"].isNull() || !jsRoot["enc"].isNumeric()
+// 			)
+// 		{
+// 			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+// 			return;
+// 		}
+// 
+// 		host_ip = jsRoot["ip"].asCString();
+// 		host_port = jsRoot["port"].asUInt();
+// 		sys_type = jsRoot["systype"].asUInt();
+// 		account_name = jsRoot["account"].asCString();
+// 		user_name = jsRoot["uname"].asCString();
+// 		user_auth = jsRoot["uauth"].asCString();
+// 		if (jsRoot["uparam"].isNull())
+// 		{
+// 			user_param = "";
+// 		}
+// 		else 
+// 		{
+// 			user_param = jsRoot["uparam"].asCString();
+// 		}
+// 		
+// 		auth_mode = jsRoot["authmode"].asUInt();
+// 		protocol = jsRoot["protocol"].asUInt();
+// 		is_enc = jsRoot["enc"].asUInt();
+// 	}
+// 
+// 	// 进一步判断参数是否合法
+// 	if (host_ip.length() == 0 || host_port >= 65535 || account_name.length() == 0 
+// 		|| !(auth_mode == TS_AUTH_MODE_NONE || auth_mode == TS_AUTH_MODE_PASSWORD || auth_mode == TS_AUTH_MODE_PRIVATE_KEY)
+// 		|| !(protocol == TS_PROXY_PROTOCOL_RDP || protocol == TS_PROXY_PROTOCOL_SSH || protocol == TS_PROXY_PROTOCOL_TELNET)
+// 		|| !(is_enc == 0 || is_enc == 1)
+// 		)
+// 	{
+// 		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+// 		return;
+// 	}
+// 
+// 	if(is_enc)
+// 	{
+// 		if (user_auth.length() > 0)
+// 		{
+// 			ex_astr _auth;
+// 			if (!ts_db_field_decrypt(user_auth, _auth))
+// 			{
+// 				_create_json_ret(buf, TSR_FAILED);
+// 				return;
+// 			}
+// 
+// 			user_auth = _auth;
+// 		}
+// 	}
+// 
+// 	// 生成一个session-id（内部会避免重复）
+// 	ex_astr sid;
+// 	ex_rv rv = g_session_mgr.request_session(sid, account_name, auth_id, 
+// 		host_ip, host_port, sys_type, protocol, 
+// 		user_name, user_auth, user_param, auth_mode);
+// 	if (rv != TSR_OK)
+// 	{
+// 		_create_json_ret(buf, rv);
+// 		return;
+// 	}
+// 
+// 	EXLOGD("[core-rpc] new session-id: %s\n", sid.c_str());
+// 
+// 	Json::Value jr_root;
+// 	jr_root["code"] = TSR_OK;
+// 	jr_root["data"]["sid"] = sid;
+// 
+// 	_create_json_ret(buf, jr_root);
+// }
+
+void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 {
+	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#enc
 	// 加密一个字符串 [ p=plain-text, c=cipher-text ]
 	// 入参: {"p":"need be encrypt"}
 	// 示例: {"p":"this-is-a-password"}
@@ -482,15 +485,7 @@ void TsHttpRpc::_rpc_func_enc(const ex_astr& func_args, ex_astr& buf)
 	// 示例: {"code":0, "data":{"c":"Mxs340a9r3fs+3sdf=="}}
 	//   错误返回： {"code":1234}
 
-	Json::Reader jreader;
-	Json::Value jsRoot;
-
-	if (!jreader.parse(func_args.c_str(), jsRoot))
-	{
-		_create_json_ret(buf, TSR_INVALID_JSON_FORMAT);
-		return;
-	}
-	if (jsRoot.isArray())
+	if (json_param.isArray())
 	{
 		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
 		return;
@@ -498,13 +493,13 @@ void TsHttpRpc::_rpc_func_enc(const ex_astr& func_args, ex_astr& buf)
 
 	ex_astr plain_text;
 
-	if (jsRoot["p"].isNull() || !jsRoot["p"].isString())
+	if (json_param["p"].isNull() || !json_param["p"].isString())
 	{
 		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
 		return;
 	}
 
-	plain_text = jsRoot["p"].asCString();
+	plain_text = json_param["p"].asCString();
 	if (plain_text.length() == 0)
 	{
 		_create_json_ret(buf, TSR_DATA_LEN_ZERO);
@@ -518,11 +513,9 @@ void TsHttpRpc::_rpc_func_enc(const ex_astr& func_args, ex_astr& buf)
 		return;
 	}
 
-	Json::Value jr_root;
-	jr_root["code"] = TSR_OK;
-	jr_root["data"]["c"] = cipher_text;
-
-	_create_json_ret(buf, jr_root);
+	Json::Value jr_data;
+	jr_data["c"] = cipher_text;
+	_create_json_ret(buf, TSR_OK, jr_data);
 }
 
 #if 0

@@ -6,11 +6,11 @@ from random import Random
 
 from eom_app.module import user
 from eom_common.eomcore.logger import *
-from .base import SwxBaseHandler, SwxJsonpHandler, SwxAuthJsonHandler
+from .base import SwxAppHandler, SwxJsonpHandler, SwxAuthJsonHandler
 from .helper.captcha import gen_captcha
 
 
-class LoginHandler(SwxBaseHandler):
+class LoginHandler(SwxAppHandler):
     def get(self):
         ref = self.get_argument('ref', '/')
 
@@ -71,7 +71,7 @@ class VerifyUser(SwxJsonpHandler):
             self.write_jsonp(-1)
 
 
-class LogoutHandler(SwxBaseHandler):
+class LogoutHandler(SwxAppHandler):
     def get(self):
         user = self.get_current_user()
         user['is_login'] = False
@@ -81,7 +81,7 @@ class LogoutHandler(SwxBaseHandler):
         self.redirect('/auth/login')
 
 
-class GetCaptchaHandler(SwxBaseHandler):
+class GetCaptchaHandler(SwxAppHandler):
     def get(self):
         code, img_data = gen_captcha()
         self.set_session('captcha', code)
@@ -266,11 +266,11 @@ class ModifyPwd(SwxAuthJsonHandler):
 #             self.write_json(-1)
 
 
-def random_str(randomlength=8):
-    _str = ''
-    chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789'
-    length = len(chars) - 1
-    _random = Random()
-    for i in range(randomlength):
-        _str += chars[_random.randint(0, length)]
-    return _str
+# def random_str(randomlength=8):
+#     _str = ''
+#     chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789'
+#     length = len(chars) - 1
+#     _random = Random()
+#     for i in range(randomlength):
+#         _str += chars[_random.randint(0, length)]
+#     return _str

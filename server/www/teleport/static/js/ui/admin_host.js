@@ -575,7 +575,7 @@ ywl.on_host_table_created = function (tbl) {
 //            ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" ywl-btn-remote="' + fields.id + '"><i class="fa fa-desktop fa-fw"></i> 远程</a>');
 			ret.push('</div>');
 			return ret.join('');
-		}
+		};
 		render.make_user_btn = function (row_id, fields) {
 			var ret = [];
 			ret.push('<div class="btn-group btn-group-sm" role="group">');
@@ -866,7 +866,6 @@ ywl.create_host_edit_dlg = function (tbl) {
 	return dlg_edit_host;
 };
 
-
 ywl.create_host_user_edit_dlg = function (tbl) {
 	var dlg_user_edit_host = {};
 	dlg_user_edit_host.dom_id = "#dialog-host-user-edit";
@@ -1024,7 +1023,6 @@ ywl.create_host_user_edit_dlg = function (tbl) {
 
 	return dlg_user_edit_host;
 };
-
 
 ywl.create_sys_user = function (tbl) {
 
@@ -1433,6 +1431,7 @@ ywl.create_sys_user = function (tbl) {
 	return dlg_sys_user;
 
 };
+
 ywl.create_batch_join_group_dlg = function (tbl) {
 	var batch_join_dlg = {};
 

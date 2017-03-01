@@ -9,19 +9,19 @@ cfg = app_cfg()
 
 SESSION_EXPIRE = 3600  # 60*60
 
-
+# TODO: session接口需要支持超时（超时的session应该移除，避免内存占用越来越大）
 # SESSION_EXPIRE = 1800 # 30*60
 # SESSION_EXPIRE = 30
 
-class SwxSession:
+class WebSession:
     """
     :type _mem_client: pymemcache.client.base.Client
     """
 
     def __init__(self):
         import builtins
-        if '__swx_session__' in builtins.__dict__:
-            raise RuntimeError('SwxSession object exists, you can not create more than one instance.')
+        if '__web_session__' in builtins.__dict__:
+            raise RuntimeError('WebSession object exists, you can not create more than one instance.')
         self._session_dict = dict()
 
     def init(self):
@@ -41,14 +41,14 @@ class SwxSession:
         return v
 
 
-def swx_session():
+def web_session():
     """
     取得 SwxSession 的唯一实例
 
-    :rtype : SwxSession
+    :rtype : WebSession
     """
 
     import builtins
-    if '__swx_session__' not in builtins.__dict__:
-        builtins.__dict__['__swx_session__'] = SwxSession()
-    return builtins.__dict__['__swx_session__']
+    if '__web_session__' not in builtins.__dict__:
+        builtins.__dict__['__web_session__'] = WebSession()
+    return builtins.__dict__['__web_session__']

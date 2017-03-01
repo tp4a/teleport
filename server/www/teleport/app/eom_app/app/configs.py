@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-# import sys
 import configparser
 
 from eom_common.eomcore.logger import *
@@ -28,9 +27,6 @@ class AttrDict(dict):
 class ConfigFile(AttrDict):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # self.__file_name = None
-        # self.__save_indent = 0
-        # self.__loaded = False
 
     def load_web(self, cfg_file):
         if not os.path.exists(cfg_file):
@@ -67,7 +63,7 @@ class ConfigFile(AttrDict):
         else:
             self['log_level'] = LOG_VERBOSE
 
-        log.set_attribute(min_level=self['log_level'])
+        # log.set_attribute(min_level=self['log_level'])
 
         return True
 
@@ -111,31 +107,6 @@ class ConfigFile(AttrDict):
         if 'protocol-telnet' in _cfg:
             self['core']['telnet']['enabled'] = _cfg['protocol-telnet'].getboolean('enabled', False)
             self['core']['telnet']['port'] = _cfg['protocol-telnet'].getint('bind-port', 52389)
-
-
-        # if 'common' not in _cfg:
-        #     log.e('invalid configuration file: [{}]\n'.format(cfg_file))
-        #     return False
-        #
-        # _comm = _cfg['common']
-        # self['server_port'] = _comm.getint('port', 7190)
-        # self['log_file'] = _comm.get('log-file', None)
-        # if self['log_file'] is not None:
-        #     self['log_path'] = os.path.dirname(self['log_file'])
-        #
-        # _level = _comm.getint('log-level', 2)
-        # if _level == 0:
-        #     self['log_level'] = LOG_DEBUG
-        # elif _level == 1:
-        #     self['log_level'] = LOG_VERBOSE
-        # elif _level == 2:
-        #     self['log_level'] = LOG_INFO
-        # elif _level == 3:
-        #     self['log_level'] = LOG_WARN
-        # elif _level == 4:
-        #     self['log_level'] = LOG_ERROR
-        # else:
-        #     self['log_level'] = LOG_VERBOSE
 
         return True
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+from . import rpc
 from . import auth
 from . import host
 from . import cert
@@ -10,6 +11,7 @@ from . import set
 from . import group
 from . import index
 from . import record
+from . import maintenance
 import tornado.web
 
 from eom_app.app.configs import app_cfg
@@ -20,6 +22,13 @@ __all__ = ['controllers']
 
 controllers = [
     (r'/', index.IndexHandler),
+
+    # (r'/install/', maintenance.InstallHandler),
+    # (r'/install', maintenance.InstallHandler),
+    (r'/maintenance/', maintenance.IndexHandler),
+    (r'/maintenance', maintenance.IndexHandler),
+
+    (r'/rpc', rpc.RpcHandler),
 
     (r'/auth/login', auth.LoginHandler),
     (r'/auth/verify-user', auth.VerifyUser),

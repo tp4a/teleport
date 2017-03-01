@@ -48,7 +48,7 @@
 
 	<div id="footer" class="footer footer-fixed-bottom">
 		<div class="container">
-			<p>触维软件旗下产品 | TELEPORT | &copy;2015 - 2017 <a href="http://teleport.eomsoft.net/" target="_blank">触维软件</a>，保留所有权利。</p>
+			<p>触维软件旗下产品 | TELEPORT | &copy;2015 - 2017 <a href="http://www.eomsoft.net/" target="_blank">触维软件</a>，保留所有权利。</p>
 		</div>
 	</div>
 
@@ -76,12 +76,12 @@
 
 <script type="text/javascript" src="${ static_url('plugins/keypress/keypress.js') }"></script>
 
-<script type="text/javascript" src="${ static_url('js/ywl_const.js') }"></script>
-<script type="text/javascript" src="${ static_url('js/ywl_common.js') }"></script>
-<script type="text/javascript" src="${ static_url('js/ywl.js') }"></script>
-<script type="text/javascript" src="${ static_url('js/ywl_assist.js') }"></script>
-<script type="text/javascript" src="${ static_url('js/ui/common.js') }"></script>
-<script type="text/javascript" src="${ static_url('js/ui/controls.js') }"></script>
+## <script type="text/javascript" src="${ static_url('js/ywl_const.js') }"></script>
+## <script type="text/javascript" src="${ static_url('js/ywl_common.js') }"></script>
+## <script type="text/javascript" src="${ static_url('js/ywl.js') }"></script>
+## <script type="text/javascript" src="${ static_url('js/ywl_assist.js') }"></script>
+## <script type="text/javascript" src="${ static_url('js/ui/common.js') }"></script>
+## <script type="text/javascript" src="${ static_url('js/ui/controls.js') }"></script>
 
 
 	<%block name="extend_js"/>
@@ -92,7 +92,7 @@
 
 	$(document).ready(function () {
 		// once page ready, init ywl object.
-		ywl.init();
+## 		ywl.init();
 	});
 
 </script>

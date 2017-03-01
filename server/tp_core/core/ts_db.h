@@ -79,13 +79,13 @@ public:
 	//session 结束
 	bool session_end(int id,int ret_code);
 	//获取所有的认证ID
-	bool get_auth_id_list_by_all(AuthInfo2Vec& auth_info_list);
+// 	bool get_auth_id_list_by_all(AuthInfo2Vec& auth_info_list);
 	//通过IP获取认证ID
-	bool get_auth_id_list_by_ip(ex_astr host_ip, AuthInfo2Vec& auth_info_list);
+// 	bool get_auth_id_list_by_ip(ex_astr host_ip, AuthInfo2Vec& auth_info_list);
 	//获取所有的认证的信息
-	bool get_auth_info_list_by_all(AuthInfo3Vec& auth_info_list);
+// 	bool get_auth_info_list_by_all(AuthInfo3Vec& auth_info_list);
 	//通过IP获取认证信息
-	bool get_auth_info_list_by_ip(ex_astr host_ip, AuthInfo3Vec& auth_info_list);
+// 	bool get_auth_info_list_by_ip(ex_astr host_ip, AuthInfo3Vec& auth_info_list);
 // 	//获取server 的配置信息
 // 	bool get_server_config(TS_DB_SERVER_CONFIG* server_config);
 // 
