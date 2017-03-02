@@ -62,7 +62,7 @@ class RpcHandler(SwxJsonHandler):
 
     def _get_auth_info(self, param):
         # todo: 如果是页面上进行连接测试（增加或修改主机和用户时），信息并不写入数据库，而是在内存中存在，传递给core服务的
-        # 应该是随机字符串做authid，名称为 tauthid。本接口应该支持区分这两种认证ID。
+        # 应该是负数形式的authid。本接口应该支持区分这两种认证ID。
 
         if 'authid' not in param:
             self.write_json(-1, message='invalid request.')

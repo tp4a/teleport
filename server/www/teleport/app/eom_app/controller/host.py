@@ -890,6 +890,11 @@ class AdminGetSessionId(SwxAuthJsonHandler):
             return
         host_auth_id = args['host_auth_id']
 
+        # host_auth_id 对应的是 ts_auth_info 表中的某个条目，含有具体的认证数据，因为管理员无需授权即可访问所有远程主机，因此
+        # 直接给出 host_auth_id，且account直接指明是admin，TODO: 应该是当前登录用户的用户名，这样能够自适应
+
+        # TODO: 从数据库中查询对应的认证数据后，缓存到内存中并对应一个负数的auth_id，发给core服务，从而取得一个session-id.
+
         values = host.get_host_auth_info(host_auth_id)
         if values is None:
             self.write_json(-1)
@@ -908,11 +913,18 @@ class AdminGetSessionId(SwxAuthJsonHandler):
         ts_server_rpc_port = cfg.core.rpc.port
 
         url = 'http://{}:{}/request_session'.format(ts_server_rpc_ip, ts_server_rpc_port)
+        req = {'method': 'request_session', 'param': {'authid': auth_id}}
         # values['auth_id'] = auth_id
-        return_data = post_http(url, values)
+        # return_data = post_http(url, values)
+        # if return_data is None:
+        #     return self.write_json(-1)
+        # return_data = json.loads(return_data)
+
+        _yr = async_post_http(url, req)
+        return_data = yield _yr
         if return_data is None:
             return self.write_json(-1)
-        return_data = json.loads(return_data)
+
         if 'code' not in return_data:
             return self.write_json(-1)
         _code = return_data['code']

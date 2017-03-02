@@ -345,6 +345,7 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 		return;
 	}
 
+	// TODO: 解密操作应该延迟到使用密码/密钥时才进行，尽量减少明文出现的时间。
 	if(is_enc)
 	{
 		if (user_auth.length() > 0)
