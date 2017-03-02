@@ -143,6 +143,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 			}
 			else
 			{
+				EXLOGV("[core-rpc] got request method `%s`\n", method.c_str());
 				_this->_process_request(method, json_param, ret_buf);
 			}
 		}
@@ -284,26 +285,98 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 
 	int authid = 0;
 
+	ex_astr host_ip;
+	int host_port = 0;
+	int sys_type = 0;
+	ex_astr user_name;
+	ex_astr user_auth;
+	ex_astr user_param;
+	
+	ex_astr account_name;
+	bool account_lock = true;
+	int auth_mode = 0;
+	int protocol = 0;
+	int is_enc = 1;
+
+	// TODO: 如果authid为正整数，这是一个长期保留的认证ID，如果是负整数，这是一个临时的认证ID（用于连接测试），如果为0，则报错
 	if (!json_param["authid"].isNull())
 	{
 		// 使用认证ID的方式申请SID
-		if (!json_param["authid"].isNumeric())
+		if (!json_param["authid"].isInt())
 		{
 			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
 			return;
 		}
-		authid = json_param["authid"].asUInt();
 
+		authid = json_param["authid"].asInt();
 
-		TS_DB_AUTH_INFO ts_auth_info;
-		if (!g_db.get_auth_info(authid, ts_auth_info))
+		Json::Value jret;
+		if (!g_db.get_auth_info(authid, jret))
 		{
 			_create_json_ret(buf, TSR_GETAUTH_INFO_ERROR);
 			return;
 		}
+
+		Json::Value& _jret = jret["data"];
+
+		host_ip = _jret["host_ip"].asString();
+		host_port = _jret["host_port"].asInt();
+		//host_lock = 0;
+		sys_type = _jret["sys_type"].asInt();
+		protocol = _jret["protocol"].asInt();
+		is_enc = _jret["encrypt"].asInt() == 0 ? false : true;
+		auth_mode = _jret["auth_mode"].asInt();
+		account_lock = _jret["account_lock"].asInt() == 0 ? true : false;
+		user_name = _jret["user_name"].asString();
+		user_auth = _jret["user_auth"].asString();
+		user_param = _jret["user_param"].asString();
+		account_name = _jret["account_name"].asString();
 	}
 
-	_create_json_ret(buf, TSR_FAILED);
+
+	// 进一步判断参数是否合法
+	if (host_ip.length() == 0 || host_port >= 65535 || account_name.length() == 0 
+		|| !(auth_mode == TS_AUTH_MODE_NONE || auth_mode == TS_AUTH_MODE_PASSWORD || auth_mode == TS_AUTH_MODE_PRIVATE_KEY)
+		|| !(protocol == TS_PROXY_PROTOCOL_RDP || protocol == TS_PROXY_PROTOCOL_SSH || protocol == TS_PROXY_PROTOCOL_TELNET)
+		//|| !(is_enc == 0 || is_enc == 1)
+		)
+	{
+		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		return;
+	}
+
+	if(is_enc)
+	{
+		if (user_auth.length() > 0)
+		{
+			ex_astr _auth;
+			if (!ts_db_field_decrypt(user_auth, _auth))
+			{
+				_create_json_ret(buf, TSR_FAILED);
+				return;
+			}
+
+			user_auth = _auth;
+		}
+	}
+
+	// 生成一个session-id（内部会避免重复）
+	ex_astr sid;
+	ex_rv rv = g_session_mgr.request_session(sid, account_name, authid, 
+		host_ip, host_port, sys_type, protocol, 
+		user_name, user_auth, user_param, auth_mode);
+	if (rv != TSR_OK)
+	{
+		_create_json_ret(buf, rv);
+		return;
+	}
+
+	EXLOGD("[core-rpc] new session-id: %s\n", sid.c_str());
+
+	Json::Value jr_data;
+	jr_data["sid"] = sid;
+
+	_create_json_ret(buf, TSR_OK, jr_data);
 }
 
 // void TsHttpRpc::_rpc_func_request_session(const ex_astr& func_args, ex_astr& buf)

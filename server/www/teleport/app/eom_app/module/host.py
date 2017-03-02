@@ -785,7 +785,7 @@ def get_auth_info(auth_id):
         ','.join(['d.{}'.format(i) for i in field_d]),
         auth_id)
 
-    print(str_sql)
+    # print(str_sql)
 
     """
     "SELECT a.auth_id as auth_id, a.account_name as account_name, \
@@ -802,35 +802,45 @@ def get_auth_info(auth_id):
 
     db_ret = sql_exec.ExecProcQuery(str_sql)
 
-    if db_ret is None:
+    if db_ret is None or len(db_ret) > 1:
         return None
-    ret = list()
-    for item in db_ret:
-        x = DbItem()
 
-        x.load(item,
-               ['a_{}'.format(i) for i in field_a] +
-               ['b_{}'.format(i) for i in field_b] +
-               ['c_{}'.format(i) for i in field_c] +
-               ['d_{}'.format(i) for i in field_d]
-               )
+    db_item = DbItem()
 
-        h = dict()
-        h['host_ip'] = x.b_host_ip
-        h['sys_type'] = x.b_host_sys_type
-        h['account_name'] = x.a_account_name
-        h['account_lock'] = x.d_account_lock
-        # h['host_lock'] = x.a_host_lock
-        h['host_port'] = x.b_host_port
-        h['protocol'] = x.b_protocol
-        h['encrypt'] = x.c_encrypt
-        h['auth_mode'] = x.c_auth_mode
-        h['user_name'] = x.c_user_name
-        h['user_param'] = x.c_user_param
-        h['user_pswd'] = x.c_user_pswd
-        h['cert_id'] = x.c_cert_id
+    db_item.load(db_ret[0],
+                 ['a_{}'.format(i) for i in field_a] +
+                 ['b_{}'.format(i) for i in field_b] +
+                 ['c_{}'.format(i) for i in field_c] +
+                 ['d_{}'.format(i) for i in field_d]
+                 )
 
-        ret.append(h)
+    ret = dict()
+    ret['host_ip'] = db_item.b_host_ip
+    ret['sys_type'] = db_item.b_host_sys_type
+    ret['account_name'] = db_item.a_account_name
+    ret['account_lock'] = db_item.d_account_lock
+    # h['host_lock'] = x.a_host_lock
+    ret['host_port'] = db_item.b_host_port
+    ret['protocol'] = db_item.b_protocol
+    ret['encrypt'] = db_item.c_encrypt
+    ret['auth_mode'] = db_item.c_auth_mode
+    ret['user_name'] = db_item.c_user_name
+    ret['user_param'] = db_item.c_user_param
+    # ret['user_pswd'] = db_item.c_user_pswd
+    # ret['cert_id'] = db_item.c_cert_id
 
-    print(ret)
+    if db_item.c_auth_mode == 1:
+        ret['user_auth'] = db_item.c_user_pswd
+    elif db_item.c_auth_mode == 2:
+        cert_id = db_item.c_cert_id
+
+        str_sql = 'SELECT cert_pri FROM ts_cert WHERE cert_id={}'.format(cert_id)
+        db_ret = sql_exec.ExecProcQuery(str_sql)
+        print(db_ret)
+        if db_ret is None or len(db_ret) > 1:
+            return None
+        ret['user_auth'] = db_ret[0][0]
+    else:
+        pass
+
     return ret

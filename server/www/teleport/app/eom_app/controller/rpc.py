@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import tornado.web
+# import tornado.web
 import tornado.gen
 
 import json
@@ -11,7 +11,6 @@ from .base import SwxJsonHandler
 
 
 class RpcHandler(SwxJsonHandler):
-    @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         _uri = self.request.uri.split('?', 1)
@@ -20,8 +19,10 @@ class RpcHandler(SwxJsonHandler):
             self.write_json(-1, message='need request param.')
             return
 
-        self._dispatch(urllib.parse.unquote(_uri[1]))
+        yield self._dispatch(urllib.parse.unquote(_uri[1]))
+        self.finish()
 
+    @tornado.gen.coroutine
     def post(self):
         # curl -X POST --data '{"method":"get_auth_info","param":{"authid":0}}' http://127.0.0.1:7190/rpc
         req = self.request.body.decode('utf-8')
@@ -29,8 +30,10 @@ class RpcHandler(SwxJsonHandler):
             self.write_json(-1, message='need request param.')
             return
 
-        self._dispatch(req)
+        yield self._dispatch(req)
+        self.finish()
 
+    @tornado.gen.coroutine
     def _dispatch(self, req):
         print('rpc-req:', req)
         try:

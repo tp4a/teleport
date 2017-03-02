@@ -6,7 +6,7 @@
 
 #include <ex/ex_str.h>
 
-#include <json/json.h>
+//#include <json/json.h>
 #include <algorithm>
 #include <functional>
 
@@ -64,20 +64,20 @@ sqlite3* TsDB::get_db()
 	return NULL;
 }
 
-bool TsDB::get_auth_info(int auth_id, TS_DB_AUTH_INFO& info)
+bool TsDB::get_auth_info(int auth_id, Json::Value& jret)
 {
 	Json::FastWriter json_writer;
-	Json::Value json_req;
-	json_req["method"] = "get_auth_info";
-	json_req["param"]["authid"] = auth_id;
-	
+	Json::Value jreq;
+	jreq["method"] = "get_auth_info";
+	jreq["param"]["authid"] = auth_id;
+
 	ex_astr json_param;
-	json_param = json_writer.write(json_req);
+	json_param = json_writer.write(jreq);
 
 
-// 	char tmp[128] = { 0 };
-// 	ex_strformat(tmp, 127, "{\"method\":\"get_auth_info\",\"param\":[\"authid\":%d]}", auth_id);
-// 
+	// 	char tmp[128] = { 0 };
+	// 	ex_strformat(tmp, 127, "{\"method\":\"get_auth_info\",\"param\":[\"authid\":%d]}", auth_id);
+	// 
 	ex_astr param;
 	//ts_url_encode("{\"method\":\"get_auth_info\",\"param\":[]}", param);
 	ts_url_encode(json_param.c_str(), param);
@@ -92,8 +92,53 @@ bool TsDB::get_auth_info(int auth_id, TS_DB_AUTH_INFO& info)
 		EXLOGV("\n");
 	}
 
+	// {'account_lock': 0, 'encrypt': 1, 'account_name': 'apexliu', 'host_port': 22, 'cert_id': 0, 'user_name': 'root',
+	// 'auth_mode': 1, 'sys_type': 2, 'host_ip': '120.26.109.25', 'user_param': 'ogin:\nassword:',
+	// 'user_pswd': '40V4q3cT4/HT59YaSq8IVJjz0tBV2dmPbViZ4nCnWc4=', 'protocol': 2}
 
-	return false;
+	// {'user_auth': '40V4q3cT4/HT59YaSq8IVJjz0tBV2dmPbViZ4nCnWc4=', 'protocol': 2, 'auth_mode': 1, 'user_name': 'root', 'account_lock': 0, 'user_param': 'ogin:\nassword:', 'host_ip': '120.26.109.25', 'sys_type': 2, 'encrypt': 1, 'account_name': 'apexliu', 'host_port': 22}
+	// {"message": "", "code" : 0, "data" : {"user_auth": "40V4q3cT4/HT59YaSq8IVJjz0tBV2dmPbViZ4nCnWc4=", "protocol": 2, "auth_mode": 1, "user_name": "root", "account_lock": 0, "user_param": "ogin : \nassword : ", "host_ip": "120.26.109.25", "sys_type": 2, "encrypt": 1, "account_name": "apexliu", "host_port": 22}}
+	Json::Reader jreader;
+
+	if (!jreader.parse(body.c_str(), jret))
+		return false;
+	if (!jret.isObject())
+		return false;
+	if (!jret["data"].isObject())
+		return false;
+
+	Json::Value& _jret = jret["data"];
+
+	if (
+		!_jret["host_ip"].isString()
+		|| !_jret["host_port"].isInt()
+		|| !_jret["sys_type"].isInt()
+		|| !_jret["protocol"].isInt()
+		|| !_jret["auth_mode"].isInt()
+		|| !_jret["account_lock"].isInt()
+		|| !_jret["user_name"].isString()
+		|| !_jret["user_auth"].isString()
+		|| !_jret["user_param"].isString()
+		|| !_jret["account_name"].isString()
+		)
+	{
+		return false;
+	}
+
+// 	info.host_ip = jret["host_ip"].asString();
+// 	info.host_port = jret["host_port"].asInt();
+// 	info.host_lock = 0;
+// 	info.sys_type = jret["sys_type"].asInt();
+// 	info.protocol = jret["protocol"].asInt();
+// 	info.is_encrypt = true;
+// 	info.auth_mode = jret["auth_mode"].asInt();
+// 	info.account_lock = jret["account_lock"].asInt();
+// 	info.user_name = jret["user_name"].asString();
+// 	info.user_auth = jret["user_auth"].asString();
+// 	info.user_param = jret["user_param"].asString();
+// 	info.account_name = jret["account_name"].asString();
+
+	return true;
 }
 
 // bool TsDB::get_auth_info(int auth_id, TS_DB_AUTH_INFO& info)
@@ -252,50 +297,50 @@ bool TsDB::get_auth_info(int auth_id, TS_DB_AUTH_INFO& info)
 // 	return bFind;
 // }
 
-bool TsDB::get_cert_pri(int cert_id, ex_astr& cert_pri)
-{
-	int result = 0;
-	char * errmsg = NULL;
-	char **dbResult;
-	int nRow, nColumn;
-	int i, j;
-	int index;
-
-	sqlite3* sql_exec = get_db();
-	if (sql_exec == NULL)
-		return false;
-
-	char szSQL[256] = { 0 };
-	ex_strformat(szSQL, 256, "SELECT a.cert_pri as cert_pri FROM ts_cert as a WHERE a.cert_id=%d", cert_id);
-
-	result = sqlite3_get_table(sql_exec, szSQL, &dbResult, &nRow, &nColumn, &errmsg);
-	if (result != 0)
-		return false;
-
-	//查询是否存在表
-	index = nColumn;
-	for (i = 0; i < nRow; i++)
-	{
-		mapStringKey mapstringKey;
-		for (j = 0; j < nColumn; j++)
-		{
-			ex_astr temp = dbResult[j];
-			if (dbResult[index] == NULL)
-				mapstringKey[dbResult[j]] = "";
-			else
-				mapstringKey[dbResult[j]] = dbResult[index];
-
-			++index;
-		}
-
-		mapStringKey::iterator it = mapstringKey.find("cert_pri");
-		if (it != mapstringKey.end())
-			cert_pri = it->second.c_str();
-	}
-
-	sqlite3_free_table(dbResult);
-	return true;
-}
+// bool TsDB::get_cert_pri(int cert_id, ex_astr& cert_pri)
+// {
+// 	int result = 0;
+// 	char * errmsg = NULL;
+// 	char **dbResult;
+// 	int nRow, nColumn;
+// 	int i, j;
+// 	int index;
+// 
+// 	sqlite3* sql_exec = get_db();
+// 	if (sql_exec == NULL)
+// 		return false;
+// 
+// 	char szSQL[256] = { 0 };
+// 	ex_strformat(szSQL, 256, "SELECT a.cert_pri as cert_pri FROM ts_cert as a WHERE a.cert_id=%d", cert_id);
+// 
+// 	result = sqlite3_get_table(sql_exec, szSQL, &dbResult, &nRow, &nColumn, &errmsg);
+// 	if (result != 0)
+// 		return false;
+// 
+// 	//查询是否存在表
+// 	index = nColumn;
+// 	for (i = 0; i < nRow; i++)
+// 	{
+// 		mapStringKey mapstringKey;
+// 		for (j = 0; j < nColumn; j++)
+// 		{
+// 			ex_astr temp = dbResult[j];
+// 			if (dbResult[index] == NULL)
+// 				mapstringKey[dbResult[j]] = "";
+// 			else
+// 				mapstringKey[dbResult[j]] = dbResult[index];
+// 
+// 			++index;
+// 		}
+// 
+// 		mapStringKey::iterator it = mapstringKey.find("cert_pri");
+// 		if (it != mapstringKey.end())
+// 			cert_pri = it->second.c_str();
+// 	}
+// 
+// 	sqlite3_free_table(dbResult);
+// 	return true;
+// }
 
 // bool TsDB::get_host_count(int& count)
 // {

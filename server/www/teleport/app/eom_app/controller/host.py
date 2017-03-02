@@ -6,9 +6,12 @@ import os
 import urllib
 import urllib.parse
 import urllib.request
+import tornado.gen
+import tornado.httpclient
 
 from eom_app.app.configs import app_cfg
-from eom_app.module import set
+# from eom_app.module import set
+from eom_app.app.util import *
 from eom_app.module import host
 from eom_app.module.common import *
 from eom_common.eomcore.logger import *
@@ -770,36 +773,46 @@ class UpdateHostExtendInfo(SwxAuthJsonHandler):
             self.write_json(-1)
 
 
-def post_http(url, values):
-    try:
-        # log.v('post_http(), url={}\n'.format(url))
-
-        user_agent = 'Mozilla/4.0 (compatible;MSIE 5.5; Windows NT)'
-        # values = {
-        #     'act': 'login',
-        #     'login[email]': 'yzhang@i9i8.com',
-        #     'login[password]': '123456'
-        # }
-        values = json.dumps(values)
-        data = urllib.parse.quote(values).encode('utf-8')
-        headers = {'User-Agent': user_agent}
-        req = urllib.request.Request(url=url, data=data, headers=headers)
-        response = urllib.request.urlopen(req, timeout=3)
-        the_page = response.read()
-        info = response.info()
-        _zip = info.get('Content-Encoding')
-        if _zip == 'gzip':
-            the_page = gzip.decompress(the_page)
-        else:
-            pass
-        the_page = the_page.decode()
-        # print(the_page)
-        return the_page
-    except:
-        return None
+# @tornado.gen.coroutine
+# def post_http(url, values):
+#     try:
+#         # log.v('post_http(), url={}\n'.format(url))
+#
+#         # user_agent = 'Mozilla/4.0 (compatible;MSIE 5.5; Windows NT)'
+#         # values = {
+#         #     'act': 'login',
+#         #     'login[email]': 'yzhang@i9i8.com',
+#         #     'login[password]': '123456'
+#         # }
+#         values = json.dumps(values)
+#         data = urllib.parse.quote(values).encode('utf-8')
+#         # headers = {'User-Agent': user_agent}
+#
+#         # req = urllib.request.Request(url=url, data=data, headers=headers)
+#         # response = urllib.request.urlopen(req, timeout=3)
+#
+#         client = tornado.httpclient.AsyncHTTPClient()
+#         r = yield client.fetch(url, body=data, method='POST')
+#         print('----------', r.body)
+#         return r.body
+#
+#
+#         # the_page = response.read()
+#         # info = response.info()
+#         # _zip = info.get('Content-Encoding')
+#         # if _zip == 'gzip':
+#         #     the_page = gzip.decompress(the_page)
+#         # else:
+#         #     pass
+#         # the_page = the_page.decode()
+#         # # print(the_page)
+#         # return the_page
+#     except:
+#         return None
 
 
 class GetSessionId(SwxAuthJsonHandler):
+    @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:
@@ -827,18 +840,34 @@ class GetSessionId(SwxAuthJsonHandler):
 
         url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
         req = {'method': 'request_session', 'param': {'authid': auth_id}}
-        return_data = post_http(url, req)
+
+        # values = json.dumps(req)
+        # data = urllib.parse.quote(values).encode('utf-8')
+        # client = tornado.httpclient.AsyncHTTPClient()
+        # r = yield client.fetch(url, body=data, method='POST')
+        # if r.code == 200:
+        #     # self.write(r.body)
+        #     print('+++++++++', r.body)
+
+        _yr = async_post_http(url, req)
+        return_data = yield _yr
         if return_data is None:
             return self.write_json(-1)
-        return_data = json.loads(return_data)
+
+        # return_data = result.decode()
+        # print('############', return_data)
+        # return_data = json.loads(result.decode())
+
         if 'code' not in return_data:
             return self.write_json(-1)
+
         _code = return_data['code']
         if _code != 0:
             return self.write_json(_code)
+
         try:
             session_id = return_data['data']['sid']
-        except:
+        except IndexError:
             return self.write_json(-1)
 
         data = dict()

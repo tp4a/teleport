@@ -3,6 +3,7 @@
 
 #include "ts_session.h"
 
+#include <json/json.h>
 #include <sqlite3.h>
 #include <ex.h>
 
@@ -67,11 +68,11 @@ public:
 	~TsDB();
 
 	// 根据认证ID获取认证信息（包括服务器IP、端口，用户名、密码或私钥、协议如RDP或SSH等等）
-	bool get_auth_info(int auth_id, TS_DB_AUTH_INFO& info);
+	bool get_auth_info(int auth_id, Json::Value& jret);
 
-	bool get_cert_pri(int cert_id, ex_astr& cert_pri);
+// 	bool get_cert_pri(int cert_id, ex_astr& cert_pri);
 	// 授权的主机数量
-	bool get_host_count(int& count);
+// 	bool get_host_count(int& count);
 
 	// 重置log日志状态
 	bool update_reset_log();

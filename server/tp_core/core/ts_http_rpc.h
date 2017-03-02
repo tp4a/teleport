@@ -51,7 +51,7 @@ private:
 	void _process_request(const ex_astr& func_cmd, const Json::Value& json_param, ex_astr& buf);
 
 	//void _create_json_ret(ex_astr& buf, Json::Value& jr_root);
-	void _create_json_ret(ex_astr& buf, int errcode, const Json::Value& jr_root);
+	void _create_json_ret(ex_astr& buf, int errcode, const Json::Value& jr_data);
 	void _create_json_ret(ex_astr& buf, int errcode);
 	void _create_json_ret(ex_astr& buf, int errcode, const char* message);
 
