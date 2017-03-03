@@ -17,27 +17,32 @@ def get_free_space_mb(folder):
     """ Return folder/drive free space (in bytes)
     """
     if platform.system() == 'Windows':
-        free_bytes = ctypes.c_ulonglong(0)
-        total_bytes = ctypes.c_ulonglong(0)
-        ctypes.windll.kernel32.GetDiskFreeSpaceExW(None, None, ctypes.pointer(total_bytes), ctypes.pointer(free_bytes))
-        return total_bytes.value / 1024 / 1024 / 1024, free_bytes.value / 1024 / 1024 / 1024
+        _free_bytes = ctypes.c_ulonglong(0)
+        _total_bytes = ctypes.c_ulonglong(0)
+        ctypes.windll.kernel32.GetDiskFreeSpaceExW(folder, None, ctypes.pointer(_total_bytes), ctypes.pointer(_free_bytes))
+        # return _total_bytes.value / 1024 / 1024 / 1024, _free_bytes.value / 1024 / 1024 / 1024
+        total_bytes = _total_bytes.value
+        free_bytes = _free_bytes.value
     else:
         st = os.statvfs(folder)
-        return st.f_blocks * st.f_frsize / 1024 / 1024 / 1024, st.f_bavail * st.f_frsize / 1024 / 1024 / 1024
+        # return st.f_blocks * st.f_frsize / 1024 / 1024 / 1024, st.f_bavail * st.f_frsize / 1024 / 1024 / 1024
+        total_bytes = st.f_blocks * st.f_frsize
+        free_bytes = st.f_bavail * st.f_frsize
+
+    return total_bytes, free_bytes
 
 
 class LogHandler(SwxAdminHandler):
     def get(self):
-        #
         user_list = user.get_user_list()
         total_size, free_size = get_free_space_mb(cfg.data_path)
 
         # config_list = host.get_config_list()
         ts_server = dict()
-        ts_server['ip'] = cfg.core.rpc.ip #config_list['ts_server_ip']
-        ts_server['port'] = cfg.core.rpc.port #cfg.server_port
+        ts_server['ip'] = cfg.core.rpc.ip  # config_list['ts_server_ip']
+        ts_server['port'] = cfg.core.rpc.port  # cfg.server_port
 
-        self.render('log/index.mako', user_list=user_list, total_size=int(total_size), free_size=int(free_size), ts_server=ts_server)
+        self.render('log/index.mako', user_list=user_list, total_size=total_size, free_size=free_size, ts_server=ts_server)
 
 
 class RecordHandler(SwxAdminHandler):

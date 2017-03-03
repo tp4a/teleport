@@ -9,15 +9,14 @@ ywl.on_init = function (cb_stack, cb_args) {
 	// 创建页面控件对象
 	//===================================
 	// 表格数据
-	//console.log('ywl.page_options.total_size,', ywl.page_options.total_size, ywl.page_options.free_size);
 	var disk_rate = parseInt(ywl.page_options.free_size * 100 / ywl.page_options.total_size);
-	$('#disk-status').text('日志磁盘大小：' + ywl.page_options.total_size + 'GB，剩余空间：' + ywl.page_options.free_size + 'GB，空闲' + disk_rate + '%');
+	$('#disk-status').text('日志磁盘大小：' + size2str(ywl.page_options.total_size, 2) + '，剩余空间：' + size2str(ywl.page_options.free_size, 2) + '，空闲' + disk_rate + '%');
 	if (disk_rate < 10) {
 		$('#disk-status').removeClass().addClass('badge badge-danger');
-	} else if (disk_rate < 50) {
+	} else if (disk_rate < 30) {
 		$('#disk-status').removeClass().addClass('badge badge-warning');
 	} else {
-		$('#disk-status').removeClass().addClass('badge badge-info');
+		$('#disk-status').removeClass().addClass('badge badge-ignore');
 	}
 
 	var host_table_options = {
