@@ -106,6 +106,7 @@ class WebServerCore:
         # settings['compiled_template_cache'] = False
         # settings['static_hash_cache'] = False
 
+
         from eom_app.controller import controllers
         web_app = tornado.web.Application(controllers, **settings)
 
@@ -117,5 +118,9 @@ class WebServerCore:
             log.e('Can not listen on port {}, maybe it been used by another application.\n'.format(cfg.server_port))
             return 0
 
+        # 启动session超时管理
+        web_session().start()
         tornado.ioloop.IOLoop.instance().start()
+        web_session().stop()
+
         return 0

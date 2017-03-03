@@ -53,8 +53,7 @@
 					<div class="inputbox">
 						<div class="input-group input-group-lg">
 							<span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-							<input id="username_account" type="text" class="form-control" placeholder="账号：邮箱地址或手机号"
-								   data-toggle="popover" data-trigger="manual" data-placement="top">
+							<input id="username_account" type="text" class="form-control" placeholder="账号：邮箱地址或手机号" data-toggle="popover" data-trigger="manual" data-placement="top" value="${ user_name }">
 						</div>
 					</div>
 

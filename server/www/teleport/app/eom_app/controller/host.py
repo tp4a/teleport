@@ -15,10 +15,12 @@ from eom_app.app.util import *
 from eom_app.module import host
 from eom_app.module.common import *
 from eom_common.eomcore.logger import *
-from .base import SwxAuthHandler, SwxAuthJsonHandler
+from .base import SwxAuthHandler, SwxAuthJsonHandler, SwxAdminJsonHandler
 
 cfg = app_cfg()
 
+# 临时认证ID的基数，每次使用时均递减
+tmp_auth_id_base = -1
 
 class IndexHandler(SwxAuthHandler):
     def get(self):
@@ -46,7 +48,7 @@ class IndexHandler(SwxAuthHandler):
             ts_server['telnet_port'] = cfg.core.telnet.port
 
             # f.write("\"use strict\";\nvar teleport_ip = \"{}\";\n".format(ts_server['ip']))
-        except Exception as e:
+        except Exception:
             return self.write(-1)
         # finally:
         #     f.close()
@@ -773,44 +775,6 @@ class UpdateHostExtendInfo(SwxAuthJsonHandler):
             self.write_json(-1)
 
 
-# @tornado.gen.coroutine
-# def post_http(url, values):
-#     try:
-#         # log.v('post_http(), url={}\n'.format(url))
-#
-#         # user_agent = 'Mozilla/4.0 (compatible;MSIE 5.5; Windows NT)'
-#         # values = {
-#         #     'act': 'login',
-#         #     'login[email]': 'yzhang@i9i8.com',
-#         #     'login[password]': '123456'
-#         # }
-#         values = json.dumps(values)
-#         data = urllib.parse.quote(values).encode('utf-8')
-#         # headers = {'User-Agent': user_agent}
-#
-#         # req = urllib.request.Request(url=url, data=data, headers=headers)
-#         # response = urllib.request.urlopen(req, timeout=3)
-#
-#         client = tornado.httpclient.AsyncHTTPClient()
-#         r = yield client.fetch(url, body=data, method='POST')
-#         print('----------', r.body)
-#         return r.body
-#
-#
-#         # the_page = response.read()
-#         # info = response.info()
-#         # _zip = info.get('Content-Encoding')
-#         # if _zip == 'gzip':
-#         #     the_page = gzip.decompress(the_page)
-#         # else:
-#         #     pass
-#         # the_page = the_page.decode()
-#         # # print(the_page)
-#         # return the_page
-#     except:
-#         return None
-
-
 class GetSessionId(SwxAuthJsonHandler):
     @tornado.gen.coroutine
     def post(self, *args, **kwargs):
@@ -840,23 +804,10 @@ class GetSessionId(SwxAuthJsonHandler):
 
         url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
         req = {'method': 'request_session', 'param': {'authid': auth_id}}
-
-        # values = json.dumps(req)
-        # data = urllib.parse.quote(values).encode('utf-8')
-        # client = tornado.httpclient.AsyncHTTPClient()
-        # r = yield client.fetch(url, body=data, method='POST')
-        # if r.code == 200:
-        #     # self.write(r.body)
-        #     print('+++++++++', r.body)
-
         _yr = async_post_http(url, req)
         return_data = yield _yr
         if return_data is None:
             return self.write_json(-1)
-
-        # return_data = result.decode()
-        # print('############', return_data)
-        # return_data = json.loads(result.decode())
 
         if 'code' not in return_data:
             return self.write_json(-1)
@@ -941,7 +892,7 @@ class AdminGetSessionId(SwxAuthJsonHandler):
         return self.write_json(0, data=data)
 
 
-class AdminFastGetSessionId(SwxAuthJsonHandler):
+class AdminFastGetSessionId(SwxAdminJsonHandler):
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:
@@ -1001,16 +952,22 @@ class AdminFastGetSessionId(SwxAuthJsonHandler):
 
         values['account'] = 'admin'
 
-        # config_list = host.get_config_list()
-        # ts_server_rpc_ip = '127.0.0.1'
-        #
-        # if 'ts_server_rpc_ip' in config_list:
-        #     ts_server_rpc_ip = config_list['ts_server_rpc_ip']
-        # ts_server_rpc_port = 52080
-        # if 'ts_server_rpc_port' in config_list:
-        #     ts_server_rpc_port = config_list['ts_server_rpc_port']
         ts_server_rpc_ip = cfg.core.rpc.ip
         ts_server_rpc_port = cfg.core.rpc.port
+
+        # 为统一调用形式，这里先将密码或私钥传递给core服务加密，然后生成一个临时认证信息供后续request_session时core服务来获取
+        url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
+        req = {'method': 'enc', 'param': {'p': values['uauth']}}
+        _yr = async_post_http(url, req)
+        return_data = yield _yr
+        if return_data is None:
+            return self.write_json(-1)
+        if 'code' not in return_data or return_data['code'] != 0:
+            return self.write_json(-1)
+
+        values['uauth'] = return_data['data']['c']
+
+        # TODO: 生成一个临时认证信息备用（如何保证临时的auth_id唯一？）
 
         url = 'http://{}:{}/request_session'.format(ts_server_rpc_ip, ts_server_rpc_port)
         # values['auth_id'] = auth_id

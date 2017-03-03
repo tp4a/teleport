@@ -2,19 +2,25 @@
 
 import json
 import random
-from random import Random
+# from random import Random
 
 from eom_app.module import user
 from eom_common.eomcore.logger import *
 from .base import SwxAppHandler, SwxJsonpHandler, SwxAuthJsonHandler
-from .helper.captcha import gen_captcha
+from eom_app.app.util import gen_captcha
 
 
 class LoginHandler(SwxAppHandler):
     def get(self):
         ref = self.get_argument('ref', '/')
 
-        self.render('auth/login.mako', reference=ref, captcha_random=random.random())
+        user = self.get_current_user()
+        if user['id'] == 0:
+            user_name = ''
+        else:
+            user_name = user['name']
+
+        self.render('auth/login.mako', user_name=user_name, reference=ref, captcha_random=random.random())
 
 
 class VerifyUser(SwxJsonpHandler):
@@ -234,7 +240,6 @@ class ModifyPwd(SwxAuthJsonHandler):
         except:
             log.e('can not set session.')
             self.write_json(-1)
-
 
 #
 # class GetEncData(SwxAuthJsonHandler):

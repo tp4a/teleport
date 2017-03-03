@@ -10,7 +10,7 @@ import mako.template
 import tornado.web
 from tornado.escape import json_encode
 
-from eom_app.app.session import web_session
+from eom_app.app.session import web_session, SESSION_EXPIRE
 from eom_app.app.configs import app_cfg
 from eom_app.app.const import *
 
@@ -22,8 +22,7 @@ class SwxBaseHandler(tornado.web.RequestHandler):
         super().__init__(application, request, **kwargs)
 
         self._s_id = None
-        self._s_val = dict()
-        # self.lookup = None
+        # self._s_val = dict()
 
     def initialize(self):
         template_path = self.get_template_path()
@@ -46,32 +45,22 @@ class SwxBaseHandler(tornado.web.RequestHandler):
 
         self._s_id = self.get_cookie('_sid')
         if self._s_id is None:
-            self._s_id = 'ywl_{}_{}'.format(int(time.time()), binascii.b2a_hex(os.urandom(8)).decode())
+            self._s_id = 'tp_{}_{}'.format(int(time.time()), binascii.b2a_hex(os.urandom(8)).decode())
             self.set_cookie('_sid', self._s_id)
-            web_session().add(self._s_id, self._s_val)
-        else:
-            # print('sid:', self._s_id)
-            self._s_val = web_session().get(self._s_id)
-            if self._s_val is None:
-                self._s_val = dict()
-                web_session().add(self._s_id, self._s_val)
 
-    def set_session(self, name, value):
-        self._s_val[name] = value
-        web_session().set(self._s_id, self._s_val)
+    def set_session(self, name, value, expire=SESSION_EXPIRE):
+        k = '{}-{}'.format(self._s_id, name)
+        web_session().set(k, value, expire)
 
-    def get_session(self, name, default=None):
-        if name in self._s_val:
-            return self._s_val[name]
-        else:
-            return default
+    def get_session(self, name, _default=None):
+        k = '{}-{}'.format(self._s_id, name)
+        return web_session().get(k, _default)
 
     def del_session(self, name):
-        if name in self._s_val:
-            del self._s_val[name]
+        k = '{}-{}'.format(self._s_id, name)
+        return web_session().set(k, '', -1)
 
     def get_current_user(self):
-        # return self.get_secure_cookie('user')
         user = self.get_session('user')
         if user is None:
             user = dict()
