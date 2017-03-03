@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import datetime
 import shutil
 import struct
 
@@ -200,5 +201,48 @@ def delete_log(log_list):
                 pass
 
         return True
+    except:
+        return False
+
+
+def session_fix():
+    try:
+        sql_exec = get_db_con()
+        str_sql = 'UPDATE ts_log SET ret_code=7 WHERE ret_code=0;'
+        return sql_exec.ExecProcNonQuery(str_sql)
+    except:
+        return False
+
+
+def session_begin(sid, acc_name, host_ip, sys_type, host_port, auth_mode, user_name, protocol):
+    try:
+        _now = int(datetime.datetime.utcnow().timestamp())
+        sql_exec = get_db_con()
+
+        str_sql = 'INSERT INTO ts_log (session_id, account_name,host_ip,sys_type, host_port,auth_type, user_name,ret_code,begin_time,end_time,log_time, protocol) ' \
+                  'VALUES (\'{}\',\'{}\',\'{}\',{},{},{},\'{}\',{},{},{},\'{}\',{});'.format(
+            sid, acc_name, host_ip, sys_type, host_port, auth_mode, user_name, 0, _now, 0, '', protocol)
+
+        ret = sql_exec.ExecProcNonQuery(str_sql)
+        if not ret:
+            return -101
+
+        str_sql = 'SELECT last_insert_rowid()'
+        db_ret = sql_exec.ExecProcQuery(str_sql)
+        if db_ret is None:
+            return -102
+        user_id = db_ret[0][0]
+        return user_id
+
+    except:
+        return False
+
+
+def session_end(record_id, ret_code):
+    try:
+        _now = int(datetime.datetime.utcnow().timestamp())
+        sql_exec = get_db_con()
+        str_sql = 'UPDATE ts_log SET ret_code={}, end_time={} WHERE id={};'.format(ret_code, _now, record_id)
+        return sql_exec.ExecProcNonQuery(str_sql)
     except:
         return False

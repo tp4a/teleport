@@ -8,9 +8,6 @@
     <Filter Include="main app">
       <UniqueIdentifier>{0155895f-d6be-4e0f-970d-9b6b5c759502}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sqlite">
-      <UniqueIdentifier>{4d2bbfac-6b91-4054-a4e2-38231c443939}</UniqueIdentifier>
-    </Filter>
     <Filter Include="libex">
       <UniqueIdentifier>{9c2d60b3-2932-485b-bccd-b66886b0286b}</UniqueIdentifier>
     </Filter>
@@ -87,9 +84,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\common\libex\src\ex_log.cpp">
       <Filter>libex\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\external\sqlite\sqlite3.c">
-      <Filter>sqlite</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\external\mongoose\mongoose.c">
       <Filter>mongoose</Filter>
@@ -170,12 +164,6 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\external\sqlite\sqlite3.h">
-      <Filter>sqlite</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\external\sqlite\sqlite3ext.h">
-      <Filter>sqlite</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\external\jsoncpp\include\json\json.h">
       <Filter>jsoncpp\header</Filter>

@@ -496,7 +496,7 @@ def delete_group(group_id):
 def update_group(group_id, group_name):
     sql_exec = get_db_con()
     str_sql = 'UPDATE ts_group SET group_name = \'{}\' ' \
-              '  WHERE group_id = {}'.format(group_name, group_id)
+              'WHERE group_id = {}'.format(group_name, group_id)
     ret = sql_exec.ExecProcNonQuery(str_sql)
     return ret
 
@@ -531,30 +531,31 @@ def get_host_auth_info(host_auth_id):
         return None
     x = DbItem()
     x.load(db_ret[0], ['a_{}'.format(i) for i in field_a] + ['b_{}'.format(i) for i in field_b])
-    h = dict()
+    print(x)
 
-    h['ip'] = x.b_host_ip
-    h['systype'] = x.b_host_sys_type
-    h['authmode'] = x.a_auth_mode
-    h['uname'] = x.a_user_name
+    h = dict()
+    h['host_ip'] = x.b_host_ip
+    h['host_port'] = x.b_host_port
+    h['sys_type'] = x.b_host_sys_type
+    h['auth_mode'] = x.a_auth_mode
+    h['user_name'] = x.a_user_name
     h['protocol'] = x.b_protocol
 
     if x.a_encrypt is None:
-        h['enc'] = 1
+        h['encrypt'] = 1
     else:
-        h['enc'] = x.a_encrypt
+        h['encrypt'] = x.a_encrypt
 
     if x.a_user_param is None:
-        h['uparam'] = ''
+        h['user_param'] = ''
     else:
-        h['uparam'] = x.a_user_param
+        h['user_param'] = x.a_user_param
 
-    h['uauth'] = x.a_user_pswd
-    h['port'] = int(x.b_host_port)
+    h['user_auth'] = x.a_user_pswd
 
     # user_auth = x.a_user_auth
     if x.a_auth_mode == 1:
-        h['uauth'] = x.a_user_pswd
+        h['user_auth'] = x.a_user_pswd
     elif x.a_auth_mode == 2:
         if x.a_cert_id is None:
             cert_id = 0
@@ -564,11 +565,11 @@ def get_host_auth_info(host_auth_id):
         db_ret = sql_exec.ExecProcQuery(str_sql)
         if db_ret is not None and len(db_ret) == 1:
             (cert_pri,) = db_ret[0]
-            h['uauth'] = cert_pri
+            h['user_auth'] = cert_pri
         else:
             return None
     elif x.a_auth_mode == 0:
-        h['uauth'] = ''
+        h['user_auth'] = ''
     else:
         return None
 

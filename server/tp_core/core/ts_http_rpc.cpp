@@ -4,7 +4,7 @@
 #include "ts_crypto.h"
 #include "ts_db.h"
 
-#include <sqlite3.h>
+//#include <sqlite3.h>
 
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')

@@ -35,7 +35,6 @@ class eom_sqlite:
             raise RuntimeError('can not open database.')
         return self._conn
 
-    # 调用实例 ms.ExecProcQuery('exec P_Agent_Cmd_Get @CmdGroupId=7')
     def ExecProcQuery(self, sql):
         if self._conn is None:
             if self.connect() is None:
@@ -46,12 +45,10 @@ class eom_sqlite:
             cursor.execute(sql)
             db_ret = cursor.fetchall()
             return db_ret
-        except Exception as e:
+        except Exception:
             return None
         finally:
             cursor.close()
-
-            # return None
 
     def ExecProcNonQuery(self, sql):
         if self._conn is None:
@@ -62,7 +59,7 @@ class eom_sqlite:
         try:
             cursor.execute(sql)
             self._conn.commit()
-        except Exception as e:
+        except Exception:
             log.e('can not create/open database.\n')
             return False
         finally:

@@ -115,6 +115,7 @@ class SwxJsonpHandler(SwxAppHandler):
 
         if data is None:
             self.write('})')
+            self.finish()
             return
 
         if not isinstance(data, dict):
@@ -123,6 +124,7 @@ class SwxJsonpHandler(SwxAppHandler):
         self.write(',data:')
         self.write(json_encode(data))
         self.write('})')
+        self.finish()
 
 
 class SwxJsonHandler(SwxAppHandler):
@@ -149,6 +151,7 @@ class SwxJsonHandler(SwxAppHandler):
 
         self.set_header("Content-Type", "application/json")
         self.write(json_encode(_ret))
+        self.finish()
 
     def write_raw_json(self, data=None):
 
@@ -157,6 +160,7 @@ class SwxJsonHandler(SwxAppHandler):
 
         self.set_header("Content-Type", "application/json")
         self.write(json_encode(data))
+        self.finish()
 
 
 class SwxAuthHandler(SwxAppHandler):

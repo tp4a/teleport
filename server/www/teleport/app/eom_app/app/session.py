@@ -72,6 +72,7 @@ class WebSession(threading.Thread):
             self._session_dict[s_id] = {'v': value, 't': int(datetime.datetime.utcnow().timestamp()), 'e': expire}
 
     def get(self, s_id, _default=None):
+        # 从session中获取一个数据（读取并更新最后访问时间）
         with self._lock:
             if s_id in self._session_dict:
                 if self._session_dict[s_id]['e'] == 0:
@@ -87,6 +88,15 @@ class WebSession(threading.Thread):
             else:
                 return _default
 
+    def taken(self, s_id, _default=None):
+        # 从session中取走一个数据（读取并删除）
+        with self._lock:
+            if s_id in self._session_dict:
+                ret = self._session_dict[s_id]['v']
+                del self._session_dict[s_id]
+                return ret
+            else:
+                return _default
 
 def web_session():
     """

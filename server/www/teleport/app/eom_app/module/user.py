@@ -210,13 +210,13 @@ def delete_host_user(user_name, auth_id_list):
         return False
 
 
-def get_enc_data_helper(data):
-    try:
-        ret_code, data = get_enc_data(data)
-    except Exception as e:
-        return -100, ''
-
-    return ret_code, data
+# def get_enc_data_helper(data):
+#     try:
+#         ret_code, data = get_enc_data(data)
+#     except Exception as e:
+#         return -100, ''
+#
+#     return ret_code, data
 
 
 def get_log_list(filter, limit):
@@ -296,7 +296,7 @@ def get_log_list(filter, limit):
         if cost_time < 0:
             cost_time = 0
         h['cost_time'] = cost_time
-        h['log_time'] = x.a_log_time
+        h['begin_time'] = x.a_begin_time
         if x.a_protocol is not None:
             h['protocol'] = x.a_protocol
         else:

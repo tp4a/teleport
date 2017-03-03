@@ -100,7 +100,7 @@ class MySQL:
 
             if self.connect() is None:
                 self.conn = None
-                return None
+                return False
 
             cur = self.conn.cursor()
             cur.execute(sql)
