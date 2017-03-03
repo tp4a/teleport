@@ -123,6 +123,8 @@ class RecordGetInfo(SwxAdminJsonHandler):
 
 
 class DeleteLog(SwxAdminJsonHandler):
+
+    # TODO: 用户可能会批量删除大量录像文件，因此io操作可能会比较耗时，这里应该改为异步方式。
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:

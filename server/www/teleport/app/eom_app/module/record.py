@@ -189,7 +189,6 @@ def delete_log(log_list):
             ret = sql_exec.ExecProcNonQuery(str_sql)
             if not ret:
                 return False
-                #     删除录像文件
             try:
                 record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(log_id))
                 if os.path.exists(record_path):
