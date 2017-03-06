@@ -340,40 +340,47 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 	int protocol = 0;
 	int is_enc = 1;
 
-	// TODO: 如果authid为正整数，这是一个长期保留的认证ID，如果是负整数，这是一个临时的认证ID（用于连接测试），如果为0，则报错
-	if (!json_param["authid"].isNull())
+	// 如果authid为正整数，这是一个长期保留的认证ID，如果是负整数，这是一个临时的认证ID（用于连接测试），如果为0，则报错
+
+	if (json_param["authid"].isNull())
 	{
-		// 使用认证ID的方式申请SID
-		if (!json_param["authid"].isInt())
-		{
-			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
-			return;
-		}
-
-		authid = json_param["authid"].asInt();
-
-		Json::Value jret;
-		if (!ts_web_rpc_get_auth_info(authid, jret))
-		{
-			_create_json_ret(buf, TSR_GETAUTH_INFO_ERROR);
-			return;
-		}
-
-		Json::Value& _jret = jret["data"];
-
-		host_ip = _jret["host_ip"].asString();
-		host_port = _jret["host_port"].asInt();
-		//host_lock = 0;
-		sys_type = _jret["sys_type"].asInt();
-		protocol = _jret["protocol"].asInt();
-		is_enc = _jret["encrypt"].asInt() == 0 ? false : true;
-		auth_mode = _jret["auth_mode"].asInt();
-		account_lock = _jret["account_lock"].asInt() == 0 ? true : false;
-		user_name = _jret["user_name"].asString();
-		user_auth = _jret["user_auth"].asString();
-		user_param = _jret["user_param"].asString();
-		account_name = _jret["account_name"].asString();
+		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		return;
 	}
+	if (!json_param["authid"].isInt())
+	{
+		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		return;
+	}
+
+	authid = json_param["authid"].asInt();
+	if (0 == authid)
+	{
+		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		return;
+	}
+
+	Json::Value jret;
+	if (!ts_web_rpc_get_auth_info(authid, jret))
+	{
+		_create_json_ret(buf, TSR_GETAUTH_INFO_ERROR);
+		return;
+	}
+
+	Json::Value& _jret = jret["data"];
+
+	host_ip = _jret["host_ip"].asString();
+	host_port = _jret["host_port"].asInt();
+	//host_lock = 0;
+	sys_type = _jret["sys_type"].asInt();
+	protocol = _jret["protocol"].asInt();
+	is_enc = _jret["encrypt"].asInt() == 0 ? false : true;
+	auth_mode = _jret["auth_mode"].asInt();
+	account_lock = _jret["account_lock"].asInt() == 0 ? true : false;
+	user_name = _jret["user_name"].asString();
+	user_auth = _jret["user_auth"].asString();
+	user_param = _jret["user_param"].asString();
+	account_name = _jret["account_name"].asString();
 
 
 	// 进一步判断参数是否合法
