@@ -256,6 +256,10 @@ void TsHttpRpc::_process_request(const ex_astr& func_cmd, const Json::Value& jso
 	{
 		_rpc_func_request_session(json_param, buf);
 	}
+	else if (func_cmd == "get_config")
+	{
+		_rpc_func_get_config(json_param, buf);
+	}
 	else if (func_cmd == "enc")
 	{
 		_rpc_func_enc(json_param, buf);
@@ -290,27 +294,28 @@ void TsHttpRpc::_rpc_func_get_config(const Json::Value& json_param, ex_astr& buf
 	{
 		if (it->first.length() > 9 && 0 == wcsncmp(it->first.c_str(), L"protocol-", 9))
 		{
-			ex_wstr libname;
-			if (!it->second->GetStr(L"lib", libname))
-				continue;
+			ex_wstr name;
+			name.assign(it->first, 9);
+			ex_astr _name;
+			ex_wstr2astr(name, _name);
 
 			bool enabled = false;
 			it->second->GetBool(L"enabled", enabled, false);
-			if (!enabled)
-			{
-				EXLOGV(L"[core] `%ls` not enabled.\n", libname.c_str());
-				continue;
-			}
 
-// 			if (!g_tpp_mgr.load_tpp(libname))
-// 			{
-// 				all_ok = false;
-// 				break;
-// 			}
+			ex_wstr ip;
+			if (!it->second->GetStr(L"bind-ip", ip))
+				continue;
+			ex_astr _ip;
+			ex_wstr2astr(ip, _ip);
+
+			int port;
+			it->second->GetInt(L"bind-port", port, 52189);
+
+			jr_data[_name.c_str()]["enable"] = enabled;
+			jr_data[_name.c_str()]["ip"] = _ip;
+			jr_data[_name.c_str()]["port"] = port;
 		}
 	}
-
-	jr_data["sid"] = sid;
 
 	_create_json_ret(buf, TSR_OK, jr_data);
 }

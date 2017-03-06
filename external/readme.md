@@ -5,7 +5,9 @@ teleport项目用到的第三方库
 - openssl
   https://www.openssl.org
   openssl-1.0.2h
-  请按openssl文档所述，编译出openssl的静态库。
+  请按openssl文档所述，编译出openssl的静态库。要编译openssl，需要
+  - perl 建议安装ActivePerl http://www.activestate.com/ActivePerl
+  - nasm http://www.nasm.us
 
 
 - jsoncpp

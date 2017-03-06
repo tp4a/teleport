@@ -1,3 +1,7 @@
+#ifdef _DEBUG
+#include <vld.h>
+#endif
+
 /* Name of package */
 #define PACKAGE "libssh"
 
