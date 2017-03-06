@@ -55,6 +55,8 @@ private:
 	void _create_json_ret(ex_astr& buf, int errcode);
 	void _create_json_ret(ex_astr& buf, int errcode, const char* message);
 
+	// 获取core服务的配置信息（主要是支持的各个协议是否启用，以及其端口号等）
+	void _rpc_func_get_config(const Json::Value& json_param, ex_astr& buf);
 	// 请求一个会话ID
 	void _rpc_func_request_session(const Json::Value& json_param, ex_astr& buf);
 	// 加密一个字符串（返回的是密文的BASE64编码）

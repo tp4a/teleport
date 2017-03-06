@@ -65,50 +65,52 @@ class ConfigFile(AttrDict):
 
         # log.set_attribute(min_level=self['log_level'])
 
-        return True
-
-    def load_core(self, cfg_file):
-        if not os.path.exists(cfg_file):
-            log.e('configuration file does not exists: [{}]\n'.format(cfg_file))
-            return False
-        try:
-            _cfg = configparser.ConfigParser()
-            _cfg.read(cfg_file)
-        except:
-            log.e('can not load configuration file: [{}]\n'.format(cfg_file))
-            return False
-
-        self['core'] = AttrDict()
-
-        self['core']['rpc'] = AttrDict()
-        self['core']['rpc']['ip'] = '127.0.0.1'
-        self['core']['rpc']['port'] = 52080
-        if 'rpc' in _cfg:
-            self['core']['rpc']['ip'] = _cfg['rpc'].get('bind-ip', '127.0.0.1')
-            self['core']['rpc']['port'] = _cfg['rpc'].getint('bind-port', 52080)
-
-        self['core']['ssh'] = AttrDict()
-        self['core']['ssh']['enabled'] = False
-        self['core']['ssh']['port'] = 52189
-        if 'protocol-ssh' in _cfg:
-            self['core']['ssh']['enabled'] = _cfg['protocol-ssh'].getboolean('enabled', False)
-            self['core']['ssh']['port'] = _cfg['protocol-ssh'].getint('bind-port', 52189)
-
-        self['core']['rdp'] = AttrDict()
-        self['core']['rdp']['enabled'] = False
-        self['core']['rdp']['port'] = 52089
-        if 'protocol-rdp' in _cfg:
-            self['core']['rdp']['enabled'] = _cfg['protocol-rdp'].getboolean('enabled', False)
-            self['core']['rdp']['port'] = _cfg['protocol-rdp'].getint('bind-port', 52089)
-
-        self['core']['telnet'] = AttrDict()
-        self['core']['telnet']['enabled'] = False
-        self['core']['telnet']['port'] = 52389
-        if 'protocol-telnet' in _cfg:
-            self['core']['telnet']['enabled'] = _cfg['protocol-telnet'].getboolean('enabled', False)
-            self['core']['telnet']['port'] = _cfg['protocol-telnet'].getint('bind-port', 52389)
+        self['core_server_rpc'] = _comm.get('core-server-rpc', 'http://127.0.0.1:52080/rpc')
 
         return True
+
+    # def load_core(self, cfg_file):
+    #     if not os.path.exists(cfg_file):
+    #         log.e('configuration file does not exists: [{}]\n'.format(cfg_file))
+    #         return False
+    #     try:
+    #         _cfg = configparser.ConfigParser()
+    #         _cfg.read(cfg_file)
+    #     except:
+    #         log.e('can not load configuration file: [{}]\n'.format(cfg_file))
+    #         return False
+    #
+    #     self['core'] = AttrDict()
+    #
+    #     self['core']['rpc'] = AttrDict()
+    #     self['core']['rpc']['ip'] = '127.0.0.1'
+    #     self['core']['rpc']['port'] = 52080
+    #     if 'rpc' in _cfg:
+    #         self['core']['rpc']['ip'] = _cfg['rpc'].get('bind-ip', '127.0.0.1')
+    #         self['core']['rpc']['port'] = _cfg['rpc'].getint('bind-port', 52080)
+    #
+    #     self['core']['ssh'] = AttrDict()
+    #     self['core']['ssh']['enabled'] = False
+    #     self['core']['ssh']['port'] = 52189
+    #     if 'protocol-ssh' in _cfg:
+    #         self['core']['ssh']['enabled'] = _cfg['protocol-ssh'].getboolean('enabled', False)
+    #         self['core']['ssh']['port'] = _cfg['protocol-ssh'].getint('bind-port', 52189)
+    #
+    #     self['core']['rdp'] = AttrDict()
+    #     self['core']['rdp']['enabled'] = False
+    #     self['core']['rdp']['port'] = 52089
+    #     if 'protocol-rdp' in _cfg:
+    #         self['core']['rdp']['enabled'] = _cfg['protocol-rdp'].getboolean('enabled', False)
+    #         self['core']['rdp']['port'] = _cfg['protocol-rdp'].getint('bind-port', 52089)
+    #
+    #     self['core']['telnet'] = AttrDict()
+    #     self['core']['telnet']['enabled'] = False
+    #     self['core']['telnet']['port'] = 52389
+    #     if 'protocol-telnet' in _cfg:
+    #         self['core']['telnet']['enabled'] = _cfg['protocol-telnet'].getboolean('enabled', False)
+    #         self['core']['telnet']['port'] = _cfg['protocol-telnet'].getint('bind-port', 52389)
+    #
+    #     return True
 
 
 _g_cfg = ConfigFile()

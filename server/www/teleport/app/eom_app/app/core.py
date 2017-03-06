@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
+# import sys
+import json
+import urllib.parse
+import urllib.request
 
 import tornado.httpserver
 import tornado.ioloop
@@ -46,9 +49,11 @@ class WebServerCore:
             return False
 
         # TODO: 不要直接读取core.ini，而是通过core的json-rpc获取其配置数据
-        _cfg_file = os.path.join(cfg.cfg_path, 'core.ini')
-        if not cfg.load_core(_cfg_file):
-            return False
+        # _cfg_file = os.path.join(cfg.cfg_path, 'core.ini')
+        # if not cfg.load_core(_cfg_file):
+        #     return False
+        # if not self._get_core_server_config():
+        #     return False
 
         cfg.log_path = os.path.abspath(options['log_path'])
         cfg.log_file = os.path.join(cfg.log_path, 'tpweb.log')
@@ -71,6 +76,31 @@ class WebServerCore:
         get_sqlite_pool().init(cfg.data_path)
 
         return True
+
+    def _get_core_server_config(self):
+        try:
+            req = {'method': 'get_config', 'param': []}
+            req_data = json.dumps(req)
+            data = urllib.parse.quote(req_data).encode('utf-8')
+            req = urllib.request.Request(url=cfg.core_server_rpc, data=data)
+            rep = urllib.request.urlopen(req, timeout=3)
+            body = rep.read().decode()
+            print('core-config:', body)
+            # info = response.info()
+            # _zip = info.get('Content-Encoding')
+            # if _zip == 'gzip':
+            #     the_page = gzip.decompress(the_page)
+            # else:
+            #     pass
+            # the_page = the_page.decode()
+            # print(the_page)
+            # return the_page
+            x = json.loads(body)
+            cfg.core = x['data']
+        except:
+            log.w('can not connect to core server for get config, maybe it not start yet.\n')
+
+        # return True
 
     def run(self):
 
@@ -106,6 +136,8 @@ class WebServerCore:
         # settings['compiled_template_cache'] = False
         # settings['static_hash_cache'] = False
 
+        # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口）
+        self._get_core_server_config()
 
         from eom_app.controller import controllers
         web_app = tornado.web.Application(controllers, **settings)
@@ -118,9 +150,12 @@ class WebServerCore:
             log.e('Can not listen on port {}, maybe it been used by another application.\n'.format(cfg.server_port))
             return 0
 
+
         # 启动session超时管理
         web_session().start()
+
         tornado.ioloop.IOLoop.instance().start()
+
         web_session().stop()
 
         return 0

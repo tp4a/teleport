@@ -1,7 +1,7 @@
 #include "ts_main.h"
 #include "ts_session.h"
 #include "ts_http_rpc.h"
-#include "ts_db.h"
+#include "ts_web_rpc.h"
 #include "ts_env.h"
 //#include "ts_http_client.h"
 //#include "ts_ver.h"
@@ -57,12 +57,12 @@ bool tpp_take_session(const ex_astr& sid, TS_SESSION_INFO& info)
 
 bool tpp_session_begin(TS_SESSION_INFO& info, int& db_id)
 {
-	return g_db.session_begin(info, db_id);
+	return ts_web_rpc_session_begin(info, db_id);
 }
 
 bool tpp_session_end(int db_id, int ret)
 {
-	return g_db.session_end(db_id, ret);
+	return ts_web_rpc_session_end(db_id, ret);
 }
 
 typedef struct TPP_LIB
@@ -257,24 +257,9 @@ int ts_main(void)
 	}
 
 
-
-
-
-
-
-	// 	if (!g_cfg.init())
-	// 	{
-	// // 		EXLOGE("[ERROR] can not load configuration.\n");
-	// 		return 1;
-	// 	}
-	// 	//TS_DB_AUTH_INFO info;
-	// 	//g_db.get_auth_info(17, info);
-	g_db.update_reset_log();
-
-	//mbedtls_debug_set_threshold(9999);
+	ts_web_rpc_register_core();
 
 	EXLOGV("[core] ---- initialized, ready for service ----\n");
-
 	while (!g_exit_flag)
 	{
 		ex_sleep_ms(1000);

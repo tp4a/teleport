@@ -6,9 +6,12 @@ import tornado.gen
 import json
 import urllib.parse
 from eom_app.app.session import web_session
+from eom_app.app.configs import app_cfg
 from eom_app.module import host, record
 
 from .base import SwxJsonHandler
+
+cfg = app_cfg()
 
 
 class RpcHandler(SwxJsonHandler):
@@ -52,8 +55,8 @@ class RpcHandler(SwxJsonHandler):
             return self._session_begin(_req['param'])
         elif 'session_end' == _req['method']:
             return self._session_end(_req['param'])
-        elif 'session_fix' == _req['method']:
-            return self._session_fix()
+        elif 'register_core' == _req['method']:
+            return self._register_core(_req['param'])
         elif 'exit' == _req['method']:
             return self._exit()
 
@@ -121,8 +124,10 @@ class RpcHandler(SwxJsonHandler):
         else:
             self.write_json(0)
 
-    def _session_fix(self):
+    def _register_core(self, param):
+        # 因为core服务启动了（之前可能非正常终止了），做一下数据库中会话状态的修复操作
         record.session_fix()
+
         self.write_json(0)
 
     def _exit(self):

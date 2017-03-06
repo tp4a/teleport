@@ -2,7 +2,7 @@
 #include "ts_env.h"
 #include "ts_session.h"
 #include "ts_crypto.h"
-#include "ts_db.h"
+#include "ts_web_rpc.h"
 
 //#include <sqlite3.h>
 
@@ -279,6 +279,43 @@ void TsHttpRpc::_rpc_func_exit(const Json::Value& json_param, ex_astr& buf)
 	_create_json_ret(buf, TSR_OK);
 }
 
+void TsHttpRpc::_rpc_func_get_config(const Json::Value& json_param, ex_astr& buf)
+{
+	Json::Value jr_data;
+
+	ExIniFile& ini = g_env.get_ini();
+	ex_ini_sections& secs = ini.GetAllSections();
+	ex_ini_sections::iterator it = secs.begin();
+	for (; it != secs.end(); ++it)
+	{
+		if (it->first.length() > 9 && 0 == wcsncmp(it->first.c_str(), L"protocol-", 9))
+		{
+			ex_wstr libname;
+			if (!it->second->GetStr(L"lib", libname))
+				continue;
+
+			bool enabled = false;
+			it->second->GetBool(L"enabled", enabled, false);
+			if (!enabled)
+			{
+				EXLOGV(L"[core] `%ls` not enabled.\n", libname.c_str());
+				continue;
+			}
+
+// 			if (!g_tpp_mgr.load_tpp(libname))
+// 			{
+// 				all_ok = false;
+// 				break;
+// 			}
+		}
+	}
+
+	jr_data["sid"] = sid;
+
+	_create_json_ret(buf, TSR_OK, jr_data);
+}
+
+
 void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr& buf)
 {
 	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#request_session
@@ -311,7 +348,7 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 		authid = json_param["authid"].asInt();
 
 		Json::Value jret;
-		if (!g_db.get_auth_info(authid, jret))
+		if (!ts_web_rpc_get_auth_info(authid, jret))
 		{
 			_create_json_ret(buf, TSR_GETAUTH_INFO_ERROR);
 			return;

@@ -184,7 +184,7 @@
     <ClCompile Include="..\..\..\external\mongoose\mongoose.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ts_crypto.cpp" />
-    <ClCompile Include="ts_db.cpp" />
+    <ClCompile Include="ts_web_rpc.cpp" />
     <ClCompile Include="ts_env.cpp" />
     <ClCompile Include="ts_http_client.cpp" />
     <ClCompile Include="ts_http_rpc.cpp" />
@@ -209,7 +209,7 @@
     <ClInclude Include="..\common\ts_const.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ts_crypto.h" />
-    <ClInclude Include="ts_db.h" />
+    <ClInclude Include="ts_web_rpc.h" />
     <ClInclude Include="ts_env.h" />
     <ClInclude Include="ts_http_client.h" />
     <ClInclude Include="ts_http_rpc.h" />

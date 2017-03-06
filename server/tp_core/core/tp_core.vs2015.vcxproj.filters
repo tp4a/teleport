@@ -52,9 +52,6 @@
     <ClCompile Include="ts_crypto.cpp">
       <Filter>main app</Filter>
     </ClCompile>
-    <ClCompile Include="ts_db.cpp">
-      <Filter>main app</Filter>
-    </ClCompile>
     <ClCompile Include="ts_env.cpp">
       <Filter>main app</Filter>
     </ClCompile>
@@ -106,6 +103,9 @@
     <ClCompile Include="..\..\..\external\mbedtls\library\sha1.c">
       <Filter>mbedtls\library</Filter>
     </ClCompile>
+    <ClCompile Include="ts_web_rpc.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ts_main.h">
@@ -118,9 +118,6 @@
       <Filter>main app</Filter>
     </ClInclude>
     <ClInclude Include="ts_crypto.h">
-      <Filter>main app</Filter>
-    </ClInclude>
-    <ClInclude Include="ts_db.h">
       <Filter>main app</Filter>
     </ClInclude>
     <ClInclude Include="ts_env.h">
@@ -176,6 +173,9 @@
     </ClInclude>
     <ClInclude Include="..\common\ts_const.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_web_rpc.h">
+      <Filter>main app</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
