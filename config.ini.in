@@ -23,4 +23,7 @@ openssl = 1.0.2h
 libuv = 1.9.1
 mbedtls = 2.3.0
 sqlite = 3160200
+libssh = 0.7.4
+jsoncpp = 0.10.6
+mongoose = 6.6
 

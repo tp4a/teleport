@@ -295,7 +295,7 @@ void TsHttpRpc::_rpc_func_get_config(const Json::Value& json_param, ex_astr& buf
 		if (it->first.length() > 9 && 0 == wcsncmp(it->first.c_str(), L"protocol-", 9))
 		{
 			ex_wstr name;
-			name.assign(it->first, 9);
+			name.assign(it->first, 9, it->first.length() - 9);
 			ex_astr _name;
 			ex_wstr2astr(name, _name);
 

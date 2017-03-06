@@ -18,6 +18,10 @@ OPENSSL_VER = utils.cfg.ver.openssl
 LIBUV_VER = utils.cfg.ver.libuv
 MBEDTLS_VER = utils.cfg.ver.mbedtls
 SQLITE_VER = utils.cfg.ver.sqlite
+LIBSSH_VER = utils.cfg.ver.libssh
+JSONCPP_VER = utils.cfg.ver.jsoncpp
+MONGOOSE_VER = utils.cfg.ver.mongoose
+
 
 
 class BuilderBase:
@@ -29,6 +33,24 @@ class BuilderBase:
         self._init_path()
 
     def _init_path(self):
+        cc.e("this is a pure-virtual function.")
+
+    def build_jsoncpp(self):
+        file_name = 'jsoncpp-{}.zip'.format(JSONCPP_VER)
+        if not self._download_file('jsoncpp source tarball', 'https://github.com/open-source-parsers/jsoncpp/archive/{}.zip'.format(JSONCPP_VER), file_name):
+            return
+        self._build_jsoncpp(file_name)
+
+    def _build_jsoncpp(self, file_name):
+        cc.e("this is a pure-virtual function.")
+
+    def build_mongoose(self):
+        file_name = 'mongoose-{}.zip'.format(MONGOOSE_VER)
+        if not self._download_file('mongoose source tarball', 'https://github.com/cesanta/mongoose/archive/{}.zip'.format(MONGOOSE_VER), file_name):
+            return
+        self._build_mongoose(file_name)
+
+    def _build_mongoose(self, file_name):
         cc.e("this is a pure-virtual function.")
 
     def build_openssl(self):
@@ -59,8 +81,8 @@ class BuilderBase:
         cc.e("this is a pure-virtual function.")
 
     def build_libssh(self):
-        file_name = 'libssh-master.zip'
-        if not self._download_file('mbedtls source tarball', 'https://git.libssh.org/projects/libssh.git/snapshot/master.zip', file_name):
+        file_name = 'libssh-{}.zip'.format(LIBSSH_VER)
+        if not self._download_file('libssh source tarball', 'https://git.libssh.org/projects/libssh.git/snapshot/libssh-{}.zip'.format(LIBSSH_VER), file_name):
             return
         self._build_libssh(file_name)
 
@@ -69,7 +91,7 @@ class BuilderBase:
 
     def build_sqlite(self):
         file_name = 'sqlite-autoconf-{}.tar.gz'.format(SQLITE_VER)
-        if not self._download_file('mbedtls source tarball', 'http://sqlite.org/2016/{}'.format(file_name), file_name):
+        if not self._download_file('sqlite source tarball', 'http://sqlite.org/2016/{}'.format(file_name), file_name):
             return
         self._build_sqlite(file_name)
 
@@ -92,6 +114,7 @@ class BuilderBase:
 
     def fix_output(self):
         pass
+
 
 class BuilderWin(BuilderBase):
     def __init__(self):
@@ -117,11 +140,30 @@ class BuilderLinux(BuilderBase):
         self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-{}'.format(OPENSSL_VER))
         self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(LIBUV_VER))
         self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(MBEDTLS_VER))
-        self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-master')
+        self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(LIBSSH_VER))
         self.SQLITE_PATH_SRC = os.path.join(self.PATH_TMP, 'sqlite-autoconf-{}'.format(SQLITE_VER))
+
+        self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
+        self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
 
         if not os.path.exists(self.PATH_TMP):
             utils.makedirs(self.PATH_TMP)
+
+    def _build_jsoncpp(self, file_name):
+        cc.n('prepare jsoncpp source code...')
+        if not os.path.exists(self.JSONCPP_PATH_SRC):
+            os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, PATH_EXTERNAL))
+            os.rename(os.path.join(PATH_EXTERNAL, 'jsoncpp-{}'.format(JSONCPP_VER)), self.JSONCPP_PATH_SRC)
+        else:
+            cc.w('already exists, skip.')
+
+    def _build_mongoose(self, file_name):
+        cc.n('prepare mongoose source code...')
+        if not os.path.exists(self.MONGOOSE_PATH_SRC):
+            os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, PATH_EXTERNAL))
+            os.rename(os.path.join(PATH_EXTERNAL, 'mongoose-{}'.format(MONGOOSE_VER)), self.MONGOOSE_PATH_SRC)
+        else:
+            cc.w('already exists, skip.')
 
     def _build_openssl(self, file_name):
         if not os.path.exists(self.OPENSSL_PATH_SRC):
@@ -246,7 +288,7 @@ class BuilderLinux(BuilderBase):
         if not os.path.exists(self.LIBSSH_PATH_SRC):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-            os.rename(os.path.join(self.PATH_TMP, 'master'), os.path.join(self.PATH_TMP, 'libssh-master'))
+            # os.rename(os.path.join(self.PATH_TMP, 'master'), os.path.join(self.PATH_TMP, 'libssh-{}'.format(LIBSSH_VER)))
 
         cc.n('build libssh...')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a')):
@@ -284,8 +326,6 @@ class BuilderLinux(BuilderBase):
         # os.system('make ssh_static')
         # # os.system('make install')
         # os.chdir(old_p)
-
-        # TODO: need modify the `config.h.cmake` and comment out HAVE_OPENSSL_CRYPTO_CTR128_ENCRYPT.
 
         cmake_define = ' -DCMAKE_INSTALL_PREFIX={}' \
               ' -D_OPENSSL_VERSION={}' \
@@ -369,6 +409,9 @@ def main():
 
     if builder is None:
         builder = gen_builder(ctx.host_os)
+
+    builder.build_jsoncpp()
+    builder.build_mongoose()
 
     # builder.build_openssl()
     ####builder.build_libuv()
