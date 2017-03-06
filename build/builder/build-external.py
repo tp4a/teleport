@@ -285,6 +285,8 @@ class BuilderLinux(BuilderBase):
         # # os.system('make install')
         # os.chdir(old_p)
 
+        # TODO: need modify the `config.h.cmake` and comment out HAVE_OPENSSL_CRYPTO_CTR128_ENCRYPT.
+
         cmake_define = ' -DCMAKE_INSTALL_PREFIX={}' \
               ' -D_OPENSSL_VERSION={}' \
               ' -DOPENSSL_INCLUDE_DIR={}/include' \
@@ -299,14 +301,19 @@ class BuilderLinux(BuilderBase):
               ' -DWITH_BENCHMARKS=OFF' \
               ' -DWITH_NACL=OFF' \
               ' ..'.format(self.PATH_RELEASE, OPENSSL_VER, self.PATH_RELEASE, self.PATH_RELEASE)
-        utils.cmake(build_path, 'Release', False, cmake_define)
+
+        # libssh always try to build shared library we do not care, but it may fail.
+        # so catch the except, we will check the final output file `libssh.a` ourselves.
+        try:
+            utils.cmake(build_path, 'Release', False, cmake_define)
+        except:
+            pass
 
         # because make install will fail because we can not disable ssh_shared target,
         # so we copy necessary files ourselves.
         utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'libssh.a'))
         utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh.a')
         utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
-
 
     def _build_sqlite(self, file_name):
         if not os.path.exists(self.SQLITE_PATH_SRC):
