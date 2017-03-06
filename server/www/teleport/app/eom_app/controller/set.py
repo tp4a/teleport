@@ -78,15 +78,17 @@ class IndexHandler(SwxAdminHandler):
         #
         #     config_list['_ip_list'] = ip_list
 
-        cfg_list = dict()
-        cfg_list['ts_server_ssh_port'] = cfg.core.ssh.port
-        cfg_list['ts_server_ssh_enabled'] = 1 if cfg.core.ssh.enabled else 0
-        cfg_list['ts_server_rdp_port'] = cfg.core.rdp.port
-        cfg_list['ts_server_rdp_enabled'] = 1 if cfg.core.rdp.enabled else 0
-        cfg_list['ts_server_telnet_port'] = cfg.core.telnet.port
-        cfg_list['ts_server_telnet_enabled'] = 1 if cfg.core.telnet.enabled else 0
+        # cfg_list = dict()
+        # cfg_list['ts_server_ssh_port'] = cfg.core.ssh.port
+        # cfg_list['ts_server_ssh_enabled'] = 1 if cfg.core.ssh.enabled else 0
+        # cfg_list['ts_server_rdp_port'] = cfg.core.rdp.port
+        # cfg_list['ts_server_rdp_enabled'] = 1 if cfg.core.rdp.enabled else 0
+        # cfg_list['ts_server_telnet_port'] = cfg.core.telnet.port
+        # cfg_list['ts_server_telnet_enabled'] = 1 if cfg.core.telnet.enabled else 0
+        # self.render('set/index.mako', config_list=cfg_list)
 
-        self.render('set/index.mako', config_list=cfg_list)
+        page_param = json.dumps({'core_server': cfg.core})
+        self.render('set/index.mako', page_param=page_param)
 
 
 def _restart_func():

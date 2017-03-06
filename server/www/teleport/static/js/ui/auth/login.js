@@ -9,6 +9,14 @@ var g_login_type = 'account';
 
 ywl.on_init = function (cb_stack, cb_args) {
 	ywl.login_type = ywl.page_options.login_type;
+    g_login_type = ywl.page_options.login_type;
+
+    if(ywl.page_options.user_name.length > 0) {
+        $('#username_account').val(ywl.page_options.user_name);
+    }
+
+	$('#captcha_image').attr('src', '/auth/get-captcha?' + Math.random());
+
 	ywl.app = ywl.create_app();
 	cb_stack
 		.add(ywl.app.init)
@@ -181,7 +189,7 @@ ywl.create_app = function () {
 			success: function (data) {
 				if (data.code == 0) {
 					// 验证成功
-					window.location.href = ywl.page_options.reference;
+					window.location.href = ywl.page_options.ref;
 				}
 				else {
 					hide_op_box();
@@ -242,7 +250,7 @@ ywl.create_app = function () {
 			success: function (data) {
 				if (data.code == 0) {
 					// 验证成功
-					window.location.href = ywl.page_options.reference;
+					window.location.href = ywl.page_options.ref;
 				}
 				else {
 					hide_op_box();

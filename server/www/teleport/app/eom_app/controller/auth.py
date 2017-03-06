@@ -12,15 +12,23 @@ from eom_app.app.util import gen_captcha
 
 class LoginHandler(SwxAppHandler):
     def get(self):
-        ref = self.get_argument('ref', '/')
+        # _ref = self.get_argument('ref', '/')
 
-        user = self.get_current_user()
-        if user['id'] == 0:
+        _user = self.get_current_user()
+        if _user['id'] == 0:
             user_name = ''
         else:
-            user_name = user['name']
+            user_name = _user['name']
 
-        self.render('auth/login.mako', user_name=user_name, reference=ref, captcha_random=random.random())
+        #self.render('auth/login.mako', user_name=user_name, reference=ref, captcha_random=random.random())
+
+        page_param = {
+            'ref': self.get_argument('ref', '/'),
+            'login_type': 'account',
+            'user_name': user_name
+        }
+        page_param = json.dumps(page_param)
+        self.render('auth/login.mako', page_param=page_param)
 
 
 class VerifyUser(SwxJsonpHandler):

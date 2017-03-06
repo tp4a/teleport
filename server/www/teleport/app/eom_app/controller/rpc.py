@@ -7,7 +7,9 @@ import json
 import urllib.parse
 from eom_app.app.session import web_session
 from eom_app.app.configs import app_cfg
+from eom_app.app.util import async_post_http
 from eom_app.module import host, record
+from eom_common.eomcore.logger import *
 
 from .base import SwxJsonHandler
 
@@ -59,6 +61,8 @@ class RpcHandler(SwxJsonHandler):
             return self._register_core(_req['param'])
         elif 'exit' == _req['method']:
             return self._exit()
+        else:
+            log.e('WEB-JSON-RPC got unknown method: `{}`.\n'.format(_req['method']))
 
         self.write_json(-1, message='invalid method.')
 
@@ -127,6 +131,23 @@ class RpcHandler(SwxJsonHandler):
     def _register_core(self, param):
         # 因为core服务启动了（之前可能非正常终止了），做一下数据库中会话状态的修复操作
         record.session_fix()
+
+        if 'rpc' not in param:
+            return self.write_json(-1)
+        cfg.core_server_rpc = param['rpc']
+
+        req = {'method': 'get_config', 'param': []}
+        _yr = async_post_http(req)
+        return_data = yield _yr
+        if return_data is None:
+            return self.write_json(-1)
+        if 'code' not in return_data:
+            return self.write_json(-2)
+        if return_data['code'] != 0:
+            return self.write_json(return_data['code'])
+
+        cfg.update_core(return_data['data'])
+        print(cfg.core)
 
         self.write_json(0)
 

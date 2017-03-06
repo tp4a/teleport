@@ -85,18 +85,8 @@ class WebServerCore:
             req = urllib.request.Request(url=cfg.core_server_rpc, data=data)
             rep = urllib.request.urlopen(req, timeout=3)
             body = rep.read().decode()
-            print('core-config:', body)
-            # info = response.info()
-            # _zip = info.get('Content-Encoding')
-            # if _zip == 'gzip':
-            #     the_page = gzip.decompress(the_page)
-            # else:
-            #     pass
-            # the_page = the_page.decode()
-            # print(the_page)
-            # return the_page
             x = json.loads(body)
-            cfg.core = x['data']
+            cfg.update_core(x['data'])
         except:
             log.w('can not connect to core server for get config, maybe it not start yet.\n')
 

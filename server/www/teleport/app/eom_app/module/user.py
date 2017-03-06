@@ -37,7 +37,8 @@ def modify_pwd(old_pwd, new_pwd, user_id):
 def get_user_list():
     sql_exec = get_db_con()
     field_a = ['account_id', 'account_type', 'account_name', 'account_status', 'account_lock', 'account_desc']
-    string_sql = 'SELECT {} FROM ts_account as a WHERE account_type<100;'.format(','.join(['a.{}'.format(i) for i in field_a]))
+    # string_sql = 'SELECT {} FROM ts_account as a WHERE account_type<100;'.format(','.join(['a.{}'.format(i) for i in field_a]))
+    string_sql = 'SELECT {} FROM ts_account as a;'.format(','.join(['a.{}'.format(i) for i in field_a]))
     db_ret = sql_exec.ExecProcQuery(string_sql)
     ret = list()
     for item in db_ret:

@@ -10,9 +10,22 @@ bool ts_web_rpc_register_core()
 {
 	Json::FastWriter json_writer;
 	Json::Value jreq;
-	jreq["method"] = "register";
-	jreq["param"]["ip"] = g_env.rpc_bind_ip.c_str();
-	jreq["param"]["port"] = g_env.rpc_bind_port;
+	jreq["method"] = "register_core";
+	//jreq["param"]["ip"] = g_env.rpc_bind_ip.c_str();
+	//jreq["param"]["port"] = g_env.rpc_bind_port;
+	jreq["param"]["rpc"] = "http://127.0.0.1:52080/rpc";
+
+// 	ExIniFile& ini = g_env.get_ini();
+// 	ExIniSection* sec = ini.GetSection(L"common");
+// 	if (NULL == sec)
+// 	{
+// 		return false;
+// 	}
+// 
+// 	ex_wstr rpc;
+// 	if (!sec->GetStr(L"", L""))
+// 		return false;
+
 
 	ex_astr json_param;
 	json_param = json_writer.write(jreq);

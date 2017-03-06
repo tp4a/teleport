@@ -837,12 +837,12 @@ class GetSessionId(SwxAuthJsonHandler):
         # ts_server_rpc_port = 52080
         # if 'ts_server_rpc_port' in config_list:
         #     ts_server_rpc_port = config_list['ts_server_rpc_port']
-        ts_server_rpc_ip = cfg.core.rpc.ip
-        ts_server_rpc_port = cfg.core.rpc.port
+        # ts_server_rpc_ip = cfg.core.rpc.ip
+        # ts_server_rpc_port = cfg.core.rpc.port
 
-        url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
+        # url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
         req = {'method': 'request_session', 'param': {'authid': auth_id}}
-        _yr = async_post_http(url, req)
+        _yr = async_post_http(req)
         return_data = yield _yr
         if return_data is None:
             return self.write_json(-1)
@@ -894,8 +894,8 @@ class AdminGetSessionId(SwxAuthJsonHandler):
         tmp_auth_info['account_lock'] = 0
         tmp_auth_info['account_name'] = user['name']
 
-        ts_server_rpc_ip = cfg.core.rpc.ip
-        ts_server_rpc_port = cfg.core.rpc.port
+        # ts_server_rpc_ip = cfg.core.rpc.ip
+        # ts_server_rpc_port = cfg.core.rpc.port
 
         with tmp_auth_id_lock:
             global tmp_auth_id_base
@@ -904,9 +904,9 @@ class AdminGetSessionId(SwxAuthJsonHandler):
 
         web_session().set('tmp-auth-info-{}'.format(auth_id), tmp_auth_info, 10)
 
-        url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
+        # url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
         req = {'method': 'request_session', 'param': {'authid': auth_id}}
-        _yr = async_post_http(url, req)
+        _yr = async_post_http(req)
         return_data = yield _yr
         if return_data is None:
             return self.write_json(-1)
@@ -962,17 +962,17 @@ class AdminFastGetSessionId(SwxAdminJsonHandler):
             self.write_json(-2)
             return
 
-        ts_server_rpc_ip = cfg.core.rpc.ip
-        ts_server_rpc_port = cfg.core.rpc.port
+        # ts_server_rpc_ip = cfg.core.rpc.ip
+        # ts_server_rpc_port = cfg.core.rpc.port
 
         if tmp_auth_info['auth_mode'] == 1:
             if len(_user_pswd) == 0:  # 修改登录用户信息时可能不会修改密码，因此页面上可能不会传来密码，需要从数据库中直接读取
                 h = host.get_host_auth_info(_host_auth_id)
                 tmp_auth_info['user_auth'] = h['user_auth']
             else:  # 如果页面上修改了密码或者新建账号时设定了密码，那么需要先交给core服务进行加密
-                url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
+                # url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
                 req = {'method': 'enc', 'param': {'p': _user_pswd}}
-                _yr = async_post_http(url, req)
+                _yr = async_post_http(req)
                 return_data = yield _yr
                 if return_data is None:
                     return self.write_json(-1)
@@ -999,9 +999,9 @@ class AdminFastGetSessionId(SwxAdminJsonHandler):
 
         web_session().set('tmp-auth-info-{}'.format(auth_id), tmp_auth_info, 10)
 
-        url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
+        # url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
         req = {'method': 'request_session', 'param': {'authid': auth_id}}
-        _yr = async_post_http(url, req)
+        _yr = async_post_http(req)
         return_data = yield _yr
         if return_data is None:
             return self.write_json(-1)
