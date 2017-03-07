@@ -8,6 +8,8 @@ var YWL = {
 		self.assist = null;
 		self.page_options = {};
 
+        self.server_ip = window.location.hostname || '';
+
 		self.add_page_options = function (options) {
 			_.extend(self.page_options, options);
 		};

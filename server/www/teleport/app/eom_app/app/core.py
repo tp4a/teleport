@@ -48,13 +48,6 @@ class WebServerCore:
         if not cfg.load_web(_cfg_file):
             return False
 
-        # TODO: 不要直接读取core.ini，而是通过core的json-rpc获取其配置数据
-        # _cfg_file = os.path.join(cfg.cfg_path, 'core.ini')
-        # if not cfg.load_core(_cfg_file):
-        #     return False
-        # if not self._get_core_server_config():
-        #     return False
-
         cfg.log_path = os.path.abspath(options['log_path'])
         cfg.log_file = os.path.join(cfg.log_path, 'tpweb.log')
 

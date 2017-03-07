@@ -84,12 +84,11 @@ def get_all_host_info_list(filter, order, limit, with_pwd=False):
         ','.join(['b.{}'.format(i) for i in field_b]),
         _where, _order, _limit)
 
-    # print(str_sql)
     db_ret = sql_exec.ExecProcQuery(str_sql)
     if db_ret is None:
         return 0, None
+
     ret = list()
-    host = dict()
     for item in db_ret:
         x = DbItem()
         x.load(item, ['a_{}'.format(i) for i in field_a] +
@@ -524,14 +523,12 @@ def get_host_auth_info(host_auth_id):
               'WHERE a.id = {}'.format(
         ','.join(['a.{}'.format(i) for i in field_a]),
         ','.join(['b.{}'.format(i) for i in field_b]), host_auth_id)
-    # print(str_sql)
     db_ret = sql_exec.ExecProcQuery(str_sql)
 
     if db_ret is None or len(db_ret) != 1:
         return None
     x = DbItem()
     x.load(db_ret[0], ['a_{}'.format(i) for i in field_a] + ['b_{}'.format(i) for i in field_b])
-    print(x)
 
     h = dict()
     h['host_ip'] = x.b_host_ip
@@ -553,7 +550,6 @@ def get_host_auth_info(host_auth_id):
 
     h['user_auth'] = x.a_user_pswd
 
-    # user_auth = x.a_user_auth
     if x.a_auth_mode == 1:
         h['user_auth'] = x.a_user_pswd
     elif x.a_auth_mode == 2:
@@ -715,7 +711,6 @@ def sys_user_add(args):
                   'user_pswd,cert_id, encrypt, log_time) ' \
                   'VALUES ({},{},\'{}\',\'{}\',\'{}\',{},{}, \'{}\')'.format(host_id, auth_mode, user_name, user_param,
                                                                              '', 0, encrypt, log_time)
-    # print(str_sql)
     ret = sql_exec.ExecProcNonQuery(str_sql)
     if not ret:
         return -101

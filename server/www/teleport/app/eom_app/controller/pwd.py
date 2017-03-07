@@ -1,13 +1,6 @@
-import json
-import urllib
-import gzip
-import os
-# from .configs import app_cfg
-from eom_app.app.configs import app_cfg
-from eom_app.module import host
-from .base import SwxJsonHandler, SwxAuthHandler
+# -*- coding: utf-8 -*-
 
-cfg = app_cfg()
+from .base import SwxAuthHandler
 
 
 class IndexHandler(SwxAuthHandler):

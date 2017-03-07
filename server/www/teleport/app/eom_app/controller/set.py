@@ -87,8 +87,8 @@ class IndexHandler(SwxAdminHandler):
         # cfg_list['ts_server_telnet_enabled'] = 1 if cfg.core.telnet.enabled else 0
         # self.render('set/index.mako', config_list=cfg_list)
 
-        page_param = json.dumps({'core_server': cfg.core})
-        self.render('set/index.mako', page_param=page_param)
+        param = {'core_server': cfg.core}
+        self.render('set/index.mako', page_param=json.dumps(param))
 
 
 def _restart_func():

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# import tornado.web
 import tornado.gen
 
 import json
@@ -20,7 +19,6 @@ class RpcHandler(SwxJsonHandler):
     @tornado.gen.coroutine
     def get(self):
         _uri = self.request.uri.split('?', 1)
-        print(_uri)
         if len(_uri) != 2:
             self.write_json(-1, message='need request param.')
             return
@@ -39,7 +37,6 @@ class RpcHandler(SwxJsonHandler):
 
     @tornado.gen.coroutine
     def _dispatch(self, req):
-        print('rpc-req:', req)
         try:
             _req = json.loads(req)
 
@@ -78,11 +75,9 @@ class RpcHandler(SwxJsonHandler):
         if authid > 0:
             # 根据authid从数据库中查询对应的数据，然后返回给调用者
             x = host.get_auth_info(param['authid'])
-            print('get_auth_info():', x)
             self.write_json(0, data=x)
         elif authid < 0:
             x = web_session().taken('tmp-auth-info-{}'.format(authid), None)
-            print('get_auth_info():', x)
             self.write_json(0, data=x)
         else:
             self.write_json(-1, message='invalid auth id.')
@@ -90,15 +85,6 @@ class RpcHandler(SwxJsonHandler):
     def _session_begin(self, param):
         if 'sid' not in param:
             return self.write_json(-1, message='invalid request.')
-
-        # jreq["param"]["sid"] = info.sid.c_str();
-        # jreq["param"]["account_name"] = info.account_name.c_str();
-        # jreq["param"]["host_ip"] = info.host_ip.c_str();
-        # jreq["param"]["sys_type"] = info.sys_type;
-        # jreq["param"]["host_port"] = info.host_port;
-        # jreq["param"]["auth_mode"] = info.auth_mode,
-        # jreq["param"]["user_name"] = info.user_name.c_str();
-        # jreq["param"]["protocol"] = info.protocol;
 
         try:
             _sid = param['sid']
@@ -147,7 +133,6 @@ class RpcHandler(SwxJsonHandler):
             return self.write_json(return_data['code'])
 
         cfg.update_core(return_data['data'])
-        print(cfg.core)
 
         self.write_json(0)
 

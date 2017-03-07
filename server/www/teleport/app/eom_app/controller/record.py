@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+
 import ctypes
 import json
 import os
 import platform
 
 from eom_app.app.configs import app_cfg
-from eom_app.module import host
+# from eom_app.module import host
 from eom_app.module import record
 from eom_app.module import user
 from .base import SwxAdminHandler, SwxAdminJsonHandler
@@ -35,12 +36,15 @@ class LogHandler(SwxAdminHandler):
         user_list = user.get_user_list()
         total_size, free_size = get_free_space_bytes(cfg.data_path)
 
-        # ts_server = dict()
-        # ts_server['ip'] = cfg.core.rpc.ip
-        # ts_server['port'] = cfg.core.rpc.port
-        ts_server = '""'
+        # ts_server = '""'
+        param = {
+            'user_list': user.get_user_list(),
+            'total_size': total_size,
+            'free_size': free_size,
+        }
 
-        self.render('log/index.mako', user_list=user_list, total_size=total_size, free_size=free_size, ts_server=ts_server)
+        # self.render('log/index.mako', user_list=user_list, total_size=total_size, free_size=free_size, ts_server=ts_server)
+        self.render('log/index.mako', page_param=json.dumps(param))
 
 
 class RecordHandler(SwxAdminHandler):
@@ -50,8 +54,6 @@ class RecordHandler(SwxAdminHandler):
             return
         elif protocol == 2:
             self.render('log/record.mako', record_id=record_id)
-            return
-        pass
 
 
 # class PlayRdpHandler(SwxAdminHandler):
@@ -68,25 +70,27 @@ class RecordHandler(SwxAdminHandler):
 
 class ComandLogHandler(SwxAdminHandler):
     def get(self, protocol, record_id):
+
+        param = dict()
+        param['count'] = 0
+        param['op'] = list()
+
         protocol = int(protocol)
         if protocol == 1:
-            return
+            pass
         elif protocol == 2:
             record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
             file_info = os.path.join(record_path, 'tp-ssh-cmd.txt')
             try:
                 file = open(file_info, 'r')
-                data = file.read()
+                data = file.readlines()
+                for i in range(len(data)):
+                    param['op'].append({'t': data[i][1:20], 'c': data[i][22:-1]})
             except:
-                self.write('open file error {}'.format(file_info))
-                return
-            # "Content-Type": "text/html; charset=UTF-8",
-            self.set_header('Content-Type', 'text/plain; charset=UTF-8')
-            if len(data) == 0:
-                self.write('该用户没有操作')
-            else:
-                self.write(data)
-            return
+                pass
+            param['count'] = len(param['op'])
+
+        self.render('log/record-ssh-cmd.mako', page_param=json.dumps(param))
 
 
 class RecordGetHeader(SwxAdminJsonHandler):
@@ -121,17 +125,15 @@ class RecordGetInfo(SwxAdminJsonHandler):
 
 
 class DeleteLog(SwxAdminJsonHandler):
-
     # TODO: 用户可能会批量删除大量录像文件，因此io操作可能会比较耗时，这里应该改为异步方式。
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
             log_list = args['log_list']
-        data = record.delete_log(log_list)
-        if data is None:
+        if not record.delete_log(log_list):
             return self.write_json(-1)
-        self.write_json(0, data=data)
+        self.write_json(0)
 
 
 class LogList(SwxAdminJsonHandler):
