@@ -28,6 +28,17 @@ class ConfigFile(AttrDict):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self['core'] = AttrDict()
+        self['core']['ssh'] = AttrDict()
+        self['core']['ssh']['enable'] = False
+        self['core']['ssh']['port'] = 52189
+        self['core']['rdp'] = AttrDict()
+        self['core']['rdp']['enable'] = False
+        self['core']['rdp']['port'] = 52089
+        self['core']['telnet'] = AttrDict()
+        self['core']['telnet']['enable'] = False
+        self['core']['telnet']['port'] = 52389
+
     def load_web(self, cfg_file):
         if not os.path.exists(cfg_file):
             log.e('configuration file does not exists: [{}]\n'.format(cfg_file))

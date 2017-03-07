@@ -35,7 +35,6 @@ controllers = [
     (r'/auth/logout', auth.LogoutHandler),
     (r'/auth/get-captcha', auth.GetCaptchaHandler),
     (r'/auth/verify-captcha', auth.VerifyCaptchaHandler),
-    (r'/auth/verify-ticket', auth.VerifyTicketHandler),
     (r'/auth/modify-pwd', auth.ModifyPwd),
 
     (r'/group/list', group.GetListHandler),

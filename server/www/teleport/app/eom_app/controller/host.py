@@ -3,18 +3,15 @@
 import time
 import csv
 import os
+import json
 import threading
-import urllib
-import urllib.parse
-import urllib.request
 import tornado.gen
 import tornado.httpclient
 
 from eom_app.app.configs import app_cfg
-# from eom_app.module import set
 from eom_app.app.util import *
 from eom_app.module import host
-from eom_app.module.common import *
+# from eom_app.module.common import *
 from eom_common.eomcore.logger import *
 from eom_app.app.session import web_session
 from .base import SwxAuthHandler, SwxAuthJsonHandler, SwxAdminJsonHandler
