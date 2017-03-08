@@ -3,6 +3,12 @@
 # for windows
 #============================================
 
+# Need wget to download necessary dependency files.
+wget = C:\Program Files (x86)\wget\wget.exe
+
+# Need 7z to unzip downloaded files.
+7z = C:\Program Files (x86)\7zip\7z.exe
+
 # if not set nsis path, default to get it by register.
 #nsis = C:\Program Files (x86)\NSIS\Unicode\makensis.exe
 

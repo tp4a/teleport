@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf8 -*-
 
 import os
@@ -9,6 +8,8 @@ import sys
 import time
 
 from . import colorconsole as cc
+from .env import env
+
 
 from .configs import cfg
 
@@ -28,6 +29,32 @@ elif cfg.is_py3:
 
     if sys.platform == 'win32':
         import winreg
+
+THIS_PATH = os.path.abspath(os.path.dirname(__file__))
+ROOT_PATH = os.path.abspath(os.path.join(THIS_PATH, '..'))
+
+
+def download_file(desc, url, target_path, file_name):
+    cc.n('downloading {} ...'.format(desc))
+
+    local_file_name = os.path.join(target_path, file_name)
+    if os.path.exists(local_file_name):
+        cc.w('already exists, skip.')
+        return True
+
+    if env.is_win:
+        cmd = '"{}" --no-check-certificate {} -O "{}"'.format(env.wget, url, local_file_name)
+        sys_exec(cmd, True)
+    elif env.is_linux:
+        os.system('wget --no-check-certificate {} -O "{}"'.format(url, local_file_name))
+    else:
+        return False
+
+    if not os.path.exists(local_file_name):
+        cc.e('downloading {} from {} failed.'.format(desc, url))
+        return False
+
+    return True
 
 
 def extension_suffixes():
@@ -57,7 +84,6 @@ def extension_suffixes():
     elif cfg.dist == 'macos':
         raise RuntimeError('not support MacOS now.')
 
-    # cc.v(EXTENSION_SUFFIXES)
     return EXTENSION_SUFFIXES
 
 
@@ -282,16 +308,16 @@ def winreg_read_wow64_32(path, key):
 
 
 def sys_exec(cmd, direct_output=False, output_codec=None):
-    # 注意：output_codec在windows默认为gb2312，其他平台默认utf8
-    _os = platform.system().lower()
+    cc.v(cmd)
+    # _os = platform.system().lower()
     if output_codec is None:
-        if _os == 'windows':
+        if env.is_win:
             output_codec = 'gb2312'
         else:
             output_codec = 'utf8'
 
     p = None
-    if _os == 'windows':
+    if env.is_win:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
 
     else:
@@ -305,8 +331,6 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
             break
 
         if direct_output:
-            # cc.v(line.decode(output_codec))
-            # cc.d(line, end='')
             cc.o((cc.CR_GRAY, line), end='')
 
         output += line
@@ -316,18 +340,18 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
     return (ret, output)
 
 
-def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
-    msbuild = msbuild_path()
-
-    if force_rebuild:
-        cmd = '"{}" "{}" "/target:clean" "/property:Configuration={};Platform={}"'.format(msbuild, sln_file, target, platform)
-        ret, _ = sys_exec(cmd, direct_output=True)
-        cc.v('ret:', ret)
-
-    cmd = '"{}" "{}" "/target:{}" "/property:Configuration={};Platform={}"'.format(msbuild, sln_file, proj_name, target, platform)
-    ret, _ = sys_exec(cmd, direct_output=True)
-    if ret != 0:
-        raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
+# def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
+#     msbuild = msbuild_path()
+#
+#     if force_rebuild:
+#         cmd = '"{}" "{}" "/target:clean" "/property:Configuration={};Platform={}"'.format(msbuild, sln_file, target, platform)
+#         ret, _ = sys_exec(cmd, direct_output=True)
+#         cc.v('ret:', ret)
+#
+#     cmd = '"{}" "{}" "/target:{}" "/property:Configuration={};Platform={}"'.format(msbuild, sln_file, proj_name, target, platform)
+#     ret, _ = sys_exec(cmd, direct_output=True)
+#     if ret != 0:
+#         raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
 
 
 def nsis_build(nsi_file, _define=''):
@@ -403,37 +427,6 @@ def make_targz(work_path, folder, to_file):
     ret, _ = sys_exec(cmd, direct_output=True)
     ensure_file_exists(to_file)
     os.chdir(old_p)
-
-
-def fix_extension_files(s_path, t_path):
-    cc.n('\nfix extension files...')
-    # 遍历s_path目录下的所有Python扩展文件（动态库），并将其移动到t_path目录下，同时改名。
-    # 例如， s_path/abc/def.pyd -> t_path/abc.def.pyd
-
-    s_path = os.path.abspath(s_path)
-    t_path = os.path.abspath(t_path)
-
-    ext = extension_suffixes()
-    s_path_len = len(s_path)
-
-    def _fix_(s_path, t_path, sub_path):
-        for parent, dir_list, file_list in os.walk(sub_path):
-            for d in dir_list:
-                _fix_(s_path, t_path, os.path.join(parent, d))
-
-            for filename in file_list:
-                _, e = os.path.splitext(filename)
-                if e in ext:
-                    f_from = os.path.join(parent, filename)
-                    f_to = f_from[s_path_len + 1:]
-                    f_to = f_to.replace('\\', '.')
-                    f_to = f_to.replace('/', '.')
-                    f_to = os.path.join(t_path, f_to)
-
-                    cc.v('move: ', f_from, '\n   -> ', f_to)
-                    shutil.move(f_from, f_to)
-
-    _fix_(s_path, t_path, s_path)
 
 
 if __name__ == '__main__':

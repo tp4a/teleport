@@ -1,4 +1,3 @@
-#!/bin/env python3
 # -*- coding: utf-8 -*-
 
 import codecs
@@ -7,6 +6,8 @@ import time
 from core import colorconsole as cc
 from core import utils
 from core.context import *
+
+from core.env import env
 
 ctx = BuildContext()
 
@@ -23,7 +24,6 @@ JSONCPP_VER = utils.cfg.ver.jsoncpp
 MONGOOSE_VER = utils.cfg.ver.mongoose
 
 
-
 class BuilderBase:
     def __init__(self):
         self.out_dir = ''
@@ -37,7 +37,7 @@ class BuilderBase:
 
     def build_jsoncpp(self):
         file_name = 'jsoncpp-{}.zip'.format(JSONCPP_VER)
-        if not self._download_file('jsoncpp source tarball', 'https://github.com/open-source-parsers/jsoncpp/archive/{}.zip'.format(JSONCPP_VER), file_name):
+        if not utils.download_file('jsoncpp source tarball', 'https://github.com/open-source-parsers/jsoncpp/archive/{}.zip'.format(JSONCPP_VER), PATH_DOWNLOAD, file_name):
             return
         self._build_jsoncpp(file_name)
 
@@ -46,7 +46,7 @@ class BuilderBase:
 
     def build_mongoose(self):
         file_name = 'mongoose-{}.zip'.format(MONGOOSE_VER)
-        if not self._download_file('mongoose source tarball', 'https://github.com/cesanta/mongoose/archive/{}.zip'.format(MONGOOSE_VER), file_name):
+        if not utils.download_file('mongoose source tarball', 'https://github.com/cesanta/mongoose/archive/{}.zip'.format(MONGOOSE_VER), PATH_DOWNLOAD, file_name):
             return
         self._build_mongoose(file_name)
 
@@ -54,8 +54,11 @@ class BuilderBase:
         cc.e("this is a pure-virtual function.")
 
     def build_openssl(self):
-        file_name = 'openssl-{}.tar.gz'.format(OPENSSL_VER)
-        if not self._download_file('openssl source tarball', 'https://www.openssl.org/source/{}'.format(file_name), file_name):
+        file_name = 'openssl-{}.zip'.format(OPENSSL_VER)
+        _alt_ver = '_'.join(OPENSSL_VER.split('.'))
+        #https://github.com/openssl/openssl/archive/OpenSSL_1_1_0e.zip
+        # if not utils.download_file('openssl source tarball', 'https://www.openssl.org/source/{}'.format(file_name), PATH_DOWNLOAD, file_name):
+        if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
             return
         self._build_openssl(file_name)
 
@@ -64,7 +67,7 @@ class BuilderBase:
 
     def build_libuv(self):
         file_name = 'libuv-{}.zip'.format(LIBUV_VER)
-        if not self._download_file('libuv source tarball', 'https://github.com/libuv/libuv/archive/v{}.zip'.format(LIBUV_VER), file_name):
+        if not utils.download_file('libuv source tarball', 'https://github.com/libuv/libuv/archive/v{}.zip'.format(LIBUV_VER), PATH_DOWNLOAD, file_name):
             return
         self._build_libuv(file_name)
 
@@ -73,7 +76,7 @@ class BuilderBase:
 
     def build_mbedtls(self):
         file_name = 'mbedtls-mbedtls-{}.zip'.format(MBEDTLS_VER)
-        if not self._download_file('mbedtls source tarball', 'https://github.com/ARMmbed/mbedtls/archive/mbedtls-{}.zip'.format(MBEDTLS_VER), file_name):
+        if not utils.download_file('mbedtls source tarball', 'https://github.com/ARMmbed/mbedtls/archive/mbedtls-{}.zip'.format(MBEDTLS_VER), PATH_DOWNLOAD, file_name):
             return
         self._build_mbedtls(file_name)
 
@@ -82,7 +85,7 @@ class BuilderBase:
 
     def build_libssh(self):
         file_name = 'libssh-{}.zip'.format(LIBSSH_VER)
-        if not self._download_file('libssh source tarball', 'https://git.libssh.org/projects/libssh.git/snapshot/libssh-{}.zip'.format(LIBSSH_VER), file_name):
+        if not utils.download_file('libssh source tarball', 'https://git.libssh.org/projects/libssh.git/snapshot/libssh-{}.zip'.format(LIBSSH_VER), PATH_DOWNLOAD, file_name):
             return
         self._build_libssh(file_name)
 
@@ -91,26 +94,26 @@ class BuilderBase:
 
     def build_sqlite(self):
         file_name = 'sqlite-autoconf-{}.tar.gz'.format(SQLITE_VER)
-        if not self._download_file('sqlite source tarball', 'http://sqlite.org/2016/{}'.format(file_name), file_name):
+        if not utils.download_file('sqlite source tarball', 'http://sqlite.org/2016/{}'.format(file_name), PATH_DOWNLOAD, file_name):
             return
         self._build_sqlite(file_name)
 
     def _build_sqlite(self, file_name):
         cc.e("this is a pure-virtual function.")
 
-    def _download_file(self, desc, url, file_name):
-        cc.n('downloading {} ...'.format(desc))
-        if os.path.exists(os.path.join(PATH_DOWNLOAD, file_name)):
-            cc.w('already exists, skip.')
-            return True
-
-        os.system('wget --no-check-certificate {} -O "{}/{}"'.format(url, PATH_DOWNLOAD, file_name))
-
-        if not os.path.exists(os.path.join(PATH_DOWNLOAD, file_name)):
-            cc.e('downloading {} from {} failed.'.format(desc, url))
-            return True
-
-        return True
+    # def _download_file(self, desc, url, file_name):
+    #     cc.n('downloading {} ...'.format(desc))
+    #     if os.path.exists(os.path.join(PATH_DOWNLOAD, file_name)):
+    #         cc.w('already exists, skip.')
+    #         return True
+    #
+    #     os.system('wget --no-check-certificate {} -O "{}/{}"'.format(url, PATH_DOWNLOAD, file_name))
+    #
+    #     if not os.path.exists(os.path.join(PATH_DOWNLOAD, file_name)):
+    #         cc.e('downloading {} from {} failed.'.format(desc, url))
+    #         return True
+    #
+    #     return True
 
     def fix_output(self):
         pass
@@ -125,6 +128,10 @@ class BuilderWin(BuilderBase):
 
     def _build_openssl(self, file_name):
         cc.e('build openssl-static for Windows...not supported yet.')
+
+    def build_sqlite(self):
+        cc.w('sqlite not need for Windows, skip.')
+        pass
 
     def fix_output(self):
         pass
@@ -166,21 +173,23 @@ class BuilderLinux(BuilderBase):
             cc.w('already exists, skip.')
 
     def _build_openssl(self, file_name):
-        if not os.path.exists(self.OPENSSL_PATH_SRC):
-            os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+        pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
 
-        cc.n('build openssl static...')
-        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
-            cc.w('already exists, skip.')
-            return
-
-        old_p = os.getcwd()
-        os.chdir(self.OPENSSL_PATH_SRC)
-        #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        os.system('./config --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        os.system('make')
-        os.system('make install')
-        os.chdir(old_p)
+        # if not os.path.exists(self.OPENSSL_PATH_SRC):
+        #     os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+        #
+        # cc.n('build openssl static...')
+        # if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
+        #     cc.w('already exists, skip.')
+        #     return
+        #
+        # old_p = os.getcwd()
+        # os.chdir(self.OPENSSL_PATH_SRC)
+        # #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        # os.system('./config --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        # os.system('make')
+        # os.system('make install')
+        # os.chdir(old_p)
 
     def _build_libuv(self, file_name):
         if not os.path.exists(self.LIBUV_PATH_SRC):
@@ -328,26 +337,21 @@ class BuilderLinux(BuilderBase):
         # os.chdir(old_p)
 
         cmake_define = ' -DCMAKE_INSTALL_PREFIX={}' \
-              ' -D_OPENSSL_VERSION={}' \
-              ' -DOPENSSL_INCLUDE_DIR={}/include' \
-              ' -DOPENSSL_LIBRARIES={}/lib' \
-              ' -DWITH_GSSAPI=OFF' \
-              ' -DWITH_ZLIB=OFF' \
-              ' -DWITH_STATIC_LIB=ON' \
-              ' -DWITH_PCAP=OFF' \
-              ' -DWITH_TESTING=OFF' \
-              ' -DWITH_CLIENT_TESTING=OFF' \
-              ' -DWITH_EXAMPLES=OFF' \
-              ' -DWITH_BENCHMARKS=OFF' \
-              ' -DWITH_NACL=OFF' \
-              ' ..'.format(self.PATH_RELEASE, OPENSSL_VER, self.PATH_RELEASE, self.PATH_RELEASE)
+                       ' -D_OPENSSL_VERSION={}' \
+                       ' -DOPENSSL_INCLUDE_DIR={}/include' \
+                       ' -DOPENSSL_LIBRARIES={}/lib' \
+                       ' -DWITH_GSSAPI=OFF' \
+                       ' -DWITH_ZLIB=OFF' \
+                       ' -DWITH_STATIC_LIB=ON' \
+                       ' -DWITH_PCAP=OFF' \
+                       ' -DWITH_TESTING=OFF' \
+                       ' -DWITH_CLIENT_TESTING=OFF' \
+                       ' -DWITH_EXAMPLES=OFF' \
+                       ' -DWITH_BENCHMARKS=OFF' \
+                       ' -DWITH_NACL=OFF' \
+                       ' ..'.format(self.PATH_RELEASE, OPENSSL_VER, self.PATH_RELEASE, self.PATH_RELEASE)
 
-        # libssh always try to build shared library we do not care, but it may fail.
-        # so catch the except, we will check the final output file `libssh.a` ourselves.
-        try:
-            utils.cmake(build_path, 'Release', False, cmake_define)
-        except:
-            pass
+        utils.cmake(build_path, 'Release', False, cmake_define)
 
         # because make install will fail because we can not disable ssh_shared target,
         # so we copy necessary files ourselves.
@@ -393,6 +397,9 @@ def gen_builder(dist):
 
 
 def main():
+    if not env.init():
+        return
+
     builder = None
 
     argv = sys.argv[1:]
@@ -413,7 +420,7 @@ def main():
     builder.build_jsoncpp()
     builder.build_mongoose()
 
-    # builder.build_openssl()
+    builder.build_openssl()
     ####builder.build_libuv()
     builder.build_mbedtls()
     builder.build_libssh()
