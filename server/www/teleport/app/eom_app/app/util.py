@@ -28,7 +28,6 @@ __all__ = ['async_post_http', 'async_enc']
 
 @tornado.gen.coroutine
 def async_post_http(post_data):
-    print('async_post_http:', post_data)
     try:
         v = json.dumps(post_data)
         data = urllib.parse.quote(v).encode('utf-8')
@@ -36,7 +35,7 @@ def async_post_http(post_data):
         c = tornado.httpclient.AsyncHTTPClient()
         r = yield c.fetch(cfg.core_server_rpc, body=data, method='POST')
 
-        print('async_post_http return:', r.body.decode())
+        # print('async_post_http return:', r.body.decode())
         return json.loads(r.body.decode())
     except:
         return None

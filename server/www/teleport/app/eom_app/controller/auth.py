@@ -16,13 +16,11 @@ class LoginHandler(SwxAppHandler):
         else:
             user_name = _user['name']
 
-        page_param = {
+        param = {
             'ref': self.get_argument('ref', '/'),
-            'login_type': 'account',
             'user_name': user_name
         }
-        page_param = json.dumps(page_param)
-        self.render('auth/login.mako', page_param=page_param)
+        self.render('auth/login.mako', page_param=json.dumps(param))
 
 
 class VerifyUser(SwxJsonpHandler):
@@ -70,7 +68,6 @@ class VerifyUser(SwxJsonpHandler):
             _user['type'] = account_type
 
             self.set_session('user', _user)
-            # log.v('set session ok.\n')
             return self.write_jsonp(0)
 
         except:
@@ -116,14 +113,10 @@ class VerifyCaptchaHandler(SwxJsonpHandler):
 
 class ModifyPwd(SwxAuthJsonHandler):
     def post(self):
-        # print('verify-ticket')
-
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
             self.write_json(-1)
             return
         _old_pwd = args['o_pwd']

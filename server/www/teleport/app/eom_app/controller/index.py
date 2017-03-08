@@ -13,4 +13,3 @@ class ExitHandler(SwxBaseHandler):
     def get(self):
         self.write('exit ok')
         tornado.ioloop.IOLoop.instance().stop()
-        # sys.exit(0)

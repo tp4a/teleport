@@ -597,16 +597,15 @@
 
 <%block name="embed_js">
     <script type="text/javascript">
-        ywl.add_page_options({
-
-            group_list: ${group_list},
-            cert_list: ${cert_list},
-            ts_server: ${ts_server}
-        });
-
-        $(document).ready(function () {
-        });
-
+##         ywl.add_page_options({
+##             group_list: ${group_list},
+##             cert_list: ${cert_list},
+##             ts_server: ${ts_server}
+##         });
+##
+##         $(document).ready(function () {
+##         });
+        ywl.add_page_options(${page_param});
 
     </script>
 </%block>

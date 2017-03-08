@@ -6,6 +6,7 @@ import struct
 
 from .common import *
 from eom_app.app.configs import app_cfg
+from eom_common.eomcore.logger import log
 
 cfg = app_cfg()
 
@@ -176,6 +177,7 @@ def read_record_info(record_id, file_id):
                 break
 
     except Exception as e:
+        log.e('failed to read record file: {}\n'.format(file_info))
         return None
     finally:
         if file is not None:
@@ -185,13 +187,17 @@ def read_record_info(record_id, file_id):
 
 def delete_log(log_list):
     try:
-        sql_exec = get_db_con()
+        where = list()
+        for item in log_list:
+            where.append(' id={}'.format(item))
+
+        str_sql = 'DELETE FROM ts_log WHERE{};'.format(' OR'.join(where))
+        ret = get_db_con().ExecProcNonQuery(str_sql)
+        if not ret:
+            return False
+
         for item in log_list:
             log_id = int(item)
-            str_sql = 'DELETE FROM ts_log WHERE id={}'.format(log_id)
-            ret = sql_exec.ExecProcNonQuery(str_sql)
-            if not ret:
-                return False
             try:
                 record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(log_id))
                 if os.path.exists(record_path):

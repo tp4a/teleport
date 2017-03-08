@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-# import sys
-# import tornado.ioloop
+
 from .base import SwxBaseHandler
 
 

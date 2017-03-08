@@ -56,9 +56,7 @@
 
                 <div class="input-group input-group-sm" ywl-filter="search" style="display:inline-block;">
                     <input type="text" class="form-control" placeholder="搜索 ID 或 IP" style="display:inline-block;">
-                    <span class="input-group-btn" style="display:inline-block;margin-left:-4px;">
-    <button type="button" class="btn btn-default"><i class="fa fa-search fa-fw"></i></button>
-  </span>
+                    <span class="input-group-btn" style="display:inline-block;margin-left:-4px;"><button type="button" class="btn btn-default"><i class="fa fa-search fa-fw"></i></button></span>
                 </div>
 
             </div>
@@ -70,9 +68,6 @@
 
         <!-- begin page-nav -->
         <div class="page-nav" ywl-paging="host-list">
-##             <div style="float:left;">
-##                 <a href="https://127.0.0.1:50022/" target="_blank" class="btn btn-sm btn-danger"><i class="fa fa-info-circle fa-fw"></i> TELEPORT助手状态</a>
-##             </div>
 
             <div class="" style="float:right;">
                 <nav>
@@ -101,24 +96,6 @@
     </div>
     <!-- end of box -->
 
-
-    <!-- begin box -->
-
-    ## <div class="box">
-    ##   <div class="box-license">
-    ##     <div style="float:right;"><a href="#" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 增加主机授权</a></div>
-    ##     <div class="breadcrumb-container">
-    ##     <ol class="breadcrumb">
-    ##       <li><i class="fa fa-server fa-fw"></i> 授权主机数：<strong>120</strong></li>
-    ##       <li>已激活主机数：<strong>118</strong></li>
-    ##     </ol>
-    ##     </div>
-    ##
-    ##   </div>
-    ## </div>
-
-    <!-- end of box -->
-
 </div>
 
 
@@ -127,52 +104,12 @@
 
 
 <%block name="extend_content">
-
-    ## <div class="popover-inline-edit">
-    ## 	<div class="popover fade bottom in" role="tooltip" ywl-dlg="modify-host-desc" style="display:none;">
-    ## 		<div class="arrow" style="left:50px;"></div>
-    ## 		<h3 class="popover-title">为主机 <span ywl-field="host-id"></span> 添加备注，以便识别</h3>
-    ## 		<div class="popover-content">
-    ## 			<div style="display:inline-block;float:right;">
-    ## 				<a href="javascript:;" class="btn btn-success btn-sm" ywl-btn="ok"><i class="glyphicon glyphicon-ok"></i></a>
-    ## 				<a href="javascript:;" class="btn btn-danger btn-sm" ywl-btn="cancel"><i class="glyphicon glyphicon-remove"></i></a>
-    ## 			</div>
-    ## 			<div style="padding-right:80px;">
-    ## 				<input type="text" ywl-input="desc" class="form-control" value="">
-    ## 				<input type="hidden" ywl-input="ywl-row-index" value="">
-    ## 			</div>
-    ## 		</div>
-    ## 	</div>
-    ## </div>
-
 </%block>
 
 
 
 <%block name="embed_js">
     <script type="text/javascript">
-
-        // var host_dt = null;
-        ywl.add_page_options({
-            // 有些参数由后台python脚本生成到模板中，无法直接生成到js文件中，所以必须通过这种方式传递参数到js脚本中。
-            group_list: ${group_list},
-            ts_server: ${ts_server}
-        });
-
-        $(document).ready(function () {
-            ## 			var ywl_options = {
-            ## 				active_menu: ${self.attr.page_menu_}
-            ## 			};
-            ##
-            ## 			ywl.add_page_options(ywl_options);
-
-            // $('#username_account').keydown(function(event) { $('[data-toggle="popover"]').popover('hide'); if(event.which == 13) { $('#password_account').focus(); } });
-            // $('#password_account').keydown(function(event) { $('[data-toggle="popover"]').popover('hide'); if(event.which == 13) { $('#captcha').focus(); } });
-            // $('#username_usbkey').keydown(function(event) { $('[data-toggle="popover"]').popover('hide'); if(event.which == 13) { $('#password_usbkey').focus(); } });
-            // $('#password_usbkey').keydown(function(event) { $('[data-toggle="popover"]').popover('hide'); if(event.which == 13) { $('#captcha').focus(); } });
-            // $('#captcha').keydown(function(event) { $('[data-toggle="popover"]').popover('hide'); if(event.which == 13) { login(); } });
-        });
-
-
+        ywl.add_page_options(${page_param});
     </script>
 </%block>

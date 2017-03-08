@@ -22,7 +22,7 @@ var g_join_group_dlg = null;
 ywl.do_upload_file = function () {
 	var param = {};
 	$.ajaxFileUpload({
-		url: "/host/load-file",// 需要链接到服务器地址
+		url: "/host/upload-import",// 需要链接到服务器地址
 		secureuri: false,
 		fileElementId: "upload-file", // 文件选择框的id属性
 		dataType: 'text', // 服务器返回的格式，可以是json
@@ -243,29 +243,24 @@ ywl.on_init = function (cb_stack, cb_args) {
 
 		update_file.trigger('click');
 	});
+
 	$('#btn-batch-export-host').click(function (e) {
-		console.log('xxxxxx');
-
-		ywl.ajax_post_json('/host/export-host', {},
-			function (ret) {
-				console.log('ret', ret);
-				if (ret.code == 0) {
-					var url = ret.data.url;
-					window.location.href = url;
-					ywl.notify_success('操作成功');
-				} else {
-					ywl.notify_error('操作失败');
-				}
-
-
-//                var update_args = {host_lock: host_lock};
-//                tbl.update_row(row_id, update_args);
-
-			},
-			function () {
-				ywl.notify_error('操作失败');
-			}
-		);
+        window.location.href = '/host/export-host';
+//		ywl.ajax_post_json('/host/export-host', {},
+//			function (ret) {
+//				console.log('ret', ret);
+//				if (ret.code == 0) {
+//					var url = ret.data.url;
+//					window.location.href = url;
+//					ywl.notify_success('操作成功');
+//				} else {
+//					ywl.notify_error('操作失败');
+//				}
+//			},
+//			function () {
+//				ywl.notify_error('操作失败');
+//			}
+//		);
 	});
 
 	$("#btn-apply-group").click(function () {
@@ -400,9 +395,9 @@ ywl.on_host_table_created = function (tbl) {
 		} else if (col_key == 'auth_list') {
 			row_data = tbl.get_row(row_id);
 			$(cell_obj).find('[data-action="remote"]').click(function () {
-				var ts_rdp_port = ywl.page_options.ts_server.rdp_port;
-				var ts_ssh_port = ywl.page_options.ts_server.ssh_port;
-				var ts_telnet_port = ywl.page_options.ts_server.telnet_port;
+				var ts_rdp_port = ywl.page_options.core.rdp_port;
+				var ts_ssh_port = ywl.page_options.core.ssh_port;
+				var ts_telnet_port = ywl.page_options.core.telnet_port;
 				var host_ip = row_data.host_ip;
 				var host_port = 0;
 				var pro_type = parseInt($(this).attr('data-protocol'));
@@ -431,12 +426,12 @@ ywl.on_host_table_created = function (tbl) {
 				} else if (pro_type == 3) {
 					host_port = ts_telnet_port;
 				} else {
-					ywl.notify_error("未知的服务器端口号" + row_data.pro_port);
+					ywl.notify_error("未知的服务器端口号" + pro_port);
 					return;
 				}
 				var args = {};
 				args.host_auth_id = host_auth_id;
-				args.server_ip = ywl.page_options.ts_server.ip;
+				args.server_ip = ywl.server_ip;
 				args.server_port = host_port;
 				args.pro_type = pro_type;
 				args.pro_sub = pro_sub;
@@ -1070,9 +1065,9 @@ ywl.create_sys_user = function (tbl) {
 			if (!dlg_sys_user.check_args())
 				return;
 
-			var ts_rdp_port = ywl.page_options.ts_server.rdp_port;
-			var ts_ssh_port = ywl.page_options.ts_server.ssh_port;
-			var ts_telnet_port = ywl.page_options.ts_server.telnet_port;
+			var ts_rdp_port = ywl.page_options.core.rdp_port;
+			var ts_ssh_port = ywl.page_options.core.ssh_port;
+			var ts_telnet_port = ywl.page_options.core.telnet_port;
 			var server_port = 0;
 			var host_port = dlg_sys_user.host_port;
 			var protocol = dlg_sys_user.protocol;
@@ -1088,7 +1083,7 @@ ywl.create_sys_user = function (tbl) {
 			}
 
 			var args = {};
-			args.server_ip = ywl.page_options.ts_server.ip;
+			args.server_ip = ywl.server_ip;
 			args.server_port = parseInt(server_port);
 			args.host_port = parseInt(host_port);
 			args.protocol = parseInt(protocol);
