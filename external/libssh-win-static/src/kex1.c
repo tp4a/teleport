@@ -51,13 +51,13 @@ static ssh_string make_rsa1_string(ssh_string e, ssh_string n){
       goto error;
   }
 
-  if (ssh_buffer_add_ssh_string(buffer, rsa) < 0) {
+  if (buffer_add_ssh_string(buffer, rsa) < 0) {
     goto error;
   }
-  if (ssh_buffer_add_ssh_string(buffer, e) < 0) {
+  if (buffer_add_ssh_string(buffer, e) < 0) {
     goto error;
   }
-  if (ssh_buffer_add_ssh_string(buffer, n) < 0) {
+  if (buffer_add_ssh_string(buffer, n) < 0) {
     goto error;
   }
 
@@ -66,7 +66,7 @@ static ssh_string make_rsa1_string(ssh_string e, ssh_string n){
     goto error;
   }
 
-  ssh_string_fill(ret, ssh_buffer_get(buffer), ssh_buffer_get_len(buffer));
+  ssh_string_fill(ret, ssh_buffer_get_begin(buffer), ssh_buffer_get_len(buffer));
 error:
   ssh_buffer_free(buffer);
   ssh_string_free(rsa);
@@ -325,32 +325,32 @@ SSH_PACKET_CALLBACK(ssh_packet_publickey1){
     ssh_set_error(session,SSH_FATAL,"SSH_KEXINIT received in wrong state");
     goto error;
   }
-  if (ssh_buffer_get_data(packet, session->next_crypto->server_kex.cookie, 8) != 8) {
+  if (buffer_get_data(packet, session->next_crypto->server_kex.cookie, 8) != 8) {
     ssh_set_error(session, SSH_FATAL, "Can't get cookie in buffer");
     goto error;
   }
 
-  ssh_buffer_get_u32(packet, &server_bits);
-  server_exp = ssh_buffer_get_mpint(packet);
+  buffer_get_u32(packet, &server_bits);
+  server_exp = buffer_get_mpint(packet);
   if (server_exp == NULL) {
     goto error;
   }
-  server_mod = ssh_buffer_get_mpint(packet);
+  server_mod = buffer_get_mpint(packet);
   if (server_mod == NULL) {
     goto error;
   }
-  ssh_buffer_get_u32(packet, &host_bits);
-  host_exp = ssh_buffer_get_mpint(packet);
+  buffer_get_u32(packet, &host_bits);
+  host_exp = buffer_get_mpint(packet);
   if (host_exp == NULL) {
     goto error;
   }
-  host_mod = ssh_buffer_get_mpint(packet);
+  host_mod = buffer_get_mpint(packet);
   if (host_mod == NULL) {
     goto error;
   }
-  ssh_buffer_get_u32(packet, &protocol_flags);
-  ssh_buffer_get_u32(packet, &supported_ciphers_mask);
-  ko = ssh_buffer_get_u32(packet, &supported_authentications_mask);
+  buffer_get_u32(packet, &protocol_flags);
+  buffer_get_u32(packet, &supported_ciphers_mask);
+  ko = buffer_get_u32(packet, &supported_authentications_mask);
 
   if ((ko != sizeof(uint32_t)) || !host_mod || !host_exp
       || !server_mod || !server_exp) {
@@ -411,10 +411,10 @@ SSH_PACKET_CALLBACK(ssh_packet_publickey1){
   }
   SSH_LOG(SSH_LOG_PROTOCOL, "Sending SSH_CMSG_SESSION_KEY");
 
-   if (ssh_buffer_add_u8(session->out_buffer, SSH_CMSG_SESSION_KEY) < 0) {
+   if (buffer_add_u8(session->out_buffer, SSH_CMSG_SESSION_KEY) < 0) {
      goto error;
    }
-   if (ssh_buffer_add_u8(session->out_buffer, support_3DES ? SSH_CIPHER_3DES : SSH_CIPHER_DES) < 0) {
+   if (buffer_add_u8(session->out_buffer, support_3DES ? SSH_CIPHER_3DES : SSH_CIPHER_DES) < 0) {
      goto error;
    }
    if (ssh_buffer_add_data(session->out_buffer, session->next_crypto->server_kex.cookie, 8) < 0) {
@@ -439,11 +439,11 @@ SSH_PACKET_CALLBACK(ssh_packet_publickey1){
      goto error;
    }
    /* the protocol flags */
-   if (ssh_buffer_add_u32(session->out_buffer, 0) < 0) {
+   if (buffer_add_u32(session->out_buffer, 0) < 0) {
      goto error;
    }
    session->session_state=SSH_SESSION_STATE_KEXINIT_RECEIVED;
-   if (ssh_packet_send(session) == SSH_ERROR) {
+   if (packet_send(session) == SSH_ERROR) {
      goto error;
    }
 

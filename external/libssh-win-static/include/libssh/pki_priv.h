@@ -43,6 +43,11 @@ int bcrypt_pbkdf(const char *pass,
 /* Magic defined in OpenSSH/PROTOCOL.key */
 #define OPENSSH_AUTH_MAGIC      "openssh-key-v1"
 
+#define ssh_pki_log(...) \
+    _ssh_log(SSH_LOG_FUNCTIONS, __func__, __VA_ARGS__)
+void _ssh_pki_log(const char *function,
+                  const char *format, ...) PRINTF_ATTRIBUTE(2, 3);
+
 int pki_key_ecdsa_nid_from_name(const char *name);
 const char *pki_key_ecdsa_nid_to_name(int nid);
 

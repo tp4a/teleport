@@ -6,7 +6,7 @@
 #define PACKAGE "libssh"
 
 /* Version number of package */
-#define VERSION "0.7.0"
+#define VERSION "0.7.4"
 
 /* #undef LOCALEDIR */
 /* #undef DATADIR */
@@ -81,10 +81,10 @@
 /*************************** FUNCTIONS ***************************/
 
 /* Define to 1 if you have the `EVP_aes128_ctr' function. */
-/*#define HAVE_OPENSSL_EVP_AES_CTR 1*/
+#define HAVE_OPENSSL_EVP_AES_CTR 1
 
 /* Define to 1 if you have the `EVP_aes128_cbc' function. */
-/*#define HAVE_OPENSSL_EVP_AES_CBC 1*/
+#define HAVE_OPENSSL_EVP_AES_CBC 1
 
 /* Define to 1 if you have the `snprintf' function. */
 #define HAVE_SNPRINTF 1
@@ -157,7 +157,7 @@
 #define HAVE_MSC_THREAD_LOCAL_STORAGE 1
 
 /* #undef HAVE_GCC_VOLATILE_MEMORY_PROTECTION */
-#define HAVE_GCC_NARG_MACRO 1
+/*#define HAVE_GCC_NARG_MACRO 1*/
 
 /* #undef HAVE_COMPILER__FUNC__ */
 #define HAVE_COMPILER__FUNCTION__ 1

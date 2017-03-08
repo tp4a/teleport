@@ -334,7 +334,7 @@ int ssh_service_request(ssh_session session, const char *service) {
       return SSH_ERROR;
   }
   session->auth_service_state=SSH_AUTH_SERVICE_SENT;
-  if (ssh_packet_send(session) == SSH_ERROR) {
+  if (packet_send(session) == SSH_ERROR) {
     ssh_set_error(session, SSH_FATAL,
         "Sending SSH2_MSG_SERVICE_REQUEST failed.");
       return SSH_ERROR;
@@ -430,9 +430,8 @@ static void ssh_client_connection_callback(ssh_session session){
 		    goto error;
 		  }
 		  /* from now, the packet layer is handling incoming packets */
-		  if (session->version == 2) {
-		      ssh_packet_register_socket_callback(session, session->socket);
-		  }
+		  if(session->version==2)
+		    session->socket_callbacks.data=ssh_packet_socket_callback;
 #ifdef WITH_SSH1
 		  else
 		    session->socket_callbacks.data=ssh_packet_socket_callback1;
@@ -459,7 +458,7 @@ static void ssh_client_connection_callback(ssh_session session){
 		case SSH_SESSION_STATE_KEXINIT_RECEIVED:
 			set_status(session,0.6f);
 			ssh_list_kex(&session->next_crypto->server_kex);
-			if (ssh_set_client_kex(session) < 0) {
+			if (set_client_kex(session) < 0) {
 				goto error;
 			}
 			if (ssh_kex_select_methods(session) == SSH_ERROR)
@@ -703,7 +702,7 @@ void ssh_disconnect(ssh_session session) {
       goto error;
     }
 
-    ssh_packet_send(session);
+    packet_send(session);
     ssh_socket_close(session->socket);
   }
 error:

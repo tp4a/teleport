@@ -3,8 +3,6 @@
 #include <ex/ex_str.h>
 #include <ex/ex_log.h>
 
-// #include <vld.h>
-
 EX_BOOL ex_initialize(const char* lc_ctype)
 {
 #ifdef EX_OS_UNIX

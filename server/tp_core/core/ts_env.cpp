@@ -33,7 +33,7 @@ bool TsEnv::init(void)
 
 	if (!ex_is_file_exists(conf_file.c_str()))
 	{
-		EXLOGD("[core] ===== DEVELOPMENT MODE =====\n");
+		EXLOGW("[core] ===== DEVELOPMENT MODE =====\n");
 		base_path = m_exec_path;
 		ex_path_join(base_path, true, L"..", L"..", L"..", L"..", L"server", L"share", NULL);
 
@@ -56,8 +56,15 @@ bool TsEnv::init(void)
 		return false;
 	}
 
-	ex_wstr log_file;
 	ExIniSection* ps = m_ini.GetSection(L"common");
+
+	if (!ps->GetStr(L"replay-path", m_replay_path))
+	{
+		m_replay_path = base_path;
+		ex_path_join(m_replay_path, false, L"data", L"replay", NULL);
+	}
+
+	ex_wstr log_file;
 	if (!ps->GetStr(L"log-file", log_file))
 	{
 		ex_wstr log_path = base_path;
@@ -98,20 +105,20 @@ bool TsEnv::init(void)
 		rpc_bind_port = TS_HTTP_RPC_PORT;
 	}
 
-	m_db_file = base_path;
-	ex_path_join(m_db_file, false, L"data", L"ts_db.db", NULL);
+// 	m_db_file = base_path;
+// 	ex_path_join(m_db_file, false, L"data", L"ts_db.db", NULL);
 
 
 	return true;
 }
 
-bool TsEnv::check_db_file(void)
-{
-	if (!ex_is_file_exists(m_db_file.c_str()))
-	{
-		EXLOGE("[core] can not found database file.\n");
-		return false;
-	}
-
-	return true;
-}
+// bool TsEnv::check_db_file(void)
+// {
+// 	if (!ex_is_file_exists(m_db_file.c_str()))
+// 	{
+// 		EXLOGE("[core] can not found database file.\n");
+// 		return false;
+// 	}
+// 
+// 	return true;
+// }

@@ -160,6 +160,7 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 	init_args.logger = &g_ex_logger;
 	init_args.exec_path = g_env.m_exec_path;
 	init_args.etc_path = g_env.m_etc_path;
+	init_args.replay_path = g_env.m_replay_path;
 	init_args.cfg = &g_env.get_ini();
 	init_args.func_take_session = tpp_take_session;
 	init_args.func_session_begin = tpp_session_begin;

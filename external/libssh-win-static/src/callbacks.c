@@ -25,10 +25,7 @@
 
 #include "libssh/callbacks.h"
 #include "libssh/session.h"
-#include "libssh/misc.h"
 
-#define is_callback_valid(session, cb) \
-    (cb->size <= 0 || cb->size > 1024 * sizeof(void *))
 
 /* LEGACY */
 static void ssh_legacy_log_callback(int priority,
@@ -50,12 +47,12 @@ int ssh_set_callbacks(ssh_session session, ssh_callbacks cb) {
     return SSH_ERROR;
   }
 
-  if (is_callback_valid(session, cb)) {
-      ssh_set_error(session,
-                    SSH_FATAL,
-                    "Invalid callback passed in (badly initialized)");
-      return SSH_ERROR;
-  };
+  if(cb->size <= 0 || cb->size > 1024 * sizeof(void *)){
+  	ssh_set_error(session,SSH_FATAL,
+  			"Invalid callback passed in (badly initialized)");
+
+  	return SSH_ERROR;
+  }
   session->common.callbacks = cb;
 
   /* LEGACY */
@@ -67,80 +64,35 @@ int ssh_set_callbacks(ssh_session session, ssh_callbacks cb) {
   return 0;
 }
 
-static int ssh_add_set_channel_callbacks(ssh_channel channel,
-                                         ssh_channel_callbacks cb,
-                                         int prepend)
-{
-    ssh_session session = NULL;
-    int rc;
+int ssh_set_channel_callbacks(ssh_channel channel, ssh_channel_callbacks cb) {
+  ssh_session session = NULL;
+  if (channel == NULL || cb == NULL) {
+    return SSH_ERROR;
+  }
+  session = channel->session;
 
-    if (channel == NULL || cb == NULL) {
-      return SSH_ERROR;
-    }
-    session = channel->session;
+  if(cb->size <= 0 || cb->size > 1024 * sizeof(void *)){
+  	ssh_set_error(session,SSH_FATAL,
+  			"Invalid channel callback passed in (badly initialized)");
 
-    if (is_callback_valid(session, cb)) {
-        ssh_set_error(session,
-                      SSH_FATAL,
-                      "Invalid callback passed in (badly initialized)");
-        return SSH_ERROR;
-    };
-    if (channel->callbacks == NULL) {
-        channel->callbacks = ssh_list_new();
-        if (channel->callbacks == NULL){
-            ssh_set_error_oom(session);
-            return SSH_ERROR;
-        }
-    }
-    if (prepend) {
-        rc = ssh_list_prepend(channel->callbacks, cb);
-    } else {
-        rc = ssh_list_append(channel->callbacks, cb);
-    }
+  	return SSH_ERROR;
+  }
+  channel->callbacks = cb;
 
-    return rc;
+  return 0;
 }
-
-int ssh_set_channel_callbacks(ssh_channel channel, ssh_channel_callbacks cb)
-{
-    return ssh_add_set_channel_callbacks(channel, cb, 1);
-}
-
-int ssh_add_channel_callbacks(ssh_channel channel, ssh_channel_callbacks cb)
-{
-    return ssh_add_set_channel_callbacks(channel, cb, 0);
-}
-
-int ssh_remove_channel_callbacks(ssh_channel channel, ssh_channel_callbacks cb)
-{
-    struct ssh_iterator *it;
-
-    if (channel == NULL || channel->callbacks == NULL){
-        return SSH_ERROR;
-    }
-
-    it = ssh_list_find(channel->callbacks, cb);
-    if (it == NULL){
-        return SSH_ERROR;
-    }
-
-    ssh_list_remove(channel->callbacks, it);
-
-    return SSH_OK;
-}
-
 
 int ssh_set_server_callbacks(ssh_session session, ssh_server_callbacks cb){
 	if (session == NULL || cb == NULL) {
 		return SSH_ERROR;
 	}
 
-    if (is_callback_valid(session, cb)) {
-        ssh_set_error(session,
-                      SSH_FATAL,
-                      "Invalid callback passed in (badly initialized)");
-        return SSH_ERROR;
-    };
+	if(cb->size <= 0 || cb->size > 1024 * sizeof(void *)){
+		ssh_set_error(session,SSH_FATAL,
+				"Invalid callback passed in (badly initialized)");
+
+		return SSH_ERROR;
+	}
 	session->server_callbacks = cb;
 
 	return 0;

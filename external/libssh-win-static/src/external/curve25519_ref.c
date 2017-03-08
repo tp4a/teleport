@@ -5,10 +5,6 @@ Public domain.
 Derived from public domain code by D. J. Bernstein.
 */
 
-#ifdef _MSC_VER
-#pragma warning(disable:4146)
-#endif
-
 #include "libssh/curve25519.h"
 static const unsigned char base[32] = {9};
 

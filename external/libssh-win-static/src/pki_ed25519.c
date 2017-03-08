@@ -290,7 +290,7 @@ int pki_ed25519_sig_from_blob(ssh_signature sig, ssh_string sig_blob)
 
     len = ssh_string_len(sig_blob);
     if (len != ED25519_SIG_LEN){
-        SSH_LOG(SSH_LOG_WARN, "Invalid ssh-ed25519 signature len: %zu", len);
+        ssh_pki_log("Invalid ssh-ed25519 signature len: %zu", len);
         return SSH_ERROR;
     }
 

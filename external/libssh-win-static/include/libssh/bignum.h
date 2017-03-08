@@ -24,9 +24,9 @@
 #include "libssh/libcrypto.h"
 #include "libssh/libgcrypt.h"
 
-bignum ssh_make_string_bn(ssh_string string);
-void ssh_make_string_bn_inplace(ssh_string string, bignum bnout);
-ssh_string ssh_make_bignum_string(bignum num);
+bignum make_string_bn(ssh_string string);
+void make_string_bn_inplace(ssh_string string, bignum bnout);
+ssh_string make_bignum_string(bignum num);
 void ssh_print_bignum(const char *which,bignum num);
 
 

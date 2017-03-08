@@ -53,7 +53,7 @@
 typedef struct BlowfishContext {
 	uint32_t S[4][256];	/* S-Boxes */
 	uint32_t P[BLF_N + 2];	/* Subkeys */
-} ssh_blf_ctx;
+} blf_ctx;
 
 /* Raw access to customized Blowfish
  *	blf_key is just:
@@ -61,24 +61,24 @@ typedef struct BlowfishContext {
  *	Blowfish_expand0state( state, key, keylen )
  */
 
-void Blowfish_encipher(ssh_blf_ctx *, uint32_t *, uint32_t *);
-void Blowfish_decipher(ssh_blf_ctx *, uint32_t *, uint32_t *);
-void Blowfish_initstate(ssh_blf_ctx *);
-void Blowfish_expand0state(ssh_blf_ctx *, const uint8_t *, uint16_t);
+void Blowfish_encipher(blf_ctx *, uint32_t *, uint32_t *);
+void Blowfish_decipher(blf_ctx *, uint32_t *, uint32_t *);
+void Blowfish_initstate(blf_ctx *);
+void Blowfish_expand0state(blf_ctx *, const uint8_t *, uint16_t);
 void Blowfish_expandstate
-(ssh_blf_ctx *, const uint8_t *, uint16_t, const uint8_t *, uint16_t);
+(blf_ctx *, const uint8_t *, uint16_t, const uint8_t *, uint16_t);
 
 /* Standard Blowfish */
 
-void ssh_blf_key(ssh_blf_ctx *, const uint8_t *, uint16_t);
-void ssh_blf_enc(ssh_blf_ctx *, uint32_t *, uint16_t);
-void ssh_blf_dec(ssh_blf_ctx *, uint32_t *, uint16_t);
+void blf_key(blf_ctx *, const uint8_t *, uint16_t);
+void blf_enc(blf_ctx *, uint32_t *, uint16_t);
+void blf_dec(blf_ctx *, uint32_t *, uint16_t);
 
-void ssh_blf_ecb_encrypt(ssh_blf_ctx *, uint8_t *, uint32_t);
-void ssh_blf_ecb_decrypt(ssh_blf_ctx *, uint8_t *, uint32_t);
+void blf_ecb_encrypt(blf_ctx *, uint8_t *, uint32_t);
+void blf_ecb_decrypt(blf_ctx *, uint8_t *, uint32_t);
 
-void ssh_blf_cbc_encrypt(ssh_blf_ctx *, uint8_t *, uint8_t *, uint32_t);
-void ssh_blf_cbc_decrypt(ssh_blf_ctx *, uint8_t *, uint8_t *, uint32_t);
+void blf_cbc_encrypt(blf_ctx *, uint8_t *, uint8_t *, uint32_t);
+void blf_cbc_decrypt(blf_ctx *, uint8_t *, uint8_t *, uint32_t);
 
 /* Converts uint8_t to uint32_t */
 uint32_t Blowfish_stream2word(const uint8_t *, uint16_t , uint16_t *);

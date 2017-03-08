@@ -25,27 +25,27 @@
 
 #include "libssh/crypto.h"
 
-int ssh_dh_generate_e(ssh_session session);
-int ssh_dh_generate_f(ssh_session session);
-int ssh_dh_generate_x(ssh_session session);
-int ssh_dh_generate_y(ssh_session session);
+int dh_generate_e(ssh_session session);
+int dh_generate_f(ssh_session session);
+int dh_generate_x(ssh_session session);
+int dh_generate_y(ssh_session session);
 
 int ssh_crypto_init(void);
 void ssh_crypto_finalize(void);
 
-ssh_string ssh_dh_get_e(ssh_session session);
-ssh_string ssh_dh_get_f(ssh_session session);
-int ssh_dh_import_f(ssh_session session,ssh_string f_string);
-int ssh_dh_import_e(ssh_session session, ssh_string e_string);
-void ssh_dh_import_pubkey(ssh_session session,ssh_string pubkey_string);
-int ssh_dh_build_k(ssh_session session);
+ssh_string dh_get_e(ssh_session session);
+ssh_string dh_get_f(ssh_session session);
+int dh_import_f(ssh_session session,ssh_string f_string);
+int dh_import_e(ssh_session session, ssh_string e_string);
+void dh_import_pubkey(ssh_session session,ssh_string pubkey_string);
+int dh_build_k(ssh_session session);
 int ssh_client_dh_init(ssh_session session);
 int ssh_client_dh_reply(ssh_session session, ssh_buffer packet);
 
-int ssh_make_sessionid(ssh_session session);
+int make_sessionid(ssh_session session);
 /* add data for the final cookie */
-int ssh_hashbufin_add_cookie(ssh_session session, unsigned char *cookie);
-int ssh_hashbufout_add_cookie(ssh_session session);
-int ssh_generate_session_keys(ssh_session session);
+int hashbufin_add_cookie(ssh_session session, unsigned char *cookie);
+int hashbufout_add_cookie(ssh_session session);
+int generate_session_keys(ssh_session session);
 
 #endif /* DH_H_ */

@@ -2,7 +2,6 @@
  * This file is part of the SSH Library
  *
  * Copyright (c) 2009 by Aris Adamantiadis
- * Copyright (C) 2016 g10 Code GmbH
  *
  * The SSH Library is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +27,6 @@
 #include "libssh/session.h"
 #include "libssh/crypto.h"
 #include "libssh/wrapper.h"
-#include "libssh/string.h"
 
 #ifdef HAVE_LIBGCRYPT
 #include <gcrypt.h>
@@ -598,56 +596,6 @@ static struct ssh_cipher_struct ssh_ciphertab[] = {
 struct ssh_cipher_struct *ssh_get_ciphertab(void)
 {
   return ssh_ciphertab;
-}
-
-/*
- * Extract an MPI from the given s-expression SEXP named NAME which is
- * encoded using INFORMAT and store it in a newly allocated ssh_string
- * encoded using OUTFORMAT.
- */
-ssh_string ssh_sexp_extract_mpi(const gcry_sexp_t sexp,
-                                const char *name,
-                                enum gcry_mpi_format informat,
-                                enum gcry_mpi_format outformat)
-{
-    gpg_error_t err;
-    ssh_string result = NULL;
-    gcry_sexp_t fragment = NULL;
-    gcry_mpi_t mpi = NULL;
-    size_t size;
-
-    fragment = gcry_sexp_find_token(sexp, name, 0);
-    if (fragment == NULL) {
-        goto fail;
-    }
-
-    mpi = gcry_sexp_nth_mpi(fragment, 1, informat);
-    if (mpi == NULL) {
-        goto fail;
-    }
-
-    err = gcry_mpi_print(outformat, NULL, 0, &size, mpi);
-    if (err != 0) {
-        goto fail;
-    }
-
-    result = ssh_string_new(size);
-    if (result == NULL) {
-        goto fail;
-    }
-
-    err = gcry_mpi_print(outformat, ssh_string_data(result), size, NULL, mpi);
-    if (err != 0) {
-        ssh_string_burn(result);
-        ssh_string_free(result);
-        result = NULL;
-        goto fail;
-    }
-
-fail:
-    gcry_sexp_release(fragment);
-    gcry_mpi_release(mpi);
-    return result;
 }
 
 #endif

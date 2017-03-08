@@ -164,7 +164,7 @@ int ssh_options_copy(ssh_session src, ssh_session *dest) {
 
 int ssh_options_set_algo(ssh_session session, int algo,
     const char *list) {
-  if (!ssh_verify_existing_algo(algo, list)) {
+  if (!verify_existing_algo(algo, list)) {
     ssh_set_error(session, SSH_REQUEST_DENIED,
         "Setting method: no algorithm for method \"%s\" (%s)\n",
         ssh_kex_get_description(algo), list);
@@ -925,17 +925,6 @@ int ssh_options_get_port(ssh_session session, unsigned int* port_target) {
  *                It may include "%s" which will be replaced by the
  *                user home directory.
  *
- *              - SSH_OPTIONS_ADD_IDENTITY:
- *                Add a new identity file (const char *,format string) to
- *                the identity list.\n
- *                \n
- *                By default identity, id_dsa and id_rsa are checked.\n
- *                \n
- *                The identity used authenticate with public key will be
- *                prepended to the list.
- *                It may include "%s" which will be replaced by the
- *                user home directory.
- *
  *              - SSH_OPTIONS_PROXYCOMMAND:
  *                Get the proxycommand necessary to log into the
  *                remote host. When not explicitly set, it will be read
@@ -1179,9 +1168,7 @@ int ssh_options_getopt(ssh_session session, int *argcptr, char **argv) {
     }
   }
 
-  if (port != NULL) {
-    ssh_options_set(session, SSH_OPTIONS_PORT_STR, port);
-  }
+  ssh_options_set(session, SSH_OPTIONS_PORT_STR, port);
 
   ssh_options_set(session, SSH_OPTIONS_SSH1, &ssh1);
   ssh_options_set(session, SSH_OPTIONS_SSH2, &ssh2);
@@ -1363,10 +1350,10 @@ static int ssh_bind_set_key(ssh_bind sshbind, char **key_loc,
  *                        with verbosity less than or equal to the
  *                        logging verbosity will be shown.
  *                        - SSH_LOG_NOLOG: No logging
- *                        - SSH_LOG_RARE: Rare conditions or warnings
- *                        - SSH_LOG_ENTRY: API-accessible entrypoints
- *                        - SSH_LOG_PACKET: Packet id and size
- *                        - SSH_LOG_FUNCTIONS: Function entering and leaving
+ *                        - SSH_LOG_WARNING: Only warnings
+ *                        - SSH_LOG_PROTOCOL: High level protocol information
+ *                        - SSH_LOG_PACKET: Lower level protocol infomations, packet level
+ *                        - SSH_LOG_FUNCTIONS: Every function path
  *
  *                      - SSH_BIND_OPTIONS_LOG_VERBOSITY_STR:
  *                        Set the session logging verbosity via a
@@ -1415,7 +1402,7 @@ int ssh_bind_options_set(ssh_bind sshbind, enum ssh_bind_options_e type,
           int key_type;
           ssh_key key;
           ssh_key *bind_key_loc = NULL;
-          char **bind_key_path_loc = NULL;
+          char **bind_key_path_loc;
 
           rc = ssh_pki_import_privkey_file(value, NULL, NULL, NULL, &key);
           if (rc != SSH_OK) {

@@ -61,6 +61,7 @@ json_param		此任务方法的附加参数，如果没有附加参数，这部分可以省略。
 */
 
 void http_rpc_main_loop(void);
+void http_rpc_stop(void);
 
 typedef std::map<ex_astr, ex_astr> content_type_map;
 
@@ -80,6 +81,7 @@ public:
 
 	bool init(const char* ip, int port);
 	void run(void);
+	void stop(void);
 
 	ex_astr get_content_type(ex_astr file_suffix)
 	{
@@ -113,6 +115,7 @@ private:
 private:
 	content_type_map m_content_type_map;
 	struct mg_mgr m_mg_mgr;
+	bool m_stop;
 };
 
 #endif // __TS_HTTP_RPC_H__

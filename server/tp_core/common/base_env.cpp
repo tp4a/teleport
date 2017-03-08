@@ -18,6 +18,7 @@ bool TppEnvBase::init(TPP_INIT_ARGS* args)
 
 	exec_path = args->exec_path;
 	etc_path = args->etc_path;
+	replay_path = args->replay_path;
 
 	take_session = args->func_take_session;
 	session_begin = args->func_session_begin;
@@ -35,18 +36,18 @@ bool TppEnvBase::init(TPP_INIT_ARGS* args)
 		return false;
 	}
 
-	ExIniSection* ps = args->cfg->GetSection(L"common");
-	if (NULL == ps)
-	{
-		EXLOGE("invalid config(1).\n");
-		return false;
-	}
-
-	if (!ps->GetStr(L"replay-path", replay_path))
-	{
-		replay_path = exec_path;
-		ex_path_join(replay_path, true, L"..", L"data", L"replay", NULL);
-	}
+// 	ExIniSection* ps = args->cfg->GetSection(L"common");
+// 	if (NULL == ps)
+// 	{
+// 		EXLOGE("invalid config(1).\n");
+// 		return false;
+// 	}
+// 
+// 	if (!ps->GetStr(L"replay-path", replay_path))
+// 	{
+// 		replay_path = exec_path;
+// 		ex_path_join(replay_path, true, L"..", L"data", L"replay", NULL);
+// 	}
 
 	if (!_on_init(args))
 	{

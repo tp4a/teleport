@@ -5,6 +5,9 @@ import shutil
 import struct
 
 from .common import *
+from eom_app.app.configs import app_cfg
+
+cfg = app_cfg()
 
 
 def read_record_head(record_id):

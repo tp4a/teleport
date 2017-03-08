@@ -286,14 +286,14 @@ static int channel_open(ssh_channel channel, const char *type, int window,
   }
 
   if (payload != NULL) {
-    if (ssh_buffer_add_buffer(session->out_buffer, payload) < 0) {
+    if (buffer_add_buffer(session->out_buffer, payload) < 0) {
       ssh_set_error_oom(session);
 
       return err;
     }
   }
   channel->state = SSH_CHANNEL_STATE_OPENING;
-  if (ssh_packet_send(session) == SSH_ERROR) {
+  if (packet_send(session) == SSH_ERROR) {
 
     return err;
   }
@@ -374,7 +374,7 @@ static int grow_window(ssh_session session, ssh_channel channel, int minimumsize
     goto error;
   }
 
-  if (ssh_packet_send(session) == SSH_ERROR) {
+  if (packet_send(session) == SSH_ERROR) {
     goto error;
   }
 
@@ -492,10 +492,10 @@ SSH_PACKET_CALLBACK(channel_rcv_data){
   if (is_stderr) {
     uint32_t ignore;
     /* uint32 data type code. we can ignore it */
-    ssh_buffer_get_u32(packet, &ignore);
+    buffer_get_u32(packet, &ignore);
   }
 
-  str = ssh_buffer_get_ssh_string(packet);
+  str = buffer_get_ssh_string(packet);
   if (str == NULL) {
     SSH_LOG(SSH_LOG_PACKET, "Invalid data packet!");
 
@@ -538,38 +538,31 @@ SSH_PACKET_CALLBACK(channel_rcv_data){
 
   ssh_string_free(str);
 
-  if (is_stderr) {
-      buf = channel->stderr_buffer;
-  } else {
-      buf = channel->stdout_buffer;
-  }
-
-  ssh_callbacks_iterate(channel->callbacks,
-                        ssh_channel_callbacks,
-	                    ssh_channel_data_callback,
-                        channel_data_function) {
-      if (ssh_buffer_get(buf) == 0) {
-          break;
+  if(ssh_callbacks_exists(channel->callbacks, channel_data_function)) {
+      if(is_stderr) {
+        buf = channel->stderr_buffer;
+      } else {
+        buf = channel->stdout_buffer;
       }
-      rest = ssh_callbacks_iterate_exec(channel->session,
-                                        channel,
-                                        ssh_buffer_get(buf),
-                                        ssh_buffer_get_len(buf),
-                                        is_stderr);
-      if (rest > 0) {
-          if (channel->counter != NULL) {
-              channel->counter->in_bytes += rest;
-          }
-          ssh_buffer_pass_bytes(buf, rest);
+      rest = channel->callbacks->channel_data_function(channel->session,
+                                                channel,
+                                                buffer_get_rest(buf),
+                                                buffer_get_rest_len(buf),
+                                                is_stderr,
+                                                channel->callbacks->userdata);
+      if(rest > 0) {
+        if (channel->counter != NULL) {
+            channel->counter->in_bytes += rest;
+        }
+        buffer_pass_bytes(buf, rest);
       }
-  }
-  ssh_callbacks_iterate_end();
-
-  if (channel->local_window + ssh_buffer_get_len(buf) < WINDOWLIMIT) {
-      if (grow_window(session, channel, 0) < 0) {
+      if (channel->local_window + buffer_get_rest_len(buf) < WINDOWLIMIT) {
+        if (grow_window(session, channel, 0) < 0) {
           return -1;
+        }
       }
   }
+
   return SSH_PACKET_USED;
 }
 
@@ -592,11 +585,11 @@ SSH_PACKET_CALLBACK(channel_rcv_eof) {
   /* channel->remote_window = 0; */
   channel->remote_eof = 1;
 
-  ssh_callbacks_execute_list(channel->callbacks,
-                             ssh_channel_callbacks,
-                             channel_eof_function,
-                             channel->session,
-                             channel);
+  if(ssh_callbacks_exists(channel->callbacks, channel_eof_function)) {
+      channel->callbacks->channel_eof_function(channel->session,
+                                               channel,
+                                               channel->callbacks->userdata);
+  }
 
   return SSH_PACKET_USED;
 }
@@ -619,9 +612,9 @@ SSH_PACKET_CALLBACK(channel_rcv_close) {
 			channel->remote_channel);
 
 	if ((channel->stdout_buffer &&
-			ssh_buffer_get_len(channel->stdout_buffer) > 0) ||
+			buffer_get_rest_len(channel->stdout_buffer) > 0) ||
 			(channel->stderr_buffer &&
-					ssh_buffer_get_len(channel->stderr_buffer) > 0)) {
+					buffer_get_rest_len(channel->stderr_buffer) > 0)) {
 		channel->delayed_close = 1;
 	} else {
 		channel->state = SSH_CHANNEL_STATE_CLOSED;
@@ -636,12 +629,11 @@ SSH_PACKET_CALLBACK(channel_rcv_close) {
 	 * buffer because the eof is ignored until the buffer is empty.
 	 */
 
-    ssh_callbacks_execute_list(channel->callbacks,
-                               ssh_channel_callbacks,
-                               channel_close_function,
-                               channel->session,
-                               channel);
-
+	if(ssh_callbacks_exists(channel->callbacks, channel_close_function)) {
+	  channel->callbacks->channel_close_function(channel->session,
+	      channel,
+	      channel->callbacks->userdata);
+	}
 	channel->flags |= SSH_CHANNEL_FLAG_CLOSED_REMOTE;
 	if(channel->flags & SSH_CHANNEL_FLAG_FREED_LOCAL)
 	  ssh_channel_do_free(channel);
@@ -676,12 +668,12 @@ SSH_PACKET_CALLBACK(channel_rcv_request) {
         rc = ssh_buffer_unpack(packet, "d", &channel->exit_status);
         SSH_LOG(SSH_LOG_PACKET, "received exit-status %d", channel->exit_status);
 
-        ssh_callbacks_execute_list(channel->callbacks,
-                                   ssh_channel_callbacks,
-                                   channel_exit_status_function,
-                                   channel->session,
-                                   channel,
-                                   channel->exit_status);
+        if(ssh_callbacks_exists(channel->callbacks, channel_exit_status_function)) {
+            channel->callbacks->channel_exit_status_function(channel->session,
+                                                     channel,
+                                                     channel->exit_status,
+                                                     channel->callbacks->userdata);
+        }
 
 		return SSH_PACKET_USED;
 	}
@@ -700,13 +692,13 @@ SSH_PACKET_CALLBACK(channel_rcv_request) {
 
 		SSH_LOG(SSH_LOG_PACKET,
 				"Remote connection sent a signal SIG %s", sig);
-        ssh_callbacks_execute_list(channel->callbacks,
-                                   ssh_channel_callbacks,
-                                   channel_signal_function,
-                                   channel->session,
-                                   channel,
-                                   sig);
-		SAFE_FREE(sig);
+        if(ssh_callbacks_exists(channel->callbacks, channel_signal_function)) {
+            channel->callbacks->channel_signal_function(channel->session,
+                                                     channel,
+                                                     sig,
+                                                     channel->callbacks->userdata);
+        }
+        SAFE_FREE(sig);
 
 		return SSH_PACKET_USED;
 	}
@@ -736,15 +728,12 @@ SSH_PACKET_CALLBACK(channel_rcv_request) {
 
 		SSH_LOG(SSH_LOG_PACKET,
 				"Remote connection closed by signal SIG %s %s", sig, core);
-		ssh_callbacks_execute_list(channel->callbacks,
-                                   ssh_channel_callbacks,
-                                   channel_exit_signal_function,
-                                   channel->session,
-                                   channel,
-                                   sig,
-                                   core_dumped,
-                                   errmsg,
-                                   lang);
+        if(ssh_callbacks_exists(channel->callbacks, channel_exit_signal_function)) {
+            channel->callbacks->channel_exit_signal_function(channel->session,
+                                                     channel,
+                                                     sig, core_dumped, errmsg, lang,
+                                                     channel->callbacks->userdata);
+        }
 
         SAFE_FREE(lang);
         SAFE_FREE(errmsg);
@@ -763,7 +752,7 @@ SSH_PACKET_CALLBACK(channel_rcv_request) {
       if (rc != SSH_OK) {
           return SSH_PACKET_USED;
       }
-	  ssh_packet_send(session);
+	  packet_send(session);
 
 	  return SSH_PACKET_USED;
 	}
@@ -771,11 +760,10 @@ SSH_PACKET_CALLBACK(channel_rcv_request) {
   if (strcmp(request, "auth-agent-req@openssh.com") == 0) {
     SAFE_FREE(request);
     SSH_LOG(SSH_LOG_PROTOCOL, "Received an auth-agent-req request");
-    ssh_callbacks_execute_list(channel->callbacks,
-                               ssh_channel_callbacks,
-                               channel_auth_agent_req_function,
-                               channel->session,
-                               channel);
+    if(ssh_callbacks_exists(channel->callbacks, channel_auth_agent_req_function)) {
+        channel->callbacks->channel_auth_agent_req_function(channel->session, channel,
+            channel->callbacks->userdata);
+    }
 
     return SSH_PACKET_USED;
   }
@@ -876,7 +864,7 @@ int ssh_channel_open_session(ssh_channel channel) {
 
 #ifdef WITH_SSH1
   if (channel->session->version == 1) {
-    return ssh_channel_open_session1(channel);
+    return channel_open_session1(channel);
   }
 #endif
 
@@ -1040,9 +1028,6 @@ void ssh_channel_do_free(ssh_channel channel){
   }
   ssh_buffer_free(channel->stdout_buffer);
   ssh_buffer_free(channel->stderr_buffer);
-  if (channel->callbacks != NULL){
-    ssh_list_free(channel->callbacks);
-  }
 
   /* debug trick to catch use after frees */
   memset(channel, 'X', sizeof(struct ssh_channel_struct));
@@ -1097,7 +1082,7 @@ int ssh_channel_send_eof(ssh_channel channel){
     goto error;
   }
 
-  rc = ssh_packet_send(session);
+  rc = packet_send(session);
   SSH_LOG(SSH_LOG_PACKET,
       "Sent a EOF on client channel (%d:%d)",
       channel->local_channel,
@@ -1156,7 +1141,7 @@ int ssh_channel_close(ssh_channel channel){
     goto error;
   }
 
-  rc = ssh_packet_send(session);
+  rc = packet_send(session);
   SSH_LOG(SSH_LOG_PACKET,
       "Sent a close on client channel (%d:%d)",
       channel->local_channel,
@@ -1265,7 +1250,7 @@ static int channel_write_common(ssh_channel channel,
   }
 #ifdef WITH_SSH1
   if (channel->version == 1) {
-    rc = ssh_channel_write1(channel, data, len);
+    rc = channel_write1(channel, data, len);
 
     return rc;
   }
@@ -1333,7 +1318,7 @@ static int channel_write_common(ssh_channel channel,
         goto error;
     }
 
-    rc = ssh_packet_send(session);
+    rc = packet_send(session);
     if (rc == SSH_ERROR) {
         return SSH_ERROR;
     }
@@ -1364,23 +1349,6 @@ error:
   return SSH_ERROR;
 }
 
-/**
- * @brief Get the remote window size.
- *
- * This is the maximum amounts of bytes the remote side expects us to send
- * before growing the window again.
- *
- * @param[in] channel The channel to query.
- *
- * @return            The remote window size
- *
- * @warning A nonzero return value does not guarantee the socket is ready
- *          to send that much data. Buffering may happen in the local SSH
- *          packet buffer, so beware of really big window sizes.
- *
- * @warning A zero return value means ssh_channel_write (default settings)
- *          will block until the window grows back.
- */
 uint32_t ssh_channel_window_size(ssh_channel channel) {
     return channel->remote_window;
 }
@@ -1446,9 +1414,9 @@ int ssh_channel_is_eof(ssh_channel channel) {
       return SSH_ERROR;
   }
   if ((channel->stdout_buffer &&
-        ssh_buffer_get_len(channel->stdout_buffer) > 0) ||
+        buffer_get_rest_len(channel->stdout_buffer) > 0) ||
       (channel->stderr_buffer &&
-       ssh_buffer_get_len(channel->stderr_buffer) > 0)) {
+       buffer_get_rest_len(channel->stderr_buffer) > 0)) {
     return 0;
   }
 
@@ -1572,14 +1540,14 @@ static int channel_request(ssh_channel channel, const char *request,
   }
 
   if (buffer != NULL) {
-    if (ssh_buffer_add_data(session->out_buffer, ssh_buffer_get(buffer),
-        ssh_buffer_get_len(buffer)) < 0) {
+    if (ssh_buffer_add_data(session->out_buffer, buffer_get_rest(buffer),
+        buffer_get_rest_len(buffer)) < 0) {
       ssh_set_error_oom(session);
       goto error;
     }
   }
   channel->request_state = SSH_CHANNEL_REQ_STATE_PENDING;
-  if (ssh_packet_send(session) == SSH_ERROR) {
+  if (packet_send(session) == SSH_ERROR) {
     return rc;
   }
 
@@ -1665,7 +1633,7 @@ int ssh_channel_request_pty_size(ssh_channel channel, const char *terminal,
 
 #ifdef WITH_SSH1
   if (channel->version==1) {
-    rc = ssh_channel_request_pty_size1(channel,terminal, col, row);
+    rc = channel_request_pty_size1(channel,terminal, col, row);
 
     return rc;
     }
@@ -1743,7 +1711,7 @@ int ssh_channel_change_pty_size(ssh_channel channel, int cols, int rows) {
 
 #ifdef WITH_SSH1
   if (channel->version == 1) {
-    rc = ssh_channel_change_pty_size1(channel,cols,rows);
+    rc = channel_change_pty_size1(channel,cols,rows);
 
     return rc;
   }
@@ -1789,7 +1757,7 @@ int ssh_channel_request_shell(ssh_channel channel) {
     }
 #ifdef WITH_SSH1
   if (channel->version == 1) {
-    return ssh_channel_request_shell1(channel);
+    return channel_request_shell1(channel);
   }
 #endif
   return channel_request(channel, "shell", NULL, 1);
@@ -2014,25 +1982,6 @@ ssh_channel ssh_channel_accept_x11(ssh_channel channel, int timeout_ms) {
 }
 
 /**
- * @brief Send an "auth-agent-req" channel request over an existing session channel.
- *
- * This client-side request will enable forwarding the agent over an secure tunnel.
- * When the server is ready to open one authentication agent channel, an
- * ssh_channel_open_request_auth_agent_callback event will be generated.
- *
- * @param[in]  channel  The channel to send signal.
- *
- * @return              SSH_OK on success, SSH_ERROR if an error occurred
- */
-int ssh_channel_request_auth_agent(ssh_channel channel) {
-  if (channel == NULL) {
-    return SSH_ERROR;
-  }
-
-  return channel_request(channel, "auth-agent-req@openssh.com", NULL, 0);
-}
-
-/**
  * @internal
  *
  * @brief Handle a SSH_REQUEST_SUCCESS packet normally sent after a global
@@ -2131,8 +2080,8 @@ static int global_request(ssh_session session, const char *request,
 
   if (buffer != NULL) {
       rc = ssh_buffer_add_data(session->out_buffer,
-                           ssh_buffer_get(buffer),
-                           ssh_buffer_get_len(buffer));
+                           buffer_get_rest(buffer),
+                           buffer_get_rest_len(buffer));
       if (rc < 0) {
           ssh_set_error_oom(session);
           rc = SSH_ERROR;
@@ -2141,7 +2090,7 @@ static int global_request(ssh_session session, const char *request,
   }
 
   session->global_req_state = SSH_CHANNEL_REQ_STATE_PENDING;
-  rc = ssh_packet_send(session);
+  rc = packet_send(session);
   if (rc == SSH_ERROR) {
       return rc;
   }
@@ -2430,7 +2379,7 @@ int ssh_channel_request_exec(ssh_channel channel, const char *cmd) {
 
 #ifdef WITH_SSH1
   if (channel->version == 1) {
-    return ssh_channel_request_exec1(channel, cmd);
+    return channel_request_exec1(channel, cmd);
   }
 #endif
   switch(channel->request_state){
@@ -2616,7 +2565,7 @@ struct ssh_channel_read_termination_struct {
 
 static int ssh_channel_read_termination(void *s){
   struct ssh_channel_read_termination_struct *ctx = s;
-  if (ssh_buffer_get_len(ctx->buffer) >= ctx->count ||
+  if (buffer_get_rest_len(ctx->buffer) >= ctx->count ||
       ctx->channel->remote_eof ||
       ctx->channel->session->session_state == SSH_SESSION_STATE_ERROR)
     return 1;
@@ -2713,11 +2662,11 @@ int ssh_channel_read_timeout(ssh_channel channel,
   SSH_LOG(SSH_LOG_PACKET,
       "Read (%d) buffered : %d bytes. Window: %d",
       count,
-      ssh_buffer_get_len(stdbuf),
+      buffer_get_rest_len(stdbuf),
       channel->local_window);
 
-  if (count > ssh_buffer_get_len(stdbuf) + channel->local_window) {
-    if (grow_window(session, channel, count - ssh_buffer_get_len(stdbuf)) < 0) {
+  if (count > buffer_get_rest_len(stdbuf) + channel->local_window) {
+    if (grow_window(session, channel, count - buffer_get_rest_len(stdbuf)) < 0) {
       return -1;
     }
   }
@@ -2743,14 +2692,14 @@ int ssh_channel_read_timeout(ssh_channel channel,
   if (session->session_state == SSH_SESSION_STATE_ERROR){
       return SSH_ERROR;
   }
-  if (channel->remote_eof && ssh_buffer_get_len(stdbuf) == 0) {
+  if (channel->remote_eof && buffer_get_rest_len(stdbuf) == 0) {
     return 0;
   }
-  len = ssh_buffer_get_len(stdbuf);
+  len = buffer_get_rest_len(stdbuf);
   /* Read count bytes if len is greater, everything otherwise */
   len = (len > count ? count : len);
-  memcpy(dest, ssh_buffer_get(stdbuf), len);
-  ssh_buffer_pass_bytes(stdbuf,len);
+  memcpy(dest, buffer_get_rest(stdbuf), len);
+  buffer_pass_bytes(stdbuf,len);
   if (channel->counter != NULL) {
       channel->counter->in_bytes += len;
   }
@@ -2850,7 +2799,7 @@ int ssh_channel_poll(ssh_channel channel, int is_stderr){
     stdbuf = channel->stderr_buffer;
   }
 
-  if (ssh_buffer_get_len(stdbuf) == 0 && channel->remote_eof == 0) {
+  if (buffer_get_rest_len(stdbuf) == 0 && channel->remote_eof == 0) {
     if (channel->session->session_state == SSH_SESSION_STATE_ERROR){
       return SSH_ERROR;
     }
@@ -2859,15 +2808,15 @@ int ssh_channel_poll(ssh_channel channel, int is_stderr){
     }
   }
 
-  if (ssh_buffer_get_len(stdbuf) > 0){
-  	return ssh_buffer_get_len(stdbuf);
+  if (buffer_get_rest_len(stdbuf) > 0){
+  	return buffer_get_rest_len(stdbuf);
   }
 
   if (channel->remote_eof) {
     return SSH_EOF;
   }
 
-  return ssh_buffer_get_len(stdbuf);
+  return buffer_get_rest_len(stdbuf);
 }
 
 /**
@@ -2914,7 +2863,7 @@ int ssh_channel_poll_timeout(ssh_channel channel, int timeout, int is_stderr){
     rc = SSH_ERROR;
     goto end;
   }
-  rc = ssh_buffer_get_len(stdbuf);
+  rc = buffer_get_rest_len(stdbuf);
   if(rc > 0)
     goto end;
   if (channel->remote_eof)
@@ -3003,8 +2952,8 @@ static int channel_protocol_select(ssh_channel *rchans, ssh_channel *wchans,
       ssh_handle_packets(chan->session, SSH_TIMEOUT_NONBLOCKING);
     }
 
-    if ((chan->stdout_buffer && ssh_buffer_get_len(chan->stdout_buffer) > 0) ||
-        (chan->stderr_buffer && ssh_buffer_get_len(chan->stderr_buffer) > 0) ||
+    if ((chan->stdout_buffer && buffer_get_rest_len(chan->stdout_buffer) > 0) ||
+        (chan->stderr_buffer && buffer_get_rest_len(chan->stderr_buffer) > 0) ||
         chan->remote_eof) {
       rout[j] = chan;
       j++;
@@ -3210,6 +3159,7 @@ void ssh_channel_set_counter(ssh_channel channel,
     }
 }
 
+#if WITH_SERVER
 /**
  * @brief Blocking write on a channel stderr.
  *
@@ -3226,8 +3176,6 @@ void ssh_channel_set_counter(ssh_channel channel,
 int ssh_channel_write_stderr(ssh_channel channel, const void *data, uint32_t len) {
   return channel_write_common(channel, data, len, 1);
 }
-
-#if WITH_SERVER
 
 /**
  * @brief Open a TCP/IP reverse forwarding channel.

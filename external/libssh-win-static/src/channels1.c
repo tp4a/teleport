@@ -51,7 +51,7 @@
  * protocol.
  */
 
-int ssh_channel_open_session1(ssh_channel chan) {
+int channel_open_session1(ssh_channel chan) {
   ssh_session session;
 
   if (chan == NULL) {
@@ -91,7 +91,7 @@ int ssh_channel_open_session1(ssh_channel chan) {
  *  much simplier under ssh2. I just hope the defaults values are ok ...
  */
 
-int ssh_channel_request_pty_size1(ssh_channel channel, const char *terminal, int col,
+int channel_request_pty_size1(ssh_channel channel, const char *terminal, int col,
     int row) {
   ssh_session session;
   ssh_string str = NULL;
@@ -112,24 +112,24 @@ int ssh_channel_request_pty_size1(ssh_channel channel, const char *terminal, int
     return -1;
   }
 
-  if (ssh_buffer_add_u8(session->out_buffer, SSH_CMSG_REQUEST_PTY) < 0 ||
-      ssh_buffer_add_ssh_string(session->out_buffer, str) < 0) {
+  if (buffer_add_u8(session->out_buffer, SSH_CMSG_REQUEST_PTY) < 0 ||
+      buffer_add_ssh_string(session->out_buffer, str) < 0) {
     ssh_string_free(str);
     return -1;
   }
   ssh_string_free(str);
 
-  if (ssh_buffer_add_u32(session->out_buffer, ntohl(row)) < 0 ||
-      ssh_buffer_add_u32(session->out_buffer, ntohl(col)) < 0 ||
-      ssh_buffer_add_u32(session->out_buffer, 0) < 0 || /* x */
-      ssh_buffer_add_u32(session->out_buffer, 0) < 0 || /* y */
-      ssh_buffer_add_u8(session->out_buffer, 0) < 0) { /* tty things */
+  if (buffer_add_u32(session->out_buffer, ntohl(row)) < 0 ||
+      buffer_add_u32(session->out_buffer, ntohl(col)) < 0 ||
+      buffer_add_u32(session->out_buffer, 0) < 0 || /* x */
+      buffer_add_u32(session->out_buffer, 0) < 0 || /* y */
+      buffer_add_u8(session->out_buffer, 0) < 0) { /* tty things */
     return -1;
   }
 
   SSH_LOG(SSH_LOG_FUNCTIONS, "Opening a ssh1 pty");
   channel->request_state = SSH_CHANNEL_REQ_STATE_PENDING;
-  if (ssh_packet_send(session) == SSH_ERROR) {
+  if (packet_send(session) == SSH_ERROR) {
     return -1;
   }
 
@@ -158,7 +158,7 @@ int ssh_channel_request_pty_size1(ssh_channel channel, const char *terminal, int
   return SSH_ERROR;
 }
 
-int ssh_channel_change_pty_size1(ssh_channel channel, int cols, int rows) {
+int channel_change_pty_size1(ssh_channel channel, int cols, int rows) {
   ssh_session session;
 
   if (channel == NULL) {
@@ -170,15 +170,15 @@ int ssh_channel_change_pty_size1(ssh_channel channel, int cols, int rows) {
     ssh_set_error(session,SSH_REQUEST_DENIED,"Wrong request state");
     return SSH_ERROR;
   }
-  if (ssh_buffer_add_u8(session->out_buffer, SSH_CMSG_WINDOW_SIZE) < 0 ||
-      ssh_buffer_add_u32(session->out_buffer, ntohl(rows)) < 0 ||
-      ssh_buffer_add_u32(session->out_buffer, ntohl(cols)) < 0 ||
-      ssh_buffer_add_u32(session->out_buffer, 0) < 0 ||
-      ssh_buffer_add_u32(session->out_buffer, 0) < 0) {
+  if (buffer_add_u8(session->out_buffer, SSH_CMSG_WINDOW_SIZE) < 0 ||
+      buffer_add_u32(session->out_buffer, ntohl(rows)) < 0 ||
+      buffer_add_u32(session->out_buffer, ntohl(cols)) < 0 ||
+      buffer_add_u32(session->out_buffer, 0) < 0 ||
+      buffer_add_u32(session->out_buffer, 0) < 0) {
     return SSH_ERROR;
   }
   channel->request_state=SSH_CHANNEL_REQ_STATE_PENDING;
-  if (ssh_packet_send(session) == SSH_ERROR) {
+  if (packet_send(session) == SSH_ERROR) {
     return SSH_ERROR;
   }
 
@@ -207,7 +207,7 @@ int ssh_channel_change_pty_size1(ssh_channel channel, int cols, int rows) {
 
 }
 
-int ssh_channel_request_shell1(ssh_channel channel) {
+int channel_request_shell1(ssh_channel channel) {
   ssh_session session;
 
   if (channel == NULL) {
@@ -215,11 +215,11 @@ int ssh_channel_request_shell1(ssh_channel channel) {
   }
   session = channel->session;
 
-  if (ssh_buffer_add_u8(session->out_buffer,SSH_CMSG_EXEC_SHELL) < 0) {
+  if (buffer_add_u8(session->out_buffer,SSH_CMSG_EXEC_SHELL) < 0) {
     return -1;
   }
 
-  if (ssh_packet_send(session) == SSH_ERROR) {
+  if (packet_send(session) == SSH_ERROR) {
     return -1;
   }
 
@@ -228,7 +228,7 @@ int ssh_channel_request_shell1(ssh_channel channel) {
   return 0;
 }
 
-int ssh_channel_request_exec1(ssh_channel channel, const char *cmd) {
+int channel_request_exec1(ssh_channel channel, const char *cmd) {
   ssh_session session;
   ssh_string command = NULL;
 
@@ -242,14 +242,14 @@ int ssh_channel_request_exec1(ssh_channel channel, const char *cmd) {
     return -1;
   }
 
-  if (ssh_buffer_add_u8(session->out_buffer, SSH_CMSG_EXEC_CMD) < 0 ||
-      ssh_buffer_add_ssh_string(session->out_buffer, command) < 0) {
+  if (buffer_add_u8(session->out_buffer, SSH_CMSG_EXEC_CMD) < 0 ||
+      buffer_add_ssh_string(session->out_buffer, command) < 0) {
     ssh_string_free(command);
     return -1;
   }
   ssh_string_free(command);
 
-  if(ssh_packet_send(session) == SSH_ERROR) {
+  if(packet_send(session) == SSH_ERROR) {
     return -1;
   }
 
@@ -268,7 +268,7 @@ SSH_PACKET_CALLBACK(ssh_packet_data1){
       return SSH_PACKET_NOT_USED;
     }
 
-    str = ssh_buffer_get_ssh_string(packet);
+    str = buffer_get_ssh_string(packet);
     if (str == NULL) {
       SSH_LOG(SSH_LOG_FUNCTIONS, "Invalid data packet !\n");
       return SSH_PACKET_USED;
@@ -300,7 +300,7 @@ SSH_PACKET_CALLBACK(ssh_packet_close1){
     return SSH_PACKET_NOT_USED;
   }
 
-  ssh_buffer_get_u32(packet, &status);
+  buffer_get_u32(packet, &status);
   /*
    * It's much more than a channel closing. spec says it's the last
    * message sent by server (strange)
@@ -310,11 +310,11 @@ SSH_PACKET_CALLBACK(ssh_packet_close1){
   channel->state = SSH_CHANNEL_STATE_CLOSED;
   channel->remote_eof = 1;
 
-  rc = ssh_buffer_add_u8(session->out_buffer, SSH_CMSG_EXIT_CONFIRMATION);
+  rc = buffer_add_u8(session->out_buffer, SSH_CMSG_EXIT_CONFIRMATION);
   if (rc < 0) {
     return SSH_PACKET_NOT_USED;
   }
-  ssh_packet_send(session);
+  packet_send(session);
 
   return SSH_PACKET_USED;
 }
@@ -329,7 +329,7 @@ SSH_PACKET_CALLBACK(ssh_packet_exist_status1){
     return SSH_PACKET_NOT_USED;
   }
 
-  ssh_buffer_get_u32(packet, &status);
+  buffer_get_u32(packet, &status);
   channel->state = SSH_CHANNEL_STATE_CLOSED;
   channel->remote_eof = 1;
   channel->exit_status = ntohl(status);
@@ -338,7 +338,7 @@ SSH_PACKET_CALLBACK(ssh_packet_exist_status1){
 }
 
 
-int ssh_channel_write1(ssh_channel channel, const void *data, int len) {
+int channel_write1(ssh_channel channel, const void *data, int len) {
   ssh_session session;
   int origlen = len;
   int effectivelen;
@@ -350,13 +350,13 @@ int ssh_channel_write1(ssh_channel channel, const void *data, int len) {
   session = channel->session;
 
   while (len > 0) {
-    if (ssh_buffer_add_u8(session->out_buffer, SSH_CMSG_STDIN_DATA) < 0) {
+    if (buffer_add_u8(session->out_buffer, SSH_CMSG_STDIN_DATA) < 0) {
       return -1;
     }
 
     effectivelen = len > 32000 ? 32000 : len;
 
-    if (ssh_buffer_add_u32(session->out_buffer, htonl(effectivelen)) < 0 ||
+    if (buffer_add_u32(session->out_buffer, htonl(effectivelen)) < 0 ||
         ssh_buffer_add_data(session->out_buffer, ptr, effectivelen) < 0) {
       return -1;
     }
@@ -364,7 +364,7 @@ int ssh_channel_write1(ssh_channel channel, const void *data, int len) {
     ptr += effectivelen;
     len -= effectivelen;
 
-    if (ssh_packet_send(session) == SSH_ERROR) {
+    if (packet_send(session) == SSH_ERROR) {
       return -1;
     }
     ssh_handle_packets(session, SSH_TIMEOUT_NONBLOCKING);

@@ -108,6 +108,12 @@ void http_rpc_main_loop(void)
 	EXLOGW("[prc] main loop end.\n");
 }
 
+void http_rpc_stop(void)
+{
+	g_http_interface.stop();
+}
+
+
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
 
 int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_form_url_encoded)
@@ -147,6 +153,7 @@ int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_f
 
 TsHttpRpc::TsHttpRpc()
 {
+	m_stop = false;
 	mg_mgr_init(&m_mg_mgr, NULL);
 }
 
@@ -212,10 +219,15 @@ bool TsHttpRpc::init(const char* ip, int port)
 
 void TsHttpRpc::run(void)
 {
-	for (;;)
+	while(!m_stop)
 	{
 		mg_mgr_poll(&m_mg_mgr, 500);
 	}
+}
+
+void TsHttpRpc::stop(void)
+{
+	m_stop = true;
 }
 
 void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_data)

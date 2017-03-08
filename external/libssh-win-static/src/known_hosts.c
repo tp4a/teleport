@@ -134,7 +134,7 @@ static char **ssh_get_knownhost_line(FILE **file, const char *filename,
       continue; /* skip empty lines */
     }
 
-    tokens = ssh_space_tokenize(buffer);
+    tokens = space_tokenize(buffer);
     if (tokens == NULL) {
       fclose(*file);
       *file = NULL;
@@ -211,7 +211,7 @@ static int check_public_key(ssh_session session, char **tokens) {
       return -1;
     }
 
-    if (ssh_buffer_add_ssh_string(pubkey_buffer, tmpstring) < 0) {
+    if (buffer_add_ssh_string(pubkey_buffer, tmpstring) < 0) {
       ssh_buffer_free(pubkey_buffer);
       ssh_string_free(tmpstring);
       return -1;
@@ -225,9 +225,9 @@ static int check_public_key(ssh_session session, char **tokens) {
         ssh_buffer_free(pubkey_buffer);
         return -1;
       }
-      /* for some reason, ssh_make_bignum_string does not work
+      /* for some reason, make_bignum_string does not work
          because of the padding which it does --kv */
-      /* tmpstring = ssh_make_bignum_string(tmpbn); */
+      /* tmpstring = make_bignum_string(tmpbn); */
       /* do it manually instead */
       len = bignum_num_bytes(tmpbn);
       tmpstring = malloc(4 + len);
@@ -244,7 +244,7 @@ static int check_public_key(ssh_session session, char **tokens) {
       bignum_bn2bin(tmpbn, ssh_string_data(tmpstring));
 #endif
       bignum_free(tmpbn);
-      if (ssh_buffer_add_ssh_string(pubkey_buffer, tmpstring) < 0) {
+      if (buffer_add_ssh_string(pubkey_buffer, tmpstring) < 0) {
         ssh_buffer_free(pubkey_buffer);
         ssh_string_free(tmpstring);
         bignum_free(tmpbn);
@@ -264,14 +264,14 @@ static int check_public_key(ssh_session session, char **tokens) {
     return -1;
   }
 
-  if (ssh_buffer_get_len(pubkey_buffer) != ssh_string_len(pubkey)) {
+  if (buffer_get_rest_len(pubkey_buffer) != ssh_string_len(pubkey)) {
     ssh_buffer_free(pubkey_buffer);
     return 0;
   }
 
   /* now test that they are identical */
-  if (memcmp(ssh_buffer_get(pubkey_buffer), ssh_string_data(pubkey),
-        ssh_buffer_get_len(pubkey_buffer)) != 0) {
+  if (memcmp(buffer_get_rest(pubkey_buffer), ssh_string_data(pubkey),
+        buffer_get_rest_len(pubkey_buffer)) != 0) {
     ssh_buffer_free(pubkey_buffer);
     return 0;
   }
@@ -340,7 +340,7 @@ static int match_hashed_host(const char *host, const char *sourcehash)
     return 0;
   }
 
-  mac = hmac_init(ssh_buffer_get(salt), ssh_buffer_get_len(salt), SSH_HMAC_SHA1);
+  mac = hmac_init(buffer_get_rest(salt), buffer_get_rest_len(salt), SSH_HMAC_SHA1);
   if (mac == NULL) {
     ssh_buffer_free(salt);
     ssh_buffer_free(hash);
@@ -351,8 +351,8 @@ static int match_hashed_host(const char *host, const char *sourcehash)
   hmac_update(mac, host, strlen(host));
   hmac_final(mac, buffer, &size);
 
-  if (size == ssh_buffer_get_len(hash) &&
-      memcmp(buffer, ssh_buffer_get(hash), size) == 0) {
+  if (size == buffer_get_rest_len(hash) &&
+      memcmp(buffer, buffer_get_rest(hash), size) == 0) {
     match = 1;
   } else {
     match = 0;

@@ -172,7 +172,7 @@ static char **tokenize(const char *chain){
 
 /* same as tokenize(), but with spaces instead of ',' */
 /* TODO FIXME rewrite me! */
-char **ssh_space_tokenize(const char *chain){
+char **space_tokenize(const char *chain){
     char **tokens;
     int n=1;
     int i=0;
@@ -346,25 +346,25 @@ SSH_PACKET_CALLBACK(ssh_packet_kexinit){
     }
 
     if (server_kex) {
-        rc = ssh_buffer_get_data(packet,session->next_crypto->client_kex.cookie, 16);
+        rc = buffer_get_data(packet,session->next_crypto->client_kex.cookie, 16);
         if (rc != 16) {
             ssh_set_error(session, SSH_FATAL, "ssh_packet_kexinit: no cookie in packet");
             goto error;
         }
 
-        rc = ssh_hashbufin_add_cookie(session, session->next_crypto->client_kex.cookie);
+        rc = hashbufin_add_cookie(session, session->next_crypto->client_kex.cookie);
         if (rc < 0) {
             ssh_set_error(session, SSH_FATAL, "ssh_packet_kexinit: adding cookie failed");
             goto error;
         }
     } else {
-        rc = ssh_buffer_get_data(packet,session->next_crypto->server_kex.cookie, 16);
+        rc = buffer_get_data(packet,session->next_crypto->server_kex.cookie, 16);
         if (rc != 16) {
             ssh_set_error(session, SSH_FATAL, "ssh_packet_kexinit: no cookie in packet");
             goto error;
         }
 
-        rc = ssh_hashbufin_add_cookie(session, session->next_crypto->server_kex.cookie);
+        rc = hashbufin_add_cookie(session, session->next_crypto->server_kex.cookie);
         if (rc < 0) {
             ssh_set_error(session, SSH_FATAL, "ssh_packet_kexinit: adding cookie failed");
             goto error;
@@ -372,12 +372,12 @@ SSH_PACKET_CALLBACK(ssh_packet_kexinit){
     }
 
     for (i = 0; i < KEX_METHODS_SIZE; i++) {
-        str = ssh_buffer_get_ssh_string(packet);
+        str = buffer_get_ssh_string(packet);
         if (str == NULL) {
           goto error;
         }
 
-        rc = ssh_buffer_add_ssh_string(session->in_hashbuf, str);
+        rc = buffer_add_ssh_string(session->in_hashbuf, str);
         if (rc < 0) {
             ssh_set_error(session, SSH_FATAL, "Error adding string in hash buffer");
             goto error;
@@ -414,17 +414,17 @@ SSH_PACKET_CALLBACK(ssh_packet_kexinit){
      * 'make_sessionid').
      */
     if (server_kex) {
-        rc = ssh_buffer_get_u8(packet, &first_kex_packet_follows);
+        rc = buffer_get_u8(packet, &first_kex_packet_follows);
         if (rc != 1) {
             goto error;
         }
 
-        rc = ssh_buffer_add_u8(session->in_hashbuf, first_kex_packet_follows);
+        rc = buffer_add_u8(session->in_hashbuf, first_kex_packet_follows);
         if (rc < 0) {
             goto error;
         }
 
-        rc = ssh_buffer_add_u32(session->in_hashbuf, kexinit_reserved);
+        rc = buffer_add_u32(session->in_hashbuf, kexinit_reserved);
         if (rc < 0) {
             goto error;
         }
@@ -512,7 +512,7 @@ static char *ssh_client_select_hostkeys(ssh_session session){
 	for (i=0;preferred_hostkeys[i] != NULL; ++i){
 		for (j=0; methods[j] != NULL; ++j){
 			if(strcmp(preferred_hostkeys[i], methods[j]) == 0){
-				if (ssh_verify_existing_algo(SSH_HOSTKEYS, methods[j])){
+				if (verify_existing_algo(SSH_HOSTKEYS, methods[j])){
 					if(needcoma)
 						strncat(methods_buffer,",",sizeof(methods_buffer)-strlen(methods_buffer)-1);
 					strncat(methods_buffer, methods[j], sizeof(methods_buffer)-strlen(methods_buffer)-1);
@@ -539,7 +539,7 @@ static char *ssh_client_select_hostkeys(ssh_session session){
  * @brief sets the key exchange parameters to be sent to the server,
  *        in function of the options and available methods.
  */
-int ssh_set_client_kex(ssh_session session){
+int set_client_kex(ssh_session session){
     struct ssh_kex_struct *client= &session->next_crypto->client_kex;
     const char *wanted;
     int i;
@@ -612,7 +612,7 @@ int ssh_send_kex(ssh_session session, int server_kex) {
                        kex->cookie); /* cookie */
   if (rc != SSH_OK)
     goto error;
-  if (ssh_hashbufout_add_cookie(session) < 0) {
+  if (hashbufout_add_cookie(session) < 0) {
     goto error;
   }
 
@@ -624,10 +624,10 @@ int ssh_send_kex(ssh_session session, int server_kex) {
       goto error;
     }
 
-    if (ssh_buffer_add_ssh_string(session->out_hashbuf, str) < 0) {
+    if (buffer_add_ssh_string(session->out_hashbuf, str) < 0) {
       goto error;
     }
-    if (ssh_buffer_add_ssh_string(session->out_buffer, str) < 0) {
+    if (buffer_add_ssh_string(session->out_buffer, str) < 0) {
       goto error;
     }
     ssh_string_free(str);
@@ -642,7 +642,7 @@ int ssh_send_kex(ssh_session session, int server_kex) {
     goto error;
   }
 
-  if (ssh_packet_send(session) == SSH_ERROR) {
+  if (packet_send(session) == SSH_ERROR) {
     return -1;
   }
 
@@ -656,7 +656,7 @@ error:
 }
 
 /* returns 1 if at least one of the name algos is in the default algorithms table */
-int ssh_verify_existing_algo(int algo, const char *name){
+int verify_existing_algo(int algo, const char *name){
     char *ptr;
     if(algo>9 || algo <0)
         return -1;

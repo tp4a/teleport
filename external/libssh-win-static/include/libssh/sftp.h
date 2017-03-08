@@ -54,9 +54,7 @@ extern "C" {
 #endif /* gid_t */
 #ifdef _MSC_VER
 #ifndef ssize_t
-# ifndef _SSIZE_T_
-    typedef _W64 SSIZE_T ssize_t;
-# endif
+  typedef _W64 SSIZE_T ssize_t;
 #endif /* ssize_t */
 #endif /* _MSC_VER */
 #endif /* _WIN32 */
@@ -963,16 +961,6 @@ void sftp_handle_remove(sftp_session sftp, void *handle);
 #define SSH_FXF_TRUNC 0x10
 #define SSH_FXF_EXCL 0x20
 #define SSH_FXF_TEXT 0x40
-
-/* file type flags */
-#define SSH_S_IFMT   00170000
-#define SSH_S_IFSOCK 0140000
-#define SSH_S_IFLNK  0120000
-#define SSH_S_IFREG  0100000
-#define SSH_S_IFBLK  0060000
-#define SSH_S_IFDIR  0040000
-#define SSH_S_IFCHR  0020000
-#define SSH_S_IFIFO  0010000
 
 /* rename flags */
 #define SSH_FXF_RENAME_OVERWRITE  0x00000001

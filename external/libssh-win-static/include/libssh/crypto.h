@@ -59,20 +59,6 @@ enum ssh_key_exchange_e {
   SSH_KEX_CURVE25519_SHA256_LIBSSH_ORG
 };
 
-enum ssh_cipher_e {
-    SSH_NO_CIPHER=0,
-    SSH_BLOWFISH_CBC,
-    SSH_3DES_CBC,
-    SSH_3DES_CBC_SSH1,
-    SSH_DES_CBC_SSH1,
-    SSH_AES128_CBC,
-    SSH_AES192_CBC,
-    SSH_AES256_CBC,
-    SSH_AES128_CTR,
-    SSH_AES192_CTR,
-    SSH_AES256_CTR
-};
-
 struct ssh_crypto_struct {
     bignum e,f,x,k,y;
 #ifdef HAVE_ECDH
@@ -118,15 +104,12 @@ struct ssh_crypto_struct {
 struct ssh_cipher_struct {
     const char *name; /* ssh name of the algorithm */
     unsigned int blocksize; /* blocksize of the algo */
-    enum ssh_cipher_e ciphertype;
+    unsigned int keylen; /* length of the key structure */
 #ifdef HAVE_LIBGCRYPT
-    size_t keylen; /* length of the key structure */
     gcry_cipher_hd_t *key;
 #elif defined HAVE_LIBCRYPTO
-    struct ssh_3des_key_schedule *des3_key;
-    struct ssh_aes_key_schedule *aes_key;
-    const EVP_CIPHER *cipher;
-    EVP_CIPHER_CTX ctx;
+    void *key; /* a key buffer allocated for the algo */
+    void *IV;
 #endif
     unsigned int keysize; /* bytes of key used. != keylen */
     /* sets the new key for immediate use */
@@ -136,7 +119,6 @@ struct ssh_cipher_struct {
         unsigned long len);
     void (*decrypt)(struct ssh_cipher_struct *cipher, void *in, void *out,
         unsigned long len);
-    void (*cleanup)(struct ssh_cipher_struct *cipher);
 };
 
 /* vim: set ts=2 sw=2 et cindent: */

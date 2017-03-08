@@ -92,7 +92,7 @@ ssh_session ssh_new(void) {
   session->maxchannel = FIRST_CHANNEL;
 
 #ifndef _WIN32
-    session->agent = ssh_agent_new(session);
+    session->agent = agent_new(session);
     if (session->agent == NULL) {
       goto err;
     }
@@ -231,7 +231,7 @@ void ssh_free(ssh_session session) {
   crypto_free(session->next_crypto);
 
 #ifndef _WIN32
-  ssh_agent_free(session->agent);
+  agent_free(session->agent);
 #endif /* _WIN32 */
 
   ssh_key_free(session->srv.dsa_key);
@@ -272,8 +272,8 @@ void ssh_free(ssh_session session) {
 
 #ifndef _WIN32
   ssh_agent_state_free (session->agent_state);
+#endif
   session->agent_state = NULL;
-#endif /* _WIN32 */
 
   SAFE_FREE(session->auth_auto_state);
   SAFE_FREE(session->serverbanner);
@@ -842,7 +842,7 @@ int ssh_send_ignore (ssh_session session, const char *data) {
             ssh_set_error_oom(session);
             goto error;
         }
-        ssh_packet_send(session);
+        packet_send(session);
         ssh_handle_packets(session, 0);
     }
 
@@ -878,7 +878,7 @@ int ssh_send_debug (ssh_session session, const char *message, int always_display
             ssh_set_error_oom(session);
             goto error;
         }
-        ssh_packet_send(session);
+        packet_send(session);
         ssh_handle_packets(session, 0);
     }
 

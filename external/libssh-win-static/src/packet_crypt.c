@@ -44,11 +44,11 @@
 #include "libssh/crypto.h"
 #include "libssh/buffer.h"
 
-uint32_t ssh_packet_decrypt_len(ssh_session session, char *crypted){
+uint32_t packet_decrypt_len(ssh_session session, char *crypted){
   uint32_t decrypted;
 
   if (session->current_crypto) {
-    if (ssh_packet_decrypt(session, crypted,
+    if (packet_decrypt(session, crypted,
           session->current_crypto->in_cipher->blocksize) < 0) {
       return 0;
     }
@@ -57,7 +57,7 @@ uint32_t ssh_packet_decrypt_len(ssh_session session, char *crypted){
   return ntohl(decrypted);
 }
 
-int ssh_packet_decrypt(ssh_session session, void *data,uint32_t len) {
+int packet_decrypt(ssh_session session, void *data,uint32_t len) {
   struct ssh_cipher_struct *crypto = session->current_crypto->in_cipher;
   char *out = NULL;
 
@@ -72,6 +72,11 @@ int ssh_packet_decrypt(ssh_session session, void *data,uint32_t len) {
     return -1;
   }
 
+  if (crypto->set_decrypt_key(crypto, session->current_crypto->decryptkey,
+        session->current_crypto->decryptIV) < 0) {
+    SAFE_FREE(out);
+    return -1;
+  }
   crypto->decrypt(crypto,data,out,len);
 
   memcpy(data,out,len);
@@ -80,7 +85,7 @@ int ssh_packet_decrypt(ssh_session session, void *data,uint32_t len) {
   return 0;
 }
 
-unsigned char *ssh_packet_encrypt(ssh_session session, void *data, uint32_t len) {
+unsigned char *packet_encrypt(ssh_session session, void *data, uint32_t len) {
   struct ssh_cipher_struct *crypto = NULL;
   HMACCTX ctx = NULL;
   char *out = NULL;
@@ -105,6 +110,12 @@ unsigned char *ssh_packet_encrypt(ssh_session session, void *data, uint32_t len)
   type = session->current_crypto->out_hmac;
   seq = ntohl(session->send_seq);
   crypto = session->current_crypto->out_cipher;
+
+  if (crypto->set_encrypt_key(crypto, session->current_crypto->encryptkey,
+      session->current_crypto->encryptIV) < 0) {
+    SAFE_FREE(out);
+    return NULL;
+  }
 
   if (session->version == 2) {
     ctx = hmac_init(session->current_crypto->encryptMAC, hmac_digest_len(type), type);
@@ -149,7 +160,7 @@ unsigned char *ssh_packet_encrypt(ssh_session session, void *data, uint32_t len)
  * @return              0 if hmac and mac are equal, < 0 if not or an error
  *                      occurred.
  */
-int ssh_packet_hmac_verify(ssh_session session, ssh_buffer buffer,
+int packet_hmac_verify(ssh_session session, ssh_buffer buffer,
     unsigned char *mac, enum ssh_hmac_e type) {
   unsigned char hmacbuf[DIGEST_MAX_LEN] = {0};
   HMACCTX ctx;
@@ -164,7 +175,7 @@ int ssh_packet_hmac_verify(ssh_session session, ssh_buffer buffer,
   seq = htonl(session->recv_seq);
 
   hmac_update(ctx, (unsigned char *) &seq, sizeof(uint32_t));
-  hmac_update(ctx, ssh_buffer_get(buffer), ssh_buffer_get_len(buffer));
+  hmac_update(ctx, buffer_get_rest(buffer), buffer_get_rest_len(buffer));
   hmac_final(ctx, hmacbuf, &len);
 
 #ifdef DEBUG_CRYPTO

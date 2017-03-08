@@ -104,18 +104,18 @@ static int send_username(ssh_session session, const char *username) {
     return SSH_AUTH_ERROR;
   }
 
-  if (ssh_buffer_add_u8(session->out_buffer, SSH_CMSG_USER) < 0) {
+  if (buffer_add_u8(session->out_buffer, SSH_CMSG_USER) < 0) {
     ssh_string_free(user);
     return SSH_AUTH_ERROR;
   }
-  if (ssh_buffer_add_ssh_string(session->out_buffer, user) < 0) {
+  if (buffer_add_ssh_string(session->out_buffer, user) < 0) {
     ssh_string_free(user);
     return SSH_AUTH_ERROR;
   }
   ssh_string_free(user);
   session->auth_state=SSH_AUTH_STATE_NONE;
   session->auth_service_state = SSH_AUTH_SERVICE_SENT;
-  if (ssh_packet_send(session) == SSH_ERROR) {
+  if (packet_send(session) == SSH_ERROR) {
     return SSH_AUTH_ERROR;
   }
   return SSH_AUTH_AGAIN;
@@ -201,13 +201,13 @@ int ssh_userauth1_password(ssh_session session, const char *username,
     ssh_string_fill(pwd, buf, sizeof(buf));
   }
 
-  if (ssh_buffer_add_u8(session->out_buffer, SSH_CMSG_AUTH_PASSWORD) < 0) {
+  if (buffer_add_u8(session->out_buffer, SSH_CMSG_AUTH_PASSWORD) < 0) {
     ssh_string_burn(pwd);
     ssh_string_free(pwd);
 
     return SSH_AUTH_ERROR;
   }
-  if (ssh_buffer_add_ssh_string(session->out_buffer, pwd) < 0) {
+  if (buffer_add_ssh_string(session->out_buffer, pwd) < 0) {
     ssh_string_burn(pwd);
     ssh_string_free(pwd);
 
@@ -218,7 +218,7 @@ int ssh_userauth1_password(ssh_session session, const char *username,
   ssh_string_free(pwd);
   session->auth_state=SSH_AUTH_STATE_NONE;
   session->pending_call_state = SSH_PENDING_CALL_AUTH_PASSWORD;
-  if (ssh_packet_send(session) == SSH_ERROR) {
+  if (packet_send(session) == SSH_ERROR) {
     return SSH_AUTH_ERROR;
   }
 pending:

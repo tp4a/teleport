@@ -25,7 +25,7 @@
 #include "libssh/bignum.h"
 #include "libssh/string.h"
 
-ssh_string ssh_make_bignum_string(bignum num) {
+ssh_string make_bignum_string(bignum num) {
   ssh_string ptr = NULL;
   int pad = 0;
   unsigned int len = bignum_num_bytes(num);
@@ -63,7 +63,7 @@ ssh_string ssh_make_bignum_string(bignum num) {
   return ptr;
 }
 
-bignum ssh_make_string_bn(ssh_string string){
+bignum make_string_bn(ssh_string string){
   bignum bn = NULL;
   unsigned int len = ssh_string_len(string);
 
@@ -81,7 +81,7 @@ bignum ssh_make_string_bn(ssh_string string){
   return bn;
 }
 
-void ssh_make_string_bn_inplace(ssh_string string, bignum bnout) {
+void make_string_bn_inplace(ssh_string string, bignum bnout) {
   unsigned int len = ssh_string_len(string);
 #ifdef HAVE_LIBGCRYPT
   /* XXX: FIXME as needed for LIBGCRYPT ECDSA codepaths. */

@@ -145,7 +145,7 @@ void buffer_free(ssh_buffer buffer){
   ssh_buffer_free(buffer);
 }
 void *buffer_get(ssh_buffer buffer){
-  return ssh_buffer_get(buffer);
+  return ssh_buffer_get_begin(buffer);
 }
 uint32_t buffer_get_len(ssh_buffer buffer){
   return ssh_buffer_get_len(buffer);

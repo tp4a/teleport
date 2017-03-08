@@ -128,6 +128,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 		DispatchMessage(&msg);
 	}
 	
+	http_rpc_stop();
+	WaitForSingleObject(hThread, INFINITE);
+
 	CloseHandle(g_SingleInstanceMutexHandle);
 
 	LocalFree(g_argv);

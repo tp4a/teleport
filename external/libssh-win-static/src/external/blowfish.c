@@ -70,7 +70,7 @@
 #define BLFRND(s,p,i,j,n) (i ^= F(s,j) ^ (p)[n])
 
 void
-Blowfish_encipher(ssh_blf_ctx *c, uint32_t *xl, uint32_t *xr)
+Blowfish_encipher(blf_ctx *c, uint32_t *xl, uint32_t *xr)
 {
 	uint32_t Xl;
 	uint32_t Xr;
@@ -95,7 +95,7 @@ Blowfish_encipher(ssh_blf_ctx *c, uint32_t *xl, uint32_t *xr)
 }
 
 void
-Blowfish_decipher(ssh_blf_ctx *c, uint32_t *xl, uint32_t *xr)
+Blowfish_decipher(blf_ctx *c, uint32_t *xl, uint32_t *xr)
 {
 	uint32_t Xl;
 	uint32_t Xr;
@@ -120,11 +120,11 @@ Blowfish_decipher(ssh_blf_ctx *c, uint32_t *xl, uint32_t *xr)
 }
 
 void
-Blowfish_initstate(ssh_blf_ctx *c)
+Blowfish_initstate(blf_ctx *c)
 {
 	/* P-box and S-box tables initialized with digits of Pi */
 
-	static const ssh_blf_ctx initstate =
+	static const blf_ctx initstate =
 	{ {
 		{
 			0xd1310ba6, 0x98dfb5ac, 0x2ffd72db, 0xd01adfb7,
@@ -420,7 +420,7 @@ Blowfish_stream2word(const uint8_t *data, uint16_t databytes,
 }
 
 void
-Blowfish_expand0state(ssh_blf_ctx *c, const uint8_t *key, uint16_t keybytes)
+Blowfish_expand0state(blf_ctx *c, const uint8_t *key, uint16_t keybytes)
 {
 	uint16_t i;
 	uint16_t j;
@@ -458,7 +458,7 @@ Blowfish_expand0state(ssh_blf_ctx *c, const uint8_t *key, uint16_t keybytes)
 
 
 void
-Blowfish_expandstate(ssh_blf_ctx *c, const uint8_t *data, uint16_t databytes,
+Blowfish_expandstate(blf_ctx *c, const uint8_t *data, uint16_t databytes,
     const uint8_t *key, uint16_t keybytes)
 {
 	uint16_t i;
@@ -501,7 +501,7 @@ Blowfish_expandstate(ssh_blf_ctx *c, const uint8_t *data, uint16_t databytes,
 }
 
 void
-ssh_blf_key(ssh_blf_ctx *c, const uint8_t *k, uint16_t len)
+blf_key(blf_ctx *c, const uint8_t *k, uint16_t len)
 {
 	/* Initialize S-boxes and subkeys with Pi */
 	Blowfish_initstate(c);
@@ -511,7 +511,7 @@ ssh_blf_key(ssh_blf_ctx *c, const uint8_t *k, uint16_t len)
 }
 
 void
-ssh_blf_enc(ssh_blf_ctx *c, uint32_t *data, uint16_t blocks)
+blf_enc(blf_ctx *c, uint32_t *data, uint16_t blocks)
 {
 	uint32_t *d;
 	uint16_t i;
@@ -524,7 +524,7 @@ ssh_blf_enc(ssh_blf_ctx *c, uint32_t *data, uint16_t blocks)
 }
 
 void
-ssh_blf_dec(ssh_blf_ctx *c, uint32_t *data, uint16_t blocks)
+blf_dec(blf_ctx *c, uint32_t *data, uint16_t blocks)
 {
 	uint32_t *d;
 	uint16_t i;
@@ -537,7 +537,7 @@ ssh_blf_dec(ssh_blf_ctx *c, uint32_t *data, uint16_t blocks)
 }
 
 void
-ssh_blf_ecb_encrypt(ssh_blf_ctx *c, uint8_t *data, uint32_t len)
+blf_ecb_encrypt(blf_ctx *c, uint8_t *data, uint32_t len)
 {
 	uint32_t l, r;
 	uint32_t i;
@@ -559,7 +559,7 @@ ssh_blf_ecb_encrypt(ssh_blf_ctx *c, uint8_t *data, uint32_t len)
 }
 
 void
-ssh_blf_ecb_decrypt(ssh_blf_ctx *c, uint8_t *data, uint32_t len)
+blf_ecb_decrypt(blf_ctx *c, uint8_t *data, uint32_t len)
 {
 	uint32_t l, r;
 	uint32_t i;
@@ -581,7 +581,7 @@ ssh_blf_ecb_decrypt(ssh_blf_ctx *c, uint8_t *data, uint32_t len)
 }
 
 void
-ssh_blf_cbc_encrypt(ssh_blf_ctx *c, uint8_t *iv, uint8_t *data, uint32_t len)
+blf_cbc_encrypt(blf_ctx *c, uint8_t *iv, uint8_t *data, uint32_t len)
 {
 	uint32_t l, r;
 	uint32_t i, j;
@@ -606,7 +606,7 @@ ssh_blf_cbc_encrypt(ssh_blf_ctx *c, uint8_t *iv, uint8_t *data, uint32_t len)
 }
 
 void
-ssh_blf_cbc_decrypt(ssh_blf_ctx *c, uint8_t *iva, uint8_t *data, uint32_t len)
+blf_cbc_decrypt(blf_ctx *c, uint8_t *iva, uint8_t *data, uint32_t len)
 {
 	uint32_t l, r;
 	uint8_t *iv;
@@ -659,7 +659,7 @@ void
 main(void)
 {
 
-	ssh_blf_ctx c;
+	blf_ctx c;
 	char    key[] = "AAAAA";
 	char    key2[] = "abcdefghijklmnopqrstuvwxyz";
 
@@ -673,19 +673,19 @@ main(void)
 	for (i = 0; i < 10; i++)
 		data[i] = i;
 
-	ssh_blf_key(&c, (uint8_t *) key, 5);
-	ssh_blf_enc(&c, data, 5);
-	ssh_blf_dec(&c, data, 1);
-	ssh_blf_dec(&c, data + 2, 4);
+	blf_key(&c, (uint8_t *) key, 5);
+	blf_enc(&c, data, 5);
+	blf_dec(&c, data, 1);
+	blf_dec(&c, data + 2, 4);
 	printf("Should read as 0 - 9.\n");
 	report(data, 10);
 
 	/* Second test */
-	ssh_blf_key(&c, (uint8_t *) key2, strlen(key2));
-	ssh_blf_enc(&c, data2, 1);
+	blf_key(&c, (uint8_t *) key2, strlen(key2));
+	blf_enc(&c, data2, 1);
 	printf("\nShould read as: 0x324ed0fe 0xf413a203.\n");
 	report(data2, 2);
-	ssh_blf_dec(&c, data2, 1);
+	blf_dec(&c, data2, 1);
 	report(data2, 2);
 }
 #endif

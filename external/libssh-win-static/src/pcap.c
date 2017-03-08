@@ -144,8 +144,8 @@ static int ssh_pcap_file_write(ssh_pcap_file pcap, ssh_buffer packet){
 	uint32_t len;
 	if(pcap == NULL || pcap->output==NULL)
 		return SSH_ERROR;
-	len=ssh_buffer_get_len(packet);
-	err=fwrite(ssh_buffer_get(packet),len,1,pcap->output);
+	len=buffer_get_rest_len(packet);
+	err=fwrite(buffer_get_rest(packet),len,1,pcap->output);
 	if(err<0)
 		return SSH_ERROR;
 	else
@@ -163,23 +163,23 @@ int ssh_pcap_file_write_packet(ssh_pcap_file pcap, ssh_buffer packet, uint32_t o
 	if(header == NULL)
 		return SSH_ERROR;
 	gettimeofday(&now,NULL);
-    err = ssh_buffer_add_u32(header,htonl(now.tv_sec));
+    err = buffer_add_u32(header,htonl(now.tv_sec));
     if (err < 0) {
         goto error;
     }
-    err = ssh_buffer_add_u32(header,htonl(now.tv_usec));
+    err = buffer_add_u32(header,htonl(now.tv_usec));
     if (err < 0) {
         goto error;
     }
-    err = ssh_buffer_add_u32(header,htonl(ssh_buffer_get_len(packet)));
+    err = buffer_add_u32(header,htonl(buffer_get_rest_len(packet)));
     if (err < 0) {
         goto error;
     }
-    err = ssh_buffer_add_u32(header,htonl(original_len));
+    err = buffer_add_u32(header,htonl(original_len));
     if (err < 0) {
         goto error;
     }
-    err = ssh_buffer_add_buffer(header,packet);
+    err = buffer_add_buffer(header,packet);
     if (err < 0) {
         goto error;
     }
@@ -207,35 +207,35 @@ int ssh_pcap_file_open(ssh_pcap_file pcap, const char *filename){
 	header=ssh_buffer_new();
 	if(header==NULL)
 		return SSH_ERROR;
-    err = ssh_buffer_add_u32(header,htonl(PCAP_MAGIC));
+    err = buffer_add_u32(header,htonl(PCAP_MAGIC));
     if (err < 0) {
         goto error;
     }
-    err = ssh_buffer_add_u16(header,htons(PCAP_VERSION_MAJOR));
+    err = buffer_add_u16(header,htons(PCAP_VERSION_MAJOR));
     if (err < 0) {
         goto error;
     }
-    err = ssh_buffer_add_u16(header,htons(PCAP_VERSION_MINOR));
+    err = buffer_add_u16(header,htons(PCAP_VERSION_MINOR));
     if (err < 0) {
         goto error;
     }
 	/* currently hardcode GMT to 0 */
-    err = ssh_buffer_add_u32(header,htonl(0));
+    err = buffer_add_u32(header,htonl(0));
     if (err < 0) {
         goto error;
     }
 	/* accuracy */
-    err = ssh_buffer_add_u32(header,htonl(0));
+    err = buffer_add_u32(header,htonl(0));
     if (err < 0) {
         goto error;
     }
 	/* size of the biggest packet */
-    err = ssh_buffer_add_u32(header,htonl(MAX_PACKET_LEN));
+    err = buffer_add_u32(header,htonl(MAX_PACKET_LEN));
     if (err < 0) {
         goto error;
     }
 	/* we will write sort-of IP */
-    err = ssh_buffer_add_u32(header,htonl(DLT_RAW));
+    err = buffer_add_u32(header,htonl(DLT_RAW));
     if (err < 0) {
         goto error;
     }
@@ -371,40 +371,40 @@ int ssh_pcap_context_write(ssh_pcap_context ctx,enum ssh_pcap_direction directio
 	    goto error;
 	}
 	if(direction==SSH_PCAP_DIR_OUT){
-        rc = ssh_buffer_add_u32(ip,ctx->ipsource);
+        rc = buffer_add_u32(ip,ctx->ipsource);
         if (rc < 0) {
             goto error;
         }
-        rc = ssh_buffer_add_u32(ip,ctx->ipdest);
+        rc = buffer_add_u32(ip,ctx->ipdest);
         if (rc < 0) {
             goto error;
         }
 	} else {
-        rc = ssh_buffer_add_u32(ip,ctx->ipdest);
+        rc = buffer_add_u32(ip,ctx->ipdest);
         if (rc < 0) {
             goto error;
         }
-        rc = ssh_buffer_add_u32(ip,ctx->ipsource);
+        rc = buffer_add_u32(ip,ctx->ipsource);
         if (rc < 0) {
             goto error;
         }
 	}
 	/* TCP */
 	if(direction==SSH_PCAP_DIR_OUT){
-	    rc = ssh_buffer_add_u16(ip,ctx->portsource);
+	    rc = buffer_add_u16(ip,ctx->portsource);
         if (rc < 0) {
             goto error;
         }
-	    rc = ssh_buffer_add_u16(ip,ctx->portdest);
+	    rc = buffer_add_u16(ip,ctx->portdest);
         if (rc < 0) {
             goto error;
         }
 	} else {
-	    rc = ssh_buffer_add_u16(ip,ctx->portdest);
+	    rc = buffer_add_u16(ip,ctx->portdest);
         if (rc < 0) {
             goto error;
         }
-	    rc = ssh_buffer_add_u16(ip,ctx->portsource);
+	    rc = buffer_add_u16(ip,ctx->portsource);
         if (rc < 0) {
             goto error;
         }

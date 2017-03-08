@@ -48,6 +48,10 @@
 #define HAS_AES
 #include <openssl/aes.h>
 #endif
+#ifdef HAVE_OPENSSL_BLOWFISH_H
+#define HAS_BLOWFISH
+#include <openssl/blowfish.h>
+#endif
 #ifdef HAVE_OPENSSL_DES_H
 #define HAS_DES
 #include <openssl/des.h>
@@ -69,6 +73,15 @@ struct ssh_mac_ctx_struct {
   } ctx;
 };
 
+static int alloc_key(struct ssh_cipher_struct *cipher) {
+    cipher->key = malloc(cipher->keylen);
+    if (cipher->key == NULL) {
+      return -1;
+    }
+
+    return 0;
+}
+
 void ssh_reseed(void){
 #ifndef _WIN32
     struct timeval tv;
@@ -77,42 +90,27 @@ void ssh_reseed(void){
 #endif
 }
 
-SHACTX sha1_init(void)
-{
-    int rc;
-    SHACTX c = EVP_MD_CTX_create();
-    if (c == NULL) {
-        return NULL;
-    }
-    EVP_MD_CTX_init(c);
-    rc = EVP_DigestInit_ex(c, EVP_sha1(), NULL);
-    if (rc == 0) {
-        EVP_MD_CTX_destroy(c);
-        c = NULL;
-    }
-    return c;
+SHACTX sha1_init(void) {
+  SHACTX c = malloc(sizeof(*c));
+  if (c == NULL) {
+    return NULL;
+  }
+  SHA1_Init(c);
+
+  return c;
 }
 
-void sha1_update(SHACTX c, const void *data, unsigned long len)
-{
-    EVP_DigestUpdate(c, data, len);
+void sha1_update(SHACTX c, const void *data, unsigned long len) {
+  SHA1_Update(c,data,len);
 }
 
-void sha1_final(unsigned char *md, SHACTX c)
-{
-    unsigned int mdlen = 0;
-
-    EVP_DigestFinal(c, md, &mdlen);
-    EVP_MD_CTX_destroy(c);
+void sha1_final(unsigned char *md, SHACTX c) {
+  SHA1_Final(md, c);
+  SAFE_FREE(c);
 }
 
-void sha1(unsigned char *digest, int len, unsigned char *hash)
-{
-    SHACTX c = sha1_init();
-    if (c != NULL) {
-        sha1_update(c, digest, len);
-        sha1_final(hash, c);
-    }
+void sha1(unsigned char *digest, int len, unsigned char *hash) {
+  SHA1(digest, len, hash);
 }
 
 #ifdef HAVE_OPENSSL_ECC
@@ -167,147 +165,93 @@ void evp_final(EVPCTX ctx, unsigned char *md, unsigned int *mdlen)
 }
 #endif
 
-SHA256CTX sha256_init(void)
-{
-    int rc;
-    SHA256CTX c = EVP_MD_CTX_create();
-    if (c == NULL) {
-        return NULL;
-    }
-    EVP_MD_CTX_init(c);
-    rc = EVP_DigestInit_ex(c, EVP_sha256(), NULL);
-    if (rc == 0) {
-        EVP_MD_CTX_destroy(c);
-        c = NULL;
-    }
-    return c;
+SHA256CTX sha256_init(void){
+  SHA256CTX c = malloc(sizeof(*c));
+  if (c == NULL) {
+    return NULL;
+  }
+  SHA256_Init(c);
+
+  return c;
 }
 
-void sha256_update(SHA256CTX c, const void *data, unsigned long len)
-{
-    EVP_DigestUpdate(c, data, len);
+void sha256_update(SHA256CTX c, const void *data, unsigned long len){
+  SHA256_Update(c,data,len);
 }
 
-void sha256_final(unsigned char *md, SHA256CTX c)
-{
-    unsigned int mdlen = 0;
-
-    EVP_DigestFinal(c, md, &mdlen);
-    EVP_MD_CTX_destroy(c);
+void sha256_final(unsigned char *md, SHA256CTX c) {
+  SHA256_Final(md, c);
+  SAFE_FREE(c);
 }
 
-void sha256(unsigned char *digest, int len, unsigned char *hash)
-{
-    SHA256CTX c = sha256_init();
-    if (c != NULL) {
-        sha256_update(c, digest, len);
-        sha256_final(hash, c);
-    }
+void sha256(unsigned char *digest, int len, unsigned char *hash) {
+  SHA256(digest, len, hash);
 }
 
-SHA384CTX sha384_init(void)
-{
-    int rc;
-    SHA384CTX c = EVP_MD_CTX_create();
-    if (c == NULL) {
-        return NULL;
-    }
-    EVP_MD_CTX_init(c);
-    rc = EVP_DigestInit_ex(c, EVP_sha384(), NULL);
-    if (rc == 0) {
-        EVP_MD_CTX_destroy(c);
-        c = NULL;
-    }
-    return c;
+SHA384CTX sha384_init(void){
+  SHA384CTX c = malloc(sizeof(*c));
+  if (c == NULL) {
+    return NULL;
+  }
+  SHA384_Init(c);
+
+  return c;
 }
 
-void sha384_update(SHA384CTX c, const void *data, unsigned long len)
-{
-    EVP_DigestUpdate(c, data, len);
+void sha384_update(SHA384CTX c, const void *data, unsigned long len){
+  SHA384_Update(c,data,len);
 }
 
-void sha384_final(unsigned char *md, SHA384CTX c)
-{
-    unsigned int mdlen = 0;
-
-    EVP_DigestFinal(c, md, &mdlen);
-    EVP_MD_CTX_destroy(c);
+void sha384_final(unsigned char *md, SHA384CTX c) {
+  SHA384_Final(md, c);
+  SAFE_FREE(c);
 }
 
-void sha384(unsigned char *digest, int len, unsigned char *hash)
-{
-    SHA384CTX c = sha384_init();
-    if (c != NULL) {
-        sha384_update(c, digest, len);
-        sha384_final(hash, c);
-    }
+void sha384(unsigned char *digest, int len, unsigned char *hash) {
+  SHA384(digest, len, hash);
 }
 
-SHA512CTX sha512_init(void)
-{
-    int rc = 0;
-    SHA512CTX c = EVP_MD_CTX_create();
-    if (c == NULL) {
-        return NULL;
-    }
-    EVP_MD_CTX_init(c);
-    rc = EVP_DigestInit_ex(c, EVP_sha512(), NULL);
-    if (rc == 0) {
-        EVP_MD_CTX_destroy(c);
-        c = NULL;
-    }
-    return c;
+SHA512CTX sha512_init(void){
+  SHA512CTX c = malloc(sizeof(*c));
+  if (c == NULL) {
+    return NULL;
+  }
+  SHA512_Init(c);
+
+  return c;
 }
 
-void sha512_update(SHA512CTX c, const void *data, unsigned long len)
-{
-    EVP_DigestUpdate(c, data, len);
+void sha512_update(SHA512CTX c, const void *data, unsigned long len){
+  SHA512_Update(c,data,len);
 }
 
-void sha512_final(unsigned char *md, SHA512CTX c)
-{
-    unsigned int mdlen = 0;
-
-    EVP_DigestFinal(c, md, &mdlen);
-    EVP_MD_CTX_destroy(c);
+void sha512_final(unsigned char *md, SHA512CTX c) {
+  SHA512_Final(md, c);
+  SAFE_FREE(c);
 }
 
-void sha512(unsigned char *digest, int len, unsigned char *hash)
-{
-    SHA512CTX c = sha512_init();
-    if (c != NULL) {
-        sha512_update(c, digest, len);
-        sha512_final(hash, c);
-    }
+void sha512(unsigned char *digest, int len, unsigned char *hash) {
+  SHA512(digest, len, hash);
 }
 
-MD5CTX md5_init(void)
-{
-    int rc;
-    MD5CTX c = EVP_MD_CTX_create();
-    if (c == NULL) {
-        return NULL;
-    }
-    EVP_MD_CTX_init(c);
-    rc = EVP_DigestInit_ex(c, EVP_md5(), NULL);
-    if(rc == 0) {
-        EVP_MD_CTX_destroy(c);
-        c = NULL;
-    }
-    return c;
+MD5CTX md5_init(void) {
+  MD5CTX c = malloc(sizeof(*c));
+  if (c == NULL) {
+    return NULL;
+  }
+
+  MD5_Init(c);
+
+  return c;
 }
 
-void md5_update(MD5CTX c, const void *data, unsigned long len)
-{
-    EVP_DigestUpdate(c, data, len);
+void md5_update(MD5CTX c, const void *data, unsigned long len) {
+  MD5_Update(c, data, len);
 }
 
-void md5_final(unsigned char *md, MD5CTX c)
-{
-    unsigned int mdlen = 0;
-
-    EVP_DigestFinal(c, md, &mdlen);
-    EVP_MD_CTX_destroy(c);
+void md5_final(unsigned char *md, MD5CTX c) {
+  MD5_Final(md,c);
+  SAFE_FREE(c);
 }
 
 ssh_mac_ctx ssh_mac_ctx_init(enum ssh_mac_e type){
@@ -427,159 +371,83 @@ void hmac_final(HMACCTX ctx, unsigned char *hashmacbuf, unsigned int *len) {
   SAFE_FREE(ctx);
 }
 
-static void evp_cipher_init(struct ssh_cipher_struct *cipher) {
-    switch(cipher->ciphertype){
-    case SSH_AES128_CBC:
-        cipher->cipher = EVP_aes_128_cbc();
-        break;
-    case SSH_AES192_CBC:
-        cipher->cipher = EVP_aes_192_cbc();
-        break;
-    case SSH_AES256_CBC:
-        cipher->cipher = EVP_aes_256_cbc();
-        break;
-#ifdef HAVE_OPENSSL_EVP_AES_CTR
-    case SSH_AES128_CTR:
-        cipher->cipher = EVP_aes_128_ctr();
-        break;
-    case SSH_AES192_CTR:
-        cipher->cipher = EVP_aes_192_ctr();
-        break;
-    case SSH_AES256_CTR:
-        cipher->cipher = EVP_aes_256_ctr();
-        break;
-#else
-    case SSH_AES128_CTR:
-    case SSH_AES192_CTR:
-    case SSH_AES256_CTR:
-        SSH_LOG(SSH_LOG_WARNING, "This cipher is not available in evp_cipher_init");
-        break;
-#endif
-    case SSH_3DES_CBC:
-        cipher->cipher = EVP_des_ede3_cbc();
-        break;
-    case SSH_BLOWFISH_CBC:
-        cipher->cipher = EVP_bf_cbc();
-        break;
-        /* ciphers not using EVP */
-    case SSH_3DES_CBC_SSH1:
-    case SSH_DES_CBC_SSH1:
-        SSH_LOG(SSH_LOG_WARNING, "This cipher should not use evp_cipher_init");
-        break;
-    case SSH_NO_CIPHER:
-        SSH_LOG(SSH_LOG_WARNING, "No valid ciphertype found");
-        break;
+#ifdef HAS_BLOWFISH
+/* the wrapper functions for blowfish */
+static int blowfish_set_key(struct ssh_cipher_struct *cipher, void *key, void *IV){
+  if (cipher->key == NULL) {
+    if (alloc_key(cipher) < 0) {
+      return -1;
     }
+    BF_set_key(cipher->key, 16, key);
+  }
+  cipher->IV = IV;
+  return 0;
 }
 
-static int evp_cipher_set_encrypt_key(struct ssh_cipher_struct *cipher,
-            void *key, void *IV)
-{
-    int rc;
-
-    evp_cipher_init(cipher);
-    EVP_CIPHER_CTX_init(&cipher->ctx);
-
-    rc = EVP_EncryptInit_ex(&cipher->ctx, cipher->cipher, NULL, key, IV);
-    if (rc != 1){
-        SSH_LOG(SSH_LOG_WARNING, "EVP_EncryptInit_ex failed");
-        return SSH_ERROR;
-    }
-    EVP_CIPHER_CTX_set_padding(&cipher->ctx, 0);
-
-    return SSH_OK;
+static void blowfish_encrypt(struct ssh_cipher_struct *cipher, void *in,
+    void *out, unsigned long len) {
+  BF_cbc_encrypt(in, out, len, cipher->key, cipher->IV, BF_ENCRYPT);
 }
 
-static int evp_cipher_set_decrypt_key(struct ssh_cipher_struct *cipher,
-            void *key, void *IV) {
-    int rc;
-
-    evp_cipher_init(cipher);
-    EVP_CIPHER_CTX_init(&cipher->ctx);
-
-    rc = EVP_DecryptInit_ex(&cipher->ctx, cipher->cipher, NULL, key, IV);
-    if (rc != 1){
-        SSH_LOG(SSH_LOG_WARNING, "EVP_DecryptInit_ex failed");
-        return SSH_ERROR;
-    }
-    EVP_CIPHER_CTX_set_padding(&cipher->ctx, 0);
-
-    return SSH_OK;
+static void blowfish_decrypt(struct ssh_cipher_struct *cipher, void *in,
+    void *out, unsigned long len) {
+  BF_cbc_encrypt(in, out, len, cipher->key, cipher->IV, BF_DECRYPT);
 }
+#endif /* HAS_BLOWFISH */
 
-/* EVP wrapper function for encrypt/decrypt */
-static void evp_cipher_encrypt(struct ssh_cipher_struct *cipher,
-                        void *in,
-                        void *out,
-                        unsigned long len) {
-    int outlen = 0;
-    int rc = 0;
-
-    rc = EVP_EncryptUpdate(&cipher->ctx, (unsigned char *)out, &outlen, (unsigned char *)in, len);
-    if (rc != 1){
-        SSH_LOG(SSH_LOG_WARNING, "EVP_EncryptUpdate failed");
-        return;
-    }
-    if (outlen != (int)len){
-        SSH_LOG(SSH_LOG_WARNING, "EVP_EncryptUpdate: output size %d for %zu in", outlen, len);
-        return;
-    }
-}
-
-static void evp_cipher_decrypt(struct ssh_cipher_struct *cipher,
-                        void *in,
-                        void *out,
-                        unsigned long len) {
-    int outlen = 0;
-    int rc = 0;
-
-    rc = EVP_DecryptUpdate(&cipher->ctx, (unsigned char *)out, &outlen, (unsigned char *)in, len);
-    if (rc != 1){
-        SSH_LOG(SSH_LOG_WARNING, "EVP_DecryptUpdate failed");
-        return;
-    }
-    if (outlen != (int)len){
-        SSH_LOG(SSH_LOG_WARNING, "EVP_DecryptUpdate: output size %d for %zu in", outlen, len);
-        return;
-    }
-}
-
-static void evp_cipher_cleanup(struct ssh_cipher_struct *cipher) {
-    EVP_CIPHER_CTX_cleanup(&cipher->ctx);
-}
-
-#ifndef HAVE_OPENSSL_EVP_AES_CTR
-/* Some OS (osx, OpenIndiana, ...) have no support for CTR ciphers in EVP_aes */
-
-struct ssh_aes_key_schedule {
-    AES_KEY key;
-    uint8_t IV[AES_BLOCK_SIZE];
-};
-
-static int aes_ctr_set_key(struct ssh_cipher_struct *cipher, void *key,
+#ifdef HAS_AES
+static int aes_set_encrypt_key(struct ssh_cipher_struct *cipher, void *key,
     void *IV) {
-    int rc;
-
-    if (cipher->aes_key == NULL) {
-        cipher->aes_key = malloc(sizeof (struct ssh_aes_key_schedule));
+  if (cipher->key == NULL) {
+    if (alloc_key(cipher) < 0) {
+      return -1;
     }
-    if (cipher->aes_key == NULL) {
-        return SSH_ERROR;
+    if (AES_set_encrypt_key(key,cipher->keysize,cipher->key) < 0) {
+      SAFE_FREE(cipher->key);
+      return -1;
     }
-    ZERO_STRUCTP(cipher->aes_key);
-    /* CTR doesn't need a decryption key */
-    rc = AES_set_encrypt_key(key, cipher->keysize, &cipher->aes_key->key);
-    if (rc < 0) {
-        SAFE_FREE(cipher->aes_key);
-        return SSH_ERROR;
+  }
+  cipher->IV=IV;
+  return 0;
+}
+static int aes_set_decrypt_key(struct ssh_cipher_struct *cipher, void *key,
+    void *IV) {
+  if (cipher->key == NULL) {
+    if (alloc_key(cipher) < 0) {
+      return -1;
     }
-    memcpy(cipher->aes_key->IV, IV, AES_BLOCK_SIZE);
-    return SSH_OK;
+    if (AES_set_decrypt_key(key,cipher->keysize,cipher->key) < 0) {
+      SAFE_FREE(cipher->key);
+      return -1;
+    }
+  }
+  cipher->IV=IV;
+  return 0;
 }
 
-static void aes_ctr_encrypt(struct ssh_cipher_struct *cipher, void *in, void *out,
+static void aes_encrypt(struct ssh_cipher_struct *cipher, void *in, void *out,
     unsigned long len) {
-  unsigned char tmp_buffer[AES_BLOCK_SIZE];
+  AES_cbc_encrypt(in, out, len, cipher->key, cipher->IV, AES_ENCRYPT);
+}
+
+static void aes_decrypt(struct ssh_cipher_struct *cipher, void *in, void *out,
+    unsigned long len) {
+  AES_cbc_encrypt(in, out, len, cipher->key, cipher->IV, AES_DECRYPT);
+}
+
+#ifndef BROKEN_AES_CTR
+/* OpenSSL until 0.9.7c has a broken AES_ctr128_encrypt implementation which
+ * increments the counter from 2^64 instead of 1. It's better not to use it
+ */
+
+/** @internal
+ * @brief encrypts/decrypts data with stream cipher AES_ctr128. 128 bits is actually
+ * the size of the CTR counter and incidentally the blocksize, but not the keysize.
+ * @param len[in] must be a multiple of AES128 block size.
+ */
+static void aes_ctr128_encrypt(struct ssh_cipher_struct *cipher, void *in, void *out,
+    unsigned long len) {
+  unsigned char tmp_buffer[128/8];
   unsigned int num=0;
   /* Some things are special with ctr128 :
    * In this case, tmp_buffer is not being used, because it is used to store temporary data
@@ -587,266 +455,249 @@ static void aes_ctr_encrypt(struct ssh_cipher_struct *cipher, void *in, void *ou
    * Same for num, which is being used to store the current offset in blocksize in CTR
    * function.
    */
-  AES_ctr128_encrypt(in, out, len, &cipher->aes_key->key, cipher->aes_key->IV, tmp_buffer, &num);
+  AES_ctr128_encrypt(in, out, len, cipher->key, cipher->IV, tmp_buffer, &num);
 }
+#endif /* BROKEN_AES_CTR */
+#endif /* HAS_AES */
 
-static void aes_ctr_cleanup(struct ssh_cipher_struct *cipher){
-    BURN_BUFFER(cipher->aes_key, sizeof(*cipher->aes_key));
-    SAFE_FREE(cipher->aes_key);
-}
-
-#endif /* HAVE_OPENSSL_EVP_AES_CTR */
 #ifdef HAS_DES
-
-typedef uint8_t des_iv_t[8];
-
-struct ssh_3des_key_schedule {
-    DES_key_schedule keys[3];
-    union {
-        des_iv_t v[3];
-        uint8_t *c;
-    } ivs;
-};
-
-/* 3des cbc for SSH-1 has no suitable EVP construct and requires
- * a custom key setup
- */
-static int des3_set_key(struct ssh_cipher_struct *cipher, void *key, void *IV){
-    DES_cblock *keys = key;
-
-    DES_set_odd_parity(&keys[0]);
-    DES_set_odd_parity(&keys[1]);
-    DES_set_odd_parity(&keys[2]);
-
-    cipher->des3_key = malloc(sizeof (struct ssh_3des_key_schedule));
-    if (cipher->des3_key == NULL){
-        return SSH_ERROR;
+static int des3_set_key(struct ssh_cipher_struct *cipher, void *key,void *IV) {
+  if (cipher->key == NULL) {
+    if (alloc_key(cipher) < 0) {
+      return -1;
     }
-    DES_set_key_unchecked(&keys[0], &cipher->des3_key->keys[0]);
-    DES_set_key_unchecked(&keys[1], &cipher->des3_key->keys[1]);
-    DES_set_key_unchecked(&keys[2], &cipher->des3_key->keys[2]);
-    memcpy(cipher->des3_key->ivs.v, IV, 24);
-    return SSH_OK;
+
+    DES_set_odd_parity(key);
+    DES_set_odd_parity((void*)((uint8_t*)key + 8));
+    DES_set_odd_parity((void*)((uint8_t*)key + 16));
+    DES_set_key_unchecked(key, cipher->key);
+    DES_set_key_unchecked((void*)((uint8_t*)key + 8), (void*)((uint8_t*)cipher->key + sizeof(DES_key_schedule)));
+    DES_set_key_unchecked((void*)((uint8_t*)key + 16), (void*)((uint8_t*)cipher->key + 2 * sizeof(DES_key_schedule)));
+  }
+  cipher->IV=IV;
+  return 0;
+}
+
+static void des3_encrypt(struct ssh_cipher_struct *cipher, void *in,
+    void *out, unsigned long len) {
+  DES_ede3_cbc_encrypt(in, out, len, cipher->key,
+      (void*)((uint8_t*)cipher->key + sizeof(DES_key_schedule)),
+      (void*)((uint8_t*)cipher->key + 2 * sizeof(DES_key_schedule)),
+      cipher->IV, 1);
+}
+
+static void des3_decrypt(struct ssh_cipher_struct *cipher, void *in,
+    void *out, unsigned long len) {
+  DES_ede3_cbc_encrypt(in, out, len, cipher->key,
+      (void*)((uint8_t*)cipher->key + sizeof(DES_key_schedule)),
+      (void*)((uint8_t*)cipher->key + 2 * sizeof(DES_key_schedule)),
+      cipher->IV, 0);
 }
 
 static void des3_1_encrypt(struct ssh_cipher_struct *cipher, void *in,
     void *out, unsigned long len) {
 #ifdef DEBUG_CRYPTO
-  ssh_print_hexa("Encrypt IV before", cipher->des3_key->ivs.c, 24);
+  ssh_print_hexa("Encrypt IV before", cipher->IV, 24);
 #endif
-  DES_ncbc_encrypt(in, out, len, &cipher->des3_key->keys[0], &cipher->des3_key->ivs.v[0], 1);
-  DES_ncbc_encrypt(out, in, len, &cipher->des3_key->keys[1], &cipher->des3_key->ivs.v[1], 0);
-  DES_ncbc_encrypt(in, out, len, &cipher->des3_key->keys[2], &cipher->des3_key->ivs.v[2], 1);
+  DES_ncbc_encrypt(in, out, len, cipher->key, cipher->IV, 1);
+  DES_ncbc_encrypt(out, in, len, (void*)((uint8_t*)cipher->key + sizeof(DES_key_schedule)),
+      (void*)((uint8_t*)cipher->IV + 8), 0);
+  DES_ncbc_encrypt(in, out, len, (void*)((uint8_t*)cipher->key + 2 * sizeof(DES_key_schedule)),
+      (void*)((uint8_t*)cipher->IV + 16), 1);
 #ifdef DEBUG_CRYPTO
-  ssh_print_hexa("Encrypt IV after", cipher->des3_key->ivs.c, 24);
+  ssh_print_hexa("Encrypt IV after", cipher->IV, 24);
 #endif
 }
 
 static void des3_1_decrypt(struct ssh_cipher_struct *cipher, void *in,
     void *out, unsigned long len) {
 #ifdef DEBUG_CRYPTO
-  ssh_print_hexa("Decrypt IV before", cipher->des3_key->ivs.c, 24);
+  ssh_print_hexa("Decrypt IV before", cipher->IV, 24);
 #endif
 
-  DES_ncbc_encrypt(in, out, len, &cipher->des3_key->keys[2], &cipher->des3_key->ivs.v[0], 0);
-  DES_ncbc_encrypt(out, in, len, &cipher->des3_key->keys[1], &cipher->des3_key->ivs.v[1], 1);
-  DES_ncbc_encrypt(in, out, len, &cipher->des3_key->keys[0], &cipher->des3_key->ivs.v[2], 0);
+  DES_ncbc_encrypt(in, out, len, (void*)((uint8_t*)cipher->key + 2 * sizeof(DES_key_schedule)),
+      cipher->IV, 0);
+  DES_ncbc_encrypt(out, in, len, (void*)((uint8_t*)cipher->key + sizeof(DES_key_schedule)),
+      (void*)((uint8_t*)cipher->IV + 8), 1);
+  DES_ncbc_encrypt(in, out, len, cipher->key, (void*)((uint8_t*)cipher->IV + 16), 0);
 
 #ifdef DEBUG_CRYPTO
-  ssh_print_hexa("Decrypt IV after", cipher->des3_key->ivs.c, 24);
+  ssh_print_hexa("Decrypt IV after", cipher->IV, 24);
 #endif
 }
 
-static int des1_set_key(struct ssh_cipher_struct *cipher, void *key, void *IV) {
-    DES_set_odd_parity(key);
-
-    cipher->des3_key = malloc(sizeof (struct ssh_3des_key_schedule));
-    if (cipher->des3_key == NULL){
-        return SSH_ERROR;
+static int des1_set_key(struct ssh_cipher_struct *cipher, void *key, void *IV){
+  if(!cipher->key){
+    if (alloc_key(cipher) < 0) {
+      return -1;
     }
-    DES_set_key_unchecked(key, &cipher->des3_key->keys[0]);
-    memcpy(cipher->des3_key->ivs.v, IV, 8);
-    return SSH_OK;
+    DES_set_odd_parity(key);
+    DES_set_key_unchecked(key,cipher->key);
+  }
+  cipher->IV=IV;
+  return 0;
 }
 
 static void des1_1_encrypt(struct ssh_cipher_struct *cipher, void *in, void *out,
                            unsigned long len){
-    DES_ncbc_encrypt(in, out, len, &cipher->des3_key->keys[0], &cipher->des3_key->ivs.v[0], 1);
+
+  DES_ncbc_encrypt(in, out, len, cipher->key, cipher->IV, 1);
 }
 
 static void des1_1_decrypt(struct ssh_cipher_struct *cipher, void *in, void *out,
-        unsigned long len){
-    DES_ncbc_encrypt(in,out,len, &cipher->des3_key->keys[0], &cipher->des3_key->ivs.v[0], 0);
-}
+                           unsigned long len){
 
-static void des_cleanup(struct ssh_cipher_struct *cipher){
-    BURN_BUFFER(cipher->des3_key, sizeof(*cipher->des3_key));
-    SAFE_FREE(cipher->des3_key);
+  DES_ncbc_encrypt(in,out,len, cipher->key, cipher->IV, 0);
 }
 
 #endif /* HAS_DES */
 
 /*
  * The table of supported ciphers
+ *
+ * WARNING: If you modify ssh_cipher_struct, you must make sure the order is
+ * correct!
  */
 static struct ssh_cipher_struct ssh_ciphertab[] = {
+#ifdef HAS_BLOWFISH
   {
-    .name = "blowfish-cbc",
-    .blocksize = 8,
-    .ciphertype = SSH_BLOWFISH_CBC,
-    .keysize = 128,
-    .set_encrypt_key = evp_cipher_set_encrypt_key,
-    .set_decrypt_key = evp_cipher_set_decrypt_key,
-    .encrypt = evp_cipher_encrypt,
-    .decrypt = evp_cipher_decrypt,
-    .cleanup = evp_cipher_cleanup
+    "blowfish-cbc",
+    8,
+    sizeof (BF_KEY),
+    NULL,
+    NULL,
+    128,
+    blowfish_set_key,
+    blowfish_set_key,
+    blowfish_encrypt,
+    blowfish_decrypt
   },
+#endif /* HAS_BLOWFISH */
 #ifdef HAS_AES
 #ifndef BROKEN_AES_CTR
-/* OpenSSL until 0.9.7c has a broken AES_ctr128_encrypt implementation which
- * increments the counter from 2^64 instead of 1. It's better not to use it
- */
-#ifdef HAVE_OPENSSL_EVP_AES_CTR
   {
-    .name = "aes128-ctr",
-    .blocksize = 16,
-    .ciphertype = SSH_AES128_CTR,
-    .keysize = 128,
-    .set_encrypt_key = evp_cipher_set_encrypt_key,
-    .set_decrypt_key = evp_cipher_set_decrypt_key,
-    .encrypt = evp_cipher_encrypt,
-    .decrypt = evp_cipher_decrypt,
-    .cleanup = evp_cipher_cleanup
+    "aes128-ctr",
+    16,
+    sizeof(AES_KEY),
+    NULL,
+    NULL,
+    128,
+    aes_set_encrypt_key,
+    aes_set_encrypt_key,
+    aes_ctr128_encrypt,
+    aes_ctr128_encrypt
   },
   {
-    .name = "aes192-ctr",
-    .blocksize = 16,
-    .ciphertype = SSH_AES192_CTR,
-    .keysize = 192,
-    .set_encrypt_key = evp_cipher_set_encrypt_key,
-    .set_decrypt_key = evp_cipher_set_decrypt_key,
-    .encrypt = evp_cipher_encrypt,
-    .decrypt = evp_cipher_decrypt,
-    .cleanup = evp_cipher_cleanup
+    "aes192-ctr",
+    16,
+    sizeof(AES_KEY),
+    NULL,
+    NULL,
+    192,
+    aes_set_encrypt_key,
+    aes_set_encrypt_key,
+    aes_ctr128_encrypt,
+    aes_ctr128_encrypt
   },
   {
-    .name = "aes256-ctr",
-    .blocksize = 16,
-    .ciphertype = SSH_AES256_CTR,
-    .keysize = 256,
-    .set_encrypt_key = evp_cipher_set_encrypt_key,
-    .set_decrypt_key = evp_cipher_set_decrypt_key,
-    .encrypt = evp_cipher_encrypt,
-    .decrypt = evp_cipher_decrypt,
-    .cleanup = evp_cipher_cleanup
+    "aes256-ctr",
+    16,
+    sizeof(AES_KEY),
+    NULL,
+    NULL,
+    256,
+    aes_set_encrypt_key,
+    aes_set_encrypt_key,
+    aes_ctr128_encrypt,
+    aes_ctr128_encrypt
   },
-#else /* HAVE_OPENSSL_EVP_AES_CTR */
-  {
-    .name = "aes128-ctr",
-    .blocksize = 16,
-    .ciphertype = SSH_AES128_CTR,
-    .keysize = 128,
-    .set_encrypt_key = aes_ctr_set_key,
-    .set_decrypt_key = aes_ctr_set_key,
-    .encrypt = aes_ctr_encrypt,
-    .decrypt = aes_ctr_encrypt,
-    .cleanup = aes_ctr_cleanup
-  },
-  {
-    .name = "aes192-ctr",
-    .blocksize = 16,
-    .ciphertype = SSH_AES192_CTR,
-    .keysize = 192,
-    .set_encrypt_key = aes_ctr_set_key,
-    .set_decrypt_key = aes_ctr_set_key,
-    .encrypt = aes_ctr_encrypt,
-    .decrypt = aes_ctr_encrypt,
-    .cleanup = aes_ctr_cleanup
-  },
-  {
-    .name = "aes256-ctr",
-    .blocksize = 16,
-    .ciphertype = SSH_AES256_CTR,
-    .keysize = 256,
-    .set_encrypt_key = aes_ctr_set_key,
-    .set_decrypt_key = aes_ctr_set_key,
-    .encrypt = aes_ctr_encrypt,
-    .decrypt = aes_ctr_encrypt,
-    .cleanup = aes_ctr_cleanup
-  },
-#endif /* HAVE_OPENSSL_EVP_AES_CTR */
 #endif /* BROKEN_AES_CTR */
   {
-    .name = "aes128-cbc",
-    .blocksize = 16,
-    .ciphertype = SSH_AES128_CBC,
-    .keysize = 128,
-    .set_encrypt_key = evp_cipher_set_encrypt_key,
-    .set_decrypt_key = evp_cipher_set_decrypt_key,
-    .encrypt = evp_cipher_encrypt,
-    .decrypt = evp_cipher_decrypt,
-    .cleanup = evp_cipher_cleanup
+    "aes128-cbc",
+    16,
+    sizeof(AES_KEY),
+    NULL,
+    NULL,
+    128,
+    aes_set_encrypt_key,
+    aes_set_decrypt_key,
+    aes_encrypt,
+    aes_decrypt
   },
   {
-    .name = "aes192-cbc",
-    .blocksize = 16,
-    .ciphertype = SSH_AES192_CBC,
-    .keysize = 192,
-    .set_encrypt_key = evp_cipher_set_encrypt_key,
-    .set_decrypt_key = evp_cipher_set_decrypt_key,
-    .encrypt = evp_cipher_encrypt,
-    .decrypt = evp_cipher_decrypt,
-    .cleanup = evp_cipher_cleanup
+    "aes192-cbc",
+    16,
+    sizeof(AES_KEY),
+    NULL,
+    NULL,
+    192,
+    aes_set_encrypt_key,
+    aes_set_decrypt_key,
+    aes_encrypt,
+    aes_decrypt
   },
   {
-    .name = "aes256-cbc",
-    .blocksize = 16,
-    .ciphertype = SSH_AES256_CBC,
-    .keysize = 256,
-    .set_encrypt_key = evp_cipher_set_encrypt_key,
-    .set_decrypt_key = evp_cipher_set_decrypt_key,
-    .encrypt = evp_cipher_encrypt,
-    .decrypt = evp_cipher_decrypt,
-    .cleanup = evp_cipher_cleanup
+    "aes256-cbc",
+    16,
+    sizeof(AES_KEY),
+    NULL,
+    NULL,
+    256,
+    aes_set_encrypt_key,
+    aes_set_decrypt_key,
+    aes_encrypt,
+    aes_decrypt
   },
 #endif /* HAS_AES */
 #ifdef HAS_DES
   {
-    .name = "3des-cbc",
-    .blocksize = 8,
-    .ciphertype = SSH_3DES_CBC,
-    .keysize = 192,
-    .set_encrypt_key = evp_cipher_set_encrypt_key,
-    .set_decrypt_key = evp_cipher_set_decrypt_key,
-    .encrypt = evp_cipher_encrypt,
-    .decrypt = evp_cipher_decrypt,
-    .cleanup = evp_cipher_cleanup
+    "3des-cbc",
+    8,
+    sizeof(DES_key_schedule) * 3,
+    NULL,
+    NULL,
+    192,
+    des3_set_key,
+    des3_set_key,
+    des3_encrypt,
+    des3_decrypt
   },
   {
-    .name = "3des-cbc-ssh1",
-    .blocksize = 8,
-    .ciphertype = SSH_3DES_CBC_SSH1,
-    .keysize = 192,
-    .set_encrypt_key = des3_set_key,
-    .set_decrypt_key = des3_set_key,
-    .encrypt = des3_1_encrypt,
-    .decrypt = des3_1_decrypt,
-    .cleanup = des_cleanup
+    "3des-cbc-ssh1",
+    8,
+    sizeof(DES_key_schedule) * 3,
+    NULL,
+    NULL,
+    192,
+    des3_set_key,
+    des3_set_key,
+    des3_1_encrypt,
+    des3_1_decrypt
   },
   {
-    .name = "des-cbc-ssh1",
-    .blocksize = 8,
-    .ciphertype = SSH_DES_CBC_SSH1,
-    .keysize = 64,
-    .set_encrypt_key = des1_set_key,
-    .set_decrypt_key = des1_set_key,
-    .encrypt = des1_1_encrypt,
-    .decrypt = des1_1_decrypt,
-    .cleanup = des_cleanup
+    "des-cbc-ssh1",
+    8,
+    sizeof(DES_key_schedule),
+    NULL,
+    NULL,
+    64,
+    des1_set_key,
+    des1_set_key,
+    des1_1_encrypt,
+    des1_1_decrypt
   },
 #endif /* HAS_DES */
   {
-    .name = NULL
+    NULL,
+    0,
+    0,
+    NULL,
+    NULL,
+    0,
+    NULL,
+    NULL,
+    NULL,
+    NULL
   }
 };
 

@@ -259,10 +259,6 @@ int decompress_buffer(ssh_session session,ssh_buffer buf, size_t maxlen);
 /* match.c */
 int match_hostname(const char *host, const char *pattern, unsigned int len);
 
-/* connector.c */
-int ssh_connector_set_event(ssh_connector connector, ssh_event event);
-int ssh_connector_remove_event(ssh_connector connector);
-
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
@@ -364,6 +360,24 @@ int ssh_connector_remove_event(ssh_connector connector);
 #endif
 
 #define CLOSE_SOCKET(s) do { if ((s) != SSH_INVALID_SOCKET) { _XCLOSESOCKET(s); (s) = SSH_INVALID_SOCKET;} } while(0)
+
+#ifndef HAVE_HTONLL
+# ifdef WORDS_BIGENDIAN
+#  define htonll(x) (x)
+# else
+#  define htonll(x) \
+    (((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
+# endif
+#endif
+
+#ifndef HAVE_NTOHLL
+# ifdef WORDS_BIGENDIAN
+#  define ntohll(x) (x)
+# else
+#  define ntohll(x) \
+    (((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
+# endif
+#endif
 
 void ssh_agent_state_free(void *data);
 

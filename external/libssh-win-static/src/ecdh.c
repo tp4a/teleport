@@ -47,7 +47,7 @@ int ssh_client_ecdh_init(ssh_session session){
   int rc;
   bignum_CTX ctx = BN_CTX_new();
 
-  rc = ssh_buffer_add_u8(session->out_buffer, SSH2_MSG_KEX_ECDH_INIT);
+  rc = buffer_add_u8(session->out_buffer, SSH2_MSG_KEX_ECDH_INIT);
   if (rc < 0) {
       BN_CTX_free(ctx);
       return SSH_ERROR;
@@ -77,7 +77,7 @@ int ssh_client_ecdh_init(ssh_session session){
       ssh_string_data(client_pubkey),len,ctx);
   BN_CTX_free(ctx);
 
-  rc = ssh_buffer_add_ssh_string(session->out_buffer,client_pubkey);
+  rc = buffer_add_ssh_string(session->out_buffer,client_pubkey);
   if (rc < 0) {
       EC_KEY_free(key);
       ssh_string_free(client_pubkey);
@@ -87,7 +87,7 @@ int ssh_client_ecdh_init(ssh_session session){
   session->next_crypto->ecdh_privkey = key;
   session->next_crypto->ecdh_client_pubkey = client_pubkey;
 
-  rc = ssh_packet_send(session);
+  rc = packet_send(session);
 
   return rc;
 }
@@ -181,20 +181,20 @@ int ssh_client_ecdh_reply(ssh_session session, ssh_buffer packet){
   ssh_string pubkey = NULL;
   ssh_string signature = NULL;
   int rc;
-  pubkey = ssh_buffer_get_ssh_string(packet);
+  pubkey = buffer_get_ssh_string(packet);
   if (pubkey == NULL){
     ssh_set_error(session,SSH_FATAL, "No public key in packet");
     goto error;
   }
   ecdh_import_pubkey(session, pubkey);
 
-  q_s_string = ssh_buffer_get_ssh_string(packet);
+  q_s_string = buffer_get_ssh_string(packet);
   if (q_s_string == NULL) {
     ssh_set_error(session,SSH_FATAL, "No Q_S ECC point in packet");
     goto error;
   }
   session->next_crypto->ecdh_server_pubkey = q_s_string;
-  signature = ssh_buffer_get_ssh_string(packet);
+  signature = buffer_get_ssh_string(packet);
   if (signature == NULL) {
     ssh_set_error(session, SSH_FATAL, "No signature in packet");
     goto error;
@@ -208,11 +208,11 @@ int ssh_client_ecdh_reply(ssh_session session, ssh_buffer packet){
   }
 
   /* Send the MSG_NEWKEYS */
-  if (ssh_buffer_add_u8(session->out_buffer, SSH2_MSG_NEWKEYS) < 0) {
+  if (buffer_add_u8(session->out_buffer, SSH2_MSG_NEWKEYS) < 0) {
     goto error;
   }
 
-  rc=ssh_packet_send(session);
+  rc=packet_send(session);
   SSH_LOG(SSH_LOG_PROTOCOL, "SSH_MSG_NEWKEYS sent");
   return rc;
 error:
@@ -240,7 +240,7 @@ int ssh_server_ecdh_init(ssh_session session, ssh_buffer packet){
     int rc;
 
     /* Extract the client pubkey from the init packet */
-    q_c_string = ssh_buffer_get_ssh_string(packet);
+    q_c_string = buffer_get_ssh_string(packet);
     if (q_c_string == NULL) {
         ssh_set_error(session,SSH_FATAL, "No Q_C ECC point in packet");
         return SSH_ERROR;
@@ -299,7 +299,7 @@ int ssh_server_ecdh_init(ssh_session session, ssh_buffer packet){
         return SSH_ERROR;
     }
 
-    rc = ssh_make_sessionid(session);
+    rc = make_sessionid(session);
     if (rc != SSH_OK) {
         ssh_set_error(session, SSH_FATAL, "Could not create a session id");
         return SSH_ERROR;
@@ -326,19 +326,19 @@ int ssh_server_ecdh_init(ssh_session session, ssh_buffer packet){
     }
 
     SSH_LOG(SSH_LOG_PROTOCOL, "SSH_MSG_KEXDH_REPLY sent");
-    rc = ssh_packet_send(session);
+    rc = packet_send(session);
     if (rc == SSH_ERROR) {
         return SSH_ERROR;
     }
 
     /* Send the MSG_NEWKEYS */
-    rc = ssh_buffer_add_u8(session->out_buffer, SSH2_MSG_NEWKEYS);
+    rc = buffer_add_u8(session->out_buffer, SSH2_MSG_NEWKEYS);
     if (rc < 0) {
         return SSH_ERROR;;
     }
 
     session->dh_handshake_state = DH_STATE_NEWKEYS_SENT;
-    rc = ssh_packet_send(session);
+    rc = packet_send(session);
     SSH_LOG(SSH_LOG_PROTOCOL, "SSH_MSG_NEWKEYS sent");
 
     return rc;

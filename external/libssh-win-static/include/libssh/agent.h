@@ -81,16 +81,16 @@ struct ssh_agent_struct {
  *
  * @return An allocated ssh agent structure or NULL on error.
  */
-struct ssh_agent_struct *ssh_agent_new(struct ssh_session_struct *session);
+struct ssh_agent_struct *agent_new(struct ssh_session_struct *session);
 
-void ssh_agent_close(struct ssh_agent_struct *agent);
+void agent_close(struct ssh_agent_struct *agent);
 
 /**
  * @brief Free an allocated ssh agent structure.
  *
  * @param agent The ssh agent structure to free.
  */
-void ssh_agent_free(struct ssh_agent_struct *agent);
+void agent_free(struct ssh_agent_struct *agent);
 
 /**
  * @brief Check if the ssh agent is running.
@@ -99,7 +99,7 @@ void ssh_agent_free(struct ssh_agent_struct *agent);
  *
  * @return 1 if it is running, 0 if not.
  */
-int ssh_agent_is_running(struct ssh_session_struct *session);
+int agent_is_running(struct ssh_session_struct *session);
 
 int ssh_agent_get_ident_count(struct ssh_session_struct *session);
 

@@ -30,13 +30,15 @@
 #include <openssl/sha.h>
 #include <openssl/md5.h>
 #include <openssl/hmac.h>
+#ifdef HAVE_OPENSSL_ECC
 #include <openssl/evp.h>
+#endif
 
-typedef EVP_MD_CTX* SHACTX;
-typedef EVP_MD_CTX* SHA256CTX;
-typedef EVP_MD_CTX* SHA384CTX;
-typedef EVP_MD_CTX* SHA512CTX;
-typedef EVP_MD_CTX* MD5CTX;
+typedef SHA_CTX* SHACTX;
+typedef SHA256_CTX* SHA256CTX;
+typedef SHA512_CTX* SHA384CTX;
+typedef SHA512_CTX* SHA512CTX;
+typedef MD5_CTX*  MD5CTX;
 typedef HMAC_CTX* HMACCTX;
 #ifdef HAVE_ECC
 typedef EVP_MD_CTX *EVPCTX;

@@ -28,4 +28,8 @@ teleport项目用到的第三方库
   mbedtls-mbedtls-2.2.1
   注意：teleport项目使用源代码直接编译，因此解压缩源代码到此即可。
 - libssh
+  https://git.libssh.org/projects/libssh.git/snapshot
+  libssh-0.7.4.zip
+  Windows平台使用预制的libssh-static工程进行编译。
+
 
