@@ -142,12 +142,6 @@ int _app_main(int argc, wchar_t** argv)
 	}
 #endif
 
-// 	if (!g_env.check_db_file())
-// 	{
-// 		EXLOGE("[tpcore] env init failed.\n");
-// 		return 1;
-// 	}
-
 	if (!g_is_debug)
 	{
 		if (!_run_daemon())

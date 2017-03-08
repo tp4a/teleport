@@ -71,7 +71,7 @@
 
         ywl.add_page_options(${page_param});
 
-        var danger_cmd = ['rm', 'su', 'sudo'];
+        var danger_cmd = ['rm', 'su', 'sudo', 'kill'];
         var info_cmd = ['exit'];
 
         ywl.on_init = function (cb_stack, cb_args) {

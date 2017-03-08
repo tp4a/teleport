@@ -58,10 +58,8 @@ void TsHttpRpc::_thread_loop(void)
 {
 	EXLOGV("[core-rpc] TeleportServer-HTTP-RPC ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 
-	for (;;)
+	while(!m_stop_flag)
 	{
-		if (m_stop_flag)
-			break;
 		mg_mgr_poll(&m_mg_mgr, 500);
 	}
 
@@ -86,7 +84,6 @@ bool TsHttpRpc::init(void)
 	else
 		ex_strformat(addr, 128, "%s:%d", m_host_ip.c_str(), m_host_port);
 
-	mg_mgr_init(&m_mg_mgr, NULL);
 	nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
 	if (NULL == nc)
 	{
@@ -97,7 +94,12 @@ bool TsHttpRpc::init(void)
 	nc->user_data = this;
 
 	mg_set_protocol_http_websocket(nc);
-	mg_enable_multithreading(nc);
+
+	// 导致内存泄露的地方（每次请求约消耗1KB内存）
+	// DO NOT USE MULTITHREADING OF MG.
+	// cpq (one of the authors of MG) commented on 3 Feb: Multithreading support has been removed.
+	// https://github.com/cesanta/mongoose/commit/707b9ed2d6f177b3ad8787cb16a1bff90ddad992
+	//mg_enable_multithreading(nc);
 
 	return true;
 }

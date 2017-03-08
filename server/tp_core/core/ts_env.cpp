@@ -105,20 +105,5 @@ bool TsEnv::init(void)
 		rpc_bind_port = TS_HTTP_RPC_PORT;
 	}
 
-// 	m_db_file = base_path;
-// 	ex_path_join(m_db_file, false, L"data", L"ts_db.db", NULL);
-
-
 	return true;
 }
-
-// bool TsEnv::check_db_file(void)
-// {
-// 	if (!ex_is_file_exists(m_db_file.c_str()))
-// 	{
-// 		EXLOGE("[core] can not found database file.\n");
-// 		return false;
-// 	}
-// 
-// 	return true;
-// }

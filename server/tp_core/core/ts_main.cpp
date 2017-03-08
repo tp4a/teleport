@@ -3,52 +3,11 @@
 #include "ts_http_rpc.h"
 #include "ts_web_rpc.h"
 #include "ts_env.h"
-//#include "ts_http_client.h"
-//#include "ts_ver.h"
-//#include "ts_crypto.h"
-
-//#include "../common/protocol_interface.h"
-
 
 #include <mbedtls/platform.h>
 #include <mbedtls/debug.h>
-//#include <list>
 
 bool g_exit_flag = false;
-
-//static unsigned char ToHex(unsigned char x)
-//{
-//	return  x > 9 ? x + 55 : x + 48;
-//}
-//
-//ex_astr UrlEncode(const ex_astr& str)
-//{
-//	ex_astr strTemp = "";
-//	size_t length = str.length();
-//	for (size_t i = 0; i < length; i++)
-//	{
-//		if (isalnum((unsigned char)str[i]) ||
-//			(str[i] == '-') ||
-//			(str[i] == '_') ||
-//			(str[i] == '.') ||
-//			(str[i] == '~'))
-//		{
-//			strTemp += str[i];
-//		}
-//		else if (str[i] == ' ')
-//		{
-//			strTemp += "+";
-//		}
-//		else
-//		{
-//			strTemp += '%';
-//			strTemp += ToHex((unsigned char)str[i] >> 4);
-//			strTemp += ToHex((unsigned char)str[i] % 16);
-//		}
-//	}
-//
-//	return strTemp;
-//}
 
 bool tpp_take_session(const ex_astr& sid, TS_SESSION_INFO& info)
 {
@@ -257,13 +216,15 @@ int ts_main(void)
 		g_exit_flag = true;
 	}
 
-
-	ts_web_rpc_register_core();
-
-	EXLOGV("[core] ---- initialized, ready for service ----\n");
-	while (!g_exit_flag)
+	if (!g_exit_flag)
 	{
-		ex_sleep_ms(1000);
+		ts_web_rpc_register_core();
+
+		EXLOGV("[core] ---- initialized, ready for service ----\n");
+		while (!g_exit_flag)
+		{
+			ex_sleep_ms(1000);
+		}
 	}
 
 	g_tpp_mgr.stop_all();

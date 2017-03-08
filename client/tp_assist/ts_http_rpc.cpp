@@ -198,8 +198,6 @@ bool TsHttpRpc::init(const char* ip, int port)
 	nc->user_data = this;
 
 	mg_set_protocol_http_websocket(nc);
-	mg_enable_multithreading(nc);
-
 
 	m_content_type_map[".js"] = "application/javascript";
 	m_content_type_map[".png"] = "image/png";
