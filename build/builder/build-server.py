@@ -1,17 +1,15 @@
-#!/bin/env python3
 # -*- coding: utf-8 -*-
 
-import codecs
-import shutil
-import time
+# import codecs
+# import shutil
+# import time
 from core import colorconsole as cc
-from core import makepyo
+# from core import makepyo
 from core import utils
 from core.context import *
+from core.env import env
 
 ctx = BuildContext()
-
-ROOT_PATH = utils.cfg.ROOT_PATH
 
 
 class BuilderBase:
@@ -28,32 +26,32 @@ class BuilderWin(BuilderBase):
 
     def build_server(self):
         cc.n('build web server ...')
-        sln_file = os.path.join(ROOT_PATH, 'server', 'tp_web', 'src', 'tp_web.vs2015.sln')
-        out_file = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_web.exe')
+        sln_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'tp_web.vs2015.sln')
+        out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_web.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
         utils.msvc_build(sln_file, 'tp_web', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
 
         cc.n('build core server ...')
-        sln_file = os.path.join(ROOT_PATH, 'server', 'tp_core', 'core', 'tp_core.vs2015.sln')
-        out_file = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_core.exe')
+        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'core', 'tp_core.vs2015.sln')
+        out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_core.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
         utils.msvc_build(sln_file, 'tp_core', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
 
         cc.n('build SSH protocol ...')
-        sln_file = os.path.join(ROOT_PATH, 'server', 'tp_core', 'protocol', 'ssh', 'tpssh.vs2015.sln')
-        out_file = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, ctx.target_path, 'tpssh.dll')
+        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'ssh', 'tpssh.vs2015.sln')
+        out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tpssh.dll')
         if os.path.exists(out_file):
             utils.remove(out_file)
         utils.msvc_build(sln_file, 'tpssh', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
 
         #
-        # s = os.path.join(ROOT_PATH, 'out', 'console', ctx.bits_path, ctx.target_path, 'console.exe')
-        # t = os.path.join(ROOT_PATH, 'out', 'eom_agent', ctx.target_path, ctx.dist_path, 'eom_agent.com')
+        # s = os.path.join(env.root_path, 'out', 'console', ctx.bits_path, ctx.target_path, 'console.exe')
+        # t = os.path.join(env.root_path, 'out', 'eom_agent', ctx.target_path, ctx.dist_path, 'eom_agent.com')
         # shutil.copy(s, t)
         # utils.ensure_file_exists(t)
 
@@ -66,8 +64,8 @@ class BuilderLinux(BuilderBase):
         cc.n('build tp_web...')
 
         ###################
-        # out_path = os.path.join(ROOT_PATH, 'out', 'eom_ts', ctx.target_path, ctx.dist_path)
-        out_path = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, 'bin')
+        # out_path = os.path.join(env.root_path, 'out', 'eom_ts', ctx.target_path, ctx.dist_path)
+        out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
         out_file = os.path.join(out_path, 'tp_web')
 
         if os.path.exists(out_file):
@@ -75,14 +73,14 @@ class BuilderLinux(BuilderBase):
 
         utils.makedirs(out_path)
 
-        utils.cmake(os.path.join(ROOT_PATH, 'server', 'cmake-build'), ctx.target_path, False)
+        utils.cmake(os.path.join(env.root_path, 'server', 'cmake-build'), ctx.target_path, False)
         utils.strip(out_file)
 
 
-        # wscript_file = os.path.join(ROOT_PATH, 'wscript')
+        # wscript_file = os.path.join(env.root_path, 'wscript')
         # utils.waf_build(wscript_file, ctx.target_path, False)
 
-        # chk_file = os.path.join(ROOT_PATH, 'waf_build', ctx.target_path, 'eom_ts')
+        # chk_file = os.path.join(env.root_path, 'waf_build', ctx.target_path, 'eom_ts')
         # utils.ensure_file_exists(chk_file)
         # os.chmod(chk_file, 0o777)
 
@@ -104,6 +102,9 @@ def gen_builder(dist):
 
 
 def main():
+    if not env.init():
+        return
+
     builder = None
 
     argv = sys.argv[1:]

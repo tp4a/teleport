@@ -355,23 +355,26 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
     return (ret, output)
 
 
-# def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
-#     msbuild = msbuild_path()
-#
-#     if force_rebuild:
-#         cmd = '"{}" "{}" "/target:clean" "/property:Configuration={};Platform={}"'.format(msbuild, sln_file, target, platform)
-#         ret, _ = sys_exec(cmd, direct_output=True)
-#         cc.v('ret:', ret)
-#
-#     cmd = '"{}" "{}" "/target:{}" "/property:Configuration={};Platform={}"'.format(msbuild, sln_file, proj_name, target, platform)
-#     ret, _ = sys_exec(cmd, direct_output=True)
-#     if ret != 0:
-#         raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
+def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
+    if env.msbuild is None:
+        raise RuntimeError('where is `msbuild`?')
+
+    if force_rebuild:
+        cmd = '"{}" "{}" "/target:clean" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, target, platform)
+        ret, _ = sys_exec(cmd, direct_output=True)
+        cc.v('ret:', ret)
+
+    cmd = '"{}" "{}" "/target:{}" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, proj_name, target, platform)
+    ret, _ = sys_exec(cmd, direct_output=True)
+    if ret != 0:
+        raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
 
 
 def nsis_build(nsi_file, _define=''):
-    nsis = nsis_path()
-    cmd = '"{}" /V2 {} /X"SetCompressor /SOLID /FINAL lzma" "{}"'.format(nsis, _define, nsi_file)
+    if env.nsis is None:
+        raise RuntimeError('where is `nsis`?')
+
+    cmd = '"{}" /V2 {} /X"SetCompressor /SOLID /FINAL lzma" "{}"'.format(env.nsis, _define, nsi_file)
     ret, _ = sys_exec(cmd, direct_output=True)
     if ret != 0:
         raise RuntimeError('make installer with nsis failed. [{}]'.format(nsi_file))
@@ -379,16 +382,9 @@ def nsis_build(nsi_file, _define=''):
 
 def cmake(work_path, target, force_rebuild, cmake_define=''):
     # because cmake v2.8 shipped with Ubuntu 14.04LTS, but we need 3.5.
-    # I copy a v3.5 cmake from CLion.
-    print(cfg)
-    if 'cmake' not in cfg.toolchain:
-        raise RuntimeError('please set `cmake` path.')
-
-    print(cfg.toolchain.cmake)
-    if not os.path.exists(cfg.toolchain.cmake):
-        raise RuntimeError('`cmake` does not exists, please check your configuration and try again.')
-
-    CMAKE = cfg.toolchain.cmake
+    # I use a v3.5 one from CLion.
+    if env.cmake is None:
+        raise RuntimeError('where is `cmake`?')
 
     cc.n('make by cmake', target, sep=': ')
     old_p = os.getcwd()
@@ -406,7 +402,7 @@ def cmake(work_path, target, force_rebuild, cmake_define=''):
         target = 'Debug'
     else:
         target = 'Release'
-    cmd = '"{}" -DCMAKE_BUILD_TYPE={} {} ..;make'.format(CMAKE, target, cmake_define)
+    cmd = '"{}" -DCMAKE_BUILD_TYPE={} {} ..;make'.format(env.cmake, target, cmake_define)
     ret, _ = sys_exec(cmd, direct_output=True)
     os.chdir(old_p)
     if ret != 0:
@@ -436,7 +432,6 @@ def make_zip(src_path, to_file):
 def unzip(file_name, to_path):
     if env.is_win:
         cmd = '""{}" x "{}" -o"{}""'.format(env.zip7, file_name, to_path)
-        print(cmd)
         os.system(cmd)
     elif env.is_linux:
         os.system('unzip "{}" -d "{}"'.format(file_name, to_path))

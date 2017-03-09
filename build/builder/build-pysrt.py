@@ -7,13 +7,10 @@ from core import colorconsole as cc
 from core import makepyo
 from core import utils
 from core.context import *
+from core.env import env
+
 
 ctx = BuildContext()
-
-#PY_VER = platform.python_version_tuple()
-
-ROOT_PATH = utils.cfg.ROOT_PATH
-PY_EXEC = utils.cfg.py_exec
 
 MODULES_WIN = ['_bz2', '_ctypes', '_hashlib', '_lzma', '_overlapped', '_socket', '_sqlite3', '_ssl', 'select', 'sqlite3', 'unicodedata']
 PY_LIB_REMOVE_WIN = ['ctypes/test', 'curses', 'dbm', 'distutils', 'email/test', 'ensurepip', 'idlelib', 'lib2to3',
@@ -28,7 +25,7 @@ PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'config-3.4m-x86_64-linux-gnu', 
 
 class PYSBase:
     def __init__(self):
-        self.base_path = os.path.join(ROOT_PATH, 'out', 'pysrt', ctx.dist_path)
+        self.base_path = os.path.join(env.root_path, 'out', 'pysrt', ctx.dist_path)
 
         self.py_dll_path = ''
         self.py_lib_path = ''
@@ -188,7 +185,7 @@ class PYSBaseLinux(PYSBase):
     def __init__(self):
         super().__init__()
 
-        self.PY_STATIC_PATH = os.path.join(os.path.join(ROOT_PATH, 'external', 'linux', 'release'))
+        self.PY_STATIC_PATH = os.path.join(os.path.join(env.root_path, 'external', 'linux', 'release'))
         if not os.path.exists(self.PY_STATIC_PATH):
             raise RuntimeError('can not locate py-static release folder.')
 
@@ -227,6 +224,9 @@ class PYSBaseLinux(PYSBase):
 
 
 def main():
+    if not env.init():
+        return
+
     if ctx.host_os == 'windows':
         x = PYSBaseWin()
     elif ctx.host_os == 'linux':

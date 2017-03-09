@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# import codecs
-# import shutil
-# import time
 from core import colorconsole as cc
 from core import utils
 from core.context import *
@@ -11,17 +8,8 @@ from core.env import env
 
 ctx = BuildContext()
 
-# ROOT_PATH = utils.cfg.ROOT_PATH
 PATH_EXTERNAL = os.path.join(env.root_path, 'external')
 PATH_DOWNLOAD = os.path.join(PATH_EXTERNAL, '_download_')
-
-# OPENSSL_VER = env.ver_openssl
-# LIBUV_VER = utils.cfg.ver.libuv
-# MBEDTLS_VER = utils.cfg.ver.mbedtls
-# SQLITE_VER = utils.cfg.ver.sqlite
-# LIBSSH_VER = utils.cfg.ver.libssh
-# JSONCPP_VER = utils.cfg.ver.jsoncpp
-# MONGOOSE_VER = utils.cfg.ver.mongoose
 
 
 class BuilderBase:
@@ -112,6 +100,23 @@ class BuilderWin(BuilderBase):
         self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
         self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
         self.MBEDTLS_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mbedtls')
+        self.LIBSSH_PATH_SRC = os.path.join(PATH_EXTERNAL, 'libssh-win-static')
+
+        self._prepare_python_header()
+
+    def _prepare_python_header(self):
+        cc.n('prepare python header files ...')
+        _header_path = None
+        for p in sys.path:
+            if os.path.exists(os.path.join(p, 'include', 'pyctype.h')):
+                _header_path = os.path.join(p, 'include')
+        if _header_path is None:
+            cc.e('\ncan not locate python development include path in:')
+            for p in sys.path:
+                cc.e('  ', p)
+            raise RuntimeError()
+
+        utils.copy_ex(_header_path, os.path.join(PATH_EXTERNAL, 'python', 'include'))
 
     def _build_openssl(self, file_name):
         cc.n('build openssl static library from source code... ', end='')
@@ -151,8 +156,46 @@ class BuilderWin(BuilderBase):
             if not os.path.exists(f):
                 raise RuntimeError('build openssl static library from source code failed.')
 
+    def _build_libssh(self, file_name):
+        cc.n('build libssh static library from source code... ', end='')
+        out_file = os.path.join(self.LIBSSH_PATH_SRC, 'lib', 'libsshMT.lib')
+
+        need_build = False
+        if not os.path.exists(out_file):
+            need_build = True
+
+        if not need_build:
+            cc.w('already exists, skip.')
+            return
+
+        cc.n('\nprepare libssh source code... ', end='')
+
+        _include = os.path.join(self.LIBSSH_PATH_SRC, 'include', 'libssh')
+        _src = os.path.join(self.LIBSSH_PATH_SRC, 'src')
+
+        if not os.path.exists(_include) or not os.path.exists(_src):
+            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            # os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
+
+            _unzipped_path = os.path.join(PATH_EXTERNAL, 'libssh-{}'.format(env.ver_libssh))
+
+            utils.copy_ex(os.path.join(_unzipped_path, 'include', 'libssh'), _include)
+            utils.copy_ex(os.path.join(_unzipped_path, 'src'), _src)
+
+            utils.remove(_unzipped_path)
+
+            if not os.path.exists(_include) or not os.path.exists(_src):
+                raise RuntimeError('\ncan not prepare libssh source code.')
+        else:
+            cc.w('already exists, skip.')
+
+        cc.i('build libssh...')
+        sln_file = os.path.join(self.LIBSSH_PATH_SRC, 'libssh.vs2015.sln')
+        utils.msvc_build(sln_file, 'libssh', ctx.target_path, ctx.bits_path, False)
+        utils.ensure_file_exists(out_file)
+
     def _build_jsoncpp(self, file_name):
-        cc.n('prepare jsoncpp source code...')
+        cc.n('prepare jsoncpp source code... ', end='')
         if not os.path.exists(self.JSONCPP_PATH_SRC):
             utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
             os.rename(os.path.join(PATH_EXTERNAL, 'jsoncpp-{}'.format(env.ver_jsoncpp)), self.JSONCPP_PATH_SRC)
@@ -468,7 +511,7 @@ def main():
     builder.build_openssl()
     ####builder.build_libuv()
     builder.build_mbedtls()
-    # builder.build_libssh()
+    builder.build_libssh()
     builder.build_sqlite()
     #
     # builder.fix_output()
