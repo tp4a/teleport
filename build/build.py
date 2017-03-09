@@ -24,7 +24,7 @@ ctx = BuildContext()
 def main():
     cc.set_default(sep='', end='\n')
 
-    if not env.init():
+    if not env.init(warn_miss_tool=True):
         return
 
     action = None

@@ -10,7 +10,6 @@ import time
 from . import colorconsole as cc
 from .env import env
 
-
 from .configs import cfg
 
 try:
@@ -34,23 +33,39 @@ THIS_PATH = os.path.abspath(os.path.dirname(__file__))
 ROOT_PATH = os.path.abspath(os.path.join(THIS_PATH, '..'))
 
 
+def _check_download_file(file_name):
+    if env.is_win:
+        # use 7z to test integrity of downloaded
+        ret, output = sys_exec('"{}" t "{}"'.format(env.zip7, file_name), False)
+        if 'Everything is Ok' in output:
+            return True
+    else:
+        cc.e('fixme.')
+        return False
+
+
 def download_file(desc, url, target_path, file_name):
-    cc.n('downloading {} ...'.format(desc))
+    cc.n('download {} ... '.format(desc), end='')
 
     local_file_name = os.path.join(target_path, file_name)
     if os.path.exists(local_file_name):
-        cc.w('already exists, skip.')
-        return True
+        if not _check_download_file(local_file_name):
+            cc.w('already exists but broken, download it again...')
+        else:
+            cc.w('already exists, skip.')
+            return True
 
+    cc.v('')
+    # 因为下载过程会在命令行显示进度，所以不能使用subprocess.Popen()的方式捕获输出，会很难看！
     if env.is_win:
-        cmd = '"{}" --no-check-certificate {} -O "{}"'.format(env.wget, url, local_file_name)
-        sys_exec(cmd, True)
+        cmd = '""{}" --no-check-certificate {} -O "{}""'.format(env.wget, url, local_file_name)
+        os.system(cmd)
     elif env.is_linux:
         os.system('wget --no-check-certificate {} -O "{}"'.format(url, local_file_name))
     else:
         return False
 
-    if not os.path.exists(local_file_name):
+    if not os.path.exists(local_file_name) or not _check_download_file(local_file_name):
         cc.e('downloading {} from {} failed.'.format(desc, url))
         return False
 
@@ -308,8 +323,6 @@ def winreg_read_wow64_32(path, key):
 
 
 def sys_exec(cmd, direct_output=False, output_codec=None):
-    cc.v(cmd)
-    # _os = platform.system().lower()
     if output_codec is None:
         if env.is_win:
             output_codec = 'gb2312'
@@ -323,17 +336,19 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
     else:
         p = subprocess.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
 
-    output = ''
+    output = list()
     f = p.stdout
     while True:
         line = f.readline()
         if 0 == len(line):
             break
 
-        if direct_output:
-            cc.o((cc.CR_GRAY, line), end='')
+        line = line.rstrip('\r\n')
 
-        output += line
+        if direct_output:
+            cc.o((cc.CR_GRAY, line), end='\n')
+
+        output.append(line)
 
     ret = p.wait()
 
@@ -416,6 +431,15 @@ def make_zip(src_path, to_file):
     p = os.path.dirname(to_file)
     shutil.make_archive(os.path.join(p, n), 'zip', src_path)
     ensure_file_exists(to_file)
+
+
+def unzip(file_name, to_path):
+    if env.is_win:
+        cmd = '""{}" x "{}" -o"{}""'.format(env.zip7, file_name, to_path)
+        print(cmd)
+        os.system(cmd)
+    elif env.is_linux:
+        os.system('unzip "{}" -d "{}"'.format(file_name, to_path))
 
 
 def make_targz(work_path, folder, to_file):
