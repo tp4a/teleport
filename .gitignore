@@ -65,3 +65,5 @@ __pycache__
 /dist/windows/client/assist/cfg
 /client/tools/putty
 /client/tools/winscp
+/external/libssh-win-static/include/libssh
+/external/libssh-win-static/src
