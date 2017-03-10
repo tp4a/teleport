@@ -199,6 +199,8 @@ class Env(object):
 
     def _get_nsis(self):
         p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\NSIS\Unicode', '')
+        if p is None:
+            p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\NSIS', '')
         return os.path.join(p[0], 'makensis.exe') if p is not None else None
 
     def _winreg_read(self, base, path, key):

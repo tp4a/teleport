@@ -46,6 +46,8 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\..\out\client\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>..\..\out\_tmp_\$(ProjectName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>D:\apps\vld\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\apps\vld\lib\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

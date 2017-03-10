@@ -105,7 +105,7 @@ void http_rpc_main_loop(void)
 
 	g_http_interface.run();
 
-	EXLOGW("[prc] main loop end.\n");
+	EXLOGW("[rpc] main loop end.\n");
 }
 
 void http_rpc_stop(void)
@@ -188,7 +188,6 @@ bool TsHttpRpc::init(const char* ip, int port)
 	else
 		sprintf_s(addr, 128, "%s:%d", ip, port);
 
-	mg_mgr_init(&m_mg_mgr, NULL);
 	nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
 	if (nc == NULL)
 	{
@@ -250,7 +249,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		memcpy(&_uri[0], hm->uri.p, hm->uri.len);
 		uri = &_uri[0];
 
-#ifdef TS_DEBUG
+#ifdef EX_DEBUG
 		char* dbg_method = NULL;
 		if (hm->method.len == 3 && 0 == memcmp(hm->method.p, "GET", hm->method.len))
 			dbg_method = "GET";
@@ -319,6 +318,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 
 				mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: %s\r\n\r\n", file_size, content_type.c_str());
 				mg_send(nc, buf, file_size);
+				delete []buf;
 				nc->flags |= MG_F_SEND_AND_CLOSE;
 				return;
 			}
