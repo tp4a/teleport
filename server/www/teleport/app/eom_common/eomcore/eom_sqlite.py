@@ -7,7 +7,7 @@ import os
 import sqlite3
 import threading
 
-from .logger import *
+from .logger import log
 
 sqlite_pool = None
 
@@ -75,7 +75,6 @@ class eom_sqlite:
         cursor = self._conn.cursor()
         try:
             cursor.executescript(sql)
-            # print(sql)
             self._conn.commit()
             cursor.close()
         except Exception as e:
@@ -99,6 +98,7 @@ class SqlitePool:
     def init(self, path):
         self._conn_sys.clear()
         self._path = os.path.join(path, 'ts_db.db')
+        log.w('use sqlite database, db file: {}\n'.format(self._path))
         if not os.path.exists(self._path):
             return False
 

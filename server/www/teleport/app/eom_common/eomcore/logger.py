@@ -18,19 +18,19 @@ LOG_INFO = 2
 LOG_WARN = 3
 LOG_ERROR = 4
 
-USE_TPWEB_LOG = True
+USE_TPWEB_LOG = False
 
 try:
     import tpweb
 
+    USE_TPWEB_LOG = True
     LOG_DEBUG = tpweb.EX_LOG_LEVEL_DEBUG
     LOG_VERBOSE = tpweb.EX_LOG_LEVEL_VERBOSE
     LOG_INFO = tpweb.EX_LOG_LEVEL_INFO
     LOG_WARN = tpweb.EX_LOG_LEVEL_WARN
     LOG_ERROR = tpweb.EX_LOG_LEVEL_ERROR
 except ImportError:
-    print('can not import tpweb.')
-    USE_TPWEB_LOG = False
+    pass
 
 TRACE_ERROR_NONE = 0
 TRACE_ERROR_FULL = 999999
@@ -174,7 +174,6 @@ class EomLogger:
             self.v = self._log_pass
             self.i = self._log_pass
             self.w = self._log_pass
-            pass
         else:
             pass
 
@@ -208,6 +207,8 @@ class EomLogger:
                     self._console_restore_color = self._log_pass
 
     def _set_filename(self, base_filename):
+        if USE_TPWEB_LOG:
+            return True
 
         if len(base_filename) == 0:
             if self._file_handle is not None:
@@ -224,7 +225,7 @@ class EomLogger:
             self._file_handle = open(log_filename, 'a+', encoding='utf8')
         except IOError:
             self._file_handle = None
-            self.e('Can not open log file for write.\n')
+            self.e('Can not open log file for write [{}].\n'.format(log_filename))
             return False
 
         return True
@@ -314,18 +315,21 @@ class EomLogger:
         self._win_color.set_color(COLORS[cr][1])
 
     def _console_set_color_linux(self, cr=None):
-        if cr is None:
+        if cr is None or USE_TPWEB_LOG:
             return
-        if not USE_TPWEB_LOG:
-            sys.stdout.writelines('\x1B')
-            sys.stdout.writelines(COLORS[cr][0])
+        sys.stdout.writelines('\x1B')
+        sys.stdout.writelines(COLORS[cr][0])
         sys.stdout.flush()
 
     def _console_restore_color_win(self):
+        if USE_TPWEB_LOG:
+            return
         self._win_color.set_color(COLORS[CR_NORMAL][1])
         sys.stdout.flush()
 
     def _console_restore_color_linux(self):
+        if USE_TPWEB_LOG:
+            return
         sys.stdout.writelines('\x1B[0m')
         sys.stdout.flush()
 

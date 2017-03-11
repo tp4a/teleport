@@ -39,7 +39,7 @@ class WebServerCore:
 
         cfg.app_mode = APP_MODE_NORMAL
         # cfg.app_mode = APP_MODE_UNKNOWN
-        # if os.path.exists(os.path.join(cfg.app_path, 'maintenance-mode')):
+        # if os.path.exists(os.path.join(cfg.cfg_path, 'maintenance-mode')):
         #     cfg.app_mode = APP_MODE_UPGRADE
         # else:
         #     cfg.app_mode = APP_MODE_NORMAL
@@ -59,6 +59,9 @@ class WebServerCore:
 
         log.set_attribute(min_level=cfg.log_level, filename=cfg.log_file)
         # log.set_attribute(min_level=self['log_level'])
+
+        # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口）
+        self._get_core_server_config()
 
         if not web_session().init():
             return False
@@ -81,9 +84,7 @@ class WebServerCore:
             x = json.loads(body)
             cfg.update_core(x['data'])
         except:
-            log.w('can not connect to core server for get config, maybe it not start yet.\n')
-
-        # return True
+            log.w('can not connect to core server for get config, maybe it not start yet, ignore.\n')
 
     def run(self):
 
@@ -119,9 +120,6 @@ class WebServerCore:
         # settings['compiled_template_cache'] = False
         # settings['static_hash_cache'] = False
 
-        # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口）
-        self._get_core_server_config()
-
         from eom_app.controller import controllers
         web_app = tornado.web.Application(controllers, **settings)
 
@@ -132,7 +130,6 @@ class WebServerCore:
         except:
             log.e('Can not listen on port {}, maybe it been used by another application.\n'.format(cfg.server_port))
             return 0
-
 
         # 启动session超时管理
         web_session().start()
