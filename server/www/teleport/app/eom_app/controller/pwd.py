@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from .base import SwxAuthHandler
+from .base import TPBaseUserAuthHandler
 
 
-class IndexHandler(SwxAuthHandler):
+class IndexHandler(TPBaseUserAuthHandler):
     def get(self):
         self.render('pwd/index.mako')

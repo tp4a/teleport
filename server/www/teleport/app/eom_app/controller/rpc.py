@@ -10,12 +10,12 @@ from eom_app.app.util import async_post_http
 from eom_app.module import host, record
 from eom_common.eomcore.logger import *
 
-from .base import SwxJsonHandler
+from .base import TPBaseJsonHandler
 
 cfg = app_cfg()
 
 
-class RpcHandler(SwxJsonHandler):
+class RpcHandler(TPBaseJsonHandler):
     @tornado.gen.coroutine
     def get(self):
         _uri = self.request.uri.split('?', 1)

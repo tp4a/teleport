@@ -9,7 +9,7 @@ from eom_env import *
 from eom_common.eomcore.eom_sqlite import get_sqlite_pool
 from eom_common.eomcore.logger import *
 
-log.set_attribute(min_level=LOG_DEBUG, log_datetime=False, trace_error=TRACE_ERROR_FULL)
+log.set_attribute(min_level=LOG_DEBUG, log_datetime=False, trace_error=log.TRACE_ERROR_FULL)
 
 db_file = os.path.join(PATH_DATA, 'ts_db.db')
 

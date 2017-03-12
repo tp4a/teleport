@@ -37,12 +37,11 @@ class WebServerCore:
         cfg.res_path = os.path.abspath(options['res_path'])
         cfg.cfg_path = os.path.abspath(options['cfg_path'])
 
-        cfg.app_mode = APP_MODE_NORMAL
-        # cfg.app_mode = APP_MODE_UNKNOWN
-        # if os.path.exists(os.path.join(cfg.cfg_path, 'maintenance-mode')):
-        #     cfg.app_mode = APP_MODE_UPGRADE
-        # else:
-        #     cfg.app_mode = APP_MODE_NORMAL
+        # cfg.app_mode = APP_MODE_NORMAL
+        if os.path.exists(os.path.join(cfg.cfg_path, 'maintenance-mode')):
+            cfg.app_mode = APP_MODE_MAINTENANCE
+        else:
+            cfg.app_mode = APP_MODE_NORMAL
 
         _cfg_file = os.path.join(cfg.cfg_path, 'web.ini')
         if not cfg.load_web(_cfg_file):
@@ -58,7 +57,8 @@ class WebServerCore:
                 return False
 
         log.set_attribute(min_level=cfg.log_level, filename=cfg.log_file)
-        # log.set_attribute(min_level=self['log_level'])
+        if cfg.debug:
+            log.set_attribute(trace_error=log.TRACE_ERROR_FULL)
 
         # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口）
         self._get_core_server_config()
@@ -109,16 +109,13 @@ class WebServerCore:
             # 'debug': True,
 
             # Debug Mode.
-            'compiled_template_cache': False,
-            'static_hash_cache': False,
+            'compiled_template_cache': True,
+            'static_hash_cache': True,
         }
 
-        # TODO: 配置文件中应该增加 debug 选项
-        # if cfg.debug:
-        #     settings['compiled_template_cache'] = False
-        #     settings['static_hash_cache'] = False
-        # settings['compiled_template_cache'] = False
-        # settings['static_hash_cache'] = False
+        if cfg.debug:
+            settings['compiled_template_cache'] = False
+            settings['static_hash_cache'] = False
 
         from eom_app.controller import controllers
         web_app = tornado.web.Application(controllers, **settings)

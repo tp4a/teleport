@@ -12,7 +12,7 @@ import time
 from eom_app.app.configs import app_cfg
 from eom_app.module import host
 from eom_app.module import set
-from .base import SwxAdminHandler, SwxAdminJsonHandler
+from .base import TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
 
 cfg = app_cfg()
 
@@ -40,7 +40,7 @@ def get_local_ip():
         return iplist
 
 
-class IndexHandler(SwxAdminHandler):
+class IndexHandler(TPBaseAdminAuthHandler):
     def get(self):
         # static_path = cfg.static_path
         # var_js = os.path.join(static_path, 'js', 'var.js')
@@ -114,7 +114,7 @@ def restart_service():
     t.start()
 
 
-class UpdateConfig(SwxAdminJsonHandler):
+class UpdateConfig(TPBaseAdminAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -159,7 +159,7 @@ class UpdateConfig(SwxAdminJsonHandler):
         except:
             self.write_json(-2)
 
-# class OsOperator(SwxAuthJsonHandler):
+# class OsOperator(TPBaseUserAuthJsonHandler):
 #     def post(self):
 #         args = self.get_argument('args', None)
 #         if args is not None:

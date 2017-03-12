@@ -10,7 +10,7 @@ import traceback
 
 __all__ = ['log',
            'CR_DEBUG', 'CR_VERBOSE', 'CR_INFO', 'CR_WARN', 'CR_ERROR',
-           'LOG_DEBUG', 'LOG_VERBOSE', 'LOG_INFO', 'LOG_WARN', 'LOG_ERROR', 'TRACE_ERROR_NONE', 'TRACE_ERROR_FULL']
+           'LOG_DEBUG', 'LOG_VERBOSE', 'LOG_INFO', 'LOG_WARN', 'LOG_ERROR']
 
 LOG_DEBUG = 0
 LOG_VERBOSE = 1
@@ -31,9 +31,6 @@ try:
     LOG_ERROR = tpweb.EX_LOG_LEVEL_ERROR
 except ImportError:
     pass
-
-TRACE_ERROR_NONE = 0
-TRACE_ERROR_FULL = 999999
 
 # ======================================
 # 颜色
@@ -95,6 +92,9 @@ class EomLogger:
     :type _win_color : Win32ColorConsole
     """
 
+    TRACE_ERROR_NONE = 0
+    TRACE_ERROR_FULL = 999999
+
     def __init__(self):
         atexit.register(self.finalize)
 
@@ -104,7 +104,7 @@ class EomLogger:
         # self._end = '\n'
 
         self._min_level = LOG_INFO  # 大于等于此值的日志信息才会记录
-        self._trace_error = TRACE_ERROR_NONE  # 记录错误信息时，是否追加记录调用栈
+        self._trace_error = self.TRACE_ERROR_NONE  # 记录错误信息时，是否追加记录调用栈
         self._log_datetime = True  # 是否记录日志时间
         self._file_handle = None  # 日志文件的句柄，为None时表示不记录到文件
 
@@ -257,7 +257,7 @@ class EomLogger:
         self._console_set_color(CR_ERROR)
         self._do_log(LOG_ERROR, *args, **kwargs)
 
-        if self._trace_error == TRACE_ERROR_NONE:
+        if self._trace_error == self.TRACE_ERROR_NONE:
             return
 
         s = traceback.extract_stack()

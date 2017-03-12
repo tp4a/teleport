@@ -98,9 +98,10 @@ class WebSession(threading.Thread):
             else:
                 return _default
 
+
 def web_session():
     """
-    取得 SwxSession 的唯一实例
+    取得Session管理器的唯一实例
 
     :rtype : WebSession
     """

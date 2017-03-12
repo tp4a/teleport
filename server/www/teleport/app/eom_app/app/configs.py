@@ -60,6 +60,7 @@ class ConfigFile(AttrDict):
         if self['log_file'] is not None:
             self['log_path'] = os.path.dirname(self['log_file'])
 
+        self['log_level'] = LOG_INFO
         _level = _comm.getint('log-level', 2)
         if _level == 0:
             self['log_level'] = LOG_DEBUG
@@ -75,6 +76,12 @@ class ConfigFile(AttrDict):
             self['log_level'] = LOG_VERBOSE
 
         # log.set_attribute(min_level=self['log_level'])
+
+        self['debug'] = False
+        _debug = _comm.getint('debug', 0)
+        if _debug == 1:
+            self['log_level'] = LOG_DEBUG
+            self['debug'] = True
 
         self['core_server_rpc'] = _comm.get('core-server-rpc', 'http://127.0.0.1:52080/rpc')
 

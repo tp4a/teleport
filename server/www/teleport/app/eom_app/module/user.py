@@ -1,20 +1,34 @@
 # -*- coding: utf-8 -*-
+
 import hashlib
+from eom_app.app.const import *
+from eom_app.app.configs import app_cfg
 
 from .common import *
 
+cfg = app_cfg()
 
-def verify_user(username, userpwd):
-    sql_exec = get_db_con()
-    userpwd = hashlib.sha256(userpwd.encode()).hexdigest()
 
+def verify_user(name, password):
+    _password = hashlib.sha256(password.encode()).hexdigest()
     string_sql = 'select account_id, account_type, ' \
-                 'account_name FROM ts_account WHERE account_name =\'{}\' AND account_pwd = \'{}\''.format(username, userpwd)
+                 'account_name FROM ts_account WHERE account_name =\'{}\' AND account_pwd = \'{}\''.format(name, _password)
+
+    sql_exec = get_db_con()
     db_ret = sql_exec.ExecProcQuery(string_sql)
+    if db_ret is None:
+        # 特别地，如果无法取得数据库连接，有可能是新安装的系统，尚未建立数据库，此时应该处于维护模式
+        # 因此可以特别地处理用户验证：用户名admin，密码admin可以登录为管理员
+        if cfg.app_mode == APP_MODE_MAINTENANCE:
+            if name == 'admin' and password == 'admin':
+                return 1, 100, 'admin'
+    else:
+        return 0, 0, ''
+
     if len(db_ret) != 1:
         return 0, 0, ''
-    user_id, account_type, username = db_ret[0]
-    return user_id, account_type, username
+    user_id, account_type, name = db_ret[0]
+    return user_id, account_type, name
 
 
 def modify_pwd(old_pwd, new_pwd, user_id):

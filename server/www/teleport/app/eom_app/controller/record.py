@@ -9,7 +9,7 @@ from eom_app.app.configs import app_cfg
 # from eom_app.module import host
 from eom_app.module import record
 from eom_app.module import user
-from .base import SwxAdminHandler, SwxAdminJsonHandler
+from .base import TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
 
 cfg = app_cfg()
 
@@ -31,7 +31,7 @@ def get_free_space_bytes(folder):
     return total_bytes, free_bytes
 
 
-class LogHandler(SwxAdminHandler):
+class LogHandler(TPBaseAdminAuthHandler):
     def get(self):
         user_list = user.get_user_list()
         total_size, free_size = get_free_space_bytes(cfg.data_path)
@@ -47,7 +47,7 @@ class LogHandler(SwxAdminHandler):
         self.render('log/index.mako', page_param=json.dumps(param))
 
 
-class RecordHandler(SwxAdminHandler):
+class RecordHandler(TPBaseAdminAuthHandler):
     def get(self, protocol, record_id):
         protocol = int(protocol)
         if protocol == 1:
@@ -56,7 +56,7 @@ class RecordHandler(SwxAdminHandler):
             self.render('log/record.mako', record_id=record_id)
 
 
-# class PlayRdpHandler(SwxAdminHandler):
+# class PlayRdpHandler(TPBaseAdminAuthHandler):
 #     def get(self, ip, record_id):
 #         # protocol = int(protocol)
 #         # if protocol == 1:
@@ -68,7 +68,7 @@ class RecordHandler(SwxAdminHandler):
 #         filename = os.path.join(cfg.data_path, 'replay', 'rdp', '{}'.format(record_id), 'tp-rdp.tpr')
 
 
-class ComandLogHandler(SwxAdminHandler):
+class ComandLogHandler(TPBaseAdminAuthHandler):
     def get(self, protocol, record_id):
 
         param = dict()
@@ -93,7 +93,7 @@ class ComandLogHandler(SwxAdminHandler):
         self.render('log/record-ssh-cmd.mako', page_param=json.dumps(param))
 
 
-class RecordGetHeader(SwxAdminJsonHandler):
+class RecordGetHeader(TPBaseAdminAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -111,7 +111,7 @@ class RecordGetHeader(SwxAdminJsonHandler):
         self.write_json(0, data=ret)
 
 
-class RecordGetInfo(SwxAdminJsonHandler):
+class RecordGetInfo(TPBaseAdminAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -124,7 +124,7 @@ class RecordGetInfo(SwxAdminJsonHandler):
         self.write_json(0, data=data)
 
 
-class DeleteLog(SwxAdminJsonHandler):
+class DeleteLog(TPBaseAdminAuthJsonHandler):
     # TODO: 用户可能会批量删除大量录像文件，因此io操作可能会比较耗时，这里应该改为异步方式。
     def post(self):
         args = self.get_argument('args', None)
@@ -136,7 +136,7 @@ class DeleteLog(SwxAdminJsonHandler):
         self.write_json(0)
 
 
-class LogList(SwxAdminJsonHandler):
+class LogList(TPBaseAdminAuthJsonHandler):
     def post(self):
         filter = dict()
         order = dict()

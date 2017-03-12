@@ -17,12 +17,21 @@ from eom_app.app.const import *
 cfg = app_cfg()
 
 
-class SwxBaseHandler(tornado.web.RequestHandler):
+class TPBaseHandler(tornado.web.RequestHandler):
+    """
+    所有http请求处理的基类，只有极少数的请求如登录、维护直接从本类继承，其他的所有类均从本类的子类（控制权限的类）继承
+    """
+
+    MODE_HTTP = 0
+    MODE_JSON = 1
+    # MODE_JSONP = 2
+
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
 
         self._s_id = None
-        # self._s_val = dict()
+        self._mode = self.MODE_HTTP
+        # self._jsonp_callback = ''
 
     def initialize(self):
         template_path = self.get_template_path()
@@ -35,10 +44,48 @@ class SwxBaseHandler(tornado.web.RequestHandler):
         return template.render(**namespace)
 
     def render(self, template_path, **kwargs):
+        if self._mode != self.MODE_HTTP:
+            self.write_json(-1, 'should be web page request.')
+            return
         self.finish(self.render_string(template_path, **kwargs))
+
+    def write_json(self, code, message='', data=None):
+        if self._mode != self.MODE_JSON:
+            self.write('should be json request.')
+            self.finish()
+            return
+
+        if not isinstance(code, int):
+            raise RuntimeError('`code` must be a integer.')
+        if not isinstance(message, str):
+            raise RuntimeError('`msg` must be a string.')
+
+        if data is None:
+            data = list()
+
+        _ret = {'code': code, 'message': message, 'data': data}
+
+        self.set_header("Content-Type", "application/json")
+        self.write(json_encode(_ret))
+        self.finish()
+
+    def write_raw_json(self, data=None):
+        if self._mode != self.MODE_JSON:
+            self.write('should be json request.')
+            self.finish()
+            return
+
+        if data is None:
+            data = list()
+
+        self.set_header("Content-Type", "application/json")
+        self.write(json_encode(data))
+        self.finish()
 
     def prepare(self):
         super().prepare()
+        if self._finished:
+            return
 
         # if self.application.settings.get("xsrf_cookies"):
         #     x = self.xsrf_token
@@ -76,58 +123,26 @@ class SwxBaseHandler(tornado.web.RequestHandler):
         return user
 
 
-class SwxAppHandler(SwxBaseHandler):
-    def __init__(self, application, request, **kwargs):
-        super().__init__(application, request, **kwargs)
-
-    def prepare(self):
-        super().prepare()
-        if self._finished:
-            return
-
-        if cfg.app_mode == APP_MODE_NORMAL:
-            return
-
-        # self.redirect('/maintenance')
-        self.render('maintenance/index.mako')
-
-
-class SwxJsonpHandler(SwxAppHandler):
-    def __init__(self, application, request, **kwargs):
-        super().__init__(application, request, **kwargs)
-
-        self._js_callback = ''
-
-    def prepare(self):
-        super().prepare()
-        if self._finished:
-            return
-
-        self._js_callback = self.get_argument('callback', None)
-        if self._js_callback is None:
-            raise RuntimeError('no callback in URL param.')
-
-    def write_jsonp(self, err_code, data=None):
-
-        self.write(self._js_callback)
-        self.write('({code:')
-        self.write('{}'.format(err_code))
-
-        if data is None:
-            self.write('})')
-            self.finish()
-            return
-
-        if not isinstance(data, dict):
-            raise RuntimeError('jsonp data should be dict.')
-
-        self.write(',data:')
-        self.write(json_encode(data))
-        self.write('})')
-        self.finish()
+# class TPBaseAppHandler(TPBaseHandler):
+#     """
+#     权限控制：如果处于维护模式，只有管理员登录后方可操作，其他用户均显示维护页面
+#     """
+#     def __init__(self, application, request, **kwargs):
+#         super().__init__(application, request, **kwargs)
+#
+#     def prepare(self):
+#         super().prepare()
+#         if self._finished:
+#             return
+#
+#         if cfg.app_mode == APP_MODE_NORMAL:
+#             return
+#
+#         # self.redirect('/maintenance')
+#         self.render('maintenance/index.mako')
 
 
-class SwxJsonHandler(SwxAppHandler):
+class TPBaseJsonHandler(TPBaseHandler):
     """
     所有返回JSON数据的控制器均从本类集成，返回的数据格式一律包含三个字段：code/msg/data
     code: 0=成功，其他=失败
@@ -137,33 +152,10 @@ class SwxJsonHandler(SwxAppHandler):
 
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
-
-    def write_json(self, code, message='', data=None):
-        if not isinstance(code, int):
-            raise RuntimeError('`code` must be a integer.')
-        if not isinstance(message, str):
-            raise RuntimeError('`msg` must be a string.')
-
-        if data is None:
-            data = list()
-
-        _ret = {'code': code, 'message': message, 'data': data}
-
-        self.set_header("Content-Type", "application/json")
-        self.write(json_encode(_ret))
-        self.finish()
-
-    def write_raw_json(self, data=None):
-
-        if data is None:
-            data = list()
-
-        self.set_header("Content-Type", "application/json")
-        self.write(json_encode(data))
-        self.finish()
+        self._mode = self.MODE_JSON
 
 
-class SwxAuthHandler(SwxAppHandler):
+class TPBaseUserAuthHandler(TPBaseHandler):
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
 
@@ -181,9 +173,14 @@ class SwxAuthHandler(SwxAppHandler):
                 self.redirect('/auth/login?ref={}'.format(x))
             else:
                 self.redirect('/auth/login')
+        else:
+            if cfg.app_mode == APP_MODE_MAINTENANCE and user['type'] != 100:
+                self.render('maintenance/index.mako')
+            else:
+                pass
 
 
-class SwxAdminHandler(SwxAppHandler):
+class TPBaseAdminAuthHandler(TPBaseHandler):
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
 
@@ -195,20 +192,21 @@ class SwxAdminHandler(SwxAppHandler):
         reference = self.request.uri
 
         user = self.get_current_user()
-        if user['type'] != 100:
-            if reference != '/auth/login':
+        if not user['is_login'] or user['type'] != 100:
+            if reference != '/auth/login':    # 防止循环重定向
                 x = quote(reference)
                 self.redirect('/auth/login?ref={}'.format(x))
             else:
                 self.redirect('/auth/login')
+        else:
+            if cfg.app_mode == APP_MODE_MAINTENANCE:
+                # TODO: 如果是维护模式，且尚未建立数据库，则引导用户进入安装界面，否则检查数据库版本，可能引导用户进入升级界面。
+                self.render('maintenance/index.mako')
+            else:
+                pass
 
 
-# class SwxAuthJsonpHandler(SwxAppHandler):
-#     def __init__(self, application, request, **kwargs):
-#         super().__init__(application, request, **kwargs)
-
-
-class SwxAuthJsonHandler(SwxJsonHandler):
+class TPBaseUserAuthJsonHandler(TPBaseJsonHandler):
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
 
@@ -226,8 +224,14 @@ class SwxAuthJsonHandler(SwxJsonHandler):
             else:
                 self.write_json(-99)
 
+        else:
+            if cfg.app_mode == APP_MODE_MAINTENANCE and user['type'] != 100:
+                self.write_json(-1, 'maintenance mode')
+            else:
+                pass
 
-class SwxAdminJsonHandler(SwxJsonHandler):
+
+class TPBaseAdminAuthJsonHandler(TPBaseJsonHandler):
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
 
@@ -239,6 +243,6 @@ class SwxAdminJsonHandler(SwxJsonHandler):
         reference = self.request.uri
 
         user = self.get_current_user()
-        if user['type'] != 100:
+        if not user['is_login'] or user['type'] != 100:
             if reference != '/auth/login':
                 self.write_json(-99)

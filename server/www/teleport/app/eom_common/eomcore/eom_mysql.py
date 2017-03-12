@@ -1,20 +1,9 @@
-# coding=utf-8
-# !/usr/bin/env python
-# -------------------------------------------------------------------------------
-# Name: pymssqlTest.py
-# Purpose: 测试 pymssql库，该库到这里下载：http://www.lfd.uci.edu/~gohlke/pythonlibs/#pymssql
-#
-# Author: scott
-#
-# Created: 04/02/2012
-# -------------------------------------------------------------------------------
+# -*- coding: utf-8 -*-
 
 import pymysql
 import threading
 from .logger import *
-# import logic.config_file
 
-# eom_comm_conf = logic.config_file.get_comm_conf()
 mysql_pool = None
 
 

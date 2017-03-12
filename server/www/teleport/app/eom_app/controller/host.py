@@ -13,7 +13,7 @@ from eom_app.app.util import *
 from eom_app.module import host
 from eom_common.eomcore.logger import *
 from eom_app.app.session import web_session
-from .base import SwxAuthHandler, SwxAdminHandler, SwxAuthJsonHandler, SwxAdminJsonHandler
+from .base import TPBaseUserAuthHandler, TPBaseAdminAuthHandler, TPBaseUserAuthJsonHandler, TPBaseAdminAuthJsonHandler
 
 cfg = app_cfg()
 
@@ -22,7 +22,7 @@ tmp_auth_id_base = -1
 tmp_auth_id_lock = threading.RLock()
 
 
-class IndexHandler(SwxAuthHandler):
+class IndexHandler(TPBaseUserAuthHandler):
     def get(self):
         _user = self.get_session('user')
         if _user is None:
@@ -45,7 +45,7 @@ class IndexHandler(SwxAuthHandler):
             self.render('host/common_index.mako', page_param=json.dumps(param))
 
 
-class UploadAndImportHandler(SwxAdminJsonHandler):
+class UploadAndImportHandler(TPBaseAdminAuthJsonHandler):
     # TODO: 导入操作可能会比较耗时，应该分离导入和获取导入状态两个过程，在页面上可以呈现导入进度，并列出导出成功/失败的项
 
     @tornado.gen.coroutine
@@ -208,7 +208,7 @@ class UploadAndImportHandler(SwxAdminJsonHandler):
                 os.remove(csv_filename)
 
 
-class GetListHandler(SwxAuthJsonHandler):
+class GetListHandler(TPBaseUserAuthJsonHandler):
     def post(self):
         _user = self.get_session('user')
         if _user is None:
@@ -279,13 +279,13 @@ class GetListHandler(SwxAuthJsonHandler):
         # self.write(json_encode(data))
 
 
-class GetGrouplist(SwxAuthJsonHandler):
+class GetGrouplist(TPBaseUserAuthJsonHandler):
     def post(self):
         group_list = host.get_group_list()
         self.write_json(0, data=group_list)
 
 
-class UpdateHandler(SwxAuthJsonHandler):
+class UpdateHandler(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -311,7 +311,7 @@ class UpdateHandler(SwxAuthJsonHandler):
             self.write_json(-1)
 
 
-class AddHost(SwxAuthJsonHandler):
+class AddHost(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -334,7 +334,7 @@ class AddHost(SwxAuthJsonHandler):
             return
 
 
-class LockHost(SwxAuthJsonHandler):
+class LockHost(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -359,7 +359,7 @@ class LockHost(SwxAuthJsonHandler):
             return
 
 
-class DeleteHost(SwxAuthJsonHandler):
+class DeleteHost(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -382,7 +382,7 @@ class DeleteHost(SwxAuthJsonHandler):
             return
 
 
-class ExportHostHandler(SwxAdminHandler):
+class ExportHostHandler(TPBaseAdminAuthHandler):
     def get(self):
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Disposition', 'attachment; filename=teleport-host-export.csv')
@@ -451,7 +451,7 @@ class ExportHostHandler(SwxAdminHandler):
         self.finish()
 
 
-class GetCertList(SwxAuthJsonHandler):
+class GetCertList(TPBaseUserAuthJsonHandler):
     def post(self):
         # args = self.get_argument('args', None)
         # if args is not None:
@@ -470,7 +470,7 @@ class GetCertList(SwxAuthJsonHandler):
             return
 
 
-class AddCert(SwxAuthJsonHandler):
+class AddCert(TPBaseUserAuthJsonHandler):
     @tornado.gen.coroutine
     def post(self):
         args = self.get_argument('args', None)
@@ -508,7 +508,7 @@ class AddCert(SwxAuthJsonHandler):
             return self.write_json(-1)
 
 
-class DeleteCert(SwxAuthJsonHandler):
+class DeleteCert(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -531,7 +531,7 @@ class DeleteCert(SwxAuthJsonHandler):
             return
 
 
-class UpdateCert(SwxAuthJsonHandler):
+class UpdateCert(TPBaseUserAuthJsonHandler):
     @tornado.gen.coroutine
     def post(self):
         args = self.get_argument('args', None)
@@ -570,7 +570,7 @@ class UpdateCert(SwxAuthJsonHandler):
             return
 
 
-class AddGroup(SwxAuthJsonHandler):
+class AddGroup(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -593,7 +593,7 @@ class AddGroup(SwxAuthJsonHandler):
             return
 
 
-class UpdateGroup(SwxAuthJsonHandler):
+class UpdateGroup(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -617,7 +617,7 @@ class UpdateGroup(SwxAuthJsonHandler):
             return
 
 
-class DeleteGroup(SwxAuthJsonHandler):
+class DeleteGroup(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -640,7 +640,7 @@ class DeleteGroup(SwxAuthJsonHandler):
             return
 
 
-class AddHostToGroup(SwxAuthJsonHandler):
+class AddHostToGroup(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -664,7 +664,7 @@ class AddHostToGroup(SwxAuthJsonHandler):
             return
 
 
-class GetSessionId(SwxAuthJsonHandler):
+class GetSessionId(TPBaseUserAuthJsonHandler):
     @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
@@ -704,7 +704,7 @@ class GetSessionId(SwxAuthJsonHandler):
         return self.write_json(0, data=data)
 
 
-class AdminGetSessionId(SwxAuthJsonHandler):
+class AdminGetSessionId(TPBaseUserAuthJsonHandler):
     @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
@@ -765,7 +765,7 @@ class AdminGetSessionId(SwxAuthJsonHandler):
         return self.write_json(0, data=data)
 
 
-class AdminFastGetSessionId(SwxAdminJsonHandler):
+class AdminFastGetSessionId(TPBaseAdminAuthJsonHandler):
     @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
@@ -855,7 +855,7 @@ class AdminFastGetSessionId(SwxAdminJsonHandler):
         return self.write_json(0, data=data)
 
 
-class SysUserList(SwxAuthJsonHandler):
+class SysUserList(TPBaseUserAuthJsonHandler):
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:
@@ -873,7 +873,7 @@ class SysUserList(SwxAuthJsonHandler):
         return self.write_json(0, data=data)
 
 
-class SysUserAdd(SwxAuthJsonHandler):
+class SysUserAdd(TPBaseUserAuthJsonHandler):
     @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
@@ -909,7 +909,7 @@ class SysUserAdd(SwxAuthJsonHandler):
         return self.write_json(0)
 
 
-class SysUserUpdate(SwxAuthJsonHandler):
+class SysUserUpdate(TPBaseUserAuthJsonHandler):
     @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
@@ -957,7 +957,7 @@ class SysUserUpdate(SwxAuthJsonHandler):
         return self.write_json(-1)
 
 
-class SysUserDelete(SwxAuthJsonHandler):
+class SysUserDelete(TPBaseUserAuthJsonHandler):
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:

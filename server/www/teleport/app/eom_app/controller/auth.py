@@ -4,11 +4,11 @@ import json
 
 from eom_app.module import user
 from eom_common.eomcore.logger import *
-from .base import SwxAppHandler, SwxJsonpHandler, SwxAuthJsonHandler
+from .base import TPBaseHandler, TPBaseUserAuthHandler, TPBaseJsonHandler, TPBaseUserAuthJsonHandler
 from eom_app.app.util import gen_captcha
 
 
-class LoginHandler(SwxAppHandler):
+class LoginHandler(TPBaseHandler):
     def get(self):
         _user = self.get_current_user()
         if _user['id'] == 0:
@@ -23,30 +23,33 @@ class LoginHandler(SwxAppHandler):
         self.render('auth/login.mako', page_param=json.dumps(param))
 
 
-class VerifyUser(SwxJsonpHandler):
-    def get(self):
+class VerifyUser(TPBaseJsonHandler):
+    def post(self):
         code = self.get_session('captcha')
         if code is None:
-            self.write_jsonp(-1)
-            return
-
-        captcha = self.get_argument('captcha', None)
-        username = self.get_argument('username', None)
-        userpwd = self.get_argument('userpwd', None)
-
-        if captcha is None or username is None:
-            self.write_jsonp(-1)
-            return
-        if code.lower() != captcha.lower():
-            self.write_jsonp(-1)
+            self.write_json(-1, 'can not get captcha')
             return
 
         self.del_session('captcha')
 
+        args = self.get_argument('args', None)
+        if args is not None:
+            args = json.loads(args)
+            captcha = args['captcha']
+            username = args['username']
+            userpwd = args['userpwd']
+        else:
+            self.write_json(-1, 'invalid param')
+            return
+
+        if code.lower() != captcha.lower():
+            self.write_json(-1, 'invalid captcha')
+            return
+
         try:
             user_id, account_type, nickname = user.verify_user(username, userpwd)
             if user_id == 0:
-                self.write_jsonp(-1)
+                self.write_json(-1, 'no such user or password.')
                 return
 
             _user = self.get_session('user')
@@ -68,14 +71,14 @@ class VerifyUser(SwxJsonpHandler):
             _user['type'] = account_type
 
             self.set_session('user', _user)
-            return self.write_jsonp(0)
+            return self.write_json(0)
 
         except:
             log.e('can not set session.')
-            self.write_jsonp(-1)
+            self.write_json(-1, 'session error.')
 
 
-class LogoutHandler(SwxAppHandler):
+class LogoutHandler(TPBaseUserAuthHandler):
     def get(self):
         _user = self.get_current_user()
         _user['is_login'] = False
@@ -84,7 +87,7 @@ class LogoutHandler(SwxAppHandler):
         self.redirect('/auth/login')
 
 
-class GetCaptchaHandler(SwxAppHandler):
+class GetCaptchaHandler(TPBaseHandler):
     def get(self):
         code, img_data = gen_captcha()
         self.set_session('captcha', code)
@@ -92,26 +95,29 @@ class GetCaptchaHandler(SwxAppHandler):
         self.write(img_data)
 
 
-class VerifyCaptchaHandler(SwxJsonpHandler):
-    def get(self):
+class VerifyCaptchaHandler(TPBaseJsonHandler):
+    def post(self):
         code = self.get_session('captcha')
         if code is None:
-            self.write_jsonp(-1)
+            self.write_json(-1)
             return
 
-        captcha = self.get_argument('captcha', None)
-        if captcha is None:
-            self.write_jsonp(-1)
+        args = self.get_argument('args', None)
+        if args is not None:
+            args = json.loads(args)
+            captcha = args['captcha']
+        else:
+            self.write_json(-1)
             return
 
         if code.lower() != captcha.lower():
-            self.write_jsonp(-1)
+            self.write_json(-1)
             return
 
-        self.write_jsonp(0)
+        self.write_json(0)
 
 
-class ModifyPwd(SwxAuthJsonHandler):
+class ModifyPwd(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:

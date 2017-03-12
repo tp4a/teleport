@@ -4,17 +4,17 @@ import json
 from eom_app.app.configs import app_cfg
 from eom_app.module import host
 from eom_app.module import user
-from .base import SwxAuthJsonHandler, SwxAdminHandler, SwxAdminJsonHandler
+from .base import TPBaseUserAuthJsonHandler, TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
 
 cfg = app_cfg()
 
 
-class IndexHandler(SwxAdminHandler):
+class IndexHandler(TPBaseAdminAuthHandler):
     def get(self):
         self.render('user/index.mako')
 
 
-class AuthHandler(SwxAdminHandler):
+class AuthHandler(TPBaseAdminAuthHandler):
     def get(self, user_name):
         group_list = host.get_group_list()
         cert_list = host.get_cert_list()
@@ -23,7 +23,7 @@ class AuthHandler(SwxAdminHandler):
                     cert_list=cert_list, user_name=user_name)
 
 
-class GetListHandler(SwxAdminJsonHandler):
+class GetListHandler(TPBaseAdminAuthJsonHandler):
     def post(self):
         user_list = user.get_user_list()
         ret = dict()
@@ -33,7 +33,7 @@ class GetListHandler(SwxAdminJsonHandler):
         self.write_json(0, data=ret)
 
 
-class DeleteUser(SwxAuthJsonHandler):
+class DeleteUser(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -56,7 +56,7 @@ class DeleteUser(SwxAuthJsonHandler):
             return
 
 
-class ModifyUser(SwxAuthJsonHandler):
+class ModifyUser(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -82,7 +82,7 @@ class ModifyUser(SwxAuthJsonHandler):
             return
 
 
-class AddUser(SwxAuthJsonHandler):
+class AddUser(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -106,7 +106,7 @@ class AddUser(SwxAuthJsonHandler):
             return
 
 
-class LockUser(SwxAuthJsonHandler):
+class LockUser(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -131,7 +131,7 @@ class LockUser(SwxAuthJsonHandler):
             return
 
 
-class ResetUser(SwxAuthJsonHandler):
+class ResetUser(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -156,7 +156,7 @@ class ResetUser(SwxAuthJsonHandler):
             return
 
 
-class HostList(SwxAuthJsonHandler):
+class HostList(TPBaseUserAuthJsonHandler):
     def post(self):
         filter = dict()
         # user = self.get_current_user()
@@ -217,7 +217,7 @@ class HostList(SwxAuthJsonHandler):
         self.write_json(0, data=ret)
 
 
-class AllocHost(SwxAuthJsonHandler):
+class AllocHost(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -239,7 +239,7 @@ class AllocHost(SwxAuthJsonHandler):
             self.write_json(-2)
 
 
-class AllocHostUser(SwxAuthJsonHandler):
+class AllocHostUser(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -261,7 +261,7 @@ class AllocHostUser(SwxAuthJsonHandler):
             self.write_json(-2)
 
 
-class DeleteHost(SwxAuthJsonHandler):
+class DeleteHost(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -283,7 +283,7 @@ class DeleteHost(SwxAuthJsonHandler):
             self.write_json(-2)
 
 
-class DeleteHostUser(SwxAuthJsonHandler):
+class DeleteHostUser(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:

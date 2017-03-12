@@ -86,15 +86,9 @@ ywl.create_app = function () {
         show_op_box('wait', '<i class="fa fa-circle-o-notch fa-spin"></i> 正在进行身份认证，请稍候...');
 
         // 先判断一下captcha是否正确，如果不正确，拒绝登录
-        $.ajax({
-            type: 'GET',
-            url: '/auth/verify-captcha',
-            jsonp: "callback",
-            //jsonpCallback:"login_ret",
-            data: {captcha: str_captcha},
-            dataType: 'jsonp',
-            success: function (data) {
-                if (data.code == 0) {
+		ywl.ajax_post_json('/auth/verify-captcha', {captcha: str_captcha},
+			function (ret) {
+                if (ret.code == 0) {
                     // 验证成功
                     hide_op_box();
                     show_op_box('wait', '<i class="fa fa-circle-o-notch fa-spin"></i> 正在登录TELEPORT，请稍候...');
@@ -103,48 +97,98 @@ ywl.create_app = function () {
                 else {
                     hide_op_box();
                     show_op_box('error', '验证码错误！');
-                    // renew the captcha.
-                    //change_captcha();
                     $('#captcha_image').attr('src', '/auth/get-captcha?' + Math.random());
                     $('#captcha').focus().val('');
                 }
 
                 $('#btn_login').removeAttr('disabled');
-            },
-            error: function () {
+			},
+			function () {
                 hide_op_box();
                 show_op_box('error', '很抱歉，无法连接服务器！请稍后再试一次！');
                 $('#btn_login').removeAttr('disabled');
-            }
-        });
+			}
+		);
+
+//        $.ajax({
+//            type: 'GET',
+//            url: '/auth/verify-captcha',
+//            jsonp: "callback",
+//            //jsonpCallback:"login_ret",
+//            data: {captcha: str_captcha},
+//            dataType: 'jsonp',
+//            success: function (data) {
+//                if (data.code == 0) {
+//                    // 验证成功
+//                    hide_op_box();
+//                    show_op_box('wait', '<i class="fa fa-circle-o-notch fa-spin"></i> 正在登录TELEPORT，请稍候...');
+//                    _app.do_account_login(str_username, str_password, str_captcha);
+//                }
+//                else {
+//                    hide_op_box();
+//                    show_op_box('error', '验证码错误！');
+//                    // renew the captcha.
+//                    //change_captcha();
+//                    $('#captcha_image').attr('src', '/auth/get-captcha?' + Math.random());
+//                    $('#captcha').focus().val('');
+//                }
+//
+//                $('#btn_login').removeAttr('disabled');
+//            },
+//            error: function () {
+//                hide_op_box();
+//                show_op_box('error', '很抱歉，无法连接服务器！请稍后再试一次！');
+//                $('#btn_login').removeAttr('disabled');
+//            }
+//        });
     };
 
     _app.do_account_login = function (username, userpwd, captcha) {
-
-        $.ajax({
-            type: 'GET',
-            url: '/auth/verify-user',
-            jsonp: "callback",
-            data: {username: username, userpwd: userpwd, captcha: captcha},
-            dataType: 'jsonp',
-            success: function (data) {
-                if (data.code == 0) {
+		ywl.ajax_post_json('/auth/verify-user', {username: username, userpwd: userpwd, captcha: captcha},
+			function (ret) {
+                if (ret.code == 0) {
                     // 验证成功
                     window.location.href = ywl.page_options.ref;
                 }
                 else {
                     hide_op_box();
                     show_op_box('error', '无法登录TELEPORT！');
+                    console.log(ret);
                 }
 
                 $('#btn_login').removeAttr('disabled');
-            },
-            error: function () {
+			},
+			function () {
                 hide_op_box();
                 show_op_box('error', '很抱歉，无法连接服务器！请稍后再试一次！');
                 $('#btn_login').removeAttr('disabled');
-            }
-        });
+			}
+		);
+
+//        $.ajax({
+//            type: 'GET',
+//            url: '/auth/verify-user',
+//            jsonp: "callback",
+//            data: {username: username, userpwd: userpwd, captcha: captcha},
+//            dataType: 'jsonp',
+//            success: function (data) {
+//                if (data.code == 0) {
+//                    // 验证成功
+//                    window.location.href = ywl.page_options.ref;
+//                }
+//                else {
+//                    hide_op_box();
+//                    show_op_box('error', '无法登录TELEPORT！');
+//                }
+//
+//                $('#btn_login').removeAttr('disabled');
+//            },
+//            error: function () {
+//                hide_op_box();
+//                show_op_box('error', '很抱歉，无法连接服务器！请稍后再试一次！');
+//                $('#btn_login').removeAttr('disabled');
+//            }
+//        });
     };
 
     return _app;

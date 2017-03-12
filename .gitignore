@@ -73,3 +73,4 @@ __pycache__
 # for not finished code
 /common/libex/test
 /client/tp_rdp
+/server/share/etc/maintenance-mode

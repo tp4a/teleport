@@ -28,6 +28,8 @@ class eom_sqlite:
         self._conn = None
 
     def connect(self):
+        if not os.path.exists(self._db_file):
+            return None
         try:
             self._conn = sqlite3.connect(self._db_file)
         except:
