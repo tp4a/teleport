@@ -6,8 +6,8 @@
 from core import colorconsole as cc
 # from core import makepyo
 from core import utils
-from core.context import *
 from core.env import env
+from core.context import *
 
 ctx = BuildContext()
 

@@ -248,7 +248,18 @@ int _app_main(int argc, wchar_t** argv)
 	if (!_process_cmd_line(argc, argv))
 		return 1;
 
-	if (!g_env.init())
+	if (g_run_type == RUN_PY_SCRIPT)
+	{
+		if (!g_env.init(false))
+		{
+			EXLOGE("[tpweb] env init failed.\n");
+			return 1;
+		}
+
+		return _main_loop();
+	}
+
+	if (!g_env.init(true))
 	{
 		EXLOGE("[tpweb] env init failed.\n");
 		return 1;
@@ -258,12 +269,8 @@ int _app_main(int argc, wchar_t** argv)
 	EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
 #endif
 
-	if (g_run_type == RUN_PY_SCRIPT)
-	{
-		return _main_loop();
-	}
 #ifdef EX_OS_WIN32
-	else if (g_run_type == RUN_INSTALL_SRV)
+	if (g_run_type == RUN_INSTALL_SRV)
 	{
 		return service_install();
 	}

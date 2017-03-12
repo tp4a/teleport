@@ -422,10 +422,29 @@ def strip(filename):
 
 def make_zip(src_path, to_file):
     cc.v('compress folder into .zip...')
-    n, _ = os.path.splitext(to_file)
-    # x = os.path.split(to_file)[1].split('.')
-    p = os.path.dirname(to_file)
-    shutil.make_archive(os.path.join(p, n), 'zip', src_path)
+    # n, _ = os.path.splitext(to_file)
+    # # x = os.path.split(to_file)[1].split('.')
+    # p = os.path.dirname(to_file)
+    # shutil.make_archive(os.path.join(p, n), 'zip', src_path)
+    # ensure_file_exists(to_file)
+    if env.is_win:
+        src_path = os.path.abspath(src_path)
+        print('src_path', src_path)
+        _parent = os.path.abspath(os.path.join(src_path, '..'))
+        print('_parent', _parent)
+        _folder = src_path[len(_parent) + 1:]
+
+        old_p = os.getcwd()
+        os.chdir(_parent)
+        cmd = '""{}" a "{}" "{}""'.format(env.zip7, to_file, _folder)
+        print(cmd)
+        os.system(cmd)
+        os.chdir(old_p)
+    elif env.is_linux:
+        pass
+    else:
+        raise RuntimeError('not support this platform.')
+
     ensure_file_exists(to_file)
 
 
@@ -435,6 +454,8 @@ def unzip(file_name, to_path):
         os.system(cmd)
     elif env.is_linux:
         os.system('unzip "{}" -d "{}"'.format(file_name, to_path))
+    else:
+        raise RuntimeError('not support this platform.')
 
 
 def make_targz(work_path, folder, to_file):

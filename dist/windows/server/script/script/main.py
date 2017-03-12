@@ -6,7 +6,6 @@ import time
 from core.env import env
 import core.colorconsole as cc
 import core.utils as utils
-from core.eom_ver import *
 
 WIN_CORE_SERVICE_NAME = 'EOM Teleport Core Service'
 WIN_WEB_SERVICE_NAME = 'EOM Teleport Web Service'
@@ -21,10 +20,21 @@ class InstallerBase:
         self._log_path = ''
 
         self._installed_ver_str = 'UNKNOWN'
-        # self._installed_ver = [0, 0, 0, 0]
-        # self._current_ver = self._ver_str_to_ver(TS_VER)
+        self._current_ver = 'UNKNOWN'
 
         self._def_install_path = ''
+
+        ver_file = os.path.join(env.root_path, 'data', 'www', 'teleport', 'app', 'eom_ver.py')
+        try:
+            with open(ver_file) as f:
+                x = f.readlines()
+                for i in x:
+                    s = i.split('=', 1)
+                    if 'TS_VER' == s[0].strip():
+                        self._current_ver = s[1].strip()[1:-1]
+                        break
+        except FileNotFoundError:
+            raise RuntimeError('Cannot detect installer version.')
 
     def init(self):
         _width = 79
@@ -33,7 +43,7 @@ class InstallerBase:
         _str = 'Teleport Server Installation'
         cc.o((cc.CR_VERBOSE, ' | '), (cc.CR_INFO, _str), (cc.CR_VERBOSE, '{}|'.format(' ' * (_width - 5 - len(_str)))))
         cc.v(' |{}|'.format('=' * (_width - 4)))
-        cc.o((cc.CR_VERBOSE, ' |    ver: '), (cc.CR_NORMAL, TS_VER), (cc.CR_VERBOSE, '{}|'.format(' ' * (_width - 13 - len(TS_VER)))))
+        cc.o((cc.CR_VERBOSE, ' |    ver: '), (cc.CR_NORMAL, self._current_ver), (cc.CR_VERBOSE, '{}|'.format(' ' * (_width - 13 - len(self._current_ver)))))
         _str = 'author: apexliu@eomsoft.net'
         cc.v(' | {}{}|'.format(_str, ' ' * (_width - 5 - len(_str))))
         cc.v('[]{}[]'.format('=' * (_width - 4)))
@@ -56,9 +66,9 @@ class InstallerBase:
             self.install()
         else:
             cc.v('')
-            cc.v('Found teleport server already installed, now what are you want to do?')
+            cc.v('Found teleport server have installed at `{}` already.'.format(self._install_path))
             while True:
-                x = self._prompt_choice('Please choice', [('Upgrade', 2, True), ('Uninstall', 0, False), ('Quit', 0, False)])
+                x = self._prompt_choice('What are you wanna to do?', [('upgrade', 2, True), ('uninstall', 0, False), ('quit', 0, False)])
                 x = x.lower()
                 if 'q' == x:
                     return
@@ -138,11 +148,11 @@ class InstallerBase:
         pass
 
     def _upgrade(self):
-        x = self._ver_compare(TS_VER, self._installed_ver_str)
+        x = self._ver_compare(self._current_ver, self._installed_ver_str)
         if x == 0:
             while True:
                 cc.v('')
-                x = self._prompt_choice('The same version `{}` installed, are you sure to overwrite?'.format(TS_VER), [('Yes', 0, False), ('No', 0, True)])
+                x = self._prompt_choice('The same version `{}` installed, are you sure to overwrite?'.format(self._current_ver), [('Yes', 0, False), ('No', 0, True)])
                 x = x.lower()
                 if 'y' == x:
                     break
@@ -151,7 +161,7 @@ class InstallerBase:
         elif x < 0:
             while True:
                 cc.v('')
-                x = self._prompt_choice('A new version `{}` installed, rollback to old version `{}` may cause Teleport Server not functionally.\nAre you sure to rollback to old version?'.format(self._installed_ver_str, TS_VER), [('Yes', 0, False), ('No', 0, True)])
+                x = self._prompt_choice('A new version `{}` installed, rollback to old version `{}` may cause Teleport Server not functionally.\nAre you sure to rollback to old version?'.format(self._installed_ver_str, self._current_ver), [('Yes', 0, False), ('No', 0, True)])
                 x = x.lower()
                 if 'y' == x:
                     break
@@ -160,7 +170,7 @@ class InstallerBase:
         else:
             while True:
                 cc.v('')
-                x = self._prompt_choice('Now upgrade from version `{}` to `{}`, \nAre you sure to upgrade to new version?'.format(self._installed_ver_str, TS_VER), [('Yes', 0, False), ('No', 0, True)])
+                x = self._prompt_choice('Now upgrade from version `{}` to `{}`, \nAre you sure to upgrade to new version?'.format(self._installed_ver_str, self._current_ver), [('Yes', 0, False), ('No', 0, True)])
                 x = x.lower()
                 if 'y' == x:
                     break
@@ -236,20 +246,6 @@ class InstallerBase:
             x = def_value
 
         return x
-
-    # @staticmethod
-    # def _ver_str_to_ver(ver_str):
-    #     x = ver_str.split('.')
-    #     if len(x) > 4:
-    #         x = x[:4]
-    #     elif len(x) < 4:
-    #         for i in range(4 - len(x)):
-    #             x.append('0')
-    #
-    #     for i in range(4):
-    #         x[i] = int(x[i])
-    #
-    #     return x
 
     @staticmethod
     def _ver_compare(left, right):
@@ -374,7 +370,7 @@ class InstallerWin(InstallerBase):
         utils.copy_ex(os.path.join(env.src_path, 'www'), os.path.join(self._install_path, 'www'))
 
         if not os.path.exists(self._config_path):
-            utils.copy_ex(os.path.join(env.src_path, 'etc'), self._config_path)
+            utils.copy_ex(os.path.join(env.src_path, 'tmp', 'etc'), self._config_path)
 
     def _delete_files(self, del_settings):
         utils.remove(os.path.join(self._install_path, 'bin'))
