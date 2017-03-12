@@ -18,6 +18,7 @@ import eom_common.eomcore.utils as utils
 from eom_common.eomcore.logger import log
 from .const import *
 from .configs import app_cfg
+from .db import db
 from .session import web_session
 
 cfg = app_cfg()
@@ -70,6 +71,8 @@ class WebServerCore:
         # get_mysql_pool().init(cfg.mysql_ip, cfg.mysql_port, cfg.mysql_user, cfg.mysql_pass)
         # db_path = os.path.join(cfg.data_path, 'ts_db.db')
         get_sqlite_pool().init(cfg.data_path)
+
+        db.init_sqlite(os.path.join(cfg.data_path, 'ts_db.db'))
 
         return True
 
