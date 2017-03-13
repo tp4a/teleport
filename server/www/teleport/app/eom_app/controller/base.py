@@ -10,9 +10,10 @@ import mako.template
 import tornado.web
 from tornado.escape import json_encode
 
+from eom_app.app.const import *
 from eom_app.app.session import web_session, SESSION_EXPIRE
 from eom_app.app.configs import app_cfg
-from eom_app.app.const import *
+from eom_app.app.db import get_db
 
 cfg = app_cfg()
 
@@ -24,6 +25,7 @@ class TPBaseHandler(tornado.web.RequestHandler):
 
     MODE_HTTP = 0
     MODE_JSON = 1
+
     # MODE_JSONP = 2
 
     def __init__(self, application, request, **kwargs):
@@ -165,6 +167,7 @@ class TPBaseUserAuthHandler(TPBaseHandler):
             return
 
         reference = self.request.uri
+        print(reference)
 
         user = self.get_current_user()
         if not user['is_login']:
@@ -174,10 +177,19 @@ class TPBaseUserAuthHandler(TPBaseHandler):
             else:
                 self.redirect('/auth/login')
         else:
-            if cfg.app_mode == APP_MODE_MAINTENANCE and user['type'] != 100:
-                self.render('maintenance/index.mako')
-            else:
-                pass
+            # if cfg.app_mode == APP_MODE_MAINTENANCE and user['type'] != 100:
+            #     self.render('maintenance/index.mako')
+            # else:
+            #     pass
+            if cfg.app_mode == APP_MODE_MAINTENANCE:
+                if user['type'] != 100:
+                    self.render('maintenance/index.mako')
+                else:
+                    if not reference.startswith('/maintenance/'):
+                        if get_db().need_create:
+                            self.redirect('/maintenance/install')
+                        elif get_db().need_upgrade:
+                            self.redirect('/maintenance/upgrade')
 
 
 class TPBaseAdminAuthHandler(TPBaseHandler):
@@ -193,17 +205,18 @@ class TPBaseAdminAuthHandler(TPBaseHandler):
 
         user = self.get_current_user()
         if not user['is_login'] or user['type'] != 100:
-            if reference != '/auth/login':    # 防止循环重定向
+            if reference != '/auth/login':  # 防止循环重定向
                 x = quote(reference)
                 self.redirect('/auth/login?ref={}'.format(x))
             else:
                 self.redirect('/auth/login')
         else:
             if cfg.app_mode == APP_MODE_MAINTENANCE:
-                # TODO: 如果是维护模式，且尚未建立数据库，则引导用户进入安装界面，否则检查数据库版本，可能引导用户进入升级界面。
-                self.render('maintenance/index.mako')
-            else:
-                pass
+                if not reference.startswith('/maintenance/'):
+                    if get_db().need_create:
+                        self.redirect('/maintenance/install')
+                    elif get_db().need_upgrade:
+                        self.redirect('/maintenance/upgrade')
 
 
 class TPBaseUserAuthJsonHandler(TPBaseJsonHandler):

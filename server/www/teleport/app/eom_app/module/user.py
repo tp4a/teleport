@@ -22,7 +22,6 @@ def verify_user(name, password):
         if cfg.app_mode == APP_MODE_MAINTENANCE:
             if name == 'admin' and password == 'admin':
                 return 1, 100, 'admin'
-    else:
         return 0, 0, ''
 
     if len(db_ret) != 1:

@@ -152,7 +152,7 @@ ywl.create_app = function () {
                 }
                 else {
                     hide_op_box();
-                    show_op_box('error', '无法登录TELEPORT！');
+                    show_op_box('error', '无法登录TELEPORT：'+ret.message);
                     console.log(ret);
                 }
 

@@ -23,8 +23,8 @@ __all__ = ['controllers']
 controllers = [
     (r'/', index.IndexHandler),
 
-    # (r'/install/', maintenance.InstallHandler),
-    # (r'/install', maintenance.InstallHandler),
+    (r'/maintenance/install', maintenance.InstallHandler),
+    (r'/maintenance/upgrade', maintenance.UpgradeHandler),
     (r'/maintenance/', maintenance.IndexHandler),
     (r'/maintenance', maintenance.IndexHandler),
 

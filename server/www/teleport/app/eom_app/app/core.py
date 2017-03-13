@@ -18,7 +18,7 @@ import eom_common.eomcore.utils as utils
 from eom_common.eomcore.logger import log
 from .const import *
 from .configs import app_cfg
-from .db import db
+from .db import get_db
 from .session import web_session
 
 cfg = app_cfg()
@@ -39,10 +39,10 @@ class WebServerCore:
         cfg.cfg_path = os.path.abspath(options['cfg_path'])
 
         # cfg.app_mode = APP_MODE_NORMAL
-        if os.path.exists(os.path.join(cfg.cfg_path, 'maintenance-mode')):
-            cfg.app_mode = APP_MODE_MAINTENANCE
-        else:
-            cfg.app_mode = APP_MODE_NORMAL
+        # if os.path.exists(os.path.join(cfg.cfg_path, 'maintenance-mode')):
+        #     cfg.app_mode = APP_MODE_MAINTENANCE
+        # else:
+        #     cfg.app_mode = APP_MODE_NORMAL
 
         _cfg_file = os.path.join(cfg.cfg_path, 'web.ini')
         if not cfg.load_web(_cfg_file):
@@ -72,7 +72,11 @@ class WebServerCore:
         # db_path = os.path.join(cfg.data_path, 'ts_db.db')
         get_sqlite_pool().init(cfg.data_path)
 
-        db.init_sqlite(os.path.join(cfg.data_path, 'ts_db.db'))
+        get_db().init_sqlite(os.path.join(cfg.data_path, 'ts_db.db'))
+        if get_db().need_create or get_db().need_upgrade:
+            cfg.app_mode = APP_MODE_MAINTENANCE
+        else:
+            cfg.app_mode = APP_MODE_NORMAL
 
         return True
 

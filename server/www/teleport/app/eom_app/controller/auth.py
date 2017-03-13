@@ -2,22 +2,32 @@
 
 import json
 
+from eom_app.app.const import *
+from eom_app.app.configs import app_cfg
 from eom_app.module import user
 from eom_common.eomcore.logger import *
 from .base import TPBaseHandler, TPBaseUserAuthHandler, TPBaseJsonHandler, TPBaseUserAuthJsonHandler
 from eom_app.app.util import gen_captcha
 
+cfg = app_cfg()
+
 
 class LoginHandler(TPBaseHandler):
     def get(self):
         _user = self.get_current_user()
+        _ref = self.get_argument('ref', '/')
+
+        if _user['is_login']:
+            self.redirect(_ref)
+            return
+
         if _user['id'] == 0:
             user_name = ''
         else:
             user_name = _user['name']
 
         param = {
-            'ref': self.get_argument('ref', '/'),
+            'ref': _ref,
             'user_name': user_name
         }
         self.render('auth/login.mako', page_param=json.dumps(param))
@@ -27,7 +37,7 @@ class VerifyUser(TPBaseJsonHandler):
     def post(self):
         code = self.get_session('captcha')
         if code is None:
-            self.write_json(-1, 'can not get captcha')
+            self.write_json(-1, '验证码已失效')
             return
 
         self.del_session('captcha')
@@ -39,17 +49,20 @@ class VerifyUser(TPBaseJsonHandler):
             username = args['username']
             userpwd = args['userpwd']
         else:
-            self.write_json(-1, 'invalid param')
+            self.write_json(-1, '系统内部错误')
             return
 
         if code.lower() != captcha.lower():
-            self.write_json(-1, 'invalid captcha')
+            self.write_json(-1, '验证码错误')
             return
 
         try:
             user_id, account_type, nickname = user.verify_user(username, userpwd)
             if user_id == 0:
-                self.write_json(-1, 'no such user or password.')
+                if cfg.app_mode == APP_MODE_MAINTENANCE:
+                    self.write_json(-2, '系统维护中，请稍候再试')
+                else:
+                    self.write_json(-1, '用户名/密码错误')
                 return
 
             _user = self.get_session('user')
@@ -75,7 +88,7 @@ class VerifyUser(TPBaseJsonHandler):
 
         except:
             log.e('can not set session.')
-            self.write_json(-1, 'session error.')
+            self.write_json(-1, '无法记录用户登录状态')
 
 
 class LogoutHandler(TPBaseUserAuthHandler):

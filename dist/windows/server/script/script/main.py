@@ -373,11 +373,11 @@ class InstallerWin(InstallerBase):
         utils.copy_ex(os.path.join(env.src_path, 'www'), os.path.join(self._install_path, 'www'))
 
         # 创建一个标志文件，这样访问后台时会进入维护模式
-        try:
-            with open(os.path.join(self._install_path, 'www', 'teleport', 'maintenance-mode'), 'w') as f:
-                f.write('!!! DO NOT TOUCH !!!')
-        except:
-            pass
+        # try:
+        #     with open(os.path.join(self._install_path, 'www', 'teleport', 'maintenance-mode'), 'w') as f:
+        #         f.write('!!! DO NOT TOUCH !!!')
+        # except:
+        #     pass
 
         if not os.path.exists(self._config_path):
             utils.copy_ex(os.path.join(env.src_path, 'tmp', 'etc'), self._config_path)
