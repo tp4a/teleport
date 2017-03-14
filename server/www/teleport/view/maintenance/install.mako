@@ -1,7 +1,5 @@
 <%!
-    page_title_ = '安装配置'
-    ## 	page_menu_ = ['user']
-    ## 	page_id_ = 'user'
+    page_title_ = '配置TELEPORT服务'
 %>
 <%inherit file="../page_maintenance_base.mako"/>
 
@@ -13,34 +11,15 @@
 
 <%block name="embed_css">
     <style type="text/css">
-        .content_box {
-            margin-top:48px;
+        .container {
+            background-color: #fff;
+            padding-bottom:20px;
         }
-
-        .content_box .error_sidebar {
-            float: left;
-            width: 160px;
-            margin-left: 120px;
-            font-size: 260px;
-            color: #e3693b;
+        h1 {
+            font-size:200%;
         }
-
-        .content_box .error_content {
-            min-height: 400px;
-            width: 800px;
-            padding: 30px;
-            margin-left: 300px;
-            background: #ffffff;
-            border-radius: 5px;
-
-            background: rgba(255, 255, 255, 0.8);
-            background: #fff \9;
-            z-index: 9;
-            position: relative;
-        }
-
-        h1 .fa-spin {
-            color:#aaa;
+        h2 {
+            font-size:160%;
         }
     </style>
 </%block>
@@ -52,16 +31,23 @@
     <div class="content_box">
         <div class="container">
 
-            <div class="error_sidebar">
-                <i class="fa fa-exclamation-triangle"></i>
+            <h1>配置TELEPORT服务</h1>
+            <hr/>
+
+            <h2>第一步：创建数据表 <span id="step-create-db-result"></span></h2>
+            <div id="step-create-db">
+                <p>请选择要使用的数据库类型（暂时仅支持sqlite，其它类型开发中）：</p>
+                <input id="db-sqlite" type="radio" checked="checked" name="database" value="sqlite"/> <label for="db-sqlite">SQLite</label><br/>
+                <input id="db-mysql" type="radio" name="database" value="mysql" disabled="disabled"/> <label for="db-mysql">MySQL（暂不支持）</label>
+                <div>
+                    <button id="btn-create-db" type="button" class="btn btn-primary"><i class="fa fa-wrench fa-fw"></i> 开始创建</button>
+                </div>
+
+                <div class="step-detail">
+                    <i class="fa fa-cog fa-spin"></i> 正在创建用户表...
+                </div>
             </div>
 
-            <div class="error_content">
-                <br/>
-                <h1><i class="fa fa-cog fa-spin"></i> 系统维护中...</h1>
-                <hr/>
-                <p>系统管理员正在紧张地维护系统，请稍后刷新页面重试！</p>
-            </div>
 
         </div>
     </div>
