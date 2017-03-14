@@ -67,36 +67,41 @@ def async_enc(data):
     return {'code': 0, 'data': return_data['data']['c']}
 
 
-_chars = 'ACDEFHJKLMNPQRTVWXY34679'
+_chars = 'AaCDdEeFfHJjKkLMmNnPpQRrTtVvWwXxYy34679'
+_font_dir = os.path.join(cfg.res_path, 'fonts')
 
 
 def gen_captcha():
-    _font_dir = os.path.join(cfg.res_path, 'fonts')
     captcha_image_t = captcha(
         width=136,
         height=36,
         drawings=[
             background(color='#eeeeee'),
+            # curve(color='#4388d5', width=1, number=10),
+            curve(color='#4388d5', width=1, number=10),
+            curve(color='#af6fff', width=3, number=16),
+            noise(number=80, color='#eeeeee', level=3),
             text(fonts=[
                 os.path.join(_font_dir, '001.ttf')
             ],
-                font_sizes=(28, 34, 36, 32),
+                # font_sizes=(28, 34, 36, 32),
+                font_sizes=(34, 36, 32),
                 color='#63a8f5',
-                squeeze_factor=1.1,
+                squeeze_factor=1.2,
                 drawings=[
-                    warp(dx_factor=0.05, dy_factor=0.05),
+                    # warp(dx_factor=0.05, dy_factor=0.05),
                     rotate(angle=15),
                     offset()
                 ]),
-            curve(color='#af6fff', width=2, number=9),
-            noise(),
-            smooth()
+            # curve(color='#af6fff', width=3, number=16),
+            noise(number=60, color='#eeeeee', level=2),
+            smooth(),
         ])
 
     chars_t = random.sample(_chars, 4)
     image = captcha_image_t(chars_t)
 
     out = io.BytesIO()
-    image.save(out, "jpeg", quality=90)
+    image.save(out, "jpeg", quality=100)
     # web.header('Content-Type','image/jpeg')
     return ''.join(chars_t), out.getvalue()
