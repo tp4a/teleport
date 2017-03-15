@@ -63,31 +63,24 @@ class BuilderLinux(BuilderBase):
         super().__init__()
 
     def build_server(self):
-        cc.n('build tp_web...')
+        cc.n('build server app (tp_core/libtpssh/tp_web)...')
 
-        ###################
-        # out_path = os.path.join(ROOT_PATH, 'out', 'eom_ts', ctx.target_path, ctx.dist_path)
         out_path = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, 'bin')
-        out_file = os.path.join(out_path, 'tp_web')
+        out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'libtpssh.so'),
+                     os.path.join(out_path, 'tp_web')]
 
-        if os.path.exists(out_file):
-            utils.remove(out_file)
+        for f in out_files:
+            if os.path.exists(f):
+                utils.remove(f)
 
         utils.makedirs(out_path)
 
         utils.cmake(os.path.join(ROOT_PATH, 'server', 'cmake-build'), ctx.target_path, False)
-        utils.strip(out_file)
+        # utils.strip(out_file)
 
-
-        # wscript_file = os.path.join(ROOT_PATH, 'wscript')
-        # utils.waf_build(wscript_file, ctx.target_path, False)
-
-        # chk_file = os.path.join(ROOT_PATH, 'waf_build', ctx.target_path, 'eom_ts')
-        # utils.ensure_file_exists(chk_file)
-        # os.chmod(chk_file, 0o777)
-
-        # shutil.copy(chk_file, out_file)
-        utils.ensure_file_exists(out_file)
+        for f in out_files:
+            if os.path.exists(f):
+                utils.ensure_file_exists(f)
 
 
 

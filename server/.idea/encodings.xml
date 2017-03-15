@@ -9,6 +9,7 @@
     <file url="file://$PROJECT_DIR$/../common/libex/src/ex_log.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/../common/libex/src/ex_util.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/common/ts_membuf.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/tp_core/common/ts_membuf.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/core/main.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/core/ts_db.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/core/ts_env.cpp" charset="GBK" />

@@ -46,20 +46,20 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_http_rpc.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_crypto.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_main.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_main.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_http_client.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_session.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_http_client.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_http_rpc.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_db.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_main.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_main.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/CMakeLists.txt" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/tp_core/core/main.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_crypto.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_env.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_env.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_db.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_http_client.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tp_core/core/main.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_session.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/tp_core/core/ts_crypto.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/common/base_env.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/common/ts_membuf.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/common/base_env.cpp" isTestSource="false" />
@@ -73,9 +73,9 @@
       <sourceFolder url="file://$MODULE_DIR$/tp_core/protocol/ssh/ssh_proxy.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/protocol/ssh/tpssh.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/protocol/ssh/ssh_recorder.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/tp_core/protocol/ssh/ssh_proxy.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/tp_core/protocol/ssh/ssh_session.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_core/protocol/ssh/tpp_env.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tp_core/protocol/ssh/ssh_session.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tp_core/protocol/ssh/ssh_proxy.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_web/src/main.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_web/src/ts_env.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tp_web/src/CMakeLists.txt" isTestSource="false" />
