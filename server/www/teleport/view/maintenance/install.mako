@@ -53,3 +53,10 @@
     </div>
 
 </div>
+
+
+<%block name="embed_js">
+    <script type="text/javascript">
+        "use strict";
+    </script>
+</%block>
