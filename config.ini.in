@@ -21,6 +21,7 @@ cmake = /opt/cmake/bin/cmake
 [external_ver]
 openssl = 1.0.2h
 libuv = 1.9.1
+libssh = 0.7.4
 mbedtls = 2.3.0
 sqlite = 3160200
 

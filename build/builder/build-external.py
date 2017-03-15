@@ -18,6 +18,7 @@ OPENSSL_VER = utils.cfg.ver.openssl
 LIBUV_VER = utils.cfg.ver.libuv
 MBEDTLS_VER = utils.cfg.ver.mbedtls
 SQLITE_VER = utils.cfg.ver.sqlite
+LIBSSH_VER = utils.cfg.ver.libssh
 
 
 class BuilderBase:
@@ -59,8 +60,8 @@ class BuilderBase:
         cc.e("this is a pure-virtual function.")
 
     def build_libssh(self):
-        file_name = 'libssh-master.zip'
-        if not self._download_file('mbedtls source tarball', 'https://git.libssh.org/projects/libssh.git/snapshot/master.zip', file_name):
+        file_name = 'libssh-{}.zip'.format(LIBSSH_VER)
+        if not self._download_file('mbedtls source tarball', 'https://git.libssh.org/projects/libssh.git/snapshot/libssh-{}.zip'.format(LIBSSH_VER), file_name):
             return
         self._build_libssh(file_name)
 
@@ -117,7 +118,7 @@ class BuilderLinux(BuilderBase):
         self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-{}'.format(OPENSSL_VER))
         self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(LIBUV_VER))
         self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(MBEDTLS_VER))
-        self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-master')
+        self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(LIBSSH_VER))
         self.SQLITE_PATH_SRC = os.path.join(self.PATH_TMP, 'sqlite-autoconf-{}'.format(SQLITE_VER))
 
         if not os.path.exists(self.PATH_TMP):
@@ -246,7 +247,7 @@ class BuilderLinux(BuilderBase):
         if not os.path.exists(self.LIBSSH_PATH_SRC):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-            os.rename(os.path.join(self.PATH_TMP, 'master'), os.path.join(self.PATH_TMP, 'libssh-master'))
+            # os.rename(os.path.join(self.PATH_TMP, 'master'), os.path.join(self.PATH_TMP, 'libssh-master'))
 
         cc.n('build libssh...')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a')):
@@ -299,7 +300,10 @@ class BuilderLinux(BuilderBase):
               ' -DWITH_BENCHMARKS=OFF' \
               ' -DWITH_NACL=OFF' \
               ' ..'.format(self.PATH_RELEASE, OPENSSL_VER, self.PATH_RELEASE, self.PATH_RELEASE)
-        utils.cmake(build_path, 'Release', False, cmake_define)
+        try:
+            utils.cmake(build_path, 'Release', False, cmake_define)
+        except:
+            pass
 
         # because make install will fail because we can not disable ssh_shared target,
         # so we copy necessary files ourselves.
