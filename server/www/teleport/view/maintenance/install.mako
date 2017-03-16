@@ -67,13 +67,23 @@
             };
 
             ywl.dom.btn_create_db.click(function () {
+
+                ywl.dom.btn_create_db.attr('disabled', 'disabled');
+
                 console.log('create-db-click');
                 ywl.ajax_post_json('/maintenance/rpc', {cmd: 'create_db'},
                         function (ret) {
                             console.log('create-db:', ret);
                             if (ret.code == 0) {
-                                ywl.get_task_ret(ret.data.task_id);
-                            }
+
+                                var cb_stack = CALLBACK_STACK.create();
+                                cb_stack
+                                        .add(ywl.get_task_ret, {task_id: ret.data.task_id})
+                                        .add(ywl.delay_exec, {delay_ms: 500})
+                                        .exec();
+
+                                ##                                 ywl.get_task_ret(ret.data.task_id);
+                                                            }
 
                         },
                         function () {
@@ -83,12 +93,25 @@
 
             });
 
-            ywl.get_task_ret = function (task_id) {
+            ywl.get_task_ret = function (cb_stack, cb_args) {
+                var task_id = cb_args.task_id || 0;
+                if (task_id == 0) {
+                    console.log('task-id', task_id);
+                    return;
+                }
+
                 ywl.ajax_post_json('/maintenance/rpc', {cmd: 'get_task_ret', 'tid': task_id},
                         function (ret) {
                             console.log('get_task_ret:', ret);
                             if (ret.code == 0) {
+                                if(!ret.data.running) {
+                                    return;
+                                }
 
+                                cb_stack
+                                        .add(ywl.get_task_ret, {task_id: task_id})
+                                        .add(ywl.delay_exec, {delay_ms: 500})
+                                        .exec();
                             }
 
                         },

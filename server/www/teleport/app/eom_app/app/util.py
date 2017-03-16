@@ -3,6 +3,7 @@
 import os
 import random
 import io
+import hashlib
 
 import json
 import urllib.parse
@@ -23,7 +24,7 @@ from .configs import app_cfg
 
 cfg = app_cfg()
 
-__all__ = ['async_post_http', 'async_enc']
+__all__ = ['async_post_http', 'async_enc', 'gen_captcha', 'sec_generate_password', 'sec_verify_password']
 
 
 @tornado.gen.coroutine
@@ -67,8 +68,8 @@ def async_enc(data):
     return {'code': 0, 'data': return_data['data']['c']}
 
 
-_chars = 'AaCDdEeFfHJjKkLMmNnPpQRrTtVvWwXxYy34679'
-_font_dir = os.path.join(cfg.res_path, 'fonts')
+_captcha_chars = 'AaCDdEeFfHJjKkLMmNnPpQRTtVvWwXxYy34679'
+# _font_dir = os.path.join(cfg.res_path, 'fonts')
 
 
 def gen_captcha():
@@ -82,26 +83,79 @@ def gen_captcha():
             curve(color='#af6fff', width=3, number=16),
             noise(number=80, color='#eeeeee', level=3),
             text(fonts=[
-                os.path.join(_font_dir, '001.ttf')
+                os.path.join(cfg.res_path, 'fonts', '001.ttf')
             ],
                 # font_sizes=(28, 34, 36, 32),
-                font_sizes=(34, 36, 32),
+                font_sizes=(34, 38, 32),
                 color='#63a8f5',
-                squeeze_factor=1.2,
+                # squeeze_factor=1.2,
+                squeeze_factor=0.9,
                 drawings=[
                     # warp(dx_factor=0.05, dy_factor=0.05),
-                    rotate(angle=15),
+                    warp(dx_factor=0.03, dy_factor=0.03),
+                    rotate(angle=20),
                     offset()
                 ]),
             # curve(color='#af6fff', width=3, number=16),
-            noise(number=60, color='#eeeeee', level=2),
+            noise(number=30, color='#eeeeee', level=2),
             smooth(),
         ])
 
-    chars_t = random.sample(_chars, 4)
+    chars_t = random.sample(_captcha_chars, 4)
     image = captcha_image_t(chars_t)
 
     out = io.BytesIO()
     image.save(out, "jpeg", quality=100)
     # web.header('Content-Type','image/jpeg')
     return ''.join(chars_t), out.getvalue()
+
+
+_hex_chars = '0123456789abcdef'
+
+
+def sec_generate_password(password):
+    """
+    根据设置的password，计算一个加盐的散列，用于保存到数据库
+    @param password: string
+    @return: string
+    """
+
+    _hash_type = '3'        # 1 = md5, 2 = sha1, 3 = sha256
+
+    _salt_data = list()
+    for i in range(16):
+        _salt_data.append(random.choice(_hex_chars))
+    _salt = ''.join(_salt_data)
+
+    h = hashlib.sha256()
+    h.update(_hash_type.encode())
+    h.update(_salt.encode())
+    h.update(password.encode())
+    _val = h.hexdigest()
+
+    ret = '{}:{}:{}'.format(_hash_type, _salt, _val)
+
+    print(ret, len(ret))
+    return ret
+
+
+def sec_verify_password(password, sec_password):
+    _sec = sec_password.split(':')
+    if len(_sec) != 3:
+        return False
+
+    if _sec[0] == '1':
+        h = hashlib.md5()
+    elif _sec[0] == '2':
+        h = hashlib.sha1()
+    elif _sec[0] == '3':
+        h = hashlib.sha256()
+    else:
+        return False
+
+    h.update(_sec[0].encode())
+    h.update(_sec[1].encode())
+    h.update(password.encode())
+    _val = h.hexdigest()
+
+    return _val == _sec[2]
