@@ -32,7 +32,7 @@ var YWL = {
 
 			cb_stack
 			//.add(self.on_init)
-				.add(self.assist.init, self.page_options)
+//				.add(self.assist.init, self.page_options)
 				.exec();
 		};
 

@@ -10,24 +10,24 @@ import time
 from . import colorconsole as cc
 from .env import env
 
-from .configs import cfg
+# from .configs import cfg
+#
+# try:
+#     CONFIG_FILE = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')), 'config.ini')
+#     if not cfg.init(CONFIG_FILE):
+#         sys.exit(1)
+# except:
+#     cc.e('can not load configuration.\n\nplease copy `config.ini.in` into `config.ini` and modify it to fit your condition and try again.')
+#     sys.exit(1)
 
-try:
-    CONFIG_FILE = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')), 'config.ini')
-    if not cfg.init(CONFIG_FILE):
-        sys.exit(1)
-except:
-    cc.e('can not load configuration.\n\nplease copy `config.ini.in` into `config.ini` and modify it to fit your condition and try again.')
-    sys.exit(1)
-
-if cfg.is_py2:
+if env.is_py2:
     import imp
-elif cfg.is_py3:
+elif env.is_py3:
     import importlib
     import importlib.machinery
 
-    if sys.platform == 'win32':
-        import winreg
+    # if sys.platform == 'win32':
+    #     import winreg
 
 THIS_PATH = os.path.abspath(os.path.dirname(__file__))
 ROOT_PATH = os.path.abspath(os.path.join(THIS_PATH, '..'))
@@ -80,7 +80,7 @@ def extension_suffixes():
     #   type为文件类型, 1代表PY_SOURCE, 2代表PY_COMPILED, 3代表C_EXTENSION
 
     EXTENSION_SUFFIXES = list()
-    if cfg.is_py2:
+    if env.is_py2:
         suf = imp.get_suffixes()
         for s in suf:
             if s[2] == 3:
@@ -88,16 +88,16 @@ def extension_suffixes():
     else:
         EXTENSION_SUFFIXES = importlib.machinery.EXTENSION_SUFFIXES
 
-    if cfg.dist == 'windows':
+    if env.is_win:
         if '.dll' not in EXTENSION_SUFFIXES:
             EXTENSION_SUFFIXES.append('.dll')
 
-    elif cfg.dist == 'linux':
+    elif env.is_linux:
         if '.so' not in EXTENSION_SUFFIXES:
             EXTENSION_SUFFIXES.append('.so')
 
-    elif cfg.dist == 'macos':
-        raise RuntimeError('not support MacOS now.')
+    else:
+        raise RuntimeError('not support this platform now.')
 
     return EXTENSION_SUFFIXES
 
@@ -260,66 +260,66 @@ def python_exec():
     return sys.executable
 
 
-def msbuild_path():
-    if cfg.toolchain.msbuild is not None:
-        return cfg.toolchain.msbuild
-
-    # 14.0 = VS2015
-    # 12.0 = VS2012
-    #  4.0 = VS2008
-    chk = ['14.0', '4.0', '12.0']
-
-    msp = None
-    for c in chk:
-        msp = winreg_read("SOFTWARE\\Microsoft\\MSBuild\\ToolsVersions\\{}".format(c), 'MSBuildToolsPath')
-        if msp is not None:
-            break
-
-    if msp is None:
-        raise RuntimeError('Can not locate MSBuild.')
-
-    msb = os.path.join(msp[0], 'MSBuild.exe')
-    if not os.path.exists(msb):
-        raise RuntimeError('Can not locate MSBuild at {}'.format(msp))
-
-    cfg.toolchain.msbuild = msb
-    return msb
-
-
-def nsis_path():
-    if cfg.toolchain.nsis is not None:
-        return cfg.toolchain.nsis
-
-    p = winreg_read_wow64_32(r'SOFTWARE\NSIS\Unicode', '')
-    if p is None:
-        raise RuntimeError('Can not locate unicode version of NSIS.')
-
-    p = os.path.join(p[0], 'makensis.exe')
-    if not os.path.exists(p):
-        raise RuntimeError('Can not locate NSIS at {}'.format(p))
-
-    cfg.toolchain.nsis = p
-    return p
+# def msbuild_path():
+#     if cfg.toolchain.msbuild is not None:
+#         return cfg.toolchain.msbuild
+#
+#     # 14.0 = VS2015
+#     # 12.0 = VS2012
+#     #  4.0 = VS2008
+#     chk = ['14.0', '4.0', '12.0']
+#
+#     msp = None
+#     for c in chk:
+#         msp = winreg_read("SOFTWARE\\Microsoft\\MSBuild\\ToolsVersions\\{}".format(c), 'MSBuildToolsPath')
+#         if msp is not None:
+#             break
+#
+#     if msp is None:
+#         raise RuntimeError('Can not locate MSBuild.')
+#
+#     msb = os.path.join(msp[0], 'MSBuild.exe')
+#     if not os.path.exists(msb):
+#         raise RuntimeError('Can not locate MSBuild at {}'.format(msp))
+#
+#     cfg.toolchain.msbuild = msb
+#     return msb
 
 
-def winreg_read(path, key):
-    try:
-        hkey = winreg.CreateKeyEx(winreg.HKEY_LOCAL_MACHINE, path, 0, winreg.KEY_READ)
-        value = winreg.QueryValueEx(hkey, key)
-    except OSError:
-        return None
+# def nsis_path():
+#     if cfg.toolchain.nsis is not None:
+#         return cfg.toolchain.nsis
+#
+#     p = winreg_read_wow64_32(r'SOFTWARE\NSIS\Unicode', '')
+#     if p is None:
+#         raise RuntimeError('Can not locate unicode version of NSIS.')
+#
+#     p = os.path.join(p[0], 'makensis.exe')
+#     if not os.path.exists(p):
+#         raise RuntimeError('Can not locate NSIS at {}'.format(p))
+#
+#     cfg.toolchain.nsis = p
+#     return p
 
-    return value
+
+# def winreg_read(path, key):
+#     try:
+#         hkey = winreg.CreateKeyEx(winreg.HKEY_LOCAL_MACHINE, path, 0, winreg.KEY_READ)
+#         value = winreg.QueryValueEx(hkey, key)
+#     except OSError:
+#         return None
+#
+#     return value
 
 
-def winreg_read_wow64_32(path, key):
-    try:
-        hkey = winreg.CreateKeyEx(winreg.HKEY_LOCAL_MACHINE, path, 0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY)
-        value = winreg.QueryValueEx(hkey, key)
-    except OSError:
-        return None
-
-    return value
+# def winreg_read_wow64_32(path, key):
+#     try:
+#         hkey = winreg.CreateKeyEx(winreg.HKEY_LOCAL_MACHINE, path, 0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY)
+#         value = winreg.QueryValueEx(hkey, key)
+#     except OSError:
+#         return None
+#
+#     return value
 
 
 def sys_exec(cmd, direct_output=False, output_codec=None):

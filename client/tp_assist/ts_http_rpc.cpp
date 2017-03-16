@@ -964,7 +964,7 @@ void TsHttpRpc::_rpc_func_ts_check(const ex_astr& func_args, ex_astr& buf)
 		}
 		/* 将主机的规范名打出来 */
 		//printf("official hostname:%s/n", hptr->h_name);
-		///* 主机可能有多个别名，将所有别名分别打出来 */
+		// 主机可能有多个别名，将所有别名分别打出来
 		//for (pptr = hptr->h_aliases; *pptr != NULL; pptr++)
 		//	printf(" alias:%s/n", *pptr);
 		/* 根据地址类型，将地址打出来 */

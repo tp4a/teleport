@@ -72,7 +72,7 @@
 	## <script type="text/javascript" src="${ static_url('js/json2.js') }"></script>
 
 <script type="text/javascript" src="${ static_url('plugins/gritter/js/jquery.gritter.js') }"></script>
-<script type="text/javascript" src="${ static_url('plugins/jstree/jstree.js') }"></script>
+## <script type="text/javascript" src="${ static_url('plugins/jstree/jstree.js') }"></script>
 
 <script type="text/javascript" src="${ static_url('plugins/keypress/keypress.js') }"></script>
 
@@ -92,7 +92,7 @@
 
 	$(document).ready(function () {
 		// once page ready, init ywl object.
-## 		ywl.init();
+		ywl.init();
 	});
 
 </script>

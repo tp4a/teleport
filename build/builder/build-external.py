@@ -105,7 +105,13 @@ class BuilderWin(BuilderBase):
         self._prepare_python_header()
 
     def _prepare_python_header(self):
-        cc.n('prepare python header files ...')
+        cc.n('prepare python header files ...', end='')
+
+        if os.path.exists(os.path.join(PATH_EXTERNAL, 'python', 'include', 'pyctype.h')):
+            cc.w('already exists, skip.')
+            return
+
+        cc.v('')
         _header_path = None
         for p in sys.path:
             if os.path.exists(os.path.join(p, 'include', 'pyctype.h')):
@@ -203,16 +209,18 @@ class BuilderWin(BuilderBase):
             cc.w('already exists, skip.')
 
     def _build_mongoose(self, file_name):
-        cc.n('prepare mongoose source code...')
+        cc.n('prepare mongoose source code... ', end='')
         if not os.path.exists(self.MONGOOSE_PATH_SRC):
+            cc.v('')
             utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
             os.rename(os.path.join(PATH_EXTERNAL, 'mongoose-{}'.format(env.ver_mongoose)), self.MONGOOSE_PATH_SRC)
         else:
             cc.w('already exists, skip.')
 
     def _build_mbedtls(self, file_name):
-        cc.n('prepare mbedtls source code...')
+        cc.n('prepare mbedtls source code... ', end='')
         if not os.path.exists(self.MBEDTLS_PATH_SRC):
+            cc.v('')
             utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
             os.rename(os.path.join(PATH_EXTERNAL, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls)), self.MBEDTLS_PATH_SRC)
         else:

@@ -937,7 +937,7 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 				"  - authroized by %s\r\n"\
 				"=============================================\r\n"\
 				"\r\n"\
-				"\033]0;TP#telnet://%s\007",
+				"\033]0;tpssh://%s\007",
 				_this->m_server_ip.c_str(),
 				_this->m_server_port, auth_mode,
 				_this->m_server_ip.c_str()
@@ -955,9 +955,13 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 	{
 		ret = ssh_channel_write_stderr(info->channel, data, len);
 	}
+	else if(info->type != TS_SSH_CHANNEL_TYPE_SHELL)
+    {
+        ret = ssh_channel_write(info->channel, data, len);
+    }
 	else
 	{
-		if (len > 5)
+		if (len > 5 && len < 256)
 		{
 			const ex_u8* _begin = ex_memmem((const ex_u8*)data, len, (const ex_u8*)"\033]0;", 4);
 			if (NULL != _begin)
@@ -975,18 +979,25 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 					if (len_before > 0)
 						mbuf.append((ex_u8*)data, len_before);
 
-					mbuf.append((ex_u8*)"\033]0;TP#ssh://", 13);
+					mbuf.append((ex_u8*)"\033]0;tpssh://", 13);
 					mbuf.append((ex_u8*)_this->m_server_ip.c_str(), _this->m_server_ip.length());
 					mbuf.append((ex_u8*)"\007", 1);
 
 					if (len_end > 0)
 						mbuf.append((ex_u8*)_end, len_end);
 
-					ret = ssh_channel_write(info->channel, mbuf.data(), mbuf.size());
-					if (ret <= 0)
-						EXLOGE("[ssh] send to client failed (1).\n");
-					else
-						ret = len;
+                    if(mbuf.size() > 0)
+                    {
+                        ret = ssh_channel_write(info->channel, mbuf.data(), mbuf.size());
+                        if (ret <= 0)
+                            EXLOGE("[ssh] send to client failed (1).\n");
+                        else
+                            ret = len;
+                    }
+                    else
+                    {
+                        ret = ssh_channel_write(info->channel, data, len);
+                    }
 				}
 				else
 				{

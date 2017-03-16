@@ -25,6 +25,7 @@ controllers = [
 
     (r'/maintenance/install', maintenance.InstallHandler),
     (r'/maintenance/upgrade', maintenance.UpgradeHandler),
+    (r'/maintenance/rpc', maintenance.RpcHandler),
     (r'/maintenance/', maintenance.IndexHandler),
     (r'/maintenance', maintenance.IndexHandler),
 

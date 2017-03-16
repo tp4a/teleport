@@ -5,16 +5,18 @@ import codecs
 
 from core import colorconsole as cc
 from core import utils
+from core.env import env
 from core.context import *
 
 ctx = BuildContext()
 
-ROOT_PATH = utils.cfg.ROOT_PATH
+
+# ROOT_PATH = utils.cfg.ROOT_PATH
 
 
 class Builder:
     def __init__(self):
-        self.ver_in = os.path.join(ROOT_PATH, 'version.in')
+        self.ver_in = os.path.join(env.root_path, 'version.in')
 
         self.VER_TELEPORT_SERVER = ''
         self.VER_TELEPORT_ASSIST = ''
@@ -57,7 +59,7 @@ class Builder:
         self.make_web_ver()
 
     def make_build_ver(self):
-        ver_file = os.path.join(ROOT_PATH, 'build', 'builder', 'core', 'ver.py')
+        ver_file = os.path.join(env.root_path, 'build', 'builder', 'core', 'ver.py')
         # ver_content = '# -*- coding: utf8 -*-\nVER_TELEPORT_SERVER = "{}"\nVER_TELEPORT_ASSIST = "{}"\nVER_TELEPORT_MAKECERT = "{}"\n'.format(self.VER_TELEPORT_SERVER, self.VER_TELEPORT_ASSIST, self.VER_TELEPORT_MAKECERT)
         ver_content = '# -*- coding: utf8 -*-\nVER_TELEPORT_SERVER = "{}"\nVER_TELEPORT_ASSIST = "{}"\n'.format(self.VER_TELEPORT_SERVER, self.VER_TELEPORT_ASSIST)
 
@@ -77,7 +79,7 @@ class Builder:
                 f.write(ver_content)
 
     def make_web_ver(self):
-        ver_file = os.path.join(ROOT_PATH, 'server', 'www', 'teleport', 'app', 'eom_ver.py')
+        ver_file = os.path.join(env.root_path, 'server', 'www', 'teleport', 'app', 'eom_ver.py')
         # ver_content = '# -*- coding: utf8 -*-\n\nTS_VER = "{}"\n'.format(self.VER_TELEPORT_SERVER)
         ver_content = '# -*- coding: utf8 -*-\nTS_VER = "{}"\nTP_ASSIST_LAST_VER = "{}"\nTP_ASSIST_REQUIRE = "{}"\n'.format(self.VER_TELEPORT_SERVER, self.VER_TELEPORT_ASSIST, self.VER_TELEPORT_ASSIST_REQUIRE)
 
@@ -97,7 +99,7 @@ class Builder:
                 f.write(ver_content)
 
     def make_assist_ver(self):
-        ver_file = os.path.join(ROOT_PATH, 'client', 'tp_assist', 'ts_ver.h')
+        ver_file = os.path.join(env.root_path, 'client', 'tp_assist', 'ts_ver.h')
         ver_content = '#ifndef __TS_ASSIST_VER_H__\n#define __TS_ASSIST_VER_H__\n\n#define TP_ASSIST_VER\tL"{}"\n\n#endif // __TS_ASSIST_VER_H__\n'.format(self.VER_TELEPORT_ASSIST)
 
         rewrite = False
@@ -115,14 +117,14 @@ class Builder:
             with open(ver_file, 'w') as f:
                 f.write(ver_content)
 
-        rc_file = os.path.join(ROOT_PATH, 'client', 'tp_assist', 'tp_assist.rc')
+        rc_file = os.path.join(env.root_path, 'client', 'tp_assist', 'tp_assist.rc')
         self._update_vs_rc(rc_file, self.VER_TELEPORT_ASSIST)
 
-        nsi_file = os.path.join(ROOT_PATH, 'dist', 'windows', 'client', 'assist', 'installer.nsi')
+        nsi_file = os.path.join(env.root_path, 'dist', 'windows', 'client', 'assist', 'installer.nsi')
         self._update_nsi_rc(nsi_file, self.VER_TELEPORT_ASSIST)
 
     def make_tp_core_ver(self):
-        ver_file = os.path.join(ROOT_PATH, 'server', 'tp_core', 'core', 'ts_ver.h')
+        ver_file = os.path.join(env.root_path, 'server', 'tp_core', 'core', 'ts_ver.h')
         ver_content = '#ifndef __TS_SERVER_VER_H__\n#define __TS_SERVER_VER_H__\n\n#define TP_SERVER_VER\tL"{}"\n\n#endif // __TS_SERVER_VER_H__\n'.format(self.VER_TELEPORT_SERVER)
 
         rewrite = False
@@ -140,11 +142,11 @@ class Builder:
             with open(ver_file, 'w') as f:
                 f.write(ver_content)
 
-        rc_file = os.path.join(ROOT_PATH, 'server', 'tp_core', 'core', 'tp_core.rc')
+        rc_file = os.path.join(env.root_path, 'server', 'tp_core', 'core', 'tp_core.rc')
         self._update_vs_rc(rc_file, self.VER_TELEPORT_SERVER)
 
     def make_tp_web_ver(self):
-        ver_file = os.path.join(ROOT_PATH, 'server', 'tp_web', 'src', 'ts_ver.h')
+        ver_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'ts_ver.h')
         ver_content = '#ifndef __TS_SERVER_VER_H__\n#define __TS_SERVER_VER_H__\n\n#define TP_SERVER_VER\tL"{}"\n\n#endif // __TS_SERVER_VER_H__\n'.format(self.VER_TELEPORT_SERVER)
 
         rewrite = False
@@ -162,7 +164,7 @@ class Builder:
             with open(ver_file, 'w') as f:
                 f.write(ver_content)
 
-        rc_file = os.path.join(ROOT_PATH, 'server', 'tp_web', 'src', 'tp_web.rc')
+        rc_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'tp_web.rc')
         self._update_vs_rc(rc_file, self.VER_TELEPORT_SERVER)
 
     def _update_vs_rc(self, rcFilePath, ver):
@@ -352,6 +354,9 @@ class Builder:
 
 
 def main():
+    if not env.init():
+        return
+
     builder = Builder()
     builder.build()
 

@@ -90,8 +90,8 @@ def main():
 
 
 def clean_all():
-    cc.v('remove compiler out path...')
-    utils.remove(os.path.join(ROOT_PATH, 'out'))
+    cc.e('sorry, clean not implemented yet.')
+    # utils.remove(os.path.join(env.root_path, 'out'))
 
 
 def do_opt(opt):
@@ -130,7 +130,7 @@ def do_opt(opt):
         return
 
     # cmd = '"%s" -B "%s" %s' % (utils.cfg.py_exec, os.path.join(BUILDER_PATH, script), arg)
-    cmd = '%s -B %s %s' % (utils.cfg.py_exec, os.path.join(env.builder_path, script), arg)
+    cmd = '%s -B %s %s' % (env.py_exec, os.path.join(env.builder_path, script), arg)
     os.system(cmd)
 
 
