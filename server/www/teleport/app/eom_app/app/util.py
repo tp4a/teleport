@@ -69,7 +69,6 @@ def async_enc(data):
 
 
 _captcha_chars = 'AaCDdEeFfHJjKkLMmNnPpQRTtVvWwXxYy34679'
-# _font_dir = os.path.join(cfg.res_path, 'fonts')
 
 
 def gen_captcha():
@@ -86,7 +85,7 @@ def gen_captcha():
                 os.path.join(cfg.res_path, 'fonts', '001.ttf')
             ],
                 # font_sizes=(28, 34, 36, 32),
-                font_sizes=(34, 38, 32),
+                font_sizes=(34, 40, 32, 36),
                 color='#63a8f5',
                 # squeeze_factor=1.2,
                 squeeze_factor=0.9,
@@ -135,7 +134,6 @@ def sec_generate_password(password):
 
     ret = '{}:{}:{}'.format(_hash_type, _salt, _val)
 
-    print(ret, len(ret))
     return ret
 
 

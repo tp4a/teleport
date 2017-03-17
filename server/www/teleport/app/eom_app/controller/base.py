@@ -8,12 +8,11 @@ from urllib.parse import quote
 import mako.lookup
 import mako.template
 import tornado.web
-from tornado.escape import json_encode
-
-from eom_app.app.const import *
-from eom_app.app.session import web_session, SESSION_EXPIRE
 from eom_app.app.configs import app_cfg
+from eom_app.app.const import *
 from eom_app.app.db import get_db
+from eom_app.app.session import web_session, SESSION_EXPIRE
+from tornado.escape import json_encode
 
 cfg = app_cfg()
 
@@ -26,14 +25,11 @@ class TPBaseHandler(tornado.web.RequestHandler):
     MODE_HTTP = 0
     MODE_JSON = 1
 
-    # MODE_JSONP = 2
-
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
 
         self._s_id = None
         self._mode = self.MODE_HTTP
-        # self._jsonp_callback = ''
 
     def initialize(self):
         template_path = self.get_template_path()
@@ -125,25 +121,6 @@ class TPBaseHandler(tornado.web.RequestHandler):
         return user
 
 
-# class TPBaseAppHandler(TPBaseHandler):
-#     """
-#     权限控制：如果处于维护模式，只有管理员登录后方可操作，其他用户均显示维护页面
-#     """
-#     def __init__(self, application, request, **kwargs):
-#         super().__init__(application, request, **kwargs)
-#
-#     def prepare(self):
-#         super().prepare()
-#         if self._finished:
-#             return
-#
-#         if cfg.app_mode == APP_MODE_NORMAL:
-#             return
-#
-#         # self.redirect('/maintenance')
-#         self.render('maintenance/index.mako')
-
-
 class TPBaseJsonHandler(TPBaseHandler):
     """
     所有返回JSON数据的控制器均从本类集成，返回的数据格式一律包含三个字段：code/msg/data
@@ -167,7 +144,6 @@ class TPBaseUserAuthHandler(TPBaseHandler):
             return
 
         reference = self.request.uri
-        print(reference)
 
         user = self.get_current_user()
         if not user['is_login']:
@@ -177,10 +153,6 @@ class TPBaseUserAuthHandler(TPBaseHandler):
             else:
                 self.redirect('/auth/login')
         else:
-            # if cfg.app_mode == APP_MODE_MAINTENANCE and user['type'] != 100:
-            #     self.render('maintenance/index.mako')
-            # else:
-            #     pass
             if cfg.app_mode == APP_MODE_MAINTENANCE:
                 if user['type'] != 100:
                     self.render('maintenance/index.mako')

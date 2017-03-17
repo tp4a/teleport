@@ -23,6 +23,23 @@
         h2 {
             font-size: 160%;
         }
+        .steps-detail {
+            display: none;
+            margin:10px;
+            padding:10px;
+            border:1px solid #b4b4b4;
+            background-color: #dcdcdc;
+        }
+        .steps-detail p {
+            padding-left:5px;
+            margin:2px 0 2px 1px;
+        }
+        .steps-detail p.error {
+            color:#ffffff;
+            margin:2px 0 2px 0;
+            background-color: #cc3632;
+            border:1px solid #9c2a26;
+        }
     </style>
 </%block>
 
@@ -45,9 +62,7 @@
                     <button id="btn-create-db" type="button" class="btn btn-primary"><i class="fa fa-wrench fa-fw"></i> 开始创建</button>
                 </div>
 
-                <div class="step-detail">
-                    <i class="fa fa-cog fa-spin"></i> 正在创建用户表...
-                </div>
+                <div id="steps-detail" class="steps-detail"></div>
             </div>
 
 
@@ -64,11 +79,13 @@
         ywl.on_init = function (cb_stack, cb_args) {
             ywl.dom = {
                 btn_create_db: $('#btn-create-db'),
+                steps_detail: $('#steps-detail')
             };
 
             ywl.dom.btn_create_db.click(function () {
 
-                ywl.dom.btn_create_db.attr('disabled', 'disabled');
+                ywl.dom.btn_create_db.attr('disabled', 'disabled').hide();
+                ywl.dom.steps_detail.show();
 
                 console.log('create-db-click');
                 ywl.ajax_post_json('/maintenance/rpc', {cmd: 'create_db'},
@@ -81,9 +98,7 @@
                                         .add(ywl.get_task_ret, {task_id: ret.data.task_id})
                                         .add(ywl.delay_exec, {delay_ms: 500})
                                         .exec();
-
-                                ##                                 ywl.get_task_ret(ret.data.task_id);
-                                                            }
+                            }
 
                         },
                         function () {
@@ -104,7 +119,35 @@
                         function (ret) {
                             console.log('get_task_ret:', ret);
                             if (ret.code == 0) {
-                                if(!ret.data.running) {
+
+                                // show step progress.
+                                var steps = ret.data.steps;
+                                ywl.dom.steps_detail.empty();
+
+                                var html = [];
+                                var icon_class = '';
+                                var err_class = '';
+                                for(var i = 0; i < steps.length; ++i) {
+                                    if(steps[i].stat == 0)
+                                        icon_class = 'fa-check';
+                                    else
+                                        icon_class = 'fa-cog fa-spin';
+                                    if(steps[i].code != 0)
+                                        err_class = ' class="error"';
+                                    else
+                                        err_class = '';
+                                    html.push('<p');
+                                    html.push(err_class);
+                                    html.push('><i class="fa ');
+                                    html.push(icon_class);
+                                    html.push('"></i> ');
+                                    html.push(steps[i].msg);
+                                    html.push('</p>')
+                                }
+                                ywl.dom.steps_detail.html(html.join(''));
+
+
+                                if (!ret.data.running) {
                                     return;
                                 }
 

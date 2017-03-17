@@ -13,6 +13,7 @@ cfg = app_cfg()
 
 __all__ = ['get_db']
 
+
 # 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
 # TELEPORT_DATABASE_VERSION = 2
 
@@ -46,15 +47,15 @@ class TPDatabase:
             return
 
         # 看看数据库中是否存在用户表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
-        ret = self.query('SELECT COUNT(*) FROM sqlite_master where type="table" and name="ts_account";')
-        if ret[0][0] == 0:
+        ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}account";'.format(self._table_prefix))
+        if ret is None or ret[0][0] == 0:
             log.w('database need create.\n')
             self.need_create = True
             return
 
         # 尝试从配置表中读取当前数据库版本号（如果不存在，说明是比较旧的版本了，则置为0）
-        ret = self.query('SELECT value FROM ts_config where name="db_ver";')
-        if 0 == len(ret):
+        ret = self.query('SELECT `value` FROM {}config WHERE `name`="db_ver";'.format(self._table_prefix))
+        if ret is None or 0 == len(ret):
             log.w('database need upgrade.\n')
             self.need_upgrade = True
 
@@ -64,10 +65,13 @@ class TPDatabase:
     def exec(self, sql):
         return self._conn_pool.exec(sql)
 
-
     def create_and_init(self, step_begin, step_end):
         step_begin('准备创建数据表')
-        create_and_init(self, step_begin, step_end)
+        if create_and_init(self, step_begin, step_end):
+            self.need_create = False
+            return True
+        else:
+            return False
 
 
 class TPDatabasePool:

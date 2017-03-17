@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import json
-import time
 import threading
-from .base import TPBaseUserAuthHandler, TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
+import time
+
+from eom_app.app.configs import app_cfg
+from eom_app.app.const import *
 from eom_app.app.db import get_db
-from eom_app.app.util import sec_generate_password, sec_verify_password
+from .base import TPBaseUserAuthHandler, TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
+
+cfg = app_cfg()
+
+# from eom_app.app.util import sec_generate_password, sec_verify_password
 
 
 class IndexHandler(TPBaseUserAuthHandler):
@@ -15,18 +21,22 @@ class IndexHandler(TPBaseUserAuthHandler):
 
 class InstallHandler(TPBaseAdminAuthHandler):
     def get(self):
-        if get_db().need_upgrade:
+        if get_db().need_create:
+            self.render('maintenance/install.mako')
+        elif get_db().need_upgrade:
             return self.redirect('/maintenance/upgrade')
-
-        self.render('maintenance/install.mako')
+        else:
+            self.redirect('/')
 
 
 class UpgradeHandler(TPBaseAdminAuthHandler):
     def get(self):
         if get_db().need_create:
             return self.redirect('/maintenance/install')
-
-        self.render('maintenance/upgrade.mako')
+        elif get_db().need_upgrade:
+            self.render('maintenance/upgrade.mako')
+        else:
+            self.redirect('/')
 
 
 class RpcThreadManage:
@@ -86,7 +96,8 @@ class RpcThreadManage:
         time.sleep(1)
         # self._add_step_result(tid, 0, '正在初始化 1...')
 
-        get_db().create_and_init(_step_begin, _step_end)
+        if get_db().create_and_init(_step_begin, _step_end):
+            cfg.app_mode = APP_MODE_NORMAL
 
         self._step_begin(tid, '操作已完成')
 

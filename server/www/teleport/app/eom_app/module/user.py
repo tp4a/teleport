@@ -3,6 +3,8 @@
 import hashlib
 from eom_app.app.const import *
 from eom_app.app.configs import app_cfg
+from eom_app.app.db import get_db
+from eom_app.app.util import sec_generate_password, sec_verify_password
 
 from .common import *
 
@@ -10,12 +12,10 @@ cfg = app_cfg()
 
 
 def verify_user(name, password):
-    _password = hashlib.sha256(password.encode()).hexdigest()
-    string_sql = 'select account_id, account_type, ' \
-                 'account_name FROM ts_account WHERE account_name =\'{}\' AND account_pwd = \'{}\''.format(name, _password)
+    db = get_db()
 
-    sql_exec = get_db_con()
-    db_ret = sql_exec.ExecProcQuery(string_sql)
+    sql = 'SELECT `account_id`, `account_type`, `account_name`, `account_pwd` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, name)
+    db_ret = db.query(sql)
     if db_ret is None:
         # 特别地，如果无法取得数据库连接，有可能是新安装的系统，尚未建立数据库，此时应该处于维护模式
         # 因此可以特别地处理用户验证：用户名admin，密码admin可以登录为管理员
@@ -26,25 +26,57 @@ def verify_user(name, password):
 
     if len(db_ret) != 1:
         return 0, 0, ''
-    user_id, account_type, name = db_ret[0]
+
+    user_id = db_ret[0][0]
+    account_type = db_ret[0][1]
+    name = db_ret[0][2]
+    if not sec_verify_password(password, db_ret[0][3]):
+        # 按新方法验证密码失败，可能是旧版本的密码散列格式，再尝试一下
+        if db_ret[0][3] != hashlib.sha256(password.encode()).hexdigest():
+            return 0, 0, ''
+        else:
+            # 发现此用户的密码散列格式还是旧的，更新成新的吧！
+            _new_sec_password = sec_generate_password(password)
+            sql = 'UPDATE `{}account` SET `account_pwd`="{}" WHERE `account_id`={}'.format(db.table_prefix, _new_sec_password, int(user_id))
+            db.exec(sql)
+
     return user_id, account_type, name
 
 
 def modify_pwd(old_pwd, new_pwd, user_id):
-    sql_exec = get_db_con()
-    new_pwd = hashlib.sha256(new_pwd.encode()).hexdigest()
-    old_pwd = hashlib.sha256(old_pwd.encode()).hexdigest()
-
-    string_sql = 'SELECT account_id FROM ts_account WHERE account_pwd = \'{}\' AND  account_id = {};'.format(old_pwd, int(user_id))
-    db_ret = sql_exec.ExecProcQuery(string_sql)
-    if len(db_ret) != 1:
+    db = get_db()
+    sql = 'SELECT `account_pwd` FROM `{}account` WHERE `account_id`={};'.format(db.table_prefix, int(user_id))
+    db_ret = db.query(sql)
+    if db_ret is None or len(db_ret) != 1:
         return -2
-    string_sql = 'UPDATE ts_account SET account_pwd = \'{}\' WHERE account_pwd = \'{}\' AND  account_id = {}'.format(new_pwd, old_pwd, int(user_id))
 
-    ret = sql_exec.ExecProcNonQuery(string_sql)
-    if ret:
+    if not sec_verify_password(old_pwd, db_ret[0][0]):
+        # 按新方法验证密码失败，可能是旧版本的密码散列格式，再尝试一下
+        if db_ret[0][0] != hashlib.sha256(old_pwd.encode()).hexdigest():
+            return -2
+
+    _new_sec_password = sec_generate_password(new_pwd)
+    sql = 'UPDATE `{}account` SET `account_pwd`="{}" WHERE `account_id`={}'.format(db.table_prefix, _new_sec_password, int(user_id))
+    db_ret = db.exec(sql)
+    if db_ret:
         return 0
-    return -3
+    else:
+        return -3
+
+    # sql_exec = get_db_con()
+    # new_pwd = hashlib.sha256(new_pwd.encode()).hexdigest()
+    # old_pwd = hashlib.sha256(old_pwd.encode()).hexdigest()
+
+    # string_sql = 'SELECT account_id FROM ts_account WHERE account_pwd = \'{}\' AND  account_id = {};'.format(old_pwd, int(user_id))
+    # db_ret = sql_exec.ExecProcQuery(string_sql)
+    # if len(db_ret) != 1:
+    #     return -2
+    # string_sql = 'UPDATE ts_account SET account_pwd = \'{}\' WHERE account_pwd = \'{}\' AND  account_id = {}'.format(new_pwd, old_pwd, int(user_id))
+    #
+    # ret = sql_exec.ExecProcNonQuery(string_sql)
+    # if ret:
+    #     return 0
+    # return -3
 
 
 def get_user_list():
@@ -72,7 +104,7 @@ def get_user_list():
 def delete_user(user_id):
     sql_exec = get_db_con()
     #
-    str_sql = 'DELETE FROM ts_account WHERE account_id = {} '.format(user_id)
+    str_sql = 'DELETE FROM ts_account WHERE account_id={};'.format(user_id)
     ret = sql_exec.ExecProcNonQuery(str_sql)
     return ret
 
@@ -80,27 +112,32 @@ def delete_user(user_id):
 def lock_user(user_id, lock_status):
     sql_exec = get_db_con()
     #
-    str_sql = 'UPDATE ts_account SET account_lock = {} ' \
-              ' WHERE account_id = {}'.format(lock_status, user_id)
+    str_sql = 'UPDATE ts_account SET account_lock={} ' \
+              'WHERE account_id={};'.format(lock_status, user_id)
     ret = sql_exec.ExecProcNonQuery(str_sql)
     return ret
 
 
 def reset_user(user_id):
-    sql_exec = get_db_con()
+    # sql_exec = get_db_con()
     #
-    user_pwd = hashlib.sha256("123456".encode()).hexdigest()
-    str_sql = 'UPDATE ts_account SET account_pwd = "{}" ' \
-              ' WHERE account_id = {}'.format(user_pwd, user_id)
-    ret = sql_exec.ExecProcNonQuery(str_sql)
+    # user_pwd = hashlib.sha256("123456".encode()).hexdigest()
+    # str_sql = 'UPDATE ts_account SET account_pwd = "{}" ' \
+    #           ' WHERE account_id = {}'.format(user_pwd, user_id)
+    # ret = sql_exec.ExecProcNonQuery(str_sql)
+
+    db = get_db()
+    _new_sec_password = sec_generate_password('123456')
+    sql = 'UPDATE `{}account` SET `account_pwd`="{}" WHERE `account_id`={};'.format(db.table_prefix, _new_sec_password, int(user_id))
+    ret = db.exec(sql)
     return ret
 
 
 def modify_user(user_id, user_desc):
     sql_exec = get_db_con()
     #
-    str_sql = 'UPDATE ts_account SET account_desc = \'{}\' ' \
-              '  WHERE account_id = {}'.format(user_desc, user_id)
+    str_sql = 'UPDATE ts_account SET account_desc="{}" ' \
+              'WHERE account_id={};'.format(user_desc, user_id)
     ret = sql_exec.ExecProcNonQuery(str_sql)
     return ret
 
