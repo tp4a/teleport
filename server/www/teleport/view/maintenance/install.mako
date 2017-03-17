@@ -53,8 +53,8 @@
             <h1>配置TELEPORT服务</h1>
             <hr/>
 
-            <h2>第一步：创建数据表 <span id="step-create-db-result"></span></h2>
-            <div id="step-create-db">
+            <h2>第一步：创建数据表</h2>
+            <div>
                 <p>请选择要使用的数据库类型（暂时仅支持sqlite，其它类型开发中）：</p>
                 <input id="db-sqlite" type="radio" checked="checked" name="database" value="sqlite"/> <label for="db-sqlite">SQLite</label><br/>
                 <input id="db-mysql" type="radio" name="database" value="mysql" disabled="disabled"/> <label for="db-mysql">MySQL（开发中，暂不支持）</label>

@@ -7,7 +7,8 @@ import threading
 
 from eom_common.eomcore.logger import log
 from .configs import app_cfg
-from .database.create import create_and_init, TELEPORT_DATABASE_VERSION
+from .database.create import create_and_init
+from .database.upgrade import upgrade_database
 
 cfg = app_cfg()
 
@@ -15,7 +16,7 @@ __all__ = ['get_db']
 
 
 # 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
-# TELEPORT_DATABASE_VERSION = 2
+TELEPORT_DATABASE_VERSION = 10
 
 
 class TPDatabase:
@@ -55,7 +56,7 @@ class TPDatabase:
 
         # 尝试从配置表中读取当前数据库版本号（如果不存在，说明是比较旧的版本了，则置为0）
         ret = self.query('SELECT `value` FROM {}config WHERE `name`="db_ver";'.format(self._table_prefix))
-        if ret is None or 0 == len(ret):
+        if ret is None or 0 == len(ret) or ret[0][0] < TELEPORT_DATABASE_VERSION:
             log.w('database need upgrade.\n')
             self.need_upgrade = True
 
@@ -67,8 +68,16 @@ class TPDatabase:
 
     def create_and_init(self, step_begin, step_end):
         step_begin('准备创建数据表')
-        if create_and_init(self, step_begin, step_end):
+        if create_and_init(self, step_begin, step_end, TELEPORT_DATABASE_VERSION):
             self.need_create = False
+            return True
+        else:
+            return False
+
+    def upgrade_database(self, step_begin, step_end):
+        step_begin('准备升级数据表')
+        if upgrade_database(self, step_begin, step_end, TELEPORT_DATABASE_VERSION):
+            self.need_upgrade = False
             return True
         else:
             return False

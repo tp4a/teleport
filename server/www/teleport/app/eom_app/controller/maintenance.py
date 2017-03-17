@@ -2,7 +2,6 @@
 
 import json
 import threading
-import time
 
 from eom_app.app.configs import app_cfg
 from eom_app.app.const import *
@@ -10,8 +9,6 @@ from eom_app.app.db import get_db
 from .base import TPBaseUserAuthHandler, TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
 
 cfg = app_cfg()
-
-# from eom_app.app.util import sec_generate_password, sec_verify_password
 
 
 class IndexHandler(TPBaseUserAuthHandler):
@@ -56,6 +53,17 @@ class RpcThreadManage:
 
         return task_id
 
+    def upgrade_db(self):
+        with self._lock:
+            self._id_base += 1
+            task_id = self._id_base
+
+            t = threading.Thread(target=self._upgrade_db, args=[task_id])
+            self._threads[task_id] = {'cmd': 'create_db', 'running': True, 'stop': False, 'steps': list()}
+            t.start()
+
+        return task_id
+
     def get_task(self, task_id):
         with self._lock:
             if task_id in self._threads:
@@ -83,34 +91,31 @@ class RpcThreadManage:
                 self._threads[task_id]['stop'] = True
 
     def _create_db(self, tid):
-        # x = sec_generate_password('admin')
-        # print(sec_verify_password('admin', x))
-        # print(sec_verify_password('.admin', x))
-
         def _step_begin(msg):
             self._step_begin(tid, msg)
 
         def _step_end(sid, code, msg=None):
             self._step_end(tid, sid, code, msg)
 
-        time.sleep(1)
-        # self._add_step_result(tid, 0, '正在初始化 1...')
-
         if get_db().create_and_init(_step_begin, _step_end):
             cfg.app_mode = APP_MODE_NORMAL
 
         self._step_begin(tid, '操作已完成')
 
-        # time.sleep(1)
-        # self._add_step_result(tid, 0, '正在初始化 2...')
-        # time.sleep(1)
-        # self._add_step_result(tid, 0, '正在初始化 3...')
-        # time.sleep(1)
-        # self._add_step_result(tid, 0, '正在初始化 4...')
+        self._thread_end(tid)
 
-        # self._threads[tid]['steps'].append({'stat': 0, 'msg': '执行已结束'})
-        # if self._threads[tid]['stop']:
-        #     self._add_step_result(tid, -1, '操作被终止')
+    def _upgrade_db(self, tid):
+        def _step_begin(msg):
+            self._step_begin(tid, msg)
+
+        def _step_end(sid, code, msg=None):
+            self._step_end(tid, sid, code, msg)
+
+        if get_db().upgrade_database(_step_begin, _step_end):
+            cfg.app_mode = APP_MODE_NORMAL
+
+        self._step_begin(tid, '操作已完成')
+
         self._thread_end(tid)
 
     def _step_begin(self, tid, msg):
@@ -132,11 +137,6 @@ class RpcThreadManage:
                 pass
 
             return len(self._threads[tid]['steps']) - 1
-
-    # def _add_step_result(self, tid, code, msg):
-    #     if len(self._threads[tid]['steps']) > 0:
-    #         self._threads[tid]['steps'][-1]['stat'] = 0  # 0 表示此步骤已完成
-    #     self._threads[tid]['steps'].append({'stat': 1, 'code': code, 'msg': msg})
 
     def _thread_end(self, tid):
         with self._lock:
@@ -171,13 +171,18 @@ class RpcHandler(TPBaseAdminAuthJsonHandler):
             task_id = thread_mgr.create_db()
             return self.write_json(0, data={"task_id": task_id})
 
+        if cmd == 'upgrade_db':
+            if not get_db().need_upgrade:
+                return self.write_json(-1)
+            task_id = thread_mgr.upgrade_db()
+            return self.write_json(0, data={"task_id": task_id})
+
         elif cmd == 'get_task_ret':
             # return self.write_json(-1)
             r = thread_mgr.get_task(args['tid'])
             if r is None:
                 return self.write_json(0, data={'running': False, 'steps': []})
             else:
-                # del r['stop']
                 return self.write_json(0, data=r)
 
         else:

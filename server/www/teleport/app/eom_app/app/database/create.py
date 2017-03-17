@@ -3,9 +3,6 @@
 from eom_app.app.util import sec_generate_password
 from eom_common.eomcore.logger import log
 
-# 升级数据表结构时必须升级此版本号，并编写响应的升级SQL
-TELEPORT_DATABASE_VERSION = 10
-
 
 def _db_exec(db, step_begin, step_end, msg, sql):
     _step = step_begin(msg)
@@ -18,7 +15,7 @@ def _db_exec(db, step_begin, step_end, msg, sql):
         step_end(_step, 0)
 
 
-def create_and_init(db, step_begin, step_end):
+def create_and_init(db, step_begin, step_end, db_ver):
     try:
         _db_exec(db, step_begin, step_end, '创建表 account', """CREATE TABLE `{}account` (
   `account_id` integer PRIMARY KEY AUTOINCREMENT,
@@ -107,7 +104,7 @@ PRIMARY KEY (`name` ASC)
 
         _db_exec(db, step_begin, step_end,
                  '设定数据库版本',
-                 'INSERT INTO `{}config` VALUES ("db_ver", "{}");'.format(db.table_prefix, TELEPORT_DATABASE_VERSION)
+                 'INSERT INTO `{}config` VALUES ("db_ver", "{}");'.format(db.table_prefix, db_ver)
                  )
 
         return True
