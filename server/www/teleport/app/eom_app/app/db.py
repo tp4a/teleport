@@ -8,7 +8,7 @@ import threading
 from eom_common.eomcore.logger import log
 from .configs import app_cfg
 from .database.create import create_and_init
-from .database.upgrade import upgrade_database
+from .database.upgrade import DatabaseUpgrade
 
 cfg = app_cfg()
 
@@ -16,49 +16,117 @@ __all__ = ['get_db']
 
 
 # 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
-TELEPORT_DATABASE_VERSION = 10
 
 
 class TPDatabase:
+    DB_VERSION = 10
+
+    DB_TYPE_UNKNOWN = 0
+    DB_TYPE_SQLITE = 1
+    DB_TYPE_MYSQL = 2
+
     def __init__(self):
         if '__teleport_db__' in builtins.__dict__:
             raise RuntimeError('TPDatabase object exists, you can not create more than one instance.')
 
-        self._table_prefix = ''
-
+        self.db_source = {'type': self.DB_TYPE_UNKNOWN}
         self.need_create = False  # 数据尚未存在，需要创建
         self.need_upgrade = False  # 数据库已存在但版本较低，需要升级
+        self.current_ver = 0
+
+        self._table_prefix = ''
         self._conn_pool = None
 
     @property
     def table_prefix(self):
         return self._table_prefix
 
-    def init_mysql(self):
-        # NOT SUPPORTED YET
-        pass
+    def init(self, db_source):
+        self.db_source = db_source
 
-    def init_sqlite(self, db_file):
-        self._table_prefix = 'ts_'
-        self._conn_pool = TPSqlitePool(db_file)
+        if db_source['type'] == self.DB_TYPE_MYSQL:
+            log.e('MySQL not supported yet.')
+            return False
+        elif db_source['type'] == self.DB_TYPE_SQLITE:
+            self._table_prefix = 'ts_'
+            self._conn_pool = TPSqlitePool(db_source['file'])
 
-        if not os.path.exists(db_file):
+            if not os.path.exists(db_source['file']):
+                log.w('database need create.\n')
+                self.need_create = True
+                return True
+        else:
+            log.e('Unknown database type: {}'.format(db_source['type']))
+            return False
+
+        # 看看数据库中是否存在指定的数据表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
+        # ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}account";'.format(self._table_prefix))
+        ret = self.is_table_exists('group')
+        if ret is None or not ret:
+            # if ret is None or ret[0][0] == 0:
             log.w('database need create.\n')
             self.need_create = True
-            return
+            return True
 
-        # 看看数据库中是否存在用户表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
-        ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}account";'.format(self._table_prefix))
-        if ret is None or ret[0][0] == 0:
-            log.w('database need create.\n')
-            self.need_create = True
-            return
+        # 尝试从配置表中读取当前数据库版本号（如果不存在，说明是比较旧的版本了）
+        ret = self.query('SELECT `value` FROM `{}config` WHERE `name`="db_ver";'.format(self._table_prefix))
+        log.w(ret)
+        if ret is None or 0 == len(ret):
+            self.current_ver = 1
+        else:
+            self.current_ver = int(ret[0][0])
 
-        # 尝试从配置表中读取当前数据库版本号（如果不存在，说明是比较旧的版本了，则置为0）
-        ret = self.query('SELECT `value` FROM {}config WHERE `name`="db_ver";'.format(self._table_prefix))
-        if ret is None or 0 == len(ret) or ret[0][0] < TELEPORT_DATABASE_VERSION:
+        if self.current_ver < self.DB_VERSION:
             log.w('database need upgrade.\n')
             self.need_upgrade = True
+            return True
+
+        return True
+
+    # def init_sqlite(self, db_file):
+    #     self._table_prefix = 'ts_'
+    #     self._conn_pool = TPSqlitePool(db_file)
+    #
+    #     if not os.path.exists(db_file):
+    #         log.w('database need create.\n')
+    #         self.need_create = True
+    #         return
+    #
+    #     # 看看数据库中是否存在指定的数据表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
+    #     # ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}account";'.format(self._table_prefix))
+    #     ret = self.is_table_exists('group')
+    #     if ret is None or not ret:
+    #         # if ret is None or ret[0][0] == 0:
+    #         log.w('database need create.\n')
+    #         self.need_create = True
+    #         return
+    #
+    #     # 尝试从配置表中读取当前数据库版本号（如果不存在，说明是比较旧的版本了）
+    #     ret = self.query('SELECT `value` FROM {}config WHERE `name`="db_ver";'.format(self._table_prefix))
+    #     if ret is None or 0 == len(ret) or ret[0][0] < TELEPORT_DATABASE_VERSION:
+    #         log.w('database need upgrade.\n')
+    #         self.need_upgrade = True
+
+    def is_table_exists(self, table_name):
+        """
+        判断指定的表是否存在
+        @param table_name: string
+        @return: None or Boolean
+        """
+        # return self._conn_pool.is_table_exists(table_name)
+        if self.db_source['type'] == self.DB_TYPE_SQLITE:
+            ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}{}";'.format(self._table_prefix, table_name))
+            if ret is None:
+                return None
+            if len(ret) == 0:
+                return False
+            if ret[0][0] == 0:
+                return False
+            return True
+        elif self.db_source['type'] == self.DB_TYPE_MYSQL:
+            return None
+        else:
+            return None
 
     def query(self, sql):
         return self._conn_pool.query(sql)
@@ -67,16 +135,15 @@ class TPDatabase:
         return self._conn_pool.exec(sql)
 
     def create_and_init(self, step_begin, step_end):
-        step_begin('准备创建数据表')
-        if create_and_init(self, step_begin, step_end, TELEPORT_DATABASE_VERSION):
+        if create_and_init(self, step_begin, step_end):
             self.need_create = False
             return True
         else:
             return False
 
     def upgrade_database(self, step_begin, step_end):
-        step_begin('准备升级数据表')
-        if upgrade_database(self, step_begin, step_end, TELEPORT_DATABASE_VERSION):
+        if DatabaseUpgrade(self, step_begin, step_end).do_upgrade():
+            # if upgrade_database(self, step_begin, step_end):
             self.need_upgrade = False
             return True
         else:
@@ -87,6 +154,12 @@ class TPDatabasePool:
     def __init__(self):
         self._locker = threading.RLock()
         self._connections = dict()
+
+    # def is_table_exists(self, table_name):
+    #     _conn = self._get_connect()
+    #     if _conn is None:
+    #         return None
+    #     return self._is_table_exists(_conn, table_name)
 
     def query(self, sql):
         _conn = self._get_connect()
@@ -114,6 +187,9 @@ class TPDatabasePool:
     def _do_connect(self):
         return None
 
+    # def _is_table_exists(self, conn, table_name):
+    #     return None
+
     def _do_query(self, conn, sql):
         return None
 
@@ -132,6 +208,14 @@ class TPSqlitePool(TPDatabasePool):
         except:
             log.e('[sqlite] can not connect, does the database file correct?')
             return None
+
+    # def _is_table_exists(self, conn, table_name):
+    #     ret = self._do_query(conn, 'SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}{}";'.format(self._table_prefix, table_name))
+    #     # ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}{}";'.format(self._table_prefix, table_name))
+    #     if ret is None or ret[0][0] == 0:
+    #         return False
+    #     else:
+    #         return True
 
     def _do_query(self, conn, sql):
         cursor = conn.cursor()

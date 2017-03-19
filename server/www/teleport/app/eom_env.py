@@ -39,8 +39,8 @@ if os.path.exists(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'etc')):
 
 # 检查操作系统，目前仅支持Win和Linux
 PLATFORM = platform.system().lower()
-if PLATFORM not in ['windows', 'linux']:
-    print('Teleport WEB Server support Windows and Linux only.')
+if PLATFORM not in ['windows', 'linux', 'darwin']:
+    print('TELEPORT WEB Server does not support `{}` platform yet.'.format(PLATFORM))
     sys.exit(1)
 
 BITS = 'x64'

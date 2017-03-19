@@ -72,8 +72,12 @@ class WebServerCore:
         # db_path = os.path.join(cfg.data_path, 'ts_db.db')
         get_sqlite_pool().init(cfg.data_path)
 
-        get_db().init_sqlite(os.path.join(cfg.data_path, 'ts_db.db'))
-        if get_db().need_create or get_db().need_upgrade:
+        # get_db().init_sqlite(os.path.join(cfg.data_path, 'ts_db.db'))
+        _db = get_db()
+        if not _db.init({'type': _db.DB_TYPE_SQLITE, 'file': os.path.join(cfg.data_path, 'ts_db.db')}):
+            log.e('initialize database interface failed.\n')
+            return False
+        if _db.need_create or _db.need_upgrade:
             cfg.app_mode = APP_MODE_MAINTENANCE
         else:
             cfg.app_mode = APP_MODE_NORMAL

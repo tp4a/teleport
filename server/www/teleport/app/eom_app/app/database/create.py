@@ -15,16 +15,16 @@ def _db_exec(db, step_begin, step_end, msg, sql):
         step_end(_step, 0)
 
 
-def create_and_init(db, step_begin, step_end, db_ver):
+def create_and_init(db, step_begin, step_end):
     try:
         _db_exec(db, step_begin, step_end, '创建表 account', """CREATE TABLE `{}account` (
-  `account_id` integer PRIMARY KEY AUTOINCREMENT,
-  `account_type` int(11) DEFAULT 0,
-  `account_name` varchar(32) DEFAULT NULL,
-  `account_pwd` varchar(32) DEFAULT NULL,
-  `account_status` int(11) DEFAULT 0,
-  `account_lock` int(11) DEFAULT 0,
-  `account_desc` varchar(255)
+`account_id` integer PRIMARY KEY AUTOINCREMENT,
+`account_type` int(11) DEFAULT 0,
+`account_name` varchar(32) DEFAULT NULL,
+`account_pwd` varchar(32) DEFAULT NULL,
+`account_status` int(11) DEFAULT 0,
+`account_lock` int(11) DEFAULT 0,
+`account_desc` varchar(255)
 );""".format(db.table_prefix))
 
         _db_exec(db, step_begin, step_end, '创建表 auth', """CREATE TABLE `{}auth`(
@@ -104,7 +104,7 @@ PRIMARY KEY (`name` ASC)
 
         _db_exec(db, step_begin, step_end,
                  '设定数据库版本',
-                 'INSERT INTO `{}config` VALUES ("db_ver", "{}");'.format(db.table_prefix, db_ver)
+                 'INSERT INTO `{}config` VALUES ("db_ver", "{}");'.format(db.table_prefix, db.DB_VERSION)
                  )
 
         return True

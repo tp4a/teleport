@@ -92,7 +92,7 @@ class RpcThreadManage:
 
     def _create_db(self, tid):
         def _step_begin(msg):
-            self._step_begin(tid, msg)
+            return self._step_begin(tid, msg)
 
         def _step_end(sid, code, msg=None):
             self._step_end(tid, sid, code, msg)
@@ -106,7 +106,7 @@ class RpcThreadManage:
 
     def _upgrade_db(self, tid):
         def _step_begin(msg):
-            self._step_begin(tid, msg)
+            return self._step_begin(tid, msg)
 
         def _step_end(sid, code, msg=None):
             self._step_end(tid, sid, code, msg)
@@ -132,11 +132,9 @@ class RpcThreadManage:
                 self._threads[tid]['steps'][sid]['code'] = code
                 self._threads[tid]['steps'][sid]['stat'] = 0  # 0 表示此步骤已完成
                 if msg is not None:
-                    self._threads[tid]['steps'][sid]['msg'] = msg
+                    self._threads[tid]['steps'][sid]['msg'] = '{}{}'.format(self._threads[tid]['steps'][sid]['msg'], msg)
             except:
                 pass
-
-            return len(self._threads[tid]['steps']) - 1
 
     def _thread_end(self, tid):
         with self._lock:
