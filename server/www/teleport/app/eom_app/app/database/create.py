@@ -35,7 +35,7 @@ def create_and_init(db, step_begin, step_end):
 );""".format(db.table_prefix))
 
         # 注意，这个key表原名为cert，考虑到其中存放的是ssh密钥对，与证书无关，因此改名为key
-        # 这也是升级到数据库版本10的标志！
+        # 这也是升级到数据库版本5的标志！
         _db_exec(db, step_begin, step_end, '创建表 key', """CREATE TABLE `{}key` (
 `cert_id`  integer PRIMARY KEY AUTOINCREMENT,
 `cert_name`  varchar(256),

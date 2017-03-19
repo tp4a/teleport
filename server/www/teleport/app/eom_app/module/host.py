@@ -332,7 +332,7 @@ def get_cert_list():
     field_a = ['cert_id', 'cert_name', 'cert_pub', 'cert_pri', 'cert_desc']
 
     str_sql = 'SELECT {} ' \
-              'FROM ts_cert as a '.format(','.join(['a.{}'.format(i) for i in field_a]))
+              'FROM ts_key as a '.format(','.join(['a.{}'.format(i) for i in field_a]))
 
     db_ret = sql_exec.ExecProcQuery(str_sql)
 
@@ -439,7 +439,7 @@ def delete_host(host_list):
 def add_cert(cert_pub, cert_pri, cert_name):
     sql_exec = get_db_con()
     #
-    str_sql = 'INSERT INTO ts_cert (cert_pub, cert_pri, cert_name) VALUES (\'{}\',\'{}\',\'{}\')'.format(cert_pub, cert_pri, cert_name)
+    str_sql = 'INSERT INTO ts_key (cert_pub, cert_pri, cert_name) VALUES (\'{}\',\'{}\',\'{}\')'.format(cert_pub, cert_pri, cert_name)
     ret = sql_exec.ExecProcNonQuery(str_sql)
     return ret
 
@@ -447,7 +447,7 @@ def add_cert(cert_pub, cert_pri, cert_name):
 def delete_cert(cert_id):
     sql_exec = get_db_con()
     #
-    str_sql = 'DELETE FROM ts_cert WHERE cert_id = {} '.format(cert_id)
+    str_sql = 'DELETE FROM ts_key WHERE cert_id = {} '.format(cert_id)
     ret = sql_exec.ExecProcNonQuery(str_sql)
     return ret
 
@@ -457,11 +457,11 @@ def update_cert(cert_id, cert_pub, cert_pri, cert_name):
     #
 
     if 0 == len(cert_pri):
-        str_sql = 'UPDATE ts_cert SET cert_pub = \'{}\', ' \
+        str_sql = 'UPDATE ts_key SET cert_pub = \'{}\', ' \
                   'cert_name = \'{}\'' \
                   '  WHERE cert_id = {}'.format(cert_pub, cert_name, cert_id)
     else:
-        str_sql = 'UPDATE ts_cert SET cert_pub = \'{}\', ' \
+        str_sql = 'UPDATE ts_key SET cert_pub = \'{}\', ' \
                   'cert_pri = \'{}\', cert_name = \'{}\'' \
                   '  WHERE cert_id = {}'.format(cert_pub, cert_pri, cert_name, cert_id)
 
@@ -557,7 +557,7 @@ def get_host_auth_info(host_auth_id):
             cert_id = 0
         else:
             cert_id = int(x.a_cert_id)  # int(user_auth)
-        str_sql = 'SELECT cert_pri FROM ts_cert WHERE cert_id = {}'.format(cert_id)
+        str_sql = 'SELECT cert_pri FROM ts_key WHERE cert_id = {}'.format(cert_id)
         db_ret = sql_exec.ExecProcQuery(str_sql)
         if db_ret is not None and len(db_ret) == 1:
             (cert_pri,) = db_ret[0]
@@ -609,7 +609,7 @@ def update_host_extend_info(host_id, args):
 
 def get_cert_info(cert_id):
     sql_exec = get_db_con()
-    str_sql = 'SELECT cert_pri FROM ts_cert WHERE cert_id = {}'.format(cert_id)
+    str_sql = 'SELECT cert_pri FROM ts_key WHERE cert_id = {}'.format(cert_id)
     db_ret = sql_exec.ExecProcQuery(str_sql)
     if db_ret is not None and len(db_ret) == 1:
         (cert_pri,) = db_ret[0]
@@ -813,7 +813,7 @@ def get_auth_info(auth_id):
     elif db_item.c_auth_mode == 2:
         cert_id = db_item.c_cert_id
 
-        str_sql = 'SELECT cert_pri FROM ts_cert WHERE cert_id={}'.format(cert_id)
+        str_sql = 'SELECT cert_pri FROM ts_key WHERE cert_id={}'.format(cert_id)
         db_ret = sql_exec.ExecProcQuery(str_sql)
         if db_ret is None or len(db_ret) > 1:
             return None

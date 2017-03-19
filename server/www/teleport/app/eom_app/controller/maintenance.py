@@ -100,7 +100,7 @@ class RpcThreadManage:
         if get_db().create_and_init(_step_begin, _step_end):
             cfg.app_mode = APP_MODE_NORMAL
 
-        self._step_begin(tid, '操作已完成')
+        # self._step_begin(tid, '操作已完成')
 
         self._thread_end(tid)
 
@@ -114,7 +114,7 @@ class RpcThreadManage:
         if get_db().upgrade_database(_step_begin, _step_end):
             cfg.app_mode = APP_MODE_NORMAL
 
-        self._step_begin(tid, '操作已完成')
+        # self._step_begin(tid, '操作已完成')
 
         self._thread_end(tid)
 

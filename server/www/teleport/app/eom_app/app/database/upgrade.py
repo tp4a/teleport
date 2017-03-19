@@ -35,7 +35,7 @@ class DatabaseUpgrade:
 
             ret = self.db.is_table_exists('sys_user')
             if ret is None:
-                self.step_end(_step, -1)
+                self.step_end(_step, -1, '无法连接到数据库')
                 return False
             elif not ret:
                 self.step_end(_step, 0, '跳过 v1 到 v2 的升级操作')
@@ -121,28 +121,31 @@ class DatabaseUpgrade:
 
             _step = self.step_begin(' - 调整数据表...')
             if not self.db.exec('ALTER TABLE `{}auth` ADD `host_auth_id` INTEGER;'.format(self.db.table_prefix)):
-                self.step_end(_step, -1)
+                self.step_end(_step, -1, '无法在auth表中加入host_auth_id字段')
                 return False
 
             if not self.db.exec('UPDATE `{}auth` SET `host_auth_id`=`host_id`;'.format(self.db.table_prefix)):
-                self.step_end(_step, -1)
+                self.step_end(_step, -1, '无法将auth表中host_auth_id字段的值均调整为host_id字段的值')
                 return False
 
             if not self.db.exec('ALTER TABLE `{}log` ADD `protocol` INTEGER;'.format(self.db.table_prefix)):
-                self.step_end(_step, -1)
+                self.step_end(_step, -1, '无法在log表中加入protocol字段')
                 return False
 
             if not self.db.exec('UPDATE `{}log` SET `protocol`=1 WHERE `sys_type`=1;'.format(self.db.table_prefix)):
-                self.step_end(_step, -1)
+                self.step_end(_step, -1, '无法修正log表中的protocol字段数据(1)')
                 return False
 
             if not self.db.exec('UPDATE `{}log` SET `protocol`=2 WHERE `sys_type`=2;'.format(self.db.table_prefix)):
-                self.step_end(_step, -1)
+                self.step_end(_step, -1, '无法修正log表中的protocol字段数据(2)')
                 return False
 
-            if not self.db.exec('UPDATE ``{}log`` SET `ret_code`=9999 WHERE `ret_code`=0;'.format(self.db.table_prefix)):
-                self.step_end(_step, -1)
+            if not self.db.exec('UPDATE `{}log` SET `ret_code`=9999 WHERE `ret_code`=0;'.format(self.db.table_prefix)):
+                self.step_end(_step, -1, '无法修正log表中的ret_code字段数据')
                 return False
+
+            self.step_end(_step, 0)
+            _step = self.step_begin(' - 拆分数据表...')
 
             # 新建两个表，用于拆分原来的 ts_host 表
             if not self.db.exec("""CREATE TABLE `{}host_info` (
@@ -254,12 +257,16 @@ class DatabaseUpgrade:
                     shutil.copy(self.db.db_source['file'], _bak_file)
                 self.step_end(_step, 0)
 
+            _step = self.step_begin(' - 为telnet增加默认配置')
             # 如果ts_config表中没有ts_server_telnet_port项，则增加默认值52389
             db_ret = self.db.query('SELECT * FROM `{}config` WHERE `name`="ts_server_telnet_port";'.format(self.db.table_prefix))
             if len(db_ret) == 0:
                 if not self.db.exec('INSERT INTO `{}config` (`name`, `value`) VALUES ("ts_server_telnet_port", "52389");'.format(self.db.table_prefix)):
+                    self.step_end(_step, -1)
                     return False
+            self.step_end(_step, 0)
 
+            _step = self.step_begin(' - 调整认证数据表数据...')
             auth_info_ret = self.db.query('SELECT `id`, `host_id`, `pro_type`, `auth_mode`, `user_name`, `user_pswd`, `cert_id`, `encrypt`, `log_time` FROM `{}auth_info`;'.format(self.db.table_prefix))
             auth_ret = self.db.query('SELECT `auth_id`, `account_name`, `host_id`, `host_auth_id` FROM `{}auth`;'.format(self.db.table_prefix))
 
@@ -271,7 +278,9 @@ class DatabaseUpgrade:
             # 从原来的表中查询数据
             host_info_ret = self.db.query('SELECT `host_id`, `group_id`, `host_sys_type`, `host_ip`, `pro_port`, `host_lock`, `host_desc` FROM {}host_info;'.format(self.db.table_prefix))
             if host_info_ret is None:
+                self.step_end(_step, 0, '尚无认证数据，跳过处理')
                 return True
+
             # 先找出最大的host_id，这样如果要拆分一个host，就知道新的host_id应该是多少了
             for i in range(len(host_info_ret)):
                 if host_info_ret[i][0] > max_host_id:
@@ -380,6 +389,9 @@ class DatabaseUpgrade:
             # for i in range(len(new_auth)):
             #     print(new_auth[i])
 
+            self.step_end(_step, 0)
+            _step = self.step_begin(' - 重新整理认证数据表结构及数据...')
+
             # 将整理好的数据写入新的临时表
             # 先创建三个临时表
             if not self.db.exec("""CREATE TABLE `{}auth_tmp` (
@@ -388,6 +400,7 @@ class DatabaseUpgrade:
     `host_id`  INTEGER,
     `host_auth_id`  int(11) NOT NULL
     );""".format(self.db.table_prefix)):
+                self.step_end(_step, -1, '无法创建认证数据临时表')
                 return False
 
             if not self.db.exec("""CREATE TABLE `{}host_info_tmp` (
@@ -400,6 +413,7 @@ class DatabaseUpgrade:
     `host_lock`  int(11) DEFAULT 0,
     `host_desc`   DEFAULT ''
     );""".format(self.db.table_prefix)):
+                self.step_end(_step, -1, '无法创建主机信息数据临时表')
                 return False
 
             if not self.db.exec("""CREATE TABLE `{}auth_info_tmp` (
@@ -413,6 +427,7 @@ class DatabaseUpgrade:
     `encrypt`  INTEGER,
     `log_time`  varchar(60)
     );""".format(self.db.table_prefix)):
+                self.step_end(_step, -1, '无法创建认证信息数据临时表')
                 return False
 
             for i in range(len(new_host_info)):
@@ -424,6 +439,7 @@ class DatabaseUpgrade:
                     new_host_info[i]['host_lock'], new_host_info[i]['host_desc']
                 )
                 if not self.db.exec(sql):
+                    self.step_end(_step, -1, '无法调整数据(1)')
                     return False
 
             for i in range(len(new_auth_info)):
@@ -436,6 +452,7 @@ class DatabaseUpgrade:
                 )
                 # print(str_sql)
                 if not self.db.exec(sql):
+                    self.step_end(_step, -1, '无法调整数据(2)')
                     return False
 
             for i in range(len(new_auth)):
@@ -445,27 +462,35 @@ class DatabaseUpgrade:
                     new_auth[i]['auth_id'], new_auth[i]['account_name'], new_auth[i]['host_id'], new_auth[i]['host_auth_id']
                 )
                 if not self.db.exec(sql):
+                    self.step_end(_step, -1, '无法调整数据(3)')
                     return False
 
             # 表改名
             if not self.db.exec('ALTER TABLE `{}auth` RENAME TO `__bak_{}auth`;'.format(self.db.table_prefix, self.db.table_prefix)):
+                self.step_end(_step, -1, '无法处理临时表(1)')
                 return False
 
             if not self.db.exec('ALTER TABLE `{}auth_info` RENAME TO `__bak_{}auth_info`;'.format(self.db.table_prefix, self.db.table_prefix)):
+                self.step_end(_step, -1, '无法处理临时表(2)')
                 return False
 
             if not self.db.exec('ALTER TABLE `{}host_info` RENAME TO `__bak_{}host_info`;'.format(self.db.table_prefix, self.db.table_prefix)):
+                self.step_end(_step, -1, '无法处理临时表(3)')
                 return False
 
             if not self.db.exec('ALTER TABLE `{}auth_tmp` RENAME TO `{}auth`;'.format(self.db.table_prefix, self.db.table_prefix)):
+                self.step_end(_step, -1, '无法处理临时表(4)')
                 return False
 
             if not self.db.exec('ALTER TABLE `{}auth_info_tmp` RENAME TO `{}auth_info`;'.format(self.db.table_prefix, self.db.table_prefix)):
+                self.step_end(_step, -1, '无法处理临时表(5)')
                 return False
 
             if not self.db.exec('ALTER TABLE `{}host_info_tmp` RENAME TO `{}host_info`;'.format(self.db.table_prefix, self.db.table_prefix)):
+                self.step_end(_step, -1, '无法处理临时表(6)')
                 return False
 
+            self.step_end(_step, 0)
             return True
 
         except:
