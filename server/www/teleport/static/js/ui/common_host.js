@@ -23,16 +23,16 @@ ywl.on_init = function (cb_stack, cb_args) {
             $("#tp-assist-current-version").text("当前助手版本：" + ret.version);
         },
         function (ret, code, error) {
-            if (code == TP_ERR_NO_ASSIST) {
+            if (code == TPE_NO_ASSIST) {
                 $("#tp-assist-current-version").text("未能检测到TP助手，请您下载并启动TP助手！")
                 g_assist.alert_assist_not_found();
             }
-            else if (code == TP_ERR_VERSION_TOO_LOW) {
+            else if (code == TPE_OLD_ASSIST) {
                 ywl.notify_error(error);
                 $('#tp-assist-current-version').html('当前助手版本太低（v' + ret.version + '），请<a href="http://teleport.eomsoft.net/static/download/teleport-assist-last-win.zip">下载最新版本</a>!');
             }
             else {
-                $("#tp-assist-current-version").text(error)
+                $("#tp-assist-current-version").text(error);
                 ywl.notify_error(error);
 
                 console.log('error:', error)
@@ -146,7 +146,7 @@ ywl.on_host_table_created = function (tbl) {
                         console.log('远程连接建立成功！')
                     },
                     function (code, error) {
-                        if (code == TP_ERR_NO_ASSIST)
+                        if (code == TPE_NO_ASSIST)
                             g_assist.alert_assist_not_found();
                         else {
                             ywl.notify_error(error);
@@ -201,7 +201,7 @@ ywl.on_host_table_created = function (tbl) {
                         console.log('远程连接建立成功！')
                     },
                     function (code, error) {
-                        if (code == TP_ERR_NO_ASSIST)
+                        if (code == TPE_NO_ASSIST)
                             g_assist.alert_assist_not_found();
                         else {
                             ywl.notify_error(error);

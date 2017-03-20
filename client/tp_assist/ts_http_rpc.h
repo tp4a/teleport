@@ -13,25 +13,25 @@
 #include "../../external/mongoose/mongoose.h"
 
 
-typedef ex_u32 ts_rv;
+// typedef ex_u32 ts_rv;
 
-#define TSR_OK						0x0000
-#define TSR_INVALID_DATA			0x0001
-#define TSR_SEND_ERROR				0x0002
-#define TSR_NEED_MORE_DATA			0x0005
-#define TSR_FAILED					0x0006
-#define TSR_PING_OK					0x0007
-#define TSR_PING_ERROR				0x0008
-
-#define TSR_INVALID_REQUEST			0x1000
-#define TSR_INVALID_URI				0x1001
-#define TSR_INVALID_URL_ENCODE		0x1002
-#define TSR_NO_SUCH_METHOD			0x1003
-#define TSR_INVALID_JSON_FORMAT		0x1004
-#define TSR_INVALID_JSON_PARAM		0x1005
-#define TSR_CREATE_PROCESS_ERROR	0x1006
-#define TSR_OPENFILE_ERROR			0x1007
-#define TSR_GETTEMPPATH_ERROR		0x1007
+// #define TSR_OK						0x0000
+// #define TSR_INVALID_DATA			0x0001
+// #define TSR_SEND_ERROR				0x0002
+// #define TSR_NEED_MORE_DATA			0x0005
+// #define TSR_FAILED					0x0006
+// #define TSR_PING_OK					0x0007
+// #define TSR_PING_ERROR				0x0008
+// 
+// #define TSR_INVALID_REQUEST			0x1000
+// #define TSR_INVALID_URI				0x1001
+// #define TSR_INVALID_URL_ENCODE		0x1002
+// #define TSR_NO_SUCH_METHOD			0x1003
+// #define TSR_INVALID_JSON_FORMAT		0x1004
+// #define TSR_INVALID_JSON_PARAM		0x1005
+// #define TSR_CREATE_PROCESS_ERROR	0x1006
+// #define TSR_OPENFILE_ERROR			0x1007
+// #define TSR_GETTEMPPATH_ERROR		0x1007
 
 /*
 //=================================================================
@@ -97,7 +97,7 @@ public:
 	};
 
 private:
-	unsigned int _parse_request(struct http_message* req, ex_astr& func_cmd, ex_astr& func_args);
+	int _parse_request(struct http_message* req, ex_astr& func_cmd, ex_astr& func_args);
 	void _process_js_request(const ex_astr& func_cmd, const ex_astr& func_args, ex_astr& buf);
 	void _create_json_ret(ex_astr& buf, int errcode);
 	void _create_json_ret(ex_astr& buf, Json::Value& jr_root);

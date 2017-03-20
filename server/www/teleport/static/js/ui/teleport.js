@@ -1,15 +1,4 @@
-/**
- * Created by mi on 2016/6/28.
- */
 "use strict";
-
-var TP_ERR_NETWORK = 1;
-var TP_ERR_START_CLIENT = 2;
-var TP_ERR_NO_ASSIST = 3;
-//var TP_ERR_ASSIST_DENIED = 4;
-var TP_ERR_CORE_SRV = 5;
-var TP_ERR_TRIAL_LIMITED = 6;
-var TP_ERR_VERSION_TOO_LOW = 7;
 
 var g_low_version = "";
 var g_last_version = "";
@@ -18,23 +7,23 @@ var g_current_version = "";
 var g_host_name = window.location.hostname;
 
 var error_process = function (ret, func_success, func_error) {
-	console.log("ret", ret);
+//	console.log("ret", ret);
 	var code = ret.code;
-	if (code == 0) {
+	if (code == TPE_OK) {
 		func_success(ret);
 		return;
 	}
 
-	if (code == 0x1006) {
-		func_error(TP_ERR_START_CLIENT, '启动本地客户端进程失败，请检查命令行是否正确：' + ret.path);
+	if (code == TPE_START_CLIENT) {
+		func_error(TPE_START_CLIENT, '启动本地客户端进程失败，请检查命令行是否正确：' + ret.path);
 		console.log('启动本地进程失败，命令行：', ret.path);
-	} else if (code == 0x1004) {
-		func_error(TP_ERR_START_CLIENT, "启动本地客户端进程失败：启动参数错误！");
-	} else if (code == TP_ERR_VERSION_TOO_LOW) {
-		func_error(TP_ERR_VERSION_TOO_LOW, '助手版本太低，请下载最新版本！');
+	} else if (code == TPE_JSON_FORMAT || code == TPE_PARAM) {
+		func_error(TPE_START_CLIENT, "启动本地客户端进程失败：启动参数错误！");
+	} else if (code == TPE_OLD_ASSIST) {
+		func_error(TPE_OLD_ASSIST, '助手版本太低，请下载最新版本！');
 	}
 	else {
-		func_error(TP_ERR_START_CLIENT, '启动本地客户端失败，错误代码：' + ret.code);
+		func_error(TPE_START_CLIENT, '启动本地客户端失败，错误代码：' + ret.code);
 	}
 };
 
@@ -56,11 +45,11 @@ var teleport_init = function (low_version, last_version, func_success, func_erro
 			if (version_compare()) {
 				error_process(ret, func_success, func_error);
 			} else {
-				func_error(ret, TP_ERR_VERSION_TOO_LOW, '助手版本太低，请<a style="color:#aaaaff;" href="http://teleport.eomsoft.net/static/download/teleport-assist-last-win.zip">下载最新版本</a>！');
+				func_error(ret, TPE_OLD_ASSIST, '助手版本太低，请<a style="color:#aaaaff;" href="http://teleport.eomsoft.net/static/download/teleport-assist-last-win.zip">下载最新版本</a>！');
 			}
 		},
 		error: function (jqXhr) {
-			func_error({}, TP_ERR_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
+			func_error({}, TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
 		}
 	});
 };
@@ -109,15 +98,15 @@ var to_teleport = function (url, args, func_success, func_error) {
 						error_process(ret, func_success, func_error);
 					},
 					error: function (jqXhr) {
-						func_error(TP_ERR_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
+						func_error(TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
 					}
 				});
 			} else {
-				func_error(TP_ERR_CORE_SRV, '远程连接请求失败，可能teleport核心服务尚未启动！');
+				func_error(TPE_NO_CORE_SERVER, '远程连接请求失败，可能teleport核心服务尚未启动！');
 			}
 		},
 		error: function () {
-			func_error(TP_ERR_NETWORK, '远程网络通讯失败！');
+			func_error(TPE_NETWORK, '远程网络通讯失败！');
 		}
 	});
 };
@@ -158,15 +147,15 @@ var to_admin_teleport = function (url, args, func_success, func_error) {
 						error_process(ret, func_success, func_error);
 					},
 					error: function () {
-						func_error(TP_ERR_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
+						func_error(TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
 					}
 				});
 			} else {
-				func_error(TP_ERR_CORE_SRV, '远程连接请求失败，可能teleport核心服务尚未启动！');
+				func_error(TPE_NO_CORE_SERVER, '远程连接请求失败，可能teleport核心服务尚未启动！');
 			}
 		},
 		error: function () {
-			func_error(TP_ERR_NETWORK, '远程网络通讯失败！');
+			func_error(TPE_NETWORK, '远程网络通讯失败！');
 		}
 	});
 };
@@ -210,15 +199,15 @@ var to_admin_fast_teleport = function (url, args, func_success, func_error) {
 						console.log('e', _e);
 
 						console.log('state:', jqXhr.state());
-						func_error(TP_ERR_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
+						func_error(TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
 					}
 				});
 			} else {
-				func_error(TP_ERR_CORE_SRV, '远程连接请求失败，可能teleport核心服务尚未启动！');
+				func_error(TPE_NO_CORE_SERVER, '远程连接请求失败，可能teleport核心服务尚未启动！');
 			}
 		},
 		error: function () {
-			func_error(TP_ERR_NETWORK, '远程网络通讯失败！');
+			func_error(TPE_NETWORK, '远程网络通讯失败！');
 		}
 	});
 };
@@ -233,15 +222,15 @@ var start_rdp_replay = function (args, func_success, func_error) {
 		jsonp: 'callback',
 		dataType: 'json',
 		success: function (ret) {
-			if (ret.code === 0) {
+			if (ret.code === TPE_OK) {
 				error_process(ret, func_success, func_error);
 			} else {
-				func_error(1, '查看录像失败！');
+				func_error(ret.code, '查看录像失败！');
 			}
 			console.log('ret', ret);
 		},
 		error: function () {
-			func_error(TP_ERR_NETWORK, '远程网络通讯失败！');
+			func_error(TPE_NETWORK, '远程网络通讯失败！');
 		}
 	});
 };

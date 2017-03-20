@@ -185,14 +185,13 @@ ywl.on_host_table_created = function (tbl) {
 					start_rdp_replay(args,
 						function () {
 							ywl.notify_success('RDP 录像播放器成功启动！');
-							//console.log('RDP 录像播放器成功启动！')
 						},
-						function (code, error) {
-							if (code == TP_ERR_NO_ASSIST)
+						function (code, msg) {
+							if (code == TPE_NO_ASSIST)
 								g_assist.alert_assist_not_found();
 							else {
-								ywl.notify_error(error);
-								console.log('error:', error)
+								ywl.notify_error(msg);
+								console.log('error:', msg)
 							}
 						});
 				});
