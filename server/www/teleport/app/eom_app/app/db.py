@@ -19,7 +19,7 @@ __all__ = ['get_db']
 
 
 class TPDatabase:
-    DB_VERSION = 10
+    DB_VERSION = 5
 
     DB_TYPE_UNKNOWN = 0
     DB_TYPE_SQLITE = 1

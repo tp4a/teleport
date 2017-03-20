@@ -506,6 +506,15 @@ class DatabaseUpgrade:
             # 判断依据：
             # 如果 config 表中不存在名为db_ver的数据，说明是旧版本，需要升级
 
+            if not self.db.is_table_exists('config'):
+                if not self.db.exec("""CREATE TABLE `{}config` (
+    `name`  varchar(256) NOT NULL,
+    `value`  varchar(256),
+    PRIMARY KEY (`name` ASC)
+);""".format(self.db.table_prefix)):
+                    self.step_end(_step, -1, 'config表不存在且无法创建')
+                    return False
+
             db_ret = self.db.query('SELECT `value` FROM `{}config` WHERE `name`="db_ver";'.format(self.db.table_prefix))
             if db_ret is None:
                 self.step_end(_step, -1)
@@ -514,6 +523,12 @@ class DatabaseUpgrade:
                 self.step_end(_step, 0, '跳过 v4 到 v5 的升级操作')
                 return True
             self.step_end(_step, 0, '需要升级到v5')
+
+            _step = self.step_begin(' - 调整表名称')
+            if not self.db.exec('ALTER TABLE `{}cert` RENAME TO `{}key`;'.format(self.db.table_prefix, self.db.table_prefix)):
+                self.step_end(_step, -1)
+                return False
+            self.step_end(_step, 0)
 
             _step = self.step_begin(' - 更新数据库版本号')
             if not self.db.exec('INSERT INTO `{}config` VALUES ("db_ver", "{}");'.format(self.db.table_prefix, self.db.DB_VERSION)):
