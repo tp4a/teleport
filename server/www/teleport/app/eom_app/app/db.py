@@ -12,7 +12,7 @@ from .database.upgrade import DatabaseUpgrade
 
 cfg = app_cfg()
 
-__all__ = ['get_db']
+__all__ = ['get_db', 'DbItem']
 
 
 # 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
@@ -238,6 +238,20 @@ class TPSqlitePool(TPDatabasePool):
             return False
         finally:
             cursor.close()
+
+
+class DbItem(dict):
+    def load(self, db_item, db_fields):
+        if len(db_fields) != len(db_item):
+            raise RuntimeError('!=')
+        for i in range(len(db_item)):
+            self[db_fields[i]] = db_item[i]
+
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise
 
 
 def get_db():

@@ -3,15 +3,15 @@
 import hashlib
 from eom_app.app.const import *
 from eom_app.app.configs import app_cfg
-from eom_app.app.db import get_db
+from eom_app.app.db import get_db, DbItem
 from eom_app.app.util import sec_generate_password, sec_verify_password
+# from eom_common.eomcore.logger import log
 
-from .common import *
-
-cfg = app_cfg()
+# from .common import *
 
 
 def verify_user(name, password):
+    cfg = app_cfg()
     db = get_db()
 
     sql = 'SELECT `account_id`, `account_type`, `account_name`, `account_pwd` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, name)
@@ -63,30 +63,23 @@ def modify_pwd(old_pwd, new_pwd, user_id):
     else:
         return -3
 
-    # sql_exec = get_db_con()
-    # new_pwd = hashlib.sha256(new_pwd.encode()).hexdigest()
-    # old_pwd = hashlib.sha256(old_pwd.encode()).hexdigest()
 
-    # string_sql = 'SELECT account_id FROM ts_account WHERE account_pwd = \'{}\' AND  account_id = {};'.format(old_pwd, int(user_id))
-    # db_ret = sql_exec.ExecProcQuery(string_sql)
-    # if len(db_ret) != 1:
-    #     return -2
-    # string_sql = 'UPDATE ts_account SET account_pwd = \'{}\' WHERE account_pwd = \'{}\' AND  account_id = {}'.format(new_pwd, old_pwd, int(user_id))
-    #
-    # ret = sql_exec.ExecProcNonQuery(string_sql)
-    # if ret:
-    #     return 0
-    # return -3
-
-
-def get_user_list():
-    # TODO: 用户管理页面不需要列出超级管理员，但是日志查看页面需要，所以应该有参数来区分不同的请求。
-    sql_exec = get_db_con()
-    field_a = ['account_id', 'account_type', 'account_name', 'account_status', 'account_lock', 'account_desc']
-    string_sql = 'SELECT {} FROM ts_account as a WHERE account_type<100;'.format(','.join(['a.{}'.format(i) for i in field_a]))
-    # string_sql = 'SELECT {} FROM ts_account as a;'.format(','.join(['a.{}'.format(i) for i in field_a]))
-    db_ret = sql_exec.ExecProcQuery(string_sql)
+def get_user_list(with_admin=False):
+    db = get_db()
     ret = list()
+
+    field_a = ['account_id', 'account_type', 'account_name', 'account_status', 'account_lock', 'account_desc']
+
+    if with_admin:
+        where = ''
+    else:
+        where = 'WHERE `a`.`account_type`<100'
+
+    sql = 'SELECT {} FROM `{}account` as a {} ORDER BY `account_name`;'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix, where)
+    db_ret = db.query(sql)
+    if db_ret is None:
+        return ret
+
     for item in db_ret:
         x = DbItem()
         x.load(item, ['a_{}'.format(i) for i in field_a])
@@ -102,68 +95,51 @@ def get_user_list():
 
 
 def delete_user(user_id):
-    sql_exec = get_db_con()
-    #
-    str_sql = 'DELETE FROM ts_account WHERE account_id={};'.format(user_id)
-    ret = sql_exec.ExecProcNonQuery(str_sql)
-    return ret
+    db = get_db()
+    sql = 'DELETE FROM `{}account` WHERE `account_id`={};'.format(db.table_prefix, int(user_id))
+    return db.exec(sql)
 
 
 def lock_user(user_id, lock_status):
-    sql_exec = get_db_con()
-    #
-    str_sql = 'UPDATE ts_account SET account_lock={} ' \
-              'WHERE account_id={};'.format(lock_status, user_id)
-    ret = sql_exec.ExecProcNonQuery(str_sql)
-    return ret
+    db = get_db()
+    sql = 'UPDATE `{}account` SET `account_lock`={} WHERE `account_id`={};'.format(db.table_prefix, lock_status, int(user_id))
+    return db.exec(sql)
 
 
 def reset_user(user_id):
-    # sql_exec = get_db_con()
-    #
-    # user_pwd = hashlib.sha256("123456".encode()).hexdigest()
-    # str_sql = 'UPDATE ts_account SET account_pwd = "{}" ' \
-    #           ' WHERE account_id = {}'.format(user_pwd, user_id)
-    # ret = sql_exec.ExecProcNonQuery(str_sql)
-
     db = get_db()
     _new_sec_password = sec_generate_password('123456')
     sql = 'UPDATE `{}account` SET `account_pwd`="{}" WHERE `account_id`={};'.format(db.table_prefix, _new_sec_password, int(user_id))
-    ret = db.exec(sql)
-    return ret
+    return db.exec(sql)
 
 
 def modify_user(user_id, user_desc):
-    sql_exec = get_db_con()
-    #
-    str_sql = 'UPDATE ts_account SET account_desc="{}" ' \
-              'WHERE account_id={};'.format(user_desc, user_id)
-    ret = sql_exec.ExecProcNonQuery(str_sql)
-    return ret
+    db = get_db()
+    sql = 'UPDATE `{}account` SET `account_desc`="{}" WHERE `account_id`={};'.format(db.table_prefix, user_desc, int(user_id))
+    return db.exec(sql)
 
 
 def add_user(user_name, user_pwd, user_desc):
-    sql_exec = get_db_con()
-    #
-    user_pwd = hashlib.sha256(user_pwd.encode()).hexdigest()
-    string_sql = 'SELECT account_id FROM ts_account WHERE account_name = \'{}\';'.format(user_name)
-    db_ret = sql_exec.ExecProcQuery(string_sql)
-    if len(db_ret) != 0:
+    db = get_db()
+    sql = 'SELECT `account_id` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, user_name)
+    db_ret = db.query(sql)
+    if db_ret is None or len(db_ret) != 0:
         return -2
 
-    str_sql = 'INSERT INTO ts_account (account_type, account_name, account_pwd, account_status,' \
-              'account_lock,account_desc) VALUES (1,\'{}\',\'{}\',0,0,\'{}\')'.format(user_name, user_pwd, user_desc)
-    ret = sql_exec.ExecProcNonQuery(str_sql)
+    sec_password = sec_generate_password(user_pwd)
+    sql = 'INSERT INTO `{}account` (`account_type`, `account_name`, `account_pwd`, `account_status`,' \
+          '`account_lock`,`account_desc`) VALUES (1,"{}","{}",0,0,"{}")'.format(db.table_prefix, user_name, sec_password, user_desc)
+    ret = db.exec(sql)
     if ret:
         return 0
     return -3
 
 
 def alloc_host(user_name, host_list):
-    sql_exec = get_db_con()
+    db = get_db()
     field_a = ['host_id']
-    string_sql = 'SELECT {} FROM ts_auth as a WHERE account_name=\'{}\';'.format(','.join(['a.{}'.format(i) for i in field_a]), user_name)
-    db_ret = sql_exec.ExecProcQuery(string_sql)
+    sql = 'SELECT {} FROM `{}auth` AS a WHERE `account_name`="{}";'.format(','.join(['a.{}'.format(i) for i in field_a]), db.table_prefix, user_name)
+    db_ret = db.query(sql)
     ret = dict()
     for item in db_ret:
         x = DbItem()
@@ -180,8 +156,8 @@ def alloc_host(user_name, host_list):
     try:
         for item in a_list:
             host_id = int(item)
-            str_sql = 'INSERT INTO ts_auth (account_name, host_id) VALUES (\'{}\', {})'.format(user_name, host_id)
-            ret = sql_exec.ExecProcNonQuery(str_sql)
+            sql = 'INSERT INTO `{}auth` (`account_name`, `host_id`) VALUES ("{}", {});'.format(db.table_prefix, user_name, host_id)
+            ret = db.exec(sql)
             if not ret:
                 return False
         return True
@@ -190,10 +166,10 @@ def alloc_host(user_name, host_list):
 
 
 def alloc_host_user(user_name, host_auth_dict):
-    sql_exec = get_db_con()
+    db = get_db()
     field_a = ['host_id', 'host_auth_id']
-    string_sql = 'SELECT {} FROM ts_auth as a WHERE account_name=\'{}\';'.format(','.join(['a.{}'.format(i) for i in field_a]), user_name)
-    db_ret = sql_exec.ExecProcQuery(string_sql)
+    sql = 'SELECT {} FROM `{}auth` AS a WHERE `account_name`="{}";'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix, user_name)
+    db_ret = db.query(sql)
     ret = dict()
     for item in db_ret:
         x = DbItem()
@@ -225,8 +201,8 @@ def alloc_host_user(user_name, host_auth_dict):
         for k, v in add_dict.items():
             host_auth_id = int(k)
             host_id = int(v)
-            str_sql = 'INSERT INTO ts_auth (account_name, host_id, host_auth_id) VALUES (\'{}\', {}, {})'.format(user_name, host_id, host_auth_id)
-            ret = sql_exec.ExecProcNonQuery(str_sql)
+            sql = 'INSERT INTO `{}auth` (`account_name`, `host_id`, `host_auth_id`) VALUES ("{}", {}, {});'.format(db.table_prefix, user_name, host_id, host_auth_id)
+            ret = db.exec(sql)
             if not ret:
                 return False
         return True
@@ -235,12 +211,12 @@ def alloc_host_user(user_name, host_auth_dict):
 
 
 def delete_host(user_name, host_list):
+    db = get_db()
     try:
-        sql_exec = get_db_con()
         for item in host_list:
             host_id = int(item)
-            str_sql = 'DELETE FROM ts_auth WHERE account_name = \'{}\' AND host_id={}'.format(user_name, host_id)
-            ret = sql_exec.ExecProcNonQuery(str_sql)
+            sql = 'DELETE FROM `{}auth` WHERE `account_name`="{}" AND `host_id`={};'.format(db.table_prefix, user_name, host_id)
+            ret = db.exec(sql)
             if not ret:
                 return False
         return True
@@ -249,12 +225,12 @@ def delete_host(user_name, host_list):
 
 
 def delete_host_user(user_name, auth_id_list):
+    db = get_db()
     try:
-        sql_exec = get_db_con()
         for item in auth_id_list:
             auth_id = int(item)
-            str_sql = 'DELETE FROM ts_auth WHERE account_name = \'{}\' AND auth_id={}'.format(user_name, auth_id)
-            ret = sql_exec.ExecProcNonQuery(str_sql)
+            sql = 'DELETE FROM `{}auth` WHERE `account_name`="{}" AND `auth_id`={};'.format(db.table_prefix, user_name, auth_id)
+            ret = db.exec(sql)
             if not ret:
                 return False
         return True
@@ -262,35 +238,26 @@ def delete_host_user(user_name, auth_id_list):
         return False
 
 
-# def get_enc_data_helper(data):
-#     try:
-#         ret_code, data = get_enc_data(data)
-#     except Exception as e:
-#         return -100, ''
-#
-#     return ret_code, data
-
-
-def get_log_list(filter, limit):
-    sql_exec = get_db_con()
+def get_log_list(_filter, limit):
+    db = get_db()
 
     _where = ''
 
-    if len(filter) > 0:
+    if len(_filter) > 0:
         _where = 'WHERE ( '
 
         need_and = False
-        for k in filter:
+        for k in _filter:
             if k == 'account_name':
                 if need_and:
                     _where += ' AND'
-                _where += ' a.account_name=\'{}\''.format(filter[k])
+                _where += ' `a`.`account_name`="{}"'.format(_filter[k])
                 need_and = True
 
             if k == 'user_name':
                 if need_and:
                     _where += ' AND'
-                _where += ' a.account_name=\'{}\''.format(filter[k])
+                _where += ' `a`.`account_name`="{}"'.format(_filter[k])
                 need_and = True
 
             elif k == 'search':
@@ -301,7 +268,7 @@ def get_log_list(filter, limit):
                     _where += ' AND '
 
                 _where += '('
-                _where += 'a.host_ip LIKE "%{}%" )'.format(filter[k])
+                _where += '`a`.`host_ip` LIKE "%{}%" )'.format(_filter[k])
                 need_and = True
         _where += ')'
 
@@ -309,11 +276,9 @@ def get_log_list(filter, limit):
     field_a = ['id', 'session_id', 'account_name', 'host_ip', 'host_port', 'auth_type', 'sys_type', 'user_name', 'ret_code',
                'begin_time', 'end_time', 'log_time', 'protocol']
 
-    str_sql = 'SELECT COUNT(*) ' \
-              'FROM ts_log AS a ' \
-              '{};'.format(_where)
+    sql = 'SELECT COUNT(*) FROM `{}log` AS a {};'.format(db.table_prefix, _where)
 
-    db_ret = sql_exec.ExecProcQuery(str_sql)
+    db_ret = db.query(sql)
     total_count = db_ret[0][0]
     # 修正分页数据
     _limit = ''
@@ -324,11 +289,10 @@ def get_log_list(filter, limit):
 
         if _page_index * _per_page >= total_count:
             _page_index = int(total_count / _per_page)
-            # log.d(_page_index)
             _limit = 'LIMIT {},{}'.format(_page_index * _per_page, (_page_index + 1) * _per_page)
 
-    string_sql = 'SELECT {} FROM ts_log as a {} ORDER BY begin_time DESC {};'.format(','.join(['a.{}'.format(i) for i in field_a]), _where, _limit)
-    db_ret = sql_exec.ExecProcQuery(string_sql)
+    sql = 'SELECT {} FROM `{}log` AS a {} ORDER BY `begin_time` DESC {};'.format(','.join(['a.{}'.format(i) for i in field_a]), db.table_prefix, _where, _limit)
+    db_ret = db.query(sql)
 
     ret = list()
     for item in db_ret:

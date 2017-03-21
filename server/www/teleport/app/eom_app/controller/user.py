@@ -25,7 +25,7 @@ class AuthHandler(TPBaseAdminAuthHandler):
 
 class GetListHandler(TPBaseAdminAuthJsonHandler):
     def post(self):
-        user_list = user.get_user_list()
+        user_list = user.get_user_list(with_admin=False)
         ret = dict()
         ret['page_index'] = 10
         ret['total'] = len(user_list)

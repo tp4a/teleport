@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-import os
+
 import datetime
+import os
 import shutil
 import struct
 
-from .common import *
 from eom_app.app.configs import app_cfg
 from eom_common.eomcore.logger import log
+from .common import *
 
 cfg = app_cfg()
 
