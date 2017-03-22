@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import datetime
 import os
 import shutil
 import struct
 
 from eom_app.app.configs import app_cfg
+from eom_app.app.db import get_db
 from eom_common.eomcore.logger import log
-from .common import *
-
-cfg = app_cfg()
+from eom_common.eomcore.utils import timestamp_utc_now
 
 
 def read_record_head(record_id):
-    record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
+    record_path = os.path.join(app_cfg().data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
     header_file_path = os.path.join(record_path, 'tp-ssh.tpr')
     file = None
     try:
@@ -128,7 +126,7 @@ def read_record_head(record_id):
 
 
 def read_record_info(record_id, file_id):
-    record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
+    record_path = os.path.join(app_cfg().data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
     file_info = os.path.join(record_path, 'tp-ssh.{:03d}'.format(int(file_id)))
     file = None
     try:
@@ -190,20 +188,21 @@ def delete_log(log_list):
     try:
         where = list()
         for item in log_list:
-            where.append(' id={}'.format(item))
+            where.append(' `id`={}'.format(item))
 
-        str_sql = 'DELETE FROM ts_log WHERE{};'.format(' OR'.join(where))
-        ret = get_db_con().ExecProcNonQuery(str_sql)
+        db = get_db()
+        sql = 'DELETE FROM `{}log` WHERE{};'.format(db.table_prefix, ' OR'.join(where))
+        ret = db.exec(sql)
         if not ret:
             return False
 
         for item in log_list:
             log_id = int(item)
             try:
-                record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(log_id))
+                record_path = os.path.join(app_cfg().data_path, 'replay', 'ssh', '{:06d}'.format(log_id))
                 if os.path.exists(record_path):
                     shutil.rmtree(record_path)
-                record_path = os.path.join(cfg.data_path, 'replay', 'rdp', '{:06d}'.format(log_id))
+                record_path = os.path.join(app_cfg().data_path, 'replay', 'rdp', '{:06d}'.format(log_id))
                 if os.path.exists(record_path):
                     shutil.rmtree(record_path)
             except Exception:
@@ -216,28 +215,27 @@ def delete_log(log_list):
 
 def session_fix():
     try:
-        sql_exec = get_db_con()
-        str_sql = 'UPDATE ts_log SET ret_code=7 WHERE ret_code=0;'
-        return sql_exec.ExecProcNonQuery(str_sql)
+        db = get_db()
+        sql = 'UPDATE `{}log` SET `ret_code`=7 WHERE `ret_code`=0;'.format(db.table_prefix)
+        return db.exec(sql)
     except:
         return False
 
 
 def session_begin(sid, acc_name, host_ip, sys_type, host_port, auth_mode, user_name, protocol):
     try:
-        _now = int(datetime.datetime.utcnow().timestamp())
-        sql_exec = get_db_con()
+        db = get_db()
+        sql = 'INSERT INTO `{}log` (`session_id`,`account_name`,`host_ip`,`sys_type`,`host_port`,`auth_type`,`user_name`,`ret_code`,`begin_time`,`end_time`,`log_time`,`protocol`) ' \
+              'VALUES ("{}","{}","{}",{},{},{},"{}",{},{},{},"{}",{});' \
+              ''.format(db.table_prefix,
+                        sid, acc_name, host_ip, sys_type, host_port, auth_mode, user_name, 0, timestamp_utc_now(), 0, '', protocol)
 
-        str_sql = 'INSERT INTO ts_log (session_id, account_name,host_ip,sys_type, host_port,auth_type, user_name,ret_code,begin_time,end_time,log_time, protocol) ' \
-                  'VALUES (\'{}\',\'{}\',\'{}\',{},{},{},\'{}\',{},{},{},\'{}\',{});'.format(
-            sid, acc_name, host_ip, sys_type, host_port, auth_mode, user_name, 0, _now, 0, '', protocol)
-
-        ret = sql_exec.ExecProcNonQuery(str_sql)
+        ret = db.exec(sql)
         if not ret:
             return -101
 
-        str_sql = 'SELECT last_insert_rowid()'
-        db_ret = sql_exec.ExecProcQuery(str_sql)
+        sql = 'SELECT last_insert_rowid()'
+        db_ret = db.query(sql)
         if db_ret is None:
             return -102
         user_id = db_ret[0][0]
@@ -249,9 +247,8 @@ def session_begin(sid, acc_name, host_ip, sys_type, host_port, auth_mode, user_n
 
 def session_end(record_id, ret_code):
     try:
-        _now = int(datetime.datetime.utcnow().timestamp())
-        sql_exec = get_db_con()
-        str_sql = 'UPDATE ts_log SET ret_code={}, end_time={} WHERE id={};'.format(ret_code, _now, record_id)
-        return sql_exec.ExecProcNonQuery(str_sql)
+        db = get_db()
+        sql = 'UPDATE `{}log` SET `ret_code`={}, `end_time`={} WHERE `id`={};'.format(db.table_prefix, int(ret_code), timestamp_utc_now(), int(record_id))
+        return db.exec(sql)
     except:
         return False

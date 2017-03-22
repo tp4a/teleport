@@ -138,7 +138,7 @@ def add_user(user_name, user_pwd, user_desc):
 def alloc_host(user_name, host_list):
     db = get_db()
     field_a = ['host_id']
-    sql = 'SELECT {} FROM `{}auth` AS a WHERE `account_name`="{}";'.format(','.join(['a.{}'.format(i) for i in field_a]), db.table_prefix, user_name)
+    sql = 'SELECT {} FROM `{}auth` AS a WHERE `account_name`="{}";'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix, user_name)
     db_ret = db.query(sql)
     ret = dict()
     for item in db_ret:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from eom_app.app.configs import app_cfg
-cfg = app_cfg()
+# from eom_app.app.configs import app_cfg
+# cfg = app_cfg()
 
 # def get_config_list():
 #     try:
@@ -33,7 +33,7 @@ cfg = app_cfg()
 #         ret = sql_exec.ExecProcNonQuery(str_sql)
 #
 #     return ret
-
-def get_config_list():
-    print(cfg.core)
-    return cfg.core
+#
+# def get_config_list():
+#     print(cfg.core)
+#     return cfg.core

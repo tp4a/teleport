@@ -4,21 +4,20 @@ import builtins
 import os
 import sqlite3
 import threading
+import datetime
 
 from eom_common.eomcore.logger import log
-from .configs import app_cfg
+# from .configs import app_cfg
 from .database.create import create_and_init
 from .database.upgrade import DatabaseUpgrade
 
-cfg = app_cfg()
+# cfg = app_cfg()
 
 __all__ = ['get_db', 'DbItem']
 
 
-# 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
-
-
 class TPDatabase:
+    # 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
     DB_VERSION = 5
 
     DB_TYPE_UNKNOWN = 0
@@ -70,7 +69,7 @@ class TPDatabase:
 
         # 尝试从配置表中读取当前数据库版本号（如果不存在，说明是比较旧的版本了）
         ret = self.query('SELECT `value` FROM `{}config` WHERE `name`="db_ver";'.format(self._table_prefix))
-        log.w(ret)
+        # log.w(ret)
         if ret is None or 0 == len(ret):
             self.current_ver = 1
         else:
@@ -82,7 +81,7 @@ class TPDatabase:
             return True
 
         # DO TEST
-        self.alter_table('ts_account', [['account_id', 'id'], ['account_type', 'type']])
+        # self.alter_table('ts_account', [['account_id', 'id'], ['account_type', 'type']])
 
         return True
 
@@ -108,10 +107,20 @@ class TPDatabase:
             return None
 
     def query(self, sql):
-        return self._conn_pool.query(sql)
+        # _start = datetime.datetime.utcnow().timestamp()
+        ret = self._conn_pool.query(sql)
+        # _end = datetime.datetime.utcnow().timestamp()
+        # log.d('[db] {}\n'.format(sql))
+        # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
+        return ret
 
     def exec(self, sql):
-        return self._conn_pool.exec(sql)
+        # _start = datetime.datetime.utcnow().timestamp()
+        ret = self._conn_pool.exec(sql)
+        # _end = datetime.datetime.utcnow().timestamp()
+        # log.d('[db] {}\n'.format(sql))
+        # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
+        return ret
 
     def create_and_init(self, step_begin, step_end):
         if create_and_init(self, step_begin, step_end):
@@ -165,7 +174,7 @@ class TPDatabase:
                 # 先获取数据表的字段名列表
                 ret = self.query('SELECT * FROM `sqlite_master` WHERE `type`="table" AND `name`="{}";'.format(old_table_name))
                 log.w('-----\n')
-                log.w(ret)
+                log.w(ret[0][4])
                 log.w('\n')
 
                 # 先将数据表改名，成为一个临时表

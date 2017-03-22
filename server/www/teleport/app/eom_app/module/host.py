@@ -3,13 +3,11 @@
 import json
 import time
 
-# from .common import *
 from eom_app.app.db import get_db, DbItem
 
 
 # 获取主机列表，包括主机的基本信息
 def get_all_host_info_list(_filter, order, limit, with_pwd=False):
-    # sql_exec = get_db_con()
     db = get_db()
 
     _where = ''
@@ -126,12 +124,9 @@ def get_all_host_info_list(_filter, order, limit, with_pwd=False):
 
 
 def get_host_info_list_by_user(_filter, order, limit):
-    # sql_exec = get_db_con()
     db = get_db()
 
     _where = ''
-    # _where = ''
-    # _where = 'WHERE ( a.account_name=\'{}\' '.format(uname)
     if len(_filter) > 0:
         _where = 'WHERE ( '
 
@@ -167,7 +162,6 @@ def get_host_info_list_by_user(_filter, order, limit):
 
     _where += ')'
 
-    # http://www.jb51.net/article/46015.htm
     field_a = ['auth_id', 'host_id', 'account_name', 'host_auth_id']
     field_b = ['host_id', 'host_lock', 'host_ip', 'protocol', 'host_port', 'host_desc', 'group_id', 'host_sys_type']
     field_c = ['group_name']
@@ -271,7 +265,6 @@ def get_host_info_list_by_user(_filter, order, limit):
 def get_group_list():
     db = get_db()
     field_a = ['group_id', 'group_name']
-    # sql_exec = get_db_con()
     sql = 'SELECT {} FROM `{}group` AS a; '.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix)
     db_ret = db.query(sql)
     ret = list()
@@ -284,23 +277,6 @@ def get_group_list():
         h['group_name'] = x.a_group_name
         ret.append(h)
     return ret
-
-
-# def get_config_list():
-#     try:
-#         sql_exec = get_db_con()
-#         field_a = ['name', 'value']
-#         string_sql = 'SELECT {} FROM ts_config as a ;'.format(','.join(['a.{}'.format(i) for i in field_a]))
-#         db_ret = sql_exec.ExecProcQuery(string_sql)
-#         h = dict()
-#         for item in db_ret:
-#             x = DbItem()
-#             x.load(item, ['a_{}'.format(i) for i in field_a])
-#             h[x.a_name] = x.a_value
-#
-#         return h
-#     except:
-#         return None
 
 
 def update(host_id, kv):
@@ -327,10 +303,7 @@ def update(host_id, kv):
 
 def get_cert_list():
     db = get_db()
-
-    # http://www.jb51.net/article/46015.htm
     field_a = ['cert_id', 'cert_name', 'cert_pub', 'cert_pri', 'cert_desc']
-
     sql = 'SELECT {} FROM `{}key` AS a;'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix)
     db_ret = db.query(sql)
 
@@ -425,7 +398,7 @@ def delete_host(host_list):
         sql = 'DELETE FROM `{}auth_info` WHERE `host_id`={};'.format(db.table_prefix, host_id)
         ret = db.exec(sql)
 
-        str_sql = 'DELETE FROM `{}auth` WHERE `host_id`={};'.format(db.table_prefix, host_id)
+        sql = 'DELETE FROM `{}auth` WHERE `host_id`={};'.format(db.table_prefix, host_id)
         ret = db.exec(sql)
     return True
 
@@ -477,7 +450,7 @@ def delete_group(group_id):
 
 def update_group(group_id, group_name):
     db = get_db()
-    sql = 'UPDATE {}group SET `group_name`="{}" ' \
+    sql = 'UPDATE `{}group` SET `group_name`="{}" ' \
           'WHERE `group_id`={};'.format(db.table_prefix, group_name, int(group_id))
     return db.exec(sql)
 
@@ -502,8 +475,8 @@ def get_host_auth_info(host_auth_id):
     sql = 'SELECT {},{} ' \
           'FROM `{}auth_info` AS a ' \
           'LEFT JOIN `{}host_info` AS b ON `a`.`host_id`=`b`.`host_id` ' \
-          'WHERE `a`.`id`={};'.format(','.join(['a.{}'.format(i) for i in field_a]),
-                                      ','.join(['b.{}'.format(i) for i in field_b]),
+          'WHERE `a`.`id`={};'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]),
+                                      ','.join(['`b`.`{}`'.format(i) for i in field_b]),
                                       db.table_prefix, db.table_prefix,
                                       host_auth_id)
     db_ret = db.query(sql)
@@ -555,41 +528,6 @@ def get_host_auth_info(host_auth_id):
     return h
 
 
-# def update_host_extend_info(host_id, args):
-#     db = get_db()
-#
-#     ip = args['ip']
-#     port = int(args['port'])
-#     user_name = args['user_name']
-#     user_pwd = args['user_pwd']
-#     cert_id = int(args['cert_id'])
-#     pro_type = int(args['pro_type'])
-#     sys_type = int(args['sys_type'])
-#     group_id = args['group_id']
-#     host_desc = args['desc']
-#     host_auth_mode = int(args['host_auth_mode'])
-#     host_encrypt = 1
-#
-#     # if len(user_pwd) == 0 and 0 == cert_id:
-#     #     return False
-#     if 0 == len(user_pwd):
-#         str_sql = 'UPDATE ts_host_info SET host_ip = \'{}\', ' \
-#                   'host_pro_port = {}, host_user_name = \'{}\', ' \
-#                   'cert_id = {}, host_pro_type = {},host_sys_type={}, group_id={},host_auth_mode={},host_encrypt={}, ' \
-#                   'host_desc=\'{}\' WHERE host_id = {}'.format(
-#             ip, port, user_name, cert_id, pro_type, sys_type, group_id, host_auth_mode, host_encrypt, host_desc, host_id)
-#
-#     else:
-#         str_sql = 'UPDATE ts_host_info SET host_ip = \'{}\', ' \
-#                   'host_pro_port = {}, host_user_name = \'{}\', host_user_pwd = \'{}\', ' \
-#                   'cert_id = {}, host_pro_type = {},host_sys_type={}, group_id={},host_auth_mode={},host_encrypt={}, ' \
-#                   'host_desc=\'{}\' WHERE host_id = {}'.format(
-#             ip, port, user_name, user_pwd, cert_id, pro_type, sys_type, group_id, host_auth_mode, host_encrypt, host_desc, host_id)
-#
-#     ret = sql_exec.ExecProcNonQuery(str_sql)
-#     return ret
-
-
 def get_cert_info(cert_id):
     db = get_db()
     sql = 'SELECT `cert_pri` FROM `{}key` WHERE `cert_id`={};'.format(db.table_prefix, cert_id)
@@ -607,11 +545,11 @@ def sys_user_list(host_id, with_pwd=True, host_auth_id=0):
     if host_auth_id == 0:
         sql = 'SELECT {} ' \
               'FROM `{}auth_info` AS a ' \
-              'WHERE `a`.`host_id`={};'.format(','.join(['a.{}'.format(i) for i in field_a]), db.table_prefix, int(host_id))
+              'WHERE `a`.`host_id`={};'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix, int(host_id))
     else:
         sql = 'SELECT {} ' \
               'FROM `{}auth_info` AS a ' \
-              'WHERE `a`.`id`={} and `a`.`host_id`={};'.format(','.join(['a.{}'.format(i) for i in field_a]), db.table_prefix, int(host_auth_id), int(host_id))
+              'WHERE `a`.`id`={} and `a`.`host_id`={};'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix, int(host_auth_id), int(host_id))
 
     db_ret = db.query(sql)
 
@@ -678,15 +616,15 @@ def sys_user_add(args):
     log_time = GetNowTime()
 
     if auth_mode == 1:
-        sql = 'INSERT INTO {}auth_info (host_id, auth_mode, user_name, user_pswd, user_param, encrypt, cert_id, log_time) ' \
+        sql = 'INSERT INTO `{}auth_info` (`host_id`,`auth_mode`,`user_name`,`user_pswd`,`user_param`,`encrypt`,`cert_id`,`log_time`) ' \
               'VALUES ({},{},"{}","{}","{}",{}, {},"{}")' \
               ''.format(db.table_prefix, host_id, auth_mode, user_name, user_pswd, user_param, encrypt, 0, log_time)
     elif auth_mode == 2:
-        sql = 'INSERT INTO {}auth_info (host_id, auth_mode, user_name, user_pswd, user_param, encrypt, cert_id, log_time) ' \
+        sql = 'INSERT INTO `{}auth_info` (`host_id`,`auth_mode`,`user_name`,`user_pswd`,`user_param`,`encrypt`,`cert_id`,`log_time`) ' \
               'VALUES ({},{},"{}","{}","{}",{},{},"{}")' \
               ''.format(db.table_prefix, host_id, auth_mode, user_name, '', user_param, encrypt, cert_id, log_time)
     elif auth_mode == 0:
-        sql = 'INSERT INTO {}auth_info (host_id, auth_mode, user_name, user_pswd, user_param, encrypt, cert_id, log_time) ' \
+        sql = 'INSERT INTO `{}auth_info` (`host_id`,`auth_mode`,`user_name`,`user_pswd`,`user_param`,`encrypt`,`cert_id`,`log_time`) ' \
               'VALUES ({},{},"{}","{}","{}",{},{},"{}")' \
               ''.format(db.table_prefix, host_id, auth_mode, user_name, '', user_param, encrypt, 0, log_time)
     ret = db.exec(sql)
@@ -750,10 +688,10 @@ def get_auth_info(auth_id):
           'LEFT JOIN `{}auth_info` AS c ON `a`.`host_auth_id`=`c`.`id` ' \
           'LEFT JOIN `{}account` AS d ON `a`.`account_name`=`d`.`account_name` ' \
           'WHERE `a`.`auth_id`={};' \
-          ''.format(','.join(['a.{}'.format(i) for i in field_a]),
-                    ','.join(['b.{}'.format(i) for i in field_b]),
-                    ','.join(['c.{}'.format(i) for i in field_c]),
-                    ','.join(['d.{}'.format(i) for i in field_d]),
+          ''.format(','.join(['`a`.`{}`'.format(i) for i in field_a]),
+                    ','.join(['`b`.`{}`'.format(i) for i in field_b]),
+                    ','.join(['`c`.`{}`'.format(i) for i in field_c]),
+                    ','.join(['`d`.`{}`'.format(i) for i in field_d]),
                     db.table_prefix, db.table_prefix, db.table_prefix, db.table_prefix,
                     auth_id)
 
