@@ -33,7 +33,7 @@ class DatabaseUpgrade:
             # 判断依据：
             # 如果存在名为 ${prefix}sys_user 的表，说明是旧版本，需要升级
 
-            ret = self.db.is_table_exists('sys_user')
+            ret = self.db.is_table_exists('{}sys_user'.format(self.db.table_prefix))
             if ret is None:
                 self.step_end(_step, -1, '无法连接到数据库')
                 return False
@@ -99,7 +99,7 @@ class DatabaseUpgrade:
             # 判断依据：
             # 如果不存在名为 ts_host_info 的表，说明是旧版本，需要升级
 
-            ret = self.db.is_table_exists('host_info')
+            ret = self.db.is_table_exists('{}host_info'.format(self.db.table_prefix))
             if ret is None:
                 self.step_end(_step, -1)
                 return False
@@ -506,7 +506,7 @@ class DatabaseUpgrade:
             # 判断依据：
             # 如果 config 表中不存在名为db_ver的数据，说明是旧版本，需要升级
 
-            if not self.db.is_table_exists('config'):
+            if not self.db.is_table_exists('{}config'.format(self.db.table_prefix)):
                 if not self.db.exec("""CREATE TABLE `{}config` (
     `name`  varchar(256) NOT NULL,
     `value`  varchar(256),
@@ -524,7 +524,7 @@ class DatabaseUpgrade:
                 return True
             self.step_end(_step, 0, '需要升级到v5')
 
-            _step = self.step_begin(' - 调整表名称')
+            _step = self.step_begin(' - 调整数据表字段名与表名')
             if not self.db.exec('ALTER TABLE `{}cert` RENAME TO `{}key`;'.format(self.db.table_prefix, self.db.table_prefix)):
                 self.step_end(_step, -1)
                 return False
