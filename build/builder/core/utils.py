@@ -40,8 +40,8 @@ def _check_download_file(file_name):
         if 'Everything is Ok' in output:
             return True
     else:
-        cc.e('fixme.')
-        return False
+        cc.w('[fixme] how to check file on Linux?')
+        return True
 
 
 def download_file(desc, url, target_path, file_name):
