@@ -23,7 +23,7 @@ bool g_is_debug = false;
 static ex_u8 g_run_type = RUN_UNKNOWN;
 
 
-#define EOM_CORE_SERVICE_NAME	L"EOM Teleport Core Service"
+#define EOM_CORE_SERVICE_NAME	L"Teleport Core Service"
 
 static bool _run_daemon(void);
 

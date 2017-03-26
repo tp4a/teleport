@@ -36,7 +36,7 @@ static ex_wstr g_py_main_func;
 #define RUN_UNINST_SRV		4
 static ex_u8 g_run_type = RUN_UNKNOWN;
 
-#define EOM_WEB_SERVICE_NAME		L"EOM Teleport Web Service"
+#define EOM_WEB_SERVICE_NAME		L"Teleport Web Service"
 
 static bool _run_daemon(void);
 
