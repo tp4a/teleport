@@ -274,9 +274,9 @@ class InstallerBase:
 
         cnt = len(l)
         for i in range(cnt):
-            if int(l[i] < r[i]):
+            if int(l[i]) < int(r[i]):
                 return -1
-            elif int(l[i] > r[i]):
+            elif int(l[i]) > int(r[i]):
                 return 1
 
         return 0
@@ -396,7 +396,10 @@ class InstallerWin(InstallerBase):
             utils.remove(self._log_path)
 
             # only remove the installation path when it empty.
-            os.rmdir(self._install_path)
+            try:
+                os.rmdir(self._install_path)
+            except OSError:
+                pass
 
     def _install_service(self):
         cc.o(' - install teleport core service ... ', end='')
@@ -430,8 +433,7 @@ class InstallerWin(InstallerBase):
             raise RuntimeError('Can not start core service.')
 
         cc.o(' - start teleport web service ...', end='')
-        _err, _o = utils.sys_exec(r'sc start "{}"'.format(self._web_service_name))
-        # print('start web', _err, _o)
+        _err, _ = utils.sys_exec(r'sc start "{}"'.format(self._web_service_name))
         if _err == 0:
             cc.i('[done]')
         else:
@@ -439,55 +441,47 @@ class InstallerWin(InstallerBase):
             raise RuntimeError('Can not start web service.')
 
     def _stop_service(self):
-        cc.o(' - stop teleport core service ... ', end='')
-        _err, _o = utils.sys_exec(r'sc stop "{}"'.format(self._core_service_name))
-        # print('stop core', _err, _o)
-        if _err == 1060 or _err == 1062 or _err == 0:
-            cc.i('[done]')
-        else:
-            cc.e('[failed]')
-            raise RuntimeError('can not stop core service.')
+        _check_service_name = [self._old_core_service_name, self._old_web_service_name, self._core_service_name,
+                               self._web_service_name]
 
-        cc.o(' - stop teleport web service ... ', end='')
-        _err, _o = utils.sys_exec(r'sc stop "{}"'.format(self._web_service_name))
-        # print('stop web', _err, _o)
-        if _err == 1060 or _err == 1062 or _err == 0:
-            cc.i('[done]')
-        else:
-            cc.e('[failed]')
-            raise RuntimeError('can not stop web service.')
+        for _service_name in _check_service_name:
+            cc.o(' - stop service [{}] ... '.format(_service_name), end='')
+            _err, _ = utils.sys_exec(r'sc stop "{}"'.format(_service_name))
+            if _err == 1060 or _err == 1062 or _err == 0:
+                cc.i('[done]')
+            elif _err == 1072:
+                cc.e('[failed]')
+                raise RuntimeError('can not stop service [{}]. please close Service Manager and try again.'.format(_service_name))
+            else:
+                cc.e('[failed]')
+                raise RuntimeError('can not stop service [{}].'.format(_service_name))
 
     def _uninstall_service(self):
-        cc.o(' - delete teleport core service ... ', end='')
-        _err, _o = utils.sys_exec(r'sc delete "{}"'.format(self._core_service_name))
-        # print('del core', _err, _o)
-        if _err == 1060 or _err == 0:
-            cc.i('[done]')
-        else:
-            cc.e('[failed]')
-            raise RuntimeError('Can not uninstall core service.')
+        _check_service_name = [self._old_core_service_name, self._old_web_service_name, self._core_service_name,
+                               self._web_service_name]
 
-        cc.o(' - delete teleport web service ... ', end='')
-        _err, _o = utils.sys_exec(r'sc delete "{}"'.format(self._web_service_name))
-        # print('del web', _err, _o)
-        if _err == 1060 or _err == 0:
-            cc.i('[done]')
-        else:
-            cc.e('[failed]')
-            raise RuntimeError('Can not uninstall web service.')
+        for _service_name in _check_service_name:
+            cc.o(' - remove service [{}] ... '.format(_service_name), end='')
+            _err, _ = utils.sys_exec(r'sc delete "{}"'.format(_service_name))
+            if _err == 1060 or _err == 0:
+                cc.i('[done]')
+            elif _err == 1072:
+                cc.e('[failed]')
+                raise RuntimeError('can not remove service [{}]. please close Service Manager and try again.'.format(_service_name))
+            else:
+                cc.e('[failed]')
+                raise RuntimeError('can not remove service [{}].'.format(_service_name))
 
     def _check_service(self):
         cc.o(' - check teleport core service status ... ', end='')
         _err, _o = utils.sys_exec(r'sc query "{}"'.format(self._core_service_name))
-        # print('chk core', _err, _o)
         if _err == 1060 or _err == 0:
             cc.i('[running]')
         else:
             cc.e('[not running]')
 
         cc.o(' - check teleport web service status ... ', end='')
-        _err, _o = utils.sys_exec(r'sc delete "{}"'.format(self._web_service_name))
-        # print('chk web', _err, _o)
+        _err, _o = utils.sys_exec(r'sc query "{}"'.format(self._web_service_name))
         if _err == 1060 or _err == 0:
             cc.i('[running]')
         else:

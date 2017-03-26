@@ -121,12 +121,6 @@ int _app_main(int argc, wchar_t** argv)
 	if (!_process_cmd_line(argc, argv))
 		return 1;
 
-	if (!g_env.init())
-	{
-		EXLOGE("[core] env init failed.\n");
-		return 1;
-	}
-
 #ifdef EX_DEBUG
 	EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
 #endif
@@ -134,13 +128,31 @@ int _app_main(int argc, wchar_t** argv)
 #ifdef EX_OS_WIN32
 	if (g_run_type == RUN_INSTALL_SRV)
 	{
+		if (!g_env.init(false))
+		{
+			EXLOGE("[core] env init failed.\n");
+			return 1;
+		}
+
 		return service_install();
 	}
 	else if (g_run_type == RUN_UNINST_SRV)
 	{
+		if (!g_env.init(false))
+		{
+			EXLOGE("[core] env init failed.\n");
+			return 1;
+		}
+
 		return service_uninstall();
 	}
 #endif
+
+	if (!g_env.init(true))
+	{
+		EXLOGE("[core] env init failed.\n");
+		return 1;
+	}
 
 	if (!g_is_debug)
 	{

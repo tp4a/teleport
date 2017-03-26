@@ -267,6 +267,9 @@ def get_group_list():
     field_a = ['group_id', 'group_name']
     sql = 'SELECT {} FROM `{}group` AS a; '.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix)
     db_ret = db.query(sql)
+    if db_ret is None:
+        return list()
+
     ret = list()
     for item in db_ret:
         x = DbItem()
@@ -369,7 +372,7 @@ def add_host(args, must_not_exists=True):
                     group_id, host_sys_type, host_ip,
                     host_port, protocol, host_lock, host_desc)
 
-    ret = db.query(sql)
+    ret = db.exec(sql)
     if not ret:
         return -101
 

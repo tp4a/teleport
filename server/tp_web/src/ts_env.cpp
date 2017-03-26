@@ -44,7 +44,7 @@ bool TsEnv::init(bool for_web)
 		base_path = m_exec_path;
 		ex_path_join(base_path, true, L"..", NULL);
 
-#ifdef EX_OS_WIN
+#ifdef EX_OS_WIN32
 		conf_file = base_path;
 		ex_path_join(conf_file, false, L"etc", L"web.ini", NULL);
 		log_path = base_path;
@@ -88,7 +88,7 @@ bool TsEnv::init(bool for_web)
 
 	if (!ex_is_file_exists(conf_file.c_str()))
 	{
-		EXLOGE("[tpweb] web.ini not found.\n");
+		EXLOGE(L"[tpweb] `%s` not found.\n", conf_file.c_str());
 		return false;
 	}
 

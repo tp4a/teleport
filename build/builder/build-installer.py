@@ -85,7 +85,7 @@ class BuilderWin(BuilderBase):
 
         utils.make_zip(self.path_tmp, self._final_file)
 
-        utils.remove(self.base_tmp)
+        # utils.remove(self.base_tmp)
 
 
 class BuilderLinux(BuilderBase):

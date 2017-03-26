@@ -9,7 +9,7 @@ TsEnv::TsEnv()
 TsEnv::~TsEnv()
 {}
 
-bool TsEnv::init(void)
+bool TsEnv::init(bool run_core)
 {
 	EXLOG_LEVEL(EX_LOG_LEVEL_INFO);
 
@@ -18,6 +18,8 @@ bool TsEnv::init(void)
 	m_exec_path = m_exec_file;
 	ex_dirname(m_exec_path);
 
+	if(!run_core)
+		return true;
 
 	// 定位 log, etc 路径
 	// 默认情况下，以上三个目录均位于本可执行程序的 ../ 相对位置，

@@ -6,6 +6,7 @@ import sqlite3
 import threading
 import datetime
 
+from eom_common.eomcore import utils
 from eom_common.eomcore.logger import log
 # from .configs import app_cfg
 from .database.create import create_and_init
@@ -123,6 +124,14 @@ class TPDatabase:
         return ret
 
     def create_and_init(self, step_begin, step_end):
+        if self.db_source['type'] == self.DB_TYPE_SQLITE:
+            db_path = os.path.dirname(self.db_source['file'])
+            if not os.path.exists(db_path):
+                utils.make_dir(db_path)
+                if not os.path.exists(db_path):
+                    log.e('can not create folder `{}` to store database file.\n'.format(db_path))
+                    return False
+
         if create_and_init(self, step_begin, step_end):
             self.need_create = False
             return True

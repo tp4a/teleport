@@ -113,7 +113,7 @@
                     <button type="button" id="btn-batch-add-host" class="btn btn-sm btn-primary"><i class="fa fa-plus-square fa-fw"></i> 批量添加主机</button>
                     <button type="button" id="btn-delete-host" class="btn btn-sm btn-danger"><i class="fa fa-trash fa-fw"></i> 批量移除主机</button>
                     <button type="button" id="btn-apply-group" class="btn btn-sm btn-primary"><i class="fa fa-cubes fa-fw"></i> 批量设置分组</button>
-                    <button type="button" id="btn-batch-export-host" class="btn btn-sm btn-primary"><i class="fa fa-exchange fa-fw"></i> 批量导出主机</button>
+                    <button type="button" id="btn-batch-export-host" class="btn btn-sm btn-primary"><i class="fa fa-exchange fa-fw"></i> 备份所有主机及登录信息</button>
                 </div>
                 <div>
                     <hr/>

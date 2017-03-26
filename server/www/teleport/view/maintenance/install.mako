@@ -23,22 +23,25 @@
         h2 {
             font-size: 160%;
         }
+
         .steps-detail {
             display: none;
-            margin:10px;
-            padding:10px;
-            border:1px solid #b4b4b4;
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #b4b4b4;
             background-color: #dcdcdc;
         }
+
         .steps-detail p {
-            padding-left:5px;
-            margin:2px 0 2px 1px;
+            padding-left: 5px;
+            margin: 2px 0 2px 1px;
         }
+
         .steps-detail p.error {
-            color:#ffffff;
-            margin:2px 0 2px 0;
+            color: #ffffff;
+            margin: 2px 0 2px 0;
             background-color: #cc3632;
-            border:1px solid #9c2a26;
+            border: 1px solid #9c2a26;
         }
     </style>
 </%block>
@@ -127,15 +130,21 @@
                                 var html = [];
                                 var icon_class = '';
                                 var err_class = '';
-                                for(var i = 0; i < steps.length; ++i) {
-                                    if(steps[i].stat == 0)
+                                for (var i = 0; i < steps.length; ++i) {
+                                    if (steps[i].stat == 0)
                                         icon_class = 'fa-check';
                                     else
                                         icon_class = 'fa-cog fa-spin';
-                                    if(steps[i].code != 0)
+
+                                    if (steps[i].code != 0) {
+                                        icon_class = 'fa-exclamation-circle';
                                         err_class = ' class="error"';
-                                    else
+                                        steps[i].msg += ' 失败！'
+                                    }
+                                    else {
                                         err_class = '';
+                                    }
+
                                     html.push('<p');
                                     html.push(err_class);
                                     html.push('><i class="fa ');
