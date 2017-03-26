@@ -110,8 +110,8 @@ class BuilderWin(BuilderBase):
         if os.path.exists(os.path.join(PATH_EXTERNAL, 'python', 'include', 'pyctype.h')):
             cc.w('already exists, skip.')
             return
-
         cc.v('')
+
         _header_path = None
         for p in sys.path:
             if os.path.exists(os.path.join(p, 'include', 'pyctype.h')):
@@ -141,8 +141,8 @@ class BuilderWin(BuilderBase):
         if not need_build:
             cc.w('already exists, skip.')
             return
-
         cc.v('')
+
         cc.n('prepare openssl source code...')
         _alt_ver = '_'.join(env.ver_openssl.split('.'))
         if not os.path.exists(self.OPENSSL_PATH_SRC):
@@ -173,9 +173,9 @@ class BuilderWin(BuilderBase):
         if not need_build:
             cc.w('already exists, skip.')
             return
+        cc.v('')
 
-        cc.n('\nprepare libssh source code... ', end='')
-
+        cc.n('prepare libssh source code... ', end='')
         _include = os.path.join(self.LIBSSH_PATH_SRC, 'include', 'libssh')
         _src = os.path.join(self.LIBSSH_PATH_SRC, 'src')
 
@@ -203,6 +203,7 @@ class BuilderWin(BuilderBase):
     def _build_jsoncpp(self, file_name):
         cc.n('prepare jsoncpp source code... ', end='')
         if not os.path.exists(self.JSONCPP_PATH_SRC):
+            cc.v('')
             utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
             os.rename(os.path.join(PATH_EXTERNAL, 'jsoncpp-{}'.format(env.ver_jsoncpp)), self.JSONCPP_PATH_SRC)
         else:
@@ -254,16 +255,18 @@ class BuilderLinux(BuilderBase):
             utils.makedirs(self.PATH_TMP)
 
     def _build_jsoncpp(self, file_name):
-        cc.n('prepare jsoncpp source code...')
+        cc.n('prepare jsoncpp source code...', end='')
         if not os.path.exists(self.JSONCPP_PATH_SRC):
+            cc.v('')
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, PATH_EXTERNAL))
             os.rename(os.path.join(PATH_EXTERNAL, 'jsoncpp-{}'.format(env.ver_jsoncpp)), self.JSONCPP_PATH_SRC)
         else:
             cc.w('already exists, skip.')
 
     def _build_mongoose(self, file_name):
-        cc.n('prepare mongoose source code...')
+        cc.n('prepare mongoose source code...', end='')
         if not os.path.exists(self.MONGOOSE_PATH_SRC):
+            cc.v('')
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, PATH_EXTERNAL))
             os.rename(os.path.join(PATH_EXTERNAL, 'mongoose-{}'.format(env.ver_mongoose)), self.MONGOOSE_PATH_SRC)
         else:
@@ -293,10 +296,11 @@ class BuilderLinux(BuilderBase):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
-        cc.n('build libuv...')
+        cc.n('build libuv...', end='')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libuv.a')):
             cc.w('already exists, skip.')
             return
+        cc.v('')
 
         # we need following...
         # apt-get install autoconf aptitude libtool gcc-c++
@@ -314,10 +318,11 @@ class BuilderLinux(BuilderBase):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
-        cc.n('build mbedtls...')
+        cc.n('build mbedtls...', end='')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libmbedtls.a')):
             cc.w('already exists, skip.')
             return
+        cc.v('')
 
         # fix the Makefile
         mkfile = os.path.join(self.MBEDTLS_PATH_SRC, 'Makefile')
@@ -396,10 +401,11 @@ class BuilderLinux(BuilderBase):
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
             # os.rename(os.path.join(self.PATH_TMP, 'master'), os.path.join(self.PATH_TMP, 'libssh-{}'.format(LIBSSH_VER)))
 
-        cc.n('build libssh...')
+        cc.n('build libssh...', end='')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a')):
             cc.w('already exists, skip.')
             return
+        cc.v('')
 
         build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
         # utils.makedirs(build_path)
@@ -460,10 +466,11 @@ class BuilderLinux(BuilderBase):
         if not os.path.exists(self.SQLITE_PATH_SRC):
             os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
-        cc.n('build sqlite static...')
+        cc.n('build sqlite static...', end='')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libsqlite3.a')):
             cc.w('already exists, skip.')
             return
+        cc.v('')
 
         old_p = os.getcwd()
         os.chdir(self.SQLITE_PATH_SRC)

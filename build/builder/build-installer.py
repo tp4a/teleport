@@ -158,12 +158,12 @@ class BuilderLinux(BuilderBase):
         #     shutil.copy(os.path.join(self.dist_path, 'script', i), os.path.abspath(os.path.join(self.tmp_path, '..', '..', i)))
 
         # 复制安装所需的脚本
-        utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'install.sh')
-        utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'uninst.sh')
+        # utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'install.sh')
+        # utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'uninst.sh')
+        utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'setup.sh')
         utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'script')
         utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'daemon')
 
-        # utils.make_zip(os.path.join(self.base_tmp, self.name), out_file)
         if os.path.exists(self._final_file):
             utils.remove(self._final_file)
 

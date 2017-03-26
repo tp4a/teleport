@@ -1,7 +1,6 @@
 # -*- coding: utf8 -*-
 
 import os
-import platform
 import shutil
 import subprocess
 import sys
@@ -10,27 +9,11 @@ import time
 from . import colorconsole as cc
 from .env import env
 
-# from .configs import cfg
-#
-# try:
-#     CONFIG_FILE = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')), 'config.ini')
-#     if not cfg.init(CONFIG_FILE):
-#         sys.exit(1)
-# except:
-#     cc.e('can not load configuration.\n\nplease copy `config.ini.in` into `config.ini` and modify it to fit your condition and try again.')
-#     sys.exit(1)
-
 if env.is_py2:
     import imp
 elif env.is_py3:
     import importlib
     import importlib.machinery
-
-    # if sys.platform == 'win32':
-    #     import winreg
-
-THIS_PATH = os.path.abspath(os.path.dirname(__file__))
-ROOT_PATH = os.path.abspath(os.path.join(THIS_PATH, '..'))
 
 
 def _check_download_file(file_name):
@@ -40,7 +23,7 @@ def _check_download_file(file_name):
         if 'Everything is Ok' in output:
             return True
     else:
-        cc.w('[fixme] how to check file on Linux?')
+        cc.w('[fixme] how to test file on Linux? ', end='')
         return True
 
 
@@ -250,78 +233,6 @@ def ensure_file_exists(filename):
         raise RuntimeError('path exists but not a file: {}'.format(filename))
 
 
-# def root_path():
-#     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-
-
-def python_exec():
-    if not os.path.exists(sys.executable):
-        raise RuntimeError('Can not locate Python execute file.')
-    return sys.executable
-
-
-# def msbuild_path():
-#     if cfg.toolchain.msbuild is not None:
-#         return cfg.toolchain.msbuild
-#
-#     # 14.0 = VS2015
-#     # 12.0 = VS2012
-#     #  4.0 = VS2008
-#     chk = ['14.0', '4.0', '12.0']
-#
-#     msp = None
-#     for c in chk:
-#         msp = winreg_read("SOFTWARE\\Microsoft\\MSBuild\\ToolsVersions\\{}".format(c), 'MSBuildToolsPath')
-#         if msp is not None:
-#             break
-#
-#     if msp is None:
-#         raise RuntimeError('Can not locate MSBuild.')
-#
-#     msb = os.path.join(msp[0], 'MSBuild.exe')
-#     if not os.path.exists(msb):
-#         raise RuntimeError('Can not locate MSBuild at {}'.format(msp))
-#
-#     cfg.toolchain.msbuild = msb
-#     return msb
-
-
-# def nsis_path():
-#     if cfg.toolchain.nsis is not None:
-#         return cfg.toolchain.nsis
-#
-#     p = winreg_read_wow64_32(r'SOFTWARE\NSIS\Unicode', '')
-#     if p is None:
-#         raise RuntimeError('Can not locate unicode version of NSIS.')
-#
-#     p = os.path.join(p[0], 'makensis.exe')
-#     if not os.path.exists(p):
-#         raise RuntimeError('Can not locate NSIS at {}'.format(p))
-#
-#     cfg.toolchain.nsis = p
-#     return p
-
-
-# def winreg_read(path, key):
-#     try:
-#         hkey = winreg.CreateKeyEx(winreg.HKEY_LOCAL_MACHINE, path, 0, winreg.KEY_READ)
-#         value = winreg.QueryValueEx(hkey, key)
-#     except OSError:
-#         return None
-#
-#     return value
-
-
-# def winreg_read_wow64_32(path, key):
-#     try:
-#         hkey = winreg.CreateKeyEx(winreg.HKEY_LOCAL_MACHINE, path, 0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY)
-#         value = winreg.QueryValueEx(hkey, key)
-#     except OSError:
-#         return None
-#
-#     return value
-
-
 def sys_exec(cmd, direct_output=False, output_codec=None):
     if output_codec is None:
         if env.is_win:
@@ -334,7 +245,8 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
 
     else:
-        p = subprocess.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
+        p = subprocess.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             universal_newlines=True, shell=True)
 
     output = list()
     f = p.stdout
@@ -360,11 +272,13 @@ def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
         raise RuntimeError('where is `msbuild`?')
 
     if force_rebuild:
-        cmd = '"{}" "{}" "/target:clean" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, target, platform)
+        cmd = '"{}" "{}" "/target:clean" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, target,
+                                                                                          platform)
         ret, _ = sys_exec(cmd, direct_output=True)
         cc.v('ret:', ret)
 
-    cmd = '"{}" "{}" "/target:{}" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, proj_name, target, platform)
+    cmd = '"{}" "{}" "/target:{}" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, proj_name,
+                                                                                   target, platform)
     ret, _ = sys_exec(cmd, direct_output=True)
     if ret != 0:
         raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
@@ -381,16 +295,13 @@ def nsis_build(nsi_file, _define=''):
 
 
 def cmake(work_path, target, force_rebuild, cmake_define=''):
-    # because cmake v2.8 shipped with Ubuntu 14.04LTS, but we need 3.5.
-    # I use a v3.5 one from CLion.
+    # I use cmake v3.5 which shipped with CLion.
     if env.cmake is None:
         raise RuntimeError('where is `cmake`?')
 
     cc.n('make by cmake', target, sep=': ')
     old_p = os.getcwd()
-    # new_p = os.path.dirname(wscript_file)
 
-    # work_path = os.path.join(root_path(), 'cmake-build')
     if os.path.exists(work_path):
         if force_rebuild:
             remove(work_path)
@@ -422,22 +333,14 @@ def strip(filename):
 
 def make_zip(src_path, to_file):
     cc.v('compress folder into .zip...')
-    # n, _ = os.path.splitext(to_file)
-    # # x = os.path.split(to_file)[1].split('.')
-    # p = os.path.dirname(to_file)
-    # shutil.make_archive(os.path.join(p, n), 'zip', src_path)
-    # ensure_file_exists(to_file)
     if env.is_win:
         src_path = os.path.abspath(src_path)
-        print('src_path', src_path)
         _parent = os.path.abspath(os.path.join(src_path, '..'))
-        print('_parent', _parent)
         _folder = src_path[len(_parent) + 1:]
 
         old_p = os.getcwd()
         os.chdir(_parent)
         cmd = '""{}" a "{}" "{}""'.format(env.zip7, to_file, _folder)
-        print(cmd)
         os.system(cmd)
         os.chdir(old_p)
     elif env.is_linux:

@@ -11,11 +11,9 @@
 ### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON_PATH=/usr/local/eom/teleport
+DAEMON_PATH={daemon_path}
 NAME=teleport
 DESC=teleport
-
-# test -f "$DAEMON_PATH/teleport.sh" || exit 0
 
 test -f "$DAEMON_PATH/start.sh" || exit 0
 test -f "$DAEMON_PATH/stop.sh" || exit 0
@@ -51,7 +49,7 @@ case "$1" in
       $DAEMON_PATH/status.sh $SRV
       ;;
    *)
-      echo "Usage: $NAME {start|stop|restart|status}" >&2
+      echo "Usage: $NAME {{start|stop|restart|status}}" >&2
       exit 1
       ;;
 esac
