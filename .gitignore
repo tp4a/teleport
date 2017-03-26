@@ -49,20 +49,15 @@ __pycache__
 
 # for dist folder
 **/_tmp_
-# /dist/*.zip
-# /dist/*.tar.gz
-/dist/windows/server/script/data
-/dist/windows/client/assist/apps
-/dist/windows/client/assist/cfg
+/dist/server/data
+/dist/client/windows/assist/apps
+/dist/client/windows/assist/cfg
 
 /server/share/etc/core.ini
 /server/share/etc/web.ini
-# /server/share/data/ts_db.db
 /server/share/data
 /server/share/log
-# /server/share/data/replay
 /server/www/teleport/.idea/vcs.xml
-# /server/www/teleport/static/js/var.js
 /server/www/packages/packages-windows/x64
 
 
@@ -73,6 +68,3 @@ __pycache__
 # for not finished code
 /common/libex/test
 /client/tp_rdp
-/server/share/etc/maintenance-mode
-/dist/client/windows/assist/apps
-/dist/client/windows/assist/cfg

@@ -38,12 +38,6 @@ class WebServerCore:
         cfg.res_path = os.path.abspath(options['res_path'])
         cfg.cfg_path = os.path.abspath(options['cfg_path'])
 
-        # cfg.app_mode = APP_MODE_NORMAL
-        # if os.path.exists(os.path.join(cfg.cfg_path, 'maintenance-mode')):
-        #     cfg.app_mode = APP_MODE_MAINTENANCE
-        # else:
-        #     cfg.app_mode = APP_MODE_NORMAL
-
         _cfg_file = os.path.join(cfg.cfg_path, 'web.ini')
         if not cfg.load_web(_cfg_file):
             return False

@@ -368,40 +368,8 @@ class InstallerWin(InstallerBase):
                 self._install_path = os.path.abspath(os.path.join(os.path.dirname(_exec_file), '..'))
                 break
 
-        # _err, _ = utils.sys_exec(r'sc query "{}"'.format(WIN_CORE_SERVICE_NAME))
-        # if 1060 == _err:
-        #     # core service not install
-        #     pass
-        # else:
-        #     self._is_installed = True
-        #     _err, _o = utils.sys_exec(r'sc qc "{}"'.format(WIN_CORE_SERVICE_NAME))
-        #     if _err != 0:
-        #         raise RuntimeError('Can not get core service installation information.')
-        #     for i in _o:
-        #         _x = i.split(':', 1)
-        #         if 'BINARY_PATH_NAME' == _x[0].strip():
-        #             _path = _x[1].strip()
-        #             self._install_path = os.path.abspath(os.path.join(os.path.dirname(_path), '..'))
-        #             break
-        #
-        # _err, _ = utils.sys_exec(r'sc query "{}"'.format(WIN_WEB_SERVICE_NAME))
-        # if 1060 == _err:
-        #     # web service not install.
-        #     pass
-        # else:
-        #     self._is_installed = True
-        #     _err, _o = utils.sys_exec(r'sc qc "{}"'.format(WIN_WEB_SERVICE_NAME))
-        #     if _err != 0:
-        #         raise RuntimeError('Can not get web service installation information.')
-        #     for i in _o:
-        #         _x = i.split(':', 1)
-        #         if 'BINARY_PATH_NAME' == _x[0].strip():
-        #             _path = _x[1].strip()
-        #             self._install_path = os.path.abspath(os.path.join(os.path.dirname(_path), '..'))
-        #             break
-
         if self._is_installed:
-            cc.i('[exists]')
+            cc.i('[{}]'.format(self._install_path))
             self._fix_path()
         else:
             cc.i('[not exists]')
@@ -547,7 +515,7 @@ class InstallerLinux(InstallerBase):
             # self._fix_path()
 
         if self._is_installed:
-            cc.i('[exists]')
+            cc.i('[{}]'.format(self._install_path))
             self._fix_path()
         else:
             cc.i('[not exists]')
@@ -617,8 +585,9 @@ class InstallerLinux(InstallerBase):
     def _start_service(self):
         cc.v('')
         cc.o('start services...')
-        utils.sys_exec('service teleport start', direct_output=True)
-        # raise RuntimeError('`start_service` not implement.')
+        _ret, _ = utils.sys_exec('service teleport start', direct_output=True)
+        if _ret != 0:
+            raise RuntimeError('not all services started.')
 
     def _stop_service(self):
         cc.o(' - stop teleport core service ... ', end='')

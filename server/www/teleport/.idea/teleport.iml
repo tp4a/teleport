@@ -14,9 +14,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
-  <component name="PyDocumentationSettings">
-    <option name="myDocStringFormat" value="Epytext" />
-  </component>
   <component name="TemplatesService">
     <option name="templateFileTypes">
       <list>

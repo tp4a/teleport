@@ -28,14 +28,9 @@ for p in sys.path:
 for p in x:
     sys.path.remove(p)
 
-is_dev_mode = False
 path_of_this_file = os.path.abspath(os.path.dirname(__file__))
 
 PATH_APP_ROOT = os.path.abspath(os.path.join(path_of_this_file, '..'))
-
-# 根据源代码目录形式，检查是否是开发版本
-if os.path.exists(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'etc')):
-    is_dev_mode = True
 
 # 检查操作系统，目前仅支持Win和Linux
 PLATFORM = platform.system().lower()
@@ -57,29 +52,13 @@ if _ext_path not in sys.path:
     sys.path.append(_ext_path)
 
 # 确定一些路径
-if is_dev_mode:
+if os.path.exists(os.path.join(os.path.dirname(sys.executable), 'dev_mode')):
     # 开发调试模式
-    # _ext_path = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', 'packages', 'packages-common'))
-    # if _ext_path not in sys.path:
-    #     sys.path.append(_ext_path)
-    #
-    # _ext_path = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', 'packages', 'packages-{}'.format(PLATFORM), BITS))
-    # if _ext_path not in sys.path:
-    #     sys.path.append(_ext_path)
-    #
     PATH_LOG = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'log'))
     PATH_CONF = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'etc'))
     PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'data'))
 
 else:
-    # _ext_path = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', 'packages', 'packages-common'))
-    # if _ext_path not in sys.path:
-    #     sys.path.append(_ext_path)
-    #
-    # _ext_path = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', 'packages', 'packages-{}'.format(PLATFORM), BITS))
-    # if _ext_path not in sys.path:
-    #     sys.path.append(_ext_path)
-    #
     PATH_LOG = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'log'))
     PATH_CONF = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'etc'))
     PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'data'))
