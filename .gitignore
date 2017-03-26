@@ -74,3 +74,5 @@ __pycache__
 /common/libex/test
 /client/tp_rdp
 /server/share/etc/maintenance-mode
+/dist/client/windows/assist/apps
+/dist/client/windows/assist/cfg

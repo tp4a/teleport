@@ -50,7 +50,7 @@ class BuilderWin(BuilderBase):
         self.name = 'teleport-server-windows-{}-{}'.format(ctx.bits_path, VER_TELEPORT_SERVER)
         self._final_file = os.path.join(env.root_path, 'out', 'installer', '{}.zip'.format(self.name))
 
-        self.dist_path = os.path.join(env.root_path, 'dist', ctx.dist, 'server')
+        self.dist_path = os.path.join(env.root_path, 'dist', 'server')
         self.base_path = os.path.join(env.root_path, 'out', 'installer')
         self.base_tmp = os.path.join(self.base_path, '_tmp_')
 
@@ -77,8 +77,8 @@ class BuilderWin(BuilderBase):
         utils.copy_ex(os.path.join(env.root_path, 'out', 'pysrt'), bin_path, (ctx.dist_path, 'pysrt'))
 
         # 复制安装所需的脚本
-        utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'setup.bat')
-        utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'script')
+        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'setup.bat')
+        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'script')
 
         if os.path.exists(self._final_file):
             utils.remove(self._final_file)
@@ -94,7 +94,7 @@ class BuilderLinux(BuilderBase):
         self.name = 'teleport-server-linux-{}-{}'.format(ctx.bits_path, VER_TELEPORT_SERVER)
         self._final_file = os.path.join(env.root_path, 'out', 'installer', '{}.tar.gz'.format(self.name))
 
-        self.dist_path = os.path.join(env.root_path, 'dist', ctx.dist, 'server')
+        self.dist_path = os.path.join(env.root_path, 'dist', 'server')
         self.base_path = os.path.join(env.root_path, 'out', 'installer')
         self.base_tmp = os.path.join(self.base_path, '_tmp_')
 
@@ -160,9 +160,9 @@ class BuilderLinux(BuilderBase):
         # 复制安装所需的脚本
         # utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'install.sh')
         # utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'uninst.sh')
-        utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'setup.sh')
-        utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'script')
-        utils.copy_ex(os.path.join(self.dist_path, 'script'), self.path_tmp, 'daemon')
+        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'setup.sh')
+        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'script')
+        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'daemon')
 
         if os.path.exists(self._final_file):
             utils.remove(self._final_file)

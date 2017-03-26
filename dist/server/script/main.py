@@ -532,13 +532,26 @@ class InstallerLinux(InstallerBase):
         self._def_install_path = '/usr/local/teleport'
 
     def _check_installation(self):
+        cc.o(' - check local installation ... ', end='')
+
         # old version, the daemon named `eom_ts`.
         # from 2.0.0.1, the daemon rename to `teleport`.
         # we must check both.
-        if os.path.exists('/etc/init.d/eom_ts') or os.path.exists('/etc/init.d/teleport'):
+        if os.path.exists('/etc/init.d/eom_ts'):
+            self._is_installed = True
+            self._install_path = '/usr/local/eom/teleport'
+            # self._fix_path()
+        elif os.path.exists('/etc/init.d/teleport'):
             self._is_installed = True
             self._install_path = '/usr/local/teleport'
+            # self._fix_path()
+
+        if self._is_installed:
+            cc.i('[exists]')
             self._fix_path()
+        else:
+            cc.i('[not exists]')
+            return
 
     def _fix_path(self):
         self._config_path = '/etc/teleport'

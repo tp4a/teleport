@@ -111,7 +111,7 @@ class BuilderWin(BuilderBase):
 
     @staticmethod
     def _build_installer():
-        tmp_path = os.path.join(env.root_path, 'dist', 'windows', 'client', 'assist')
+        tmp_path = os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist')
         tmp_app_path = os.path.join(tmp_path, 'apps')
         tmp_cfg_path = os.path.join(tmp_path, 'cfg')
 
@@ -137,7 +137,7 @@ class BuilderWin(BuilderBase):
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'winscp'), os.path.join(tmp_app_path, 'tools', 'winscp'), 'license.txt')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools'), os.path.join(tmp_app_path, 'tools'), 'securecrt-telnet.vbs')
 
-        utils.nsis_build(os.path.join(env.root_path, 'dist', 'windows', 'client', 'assist', 'installer.nsi'))
+        utils.nsis_build(os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist', 'installer.nsi'))
 
 
 class BuilderLinux(BuilderBase):
