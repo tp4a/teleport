@@ -109,5 +109,5 @@ PRIMARY KEY (`name` ASC)
 
         return True
     except:
-        log.e('ERROR')
+        log.e('ERROR\n')
         return False

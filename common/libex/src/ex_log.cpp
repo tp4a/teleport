@@ -1,33 +1,27 @@
 #include <ex/ex_log.h>
 #include <ex/ex_path.h>
-#include <ex/ex_thread.h>
-#include <vector>
-#include <deque>
-#include <algorithm>
+//#include <ex/ex_thread.h>
+//#include <vector>
+//#include <deque>
+//#include <algorithm>
 
 #ifdef EX_OS_WIN32
 #   include <io.h>
 #   include <stdio.h>
 #   include <direct.h>
 #else
-#   include <dirent.h>
-#   include <sys/time.h>
+//#   include <dirent.h>
+//#   include <sys/time.h>
 #endif
 
 #define EX_LOG_CONTENT_MAX_LEN 2048
 
 //typedef std::deque<unsigned long long> log_file_deque;
 
-//ExLogger g_ex_logger;
-static ExLogger* g_exlog = NULL;//&g_ex_logger;
+static ExLogger* g_exlog = NULL;
 
 void EXLOG_USE_LOGGER(ExLogger* logger)
 {
-//	if (NULL == logger)
-//		g_exlog = &g_ex_logger;
-//	else
-//		g_exlog = logger;
-
     g_exlog = logger;
 }
 
@@ -99,7 +93,7 @@ void ExLogger::log_a(int level, const char* fmt, va_list valist)
 		return;
 
 	char szTmp[4096] = { 0 };
-	int offset = 0;
+	size_t offset = 0;
 
 	if (level == EX_LOG_LEVEL_ERROR)
 	{
@@ -112,22 +106,39 @@ void ExLogger::log_a(int level, const char* fmt, va_list valist)
 
 #ifdef EX_OS_WIN32
 	vsnprintf_s(szTmp+offset, 4096-offset, 4095-offset, fmt, valist);
-	if (NULL != console_handle)
+	if(to_console)
 	{
-		printf_s("%s", szTmp);
-		fflush(stdout);
-	}
-	else
-	{
-		OutputDebugStringA(szTmp);
+		if (NULL != console_handle)
+		{
+			printf_s("%s", szTmp);
+			fflush(stdout);
+		}
+		else
+		{
+			if(debug_mode)
+				OutputDebugStringA(szTmp);
+		}
 	}
 #else
 	vsnprintf(szTmp+offset, 4095-offset, fmt, valist);
-	printf("%s", szTmp);
-	fflush(stdout);
+	if(to_console)
+	{
+        // On linux, the stdout only output the first time output format (char or wchar_t).
+        // e.g.: first time you use printf(), then after that, every wprintf() not work, and vice versa.
+        // so we always use wprintf() to fix that.
+
+        ex_astr tmp(szTmp);
+        ex_wstr _tmp;
+        ex_astr2wstr(tmp, _tmp);
+        wprintf(L"%ls", _tmp.c_str());
+        fflush(stdout);
+
+//		printf("%s", szTmp);
+//		fflush(stdout);
+	}
 #endif
 
-	write(szTmp);
+	write_a(szTmp);
 }
 
 void ExLogger::log_w(int level, const wchar_t* fmt, va_list valist)
@@ -136,7 +147,7 @@ void ExLogger::log_w(int level, const wchar_t* fmt, va_list valist)
 		return;
 
 	wchar_t szTmp[4096] = { 0 };
-	int offset = 0;
+	size_t offset = 0;
 
 	if (level == EX_LOG_LEVEL_ERROR)
 	{
@@ -149,25 +160,32 @@ void ExLogger::log_w(int level, const wchar_t* fmt, va_list valist)
 
 #ifdef EX_OS_WIN32
 	_vsnwprintf_s(szTmp+offset, 4096-offset, 4095-offset, fmt, valist);
-	if (NULL != console_handle)
+	if(to_console)
 	{
-		wprintf_s(_T("%s"), szTmp);
-		fflush(stdout);
-	}
-	else
-	{
-		OutputDebugStringW(szTmp);
+		if (NULL != console_handle)
+		{
+			wprintf_s(_T("%s"), szTmp);
+			fflush(stdout);
+		}
+		else
+		{
+			if(debug_mode)
+				OutputDebugStringW(szTmp);
+		}
 	}
 #else
 	vswprintf(szTmp+offset, 4095-offset, fmt, valist);
-	wprintf(L"%ls", szTmp);
-	fflush(stdout);
+	if(to_console)
+	{
+		wprintf(L"%ls", szTmp);
+		fflush(stdout);
+	}
 #endif
 
-	write(szTmp);
+	write_w(szTmp);
 }
 
-#define EX_PRINTF_X(fn, level) \
+#define EX_PRINTF_XA(fn, level) \
 void fn(const char* fmt, ...) \
 { \
     if(NULL == g_exlog) \
@@ -179,7 +197,9 @@ void fn(const char* fmt, ...) \
 	va_start(valist, fmt); \
 	g_exlog->log_a(level, fmt, valist); \
 	va_end(valist); \
-} \
+}
+
+#define EX_PRINTF_XW(fn, level) \
 void fn(const wchar_t* fmt, ...) \
 { \
     if(NULL == g_exlog) \
@@ -193,11 +213,17 @@ void fn(const wchar_t* fmt, ...) \
 	va_end(valist); \
 }
 
-EX_PRINTF_X(ex_printf_d, EX_LOG_LEVEL_DEBUG)
-EX_PRINTF_X(ex_printf_v, EX_LOG_LEVEL_VERBOSE)
-EX_PRINTF_X(ex_printf_i, EX_LOG_LEVEL_INFO)
-EX_PRINTF_X(ex_printf_w, EX_LOG_LEVEL_WARN)
-EX_PRINTF_X(ex_printf_e, EX_LOG_LEVEL_ERROR)
+EX_PRINTF_XA(ex_printf_d, EX_LOG_LEVEL_DEBUG)
+EX_PRINTF_XA(ex_printf_v, EX_LOG_LEVEL_VERBOSE)
+EX_PRINTF_XA(ex_printf_i, EX_LOG_LEVEL_INFO)
+EX_PRINTF_XA(ex_printf_w, EX_LOG_LEVEL_WARN)
+EX_PRINTF_XA(ex_printf_e, EX_LOG_LEVEL_ERROR)
+
+EX_PRINTF_XW(ex_printf_d, EX_LOG_LEVEL_DEBUG)
+EX_PRINTF_XW(ex_printf_v, EX_LOG_LEVEL_VERBOSE)
+EX_PRINTF_XW(ex_printf_i, EX_LOG_LEVEL_INFO)
+EX_PRINTF_XW(ex_printf_w, EX_LOG_LEVEL_WARN)
+EX_PRINTF_XW(ex_printf_e, EX_LOG_LEVEL_ERROR)
 
 
 #ifdef EX_OS_WIN32
@@ -268,7 +294,7 @@ void ex_printf_bin(const ex_u8* bin_data, size_t bin_size, const char* fmt, ...)
 	unsigned int i = 0;
 
 	char szTmp[128] = { 0 };
-	int _offset = 0;
+	size_t _offset = 0;
 
 	while (offset < bin_size)
 	{
@@ -529,7 +555,7 @@ bool ExLogFile::_backup_file()
 }
 #endif // if 0
 
-bool ExLogger::write(const char* buf)
+bool ExLogger::write_a(const char* buf)
 {
 	if (NULL == m_file)
 		return false;
@@ -561,7 +587,7 @@ bool ExLogger::write(const char* buf)
 		return false;
 	sprintf(szTime, "[%04d-%02d-%02d %02d:%02d:%02d] ", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
 
-	int lenTime = strlen(szTime);
+	size_t lenTime = strlen(szTime);
 	fwrite(szTime, lenTime, 1, m_file);
 	m_filesize += lenTime;
 	fwrite(buf, len, 1, m_file);
@@ -573,11 +599,11 @@ bool ExLogger::write(const char* buf)
 	return _rotate_file();
 }
 
-bool ExLogger::write(const wchar_t* buf)
+bool ExLogger::write_w(const wchar_t* buf)
 {
 	ex_astr _buf;
 	ex_wstr2astr(buf, _buf, EX_CODEPAGE_UTF8);
-	return write(_buf.c_str());
+	return write_a(_buf.c_str());
 }
 
 

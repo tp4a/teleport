@@ -22,7 +22,6 @@ USE_TPWEB_LOG = False
 
 try:
     import tpweb
-
     USE_TPWEB_LOG = True
     LOG_DEBUG = tpweb.EX_LOG_LEVEL_DEBUG
     LOG_VERBOSE = tpweb.EX_LOG_LEVEL_VERBOSE

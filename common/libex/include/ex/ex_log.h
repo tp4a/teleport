@@ -22,8 +22,8 @@ public:
 	bool set_log_file(const ex_wstr& log_path, const ex_wstr& log_name, ex_u32 max_filesize, ex_u8 max_count);
 	void log_a(int level, const char* fmt, va_list valist);
 	void log_w(int level, const wchar_t* fmt, va_list valist);
-	bool write(const char* buf);
-	bool write(const wchar_t* buf);
+	bool write_a(const char* buf);
+	bool write_w(const wchar_t* buf);
 
 protected:
 	bool _open_file();

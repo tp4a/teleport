@@ -7,6 +7,7 @@ import threading
 import datetime
 
 from eom_common.eomcore.logger import log
+from eom_common.eomcore import utils
 # from .configs import app_cfg
 from .database.create import create_and_init
 from .database.upgrade import DatabaseUpgrade
@@ -59,7 +60,6 @@ class TPDatabase:
             return False
 
         # 看看数据库中是否存在指定的数据表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
-        # ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}account";'.format(self._table_prefix))
         ret = self.is_table_exists('{}group'.format(self._table_prefix))
         if ret is None or not ret:
             # if ret is None or ret[0][0] == 0:
@@ -123,6 +123,9 @@ class TPDatabase:
         return ret
 
     def create_and_init(self, step_begin, step_end):
+        if self.db_source['type'] == self.DB_TYPE_SQLITE:
+            _folder = os.path.dirname(self.db_source['file'])
+            utils.make_dir(_folder)
         if create_and_init(self, step_begin, step_end):
             self.need_create = False
             return True
@@ -239,7 +242,7 @@ class TPSqlitePool(TPDatabasePool):
         try:
             return sqlite3.connect(self._db_file)
         except:
-            log.e('[sqlite] can not connect, does the database file correct?')
+            log.e('[sqlite] can not connect, does the database file correct?\n')
             return None
 
     def _do_query(self, conn, sql):

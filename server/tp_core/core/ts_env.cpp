@@ -9,7 +9,7 @@ TsEnv::TsEnv()
 TsEnv::~TsEnv()
 {}
 
-bool TsEnv::init(void)
+bool TsEnv::init(bool load_config)
 {
 	EXLOG_LEVEL(EX_LOG_LEVEL_INFO);
 
@@ -18,36 +18,54 @@ bool TsEnv::init(void)
 	m_exec_path = m_exec_file;
 	ex_dirname(m_exec_path);
 
+	if(!load_config)
+		return true;
 
-	// 定位 log, etc 路径
-	// 默认情况下，以上三个目录均位于本可执行程序的 ../ 相对位置，
-	// 如果不存在，则可能是开发调试模式，则尝试从源代码仓库根目录下的share目录中查找。
+	// check development flag file, if exists, run in development mode for trace and debug.
+	ex_wstr dev_flag_file = m_exec_path;
+	ex_path_join(dev_flag_file, false, L"dev_mode", NULL);
+
 	ex_wstr base_path = m_exec_path;
-	ex_path_join(base_path, true, L"..", NULL);
+	ex_wstr log_path;
+	ex_wstr conf_file;
 
-	m_etc_path = base_path;
-	ex_path_join(m_etc_path, false, L"etc", NULL);
-
-	ex_wstr conf_file = m_etc_path;
-	ex_path_join(conf_file, false, L"core.ini", NULL);
-
-	if (!ex_is_file_exists(conf_file.c_str()))
+	if (ex_is_file_exists(dev_flag_file.c_str()))
 	{
-		EXLOGW("[core] ===== DEVELOPMENT MODE =====\n");
-		base_path = m_exec_path;
-		ex_path_join(base_path, true, L"..", L"..", L"..", L"..", L"server", L"share", NULL);
+		EXLOGW("===== DEVELOPMENT MODE =====\n");
+
+		ex_path_join(base_path, true, L"..", L"..", L"..", L"..", L"server", NULL);
 
 		m_etc_path = base_path;
-		ex_path_join(m_etc_path, false, L"etc", NULL);
+		ex_path_join(m_etc_path, false, L"share", L"etc", NULL);
 
 		conf_file = m_etc_path;
 		ex_path_join(conf_file, false, L"core.ini", NULL);
-	}
 
-	if (!ex_is_file_exists(conf_file.c_str()))
+		m_replay_path = base_path;
+		ex_path_join(m_replay_path, false, L"share", L"data", L"replay", NULL);
+
+		log_path = base_path;
+		ex_path_join(log_path, false, L"share", L"log", NULL);
+	}
+	else	// not in development mode
 	{
-		EXLOGE("[core] core.ini not found.\n");
-		return false;
+#ifdef EX_OS_WIN
+		base_path = m_exec_path;
+		ex_path_join(base_path, true, L"..", NULL);
+		m_etc_path = base_path;
+		ex_path_join(m_etc_path, false, L"etc", NULL);
+		conf_file = m_etc_path;
+		ex_path_join(conf_file, false, L"core.ini", NULL);
+		m_replay_path = base_path;
+		ex_path_join(m_replay_path, false, L"data", L"replay", NULL);
+		log_path = base_path;
+		ex_path_join(log_path, false, L"log", NULL);
+#else
+		m_etc_path = L"/etc/teleport";
+		conf_file = L"/etc/teleport/core.ini";
+		m_replay_path = L"/var/lib/teleport/data/replay";
+		log_path = L"/var/log/teleport";
+#endif
 	}
 
 	if (!m_ini.LoadFromFile(conf_file))
@@ -58,24 +76,26 @@ bool TsEnv::init(void)
 
 	ExIniSection* ps = m_ini.GetSection(L"common");
 
-	if (!ps->GetStr(L"replay-path", m_replay_path))
+	ex_wstr replay_path;
+	if (ps->GetStr(L"replay-path", replay_path))
 	{
-		m_replay_path = base_path;
-		ex_path_join(m_replay_path, false, L"data", L"replay", NULL);
+		m_replay_path = replay_path;
 	}
 
 	ex_wstr log_file;
 	if (!ps->GetStr(L"log-file", log_file))
 	{
-		ex_wstr log_path = base_path;
-		ex_path_join(log_path, false, L"log", NULL);
 		EXLOG_FILE(L"tpcore.log", log_path.c_str());
 	}
 	else
 	{
 		ex_remove_white_space(log_file);
+		if (log_file[0] == L'"' || log_file[0] == L'\'')
+			log_file.erase(0, 1);
+		if (log_file[ log_file.length() - 1 ] == L'"' || log_file[log_file.length() - 1] == L'\'')
+			log_file.erase(log_file.length() - 1, 1);
 
-		ex_wstr log_path = log_file;
+		log_path = log_file;
 		ex_dirname(log_path);
 		ex_wstr file_name;
 		file_name.assign(log_file, log_path.length() + 1, log_file.length());
@@ -86,7 +106,6 @@ bool TsEnv::init(void)
 	int log_level = EX_LOG_LEVEL_INFO;
 	if (ps->GetInt(L"log-level", log_level))
 	{
-		EXLOGV("log-level: %d\n", log_level);
 		EXLOG_LEVEL(log_level);
 	}
 
