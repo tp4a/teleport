@@ -180,7 +180,7 @@ class PYSBaseWin(PYSBase):
 
     def _get_py_dll_name(self):
         #return 'python{}{}.dll'.format(PY_VER[0], PY_VER[1])
-        return 'python{}.dll'.format(utils.cfg.py_ver_str)
+        return 'python{}.dll'.format(env.py_ver_str)
 
 
 class PYSBaseLinux(PYSBase):

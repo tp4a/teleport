@@ -49,7 +49,7 @@ bool TsEnv::init(bool load_config)
 	}
 	else	// not in development mode
 	{
-#ifdef EX_OS_WIN
+#ifdef EX_OS_WIN32
 		base_path = m_exec_path;
 		ex_path_join(base_path, true, L"..", NULL);
 		m_etc_path = base_path;
@@ -70,7 +70,7 @@ bool TsEnv::init(bool load_config)
 
 	if (!m_ini.LoadFromFile(conf_file))
 	{
-		EXLOGE("[core] can not load core.ini.\n");
+		EXLOGE(L"[core] can not load %ls.\n", conf_file.c_str());
 		return false;
 	}
 

@@ -11,7 +11,7 @@
 # LOG_LEVEL_INFO      2   log infomation/warning/error message.
 # LOG_LEVEL_WARN      3   log warning and error message.
 # LOG_LEVEL_ERROR     4   log error message only.
-log-level=0
+log-level=2
 
 ; 'replay-path' define the replay file location. if not set, default location
 ; to $INSTDIR%/data/replay/
@@ -20,9 +20,8 @@ log-level=0
 web-server-rpc=http://127.0.0.1:7190/rpc
 
 [rpc]
-; Request by web server. `bind-ip` should be the ip of core server. If
-; web server and core server running at the same machine, it should be
-; 127.0.0.1
+; Request by web server. `bind-ip` should be the ip of core server. If web server and
+; core server running at the same machine, it should be 127.0.0.1.
 bind-ip=127.0.0.1
 bind-port=52080
 
