@@ -23,8 +23,28 @@ def _check_download_file(file_name):
         if 'Everything is Ok' in output:
             return True
     else:
-        cc.w('[fixme] how to test file on Linux? ', end='')
-        return True
+        x = os.path.splitext(file_name)
+        # print('ext:', x)
+        if x[-1].lower() == '.zip':
+            ret, output = sys_exec('zip -T "{}"'.format(file_name), False)
+            # print('test .zip:', ret, output)
+            if ret == 0:
+                return True
+        elif x[-1].lower() == '.xz':
+            ret, output = sys_exec('xz -t "{}"'.format(file_name), False)
+            # print('test .xz:', ret, output)
+            if ret == 0:
+                return True
+        elif x[-1].lower() == '.gz':
+            ret, output = sys_exec('gzip -t "{}"'.format(file_name), False)
+            # print('test .gz:', ret, output)
+            if ret == 0:
+                return True
+        else:
+            cc.w('[fixme] how to test {} on Linux? '.format(x[-1]), end='')
+            return True
+
+    return False
 
 
 def download_file(desc, url, target_path, file_name):
@@ -331,20 +351,33 @@ def strip(filename):
     return True
 
 
-def make_zip(src_path, to_file):
+def make_zip(src_path, to_file, from_parent=True):
     cc.v('compress folder into .zip...')
-    if env.is_win:
-        src_path = os.path.abspath(src_path)
-        _parent = os.path.abspath(os.path.join(src_path, '..'))
-        _folder = src_path[len(_parent) + 1:]
 
+    src_path = os.path.abspath(src_path)
+    _parent = os.path.abspath(os.path.join(src_path, '..'))
+    _folder = src_path[len(_parent) + 1:]
+
+    if env.is_win:
         old_p = os.getcwd()
-        os.chdir(_parent)
-        cmd = '""{}" a "{}" "{}""'.format(env.zip7, to_file, _folder)
+        if from_parent:
+            os.chdir(_parent)
+            cmd = '""{}" a "{}" "{}""'.format(env.zip7, to_file, _folder)
+        else:
+            os.chdir(src_path)
+            cmd = '""{}" a "{}" "*""'.format(env.zip7, to_file)
         os.system(cmd)
         os.chdir(old_p)
     elif env.is_linux:
-        pass
+        old_p = os.getcwd()
+        if from_parent:
+            os.chdir(_parent)
+            cmd = 'zip -r "{}" "{}"'.format(to_file, _folder)
+        else:
+            os.chdir(src_path)
+            cmd = 'zip -q -r "{}" ./*'.format(to_file)
+        os.system(cmd)
+        os.chdir(old_p)
     else:
         raise RuntimeError('not support this platform.')
 

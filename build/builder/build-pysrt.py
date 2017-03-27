@@ -3,6 +3,8 @@
 import shutil
 import struct
 
+import sys
+
 from core import colorconsole as cc
 from core import makepyo
 from core import utils
@@ -95,7 +97,7 @@ class PYSBase:
         makepyo.make(_tmp_)
 
         cc.v('compress into python.zip...')
-        utils.make_zip(_tmp_, out_file)
+        utils.make_zip(_tmp_, out_file, from_parent=False)
         utils.ensure_file_exists(out_file)
 
         cc.v('remove temp folder...')
