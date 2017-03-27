@@ -15,15 +15,16 @@ log-level=0
 
 ; 'replay-path' define the replay file location. if not set, default location
 ; to $INSTDIR%/data/replay/
-;replay-path=/usr/local/eom/teleport/data/replay
+;replay-path=/var/lib/teleport/data/replay
 
 web-server-rpc=http://127.0.0.1:7190/rpc
 
 [rpc]
-; Request by web server. `ip` should be the ip of core server, default to
-; 127.0.0.1 because web server and core server running at the same machine.
-;ip=127.0.0.1
-port=52080
+; Request by web server. `bind-ip` should be the ip of core server. If
+; web server and core server running at the same machine, it should be
+; 127.0.0.1
+bind-ip=127.0.0.1
+bind-port=52080
 
 [protocol-ssh]
 enabled=true

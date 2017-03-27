@@ -534,7 +534,7 @@ static bool _run_daemon(void)
 
 
 //===============================================================
-// 演示如何加入内建模块供脚本调用
+// 加入内建模块供脚本调用
 //===============================================================
 PyObject* _py_log_output(PyObject* self, PyObject* args)
 {
@@ -551,8 +551,8 @@ PyObject* _py_log_output(PyObject* self, PyObject* args)
 
 	ex_wstr tmp;
 	ex_astr2wstr(msg, tmp, EX_CODEPAGE_UTF8);
+//    EXLOGE(L"(%d) %ls.\n", level, tmp.c_str());
 
-	//EXLOGV(msg);
 	switch (level)
 	{
 	case EX_LOG_LEVEL_DEBUG:
@@ -572,7 +572,7 @@ PyObject* _py_log_output(PyObject* self, PyObject* args)
 		break;
 	default:
 		PYLIB_RETURN_FALSE;
-		break;
+//		break;
 	}
 
 	//return pylib_PyLong_FromLong(0x010001);
@@ -601,6 +601,8 @@ PyObject* _py_log_console(PyObject* self, PyObject* args)
 		EXLOGE("invalid args for _py_log_console().\n");
 		PYLIB_RETURN_FALSE;
 	}
+
+//	EXLOGE("to_console=%s\n", to_console?"true":"false");
 
 	EXLOG_CONSOLE(to_console);
 

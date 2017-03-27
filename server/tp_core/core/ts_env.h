@@ -9,7 +9,7 @@ public:
 	TsEnv();
 	~TsEnv();
 
-	bool init(bool run_core);
+	bool init(bool load_config);
 
 	ExIniFile& get_ini(void) { return m_ini; }
 
