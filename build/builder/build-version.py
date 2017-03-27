@@ -120,7 +120,7 @@ class Builder:
         rc_file = os.path.join(env.root_path, 'client', 'tp_assist', 'tp_assist.rc')
         self._update_vs_rc(rc_file, self.VER_TELEPORT_ASSIST)
 
-        nsi_file = os.path.join(env.root_path, 'dist', 'windows', 'client', 'assist', 'installer.nsi')
+        nsi_file = os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist', 'installer.nsi')
         self._update_nsi_rc(nsi_file, self.VER_TELEPORT_ASSIST)
 
     def make_tp_core_ver(self):

@@ -80,7 +80,7 @@ class BuilderBase:
 
     def build_sqlite(self):
         file_name = 'sqlite-autoconf-{}.tar.gz'.format(env.ver_sqlite)
-        if not utils.download_file('sqlite source tarball', 'http://sqlite.org/2016/{}'.format(file_name), PATH_DOWNLOAD, file_name):
+        if not utils.download_file('sqlite source tarball', 'http://sqlite.org/2017/{}'.format(file_name), PATH_DOWNLOAD, file_name):
             return
         self._build_sqlite(file_name)
 
