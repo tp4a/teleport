@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import tornado.gen
-
 import json
 import urllib.parse
-from eom_app.app.session import web_session
+
+import tornado.gen
 from eom_app.app.configs import app_cfg
+from eom_app.app.session import web_session
 from eom_app.app.util import async_post_http
 from eom_app.module import host, record
 from eom_common.eomcore.logger import *
-
 from .base import TPBaseJsonHandler
-
-cfg = app_cfg()
 
 
 class RpcHandler(TPBaseJsonHandler):
@@ -27,7 +24,6 @@ class RpcHandler(TPBaseJsonHandler):
 
     @tornado.gen.coroutine
     def post(self):
-        # curl -X POST --data '{"method":"get_auth_info","param":{"authid":0}}' http://127.0.0.1:7190/rpc
         req = self.request.body.decode('utf-8')
         if req == '':
             self.write_json(-1, message='need request param.')
@@ -43,7 +39,6 @@ class RpcHandler(TPBaseJsonHandler):
             if 'method' not in _req or 'param' not in _req:
                 self.write_json(-1, message='invalid request format.')
                 return
-
         except:
             self.write_json(-1, message='invalid json format.')
             return
@@ -120,8 +115,10 @@ class RpcHandler(TPBaseJsonHandler):
 
         if 'rpc' not in param:
             return self.write_json(-1)
-        cfg.core_server_rpc = param['rpc']
 
+        app_cfg().core_server_rpc = param['rpc']
+
+        # 获取core服务的配置信息
         req = {'method': 'get_config', 'param': []}
         _yr = async_post_http(req)
         return_data = yield _yr
@@ -132,7 +129,7 @@ class RpcHandler(TPBaseJsonHandler):
         if return_data['code'] != 0:
             return self.write_json(return_data['code'])
 
-        cfg.update_core(return_data['data'])
+        app_cfg().update_core(return_data['data'])
 
         self.write_json(0)
 

@@ -374,8 +374,6 @@ ExIniSection* ExIniFile::GetSection(const ex_wstr& strName, bool bCreateIfNotExi
 	if (!bCreateIfNotExists)
 		return NULL;
 
-
-
 	ExIniSection* pSec = new ExIniSection(strName);
 	m_secs.insert(std::make_pair(strName, pSec));
 	return pSec;

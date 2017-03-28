@@ -11,7 +11,7 @@ from eom_common.eomcore.utils import timestamp_utc_now
 
 
 def read_record_head(record_id):
-    record_path = os.path.join(app_cfg().data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
+    record_path = os.path.join(app_cfg().core.replay_path, 'ssh', '{:06d}'.format(int(record_id)))
     header_file_path = os.path.join(record_path, 'tp-ssh.tpr')
     file = None
     try:
@@ -58,7 +58,7 @@ def read_record_head(record_id):
 
 
 # def read_record_term(record_id):
-#     record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{}'.format(record_id))
+#     record_path = os.path.join(cfg.core.replay_path, 'ssh', '{}'.format(record_id))
 #     term_file_path = os.path.join(record_path, 'term.init')
 #     # term_file_path = r"E:\GitWork\teleport\share\data\replay\ssh\103\term.init"
 #
@@ -126,7 +126,7 @@ def read_record_head(record_id):
 
 
 def read_record_info(record_id, file_id):
-    record_path = os.path.join(app_cfg().data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
+    record_path = os.path.join(app_cfg().core.replay_path, 'ssh', '{:06d}'.format(int(record_id)))
     file_info = os.path.join(record_path, 'tp-ssh.{:03d}'.format(int(file_id)))
     file = None
     try:
@@ -196,13 +196,14 @@ def delete_log(log_list):
         if not ret:
             return False
 
+        # TODO: 此处应该通过json-rpc接口通知core服务来删除重放文件。
         for item in log_list:
             log_id = int(item)
             try:
-                record_path = os.path.join(app_cfg().data_path, 'replay', 'ssh', '{:06d}'.format(log_id))
+                record_path = os.path.join(app_cfg().core.replay_path, 'ssh', '{:06d}'.format(log_id))
                 if os.path.exists(record_path):
                     shutil.rmtree(record_path)
-                record_path = os.path.join(app_cfg().data_path, 'replay', 'rdp', '{:06d}'.format(log_id))
+                record_path = os.path.join(app_cfg().core.replay_path, 'rdp', '{:06d}'.format(log_id))
                 if os.path.exists(record_path):
                     shutil.rmtree(record_path)
             except Exception:

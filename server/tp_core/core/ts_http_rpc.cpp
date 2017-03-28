@@ -4,8 +4,6 @@
 #include "ts_crypto.h"
 #include "ts_web_rpc.h"
 
-//#include <sqlite3.h>
-
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
 int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_form_url_encoded)
@@ -130,7 +128,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		ex_astr uri;
 		uri.assign(hm->uri.p, hm->uri.len);
 
-		EXLOGV("got request: %s\n", uri.c_str());
+		EXLOGD("got request: %s\n", uri.c_str());
 
 		if (uri == "/rpc")
 		{
@@ -145,7 +143,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 			}
 			else
 			{
-				EXLOGV("[core-rpc] got request method `%s`\n", method.c_str());
+				EXLOGD("[core-rpc] got request method `%s`\n", method.c_str());
 				_this->_process_request(method, json_param, ret_buf);
 			}
 		}
@@ -197,8 +195,6 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
 		return TSR_INVALID_URL_ENCODE;
 
 	json_str = &sztmp[0];
-
-
 
 	Json::Reader jreader;
 
@@ -288,6 +284,10 @@ void TsHttpRpc::_rpc_func_exit(const Json::Value& json_param, ex_astr& buf)
 void TsHttpRpc::_rpc_func_get_config(const Json::Value& json_param, ex_astr& buf)
 {
 	Json::Value jr_data;
+
+	ex_astr _replay_name;
+	ex_wstr2astr(g_env.m_replay_path, _replay_name);
+	jr_data["replay-path"] = _replay_name;
 
 	ExIniFile& ini = g_env.get_ini();
 	ex_ini_sections& secs = ini.GetAllSections();

@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
-from eom_app.app.const import *
+
 from eom_app.app.configs import app_cfg
+from eom_app.app.const import *
 from eom_app.app.db import get_db, DbItem
 from eom_app.app.util import sec_generate_password, sec_verify_password
-# from eom_common.eomcore.logger import log
-
-# from .common import *
 
 
 def verify_user(name, password):

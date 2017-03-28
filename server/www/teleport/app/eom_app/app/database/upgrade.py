@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+
+import json
 import os
 import shutil
-import json
 
 from eom_common.eomcore.logger import log
 
@@ -75,7 +76,6 @@ class DatabaseUpgrade:
                     return False
 
             # 移除旧的表（暂时改名而不是真的删除）
-            # str_sql = 'ALTER TABLE ts_sys_user RENAME TO _bak_ts_sys_user;'
             _step = self.step_begin(' - 移除不再使用的数据表...')
             if not self.db.exec('ALTER TABLE `{}sys_user` RENAME TO `_bak_ts_sys_user`;'.format(self.db.table_prefix)):
                 self.step_end(_step, 0)
@@ -108,10 +108,6 @@ class DatabaseUpgrade:
                 return True
             self.step_end(_step, 0, '需要升级到v3')
 
-            # log.v('upgrade database to version 1.5.217.9 ...\n')
-            # bak_file = '{}.before-1.5.217.9'.format(db_file)
-            # if not os.path.exists(bak_file):
-            #     shutil.copy(db_file, bak_file)
             if self.db.db_source['type'] == self.db.DB_TYPE_SQLITE:
                 _step = self.step_begin(' - 备份数据库文件')
                 _bak_file = '{}.before-v2-to-v3'.format(self.db.db_source['file'])
@@ -340,12 +336,7 @@ class DatabaseUpgrade:
                 if host_info_alt is not None:
                     new_host_info.append(host_info_alt)
 
-            # print('=====================================')
-            # for i in range(len(new_host_info)):
-            #     print(new_host_info[i])
-
             # 现在有了新的ts_host_info表，重构ts_auth_info表
-            # 'SELECT id, host_id, pro_type, auth_mode, user_name, user_pswd, cert_id, encrypt, log_time FROM ts_auth_info;'
             if auth_info_ret is not None:
                 for i in range(len(auth_info_ret)):
                     auth_info = {}
@@ -367,9 +358,6 @@ class DatabaseUpgrade:
                     if found:
                         new_auth_info.append(auth_info)
 
-            # for i in range(len(new_auth_info)):
-            #     print(new_auth_info[i])
-
             # 最后重构ts_auth表
             if auth_ret is not None:
                 for i in range(len(auth_ret)):
@@ -385,9 +373,6 @@ class DatabaseUpgrade:
                             break
                     if found:
                         new_auth.append(auth)
-
-            # for i in range(len(new_auth)):
-            #     print(new_auth[i])
 
             self.step_end(_step, 0)
             _step = self.step_begin(' - 重新整理认证数据表结构及数据...')
@@ -450,7 +435,6 @@ class DatabaseUpgrade:
                     new_auth_info[i]['user_name'], new_auth_info[i]['user_pswd'], new_auth_info[i]['user_param'],
                     new_auth_info[i]['cert_id'], new_auth_info[i]['encrypt'], '1'
                 )
-                # print(str_sql)
                 if not self.db.exec(sql):
                     self.step_end(_step, -1, '无法调整数据(2)')
                     return False
@@ -542,5 +526,3 @@ class DatabaseUpgrade:
             log.e('failed.\n')
             self.step_end(_step, -1)
             return False
-
-

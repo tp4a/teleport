@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
 
-import os
-# import sys
 import json
+import os
 import urllib.parse
 import urllib.request
 
+import eom_common.eomcore.utils as utils
 import tornado.httpserver
 import tornado.ioloop
 import tornado.netutil
 import tornado.process
 import tornado.web
-
-# from eom_common.eomcore.eom_mysql import get_mysql_pool
-from eom_common.eomcore.eom_sqlite import get_sqlite_pool
-import eom_common.eomcore.utils as utils
 from eom_common.eomcore.logger import log
-from .const import *
 from .configs import app_cfg
+from .const import *
 from .db import get_db
 from .session import web_session
 
@@ -39,7 +35,7 @@ class WebServerCore:
         cfg.cfg_path = os.path.abspath(options['cfg_path'])
 
         _cfg_file = os.path.join(cfg.cfg_path, 'web.ini')
-        if not cfg.load_web(_cfg_file):
+        if not cfg.load(_cfg_file):
             return False
 
         cfg.log_path = os.path.abspath(options['log_path'])
@@ -61,12 +57,7 @@ class WebServerCore:
         if not web_session().init():
             return False
 
-        # TODO: 这里不要初始化数据库接口，需要根据配置文件来决定使用什么数据库（初始安装时还没有配置数据库信息）
-        # get_mysql_pool().init(cfg.mysql_ip, cfg.mysql_port, cfg.mysql_user, cfg.mysql_pass)
-        # db_path = os.path.join(cfg.data_path, 'ts_db.db')
-        get_sqlite_pool().init(cfg.data_path)
-
-        # get_db().init_sqlite(os.path.join(cfg.data_path, 'ts_db.db'))
+        # TODO: 根据配置文件来决定使用什么数据库（初始安装时还没有配置数据库信息）
         _db = get_db()
         if not _db.init({'type': _db.DB_TYPE_SQLITE, 'file': os.path.join(cfg.data_path, 'ts_db.db')}):
             log.e('initialize database interface failed.\n')
@@ -111,16 +102,12 @@ class WebServerCore:
             'autoescape': 'xhtml_escape',
 
             # 'ui_modules': ui_modules,
-            # 'debug': True,
+            'debug': False,
 
-            # Debug Mode.
-            'compiled_template_cache': True,
-            'static_hash_cache': True,
+            # 不开启模板和静态文件的缓存，这样一旦模板文件和静态文件变化，刷新浏览器即可看到更新。
+            'compiled_template_cache': False,
+            'static_hash_cache': False,
         }
-
-        if cfg.debug:
-            settings['compiled_template_cache'] = False
-            settings['static_hash_cache'] = False
 
         from eom_app.controller import controllers
         web_app = tornado.web.Application(controllers, **settings)

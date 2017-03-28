@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import os
 import configparser
+import os
 
 from eom_common.eomcore.logger import *
 
@@ -17,8 +17,7 @@ class AttrDict(dict):
         try:
             return self[name]
         except KeyError:
-            # print(self.__class__.__name__)
-            raise
+            return None
 
     def __setattr__(self, name, val):
         self[name] = val
@@ -39,7 +38,7 @@ class ConfigFile(AttrDict):
         self['core']['telnet']['enable'] = False
         self['core']['telnet']['port'] = 52389
 
-    def load_web(self, cfg_file):
+    def load(self, cfg_file):
         if not os.path.exists(cfg_file):
             log.e('configuration file does not exists: [{}]\n'.format(cfg_file))
             return False
@@ -90,6 +89,7 @@ class ConfigFile(AttrDict):
     def update_core(self, conf_data):
         try:
             self['core'] = AttrDict()
+
             self['core']['ssh'] = AttrDict()
             self['core']['ssh']['enable'] = False
             self['core']['ssh']['port'] = 52189
@@ -110,6 +110,9 @@ class ConfigFile(AttrDict):
             if 'telnet' in conf_data:
                 self['core']['telnet']['enable'] = conf_data['telnet']['enable']
                 self['core']['telnet']['port'] = conf_data['telnet']['port']
+
+            self['core']['replay_path'] = conf_data['replay-path']
+
         except IndexError:
             log.e('invalid core config.\n')
             return False

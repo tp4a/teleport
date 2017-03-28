@@ -171,7 +171,7 @@ class PYSBaseWin(PYSBase):
         super()._copy_modules()
 
     def _make_py_ver_file(self):
-        # 在python.zip尾部追加一个字符串（补零到64字节），指明python动态库的文件名，这样壳在加载时才知道如何加载python动态库
+        # 指明python动态库的文件名，这样壳在加载时才知道如何加载python动态库
         out_file = os.path.join(self.base_path, 'python.ver')
         _data = struct.pack('=64s', self._get_py_dll_name().encode())
         f = open(out_file, 'wb')
@@ -179,7 +179,6 @@ class PYSBaseWin(PYSBase):
         f.close()
 
     def _get_py_dll_name(self):
-        #return 'python{}{}.dll'.format(PY_VER[0], PY_VER[1])
         return 'python{}.dll'.format(env.py_ver_str)
 
 

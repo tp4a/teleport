@@ -6,12 +6,9 @@ import os
 import platform
 
 from eom_app.app.configs import app_cfg
-# from eom_app.module import host
 from eom_app.module import record
 from eom_app.module import user
 from .base import TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
-
-cfg = app_cfg()
 
 
 def get_free_space_bytes(folder):
@@ -33,16 +30,14 @@ def get_free_space_bytes(folder):
 
 class LogHandler(TPBaseAdminAuthHandler):
     def get(self):
-        total_size, free_size = get_free_space_bytes(cfg.data_path)
+        total_size, free_size = get_free_space_bytes(app_cfg().data_path)
 
-        # ts_server = '""'
         param = {
             'user_list': user.get_user_list(with_admin=True),
             'total_size': total_size,
             'free_size': free_size,
         }
 
-        # self.render('log/index.mako', user_list=user_list, total_size=total_size, free_size=free_size, ts_server=ts_server)
         self.render('log/index.mako', page_param=json.dumps(param))
 
 
@@ -64,7 +59,7 @@ class RecordHandler(TPBaseAdminAuthHandler):
 #         #     self.render('log/record.mako', record_id=record_id)
 #         #     return
 #         # pass
-#         filename = os.path.join(cfg.data_path, 'replay', 'rdp', '{}'.format(record_id), 'tp-rdp.tpr')
+#         filename = os.path.join(cfg.core.replay_path, 'replay', 'rdp', '{}'.format(record_id), 'tp-rdp.tpr')
 
 
 class ComandLogHandler(TPBaseAdminAuthHandler):
@@ -78,7 +73,7 @@ class ComandLogHandler(TPBaseAdminAuthHandler):
         if protocol == 1:
             pass
         elif protocol == 2:
-            record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
+            record_path = os.path.join(app_cfg().core.replay_path, 'ssh', '{:06d}'.format(int(record_id)))
             file_info = os.path.join(record_path, 'tp-ssh-cmd.txt')
             try:
                 file = open(file_info, 'r')
@@ -101,12 +96,9 @@ class RecordGetHeader(TPBaseAdminAuthJsonHandler):
         header = record.read_record_head(record_id)
         if header is None:
             return self.write_json(-1)
-        # term = record.read_record_term(record_id)
-        # if term is None:
-        #     return self.write_json(-1)
+
         ret = dict()
         ret['header'] = header
-        # ret['term'] = term
         self.write_json(0, data=ret)
 
 

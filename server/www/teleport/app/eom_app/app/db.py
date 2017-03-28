@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import builtins
 import os
 import sqlite3
 import threading
-import datetime
+
+import builtins
 
 from eom_common.eomcore import utils
 from eom_common.eomcore.logger import log
-from eom_common.eomcore import utils
-# from .configs import app_cfg
 from .database.create import create_and_init
 from .database.upgrade import DatabaseUpgrade
-
-# cfg = app_cfg()
 
 __all__ = ['get_db', 'DbItem']
 
@@ -63,14 +59,12 @@ class TPDatabase:
         # 看看数据库中是否存在指定的数据表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
         ret = self.is_table_exists('{}group'.format(self._table_prefix))
         if ret is None or not ret:
-            # if ret is None or ret[0][0] == 0:
             log.w('database need create.\n')
             self.need_create = True
             return True
 
         # 尝试从配置表中读取当前数据库版本号（如果不存在，说明是比较旧的版本了）
         ret = self.query('SELECT `value` FROM `{}config` WHERE `name`="db_ver";'.format(self._table_prefix))
-        # log.w(ret)
         if ret is None or 0 == len(ret):
             self.current_ver = 1
         else:
@@ -124,6 +118,8 @@ class TPDatabase:
         return ret
 
     def create_and_init(self, step_begin, step_end):
+        log.v('start database create and initialization process.\n')
+
         if self.db_source['type'] == self.DB_TYPE_SQLITE:
             db_path = os.path.dirname(self.db_source['file'])
             if not os.path.exists(db_path):
@@ -133,17 +129,21 @@ class TPDatabase:
                     return False
 
         if create_and_init(self, step_begin, step_end):
+            log.v('database created.\n')
             self.need_create = False
             return True
         else:
+            log.e('database create and initialize failed.\n')
             return False
 
     def upgrade_database(self, step_begin, step_end):
+        log.v('start database upgrade process.\n')
         if DatabaseUpgrade(self, step_begin, step_end).do_upgrade():
-            # if upgrade_database(self, step_begin, step_end):
+            log.v('database upgraded.\n')
             self.need_upgrade = False
             return True
         else:
+            log.e('database upgrade failed.\n')
             return False
 
     def alter_table(self, table_names, field_names=None):
