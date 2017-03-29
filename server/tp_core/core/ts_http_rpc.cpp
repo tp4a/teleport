@@ -119,12 +119,6 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 	{
 		ex_astr ret_buf;
 
-		//const char* dbg_method = NULL;
-// 		ex_chars _uri;
-// 		_uri.resize(hm->uri.len + 1);
-// 		memset(&_uri[0], 0, hm->uri.len + 1);
-// 		memcpy(&_uri[0], hm->uri.p, hm->uri.len);
-// 		ex_astr uri = &_uri[0];
 		ex_astr uri;
 		uri.assign(hm->uri.p, hm->uri.len);
 

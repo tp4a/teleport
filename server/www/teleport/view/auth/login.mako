@@ -59,7 +59,7 @@
 
                 <div class="inputbox">
                     <div class="checkbox">
-                        <label><input type="checkbox" value=""> 记住我，12小时内无需重新登录。</label>
+                        <label><input id="remember-me" type="checkbox" value=""> 记住我，12小时内无需重新登录。</label>
                     </div>
                 </div>
 

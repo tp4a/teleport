@@ -148,8 +148,9 @@
     <!-- end sidebar nav -->
 
     <hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:0;"/>
-    <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:100px;text-align: right">服务端版本：</span><span class="mono">${eom_ver.TS_VER}</span></div>
-    <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:100px;text-align: right">助手版本：</span><span class="mono" id="tp-assist-version" low-version=${eom_ver.TP_ASSIST_REQUIRE}>${eom_ver.TP_ASSIST_LAST_VER}</span></div>
+    <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:100px;text-align: right">服务端：</span><span class="mono">v${eom_ver.TS_VER}</span></div>
+    <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:100px;text-align: right">助手：</span><span class="mono" id="tp-assist-version" req-version=${eom_ver.TP_ASSIST_REQUIRE}>v${eom_ver.TP_ASSIST_LAST_VER}</span></div>
+    <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:100px;text-align: right">当前助手：</span><span class="mono">v${eom_ver.TP_ASSIST_REQUIRE}</span></div>
 
 </div>
 <!-- end sidebar scrollbar -->

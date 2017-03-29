@@ -65,9 +65,9 @@ ywl.on_init = function (cb_stack, cb_args) {
 
 	var _ver_obj = $("#tp-assist-version");
 	var last_version = _ver_obj.text();
-	var low_version = _ver_obj.attr("low-version");
+	var req_version = _ver_obj.attr("req-version");
 
-	teleport_init(last_version, low_version,
+	teleport_init(last_version, req_version,
 		function (ret) {
 			$("#tp-assist-current-version").text("当前助手版本：" + ret.version);
 		},
@@ -77,7 +77,7 @@ ywl.on_init = function (cb_stack, cb_args) {
 				g_assist.alert_assist_not_found();
 			} else if (code == TPE_OLD_ASSIST) {
 				ywl.notify_error(error);
-				$('#tp-assist-current-version').html('当前助手版本太低（v' + ret.version + '），请<a href="http://teleport.eomsoft.net/static/download/teleport-assist-last-win.zip">下载最新版本</a>!');
+				$('#tp-assist-current-version').html('当前助手版本太低（v' + ret.version + '），请<a target="_blank" href="http://teleport.eomsoft.net/download">下载最新版本</a>!');
 			} else {
 				$("#tp-assist-current-version").text('检测TP助手版本时发生错误！');
 				ywl.notify_error(error);

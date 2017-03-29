@@ -1,6 +1,6 @@
 "use strict";
 
-var g_low_version = "";
+var g_req_version = "";
 var g_last_version = "";
 var g_current_version = "";
 
@@ -27,9 +27,9 @@ var error_process = function (ret, func_success, func_error) {
 	}
 };
 
-var teleport_init = function (low_version, last_version, func_success, func_error) {
+var teleport_init = function (last_version, req_version, func_success, func_error) {
 
-	g_low_version = low_version;
+	g_req_version = req_version;
 	g_last_version = last_version;
 	var data = {};
 	var args_ = encodeURIComponent(JSON.stringify(data));
@@ -41,11 +41,10 @@ var teleport_init = function (low_version, last_version, func_success, func_erro
 		dataType: 'json',
 		success: function (ret) {
 			g_current_version = ret.version;
-			console.log("current_version", g_current_version);
 			if (version_compare()) {
 				error_process(ret, func_success, func_error);
 			} else {
-				func_error(ret, TPE_OLD_ASSIST, '助手版本太低，请<a style="color:#aaaaff;" href="http://teleport.eomsoft.net/static/download/teleport-assist-last-win.zip">下载最新版本</a>！');
+				func_error(ret, TPE_OLD_ASSIST, '助手版本太低，请<a style="color:#aaaaff;" target="_blank" href="http://teleport.eomsoft.net/download">下载最新版本</a>！');
 			}
 		},
 		error: function (jqXhr) {
@@ -55,11 +54,9 @@ var teleport_init = function (low_version, last_version, func_success, func_erro
 };
 
 var version_compare = function () {
-
 	var cur_version = parseInt(g_current_version.split(".")[2]);
-//	var last_version = parseInt(g_last_version.split(".")[2]);
-	var low_version = parseInt(g_low_version.split(".")[2]);
-	return cur_version >= low_version;
+	var req_version = parseInt(g_req_version.split(".")[2]);
+	return cur_version >= req_version;
 };
 
 var to_teleport = function (url, args, func_success, func_error) {

@@ -48,6 +48,7 @@ class VerifyUser(TPBaseJsonHandler):
             captcha = args['captcha']
             username = args['username']
             userpwd = args['userpwd']
+            remember = args['remember']
         else:
             self.write_json(-1, '系统内部错误')
             return
@@ -83,7 +84,10 @@ class VerifyUser(TPBaseJsonHandler):
             _user['nick_name'] = nickname
             _user['type'] = account_type
 
-            self.set_session('user', _user)
+            if remember:
+                self.set_session('user', _user, 12*60*60)
+            else:
+                self.set_session('user', _user)
             return self.write_json(0)
 
         except:
