@@ -44,6 +44,7 @@ typedef struct TPP_INIT_ARGS
 	ExLogger* logger;
 	ex_wstr exec_path;
 	ex_wstr etc_path;
+	ex_wstr replay_path;
 	ExIniFile* cfg;
 
 	TPP_TAKE_SESSION_FUNC func_take_session;

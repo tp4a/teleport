@@ -7,7 +7,7 @@ import os
 import sqlite3
 import threading
 
-from .logger import *
+from .logger import log
 
 sqlite_pool = None
 
@@ -28,6 +28,8 @@ class eom_sqlite:
         self._conn = None
 
     def connect(self):
+        # if not os.path.exists(self._db_file):
+        #     return None
         try:
             self._conn = sqlite3.connect(self._db_file)
         except:
@@ -35,7 +37,6 @@ class eom_sqlite:
             raise RuntimeError('can not open database.')
         return self._conn
 
-    # 调用实例 ms.ExecProcQuery('exec P_Agent_Cmd_Get @CmdGroupId=7')
     def ExecProcQuery(self, sql):
         if self._conn is None:
             if self.connect() is None:
@@ -46,12 +47,10 @@ class eom_sqlite:
             cursor.execute(sql)
             db_ret = cursor.fetchall()
             return db_ret
-        except Exception as e:
+        except Exception:
             return None
         finally:
             cursor.close()
-
-            # return None
 
     def ExecProcNonQuery(self, sql):
         if self._conn is None:
@@ -62,7 +61,7 @@ class eom_sqlite:
         try:
             cursor.execute(sql)
             self._conn.commit()
-        except Exception as e:
+        except Exception:
             log.e('can not create/open database.\n')
             return False
         finally:
@@ -78,7 +77,6 @@ class eom_sqlite:
         cursor = self._conn.cursor()
         try:
             cursor.executescript(sql)
-            # print(sql)
             self._conn.commit()
             cursor.close()
         except Exception as e:
@@ -102,6 +100,7 @@ class SqlitePool:
     def init(self, path):
         self._conn_sys.clear()
         self._path = os.path.join(path, 'ts_db.db')
+        log.w('use sqlite database, db file: {}\n'.format(self._path))
         if not os.path.exists(self._path):
             return False
 

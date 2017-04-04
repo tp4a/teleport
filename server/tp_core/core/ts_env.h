@@ -9,8 +9,7 @@ public:
 	TsEnv();
 	~TsEnv();
 
-	bool init(void);
-	bool check_db_file(void);
+	bool init(bool load_config);
 
 	ExIniFile& get_ini(void) { return m_ini; }
 
@@ -18,8 +17,7 @@ public:
 	ex_wstr m_exec_file;
 	ex_wstr m_exec_path;
 	ex_wstr m_etc_path;
-
-	ex_wstr m_db_file;
+	ex_wstr m_replay_path;
 
 	ex_astr rpc_bind_ip;
 	int rpc_bind_port;

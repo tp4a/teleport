@@ -1,15 +1,8 @@
-import json
-import urllib
-import gzip
-import os
-# from .configs import app_cfg
-from eom_app.app.configs import app_cfg
-from eom_app.module import host
-from .base import SwxJsonHandler, SwxAuthHandler
+# -*- coding: utf-8 -*-
 
-cfg = app_cfg()
+from .base import TPBaseUserAuthHandler
 
 
-class IndexHandler(SwxAuthHandler):
+class IndexHandler(TPBaseUserAuthHandler):
     def get(self):
         self.render('pwd/index.mako')

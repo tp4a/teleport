@@ -3,6 +3,7 @@
 
 #include <ex.h>
 
-bool ts_http_get(ex_astr url);
+void ts_url_encode(const char *src, ex_astr& out);
+bool ts_http_get(const ex_astr& url, ex_astr& body);
 
 #endif // __TS_HTTP_CLIENT_H__

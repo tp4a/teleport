@@ -2,17 +2,17 @@
 
 from eom_app.app.configs import app_cfg
 from eom_app.module import host
-from .base import SwxAdminHandler, SwxAdminJsonHandler
+from .base import TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
 
 cfg = app_cfg()
 
 
-class IndexHandler(SwxAdminHandler):
+class IndexHandler(TPBaseAdminAuthHandler):
     def get(self):
         self.render('cert/index.mako')
 
 
-class GetListHandler(SwxAdminJsonHandler):
+class GetListHandler(TPBaseAdminAuthJsonHandler):
     def post(self):
         _certs = host.get_cert_list()
         ret = dict()

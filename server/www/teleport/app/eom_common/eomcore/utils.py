@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import os
-import threading
-import time
 import datetime
 import hashlib
+import os
 import stat
+import threading
+import time
 
 
 def make_dir(path):
@@ -128,6 +128,10 @@ def timestamp_local_to_utc(t):
     return int(datetime.datetime.utcfromtimestamp(time.mktime(time.localtime(t))).timestamp())
 
 
+def timestamp_utc_now():
+    return int(datetime.datetime.utcnow().timestamp())
+
+
 def bytes_to_string(b, encode='utf8'):
     l = len(b)
     for c in range(l):
@@ -157,7 +161,7 @@ def md5file(file_name):
 
 class UniqueId():
     def __init__(self):
-        self._id = int(datetime.datetime.utcnow().timestamp())
+        self._id = timestamp_utc_now()
         self._locker = threading.RLock()
 
     def generate(self):
@@ -165,6 +169,6 @@ class UniqueId():
             self._id += 1
             return self._id
 
+
 unique_id = UniqueId()
 del UniqueId
-

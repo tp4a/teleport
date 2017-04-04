@@ -126,6 +126,9 @@
     <ClInclude Include="..\..\common\libex\include\ex\ex_thread.h">
       <Filter>libex\header</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\common\teleport\teleport_const.h">
+      <Filter>teleport</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\tp.ico">
@@ -159,6 +162,9 @@
     </Filter>
     <Filter Include="libex\src">
       <UniqueIdentifier>{d7d49fa4-5192-42c5-bc70-5584d9d646c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="teleport">
+      <UniqueIdentifier>{1291a5cf-cb08-4ad6-8a86-8a0486297c63}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

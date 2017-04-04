@@ -9,15 +9,14 @@ ywl.on_init = function (cb_stack, cb_args) {
 	// 创建页面控件对象
 	//===================================
 	// 表格数据
-	//console.log('ywl.page_options.total_size,', ywl.page_options.total_size, ywl.page_options.free_size);
 	var disk_rate = parseInt(ywl.page_options.free_size * 100 / ywl.page_options.total_size);
-	$('#disk-status').text('日志磁盘大小：' + ywl.page_options.total_size + 'GB，剩余空间：' + ywl.page_options.free_size + 'GB，空闲' + disk_rate + '%');
+	$('#disk-status').text('日志磁盘大小：' + size2str(ywl.page_options.total_size, 2) + '，剩余空间：' + size2str(ywl.page_options.free_size, 2) + '，空闲' + disk_rate + '%');
 	if (disk_rate < 10) {
 		$('#disk-status').removeClass().addClass('badge badge-danger');
-	} else if (disk_rate < 50) {
+	} else if (disk_rate < 30) {
 		$('#disk-status').removeClass().addClass('badge badge-warning');
 	} else {
-		$('#disk-status').removeClass().addClass('badge badge-info');
+		$('#disk-status').removeClass().addClass('badge badge-ignore');
 	}
 
 	var host_table_options = {
@@ -43,7 +42,7 @@ ywl.on_init = function (cb_stack, cb_args) {
 			{title: "协议", key: "protocol", render: 'protocol', fields: {protocol: 'protocol'}},
 			{title: "系统", key: "sys_type", width: 40, render: 'sys_type', fields: {sys_type: 'sys_type'}},
 			{title: "远程主机地址", key: "host_ip", render: 'server_info', fields: {host_ip: 'host_ip', host_port: 'host_port'}},
-			{title: "开始时间", key: "log_time", width: 160, render: 'log_time', fields: {log_time: 'log_time'}},
+			{title: "开始时间", key: "begin_time", width: 160, render: 'begin_time', fields: {begin_time: 'begin_time'}},
 			{title: "耗时", key: "cost_time", render: 'cost_time', fields: {cost_time: 'cost_time', ret_code: 'ret_code'}},
 			{title: "状态", key: "ret_code", render: 'ret_code', fields: {ret_code: 'ret_code'}},
 			{
@@ -186,14 +185,13 @@ ywl.on_host_table_created = function (tbl) {
 					start_rdp_replay(args,
 						function () {
 							ywl.notify_success('RDP 录像播放器成功启动！');
-							//console.log('RDP 录像播放器成功启动！')
 						},
-						function (code, error) {
-							if (code == TP_ERR_NO_ASSIST)
+						function (code, msg) {
+							if (code == TPE_NO_ASSIST)
 								g_assist.alert_assist_not_found();
 							else {
-								ywl.notify_error(error);
-								console.log('error:', error)
+								ywl.notify_error(msg);
+								console.log('error:', msg)
 							}
 						});
 				});
@@ -257,8 +255,8 @@ ywl.on_host_table_created = function (tbl) {
 //			}
 
 		};
-		render.log_time = function (row_id, fields) {
-			return '<span class="badge badge-primary mono">' + fields.log_time + ' </span>';
+		render.begin_time = function (row_id, fields) {
+			return '<span class="badge badge-primary mono">' + format_datetime(utc_to_local(fields.begin_time)) + ' </span>';
 		};
 
 		render.cost_time = function (row_id, fields) {

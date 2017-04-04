@@ -4,6 +4,11 @@
 #include "resource.h"
 #include "dlg_main.h"
 #include "ts_http_rpc.h"
+
+#ifdef _DEBUG
+#	include <vld.h>
+#endif
+
 #pragma comment(lib, "shlwapi.lib")
 
 #define WMU_INSTANCE_EXIT		(WM_USER + 2)
@@ -128,6 +133,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 		DispatchMessage(&msg);
 	}
 	
+	http_rpc_stop();
+	WaitForSingleObject(hThread, INFINITE);
+
 	CloseHandle(g_SingleInstanceMutexHandle);
 
 	LocalFree(g_argv);

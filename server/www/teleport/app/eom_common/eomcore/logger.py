@@ -10,7 +10,7 @@ import traceback
 
 __all__ = ['log',
            'CR_DEBUG', 'CR_VERBOSE', 'CR_INFO', 'CR_WARN', 'CR_ERROR',
-           'LOG_DEBUG', 'LOG_VERBOSE', 'LOG_INFO', 'LOG_WARN', 'LOG_ERROR', 'TRACE_ERROR_NONE', 'TRACE_ERROR_FULL']
+           'LOG_DEBUG', 'LOG_VERBOSE', 'LOG_INFO', 'LOG_WARN', 'LOG_ERROR']
 
 LOG_DEBUG = 0
 LOG_VERBOSE = 1
@@ -18,22 +18,18 @@ LOG_INFO = 2
 LOG_WARN = 3
 LOG_ERROR = 4
 
-USE_TPWEB_LOG = True
+USE_TPWEB_LOG = False
 
 try:
     import tpweb
-
+    USE_TPWEB_LOG = True
     LOG_DEBUG = tpweb.EX_LOG_LEVEL_DEBUG
     LOG_VERBOSE = tpweb.EX_LOG_LEVEL_VERBOSE
     LOG_INFO = tpweb.EX_LOG_LEVEL_INFO
     LOG_WARN = tpweb.EX_LOG_LEVEL_WARN
     LOG_ERROR = tpweb.EX_LOG_LEVEL_ERROR
 except ImportError:
-    print('can not import tpweb.')
-    USE_TPWEB_LOG = False
-
-TRACE_ERROR_NONE = 0
-TRACE_ERROR_FULL = 999999
+    pass
 
 # ======================================
 # 颜色
@@ -95,6 +91,9 @@ class EomLogger:
     :type _win_color : Win32ColorConsole
     """
 
+    TRACE_ERROR_NONE = 0
+    TRACE_ERROR_FULL = 999999
+
     def __init__(self):
         atexit.register(self.finalize)
 
@@ -104,7 +103,7 @@ class EomLogger:
         # self._end = '\n'
 
         self._min_level = LOG_INFO  # 大于等于此值的日志信息才会记录
-        self._trace_error = TRACE_ERROR_NONE  # 记录错误信息时，是否追加记录调用栈
+        self._trace_error = self.TRACE_ERROR_NONE  # 记录错误信息时，是否追加记录调用栈
         self._log_datetime = True  # 是否记录日志时间
         self._file_handle = None  # 日志文件的句柄，为None时表示不记录到文件
 
@@ -174,7 +173,6 @@ class EomLogger:
             self.v = self._log_pass
             self.i = self._log_pass
             self.w = self._log_pass
-            pass
         else:
             pass
 
@@ -208,6 +206,8 @@ class EomLogger:
                     self._console_restore_color = self._log_pass
 
     def _set_filename(self, base_filename):
+        if USE_TPWEB_LOG:
+            return True
 
         if len(base_filename) == 0:
             if self._file_handle is not None:
@@ -224,7 +224,7 @@ class EomLogger:
             self._file_handle = open(log_filename, 'a+', encoding='utf8')
         except IOError:
             self._file_handle = None
-            self.e('Can not open log file for write.\n')
+            self.e('Can not open log file for write [{}].\n'.format(log_filename))
             return False
 
         return True
@@ -256,7 +256,7 @@ class EomLogger:
         self._console_set_color(CR_ERROR)
         self._do_log(LOG_ERROR, *args, **kwargs)
 
-        if self._trace_error == TRACE_ERROR_NONE:
+        if self._trace_error == self.TRACE_ERROR_NONE:
             return
 
         s = traceback.extract_stack()
@@ -314,18 +314,21 @@ class EomLogger:
         self._win_color.set_color(COLORS[cr][1])
 
     def _console_set_color_linux(self, cr=None):
-        if cr is None:
+        if cr is None or USE_TPWEB_LOG:
             return
-        if not USE_TPWEB_LOG:
-            sys.stdout.writelines('\x1B')
-            sys.stdout.writelines(COLORS[cr][0])
+        sys.stdout.writelines('\x1B')
+        sys.stdout.writelines(COLORS[cr][0])
         sys.stdout.flush()
 
     def _console_restore_color_win(self):
+        if USE_TPWEB_LOG:
+            return
         self._win_color.set_color(COLORS[CR_NORMAL][1])
         sys.stdout.flush()
 
     def _console_restore_color_linux(self):
+        if USE_TPWEB_LOG:
+            return
         sys.stdout.writelines('\x1B[0m')
         sys.stdout.flush()
 

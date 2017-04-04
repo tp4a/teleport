@@ -3,6 +3,19 @@
 # for windows
 #============================================
 
+# Need wget to download necessary dependency files.
+wget = C:\Program Files (x86)\wget\wget.exe
+
+# Need 7z to unzip downloaded files.
+7z = C:\Program Files (x86)\7zip\7z.exe
+
+# need perl to build openssl on Windows, if not set, default to get it from register.
+# suggest install ActivePerl.
+#perl = C:\Perl\bin\perl.exe
+
+# need nasm to build openssl on Windows, if not set, default to locate it from register.
+#nasm = C:\Users\username\AppData\Local\NASM\nasm.exe
+
 # if not set nsis path, default to get it by register.
 #nsis = C:\Program Files (x86)\NSIS\Unicode\makensis.exe
 
@@ -19,9 +32,12 @@ cmake = /opt/cmake/bin/cmake
 
 
 [external_ver]
-openssl = 1.0.2h
+openssl = 1.0.2h,1000208f
 libuv = 1.9.1
 libssh = 0.7.4
 mbedtls = 2.3.0
-sqlite = 3160200
+sqlite = 3170000
+libssh = 0.7.4
+jsoncpp = 0.10.6
+mongoose = 6.6
 

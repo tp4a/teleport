@@ -1,57 +1,56 @@
 # -*- coding: utf-8 -*-
+
 import ctypes
 import json
 import os
 import platform
 
 from eom_app.app.configs import app_cfg
-from eom_app.module import host
 from eom_app.module import record
 from eom_app.module import user
-from .base import SwxAdminHandler, SwxAdminJsonHandler
-
-cfg = app_cfg()
+from .base import TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
 
 
-def get_free_space_mb(folder):
+def get_free_space_bytes(folder):
     """ Return folder/drive free space (in bytes)
     """
     if platform.system() == 'Windows':
-        free_bytes = ctypes.c_ulonglong(0)
-        total_bytes = ctypes.c_ulonglong(0)
-        ctypes.windll.kernel32.GetDiskFreeSpaceExW(None, None, ctypes.pointer(total_bytes), ctypes.pointer(free_bytes))
-        return total_bytes.value / 1024 / 1024 / 1024, free_bytes.value / 1024 / 1024 / 1024
+        _free_bytes = ctypes.c_ulonglong(0)
+        _total_bytes = ctypes.c_ulonglong(0)
+        ctypes.windll.kernel32.GetDiskFreeSpaceExW(folder, None, ctypes.pointer(_total_bytes), ctypes.pointer(_free_bytes))
+        total_bytes = _total_bytes.value
+        free_bytes = _free_bytes.value
     else:
         st = os.statvfs(folder)
-        return st.f_blocks * st.f_frsize / 1024 / 1024 / 1024, st.f_bavail * st.f_frsize / 1024 / 1024 / 1024
+        total_bytes = st.f_blocks * st.f_frsize
+        free_bytes = st.f_bavail * st.f_frsize
+
+    return total_bytes, free_bytes
 
 
-class LogHandler(SwxAdminHandler):
+class LogHandler(TPBaseAdminAuthHandler):
     def get(self):
-        #
-        user_list = user.get_user_list()
-        total_size, free_size = get_free_space_mb(cfg.data_path)
+        total_size, free_size = get_free_space_bytes(app_cfg().data_path)
 
-        # config_list = host.get_config_list()
-        ts_server = dict()
-        ts_server['ip'] = cfg.core.rpc.ip #config_list['ts_server_ip']
-        ts_server['port'] = cfg.core.rpc.port #cfg.server_port
+        param = {
+            'user_list': user.get_user_list(with_admin=True),
+            'total_size': total_size,
+            'free_size': free_size,
+        }
 
-        self.render('log/index.mako', user_list=user_list, total_size=int(total_size), free_size=int(free_size), ts_server=ts_server)
+        self.render('log/index.mako', page_param=json.dumps(param))
 
 
-class RecordHandler(SwxAdminHandler):
+class RecordHandler(TPBaseAdminAuthHandler):
     def get(self, protocol, record_id):
         protocol = int(protocol)
         if protocol == 1:
             return
         elif protocol == 2:
             self.render('log/record.mako', record_id=record_id)
-            return
-        pass
 
 
-# class PlayRdpHandler(SwxAdminHandler):
+# class PlayRdpHandler(TPBaseAdminAuthHandler):
 #     def get(self, ip, record_id):
 #         # protocol = int(protocol)
 #         # if protocol == 1:
@@ -60,33 +59,35 @@ class RecordHandler(SwxAdminHandler):
 #         #     self.render('log/record.mako', record_id=record_id)
 #         #     return
 #         # pass
-#         filename = os.path.join(cfg.data_path, 'replay', 'rdp', '{}'.format(record_id), 'tp-rdp.tpr')
+#         filename = os.path.join(cfg.core.replay_path, 'replay', 'rdp', '{}'.format(record_id), 'tp-rdp.tpr')
 
 
-class ComandLogHandler(SwxAdminHandler):
+class ComandLogHandler(TPBaseAdminAuthHandler):
     def get(self, protocol, record_id):
+
+        param = dict()
+        param['count'] = 0
+        param['op'] = list()
+
         protocol = int(protocol)
         if protocol == 1:
-            return
+            pass
         elif protocol == 2:
-            record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
+            record_path = os.path.join(app_cfg().core.replay_path, 'ssh', '{:06d}'.format(int(record_id)))
             file_info = os.path.join(record_path, 'tp-ssh-cmd.txt')
             try:
                 file = open(file_info, 'r')
-                data = file.read()
+                data = file.readlines()
+                for i in range(len(data)):
+                    param['op'].append({'t': data[i][1:20], 'c': data[i][22:-1]})
             except:
-                self.write('open file error {}'.format(file_info))
-                return
-            # "Content-Type": "text/html; charset=UTF-8",
-            self.set_header('Content-Type', 'text/plain; charset=UTF-8')
-            if len(data) == 0:
-                self.write('该用户没有操作')
-            else:
-                self.write(data)
-            return
+                pass
+            param['count'] = len(param['op'])
+
+        self.render('log/record-ssh-cmd.mako', page_param=json.dumps(param))
 
 
-class RecordGetHeader(SwxAdminJsonHandler):
+class RecordGetHeader(TPBaseAdminAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -95,16 +96,13 @@ class RecordGetHeader(SwxAdminJsonHandler):
         header = record.read_record_head(record_id)
         if header is None:
             return self.write_json(-1)
-        # term = record.read_record_term(record_id)
-        # if term is None:
-        #     return self.write_json(-1)
+
         ret = dict()
         ret['header'] = header
-        # ret['term'] = term
         self.write_json(0, data=ret)
 
 
-class RecordGetInfo(SwxAdminJsonHandler):
+class RecordGetInfo(TPBaseAdminAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -117,19 +115,19 @@ class RecordGetInfo(SwxAdminJsonHandler):
         self.write_json(0, data=data)
 
 
-class DeleteLog(SwxAdminJsonHandler):
+class DeleteLog(TPBaseAdminAuthJsonHandler):
+    # TODO: 用户可能会批量删除大量录像文件，因此io操作可能会比较耗时，这里应该改为异步方式。
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
             log_list = args['log_list']
-        data = record.delete_log(log_list)
-        if data is None:
+        if not record.delete_log(log_list):
             return self.write_json(-1)
-        self.write_json(0, data=data)
+        self.write_json(0)
 
 
-class LogList(SwxAdminJsonHandler):
+class LogList(TPBaseAdminAuthJsonHandler):
     def post(self):
         filter = dict()
         order = dict()

@@ -1,6 +1,7 @@
 ; codec: utf-8
 
 [common]
+;ip=0.0.0.0
 port=7190
 
 ; 'log-file' define the log file location. if not set, default location
@@ -13,4 +14,11 @@ port=7190
 # LOG_LEVEL_INFO      2   log infomation/warning/error message.
 # LOG_LEVEL_WARN      3   log warning and error message.
 # LOG_LEVEL_ERROR     4   log error message only.
-log-level=0
+log-level=2
+
+; running in debug mode. default to 0.
+; in debug mode, log-level set to 0 and trace call stack while exception raise.
+debug=0
+
+core-server-rpc=http://127.0.0.1:52080/rpc
+

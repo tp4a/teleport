@@ -9,7 +9,7 @@ public:
 	TsEnv();
 	~TsEnv();
 
-	bool init(void);
+	bool init(bool load_config);
 
 public:
 	ex_wstr m_exec_file;

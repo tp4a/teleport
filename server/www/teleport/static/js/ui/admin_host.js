@@ -1,4 +1,3 @@
-/*! ywl v1.0.1, (c)2015 eomsoft.net */
 "use strict";
 
 var OS_TYPE_WINDOWS = 1;
@@ -22,7 +21,7 @@ var g_join_group_dlg = null;
 ywl.do_upload_file = function () {
 	var param = {};
 	$.ajaxFileUpload({
-		url: "/host/load-file",// 需要链接到服务器地址
+		url: "/host/upload-import",// 需要链接到服务器地址
 		secureuri: false,
 		fileElementId: "upload-file", // 文件选择框的id属性
 		dataType: 'text', // 服务器返回的格式，可以是json
@@ -66,19 +65,19 @@ ywl.on_init = function (cb_stack, cb_args) {
 
 	var _ver_obj = $("#tp-assist-version");
 	var last_version = _ver_obj.text();
-	var low_version = _ver_obj.attr("low-version");
+	var req_version = _ver_obj.attr("req-version");
 
-	teleport_init(last_version, low_version,
+	teleport_init(last_version, req_version,
 		function (ret) {
 			$("#tp-assist-current-version").text("当前助手版本：" + ret.version);
 		},
 		function (ret, code, error) {
-			if (code == TP_ERR_NO_ASSIST) {
+			if (code == TPE_NO_ASSIST) {
 				$("#tp-assist-current-version").text("未能检测到TP助手，请您下载并启动TP助手！");
 				g_assist.alert_assist_not_found();
-			} else if (code == TP_ERR_VERSION_TOO_LOW) {
+			} else if (code == TPE_OLD_ASSIST) {
 				ywl.notify_error(error);
-				$('#tp-assist-current-version').html('当前助手版本太低（v' + ret.version + '），请<a href="http://teleport.eomsoft.net/static/download/teleport-assist-last-win.zip">下载最新版本</a>!');
+				$('#tp-assist-current-version').html('当前助手版本太低（v' + ret.version + '），请<a target="_blank" href="http://teleport.eomsoft.net/download">下载最新版本</a>!');
 			} else {
 				$("#tp-assist-current-version").text('检测TP助手版本时发生错误！');
 				ywl.notify_error(error);
@@ -243,29 +242,24 @@ ywl.on_init = function (cb_stack, cb_args) {
 
 		update_file.trigger('click');
 	});
+
 	$('#btn-batch-export-host').click(function (e) {
-		console.log('xxxxxx');
-
-		ywl.ajax_post_json('/host/export-host', {},
-			function (ret) {
-				console.log('ret', ret);
-				if (ret.code == 0) {
-					var url = ret.data.url;
-					window.location.href = url;
-					ywl.notify_success('操作成功');
-				} else {
-					ywl.notify_error('操作失败');
-				}
-
-
-//                var update_args = {host_lock: host_lock};
-//                tbl.update_row(row_id, update_args);
-
-			},
-			function () {
-				ywl.notify_error('操作失败');
-			}
-		);
+        window.location.href = '/host/export-host';
+//		ywl.ajax_post_json('/host/export-host', {},
+//			function (ret) {
+//				console.log('ret', ret);
+//				if (ret.code == 0) {
+//					var url = ret.data.url;
+//					window.location.href = url;
+//					ywl.notify_success('操作成功');
+//				} else {
+//					ywl.notify_error('操作失败');
+//				}
+//			},
+//			function () {
+//				ywl.notify_error('操作失败');
+//			}
+//		);
 	});
 
 	$("#btn-apply-group").click(function () {
@@ -400,9 +394,9 @@ ywl.on_host_table_created = function (tbl) {
 		} else if (col_key == 'auth_list') {
 			row_data = tbl.get_row(row_id);
 			$(cell_obj).find('[data-action="remote"]').click(function () {
-				var ts_rdp_port = ywl.page_options.ts_server.rdp_port;
-				var ts_ssh_port = ywl.page_options.ts_server.ssh_port;
-				var ts_telnet_port = ywl.page_options.ts_server.telnet_port;
+				var ts_rdp_port = ywl.page_options.core.rdp_port;
+				var ts_ssh_port = ywl.page_options.core.ssh_port;
+				var ts_telnet_port = ywl.page_options.core.telnet_port;
 				var host_ip = row_data.host_ip;
 				var host_port = 0;
 				var pro_type = parseInt($(this).attr('data-protocol'));
@@ -431,12 +425,12 @@ ywl.on_host_table_created = function (tbl) {
 				} else if (pro_type == 3) {
 					host_port = ts_telnet_port;
 				} else {
-					ywl.notify_error("未知的服务器端口号" + row_data.pro_port);
+					ywl.notify_error("未知的服务器端口号" + pro_port);
 					return;
 				}
 				var args = {};
 				args.host_auth_id = host_auth_id;
-				args.server_ip = ywl.page_options.ts_server.ip;
+				args.server_ip = ywl.server_ip;
 				args.server_port = host_port;
 				args.pro_type = pro_type;
 				args.pro_sub = pro_sub;
@@ -450,7 +444,7 @@ ywl.on_host_table_created = function (tbl) {
 						console.log('远程连接建立成功！')
 					},
 					function (code, error) {
-						if (code == TP_ERR_NO_ASSIST)
+						if (code == TPE_NO_ASSIST)
 							g_assist.alert_assist_not_found();
 						else {
 							ywl.notify_error(error);
@@ -575,7 +569,7 @@ ywl.on_host_table_created = function (tbl) {
 //            ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" ywl-btn-remote="' + fields.id + '"><i class="fa fa-desktop fa-fw"></i> 远程</a>');
 			ret.push('</div>');
 			return ret.join('');
-		}
+		};
 		render.make_user_btn = function (row_id, fields) {
 			var ret = [];
 			ret.push('<div class="btn-group btn-group-sm" role="group">');
@@ -866,7 +860,6 @@ ywl.create_host_edit_dlg = function (tbl) {
 	return dlg_edit_host;
 };
 
-
 ywl.create_host_user_edit_dlg = function (tbl) {
 	var dlg_user_edit_host = {};
 	dlg_user_edit_host.dom_id = "#dialog-host-user-edit";
@@ -1025,7 +1018,6 @@ ywl.create_host_user_edit_dlg = function (tbl) {
 	return dlg_user_edit_host;
 };
 
-
 ywl.create_sys_user = function (tbl) {
 
 	var dlg_sys_user = {};
@@ -1072,9 +1064,9 @@ ywl.create_sys_user = function (tbl) {
 			if (!dlg_sys_user.check_args())
 				return;
 
-			var ts_rdp_port = ywl.page_options.ts_server.rdp_port;
-			var ts_ssh_port = ywl.page_options.ts_server.ssh_port;
-			var ts_telnet_port = ywl.page_options.ts_server.telnet_port;
+			var ts_rdp_port = ywl.page_options.core.rdp_port;
+			var ts_ssh_port = ywl.page_options.core.ssh_port;
+			var ts_telnet_port = ywl.page_options.core.telnet_port;
 			var server_port = 0;
 			var host_port = dlg_sys_user.host_port;
 			var protocol = dlg_sys_user.protocol;
@@ -1090,7 +1082,7 @@ ywl.create_sys_user = function (tbl) {
 			}
 
 			var args = {};
-			args.server_ip = ywl.page_options.ts_server.ip;
+			args.server_ip = ywl.server_ip;
 			args.server_port = parseInt(server_port);
 			args.host_port = parseInt(host_port);
 			args.protocol = parseInt(protocol);
@@ -1111,7 +1103,7 @@ ywl.create_sys_user = function (tbl) {
 					console.log('远程连接建立成功！')
 				},
 				function (code, error) {
-					if (code == TP_ERR_NO_ASSIST)
+					if (code == TPE_NO_ASSIST)
 						g_assist.alert_assist_not_found();
 					else {
 						ywl.notify_error(error);
@@ -1433,6 +1425,7 @@ ywl.create_sys_user = function (tbl) {
 	return dlg_sys_user;
 
 };
+
 ywl.create_batch_join_group_dlg = function (tbl) {
 	var batch_join_dlg = {};
 

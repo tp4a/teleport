@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 import sys
 import tornado.ioloop
-from .base import SwxBaseHandler, SwxAuthHandler
+from .base import TPBaseHandler, TPBaseUserAuthHandler
 
 
-class IndexHandler(SwxAuthHandler):
+class IndexHandler(TPBaseUserAuthHandler):
     def get(self):
         self.redirect('/host')
 
 
-class ExitHandler(SwxBaseHandler):
+class ExitHandler(TPBaseHandler):
     def get(self):
         self.write('exit ok')
         tornado.ioloop.IOLoop.instance().stop()
-        # sys.exit(0)

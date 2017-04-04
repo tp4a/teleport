@@ -1,33 +1,78 @@
-#!/usr/bin/env python
 # -*- coding: utf8 -*-
 
 import os
-import platform
 import shutil
 import subprocess
 import sys
 import time
 
 from . import colorconsole as cc
+from .env import env
 
-from .configs import cfg
-
-try:
-    CONFIG_FILE = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')), 'config.ini')
-    if not cfg.init(CONFIG_FILE):
-        sys.exit(1)
-except:
-    cc.e('can not load configuration.\n\nplease copy `config.ini.in` into `config.ini` and modify it to fit your condition and try again.')
-    sys.exit(1)
-
-if cfg.is_py2:
+if env.is_py2:
     import imp
-elif cfg.is_py3:
+elif env.is_py3:
     import importlib
     import importlib.machinery
 
-    if sys.platform == 'win32':
-        import winreg
+
+def _check_download_file(file_name):
+    if env.is_win:
+        # use 7z to test integrity of downloaded
+        ret, output = sys_exec('"{}" t "{}"'.format(env.zip7, file_name), False)
+        if 'Everything is Ok' in output:
+            return True
+    else:
+        x = os.path.splitext(file_name)
+        # print('ext:', x)
+        if x[-1].lower() == '.zip':
+            ret, output = sys_exec('zip -T "{}"'.format(file_name), False)
+            # print('test .zip:', ret, output)
+            if ret == 0:
+                return True
+        elif x[-1].lower() == '.xz':
+            ret, output = sys_exec('xz -t "{}"'.format(file_name), False)
+            # print('test .xz:', ret, output)
+            if ret == 0:
+                return True
+        elif x[-1].lower() == '.gz':
+            ret, output = sys_exec('gzip -t "{}"'.format(file_name), False)
+            # print('test .gz:', ret, output)
+            if ret == 0:
+                return True
+        else:
+            cc.w('[fixme] how to test {} on Linux? '.format(x[-1]), end='')
+            return True
+
+    return False
+
+
+def download_file(desc, url, target_path, file_name):
+    cc.n('download {} ... '.format(desc), end='')
+
+    local_file_name = os.path.join(target_path, file_name)
+    if os.path.exists(local_file_name):
+        if not _check_download_file(local_file_name):
+            cc.w('already exists but broken, download it again...')
+        else:
+            cc.w('already exists, skip.')
+            return True
+
+    cc.v('')
+    # 因为下载过程会在命令行显示进度，所以不能使用subprocess.Popen()的方式捕获输出，会很难看！
+    if env.is_win:
+        cmd = '""{}" --no-check-certificate {} -O "{}""'.format(env.wget, url, local_file_name)
+        os.system(cmd)
+    elif env.is_linux:
+        os.system('wget --no-check-certificate {} -O "{}"'.format(url, local_file_name))
+    else:
+        return False
+
+    if not os.path.exists(local_file_name) or not _check_download_file(local_file_name):
+        cc.e('downloading {} from {} failed.'.format(desc, url))
+        return False
+
+    return True
 
 
 def extension_suffixes():
@@ -38,7 +83,7 @@ def extension_suffixes():
     #   type为文件类型, 1代表PY_SOURCE, 2代表PY_COMPILED, 3代表C_EXTENSION
 
     EXTENSION_SUFFIXES = list()
-    if cfg.is_py2:
+    if env.is_py2:
         suf = imp.get_suffixes()
         for s in suf:
             if s[2] == 3:
@@ -46,18 +91,17 @@ def extension_suffixes():
     else:
         EXTENSION_SUFFIXES = importlib.machinery.EXTENSION_SUFFIXES
 
-    if cfg.dist == 'windows':
+    if env.is_win:
         if '.dll' not in EXTENSION_SUFFIXES:
             EXTENSION_SUFFIXES.append('.dll')
 
-    elif cfg.dist == 'linux':
+    elif env.is_linux:
         if '.so' not in EXTENSION_SUFFIXES:
             EXTENSION_SUFFIXES.append('.so')
 
-    elif cfg.dist == 'macos':
-        raise RuntimeError('not support MacOS now.')
+    else:
+        raise RuntimeError('not support this platform now.')
 
-    # cc.v(EXTENSION_SUFFIXES)
     return EXTENSION_SUFFIXES
 
 
@@ -209,107 +253,34 @@ def ensure_file_exists(filename):
         raise RuntimeError('path exists but not a file: {}'.format(filename))
 
 
-# def root_path():
-#     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-
-
-def python_exec():
-    if not os.path.exists(sys.executable):
-        raise RuntimeError('Can not locate Python execute file.')
-    return sys.executable
-
-
-def msbuild_path():
-    if cfg.toolchain.msbuild is not None:
-        return cfg.toolchain.msbuild
-
-    # 14.0 = VS2015
-    # 12.0 = VS2012
-    #  4.0 = VS2008
-    chk = ['14.0', '4.0', '12.0']
-
-    msp = None
-    for c in chk:
-        msp = winreg_read("SOFTWARE\\Microsoft\\MSBuild\\ToolsVersions\\{}".format(c), 'MSBuildToolsPath')
-        if msp is not None:
-            break
-
-    if msp is None:
-        raise RuntimeError('Can not locate MSBuild.')
-
-    msb = os.path.join(msp[0], 'MSBuild.exe')
-    if not os.path.exists(msb):
-        raise RuntimeError('Can not locate MSBuild at {}'.format(msp))
-
-    cfg.toolchain.msbuild = msb
-    return msb
-
-
-def nsis_path():
-    if cfg.toolchain.nsis is not None:
-        return cfg.toolchain.nsis
-
-    p = winreg_read_wow64_32(r'SOFTWARE\NSIS\Unicode', '')
-    if p is None:
-        raise RuntimeError('Can not locate unicode version of NSIS.')
-
-    p = os.path.join(p[0], 'makensis.exe')
-    if not os.path.exists(p):
-        raise RuntimeError('Can not locate NSIS at {}'.format(p))
-
-    cfg.toolchain.nsis = p
-    return p
-
-
-def winreg_read(path, key):
-    try:
-        hkey = winreg.CreateKeyEx(winreg.HKEY_LOCAL_MACHINE, path, 0, winreg.KEY_READ)
-        value = winreg.QueryValueEx(hkey, key)
-    except OSError:
-        return None
-
-    return value
-
-
-def winreg_read_wow64_32(path, key):
-    try:
-        hkey = winreg.CreateKeyEx(winreg.HKEY_LOCAL_MACHINE, path, 0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY)
-        value = winreg.QueryValueEx(hkey, key)
-    except OSError:
-        return None
-
-    return value
-
-
 def sys_exec(cmd, direct_output=False, output_codec=None):
-    # 注意：output_codec在windows默认为gb2312，其他平台默认utf8
-    _os = platform.system().lower()
     if output_codec is None:
-        if _os == 'windows':
+        if env.is_win:
             output_codec = 'gb2312'
         else:
             output_codec = 'utf8'
 
     p = None
-    if _os == 'windows':
+    if env.is_win:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
 
     else:
-        p = subprocess.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
+        p = subprocess.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             universal_newlines=True, shell=True)
 
-    output = ''
+    output = list()
     f = p.stdout
     while True:
         line = f.readline()
         if 0 == len(line):
             break
 
-        if direct_output:
-            # cc.v(line.decode(output_codec))
-            # cc.d(line, end='')
-            cc.o((cc.CR_GRAY, line), end='')
+        line = line.rstrip('\r\n')
 
-        output += line
+        if direct_output:
+            cc.o((cc.CR_GRAY, line), end='\n')
+
+        output.append(line)
 
     ret = p.wait()
 
@@ -317,45 +288,40 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
 
 
 def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
-    msbuild = msbuild_path()
+    if env.msbuild is None:
+        raise RuntimeError('where is `msbuild`?')
 
     if force_rebuild:
-        cmd = '"{}" "{}" "/target:clean" "/property:Configuration={};Platform={}"'.format(msbuild, sln_file, target, platform)
+        cmd = '"{}" "{}" "/target:clean" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, target,
+                                                                                          platform)
         ret, _ = sys_exec(cmd, direct_output=True)
         cc.v('ret:', ret)
 
-    cmd = '"{}" "{}" "/target:{}" "/property:Configuration={};Platform={}"'.format(msbuild, sln_file, proj_name, target, platform)
+    cmd = '"{}" "{}" "/target:{}" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, proj_name,
+                                                                                   target, platform)
     ret, _ = sys_exec(cmd, direct_output=True)
     if ret != 0:
         raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
 
 
 def nsis_build(nsi_file, _define=''):
-    nsis = nsis_path()
-    cmd = '"{}" /V2 {} /X"SetCompressor /SOLID /FINAL lzma" "{}"'.format(nsis, _define, nsi_file)
+    if env.nsis is None:
+        raise RuntimeError('where is `nsis`?')
+
+    cmd = '"{}" /V2 {} /X"SetCompressor /SOLID /FINAL lzma" "{}"'.format(env.nsis, _define, nsi_file)
     ret, _ = sys_exec(cmd, direct_output=True)
     if ret != 0:
         raise RuntimeError('make installer with nsis failed. [{}]'.format(nsi_file))
 
 
 def cmake(work_path, target, force_rebuild, cmake_define=''):
-    # because cmake v2.8 shipped with Ubuntu 14.04LTS, but we need 3.5.
-    # I copy a v3.5 cmake from CLion.
-    print(cfg)
-    if 'cmake' not in cfg.toolchain:
-        raise RuntimeError('please set `cmake` path.')
-
-    print(cfg.toolchain.cmake)
-    if not os.path.exists(cfg.toolchain.cmake):
-        raise RuntimeError('`cmake` does not exists, please check your configuration and try again.')
-
-    CMAKE = cfg.toolchain.cmake
+    # I use cmake v3.5 which shipped with CLion.
+    if env.cmake is None:
+        raise RuntimeError('where is `cmake`?')
 
     cc.n('make by cmake', target, sep=': ')
     old_p = os.getcwd()
-    # new_p = os.path.dirname(wscript_file)
 
-    # work_path = os.path.join(root_path(), 'cmake-build')
     if os.path.exists(work_path):
         if force_rebuild:
             remove(work_path)
@@ -367,7 +333,7 @@ def cmake(work_path, target, force_rebuild, cmake_define=''):
         target = 'Debug'
     else:
         target = 'Release'
-    cmd = '"{}" -DCMAKE_BUILD_TYPE={} {} ..;make'.format(CMAKE, target, cmake_define)
+    cmd = '"{}" -DCMAKE_BUILD_TYPE={} {} ..;make'.format(env.cmake, target, cmake_define)
     ret, _ = sys_exec(cmd, direct_output=True)
     os.chdir(old_p)
     if ret != 0:
@@ -385,13 +351,47 @@ def strip(filename):
     return True
 
 
-def make_zip(src_path, to_file):
+def make_zip(src_path, to_file, from_parent=True):
     cc.v('compress folder into .zip...')
-    n, _ = os.path.splitext(to_file)
-    # x = os.path.split(to_file)[1].split('.')
-    p = os.path.dirname(to_file)
-    shutil.make_archive(os.path.join(p, n), 'zip', src_path)
+
+    src_path = os.path.abspath(src_path)
+    _parent = os.path.abspath(os.path.join(src_path, '..'))
+    _folder = src_path[len(_parent) + 1:]
+
+    if env.is_win:
+        old_p = os.getcwd()
+        if from_parent:
+            os.chdir(_parent)
+            cmd = '""{}" a "{}" "{}""'.format(env.zip7, to_file, _folder)
+        else:
+            os.chdir(src_path)
+            cmd = '""{}" a "{}" "*""'.format(env.zip7, to_file)
+        os.system(cmd)
+        os.chdir(old_p)
+    elif env.is_linux:
+        old_p = os.getcwd()
+        if from_parent:
+            os.chdir(_parent)
+            cmd = 'zip -r "{}" "{}"'.format(to_file, _folder)
+        else:
+            os.chdir(src_path)
+            cmd = 'zip -q -r "{}" ./*'.format(to_file)
+        os.system(cmd)
+        os.chdir(old_p)
+    else:
+        raise RuntimeError('not support this platform.')
+
     ensure_file_exists(to_file)
+
+
+def unzip(file_name, to_path):
+    if env.is_win:
+        cmd = '""{}" x "{}" -o"{}""'.format(env.zip7, file_name, to_path)
+        os.system(cmd)
+    elif env.is_linux:
+        os.system('unzip "{}" -d "{}"'.format(file_name, to_path))
+    else:
+        raise RuntimeError('not support this platform.')
 
 
 def make_targz(work_path, folder, to_file):
@@ -403,37 +403,6 @@ def make_targz(work_path, folder, to_file):
     ret, _ = sys_exec(cmd, direct_output=True)
     ensure_file_exists(to_file)
     os.chdir(old_p)
-
-
-def fix_extension_files(s_path, t_path):
-    cc.n('\nfix extension files...')
-    # 遍历s_path目录下的所有Python扩展文件（动态库），并将其移动到t_path目录下，同时改名。
-    # 例如， s_path/abc/def.pyd -> t_path/abc.def.pyd
-
-    s_path = os.path.abspath(s_path)
-    t_path = os.path.abspath(t_path)
-
-    ext = extension_suffixes()
-    s_path_len = len(s_path)
-
-    def _fix_(s_path, t_path, sub_path):
-        for parent, dir_list, file_list in os.walk(sub_path):
-            for d in dir_list:
-                _fix_(s_path, t_path, os.path.join(parent, d))
-
-            for filename in file_list:
-                _, e = os.path.splitext(filename)
-                if e in ext:
-                    f_from = os.path.join(parent, filename)
-                    f_to = f_from[s_path_len + 1:]
-                    f_to = f_to.replace('\\', '.')
-                    f_to = f_to.replace('/', '.')
-                    f_to = os.path.join(t_path, f_to)
-
-                    cc.v('move: ', f_from, '\n   -> ', f_to)
-                    shutil.move(f_from, f_to)
-
-    _fix_(s_path, t_path, s_path)
 
 
 if __name__ == '__main__':

@@ -153,8 +153,9 @@
 
 <%block name="embed_js">
     <script type="text/javascript">
-        ywl.add_page_options({
-            config_list: ${config_list}
-        });
+##         ywl.add_page_options({
+##             config_list: ${config_list}
+##         });
+            ywl.add_page_options(${ page_param });
     </script>
 </%block>

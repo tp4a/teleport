@@ -167,542 +167,541 @@ ywl.create_assist = function () {
         });
     };
 
-    _assist.logout = function (cb_stack) {
-        $.ajax({
-            type: 'GET',
-            timeout: 1000,
-            url: _assist.url + '/logout',
-            jsonp: _assist.jsonp_callback,
-            data: {},
-            dataType: 'jsonp',
-            success: function (ret) {
-                cb_stack.exec();
-            },
-            error: function () {
-                //_assist.alert_assist_not_found();
-            }
-        });
-    };
-
-    _assist.do_task = function (cb_stack, cb_args) {
-
-        var is_multi_step = cb_args.is_multi_step || 0;
-        var host_id = cb_args.host_id || 0;
-        var cmd = cb_args.cmd || 0;
-        var args = cb_args.args || {};
-        var cb_exec_arg = cb_args.cb_exec_arg || null;
-
-        var cb_exec = cb_args.cb_exec || null;
-        var cb_error = cb_args.cb_error || null;
-
-
-        if ((!_.isNull(cb_exec) && !_.isFunction(cb_exec)) ||
-            (!_.isNull(cb_error) && !_.isFunction(cb_error))
-        ) {
-            log.e('Invalid Param.');
-            return;
-        }
-
-        var args_ = encodeURIComponent(JSON.stringify(args));
-        log.v('do_task: args:', args_);
-
-
-        $.ajax({
-            type: 'GET',
-            timeout: 2000,
-            url: 'http://127.0.0.1:50031/do_task/' + is_multi_step + '/' + host_id + '/' + cmd + '?arg=' + args_,
-            jsonp: _assist.jsonp_callback,
-            //data: {arg: args_},
-            dataType: 'jsonp',
-            success: function (ret) {
-                log.v('do task return:', ret);
-                if (ret.code != 0) {
-                    log.e('load failed. maybe you not login.');
-                    cb_stack.exec({});
-                } else {
-                    var task_id = ret.data.task_id;
-                    if (cb_stack != null) {
-                        cb_stack.add(_assist.get_task_ret, {task_id: task_id, cb_exec: cb_exec, cb_exec_arg: cb_exec_arg, cb_error: cb_error});
-                        cb_stack.add(ywl.delay_exec, {delay_ms: 500});
-
-                        cb_stack.exec();
-                    }
-                }
-            },
-            error: function (jqXhr, error, e) {
-                log.e('do task failed.');
-                _assist.ajax_error(cb_stack, {error: error});
-                //cb_stack.exec([]);
-                //_assist.alert_assist_not_found();
-            }
-        });
-    };
-
-    _assist.do_task_time_out = function (cb_stack, cb_args, time_out) {
-
-        var is_multi_step = cb_args.is_multi_step || 0;
-        var host_id = cb_args.host_id || 0;
-        var cmd = cb_args.cmd || 0;
-        var args = cb_args.args || {};
-        var cb_exec = cb_args.cb_exec || null;
-        var cb_error = cb_args.cb_error || null;
-
-        if ((!_.isNull(cb_exec) && !_.isFunction(cb_exec)) ||
-            (!_.isNull(cb_error) && !_.isFunction(cb_error))
-        ) {
-            log.e('Invalid Param.');
-            return;
-        }
-
-        var args_ = encodeURIComponent(JSON.stringify(args));
-        log.v('do_task: args:', args_);
-
-
-        $.ajax({
-            type: 'GET',
-            timeout: time_out,
-            url: 'http://127.0.0.1:50031/do_task/' + is_multi_step + '/' + host_id + '/' + cmd + '?arg=' + args_,
-            jsonp: _assist.jsonp_callback,
-            //data: {arg: args_},
-            dataType: 'jsonp',
-            success: function (ret) {
-                log.v('do task return:', ret);
-                if (ret.code != 0) {
-                    log.e('load failed. maybe you not login.');
-                    cb_stack.exec({});
-                } else {
-                    var task_id = ret.data.task_id;
-                    if (cb_stack != null) {
-                        cb_stack.add(_assist.get_task_ret_time_out, {task_id: task_id, time_out: time_out, cb_exec: cb_exec, cb_error: cb_error});
-                        cb_stack.add(ywl.delay_exec, {delay_ms: 500});
-
-                        cb_stack.exec();
-                    }
-                }
-            },
-            //error: function () {
-            //	log.e('do task ret failed. maybe assist not start.');
-            //	//cb_stack.exec([]);
-            //	_assist.alert_assist_not_found();
-            //}
-            error: function (jqXhr, error, e) {
-                log.e('do task with timeout failed.');
-                _assist.ajax_error(cb_stack, {error: error});
-                //cb_stack.exec([]);
-                //_assist.alert_assist_not_found();
-            }
-        });
-    };
-
-
-    _assist.get_task_ret = function (cb_stack, cb_args) {
-
-        var task_id = cb_args.task_id || 0;
-        var cb_exec = cb_args.cb_exec || null;
-        var cb_error = cb_args.cb_error || null;
-        var cb_exec_arg = cb_args.cb_exec_arg || null;
-        $.ajax({
-            type: 'GET',
-            timeout: 2000,
-            url: 'http://127.0.0.1:50031/get_task_ret/' + task_id,
-            jsonp: _assist.jsonp_callback,
-            data: {},
-            dataType: 'jsonp',
-            success: function (ret) {
-                //log.v('get task ret, status:', ret.data.task_status, ret);
-
-                if (ret.code != 0) {
-                    if (_.isFunction(cb_error)) {
-                        cb_error(cb_stack, {err_code: ret.code});
-                    } else {
-                        log.e('load failed. maybe you not login.');
-                        //cb_stack.exec({});
-                        ywl.notify_error('执行本地任务时发生错误，错误码：' + ret.code + '。');
-                    }
-                    //log.e('load failed. maybe you not login.');
-                    //cb_stack.exec({});
-                } else {
-                    //log.v('task-status:', ret.data.task_status);
-                    // 如果返回值为“尚未执行完成”，那么就将get_task_ret加入堆栈，继续调用。
-
-                    if (ret.data.task_status != 4) {
-                        cb_stack
-                            .add(_assist.get_task_ret, cb_args)
-                            .add(ywl.delay_exec, {delay_ms: 500});
-
-                        if (_.isFunction(cb_exec)) {
-                            cb_exec(cb_stack, cb_exec_arg, {data: ret.data});
-                        } else {
-                            cb_stack.exec();
-                        }
-                    } else {
-                        cb_stack.exec(ret.data);
-                    }
-                }
-            },
-            error: function (jqXhr, error, e) {
-                log.e('get task result failed.');
-                _assist.ajax_error(cb_stack, {error: error});
-                //cb_stack.exec([]);
-                //_assist.alert_assist_not_found();
-            }
-        });
-    };
-
-    _assist.get_task_ret_time_out = function (cb_stack, cb_args) {
-
-        var task_id = cb_args.task_id || 0;
-        var time_out = cb_args.time_out || 2000;
-        var cb_exec = cb_args.cb_exec || null;
-        var cb_error = cb_args.cb_error || null;
-
-        $.ajax({
-            type: 'GET',
-            timeout: time_out,
-            url: 'http://127.0.0.1:50031/get_task_ret/' + task_id,
-            jsonp: _assist.jsonp_callback,
-            data: {},
-            dataType: 'jsonp',
-            success: function (ret) {
-                log.v('get task ret:', ret);
-
-                if (ret.code != 0) {
-                    if (_.isFunction(cb_error)) {
-                        cb_error(cb_stack, {err_code: ret.code});
-                    } else {
-                        log.e('load failed. maybe you not login.');
-                        //cb_stack.exec({});
-                        ywl.notify_error('执行本地任务时发生错误，错误码：' + ret.code + '。');
-                    }
-                } else {
-                    log.v('task-status:', ret.data.task_status);
-                    // 如果返回值为“尚未执行完成”，那么就将get_task_ret加入堆栈，继续调用。
-
-                    if (ret.data.task_status != 4) {
-                        cb_stack
-                            .add(_assist.get_task_ret_time_out, cb_args)
-                            .add(ywl.delay_exec, {delay_ms: 500});
-
-                        if (_.isFunction(cb_exec)) {
-                            cb_exec(cb_stack, {data: ret.data});
-                        } else {
-                            cb_stack.exec();
-                        }
-                    } else {
-                        cb_stack.exec(ret.data);
-                    }
-                }
-            },
-            //error: function () {
-            //	log.e('get task ret failed. maybe assist not start.');
-            //	//cb_stack.exec([]);
-            //	_assist.alert_assist_not_found();
-            //}
-            error: function (jqXhr, error, e) {
-                log.e('get task result with timeout failed.');
-                _assist.ajax_error(cb_stack, {error: error});
-                //cb_stack.exec([]);
-                //_assist.alert_assist_not_found();
-            }
-        });
-    };
-
-    _assist.select_local_path = function (cb_stack, cb_args) {
-        var arg = cb_args.args || {};
-        arg = encodeURIComponent(JSON.stringify(arg));
-        log.v('select_local_path: args:', arg);
-
-        $.ajax({
-            type: 'GET',
-            //timeout: 1000,
-            url: _assist.url + '/select_path?arg=' + arg,
-            jsonp: _assist.jsonp_callback,
-            //data: _args,
-            dataType: 'jsonp',
-            success: function (ret) {
-                if (ret.code == 0) {
-                    log.v('select-local-file return:', ret.data);
-                    cb_stack.exec(ret.data);
-                }
-
-            },
-            //error: function () {
-            //	//self.alert_assist_not_found();
-            //	log.e('select-local-file failed');
-            //}
-            error: function (jqXhr, error, e) {
-                log.e('select local path failed.');
-                _assist.ajax_error(cb_stack, {error: error});
-                //cb_stack.exec([]);
-                //_assist.alert_assist_not_found();
-            }
-        });
-    };
-
-    _assist.read_local_file = function (cb_stack, cb_args) {
-        var arg = cb_args.args || {};
-        arg = encodeURIComponent(JSON.stringify(arg));
-        log.v('read_local_file: args:', arg);
-
-        $.ajax({
-            type: 'GET',
-            //timeout: 1000,
-            url: _assist.url + '/read_local_file?arg=' + arg,
-            jsonp: _assist.jsonp_callback,
-            //data: _args,
-            dataType: 'jsonp',
-            success: function (ret) {
-                if (ret.code == 0) {
-                    log.v('read_local_file return:', ret.data);
-                    cb_stack.exec(ret.data);
-                }
-
-            },
-            //error: function () {
-            //	//self.alert_assist_not_found();
-            //	log.e('read_local_file failed');
-            //}
-            error: function (jqXhr, error, e) {
-                log.e('read local file failed.');
-                _assist.ajax_error(cb_stack, {error: error});
-                //cb_stack.exec([]);
-                //_assist.alert_assist_not_found();
-            }
-        });
-    };
-
-    _assist.get_file_task_list = function (cb_stack, cb_args) {
-        var arg = cb_args.args || {};
-        arg = encodeURIComponent(JSON.stringify(arg));
-        log.v('select_local_path: args:', arg);
-
-        $.ajax({
-            type: 'GET',
-            timeout: 0,
-            url: _assist.url + '/get_file_task_list?arg=' + arg,
-            jsonp: _assist.jsonp_callback,
-            //data: _args,
-            dataType: 'jsonp',
-            success: function (ret) {
-                if (ret.code == 0) {
-                    log.v('select-local-file return:', ret.data);
-                    cb_stack.exec(ret.data);
-                }
-            },
-            //error: function () {
-            //	log.e('select-local-file failed');
-            //}
-            error: function (jqXhr, error, e) {
-                log.e('get file task list failed.');
-                _assist.ajax_error(cb_stack, {error: error});
-                //cb_stack.exec([]);
-                //_assist.alert_assist_not_found();
-            }
-        });
-    };
-
-    _assist.jsonp = function (cb_stack, cb_args) {
-        var _timeout = _.isUndefined(cb_args.timeout) ? 1000 : cb_args.timeout;// cb_args.timeout || 1000;
-        var _uri = cb_args.uri;
-        var _retry = cb_args.retry || false;
-        var _retry_interval = cb_args.retry_interval || 5000;
-        var _args = cb_args.args || {};
-        _args = encodeURIComponent(JSON.stringify(_args));
-
-        $.ajax({
-            type: 'GET',
-            timeout: _timeout,
-            url: _assist.url + _uri + '?arg=' + _args,
-            jsonp: _assist.jsonp_callback,
-            dataType: 'jsonp',
-            success: function (ret) {
-                //log.v('ajax_get_jsonp return:', ret);
-                cb_stack.exec(ret)
-            },
-            error: function (xhr, error) {
-                // if (xhr.status == 404)
-
-                // 可能此时assist关停了，我们等待一会儿再重试
-                if (_retry) {
-                    cb_stack
-                        .add(_assist.jsonp, cb_args)
-                        .add(ywl.delay_exec, {delay_ms: _retry_interval})
-                        .exec();
-                }
-            }
-        });
-    };
-
-    _assist.local_task = function (cb_stack, cb_args) {
-        var timeout = cb_args.timeout || 1000 * 5;
-        var cmd = cb_args.cmd || 0;
-        var args = cb_args.args || {};
-        var cb_exec_arg = cb_args.cb_exec_arg || null;
-        var cb_exec = cb_args.cb_exec || null;
-        var cb_error = cb_args.cb_error || null;
-
-        if ((!_.isNull(cb_exec) && !_.isFunction(cb_exec)) ||
-            (!_.isNull(cb_error) && !_.isFunction(cb_error))
-        ) {
-            log.e('Invalid Param.');
-            return;
-        }
-
-        var args_ = encodeURIComponent(JSON.stringify(args));
-        log.v('local_task: args:', args_);
-        if (timeout === -1) {
-            timeout = 0;
-        }
-        $.ajax({
-            type: 'GET',
-            timeout: timeout,
-            url: 'http://127.0.0.1:50021/do_task/' + cmd + '?arg=' + args_,
-            jsonp: _assist.jsonp_callback,
-            //data: {arg: args_},
-            dataType: 'jsonp',
-            success: function (ret) {
-                log.v('local task return:', ret);
-                if (ret.code != 0) {
-                    log.e('load failed. maybe you not login.');
-                    //cb_stack.exec({});
-                } else {
-                    //var task_id = ret.data.task_id;
-                    if (cb_stack != null) {
-                        //cb_stack.add(_assist.local_task_ret, {task_id: task_id, cb_exec_arg:cb_exec_arg, cb_exec: cb_exec, cb_error: cb_error});
-                        //cb_stack.add(ywl.delay_exec, {delay_ms: 2000});
-                        cb_stack.exec();
-                    }
-                }
-            },
-            //error: function () {
-            //	log.e('do task ret failed. maybe assist not start.');
-            //	//cb_stack.exec([]);
-            //	_assist.alert_assist_not_found();
-            //}
-            error: function (jqXhr, error, e) {
-                log.e('do local task failed.');
-                _assist.ajax_error(cb_stack, {error: error});
-                //cb_stack.exec([]);
-                //_assist.alert_assist_not_found();
-            }
-        });
-    };
-
-    _assist.local_task_ret = function (cb_stack, cb_args) {
-        log.v('local_task_ret before send req.');
-
-        var task_id = cb_args.task_id || 0;
-        var cb_exec = cb_args.cb_exec || null;
-        var cb_error = cb_args.cb_error || null;
-        var cb_exec_arg = cb_args.cb_exec_arg || null;
-
-        $.ajax({
-            type: 'GET',
-            timeout: 0,
-            url: 'http://127.0.0.1:50021/get_ret/' + task_id,
-            jsonp: _assist.jsonp_callback,
-            //data: {},
-            dataType: 'jsonp',
-            success: function (ret) {
-                log.v('local task ret:', ret);
-
-                if (ret.code != 0) {
-                    if (_.isFunction(cb_error)) {
-                        cb_error(cb_stack, {err_code: ret.code});
-                    } else {
-                        log.e('load failed. maybe you not login.');
-                        ywl.notify_error('执行本地任务时发生错误，错误码：' + ret.code + '。');
-                    }
-                } else {
-                    log.v('task-status:', ret.data.status);
-                    // 如果返回值为“尚未执行完成”，那么就将local_task_ret加入堆栈，继续调用。
-
-                    // TODO: 只能通过轮询的方式进行吗？能否启动任务后立即去获取结果，设置一个超时
-                    // 如果超时了，则立即再次发送获取结果的请求，这样，一旦结果返回了，就会立即得到响应。
-
-                    if (ret.data.status != 4) {
-                        cb_stack
-                            .add(_assist.local_task_ret, cb_args)
-                            .add(ywl.delay_exec, {delay_ms: 2000});
-
-                        if (_.isFunction(cb_exec)) {
-                            cb_exec(cb_stack, cb_exec_arg, {data: ret.data});
-                        } else {
-                            cb_stack.exec();
-                        }
-                    } else {
-                        cb_stack.exec(ret.data);
-                    }
-                }
-            },
-            //error: function () {
-            //	log.e('get task ret failed. maybe assist not start.');
-            //	//cb_stack.exec([]);
-            //	_assist.alert_assist_not_found();
-            //}
-            error: function (jqXhr, error, e) {
-                log.e('get local task result failed.');
-                _assist.ajax_error(cb_stack, {error: error});
-                //cb_stack.exec([]);
-                //_assist.alert_assist_not_found();
-            }
-        });
-    };
-
-    _assist.start_event_handler = function (func_event_handler) {
-        // TODO: 使用Comet方式进行数据推送，避免页面总是处于加载状态
-        // 参考：http://www.bitscn.com/school/Javascript/201604/683480.html
-
-        var _internal_starter = function () {
-            _assist._event_last_index = 0;
-            var cb_stack = CALLBACK_STACK.create();
-
-
-            var chk_event = function (cb_stack, cb_args, ex_args) {
-                //log.v('wait-event return:', ex_args);
-
-                if (ex_args.code != 0) {
-                    // 除非格式不正确，否则不会执行到这里的
-                    log.e('can not communicate with assist.');
-                } else {
-                    func_event_handler(ex_args.data);
-
-                    if (ex_args.data.length == 0) {
-                        // no event.
-                    } else {
-                        _assist._event_last_index = ex_args.data[ex_args.data.length - 1].index;
-                        //log.v('got event. last event index:', _assist._event_last_index);
-                    }
-                }
-
-                cb_stack.add(chk_event);
-
-                var options = {
-                    timeout: 60000,
-                    uri: '/wait-event',
-                    retry: true,
-                    retry_interval: 5000,
-                    args: {idx: _assist._event_last_index}
-                };
-                _assist.jsonp(cb_stack, options);
-
-            };
-
-            cb_stack.add(chk_event);
-
-            var options = {
-                timeout: 60000,
-                uri: '/wait-event',
-                retry: true,
-                retry_interval: 5000,
-                args: {idx: 0}
-            };
-            _assist.jsonp(cb_stack, options);
-        };
-
-        // 暂时的，使用settimeout的方式来启动，可以避免页面总是处于加载状态
-        setTimeout(_internal_starter, 1);
-    };
+//    _assist.logout = function (cb_stack) {
+//        $.ajax({
+//            type: 'GET',
+//            timeout: 1000,
+//            url: _assist.url + '/logout',
+//            jsonp: _assist.jsonp_callback,
+//            data: {},
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                cb_stack.exec();
+//            },
+//            error: function () {
+//                //_assist.alert_assist_not_found();
+//            }
+//        });
+//    };
+//
+//    _assist.do_task = function (cb_stack, cb_args) {
+//
+//        var is_multi_step = cb_args.is_multi_step || 0;
+//        var host_id = cb_args.host_id || 0;
+//        var cmd = cb_args.cmd || 0;
+//        var args = cb_args.args || {};
+//        var cb_exec_arg = cb_args.cb_exec_arg || null;
+//
+//        var cb_exec = cb_args.cb_exec || null;
+//        var cb_error = cb_args.cb_error || null;
+//
+//
+//        if ((!_.isNull(cb_exec) && !_.isFunction(cb_exec)) ||
+//            (!_.isNull(cb_error) && !_.isFunction(cb_error))
+//        ) {
+//            log.e('Invalid Param.');
+//            return;
+//        }
+//
+//        var args_ = encodeURIComponent(JSON.stringify(args));
+//        log.v('do_task: args:', args_);
+//
+//
+//        $.ajax({
+//            type: 'GET',
+//            timeout: 2000,
+//            url: 'http://127.0.0.1:50031/do_task/' + is_multi_step + '/' + host_id + '/' + cmd + '?arg=' + args_,
+//            jsonp: _assist.jsonp_callback,
+//            //data: {arg: args_},
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                log.v('do task return:', ret);
+//                if (ret.code != 0) {
+//                    log.e('load failed. maybe you not login.');
+//                    cb_stack.exec({});
+//                } else {
+//                    var task_id = ret.data.task_id;
+//                    if (cb_stack != null) {
+//                        cb_stack.add(_assist.get_task_ret, {task_id: task_id, cb_exec: cb_exec, cb_exec_arg: cb_exec_arg, cb_error: cb_error});
+//                        cb_stack.add(ywl.delay_exec, {delay_ms: 500});
+//
+//                        cb_stack.exec();
+//                    }
+//                }
+//            },
+//            error: function (jqXhr, error, e) {
+//                log.e('do task failed.');
+//                _assist.ajax_error(cb_stack, {error: error});
+//                //cb_stack.exec([]);
+//                //_assist.alert_assist_not_found();
+//            }
+//        });
+//    };
+//
+//    _assist.do_task_time_out = function (cb_stack, cb_args, time_out) {
+//
+//        var is_multi_step = cb_args.is_multi_step || 0;
+//        var host_id = cb_args.host_id || 0;
+//        var cmd = cb_args.cmd || 0;
+//        var args = cb_args.args || {};
+//        var cb_exec = cb_args.cb_exec || null;
+//        var cb_error = cb_args.cb_error || null;
+//
+//        if ((!_.isNull(cb_exec) && !_.isFunction(cb_exec)) ||
+//            (!_.isNull(cb_error) && !_.isFunction(cb_error))
+//        ) {
+//            log.e('Invalid Param.');
+//            return;
+//        }
+//
+//        var args_ = encodeURIComponent(JSON.stringify(args));
+//        log.v('do_task: args:', args_);
+//
+//
+//        $.ajax({
+//            type: 'GET',
+//            timeout: time_out,
+//            url: 'http://127.0.0.1:50031/do_task/' + is_multi_step + '/' + host_id + '/' + cmd + '?arg=' + args_,
+//            jsonp: _assist.jsonp_callback,
+//            //data: {arg: args_},
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                log.v('do task return:', ret);
+//                if (ret.code != 0) {
+//                    log.e('load failed. maybe you not login.');
+//                    cb_stack.exec({});
+//                } else {
+//                    var task_id = ret.data.task_id;
+//                    if (cb_stack != null) {
+//                        cb_stack.add(_assist.get_task_ret_time_out, {task_id: task_id, time_out: time_out, cb_exec: cb_exec, cb_error: cb_error});
+//                        cb_stack.add(ywl.delay_exec, {delay_ms: 500});
+//
+//                        cb_stack.exec();
+//                    }
+//                }
+//            },
+//            //error: function () {
+//            //	log.e('do task ret failed. maybe assist not start.');
+//            //	//cb_stack.exec([]);
+//            //	_assist.alert_assist_not_found();
+//            //}
+//            error: function (jqXhr, error, e) {
+//                log.e('do task with timeout failed.');
+//                _assist.ajax_error(cb_stack, {error: error});
+//                //cb_stack.exec([]);
+//                //_assist.alert_assist_not_found();
+//            }
+//        });
+//    };
+//
+//    _assist.get_task_ret = function (cb_stack, cb_args) {
+//
+//        var task_id = cb_args.task_id || 0;
+//        var cb_exec = cb_args.cb_exec || null;
+//        var cb_error = cb_args.cb_error || null;
+//        var cb_exec_arg = cb_args.cb_exec_arg || null;
+//        $.ajax({
+//            type: 'GET',
+//            timeout: 2000,
+//            url: 'http://127.0.0.1:50031/get_task_ret/' + task_id,
+//            jsonp: _assist.jsonp_callback,
+//            data: {},
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                //log.v('get task ret, status:', ret.data.task_status, ret);
+//
+//                if (ret.code != 0) {
+//                    if (_.isFunction(cb_error)) {
+//                        cb_error(cb_stack, {err_code: ret.code});
+//                    } else {
+//                        log.e('load failed. maybe you not login.');
+//                        //cb_stack.exec({});
+//                        ywl.notify_error('执行本地任务时发生错误，错误码：' + ret.code + '。');
+//                    }
+//                    //log.e('load failed. maybe you not login.');
+//                    //cb_stack.exec({});
+//                } else {
+//                    //log.v('task-status:', ret.data.task_status);
+//                    // 如果返回值为“尚未执行完成”，那么就将get_task_ret加入堆栈，继续调用。
+//
+//                    if (ret.data.task_status != 4) {
+//                        cb_stack
+//                            .add(_assist.get_task_ret, cb_args)
+//                            .add(ywl.delay_exec, {delay_ms: 500});
+//
+//                        if (_.isFunction(cb_exec)) {
+//                            cb_exec(cb_stack, cb_exec_arg, {data: ret.data});
+//                        } else {
+//                            cb_stack.exec();
+//                        }
+//                    } else {
+//                        cb_stack.exec(ret.data);
+//                    }
+//                }
+//            },
+//            error: function (jqXhr, error, e) {
+//                log.e('get task result failed.');
+//                _assist.ajax_error(cb_stack, {error: error});
+//                //cb_stack.exec([]);
+//                //_assist.alert_assist_not_found();
+//            }
+//        });
+//    };
+//
+//    _assist.get_task_ret_time_out = function (cb_stack, cb_args) {
+//
+//        var task_id = cb_args.task_id || 0;
+//        var time_out = cb_args.time_out || 2000;
+//        var cb_exec = cb_args.cb_exec || null;
+//        var cb_error = cb_args.cb_error || null;
+//
+//        $.ajax({
+//            type: 'GET',
+//            timeout: time_out,
+//            url: 'http://127.0.0.1:50031/get_task_ret/' + task_id,
+//            jsonp: _assist.jsonp_callback,
+//            data: {},
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                log.v('get task ret:', ret);
+//
+//                if (ret.code != 0) {
+//                    if (_.isFunction(cb_error)) {
+//                        cb_error(cb_stack, {err_code: ret.code});
+//                    } else {
+//                        log.e('load failed. maybe you not login.');
+//                        //cb_stack.exec({});
+//                        ywl.notify_error('执行本地任务时发生错误，错误码：' + ret.code + '。');
+//                    }
+//                } else {
+//                    log.v('task-status:', ret.data.task_status);
+//                    // 如果返回值为“尚未执行完成”，那么就将get_task_ret加入堆栈，继续调用。
+//
+//                    if (ret.data.task_status != 4) {
+//                        cb_stack
+//                            .add(_assist.get_task_ret_time_out, cb_args)
+//                            .add(ywl.delay_exec, {delay_ms: 500});
+//
+//                        if (_.isFunction(cb_exec)) {
+//                            cb_exec(cb_stack, {data: ret.data});
+//                        } else {
+//                            cb_stack.exec();
+//                        }
+//                    } else {
+//                        cb_stack.exec(ret.data);
+//                    }
+//                }
+//            },
+//            //error: function () {
+//            //	log.e('get task ret failed. maybe assist not start.');
+//            //	//cb_stack.exec([]);
+//            //	_assist.alert_assist_not_found();
+//            //}
+//            error: function (jqXhr, error, e) {
+//                log.e('get task result with timeout failed.');
+//                _assist.ajax_error(cb_stack, {error: error});
+//                //cb_stack.exec([]);
+//                //_assist.alert_assist_not_found();
+//            }
+//        });
+//    };
+//
+//    _assist.select_local_path = function (cb_stack, cb_args) {
+//        var arg = cb_args.args || {};
+//        arg = encodeURIComponent(JSON.stringify(arg));
+//        log.v('select_local_path: args:', arg);
+//
+//        $.ajax({
+//            type: 'GET',
+//            //timeout: 1000,
+//            url: _assist.url + '/select_path?arg=' + arg,
+//            jsonp: _assist.jsonp_callback,
+//            //data: _args,
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                if (ret.code == 0) {
+//                    log.v('select-local-file return:', ret.data);
+//                    cb_stack.exec(ret.data);
+//                }
+//
+//            },
+//            //error: function () {
+//            //	//self.alert_assist_not_found();
+//            //	log.e('select-local-file failed');
+//            //}
+//            error: function (jqXhr, error, e) {
+//                log.e('select local path failed.');
+//                _assist.ajax_error(cb_stack, {error: error});
+//                //cb_stack.exec([]);
+//                //_assist.alert_assist_not_found();
+//            }
+//        });
+//    };
+//
+//    _assist.read_local_file = function (cb_stack, cb_args) {
+//        var arg = cb_args.args || {};
+//        arg = encodeURIComponent(JSON.stringify(arg));
+//        log.v('read_local_file: args:', arg);
+//
+//        $.ajax({
+//            type: 'GET',
+//            //timeout: 1000,
+//            url: _assist.url + '/read_local_file?arg=' + arg,
+//            jsonp: _assist.jsonp_callback,
+//            //data: _args,
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                if (ret.code == 0) {
+//                    log.v('read_local_file return:', ret.data);
+//                    cb_stack.exec(ret.data);
+//                }
+//
+//            },
+//            //error: function () {
+//            //	//self.alert_assist_not_found();
+//            //	log.e('read_local_file failed');
+//            //}
+//            error: function (jqXhr, error, e) {
+//                log.e('read local file failed.');
+//                _assist.ajax_error(cb_stack, {error: error});
+//                //cb_stack.exec([]);
+//                //_assist.alert_assist_not_found();
+//            }
+//        });
+//    };
+//
+//    _assist.get_file_task_list = function (cb_stack, cb_args) {
+//        var arg = cb_args.args || {};
+//        arg = encodeURIComponent(JSON.stringify(arg));
+//        log.v('select_local_path: args:', arg);
+//
+//        $.ajax({
+//            type: 'GET',
+//            timeout: 0,
+//            url: _assist.url + '/get_file_task_list?arg=' + arg,
+//            jsonp: _assist.jsonp_callback,
+//            //data: _args,
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                if (ret.code == 0) {
+//                    log.v('select-local-file return:', ret.data);
+//                    cb_stack.exec(ret.data);
+//                }
+//            },
+//            //error: function () {
+//            //	log.e('select-local-file failed');
+//            //}
+//            error: function (jqXhr, error, e) {
+//                log.e('get file task list failed.');
+//                _assist.ajax_error(cb_stack, {error: error});
+//                //cb_stack.exec([]);
+//                //_assist.alert_assist_not_found();
+//            }
+//        });
+//    };
+//
+//    _assist.jsonp = function (cb_stack, cb_args) {
+//        var _timeout = _.isUndefined(cb_args.timeout) ? 1000 : cb_args.timeout;// cb_args.timeout || 1000;
+//        var _uri = cb_args.uri;
+//        var _retry = cb_args.retry || false;
+//        var _retry_interval = cb_args.retry_interval || 5000;
+//        var _args = cb_args.args || {};
+//        _args = encodeURIComponent(JSON.stringify(_args));
+//
+//        $.ajax({
+//            type: 'GET',
+//            timeout: _timeout,
+//            url: _assist.url + _uri + '?arg=' + _args,
+//            jsonp: _assist.jsonp_callback,
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                //log.v('ajax_get_jsonp return:', ret);
+//                cb_stack.exec(ret)
+//            },
+//            error: function (xhr, error) {
+//                // if (xhr.status == 404)
+//
+//                // 可能此时assist关停了，我们等待一会儿再重试
+//                if (_retry) {
+//                    cb_stack
+//                        .add(_assist.jsonp, cb_args)
+//                        .add(ywl.delay_exec, {delay_ms: _retry_interval})
+//                        .exec();
+//                }
+//            }
+//        });
+//    };
+//
+//    _assist.local_task = function (cb_stack, cb_args) {
+//        var timeout = cb_args.timeout || 1000 * 5;
+//        var cmd = cb_args.cmd || 0;
+//        var args = cb_args.args || {};
+//        var cb_exec_arg = cb_args.cb_exec_arg || null;
+//        var cb_exec = cb_args.cb_exec || null;
+//        var cb_error = cb_args.cb_error || null;
+//
+//        if ((!_.isNull(cb_exec) && !_.isFunction(cb_exec)) ||
+//            (!_.isNull(cb_error) && !_.isFunction(cb_error))
+//        ) {
+//            log.e('Invalid Param.');
+//            return;
+//        }
+//
+//        var args_ = encodeURIComponent(JSON.stringify(args));
+//        log.v('local_task: args:', args_);
+//        if (timeout === -1) {
+//            timeout = 0;
+//        }
+//        $.ajax({
+//            type: 'GET',
+//            timeout: timeout,
+//            url: 'http://127.0.0.1:50021/do_task/' + cmd + '?arg=' + args_,
+//            jsonp: _assist.jsonp_callback,
+//            //data: {arg: args_},
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                log.v('local task return:', ret);
+//                if (ret.code != 0) {
+//                    log.e('load failed. maybe you not login.');
+//                    //cb_stack.exec({});
+//                } else {
+//                    //var task_id = ret.data.task_id;
+//                    if (cb_stack != null) {
+//                        //cb_stack.add(_assist.local_task_ret, {task_id: task_id, cb_exec_arg:cb_exec_arg, cb_exec: cb_exec, cb_error: cb_error});
+//                        //cb_stack.add(ywl.delay_exec, {delay_ms: 2000});
+//                        cb_stack.exec();
+//                    }
+//                }
+//            },
+//            //error: function () {
+//            //	log.e('do task ret failed. maybe assist not start.');
+//            //	//cb_stack.exec([]);
+//            //	_assist.alert_assist_not_found();
+//            //}
+//            error: function (jqXhr, error, e) {
+//                log.e('do local task failed.');
+//                _assist.ajax_error(cb_stack, {error: error});
+//                //cb_stack.exec([]);
+//                //_assist.alert_assist_not_found();
+//            }
+//        });
+//    };
+//
+//    _assist.local_task_ret = function (cb_stack, cb_args) {
+//        log.v('local_task_ret before send req.');
+//
+//        var task_id = cb_args.task_id || 0;
+//        var cb_exec = cb_args.cb_exec || null;
+//        var cb_error = cb_args.cb_error || null;
+//        var cb_exec_arg = cb_args.cb_exec_arg || null;
+//
+//        $.ajax({
+//            type: 'GET',
+//            timeout: 0,
+//            url: 'http://127.0.0.1:50021/get_ret/' + task_id,
+//            jsonp: _assist.jsonp_callback,
+//            //data: {},
+//            dataType: 'jsonp',
+//            success: function (ret) {
+//                log.v('local task ret:', ret);
+//
+//                if (ret.code != 0) {
+//                    if (_.isFunction(cb_error)) {
+//                        cb_error(cb_stack, {err_code: ret.code});
+//                    } else {
+//                        log.e('load failed. maybe you not login.');
+//                        ywl.notify_error('执行本地任务时发生错误，错误码：' + ret.code + '。');
+//                    }
+//                } else {
+//                    log.v('task-status:', ret.data.status);
+//                    // 如果返回值为“尚未执行完成”，那么就将local_task_ret加入堆栈，继续调用。
+//
+//                    // TODO: 只能通过轮询的方式进行吗？能否启动任务后立即去获取结果，设置一个超时
+//                    // 如果超时了，则立即再次发送获取结果的请求，这样，一旦结果返回了，就会立即得到响应。
+//
+//                    if (ret.data.status != 4) {
+//                        cb_stack
+//                            .add(_assist.local_task_ret, cb_args)
+//                            .add(ywl.delay_exec, {delay_ms: 2000});
+//
+//                        if (_.isFunction(cb_exec)) {
+//                            cb_exec(cb_stack, cb_exec_arg, {data: ret.data});
+//                        } else {
+//                            cb_stack.exec();
+//                        }
+//                    } else {
+//                        cb_stack.exec(ret.data);
+//                    }
+//                }
+//            },
+//            //error: function () {
+//            //	log.e('get task ret failed. maybe assist not start.');
+//            //	//cb_stack.exec([]);
+//            //	_assist.alert_assist_not_found();
+//            //}
+//            error: function (jqXhr, error, e) {
+//                log.e('get local task result failed.');
+//                _assist.ajax_error(cb_stack, {error: error});
+//                //cb_stack.exec([]);
+//                //_assist.alert_assist_not_found();
+//            }
+//        });
+//    };
+//
+//    _assist.start_event_handler = function (func_event_handler) {
+//        // TODO: 使用Comet方式进行数据推送，避免页面总是处于加载状态
+//        // 参考：http://www.bitscn.com/school/Javascript/201604/683480.html
+//
+//        var _internal_starter = function () {
+//            _assist._event_last_index = 0;
+//            var cb_stack = CALLBACK_STACK.create();
+//
+//
+//            var chk_event = function (cb_stack, cb_args, ex_args) {
+//                //log.v('wait-event return:', ex_args);
+//
+//                if (ex_args.code != 0) {
+//                    // 除非格式不正确，否则不会执行到这里的
+//                    log.e('can not communicate with assist.');
+//                } else {
+//                    func_event_handler(ex_args.data);
+//
+//                    if (ex_args.data.length == 0) {
+//                        // no event.
+//                    } else {
+//                        _assist._event_last_index = ex_args.data[ex_args.data.length - 1].index;
+//                        //log.v('got event. last event index:', _assist._event_last_index);
+//                    }
+//                }
+//
+//                cb_stack.add(chk_event);
+//
+//                var options = {
+//                    timeout: 60000,
+//                    uri: '/wait-event',
+//                    retry: true,
+//                    retry_interval: 5000,
+//                    args: {idx: _assist._event_last_index}
+//                };
+//                _assist.jsonp(cb_stack, options);
+//
+//            };
+//
+//            cb_stack.add(chk_event);
+//
+//            var options = {
+//                timeout: 60000,
+//                uri: '/wait-event',
+//                retry: true,
+//                retry_interval: 5000,
+//                args: {idx: 0}
+//            };
+//            _assist.jsonp(cb_stack, options);
+//        };
+//
+//        // 暂时的，使用settimeout的方式来启动，可以避免页面总是处于加载状态
+//        setTimeout(_internal_starter, 1);
+//    };
 
     return _assist;
 };

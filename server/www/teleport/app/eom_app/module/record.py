@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
+
 import os
 import shutil
 import struct
 
-from .common import *
+from eom_app.app.configs import app_cfg
+from eom_app.app.db import get_db
+from eom_common.eomcore.logger import log
+from eom_common.eomcore.utils import timestamp_utc_now
 
 
 def read_record_head(record_id):
-    record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
+    record_path = os.path.join(app_cfg().core.replay_path, 'ssh', '{:06d}'.format(int(record_id)))
     header_file_path = os.path.join(record_path, 'tp-ssh.tpr')
     file = None
     try:
@@ -54,7 +58,7 @@ def read_record_head(record_id):
 
 
 # def read_record_term(record_id):
-#     record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{}'.format(record_id))
+#     record_path = os.path.join(cfg.core.replay_path, 'ssh', '{}'.format(record_id))
 #     term_file_path = os.path.join(record_path, 'term.init')
 #     # term_file_path = r"E:\GitWork\teleport\share\data\replay\ssh\103\term.init"
 #
@@ -122,7 +126,7 @@ def read_record_head(record_id):
 
 
 def read_record_info(record_id, file_id):
-    record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(int(record_id)))
+    record_path = os.path.join(app_cfg().core.replay_path, 'ssh', '{:06d}'.format(int(record_id)))
     file_info = os.path.join(record_path, 'tp-ssh.{:03d}'.format(int(file_id)))
     file = None
     try:
@@ -172,6 +176,7 @@ def read_record_info(record_id, file_id):
                 break
 
     except Exception as e:
+        log.e('failed to read record file: {}\n'.format(file_info))
         return None
     finally:
         if file is not None:
@@ -181,24 +186,70 @@ def read_record_info(record_id, file_id):
 
 def delete_log(log_list):
     try:
-        sql_exec = get_db_con()
+        where = list()
+        for item in log_list:
+            where.append(' `id`={}'.format(item))
+
+        db = get_db()
+        sql = 'DELETE FROM `{}log` WHERE{};'.format(db.table_prefix, ' OR'.join(where))
+        ret = db.exec(sql)
+        if not ret:
+            return False
+
+        # TODO: 此处应该通过json-rpc接口通知core服务来删除重放文件。
         for item in log_list:
             log_id = int(item)
-            str_sql = 'DELETE FROM ts_log WHERE id={}'.format(log_id)
-            ret = sql_exec.ExecProcNonQuery(str_sql)
-            if not ret:
-                return False
-                #     删除录像文件
             try:
-                record_path = os.path.join(cfg.data_path, 'replay', 'ssh', '{:06d}'.format(log_id))
+                record_path = os.path.join(app_cfg().core.replay_path, 'ssh', '{:06d}'.format(log_id))
                 if os.path.exists(record_path):
                     shutil.rmtree(record_path)
-                record_path = os.path.join(cfg.data_path, 'replay', 'rdp', '{:06d}'.format(log_id))
+                record_path = os.path.join(app_cfg().core.replay_path, 'rdp', '{:06d}'.format(log_id))
                 if os.path.exists(record_path):
                     shutil.rmtree(record_path)
             except Exception:
                 pass
 
         return True
+    except:
+        return False
+
+
+def session_fix():
+    try:
+        db = get_db()
+        sql = 'UPDATE `{}log` SET `ret_code`=7 WHERE `ret_code`=0;'.format(db.table_prefix)
+        return db.exec(sql)
+    except:
+        return False
+
+
+def session_begin(sid, acc_name, host_ip, sys_type, host_port, auth_mode, user_name, protocol):
+    try:
+        db = get_db()
+        sql = 'INSERT INTO `{}log` (`session_id`,`account_name`,`host_ip`,`sys_type`,`host_port`,`auth_type`,`user_name`,`ret_code`,`begin_time`,`end_time`,`log_time`,`protocol`) ' \
+              'VALUES ("{}","{}","{}",{},{},{},"{}",{},{},{},"{}",{});' \
+              ''.format(db.table_prefix,
+                        sid, acc_name, host_ip, sys_type, host_port, auth_mode, user_name, 0, timestamp_utc_now(), 0, '', protocol)
+
+        ret = db.exec(sql)
+        if not ret:
+            return -101
+
+        sql = 'SELECT last_insert_rowid()'
+        db_ret = db.query(sql)
+        if db_ret is None:
+            return -102
+        user_id = db_ret[0][0]
+        return user_id
+
+    except:
+        return False
+
+
+def session_end(record_id, ret_code):
+    try:
+        db = get_db()
+        sql = 'UPDATE `{}log` SET `ret_code`={}, `end_time`={} WHERE `id`={};'.format(db.table_prefix, int(ret_code), timestamp_utc_now(), int(record_id))
+        return db.exec(sql)
     except:
         return False

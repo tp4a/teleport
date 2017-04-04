@@ -1056,16 +1056,16 @@ ywl.create_table_render = function (tbl, on_created) {
 			return g.group_name;
 	};
 
-	_tbl_render.command_info = function (row_id, fields) {
-		var command = get_command_name_by_id(fields.cmd_id);
-		if (command === null)
-			return '命令 ' + fields.cmd_id;
-		else
-			//return '<a href="#" data-toggle="tooltip" title=\"' + command.cmd_name + '\">' + command.cmd_desc + '</a>';
-			return '<span data-toggle="tooltip" title=\"' + command.cmd_name + '\">' + command.cmd_desc + '</span>';
-		//var info = command.cmd_name + ' '+ command.cmd_desc;
-		//return info;
-	};
+//	_tbl_render.command_info = function (row_id, fields) {
+//		var command = get_command_name_by_id(fields.cmd_id);
+//		if (command === null)
+//			return '命令 ' + fields.cmd_id;
+//		else
+//			//return '<a href="#" data-toggle="tooltip" title=\"' + command.cmd_name + '\">' + command.cmd_desc + '</a>';
+//			return '<span data-toggle="tooltip" title=\"' + command.cmd_name + '\">' + command.cmd_desc + '</span>';
+//		//var info = command.cmd_name + ' '+ command.cmd_desc;
+//		//return info;
+//	};
 	_tbl_render.user_info = function (row_id, fields) {
 		var user_info = get_user_info_by_id(fields.u_id);
 		if (user_info === null)
@@ -1075,36 +1075,36 @@ ywl.create_table_render = function (tbl, on_created) {
 		//var info = command.cmd_name + ' '+ command.cmd_desc;
 		//return info;
 	};
-	_tbl_render.event_type = function (row_id, fields) {
-		var _e_id = fields.id1 + '-' + fields.id2 + '-' + fields.id3 + '-' + fields.id4;
-		var content = '';
-		if (_e_id == '3-1-1-100') {
-			content = '系统性能监控';
-			return '<a href="#"> ' + content + '</a>';
-		} else if (_e_id == '3-1-1-107') {
-			content = 'TCP监听白名单监控';
-			return '<a href="#"> ' + content + '</a>';
-		} else if (_e_id == '3-1-1-108') {
-			content = 'UDP白名单监控';
-			return '<a href="#"> ' + content + '</a>';
-		} else if (_e_id == '3-1-1-109') {
-			content = 'TCP连接白名单监控';
-			return '<a href="#"> ' + content + '</a>';
-		} else if (_e_id == '3-1-1-110') {
-			content = '进程白名单监控';
-			return '<a href="#"> ' + content + '</a>';
-		} else if (_e_id == '3-1-1-7') {
-			content = '系统用户监控';
-			return '<a href="#"> ' + content + '</a>';
-		} else {
-			content = '未知';
-			return '<a href="#"> ' + content + '</a>';
-		}
-
-
-		//var info = command.cmd_name + ' '+ command.cmd_desc;
-		//return info;
-	};
+//	_tbl_render.event_type = function (row_id, fields) {
+//		var _e_id = fields.id1 + '-' + fields.id2 + '-' + fields.id3 + '-' + fields.id4;
+//		var content = '';
+//		if (_e_id == '3-1-1-100') {
+//			content = '系统性能监控';
+//			return '<a href="#"> ' + content + '</a>';
+//		} else if (_e_id == '3-1-1-107') {
+//			content = 'TCP监听白名单监控';
+//			return '<a href="#"> ' + content + '</a>';
+//		} else if (_e_id == '3-1-1-108') {
+//			content = 'UDP白名单监控';
+//			return '<a href="#"> ' + content + '</a>';
+//		} else if (_e_id == '3-1-1-109') {
+//			content = 'TCP连接白名单监控';
+//			return '<a href="#"> ' + content + '</a>';
+//		} else if (_e_id == '3-1-1-110') {
+//			content = '进程白名单监控';
+//			return '<a href="#"> ' + content + '</a>';
+//		} else if (_e_id == '3-1-1-7') {
+//			content = '系统用户监控';
+//			return '<a href="#"> ' + content + '</a>';
+//		} else {
+//			content = '未知';
+//			return '<a href="#"> ' + content + '</a>';
+//		}
+//
+//
+//		//var info = command.cmd_name + ' '+ command.cmd_desc;
+//		//return info;
+//	};
 	_tbl_render.event_code = function (row_id, fields) {
 		var _e_id = fields.id1 + '-' + fields.id2 + '-' + fields.id3 + '-' + fields.id4;
 		var _e_info = get_event_code_by_id(_e_id);

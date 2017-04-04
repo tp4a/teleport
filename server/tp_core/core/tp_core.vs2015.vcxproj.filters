@@ -8,9 +8,6 @@
     <Filter Include="main app">
       <UniqueIdentifier>{0155895f-d6be-4e0f-970d-9b6b5c759502}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sqlite">
-      <UniqueIdentifier>{4d2bbfac-6b91-4054-a4e2-38231c443939}</UniqueIdentifier>
-    </Filter>
     <Filter Include="libex">
       <UniqueIdentifier>{9c2d60b3-2932-485b-bccd-b66886b0286b}</UniqueIdentifier>
     </Filter>
@@ -55,9 +52,6 @@
     <ClCompile Include="ts_crypto.cpp">
       <Filter>main app</Filter>
     </ClCompile>
-    <ClCompile Include="ts_db.cpp">
-      <Filter>main app</Filter>
-    </ClCompile>
     <ClCompile Include="ts_env.cpp">
       <Filter>main app</Filter>
     </ClCompile>
@@ -88,9 +82,6 @@
     <ClCompile Include="..\..\..\common\libex\src\ex_log.cpp">
       <Filter>libex\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\external\sqlite\sqlite3.c">
-      <Filter>sqlite</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\external\mongoose\mongoose.c">
       <Filter>mongoose</Filter>
     </ClCompile>
@@ -112,6 +103,9 @@
     <ClCompile Include="..\..\..\external\mbedtls\library\sha1.c">
       <Filter>mbedtls\library</Filter>
     </ClCompile>
+    <ClCompile Include="ts_web_rpc.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ts_main.h">
@@ -124,9 +118,6 @@
       <Filter>main app</Filter>
     </ClInclude>
     <ClInclude Include="ts_crypto.h">
-      <Filter>main app</Filter>
-    </ClInclude>
-    <ClInclude Include="ts_db.h">
       <Filter>main app</Filter>
     </ClInclude>
     <ClInclude Include="ts_env.h">
@@ -171,12 +162,6 @@
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\external\sqlite\sqlite3.h">
-      <Filter>sqlite</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\external\sqlite\sqlite3ext.h">
-      <Filter>sqlite</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\external\jsoncpp\include\json\json.h">
       <Filter>jsoncpp\header</Filter>
     </ClInclude>
@@ -188,6 +173,9 @@
     </ClInclude>
     <ClInclude Include="..\common\ts_const.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_web_rpc.h">
+      <Filter>main app</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

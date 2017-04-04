@@ -36,7 +36,7 @@ static ex_wstr g_py_main_func;
 #define RUN_UNINST_SRV		4
 static ex_u8 g_run_type = RUN_UNKNOWN;
 
-#define EOM_WEB_SERVICE_NAME		L"EOM Teleport Web Service"
+#define EOM_WEB_SERVICE_NAME		L"Teleport Web Service"
 
 static bool _run_daemon(void);
 
@@ -248,30 +248,47 @@ int _app_main(int argc, wchar_t** argv)
 	if (!_process_cmd_line(argc, argv))
 		return 1;
 
-	if (!g_env.init())
+	if (g_run_type == RUN_PY_SCRIPT)
 	{
-		EXLOGE("[tpweb] env init failed.\n");
-		return 1;
+		if (!g_env.init(false))
+		{
+			EXLOGE("[tpweb] env init failed.\n");
+			return 1;
+		}
+
+		return _main_loop();
 	}
 
 #ifdef EX_DEBUG
 	EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
 #endif
 
-	if (g_run_type == RUN_PY_SCRIPT)
-	{
-		return _main_loop();
-	}
 #ifdef EX_OS_WIN32
-	else if (g_run_type == RUN_INSTALL_SRV)
+	if (g_run_type == RUN_INSTALL_SRV)
 	{
+		if (!g_env.init(false))
+		{
+			EXLOGE("[tpweb] env init failed.\n");
+			return 1;
+		}
 		return service_install();
 	}
 	else if(g_run_type == RUN_UNINST_SRV)
 	{
+		if (!g_env.init(false))
+		{
+			EXLOGE("[tpweb] env init failed.\n");
+			return 1;
+		}
 		return service_uninstall();
 	}
 #endif
+
+	if (!g_env.init(true))
+	{
+		EXLOGE("[tpweb] env init failed.\n");
+		return 1;
+	}
 
 	if (!g_is_debug)
 	{
@@ -517,7 +534,7 @@ static bool _run_daemon(void)
 
 
 //===============================================================
-// 演示如何加入内建模块供脚本调用
+// 加入内建模块供脚本调用
 //===============================================================
 PyObject* _py_log_output(PyObject* self, PyObject* args)
 {
@@ -534,8 +551,8 @@ PyObject* _py_log_output(PyObject* self, PyObject* args)
 
 	ex_wstr tmp;
 	ex_astr2wstr(msg, tmp, EX_CODEPAGE_UTF8);
+//    EXLOGE(L"(%d) %ls.\n", level, tmp.c_str());
 
-	//EXLOGV(msg);
 	switch (level)
 	{
 	case EX_LOG_LEVEL_DEBUG:
@@ -555,7 +572,7 @@ PyObject* _py_log_output(PyObject* self, PyObject* args)
 		break;
 	default:
 		PYLIB_RETURN_FALSE;
-		break;
+//		break;
 	}
 
 	//return pylib_PyLong_FromLong(0x010001);
@@ -584,6 +601,8 @@ PyObject* _py_log_console(PyObject* self, PyObject* args)
 		EXLOGE("invalid args for _py_log_console().\n");
 		PYLIB_RETURN_FALSE;
 	}
+
+//	EXLOGE("to_console=%s\n", to_console?"true":"false");
 
 	EXLOG_CONSOLE(to_console);
 

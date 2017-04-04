@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+from . import rpc
 from . import auth
 from . import host
 from . import cert
@@ -10,6 +11,7 @@ from . import set
 from . import group
 from . import index
 from . import record
+from . import maintenance
 import tornado.web
 
 from eom_app.app.configs import app_cfg
@@ -21,12 +23,19 @@ __all__ = ['controllers']
 controllers = [
     (r'/', index.IndexHandler),
 
+    (r'/maintenance/install', maintenance.InstallHandler),
+    (r'/maintenance/upgrade', maintenance.UpgradeHandler),
+    (r'/maintenance/rpc', maintenance.RpcHandler),
+    (r'/maintenance/', maintenance.IndexHandler),
+    (r'/maintenance', maintenance.IndexHandler),
+
+    (r'/rpc', rpc.RpcHandler),
+
     (r'/auth/login', auth.LoginHandler),
     (r'/auth/verify-user', auth.VerifyUser),
     (r'/auth/logout', auth.LogoutHandler),
     (r'/auth/get-captcha', auth.GetCaptchaHandler),
     (r'/auth/verify-captcha', auth.VerifyCaptchaHandler),
-    (r'/auth/verify-ticket', auth.VerifyTicketHandler),
     (r'/auth/modify-pwd', auth.ModifyPwd),
 
     (r'/group/list', group.GetListHandler),
@@ -42,7 +51,10 @@ controllers = [
     (r'/user/list', user.GetListHandler),
 
     # add another path to static-path
+
+    # todo: 重放数据路径是动态从core服务的json-rpc接口获取的，因此这里的数据获取方式需要改变
     (r"/log/replay/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
+
     (r'/log/list', record.LogList),
     (r'/log/record/(.*)/(.*)', record.RecordHandler),
     (r'/log/command-log/(.*)/(.*)', record.ComandLogHandler),
@@ -71,7 +83,7 @@ controllers = [
     (r'/host/add-host', host.AddHost),
     (r'/host/lock-host', host.LockHost),
     (r'/host/delete-host', host.DeleteHost),
-    (r'/host/export-host', host.ExportHost),
+    (r'/host/export-host', host.ExportHostHandler),
     (r'/host/get-cert-list', host.GetCertList),
     (r'/host/add-cert', host.AddCert),
     (r'/host/delete-cert', host.DeleteCert),
@@ -81,10 +93,10 @@ controllers = [
     (r'/host/update-group', host.UpdateGroup),
     (r'/host/delete-group', host.DeleteGroup),
     (r'/host/add-host-to-group', host.AddHostToGroup),
-    (r'/host/get-host-extend-info', host.GetHostExtendInfo),
-    (r'/host/update-host-extend-info', host.UpdateHostExtendInfo),
+    # (r'/host/get-host-extend-info', host.GetHostExtendInfo),
+    # (r'/host/update-host-extend-info', host.UpdateHostExtendInfo),
     (r'/host/update', host.UpdateHandler),
-    (r'/host/load-file', host.LoadFile),
+    (r'/host/upload-import', host.UploadAndImportHandler),
     (r'/host/', host.IndexHandler),
     (r'/host', host.IndexHandler),
     (r'/host/get-session-id', host.GetSessionId),

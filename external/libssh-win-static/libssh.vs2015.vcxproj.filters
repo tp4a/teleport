@@ -63,9 +63,6 @@
     <ClCompile Include="src\connect.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\connector.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\crc32.c">
       <Filter>Source Files</Filter>
     </ClCompile>

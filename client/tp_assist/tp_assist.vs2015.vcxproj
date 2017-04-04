@@ -46,6 +46,8 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\..\out\client\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>..\..\out\_tmp_\$(ProjectName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>D:\apps\vld\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\apps\vld\lib\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -59,7 +61,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WINSOCK_DEPRECATED_NO_WARNINGS;MG_ENABLE_THREADS;MG_DISABLE_HTTP_DIGEST_AUTH;MG_DISABLE_MQTT;MG_DISABLE_SSI;MG_DISABLE_FILESYSTEM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\common\libex\include;..\..\external\jsoncpp\include;..\..\external\openssl\inc32</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\common\teleport;..\..\common\libex\include;..\..\external\jsoncpp\include;..\..\external\openssl\inc32</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -76,7 +78,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WINSOCK_DEPRECATED_NO_WARNINGS;MG_ENABLE_THREADS;MG_DISABLE_HTTP_DIGEST_AUTH;MG_DISABLE_MQTT;MG_DISABLE_SSI;MG_DISABLE_FILESYSTEM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\common\libex\include;..\..\external\jsoncpp\include;..\..\external\openssl\inc32</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\common\teleport;..\..\common\libex\include;..\..\external\jsoncpp\include;..\..\external\openssl\inc32</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -98,6 +100,7 @@
     <ClInclude Include="..\..\common\libex\include\ex\ex_thread.h" />
     <ClInclude Include="..\..\common\libex\include\ex\ex_types.h" />
     <ClInclude Include="..\..\common\libex\include\ex\ex_util.h" />
+    <ClInclude Include="..\..\common\teleport\teleport_const.h" />
     <ClInclude Include="..\..\external\mongoose\mongoose.h" />
     <ClInclude Include="dlg_main.h" />
     <ClInclude Include="msocketx.h" />

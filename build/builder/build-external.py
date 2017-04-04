@@ -1,25 +1,17 @@
-#!/bin/env python3
 # -*- coding: utf-8 -*-
 
-import codecs
-import shutil
-import time
 from core import colorconsole as cc
 from core import utils
 from core.context import *
 
+from core.env import env
+
 ctx = BuildContext()
 
-ROOT_PATH = utils.cfg.ROOT_PATH
-PATH_EXTERNAL = os.path.join(ROOT_PATH, 'external')
+PATH_EXTERNAL = os.path.join(env.root_path, 'external')
 PATH_DOWNLOAD = os.path.join(PATH_EXTERNAL, '_download_')
 
-OPENSSL_VER = utils.cfg.ver.openssl
-LIBUV_VER = utils.cfg.ver.libuv
-MBEDTLS_VER = utils.cfg.ver.mbedtls
-SQLITE_VER = utils.cfg.ver.sqlite
 LIBSSH_VER = utils.cfg.ver.libssh
-
 
 class BuilderBase:
     def __init__(self):
@@ -32,9 +24,28 @@ class BuilderBase:
     def _init_path(self):
         cc.e("this is a pure-virtual function.")
 
+    def build_jsoncpp(self):
+        file_name = 'jsoncpp-{}.zip'.format(env.ver_jsoncpp)
+        if not utils.download_file('jsoncpp source tarball', 'https://github.com/open-source-parsers/jsoncpp/archive/{}.zip'.format(env.ver_jsoncpp), PATH_DOWNLOAD, file_name):
+            return
+        self._build_jsoncpp(file_name)
+
+    def _build_jsoncpp(self, file_name):
+        cc.e("this is a pure-virtual function.")
+
+    def build_mongoose(self):
+        file_name = 'mongoose-{}.zip'.format(env.ver_mongoose)
+        if not utils.download_file('mongoose source tarball', 'https://github.com/cesanta/mongoose/archive/{}.zip'.format(env.ver_mongoose), PATH_DOWNLOAD, file_name):
+            return
+        self._build_mongoose(file_name)
+
+    def _build_mongoose(self, file_name):
+        cc.e("this is a pure-virtual function.")
+
     def build_openssl(self):
-        file_name = 'openssl-{}.tar.gz'.format(OPENSSL_VER)
-        if not self._download_file('openssl source tarball', 'https://www.openssl.org/source/{}'.format(file_name), file_name):
+        file_name = 'openssl-{}.zip'.format(env.ver_openssl)
+        _alt_ver = '_'.join(env.ver_openssl.split('.'))
+        if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
             return
         self._build_openssl(file_name)
 
@@ -42,8 +53,8 @@ class BuilderBase:
         cc.e("this is a pure-virtual function.")
 
     def build_libuv(self):
-        file_name = 'libuv-{}.zip'.format(LIBUV_VER)
-        if not self._download_file('libuv source tarball', 'https://github.com/libuv/libuv/archive/v{}.zip'.format(LIBUV_VER), file_name):
+        file_name = 'libuv-{}.zip'.format(env.ver_libuv)
+        if not utils.download_file('libuv source tarball', 'https://github.com/libuv/libuv/archive/v{}.zip'.format(env.ver_libuv), PATH_DOWNLOAD, file_name):
             return
         self._build_libuv(file_name)
 
@@ -51,8 +62,8 @@ class BuilderBase:
         cc.e("this is a pure-virtual function.")
 
     def build_mbedtls(self):
-        file_name = 'mbedtls-mbedtls-{}.zip'.format(MBEDTLS_VER)
-        if not self._download_file('mbedtls source tarball', 'https://github.com/ARMmbed/mbedtls/archive/mbedtls-{}.zip'.format(MBEDTLS_VER), file_name):
+        file_name = 'mbedtls-mbedtls-{}.zip'.format(env.ver_mbedtls)
+        if not utils.download_file('mbedtls source tarball', 'https://github.com/ARMmbed/mbedtls/archive/mbedtls-{}.zip'.format(env.ver_mbedtls), PATH_DOWNLOAD, file_name):
             return
         self._build_mbedtls(file_name)
 
@@ -60,8 +71,8 @@ class BuilderBase:
         cc.e("this is a pure-virtual function.")
 
     def build_libssh(self):
-        file_name = 'libssh-{}.zip'.format(LIBSSH_VER)
-        if not self._download_file('mbedtls source tarball', 'https://git.libssh.org/projects/libssh.git/snapshot/libssh-{}.zip'.format(LIBSSH_VER), file_name):
+        file_name = 'libssh-{}.zip'.format(env.ver_libssh)
+        if not utils.download_file('libssh source tarball', 'https://git.libssh.org/projects/libssh.git/snapshot/libssh-{}.zip'.format(env.ver_libssh), PATH_DOWNLOAD, file_name):
             return
         self._build_libssh(file_name)
 
@@ -69,40 +80,157 @@ class BuilderBase:
         cc.e("this is a pure-virtual function.")
 
     def build_sqlite(self):
-        file_name = 'sqlite-autoconf-{}.tar.gz'.format(SQLITE_VER)
-        if not self._download_file('mbedtls source tarball', 'http://sqlite.org/2016/{}'.format(file_name), file_name):
+        file_name = 'sqlite-autoconf-{}.tar.gz'.format(env.ver_sqlite)
+        if not utils.download_file('sqlite source tarball', 'http://sqlite.org/2017/{}'.format(file_name), PATH_DOWNLOAD, file_name):
             return
         self._build_sqlite(file_name)
 
     def _build_sqlite(self, file_name):
         cc.e("this is a pure-virtual function.")
 
-    def _download_file(self, desc, url, file_name):
-        cc.n('downloading {} ...'.format(desc))
-        if os.path.exists(os.path.join(PATH_DOWNLOAD, file_name)):
-            cc.w('already exists, skip.')
-            return True
-
-        os.system('wget --no-check-certificate {} -O "{}/{}"'.format(url, PATH_DOWNLOAD, file_name))
-
-        if not os.path.exists(os.path.join(PATH_DOWNLOAD, file_name)):
-            cc.e('downloading {} from {} failed.'.format(desc, url))
-            return True
-
-        return True
-
     def fix_output(self):
         pass
+
 
 class BuilderWin(BuilderBase):
     def __init__(self):
         super().__init__()
 
     def _init_path(self):
-        cc.e("build external not works for Windows yet.")
+        self.OPENSSL_PATH_SRC = os.path.join(PATH_EXTERNAL, 'openssl')
+        self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
+        self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
+        self.MBEDTLS_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mbedtls')
+        self.LIBSSH_PATH_SRC = os.path.join(PATH_EXTERNAL, 'libssh-win-static')
+
+        self._prepare_python_header()
+
+    def _prepare_python_header(self):
+        cc.n('prepare python header files ...', end='')
+
+        if os.path.exists(os.path.join(PATH_EXTERNAL, 'python', 'include', 'pyctype.h')):
+            cc.w('already exists, skip.')
+            return
+        cc.v('')
+
+        _header_path = None
+        for p in sys.path:
+            if os.path.exists(os.path.join(p, 'include', 'pyctype.h')):
+                _header_path = os.path.join(p, 'include')
+        if _header_path is None:
+            cc.e('\ncan not locate python development include path in:')
+            for p in sys.path:
+                cc.e('  ', p)
+            raise RuntimeError()
+
+        utils.copy_ex(_header_path, os.path.join(PATH_EXTERNAL, 'python', 'include'))
 
     def _build_openssl(self, file_name):
-        cc.e('build openssl-static for Windows...not supported yet.')
+        cc.n('build openssl static library from source code... ', end='')
+        _chk_output = [
+            os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'libeay32.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'ssleay32.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'inc32', 'openssl', 'opensslconf.h'),
+            ]
+
+        need_build = False
+        for f in _chk_output:
+            if not os.path.exists(f):
+                need_build = True
+                break
+
+        if not need_build:
+            cc.w('already exists, skip.')
+            return
+        cc.v('')
+
+        cc.n('prepare openssl source code...')
+        _alt_ver = '_'.join(env.ver_openssl.split('.'))
+        if not os.path.exists(self.OPENSSL_PATH_SRC):
+            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
+            if not os.path.exists(self.OPENSSL_PATH_SRC):
+                raise RuntimeError('can not prepare openssl source code.')
+        else:
+            cc.w('already exists, skip.')
+
+        os.chdir(self.OPENSSL_PATH_SRC)
+        os.system('""{}" Configure VC-WIN32"'.format(env.perl))
+        os.system(r'ms\do_nasm')
+        os.system(r'"{}\VC\bin\vcvars32.bat" && nmake -f ms\nt.mak'.format(env.visual_studio_path))
+
+        for f in _chk_output:
+            if not os.path.exists(f):
+                raise RuntimeError('build openssl static library from source code failed.')
+
+    def _build_libssh(self, file_name):
+        cc.n('build libssh static library from source code... ', end='')
+        out_file = os.path.join(self.LIBSSH_PATH_SRC, 'lib', 'libsshMT.lib')
+
+        need_build = False
+        if not os.path.exists(out_file):
+            need_build = True
+
+        if not need_build:
+            cc.w('already exists, skip.')
+            return
+        cc.v('')
+
+        cc.n('prepare libssh source code... ', end='')
+        _include = os.path.join(self.LIBSSH_PATH_SRC, 'include', 'libssh')
+        _src = os.path.join(self.LIBSSH_PATH_SRC, 'src')
+
+        if not os.path.exists(_include) or not os.path.exists(_src):
+            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            # os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
+
+            _unzipped_path = os.path.join(PATH_EXTERNAL, 'libssh-{}'.format(env.ver_libssh))
+
+            utils.copy_ex(os.path.join(_unzipped_path, 'include', 'libssh'), _include)
+            utils.copy_ex(os.path.join(_unzipped_path, 'src'), _src)
+
+            utils.remove(_unzipped_path)
+
+            if not os.path.exists(_include) or not os.path.exists(_src):
+                raise RuntimeError('\ncan not prepare libssh source code.')
+        else:
+            cc.w('already exists, skip.')
+
+        cc.i('build libssh...')
+        sln_file = os.path.join(self.LIBSSH_PATH_SRC, 'libssh.vs2015.sln')
+        utils.msvc_build(sln_file, 'libssh', ctx.target_path, ctx.bits_path, False)
+        utils.ensure_file_exists(out_file)
+
+    def _build_jsoncpp(self, file_name):
+        cc.n('prepare jsoncpp source code... ', end='')
+        if not os.path.exists(self.JSONCPP_PATH_SRC):
+            cc.v('')
+            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            os.rename(os.path.join(PATH_EXTERNAL, 'jsoncpp-{}'.format(env.ver_jsoncpp)), self.JSONCPP_PATH_SRC)
+        else:
+            cc.w('already exists, skip.')
+
+    def _build_mongoose(self, file_name):
+        cc.n('prepare mongoose source code... ', end='')
+        if not os.path.exists(self.MONGOOSE_PATH_SRC):
+            cc.v('')
+            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            os.rename(os.path.join(PATH_EXTERNAL, 'mongoose-{}'.format(env.ver_mongoose)), self.MONGOOSE_PATH_SRC)
+        else:
+            cc.w('already exists, skip.')
+
+    def _build_mbedtls(self, file_name):
+        cc.n('prepare mbedtls source code... ', end='')
+        if not os.path.exists(self.MBEDTLS_PATH_SRC):
+            cc.v('')
+            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            os.rename(os.path.join(PATH_EXTERNAL, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls)), self.MBEDTLS_PATH_SRC)
+        else:
+            cc.w('already exists, skip.')
+
+    def build_sqlite(self):
+        cc.w('sqlite not need for Windows, skip.')
+        pass
 
     def fix_output(self):
         pass
@@ -115,41 +243,65 @@ class BuilderLinux(BuilderBase):
     def _init_path(self):
         self.PATH_TMP = os.path.join(PATH_EXTERNAL, 'linux', 'tmp')
         self.PATH_RELEASE = os.path.join(PATH_EXTERNAL, 'linux', 'release')
-        self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-{}'.format(OPENSSL_VER))
-        self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(LIBUV_VER))
-        self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(MBEDTLS_VER))
-        self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(LIBSSH_VER))
-        self.SQLITE_PATH_SRC = os.path.join(self.PATH_TMP, 'sqlite-autoconf-{}'.format(SQLITE_VER))
+        self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-{}'.format(env.ver_openssl))
+        self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(env.ver_libuv))
+        self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls))
+        self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(env.ver_libssh))
+        self.SQLITE_PATH_SRC = os.path.join(self.PATH_TMP, 'sqlite-autoconf-{}'.format(env.ver_sqlite))
+
+        self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
+        self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
 
         if not os.path.exists(self.PATH_TMP):
             utils.makedirs(self.PATH_TMP)
 
-    def _build_openssl(self, file_name):
-        if not os.path.exists(self.OPENSSL_PATH_SRC):
-            os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-
-        cc.n('build openssl static...')
-        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
+    def _build_jsoncpp(self, file_name):
+        cc.n('prepare jsoncpp source code...', end='')
+        if not os.path.exists(self.JSONCPP_PATH_SRC):
+            cc.v('')
+            os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, PATH_EXTERNAL))
+            os.rename(os.path.join(PATH_EXTERNAL, 'jsoncpp-{}'.format(env.ver_jsoncpp)), self.JSONCPP_PATH_SRC)
+        else:
             cc.w('already exists, skip.')
-            return
 
-        old_p = os.getcwd()
-        os.chdir(self.OPENSSL_PATH_SRC)
-        #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        os.system('./config --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        os.system('make')
-        os.system('make install')
-        os.chdir(old_p)
+    def _build_mongoose(self, file_name):
+        cc.n('prepare mongoose source code...', end='')
+        if not os.path.exists(self.MONGOOSE_PATH_SRC):
+            cc.v('')
+            os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, PATH_EXTERNAL))
+            os.rename(os.path.join(PATH_EXTERNAL, 'mongoose-{}'.format(env.ver_mongoose)), self.MONGOOSE_PATH_SRC)
+        else:
+            cc.w('already exists, skip.')
+
+    def _build_openssl(self, file_name):
+        pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
+
+        # if not os.path.exists(self.OPENSSL_PATH_SRC):
+        #     os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+        #
+        # cc.n('build openssl static...')
+        # if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
+        #     cc.w('already exists, skip.')
+        #     return
+        #
+        # old_p = os.getcwd()
+        # os.chdir(self.OPENSSL_PATH_SRC)
+        # #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        # os.system('./config --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        # os.system('make')
+        # os.system('make install')
+        # os.chdir(old_p)
 
     def _build_libuv(self, file_name):
         if not os.path.exists(self.LIBUV_PATH_SRC):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
-        cc.n('build libuv...')
+        cc.n('build libuv...', end='')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libuv.a')):
             cc.w('already exists, skip.')
             return
+        cc.v('')
 
         # we need following...
         # apt-get install autoconf aptitude libtool gcc-c++
@@ -167,10 +319,11 @@ class BuilderLinux(BuilderBase):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
-        cc.n('build mbedtls...')
+        cc.n('build mbedtls...', end='')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libmbedtls.a')):
             cc.w('already exists, skip.')
             return
+        cc.v('')
 
         # fix the Makefile
         mkfile = os.path.join(self.MBEDTLS_PATH_SRC, 'Makefile')
@@ -247,12 +400,13 @@ class BuilderLinux(BuilderBase):
         if not os.path.exists(self.LIBSSH_PATH_SRC):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-            # os.rename(os.path.join(self.PATH_TMP, 'master'), os.path.join(self.PATH_TMP, 'libssh-master'))
+            # os.rename(os.path.join(self.PATH_TMP, 'master'), os.path.join(self.PATH_TMP, 'libssh-{}'.format(LIBSSH_VER)))
 
-        cc.n('build libssh...')
+        cc.n('build libssh...', end='')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a')):
             cc.w('already exists, skip.')
             return
+        cc.v('')
 
         build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
         # utils.makedirs(build_path)
@@ -287,19 +441,20 @@ class BuilderLinux(BuilderBase):
         # os.chdir(old_p)
 
         cmake_define = ' -DCMAKE_INSTALL_PREFIX={}' \
-              ' -D_OPENSSL_VERSION={}' \
-              ' -DOPENSSL_INCLUDE_DIR={}/include' \
-              ' -DOPENSSL_LIBRARIES={}/lib' \
-              ' -DWITH_GSSAPI=OFF' \
-              ' -DWITH_ZLIB=OFF' \
-              ' -DWITH_STATIC_LIB=ON' \
-              ' -DWITH_PCAP=OFF' \
-              ' -DWITH_TESTING=OFF' \
-              ' -DWITH_CLIENT_TESTING=OFF' \
-              ' -DWITH_EXAMPLES=OFF' \
-              ' -DWITH_BENCHMARKS=OFF' \
-              ' -DWITH_NACL=OFF' \
-              ' ..'.format(self.PATH_RELEASE, OPENSSL_VER, self.PATH_RELEASE, self.PATH_RELEASE)
+                       ' -D_OPENSSL_VERSION={}' \
+                       ' -DOPENSSL_INCLUDE_DIR={}/include' \
+                       ' -DOPENSSL_LIBRARIES={}/lib' \
+                       ' -DWITH_GSSAPI=OFF' \
+                       ' -DWITH_ZLIB=OFF' \
+                       ' -DWITH_STATIC_LIB=ON' \
+                       ' -DWITH_PCAP=OFF' \
+                       ' -DWITH_TESTING=OFF' \
+                       ' -DWITH_CLIENT_TESTING=OFF' \
+                       ' -DWITH_EXAMPLES=OFF' \
+                       ' -DWITH_BENCHMARKS=OFF' \
+                       ' -DWITH_NACL=OFF' \
+                       ' ..'.format(self.PATH_RELEASE, env.ver_openssl_number, self.PATH_RELEASE, self.PATH_RELEASE)
+
         try:
             utils.cmake(build_path, 'Release', False, cmake_define)
         except:
@@ -311,15 +466,15 @@ class BuilderLinux(BuilderBase):
         utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh.a')
         utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
 
-
     def _build_sqlite(self, file_name):
         if not os.path.exists(self.SQLITE_PATH_SRC):
             os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
-        cc.n('build sqlite static...')
+        cc.n('build sqlite static...', end='')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libsqlite3.a')):
             cc.w('already exists, skip.')
             return
+        cc.v('')
 
         old_p = os.getcwd()
         os.chdir(self.SQLITE_PATH_SRC)
@@ -350,6 +505,9 @@ def gen_builder(dist):
 
 
 def main():
+    if not env.init():
+        return
+
     builder = None
 
     argv = sys.argv[1:]
@@ -367,13 +525,15 @@ def main():
     if builder is None:
         builder = gen_builder(ctx.host_os)
 
-    # builder.build_openssl()
+    builder.build_jsoncpp()
+    builder.build_mongoose()
+    builder.build_openssl()
     ####builder.build_libuv()
     builder.build_mbedtls()
     builder.build_libssh()
     builder.build_sqlite()
-
-    builder.fix_output()
+    #
+    # builder.fix_output()
 
 
 if __name__ == '__main__':

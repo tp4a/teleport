@@ -1,0 +1,57 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          teleport
+# Required-Start:    $local_fs $network $syslog
+# Required-Stop:     $local_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts the teleport daemon
+# Description:       start or stop teleport service daemon
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON_PATH={daemon_path}
+NAME=teleport
+DESC=teleport
+
+test -f "$DAEMON_PATH/start.sh" || exit 0
+test -f "$DAEMON_PATH/stop.sh" || exit 0
+test -f "$DAEMON_PATH/status.sh" || exit 0
+
+set -e
+
+# . /lib/lsb/init-functions
+
+SRV=all
+if [ x$2 != x ]; then
+   SRV=$2
+fi
+
+case "$1" in
+   start)
+      $DAEMON_PATH/start.sh $SRV
+      ;;
+
+   stop)
+      $DAEMON_PATH/stop.sh $SRV
+      ;;
+
+   restart)
+      $DAEMON_PATH/stop.sh $SRV
+      sleep 2
+      $DAEMON_PATH/start.sh $SRV
+      sleep 2
+      $DAEMON_PATH/status.sh $SRV
+      ;;
+
+   status)
+      $DAEMON_PATH/status.sh $SRV
+      ;;
+   *)
+      echo "Usage: $NAME {{start|stop|restart|status}}" >&2
+      exit 1
+      ;;
+esac
+
+exit 0

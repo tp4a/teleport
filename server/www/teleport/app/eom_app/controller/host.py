@@ -3,73 +3,52 @@
 import time
 import csv
 import os
-import urllib
-import urllib.parse
-import urllib.request
+import json
+import threading
+import tornado.gen
+import tornado.httpclient
 
 from eom_app.app.configs import app_cfg
-from eom_app.module import set
+from eom_app.app.util import *
 from eom_app.module import host
-from eom_app.module.common import *
 from eom_common.eomcore.logger import *
-from .base import SwxAuthHandler, SwxAuthJsonHandler
+from eom_app.app.session import web_session
+from .base import TPBaseUserAuthHandler, TPBaseAdminAuthHandler, TPBaseUserAuthJsonHandler, TPBaseAdminAuthJsonHandler
 
 cfg = app_cfg()
 
+# 临时认证ID的基数，每次使用时均递减
+tmp_auth_id_base = -1
+tmp_auth_id_lock = threading.RLock()
 
-class IndexHandler(SwxAuthHandler):
+
+class IndexHandler(TPBaseUserAuthHandler):
     def get(self):
         _user = self.get_session('user')
         if _user is None:
             return self.write(-1)
 
-        # static_path = cfg.static_path
-        # var_js = os.path.join(static_path, 'js', 'var.js')
-        try:
-            # f = open(var_js, 'w')
-            _type = _user['type']
-            config_list = set.get_config_list()
-            ts_server = dict()
-            # ts_server['ip'] = config_list['ts_server_ip']
-            # ts_server['ip'] = cfg['ts_server_ip']
-            # ts_server['ip'] = '0.0.0.0'
+        param = dict()
 
-            # ts_server['ssh_port'] = config_list['ts_server_ssh_port']
-            # ts_server['rdp_port'] = config_list['ts_server_rdp_port']
-            # ts_server['telnet_port'] = config_list['ts_server_telnet_port']
+        param['core'] = {
+            'ssh_port': cfg.core.ssh.port,
+            'rdp_port': cfg.core.telnet.port,
+            'telnet_port': cfg.core.telnet.port
+        }
 
-            ts_server['ssh_port'] = cfg.core.ssh.port
-            ts_server['rdp_port'] = cfg.core.rdp.port
-            ts_server['telnet_port'] = cfg.core.telnet.port
+        param['group_list'] = host.get_group_list()
 
-            # f.write("\"use strict\";\nvar teleport_ip = \"{}\";\n".format(ts_server['ip']))
-        except Exception as e:
-            return self.write(-1)
-        # finally:
-        #     f.close()
-
-        if _type >= 100:
-            group_list = host.get_group_list()
-            cert_list = host.get_cert_list()
-            self.render('host/admin_index.mako',
-                        group_list=group_list,
-                        cert_list=cert_list,
-                        ts_server=ts_server)
+        if _user['type'] >= 100:
+            param['cert_list'] = host.get_cert_list()
+            self.render('host/admin_index.mako', page_param=json.dumps(param))
         else:
-            group_list = host.get_group_list()
-
-            if config_list is None:
-                return
-
-            self.render('host/common_index.mako',
-                        group_list=group_list,
-                        ts_server=ts_server)
+            self.render('host/common_index.mako', page_param=json.dumps(param))
 
 
-class LoadFile(SwxAuthJsonHandler):
-    def get(self):
-        pass
+class UploadAndImportHandler(TPBaseAdminAuthJsonHandler):
+    # TODO: 导入操作可能会比较耗时，应该分离导入和获取导入状态两个过程，在页面上可以呈现导入进度，并列出导出成功/失败的项
 
+    @tornado.gen.coroutine
     def post(self):
         """
         csv导入规则：
@@ -83,11 +62,12 @@ class LoadFile(SwxAuthJsonHandler):
         """
         ret = dict()
         ret['code'] = 0
-        ret['msg'] = list()     # 记录跳过的行（格式不正确，或者数据重复等）
+        ret['msg'] = list()  # 记录跳过的行（格式不正确，或者数据重复等）
         csv_filename = ''
 
         try:
-            upload_path = os.path.join(os.path.dirname(__file__), 'csv-files')  # 文件的暂存路径
+            # upload_path = os.path.join(os.path.dirname(__file__), 'csv-files')  # 文件的暂存路径
+            upload_path = os.path.join(cfg.data_path, 'tmp')  # 文件的暂存路径
             if not os.path.exists(upload_path):
                 os.mkdir(upload_path)
             file_metas = self.request.files['csvfile']  # 提取表单中‘name’为‘file’的文件元数据
@@ -136,7 +116,7 @@ class LoadFile(SwxAuthJsonHandler):
 
                     # 格式错误则记录在案，然后继续
                     if len(csv_recorder) != 13:
-                        ret['msg'].append({'reason':'格式错误', 'line':', '.join(csv_recorder)})
+                        ret['msg'].append({'reason': '格式错误', 'line': ', '.join(csv_recorder)})
                         continue
 
                     # pro_type = int(line[6])
@@ -174,10 +154,22 @@ class LoadFile(SwxAuthJsonHandler):
                     elif auth_mode == 1:
                         try:
                             if is_encrpty == 0:
-                                ret_code, tmp_pswd = get_enc_data(user_pswd)
+                                # ret_code, tmp_pswd = get_enc_data(user_pswd)
+                                _yr = async_enc(user_pswd)
+                                return_data = yield _yr
+                                if return_data is None:
+                                    return self.write_json(-1)
+
+                                if 'code' not in return_data or return_data['code'] != 0:
+                                    return self.write_json(-1)
+
+                                tmp_pswd = return_data['data']
+
                             else:
                                 tmp_pswd = user_pswd
+
                             user_args['user_pswd'] = tmp_pswd
+
                         except Exception:
                             ret_code = -1
                             log.e('get_enc_data() failed.\n')
@@ -201,7 +193,7 @@ class LoadFile(SwxAuthJsonHandler):
                             ret['msg'].append({'reason': '添加登录账号失败，账号已存在', 'line': ', '.join(csv_recorder)})
                         else:
                             ret['msg'].append({'reason': '添加登录账号失败，操作数据库失败', 'line': ', '.join(csv_recorder)})
-                        # log.e('sys_user_add() failed.\n')
+                            # log.e('sys_user_add() failed.\n')
 
             ret = json.dumps(ret).encode('utf8')
             self.write(ret)
@@ -215,10 +207,8 @@ class LoadFile(SwxAuthJsonHandler):
             if os.path.exists(csv_filename):
                 os.remove(csv_filename)
 
-            # self.write_json(0)
 
-
-class GetListHandler(SwxAuthJsonHandler):
+class GetListHandler(TPBaseUserAuthJsonHandler):
     def post(self):
         _user = self.get_session('user')
         if _user is None:
@@ -289,13 +279,13 @@ class GetListHandler(SwxAuthJsonHandler):
         # self.write(json_encode(data))
 
 
-class GetGrouplist(SwxAuthJsonHandler):
+class GetGrouplist(TPBaseUserAuthJsonHandler):
     def post(self):
         group_list = host.get_group_list()
         self.write_json(0, data=group_list)
 
 
-class UpdateHandler(SwxAuthJsonHandler):
+class UpdateHandler(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -321,7 +311,7 @@ class UpdateHandler(SwxAuthJsonHandler):
             self.write_json(-1)
 
 
-class AddHost(SwxAuthJsonHandler):
+class AddHost(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -344,7 +334,7 @@ class AddHost(SwxAuthJsonHandler):
             return
 
 
-class LockHost(SwxAuthJsonHandler):
+class LockHost(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -369,7 +359,7 @@ class LockHost(SwxAuthJsonHandler):
             return
 
 
-class DeleteHost(SwxAuthJsonHandler):
+class DeleteHost(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -392,49 +382,26 @@ class DeleteHost(SwxAuthJsonHandler):
             return
 
 
-class ExportHost(SwxAuthJsonHandler):
-    def post(self):
-        args = self.get_argument('args', None)
-        if args is not None:
-            args = json.loads(args)
-            # print('args', args)
-        else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+class ExportHostHandler(TPBaseAdminAuthHandler):
+    def get(self):
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Disposition', 'attachment; filename=teleport-host-export.csv')
+
         order = dict()
         order['name'] = 'host_id'
         order['asc'] = True
-
         limit = dict()
         limit['page_index'] = 0
         limit['per_page'] = 999999
-        _total, _hosts = host.get_all_host_info_list(dict(), order, limit,True)
-        export_file = os.path.join(cfg.static_path, 'download', 'export_csv_data.csv')
-        if os.path.exists(export_file):
-            os.remove(export_file)
-        try:
-            csv_file = open(export_file, 'w', encoding='utf8')
-            # with open(export_file, 'wb') as csvfile:
-            #     spamwriter = csv.writer(csvfile)
-            #     spamwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
-            #     spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
-            csv_header = "分组ID, 操作系统, " \
-                         "IP地址, 端口, 协议, 状态, 描述, " \
-                         "系统用户, 系统密码, 是否加密,附加参数, 密钥ID, 认证类型"
-            csv_file.write(csv_header)
-            csv_file.write('\n')
-        except:
-            log.e('')
-            csv_file.close()
-            self.write_json(-1)
-            return
+        _total, _hosts = host.get_all_host_info_list(dict(), order, limit, True)
+
+        self.write("分组ID, 操作系统, IP地址, 端口, 协议, 状态, 描述, 系统用户, 系统密码, 是否加密, 附加参数, 密钥ID, 认证类型\n".encode('gbk'))
 
         try:
 
             for h in _hosts:
                 auth_list = h['auth_list']
-                # 分组ID, 操作系统, IP地址, 端口, 协议, 状态, 描述, 系统用户, 系统密码, 是否加密,附加参数, , 密钥ID, 认证类型
+                # 分组ID, 操作系统, IP地址, 端口, 协议, 状态, 描述, 系统用户, 系统密码, 是否加密,附加参数, 密钥ID, 认证类型
                 for j in auth_list:
                     row_string = ''
                     # row_string = str(h['host_id'])
@@ -470,46 +437,30 @@ class ExportHost(SwxAuthJsonHandler):
                     row_string += str(j['cert_id'])
                     row_string += ','
                     row_string += str(j['auth_mode'])
-                    csv_file.write(row_string)
-                    csv_file.write('\n')
-                    # row = list()
-                    # row.append(h['host_id'])
-                    # row.append(h['group_id'])
-                    # row.append(h['host_sys_type'])
-                    # row.append(h['host_ip'])
-                    # row.append(h['host_port'])
-                    # row.append(h['protocol'])
-                    # row.append(h['host_lock'])
-                    # row.append(h['host_desc'])
-                    # auth_list = h['auth_list']
-                    # row.append(j['host_auth_id'])
-                    # row.append(j['user_name'])
-                    # row.append(j['user_pswd'])
-                    # row.append(1)
-                    # row.append(j['user_param'])
-                    # row.append(j['cert_id'])
-                    # row.append(j['auth_mode'])
-        except Exception as e:
+
+                    self.write(row_string.encode('gbk'))
+                    self.write('\n')
+
+        except IndexError:
+            self.write('**********************************************\n'.encode('gbk'))
+            self.write('！！错误！！\n'.encode('gbk'))
+            self.write('导出过程中发生了错误！！\n'.encode('gbk'))
+            self.write('**********************************************\n'.encode('gbk'))
             log.e('')
-        finally:
-            csv_file.close()
-        url = '/static/download/export_csv_data.csv'
-        ret = dict()
-        ret['url'] = url
-        self.write_json(0, data=ret)
-        return
+
+        self.finish()
 
 
-class GetCertList(SwxAuthJsonHandler):
+class GetCertList(TPBaseUserAuthJsonHandler):
     def post(self):
-        args = self.get_argument('args', None)
-        if args is not None:
-            args = json.loads(args)
-            # print('args', args)
-        else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+        # args = self.get_argument('args', None)
+        # if args is not None:
+        #     args = json.loads(args)
+        #     # print('args', args)
+        # else:
+        #     # ret = {'code':-1}
+        #     self.write_json(-1)
+        #     return
         _certs = host.get_cert_list()
         if _certs is None:
             self.write_json(-1)
@@ -519,14 +470,13 @@ class GetCertList(SwxAuthJsonHandler):
             return
 
 
-class AddCert(SwxAuthJsonHandler):
+class AddCert(TPBaseUserAuthJsonHandler):
+    @tornado.gen.coroutine
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
             self.write_json(-1)
             return
 
@@ -537,28 +487,28 @@ class AddCert(SwxAuthJsonHandler):
         if len(cert_pri) == 0:
             self.write_json(-1)
             return
-        try:
-            ret_code, cert_pri = get_enc_data(cert_pri)
-        except Exception as e:
-            self.write_json(-100)
-            return
-        if 0 != ret_code:
-            self.write_json(ret_code)
-            return
+
+        _yr = async_enc(cert_pri)
+        return_data = yield _yr
+        if return_data is None:
+            return self.write_json(-1)
+
+        if 'code' not in return_data or return_data['code'] != 0:
+            return self.write_json(-1)
+
+        cert_pri = return_data['data']
 
         try:
             ret = host.add_cert(cert_pub, cert_pri, cert_name)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
-            return
+                return self.write_json(-1)
         except:
-            self.write_json(-1)
-            return
+            return self.write_json(-1)
 
 
-class DeleteCert(SwxAuthJsonHandler):
+class DeleteCert(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -581,7 +531,8 @@ class DeleteCert(SwxAuthJsonHandler):
             return
 
 
-class UpdateCert(SwxAuthJsonHandler):
+class UpdateCert(TPBaseUserAuthJsonHandler):
+    @tornado.gen.coroutine
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -597,14 +548,15 @@ class UpdateCert(SwxAuthJsonHandler):
         cert_name = args['cert_name']
 
         if len(cert_pri) > 0:
-            try:
-                ret_code, cert_pri = get_enc_data(cert_pri)
-            except Exception as e:
-                self.write_json(-100)
-                return
-            if 0 != ret_code:
-                self.write_json(ret_code)
-                return
+            _yr = async_enc(cert_pri)
+            return_data = yield _yr
+            if return_data is None:
+                return self.write_json(-1)
+
+            if 'code' not in return_data or return_data['code'] != 0:
+                return self.write_json(-1)
+
+            cert_pri = return_data['data']
 
         try:
             ret = host.update_cert(cert_id, cert_pub, cert_pri, cert_name)
@@ -618,7 +570,7 @@ class UpdateCert(SwxAuthJsonHandler):
             return
 
 
-class AddGroup(SwxAuthJsonHandler):
+class AddGroup(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -641,7 +593,7 @@ class AddGroup(SwxAuthJsonHandler):
             return
 
 
-class UpdateGroup(SwxAuthJsonHandler):
+class UpdateGroup(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -665,7 +617,7 @@ class UpdateGroup(SwxAuthJsonHandler):
             return
 
 
-class DeleteGroup(SwxAuthJsonHandler):
+class DeleteGroup(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -688,7 +640,7 @@ class DeleteGroup(SwxAuthJsonHandler):
             return
 
 
-class AddHostToGroup(SwxAuthJsonHandler):
+class AddHostToGroup(TPBaseUserAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
         if args is not None:
@@ -712,94 +664,8 @@ class AddHostToGroup(SwxAuthJsonHandler):
             return
 
 
-class GetHostExtendInfo(SwxAuthJsonHandler):
-    def post(self):
-        args = self.get_argument('args', None)
-        if args is not None:
-            args = json.loads(args)
-            # print('args', args)
-        else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
-        try:
-            host_id = args['host_id']
-            _host = host.get_host_extend_info(host_id)
-            self.write_json(0, data=_host)
-            return
-        except:
-            self.write_json(-1)
-            return
-
-
-class UpdateHostExtendInfo(SwxAuthJsonHandler):
-    def post(self):
-        args = self.get_argument('args', None)
-        if args is not None:
-            args = json.loads(args)
-            # print('args', args)
-        else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
-        host_id = args['host_id']
-
-        if args['host_auth_mode'] == 1:
-            if len(args['user_pwd']) > 0:
-                try:
-                    ret_code, tmp_pswd = get_enc_data(args['user_pwd'])
-                except Exception as e:
-                    self.write_json(-100)
-                    return
-                if 0 != ret_code:
-                    self.write_json(ret_code)
-                    return
-
-                args['user_pwd'] = tmp_pswd
-
-        # ip = args['ip']
-        # port = args['port']
-        # user_name = args['user_name']
-        # user_pwd = args['user_pwd']
-        # cert_id = args['cert_id']
-        # pro_type = args['pro_type']
-        ret = host.update_host_extend_info(host_id, args)
-        if ret:
-            self.write_json(0)
-        else:
-            self.write_json(-1)
-
-
-def post_http(url, values):
-    try:
-        # log.v('post_http(), url={}\n'.format(url))
-
-        user_agent = 'Mozilla/4.0 (compatible;MSIE 5.5; Windows NT)'
-        # values = {
-        #     'act': 'login',
-        #     'login[email]': 'yzhang@i9i8.com',
-        #     'login[password]': '123456'
-        # }
-        values = json.dumps(values)
-        data = urllib.parse.quote(values).encode('utf-8')
-        headers = {'User-Agent': user_agent}
-        req = urllib.request.Request(url=url, data=data, headers=headers)
-        response = urllib.request.urlopen(req, timeout=3)
-        the_page = response.read()
-        info = response.info()
-        _zip = info.get('Content-Encoding')
-        if _zip == 'gzip':
-            the_page = gzip.decompress(the_page)
-        else:
-            pass
-        the_page = the_page.decode()
-        # print(the_page)
-        return the_page
-    except:
-        return None
-
-
-class GetSessionId(SwxAuthJsonHandler):
+class GetSessionId(TPBaseUserAuthJsonHandler):
+    @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:
@@ -809,37 +675,27 @@ class GetSessionId(SwxAuthJsonHandler):
             # ret = {'code':-1}
             self.write_json(-1)
             return
-        values = dict()
         if 'auth_id' not in args:
             self.write_json(-1)
             return
         auth_id = args['auth_id']
 
-        # config_list = host.get_config_list()
-        # ts_server_rpc_ip = '127.0.0.1'
-        #
-        # if 'ts_server_rpc_ip' in config_list:
-        #     ts_server_rpc_ip = config_list['ts_server_rpc_ip']
-        # ts_server_rpc_port = 52080
-        # if 'ts_server_rpc_port' in config_list:
-        #     ts_server_rpc_port = config_list['ts_server_rpc_port']
-        ts_server_rpc_ip = cfg.core.rpc.ip
-        ts_server_rpc_port = cfg.core.rpc.port
-
-        url = 'http://{}:{}/request_session'.format(ts_server_rpc_ip, ts_server_rpc_port)
-        values['auth_id'] = auth_id
-        return_data = post_http(url, values)
+        req = {'method': 'request_session', 'param': {'authid': auth_id}}
+        _yr = async_post_http(req)
+        return_data = yield _yr
         if return_data is None:
             return self.write_json(-1)
-        return_data = json.loads(return_data)
+
         if 'code' not in return_data:
             return self.write_json(-1)
+
         _code = return_data['code']
         if _code != 0:
             return self.write_json(_code)
+
         try:
             session_id = return_data['data']['sid']
-        except:
+        except IndexError:
             return self.write_json(-1)
 
         data = dict()
@@ -848,7 +704,8 @@ class GetSessionId(SwxAuthJsonHandler):
         return self.write_json(0, data=data)
 
 
-class AdminGetSessionId(SwxAuthJsonHandler):
+class AdminGetSessionId(TPBaseUserAuthJsonHandler):
+    @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:
@@ -860,39 +717,46 @@ class AdminGetSessionId(SwxAuthJsonHandler):
         if 'host_auth_id' not in args:
             self.write_json(-1)
             return
-        host_auth_id = args['host_auth_id']
 
-        values = host.get_host_auth_info(host_auth_id)
-        if values is None:
+        _host_auth_id = int(args['host_auth_id'])
+
+        user = self.get_current_user()
+
+        # host_auth_id 对应的是 ts_auth_info 表中的某个条目，含有具体的认证数据，因为管理员无需授权即可访问所有远程主机，因此
+        # 直接给出 host_auth_id，且account直接指明是当前登录用户（其必然是管理员）
+
+        tmp_auth_info = host.get_host_auth_info(_host_auth_id)
+        if tmp_auth_info is None:
             self.write_json(-1)
             return
-        values['account'] = 'admin'
 
-        # config_list = host.get_config_list()
-        # ts_server_rpc_ip = '127.0.0.1'
-        #
-        # if 'ts_server_rpc_ip' in config_list:
-        #     ts_server_rpc_ip = config_list['ts_server_rpc_ip']
-        # ts_server_rpc_port = 52080
-        # if 'ts_server_rpc_port' in config_list:
-        #     ts_server_rpc_port = config_list['ts_server_rpc_port']
-        ts_server_rpc_ip = cfg.core.rpc.ip
-        ts_server_rpc_port = cfg.core.rpc.port
+        tmp_auth_info['account_lock'] = 0
+        tmp_auth_info['account_name'] = user['name']
 
-        url = 'http://{}:{}/request_session'.format(ts_server_rpc_ip, ts_server_rpc_port)
-        # values['auth_id'] = auth_id
-        return_data = post_http(url, values)
+        with tmp_auth_id_lock:
+            global tmp_auth_id_base
+            tmp_auth_id_base -= 1
+            auth_id = tmp_auth_id_base
+
+        # 将这个临时认证信息放到session中备后续查找使用（10秒内有效）
+        web_session().set('tmp-auth-info-{}'.format(auth_id), tmp_auth_info, 10)
+
+        req = {'method': 'request_session', 'param': {'authid': auth_id}}
+        _yr = async_post_http(req)
+        return_data = yield _yr
         if return_data is None:
             return self.write_json(-1)
-        return_data = json.loads(return_data)
+
         if 'code' not in return_data:
             return self.write_json(-1)
+
         _code = return_data['code']
         if _code != 0:
             return self.write_json(_code)
+
         try:
             session_id = return_data['data']['sid']
-        except:
+        except IndexError:
             return self.write_json(-1)
 
         data = dict()
@@ -901,7 +765,8 @@ class AdminGetSessionId(SwxAuthJsonHandler):
         return self.write_json(0, data=data)
 
 
-class AdminFastGetSessionId(SwxAuthJsonHandler):
+class AdminFastGetSessionId(TPBaseAdminAuthJsonHandler):
+    @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:
@@ -910,82 +775,78 @@ class AdminFastGetSessionId(SwxAuthJsonHandler):
             self.write_json(-1)
             return
 
+        user = self.get_current_user()
+
+        tmp_auth_info = dict()
+
         try:
-            host_ip = args['host_ip']
-            host_port = args['host_port']
-            sys_type = args['sys_type']
-            user_name = args['user_name']
-            user_pswd = args['user_pswd']
-            host_auth_id = args['host_auth_id']
-            cert_id = args['cert_id']
-            auth_mode = args['auth_mode']
-            protocol = args['protocol']
-            user_param = args['user_param']
-        except Exception as e:
+            _host_auth_id = int(args['host_auth_id'])
+            _user_pswd = args['user_pswd']
+            _cert_id = int(args['cert_id'])
+
+            tmp_auth_info['host_ip'] = args['host_ip']
+            tmp_auth_info['host_port'] = int(args['host_port'])
+            tmp_auth_info['sys_type'] = int(args['sys_type'])
+            tmp_auth_info['protocol'] = int(args['protocol'])
+            tmp_auth_info['user_name'] = args['user_name']
+            tmp_auth_info['auth_mode'] = int(args['auth_mode'])
+            tmp_auth_info['user_param'] = args['user_param']
+            tmp_auth_info['encrypt'] = 1
+            tmp_auth_info['account_lock'] = 0
+            tmp_auth_info['account_name'] = user['name']
+        except IndexError:
             self.write_json(-2)
             return
 
-        values = dict()
-        values['ip'] = host_ip
-        values['port'] = int(host_port)
-        values['systype'] = int(sys_type)
+        if tmp_auth_info['auth_mode'] == 1:
+            if len(_user_pswd) == 0:  # 修改登录用户信息时可能不会修改密码，因此页面上可能不会传来密码，需要从数据库中直接读取
+                h = host.get_host_auth_info(_host_auth_id)
+                tmp_auth_info['user_auth'] = h['user_auth']
+            else:  # 如果页面上修改了密码或者新建账号时设定了密码，那么需要先交给core服务进行加密
+                req = {'method': 'enc', 'param': {'p': _user_pswd}}
+                _yr = async_post_http(req)
+                return_data = yield _yr
+                if return_data is None:
+                    return self.write_json(-1)
+                if 'code' not in return_data or return_data['code'] != 0:
+                    return self.write_json(-1)
 
-        values['uname'] = user_name
-        values['uparam'] = user_param
-        values['authmode'] = int(auth_mode)
+                tmp_auth_info['user_auth'] = return_data['data']['c']
 
-        values['protocol'] = int(protocol)
-        values['enc'] = 1
-
-        if auth_mode == 1:
-            if len(user_pswd) == 0:
-                h = host.get_host_auth_info(host_auth_id)
-                tmp_pswd = h['uauth']
-            else:
-                ret_code, tmp_pswd = get_enc_data(user_pswd)
-                if ret_code != 0:
-                    self.write_json(-99)
-                    return
-            values['uauth'] = tmp_pswd
-        elif auth_mode == 2:
-            uauth = host.get_cert_info(int(cert_id))
-            if uauth is None:
+        elif tmp_auth_info['auth_mode'] == 2:
+            tmp_auth_info['user_auth'] = host.get_cert_info(_cert_id)
+            if tmp_auth_info['user_auth'] is None:
                 self.write_json(-100)
                 return
-            values['uauth'] = uauth
-        elif auth_mode == 0:
-            values['uauth'] = ''
+        elif tmp_auth_info['auth_mode'] == 0:
+            tmp_auth_info['user_auth'] = ''
         else:
             self.write_json(-101)
             return
 
-        values['account'] = 'admin'
+        with tmp_auth_id_lock:
+            global tmp_auth_id_base
+            tmp_auth_id_base -= 1
+            auth_id = tmp_auth_id_base
 
-        # config_list = host.get_config_list()
-        # ts_server_rpc_ip = '127.0.0.1'
-        #
-        # if 'ts_server_rpc_ip' in config_list:
-        #     ts_server_rpc_ip = config_list['ts_server_rpc_ip']
-        # ts_server_rpc_port = 52080
-        # if 'ts_server_rpc_port' in config_list:
-        #     ts_server_rpc_port = config_list['ts_server_rpc_port']
-        ts_server_rpc_ip = cfg.core.rpc.ip
-        ts_server_rpc_port = cfg.core.rpc.port
+        web_session().set('tmp-auth-info-{}'.format(auth_id), tmp_auth_info, 10)
 
-        url = 'http://{}:{}/request_session'.format(ts_server_rpc_ip, ts_server_rpc_port)
-        # values['auth_id'] = auth_id
-        return_data = post_http(url, values)
+        req = {'method': 'request_session', 'param': {'authid': auth_id}}
+        _yr = async_post_http(req)
+        return_data = yield _yr
         if return_data is None:
             return self.write_json(-1)
-        return_data = json.loads(return_data)
+
         if 'code' not in return_data:
             return self.write_json(-1)
+
         _code = return_data['code']
         if _code != 0:
             return self.write_json(_code)
+
         try:
             session_id = return_data['data']['sid']
-        except:
+        except IndexError:
             return self.write_json(-1)
 
         data = dict()
@@ -994,7 +855,7 @@ class AdminFastGetSessionId(SwxAuthJsonHandler):
         return self.write_json(0, data=data)
 
 
-class SysUserList(SwxAuthJsonHandler):
+class SysUserList(TPBaseUserAuthJsonHandler):
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:
@@ -1012,37 +873,35 @@ class SysUserList(SwxAuthJsonHandler):
         return self.write_json(0, data=data)
 
 
-class SysUserAdd(SwxAuthJsonHandler):
+class SysUserAdd(TPBaseUserAuthJsonHandler):
+    @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
         else:
-            self.write_json(-1)
-            return
+            return self.write_json(-1)
 
         try:
             auth_mode = args['auth_mode']
             user_pswd = args['user_pswd']
             cert_id = args['cert_id']
-        except Exception as e:
-            self.write_json(-2)
-            return
+        except IndexError:
+            return self.write_json(-2)
 
         if auth_mode == 1:
             if 0 == len(args['user_pswd']):
-                self.write_json(-1)
-                return
-            try:
-                ret_code, tmp_pswd = get_enc_data(user_pswd)
-            except Exception as e:
-                self.write_json(ret_code)
-                return
-            if 0 != ret_code:
-                self.write_json(ret_code)
-                return
+                return self.write_json(-1)
 
-            args['user_pswd'] = tmp_pswd
+            _yr = async_enc(user_pswd)
+            return_data = yield _yr
+            if return_data is None:
+                return self.write_json(-1)
+
+            if 'code' not in return_data or return_data['code'] != 0:
+                return self.write_json(-1)
+
+            args['user_pswd'] = return_data['data']
 
         if host.sys_user_add(args) < 0:
             return self.write_json(-1)
@@ -1050,7 +909,8 @@ class SysUserAdd(SwxAuthJsonHandler):
         return self.write_json(0)
 
 
-class SysUserUpdate(SwxAuthJsonHandler):
+class SysUserUpdate(TPBaseUserAuthJsonHandler):
+    @tornado.gen.coroutine
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:
@@ -1081,16 +941,15 @@ class SysUserUpdate(SwxAuthJsonHandler):
 
         cert_id = kv['cert_id']
         if auth_mode == 1 and user_pswd is not None:
-            try:
-                ret_code, tmp_pswd = get_enc_data(user_pswd)
-            except Exception as e:
-                self.write_json(-100)
-                return
-            if 0 != ret_code:
-                self.write_json(ret_code)
-                return
+            _yr = async_enc(user_pswd)
+            return_data = yield _yr
+            if return_data is None:
+                return self.write_json(-1)
 
-            args['kv']['user_pswd'] = tmp_pswd
+            if 'code' not in return_data or return_data['code'] != 0:
+                return self.write_json(-1)
+
+            args['kv']['user_pswd'] = return_data['data']
 
         if host.sys_user_update(args['host_auth_id'], args['kv']):
             return self.write_json(0)
@@ -1098,7 +957,7 @@ class SysUserUpdate(SwxAuthJsonHandler):
         return self.write_json(-1)
 
 
-class SysUserDelete(SwxAuthJsonHandler):
+class SysUserDelete(TPBaseUserAuthJsonHandler):
     def post(self, *args, **kwargs):
         args = self.get_argument('args', None)
         if args is not None:
@@ -1108,12 +967,11 @@ class SysUserDelete(SwxAuthJsonHandler):
             return
         try:
             host_auth_id = args['host_auth_id']
-        except Exception as e:
+        except IndexError:
             self.write_json(-2)
             return
 
         if host.sys_user_delete(host_auth_id):
-             return self.write_json(0)
+            return self.write_json(0)
 
         return self.write_json(-1)
-

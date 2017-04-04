@@ -3,17 +3,16 @@
 import shutil
 import struct
 
+import sys
+
 from core import colorconsole as cc
 from core import makepyo
 from core import utils
 from core.context import *
+from core.env import env
+
 
 ctx = BuildContext()
-
-#PY_VER = platform.python_version_tuple()
-
-ROOT_PATH = utils.cfg.ROOT_PATH
-PY_EXEC = utils.cfg.py_exec
 
 MODULES_WIN = ['_bz2', '_ctypes', '_hashlib', '_lzma', '_overlapped', '_socket', '_sqlite3', '_ssl', 'select', 'sqlite3', 'unicodedata']
 PY_LIB_REMOVE_WIN = ['ctypes/test', 'curses', 'dbm', 'distutils', 'email/test', 'ensurepip', 'idlelib', 'lib2to3',
@@ -28,7 +27,7 @@ PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'config-3.4m-x86_64-linux-gnu', 
 
 class PYSBase:
     def __init__(self):
-        self.base_path = os.path.join(ROOT_PATH, 'out', 'pysrt', ctx.dist_path)
+        self.base_path = os.path.join(env.root_path, 'out', 'pysrt', ctx.dist_path)
 
         self.py_dll_path = ''
         self.py_lib_path = ''
@@ -98,7 +97,7 @@ class PYSBase:
         makepyo.make(_tmp_)
 
         cc.v('compress into python.zip...')
-        utils.make_zip(_tmp_, out_file)
+        utils.make_zip(_tmp_, out_file, from_parent=False)
         utils.ensure_file_exists(out_file)
 
         cc.v('remove temp folder...')
@@ -172,7 +171,7 @@ class PYSBaseWin(PYSBase):
         super()._copy_modules()
 
     def _make_py_ver_file(self):
-        # 在python.zip尾部追加一个字符串（补零到64字节），指明python动态库的文件名，这样壳在加载时才知道如何加载python动态库
+        # 指明python动态库的文件名，这样壳在加载时才知道如何加载python动态库
         out_file = os.path.join(self.base_path, 'python.ver')
         _data = struct.pack('=64s', self._get_py_dll_name().encode())
         f = open(out_file, 'wb')
@@ -180,15 +179,14 @@ class PYSBaseWin(PYSBase):
         f.close()
 
     def _get_py_dll_name(self):
-        #return 'python{}{}.dll'.format(PY_VER[0], PY_VER[1])
-        return 'python{}.dll'.format(utils.cfg.py_ver_str)
+        return 'python{}.dll'.format(env.py_ver_str)
 
 
 class PYSBaseLinux(PYSBase):
     def __init__(self):
         super().__init__()
 
-        self.PY_STATIC_PATH = os.path.join(os.path.join(ROOT_PATH, 'external', 'linux', 'release'))
+        self.PY_STATIC_PATH = os.path.join(os.path.join(env.root_path, 'external', 'linux', 'release'))
         if not os.path.exists(self.PY_STATIC_PATH):
             raise RuntimeError('can not locate py-static release folder.')
 
@@ -227,6 +225,9 @@ class PYSBaseLinux(PYSBase):
 
 
 def main():
+    if not env.init():
+        return
+
     if ctx.host_os == 'windows':
         x = PYSBaseWin()
     elif ctx.host_os == 'linux':

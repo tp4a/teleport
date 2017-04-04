@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import getopt
@@ -7,46 +6,26 @@ import os
 import platform
 import sys
 
-THIS_PATH = os.path.abspath(os.path.dirname(__file__))
-ROOT_PATH = os.path.abspath(os.path.join(THIS_PATH, '..'))
-BUILDER_PATH = os.path.join(THIS_PATH, 'builder')
+from builder.core.env import env
+import builder.core.colorconsole as cc
+import builder.core.utils as utils
+from builder.core.context import *
 
-sys.path.append(os.path.join(BUILDER_PATH))
-
-try:
-    import core.colorconsole as cc
-except ImportError:
-    print('can not import color console module.')
-    sys.exit(1)
-
-import core.utils as utils
-
-try:
-    from core.context import *
-except ImportError:
-    cc.e('can not import core context module.')
-    sys.exit(1)
-
-ctx = BuildContext()
-
-if ctx.is_py2:
+if env.is_py2:
     _input = raw_input
 else:
     _input = input
 
-if ctx.host_os == 'windows':
-    try:
-        import win32api, win32con
-    except:
-        cc.e('can not import module `win32api`.')
-        sys.exit(1)
-
 options = list()
 options_idx = 0
+ctx = BuildContext()
 
 
 def main():
     cc.set_default(sep='', end='\n')
+
+    if not env.init(warn_miss_tool=True):
+        return
 
     action = None
     argv = sys.argv[1:]
@@ -111,8 +90,8 @@ def main():
 
 
 def clean_all():
-    cc.v('remove compiler out path...')
-    utils.remove(os.path.join(ROOT_PATH, 'out'))
+    cc.e('sorry, clean not implemented yet.')
+    # utils.remove(os.path.join(env.root_path, 'out'))
 
 
 def do_opt(opt):
@@ -151,7 +130,7 @@ def do_opt(opt):
         return
 
     # cmd = '"%s" -B "%s" %s' % (utils.cfg.py_exec, os.path.join(BUILDER_PATH, script), arg)
-    cmd = '%s -B %s %s' % (utils.cfg.py_exec, os.path.join(BUILDER_PATH, script), arg)
+    cmd = '%s -B %s %s' % (env.py_exec, os.path.join(env.builder_path, script), arg)
     os.system(cmd)
 
 
@@ -193,14 +172,15 @@ def add_split():
 
 
 def make_options():
-    global options, options_idx, cfg
-
-    options = list()
-    options_idx = 0
+    # global options, options_idx
+    #
+    # options = list()
+    # options_idx = 0
 
     if ctx.host_os == 'windows':
         add_option('x86', 'ver', 'Update version setting')
-        add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % (utils.cfg.py_ver_str))
+        add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % env.py_ver_str)
+        add_option('x64', 'external', 'Build external dependency')
         add_split()
         add_option('x86', 'assist-exe', 'Assist Execute [%s]' % ctx.target_path)
         # add_option('x86', 'assist-rdp', 'Teleport RDP [%s]' % ctx.target_path)
@@ -211,8 +191,8 @@ def make_options():
         add_option('x86', 'installer', 'Teleport Installer for %s' % ctx.host_os)
     else:
         add_option('x64', 'ver', 'Update version setting')
-        add_option('x64', 'pysrt', 'Make Python-Runtime for python%s-x64' % (utils.cfg.py_ver_str))
-        add_option('x64', 'external', 'Build external for Teleport-Server')
+        add_option('x64', 'pysrt', 'Make Python-Runtime for python%s-x64' % env.py_ver_str)
+        add_option('x64', 'external', 'Build external dependency')
         add_split()
         add_option('x64', 'server', 'Build server app [%s]' % ctx.target_path)
         add_split()

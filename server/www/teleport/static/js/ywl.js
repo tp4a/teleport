@@ -8,6 +8,8 @@ var YWL = {
 		self.assist = null;
 		self.page_options = {};
 
+        self.server_ip = window.location.hostname || '';
+
 		self.add_page_options = function (options) {
 			_.extend(self.page_options, options);
 		};
@@ -30,7 +32,7 @@ var YWL = {
 
 			cb_stack
 			//.add(self.on_init)
-				.add(self.assist.init, self.page_options)
+//				.add(self.assist.init, self.page_options)
 				.exec();
 		};
 

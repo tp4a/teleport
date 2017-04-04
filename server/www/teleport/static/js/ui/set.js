@@ -11,40 +11,19 @@ ywl.on_init = function (cb_stack, cb_args) {
 
 	g_assist = ywl.create_assist();
 
-	var config_list = ywl.page_options.config_list;
+    var core_server = ywl.page_options.core_server;
+    console.log(ywl.page_options, core_server);
 
-//	var ts_server_ip = config_list['ts_server_ip'];
-//	$("#current-ts-server-ip").val(ts_server_ip);
+	$("#current-rdp-port").val(core_server.rdp.port);
+    $("#current-ssh-port").val(core_server.ssh.port);
+	$("#current-telnet-port").val(core_server.telnet.port);
 
-//	var ts_server_rpc_ip = config_list['ts_server_rpc_ip'];
-//	$("#current-rpc-ip").val(ts_server_rpc_ip);
-//
-//	var ts_server_rpc_port = config_list['ts_server_rpc_port'];
-//	$("#current-rpc-port").val(ts_server_rpc_port);
-
-	var ts_server_rdp_port = config_list['ts_server_rdp_port'];
-	$("#current-rdp-port").val(ts_server_rdp_port);
-
-	var ts_server_ssh_port = config_list['ts_server_ssh_port'];
-	$("#current-ssh-port").val(ts_server_ssh_port);
-
-    var ts_server_telnet_port = config_list['ts_server_telnet_port'];
-	$("#current-telnet-port").val(ts_server_telnet_port);
-    
-//	var ip_html = [];
-//	for (var i = 0; i < config_list['_ip_list'].length; i++) {
-//		ip_html.push('<li><a href="javascript:;">' + config_list['_ip_list'][i] + '</a></li>');
-//	}
-//	$('#select-ip').html(ip_html.join(''));
-
-	$('#select-ip li a').click(function () {
-		$("#current-ts-server-ip").val($(this).text());
-	});
+//	$('#select-ip li a').click(function () {
+//		$("#current-ts-server-ip").val($(this).text());
+//	});
 
 	$("#btn-check").click(function () {
 		var ts_server_ip = $("#current-ts-server-ip").val();
-//		var ts_server_rpc_ip = $("#current-rpc-ip").val();
-//		var ts_server_rpc_port = $("#current-rpc-port").val();
 		var ts_server_rdp_port = $("#current-rdp-port").val();
 		var ts_server_ssh_port = $("#current-ssh-port").val();
         var ts_server_telnet_port = $("#current-telnet-port").val();

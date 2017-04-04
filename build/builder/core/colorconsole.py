@@ -59,9 +59,6 @@ COLORS = {
 }
 
 
-# env = eomcore.env.get_env()
-
-
 class ColorConsole:
     """
     :type _win_color : Win32ColorConsole

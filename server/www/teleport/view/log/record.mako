@@ -10,7 +10,7 @@
 
 <%block name="breadcrumb">
     <ol class="breadcrumb">
-        <li><i class="fa fa-server"></i> 录像回放</li>
+        <li><i class="fa fa-server"></i> ${self.attr.page_title_}</li>
     </ol>
 </%block>
 
@@ -41,13 +41,8 @@
 <%block name="embed_js">
     <script type="text/javascript">
         ywl.add_page_options({
-            // 有些参数由后台python脚本生成到模板中，无法直接生成到js文件中，所以必须通过这种方式传递参数到js脚本中。
             record_id:${record_id}
         });
-
-        $(document).ready(function () {
-        });
-
 
     </script>
 </%block>

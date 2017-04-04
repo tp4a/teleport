@@ -4,6 +4,9 @@
 
 #include <commdlg.h>
 #include <ShlObj.h>
+
+#include <teleport_const.h>
+
 #include "ts_http_rpc.h"
 #include "dlg_main.h"
 #include "ts_ver.h"
@@ -105,8 +108,14 @@ void http_rpc_main_loop(void)
 
 	g_http_interface.run();
 
-	EXLOGW("[prc] main loop end.\n");
+	EXLOGW("[rpc] main loop end.\n");
 }
+
+void http_rpc_stop(void)
+{
+	g_http_interface.stop();
+}
+
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
 
@@ -147,6 +156,7 @@ int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_f
 
 TsHttpRpc::TsHttpRpc()
 {
+	m_stop = false;
 	mg_mgr_init(&m_mg_mgr, NULL);
 }
 
@@ -181,7 +191,6 @@ bool TsHttpRpc::init(const char* ip, int port)
 	else
 		sprintf_s(addr, 128, "%s:%d", ip, port);
 
-	mg_mgr_init(&m_mg_mgr, NULL);
 	nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
 	if (nc == NULL)
 	{
@@ -191,8 +200,6 @@ bool TsHttpRpc::init(const char* ip, int port)
 	nc->user_data = this;
 
 	mg_set_protocol_http_websocket(nc);
-	mg_enable_multithreading(nc);
-
 
 	m_content_type_map[".js"] = "application/javascript";
 	m_content_type_map[".png"] = "image/png";
@@ -212,10 +219,15 @@ bool TsHttpRpc::init(const char* ip, int port)
 
 void TsHttpRpc::run(void)
 {
-	for (;;)
+	while(!m_stop)
 	{
 		mg_mgr_poll(&m_mg_mgr, 500);
 	}
+}
+
+void TsHttpRpc::stop(void)
+{
+	m_stop = true;
 }
 
 void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_data)
@@ -240,7 +252,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		memcpy(&_uri[0], hm->uri.p, hm->uri.len);
 		uri = &_uri[0];
 
-#ifdef TS_DEBUG
+#ifdef EX_DEBUG
 		char* dbg_method = NULL;
 		if (hm->method.len == 3 && 0 == memcmp(hm->method.p, "GET", hm->method.len))
 			dbg_method = "GET";
@@ -309,6 +321,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 
 				mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: %s\r\n\r\n", file_size, content_type.c_str());
 				mg_send(nc, buf, file_size);
+				delete []buf;
 				nc->flags |= MG_F_SEND_AND_CLOSE;
 				return;
 			}
@@ -325,7 +338,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 
 		ex_astr method;
 		ex_astr json_param;
-		unsigned int rv = _this->_parse_request(hm, method, json_param);
+		int rv = _this->_parse_request(hm, method, json_param);
 		if (0 != rv)
 		{
 			EXLOGE("[ERROR] http-rpc got invalid request.\n");
@@ -345,10 +358,10 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 	}
 }
 
-unsigned int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_astr& func_args)
+int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_astr& func_args)
 {
 	if (NULL == req)
-		return TSR_INVALID_REQUEST;
+		return TPE_FAILED;
 
 	bool is_get = true;
 	if (req->method.len == 3 && 0 == memcmp(req->method.p, "GET", req->method.len))
@@ -356,7 +369,7 @@ unsigned int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_c
 	else if (req->method.len == 4 && 0 == memcmp(req->method.p, "POST", req->method.len))
 		is_get = false;
 	else
-		return TSR_INVALID_REQUEST;
+		return TPE_HTTP_METHOD;
 
 	ex_astrs strs;
 
@@ -384,7 +397,7 @@ unsigned int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_c
 	}
 
 	if (0 == strs.size())
-		return TSR_INVALID_REQUEST;
+		return TPE_PARAM;
 
 	if (is_get)
 	{
@@ -399,7 +412,7 @@ unsigned int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_c
 		}
 		else
 		{
-			return TSR_INVALID_REQUEST;
+			return TPE_PARAM;
 		}
 	}
 	else
@@ -410,7 +423,7 @@ unsigned int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_c
 		}
 		else
 		{
-			return TSR_INVALID_REQUEST;
+			return TPE_PARAM;
 		}
 
 		if (req->body.len > 0)
@@ -427,14 +440,14 @@ unsigned int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_c
 		sztmp.resize(len);
 		memset(&sztmp[0], 0, len);
 		if (-1 == ts_url_decode(func_args.c_str(), func_args.length(), &sztmp[0], len, 0))
-			return TSR_INVALID_URL_ENCODE;
+			return TPE_HTTP_URL_ENCODE;
 
 		func_args = &sztmp[0];
 	}
 
 	EXLOGV("[rpc] method=%s, json_param=%s\n", func_cmd.c_str(), func_args.c_str());
 
-	return TSR_OK;
+	return TPE_OK;
 }
 
 void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func_args, ex_astr& buf)
@@ -470,7 +483,7 @@ void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func
 	else
 	{
 		EXLOGE("[rpc] got unknown command: %s\n", func_cmd.c_str());
-		_create_json_ret(buf, TSR_NO_SUCH_METHOD);
+		_create_json_ret(buf, TPE_UNKNOWN_CMD);
 	}
 }
 
@@ -504,12 +517,12 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 
 	if (!jreader.parse(func_args.c_str(), jsRoot))
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_FORMAT);
+		_create_json_ret(buf, TPE_JSON_FORMAT);
 		return;
 	}
 	if (jsRoot.isArray())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
@@ -519,7 +532,7 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 		|| !jsRoot["session_id"].isString() || !jsRoot["pro_type"].isNumeric()
 		)
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
@@ -852,12 +865,12 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 	if (!CreateProcess(NULL, (wchar_t *)w_exe_path.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
 	{
 		EXLOGE(_T("CreateProcess() failed. Error=0x%08X.\n  %s\n"), GetLastError(), w_exe_path.c_str());
-		root_ret["code"] = TSR_CREATE_PROCESS_ERROR;
+		root_ret["code"] = TPE_START_CLIENT;
 		_create_json_ret(buf, root_ret);
 		return;
 	}
 
-	root_ret["code"] = TSR_OK;
+	root_ret["code"] = TPE_OK;
 	_create_json_ret(buf, root_ret);
 }
 
@@ -909,12 +922,12 @@ void TsHttpRpc::_rpc_func_ts_check(const ex_astr& func_args, ex_astr& buf)
 
 	if (!jreader.parse(func_args.c_str(), jsRoot))
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_FORMAT);
+		_create_json_ret(buf, TPE_JSON_FORMAT);
 		return;
 	}
 	if (jsRoot.isArray())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 	int windows_size = 2;
@@ -926,7 +939,7 @@ void TsHttpRpc::_rpc_func_ts_check(const ex_astr& func_args, ex_astr& buf)
 		|| !jsRoot["rdp_port"].isNumeric()
 		)
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
@@ -949,12 +962,12 @@ void TsHttpRpc::_rpc_func_ts_check(const ex_astr& func_args, ex_astr& buf)
 		if ((hptr = gethostbyname(ptr)) == NULL)
 		{
 			//printf("gethostbyname error for host:%s/n", ptr);
-			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+			_create_json_ret(buf, TPE_PARAM);
 			return; /* 如果调用gethostbyname发生错误，返回1 */
 		}
 		/* 将主机的规范名打出来 */
 		//printf("official hostname:%s/n", hptr->h_name);
-		///* 主机可能有多个别名，将所有别名分别打出来 */
+		// 主机可能有多个别名，将所有别名分别打出来
 		//for (pptr = hptr->h_aliases; *pptr != NULL; pptr++)
 		//	printf(" alias:%s/n", *pptr);
 		/* 根据地址类型，将地址打出来 */
@@ -978,24 +991,24 @@ void TsHttpRpc::_rpc_func_ts_check(const ex_astr& func_args, ex_astr& buf)
 	}
 	if (!isIPAddress(server_ip.c_str()))
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 	if (TestTCPPort(server_ip, rdp_port) && TestTCPPort(server_ip, ssh_port))
 	{
-		_create_json_ret(buf, TSR_OK);
+		_create_json_ret(buf, TPE_OK);
 		return;
 	}
 	ICMPheaderRet temp = { 0 };
 	int b_ok = ICMPSendTo(&temp, (char*)server_ip.c_str(), 16, 8);
 	if (b_ok == 0)
 	{
-		_create_json_ret(buf, TSR_PING_OK);
+		_create_json_ret(buf, TPE_OK);
 		return;
 	}
 	else
 	{
-		_create_json_ret(buf, TSR_PING_ERROR);
+		_create_json_ret(buf, TPE_NETWORK);
 	}
 
 	return;
@@ -1008,24 +1021,24 @@ void TsHttpRpc::_rpc_func_ts_rdp_play(const ex_astr& func_args, ex_astr& buf)
 
 	if (!jreader.parse(func_args.c_str(), jsRoot))
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_FORMAT);
+		_create_json_ret(buf, TPE_JSON_FORMAT);
 		return;
 	}
 
 	// 判断参数是否正确
 	if (!jsRoot["host"].isString())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 	if (!jsRoot["port"].isInt())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 	if (!jsRoot["tail"].isString())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 	ex_astr a_host = jsRoot["host"].asCString();
@@ -1047,7 +1060,7 @@ void TsHttpRpc::_rpc_func_ts_rdp_play(const ex_astr& func_args, ex_astr& buf)
 		if ((hptr = gethostbyname(ptr)) == NULL)
 		{
 			//printf("gethostbyname error for host:%s/n", ptr);
-			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+			_create_json_ret(buf, TPE_PARAM);
 			return;
 		}
 		/* 将主机的规范名打出来 */
@@ -1110,12 +1123,12 @@ void TsHttpRpc::_rpc_func_ts_rdp_play(const ex_astr& func_args, ex_astr& buf)
 	if (!CreateProcess(NULL, (wchar_t *)w_exe_path.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
 	{
 		EXLOGE(_T("CreateProcess() failed. Error=0x%08X.\n  %s\n"), GetLastError(), w_exe_path.c_str());
-		root_ret["code"] = TSR_CREATE_PROCESS_ERROR;
+		root_ret["code"] = TPE_START_CLIENT;
 		_create_json_ret(buf, root_ret);
 		return;
 	}
 
-	root_ret["code"] = TSR_OK;
+	root_ret["code"] = TPE_OK;
 	_create_json_ret(buf, root_ret);
 	return;
 }
@@ -1127,13 +1140,13 @@ void TsHttpRpc::_rpc_func_get_config(const ex_astr& func_args, ex_astr& buf)
 
 	if (!jreader.parse(func_args.c_str(), jsRoot))
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_FORMAT);
+		_create_json_ret(buf, TPE_JSON_FORMAT);
 		return;
 	}
 	// 判断参数是否正确
 	if (!jsRoot["type"].isNumeric())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 	int type = jsRoot["type"].asUInt();
@@ -1268,7 +1281,7 @@ void TsHttpRpc::_rpc_func_get_config(const ex_astr& func_args, ex_astr& buf)
 	}
 	else
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 }
@@ -1280,12 +1293,12 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 
 	if (!jreader.parse(func_args.c_str(), jsRoot))
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_FORMAT);
+		_create_json_ret(buf, TPE_JSON_FORMAT);
 		return;
 	}
 	if (jsRoot.isArray())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
@@ -1294,7 +1307,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 		!jsRoot["commandline"].isString() ||
 		!jsRoot["type"].isNumeric())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 	int type = jsRoot["type"].asUInt();
@@ -1315,7 +1328,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 
 		clientsetmap::iterator it = g_cfgSSH.m_clientsetmap.find(w_name);
 		if (it == g_cfgSSH.m_clientsetmap.end()) {
-			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+			_create_json_ret(buf, TPE_PARAM);
 			return;
 		}
 		if (it->second.is_default)
@@ -1323,7 +1336,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 			g_cfgSSH.set(_T("common"), _T("current_client"), w_name);
 			g_cfgSSH.save();
 			g_cfgSSH.init();
-			_create_json_ret(buf, TSR_OK);
+			_create_json_ret(buf, TPE_OK);
 			return;
 		}
 		g_cfgSSH.set(w_name, _T("path"), w_path);
@@ -1332,7 +1345,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 
 		g_cfgSSH.save();
 		g_cfgSSH.init();
-		_create_json_ret(buf, TSR_OK);
+		_create_json_ret(buf, TPE_OK);
 		return;
 
 	}
@@ -1340,7 +1353,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 	{
 		clientsetmap::iterator it = g_cfgScp.m_clientsetmap.find(w_name);
 		if (it == g_cfgScp.m_clientsetmap.end()) {
-			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+			_create_json_ret(buf, TPE_PARAM);
 			return;
 		}
 		if (it->second.is_default)
@@ -1348,7 +1361,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 			g_cfgScp.set(_T("common"), _T("current_client"), w_name);
 			g_cfgScp.save();
 			g_cfgScp.init();
-			_create_json_ret(buf, TSR_OK);
+			_create_json_ret(buf, TPE_OK);
 			return;
 		}
 		g_cfgScp.set(w_name, _T("path"), w_path);
@@ -1357,14 +1370,14 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 
 		g_cfgScp.save();
 		g_cfgScp.init();
-		_create_json_ret(buf, TSR_OK);
+		_create_json_ret(buf, TPE_OK);
 		return;
 	}
 	else if (type == 3)
 	{
 		clientsetmap::iterator it = g_cfgTelnet.m_clientsetmap.find(w_name);
 		if (it == g_cfgTelnet.m_clientsetmap.end()) {
-			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+			_create_json_ret(buf, TPE_PARAM);
 			return;
 		}
 		if (it->second.is_default)
@@ -1372,7 +1385,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 			g_cfgTelnet.set(_T("common"), _T("current_client"), w_name);
 			g_cfgTelnet.save();
 			g_cfgTelnet.init();
-			_create_json_ret(buf, TSR_OK);
+			_create_json_ret(buf, TPE_OK);
 			return;
 		}
 		g_cfgTelnet.set(w_name, _T("path"), w_path);
@@ -1381,11 +1394,11 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 
 		g_cfgTelnet.save();
 		g_cfgTelnet.init();
-		_create_json_ret(buf, TSR_OK);
+		_create_json_ret(buf, TPE_OK);
 		return;
 	}
 	else {
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 }
@@ -1397,13 +1410,13 @@ void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
 
 	if (!jreader.parse(func_args.c_str(), jsRoot))
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_FORMAT);
+		_create_json_ret(buf, TPE_JSON_FORMAT);
 		return;
 	}
 	// 判断参数是否正确
 	if (!jsRoot["action"].isNumeric())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 	int action = jsRoot["action"].asUInt();
@@ -1473,7 +1486,7 @@ void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
 
 		if (wsDefaultPath.length() == 0)
 		{
-			_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+			_create_json_ret(buf, TPE_PARAM);
 			return;
 		}
 
@@ -1508,13 +1521,13 @@ void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
 		}
 		else
 		{
-			_create_json_ret(buf, TSR_OK);
+			_create_json_ret(buf, TPE_OK);
 			return;
 		}
 	}
 	else
 	{
-		_create_json_ret(buf, TSR_INVALID_DATA);
+		_create_json_ret(buf, TPE_DATA);
 		return;
 	}
 }
@@ -1526,7 +1539,7 @@ void TsHttpRpc::_rpc_func_get_version(const ex_astr& func_args, ex_astr& buf)
 	ex_astr version;
 	ex_wstr2astr(w_version, version, EX_CODEPAGE_UTF8);
 	root_ret["version"] = version;
-	root_ret["code"] = TSR_OK;
+	root_ret["code"] = TPE_OK;
 	_create_json_ret(buf, root_ret);
 	return;
 }

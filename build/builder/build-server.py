@@ -1,17 +1,14 @@
-#!/bin/env python3
 # -*- coding: utf-8 -*-
 
-import codecs
-import shutil
-import time
+# import codecs
+# import shutil
+# import time
 from core import colorconsole as cc
-from core import makepyo
 from core import utils
 from core.context import *
+from core.env import env
 
 ctx = BuildContext()
-
-ROOT_PATH = utils.cfg.ROOT_PATH
 
 
 class BuilderBase:
@@ -28,32 +25,32 @@ class BuilderWin(BuilderBase):
 
     def build_server(self):
         cc.n('build web server ...')
-        sln_file = os.path.join(ROOT_PATH, 'server', 'tp_web', 'src', 'tp_web.vs2015.sln')
-        out_file = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_web.exe')
+        sln_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'tp_web.vs2015.sln')
+        out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_web.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
         utils.msvc_build(sln_file, 'tp_web', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
 
         cc.n('build core server ...')
-        sln_file = os.path.join(ROOT_PATH, 'server', 'tp_core', 'core', 'tp_core.vs2015.sln')
-        out_file = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_core.exe')
+        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'core', 'tp_core.vs2015.sln')
+        out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_core.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
         utils.msvc_build(sln_file, 'tp_core', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
 
         cc.n('build SSH protocol ...')
-        sln_file = os.path.join(ROOT_PATH, 'server', 'tp_core', 'protocol', 'ssh', 'tpssh.vs2015.sln')
-        out_file = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, ctx.target_path, 'tpssh.dll')
+        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'ssh', 'tpssh.vs2015.sln')
+        out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tpssh.dll')
         if os.path.exists(out_file):
             utils.remove(out_file)
         utils.msvc_build(sln_file, 'tpssh', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
 
         #
-        # s = os.path.join(ROOT_PATH, 'out', 'console', ctx.bits_path, ctx.target_path, 'console.exe')
-        # t = os.path.join(ROOT_PATH, 'out', 'eom_agent', ctx.target_path, ctx.dist_path, 'eom_agent.com')
+        # s = os.path.join(env.root_path, 'out', 'console', ctx.bits_path, ctx.target_path, 'console.exe')
+        # t = os.path.join(env.root_path, 'out', 'eom_agent', ctx.target_path, ctx.dist_path, 'eom_agent.com')
         # shutil.copy(s, t)
         # utils.ensure_file_exists(t)
 
@@ -65,7 +62,7 @@ class BuilderLinux(BuilderBase):
     def build_server(self):
         cc.n('build server app (tp_core/libtpssh/tp_web)...')
 
-        out_path = os.path.join(ROOT_PATH, 'out', 'server', ctx.bits_path, 'bin')
+        out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
         out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'libtpssh.so'),
                      os.path.join(out_path, 'tp_web')]
 
@@ -75,13 +72,12 @@ class BuilderLinux(BuilderBase):
 
         utils.makedirs(out_path)
 
-        utils.cmake(os.path.join(ROOT_PATH, 'server', 'cmake-build'), ctx.target_path, False)
+        utils.cmake(os.path.join(env.root_path, 'server', 'cmake-build'), ctx.target_path, False)
         # utils.strip(out_file)
 
         for f in out_files:
             if os.path.exists(f):
                 utils.ensure_file_exists(f)
-
 
 
 def gen_builder(dist):
@@ -97,6 +93,9 @@ def gen_builder(dist):
 
 
 def main():
+    if not env.init():
+        return
+
     builder = None
 
     argv = sys.argv[1:]
@@ -117,14 +116,14 @@ def main():
     if 'server' in argv:
         builder.build_server()
 
-    # if 'app' in argv:
-    #     builder.build_app()
+        # if 'app' in argv:
+        #     builder.build_app()
 
-    # if 'installer' in argv:
-    #     builder.build_installer()
+        # if 'installer' in argv:
+        #     builder.build_installer()
 
-    # if 'runtime' in argv:
-    #     builder.build_runtime()
+        # if 'runtime' in argv:
+        #     builder.build_runtime()
 
 
 if __name__ == '__main__':

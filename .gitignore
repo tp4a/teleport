@@ -14,6 +14,7 @@ CMakeFiles
 cmake_install.cmake
 Makefile
 cmake-build
+cmake-build-debug
 
 # for Python
 __pycache__
@@ -28,6 +29,7 @@ __pycache__
 **/.idea/watcherTasks.xml
 **/.idea/codeStyleSettings.xml
 **/.idea/inspectionProfiles
+**/.idea/vcs.xml
 
 # for tmp folder or files.
 /out
@@ -37,29 +39,33 @@ __pycache__
 /external/mongoose
 /external/openssl
 /external/python
+/external/libssh-win-static/include/libssh
+/external/libssh-win-static/src
+/external/libssh-win-static/lib
+/external/mbedtls
+/external/sqlite
+/client/tools/putty
+/client/tools/winscp
+
 
 # for dist folder
-/dist/*.zip
-/dist/*.tar.gz
-/dist/installer/linux/server/_tmp_
 **/_tmp_
+/dist/server/data
+/dist/client/windows/assist/apps
+/dist/client/windows/assist/cfg
 
-/server/share/data/ts_db.db
-/server/share/data/replay
+/server/share/etc/core.ini
+/server/share/etc/web.ini
+/server/share/data
+/server/share/log
 /server/www/teleport/.idea/vcs.xml
-/server/www/teleport/static/js/var.js
 /server/www/packages/packages-windows/x64
+
+
+# for generated files.
+/config.ini
+/build.bat
 
 # for not finished code
 /common/libex/test
-/external/mbedtls
-/external/sqlite
-/server/share/etc/core.ini
-/server/share/etc/web.ini
 /client/tp_rdp
-/external/libssh-win-static/lib
-/server/share/log
-/config.ini
-/build.bat
-/dist/windows/client/assist/apps
-/dist/windows/client/assist/cfg
