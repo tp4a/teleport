@@ -11,7 +11,6 @@ ctx = BuildContext()
 PATH_EXTERNAL = os.path.join(env.root_path, 'external')
 PATH_DOWNLOAD = os.path.join(PATH_EXTERNAL, '_download_')
 
-LIBSSH_VER = utils.cfg.ver.libssh
 
 class BuilderBase:
     def __init__(self):
