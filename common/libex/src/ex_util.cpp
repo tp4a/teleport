@@ -55,6 +55,19 @@ const ex_u8* ex_memmem(const ex_u8* haystack, size_t haystacklen, const ex_u8* n
 	return(NULL);
 }
 
+void ex_mem_reverse(ex_u8* p, size_t l)
+{
+	ex_u8 temp = 0;
+	size_t i = 0, j = 0;
+
+	for (i = 0, j = l - 1; i < j; i++, j--)
+	{
+		temp = p[i];
+		p[i] = p[j];
+		p[j] = temp;
+	}
+}
+
 void ex_printf(const char* fmt, ...)
 {
 	if (NULL == fmt || 0 == strlen(fmt))

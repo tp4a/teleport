@@ -44,6 +44,7 @@ __pycache__
 /external/libssh-win-static/lib
 /external/mbedtls
 /external/sqlite
+/external/libuv
 /client/tools/putty
 /client/tools/winscp
 
@@ -69,3 +70,4 @@ __pycache__
 # for not finished code
 /common/libex/test
 /client/tp_rdp
+/server/tp_core/protocol/rdp
