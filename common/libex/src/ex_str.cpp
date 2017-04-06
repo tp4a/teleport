@@ -837,7 +837,7 @@ static int MultiByteToWideChar(UINT CodePage, DWORD dwFlags, LPCSTR lpMultiByteS
 
 
 
-bool utf8_to_utf16_le(const std::string& from, ex_str_utf16le& to)
+bool ex_utf8_to_utf16le(const std::string& from, ex_str_utf16le& to)
 {
 	int iSize = MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, NULL, 0);
 	if (iSize <= 0)

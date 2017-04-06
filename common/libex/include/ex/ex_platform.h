@@ -37,7 +37,7 @@
 
 #ifdef EX_OS_WIN32
 #	ifndef _WIN32_WINNT
-#		define _WIN32_WINNT 0x0500     // 0x0500 = Windows2000
+#		define _WIN32_WINNT 0x0502     // 0x0502 = WinServer2003 (libuv need this)  0x0501 = WinXP, 0x0500 = Win2000
 #	endif
 #	define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #	define _CRT_RAND_S		// for rand_s().
@@ -95,6 +95,8 @@
 #	define CHECK(exp)   assert(exp)
 //#	define DEBUG_CHECKS (1)
 #endif
+
+#define UNREACHABLE() CHECK(!"Unreachable code reached.")
 
 #ifndef UNUSED
 #	if defined(_MSC_VER)
