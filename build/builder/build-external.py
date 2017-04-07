@@ -100,6 +100,7 @@ class BuilderWin(BuilderBase):
         self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
         self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
         self.MBEDTLS_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mbedtls')
+        self.LIBUV_PATH_SRC = os.path.join(PATH_EXTERNAL, 'libuv')
         self.LIBSSH_PATH_SRC = os.path.join(PATH_EXTERNAL, 'libssh-win-static')
 
         self._prepare_python_header()
@@ -226,6 +227,23 @@ class BuilderWin(BuilderBase):
             os.rename(os.path.join(PATH_EXTERNAL, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls)), self.MBEDTLS_PATH_SRC)
         else:
             cc.w('already exists, skip.')
+            return
+        cc.v('')
+
+        # fix source file
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+
+    def _build_libuv(self, file_name):
+        cc.n('prepare libuv source code... ', end='')
+        if not os.path.exists(self.LIBUV_PATH_SRC):
+            cc.v('')
+            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            os.rename(os.path.join(PATH_EXTERNAL, 'libuv-{}'.format(env.ver_libuv)), self.LIBUV_PATH_SRC)
+        else:
+            cc.w('already exists, skip.')
 
     def build_sqlite(self):
         cc.w('sqlite not need for Windows, skip.')
@@ -346,46 +364,48 @@ class BuilderLinux(BuilderBase):
         f.writelines(fl)
         f.close()
 
-        # fix config.h
-        mkfile = os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls', 'config.h')
-        f = open(mkfile)
-        fl = f.readlines()
-        f.close()
-
-        for i in range(len(fl)):
-            if fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED') >= 0:
-                fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED\n'
-            elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED') >= 0:
-                fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED\n'
-            elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED') >= 0:
-                fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED\n'
-            elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED') >= 0:
-                fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED\n'
-            elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED') >= 0:
-                fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED\n'
-            elif fl[i].find('#define MBEDTLS_SELF_TEST') >= 0:
-                fl[i] = '//#define MBEDTLS_SELF_TEST\n'
-            elif fl[i].find('#define MBEDTLS_SSL_RENEGOTIATION') >= 0:
-                fl[i] = '//#define MBEDTLS_SSL_RENEGOTIATION\n'
-            elif fl[i].find('#define MBEDTLS_ECDH_C') >= 0:
-                fl[i] = '//#define MBEDTLS_ECDH_C\n'
-            elif fl[i].find('#define MBEDTLS_ECDSA_C') >= 0:
-                fl[i] = '//#define MBEDTLS_ECDSA_C\n'
-            elif fl[i].find('#define MBEDTLS_ECP_C') >= 0:
-                fl[i] = '//#define MBEDTLS_ECP_C\n'
-            elif fl[i].find('#define MBEDTLS_NET_C') >= 0:
-                fl[i] = '//#define MBEDTLS_NET_C\n'
-
-            elif fl[i].find('#define MBEDTLS_RSA_NO_CRT') >= 0:
-                fl[i] = '#define MBEDTLS_RSA_NO_CRT\n'
-            elif fl[i].find('#define MBEDTLS_SSL_PROTO_SSL3') >= 0:
-                fl[i] = '#define MBEDTLS_SSL_PROTO_SSL3\n'
-
-        f = open(mkfile, 'w')
-        f.writelines(fl)
-        f.close()
+        # # fix config.h
+        # mkfile = os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls', 'config.h')
+        # f = open(mkfile)
+        # fl = f.readlines()
+        # f.close()
+        #
+        # for i in range(len(fl)):
+        #     if fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED') >= 0:
+        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED\n'
+        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED') >= 0:
+        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED\n'
+        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED') >= 0:
+        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED\n'
+        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED') >= 0:
+        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED\n'
+        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED') >= 0:
+        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED\n'
+        #     elif fl[i].find('#define MBEDTLS_SELF_TEST') >= 0:
+        #         fl[i] = '//#define MBEDTLS_SELF_TEST\n'
+        #     elif fl[i].find('#define MBEDTLS_SSL_RENEGOTIATION') >= 0:
+        #         fl[i] = '//#define MBEDTLS_SSL_RENEGOTIATION\n'
+        #     elif fl[i].find('#define MBEDTLS_ECDH_C') >= 0:
+        #         fl[i] = '//#define MBEDTLS_ECDH_C\n'
+        #     elif fl[i].find('#define MBEDTLS_ECDSA_C') >= 0:
+        #         fl[i] = '//#define MBEDTLS_ECDSA_C\n'
+        #     elif fl[i].find('#define MBEDTLS_ECP_C') >= 0:
+        #         fl[i] = '//#define MBEDTLS_ECP_C\n'
+        #     elif fl[i].find('#define MBEDTLS_NET_C') >= 0:
+        #         fl[i] = '//#define MBEDTLS_NET_C\n'
+        #
+        #     elif fl[i].find('#define MBEDTLS_RSA_NO_CRT') >= 0:
+        #         fl[i] = '#define MBEDTLS_RSA_NO_CRT\n'
+        #     elif fl[i].find('#define MBEDTLS_SSL_PROTO_SSL3') >= 0:
+        #         fl[i] = '#define MBEDTLS_SSL_PROTO_SSL3\n'
+        #
+        # f = open(mkfile, 'w')
+        # f.writelines(fl)
+        # f.close()
 
         # fix source file
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
@@ -527,7 +547,7 @@ def main():
     builder.build_jsoncpp()
     builder.build_mongoose()
     builder.build_openssl()
-    ####builder.build_libuv()
+    builder.build_libuv()
     builder.build_mbedtls()
     builder.build_libssh()
     builder.build_sqlite()
