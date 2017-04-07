@@ -3,18 +3,18 @@
 
 //#include "ts_types.h"
 
-// #define TS_RDP_PROXY_PORT		3389
-// #define TS_RDP_PROXY_HOST		"0.0.0.0"
+#define TS_RDP_PROXY_PORT		3389
+#define TS_RDP_PROXY_HOST		"0.0.0.0"
 
 #define TS_SSH_PROXY_PORT		22
 #define TS_SSH_PROXY_HOST		"0.0.0.0"
-// 
-// #define TS_TELNET_PROXY_PORT		23
-// #define TS_TELNET_PROXY_HOST		"0.0.0.0"
+
+#define TS_TELNET_PROXY_PORT		23
+#define TS_TELNET_PROXY_HOST		"0.0.0.0"
 
 #define TS_HTTP_RPC_PORT		52080
-//#define TS_HTTP_RPC_HOST		"127.0.0.1"
-#define TS_HTTP_RPC_HOST		"0.0.0.0"
+#define TS_HTTP_RPC_HOST		"127.0.0.1"
+//#define TS_HTTP_RPC_HOST		"0.0.0.0"
 
 
 #define TS_RDP_PROTOCOL_RDP          0

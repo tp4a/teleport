@@ -32,7 +32,7 @@ class IndexHandler(TPBaseUserAuthHandler):
 
         param['core'] = {
             'ssh_port': cfg.core.ssh.port,
-            'rdp_port': cfg.core.telnet.port,
+            'rdp_port': cfg.core.rdp.port,
             'telnet_port': cfg.core.telnet.port
         }
 

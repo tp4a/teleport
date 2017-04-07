@@ -44,8 +44,12 @@ End Sub
 手工测试了，ubuntu服务器可以，不知道是否能够支持所有的Linux。SecureCRT对此表示忽略。
 */
 
+#define RDP_CLIENT_SYSTEM_BUILTIN
+// #define RDP_CLIENT_SYSTEM_ACTIVE_CONTROL
+// #define RDP_CLIENT_FREERDP
 
-#if 0
+
+#ifdef RDP_CLIENT_SYSTEM_BUILTIN
 std::string rdp_content = "\
 connect to console:i:%d\n\
 screen mode id:i:%d\n\
@@ -64,7 +68,7 @@ audiocapturemode:i:0\n\
 negotiate security layer:i:1\n\
 videoplaybackmode:i:1\n\
 connection type:i:2\n\
-prompt for credentials on client:i:1\r\n\
+prompt for credentials on client:i:1\n\
 displayconnectionbar:i:1\n\
 disable wallpaper:i:1\n\
 allow font smoothing:i:0\n\
@@ -115,7 +119,6 @@ void http_rpc_stop(void)
 {
 	g_http_interface.stop();
 }
-
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
 
@@ -582,9 +585,9 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 		//==============================================
 		// RDP
 		//==============================================
-#if 1
+//#if 1
 
-#if 0
+#if defined(RDP_CLIENT_SYSTEM_ACTIVE_CONTROL)
 		int split_pos = session_id.length() - 2;
 		std::string real_s_id = session_id.substr(0, split_pos);
 		std::string str_pwd_len = session_id.substr(split_pos, session_id.length());
@@ -624,7 +627,7 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 
 		w_exe_path += w_szCommandLine;
 		//BOOL bRet = DeleteFile(w_sz_file_name.c_str());
-#else
+#elif defined(RDP_CLIENT_FREERDP)
 		wchar_t* w_screen = NULL;
 
 		switch (windows_size)
@@ -677,9 +680,9 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 
 		w_exe_path += w_szCommandLine;
 
-#endif
+//#endif
 
-#else
+#elif defined(RDP_CLIENT_SYSTEM_BUILTIN)
 		int width = 800;
 		int higth = 600;
 		int cx = 0;
@@ -755,29 +758,32 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 		if (ret <= 0)
 		{
 			printf("fopen failed (%d).\n", GetLastError());
-			_create_json_ret(buf, TSR_GETTEMPPATH_ERROR);
+			_create_json_ret(buf, TPE_FAILED);
 			return;
 		}
 		ex_wstr w_s_id;
-		ex_astr2str(real_sid, w_s_id);
+		ex_astr2wstr(real_sid, w_s_id);
 
-		ex_astr temp_host_ip = replace_all_distinct(real_host_ip, ("."), "-");
+		ex_astr temp_host_ip = real_host_ip;// replace_all_distinct(real_host_ip, ("."), "-");
+		ex_replace_all(temp_host_ip, ".", "-");
 
-		sprintf_s(sz_file_name, ("%s\\%s.rdp"), temp_path, temp_host_ip.c_str());
-		FILE* f = fopen(sz_file_name, ("wt"));
-		if (f == NULL)
+		sprintf_s(sz_file_name, ("%s%s.rdp"), temp_path, temp_host_ip.c_str());
+		//FILE* f = fopen(sz_file_name, ("wt"));
+		//if (f == NULL)
+		FILE* f = NULL;
+		if(fopen_s(&f, sz_file_name, "wt") != 0)
 		{
 			printf("fopen failed (%d).\n", GetLastError());
-			_create_json_ret(buf, TSR_OPENFILE_ERROR);
+			_create_json_ret(buf, TPE_OPENFILE);
 			return;
 		}
 		// Write a string into the file.
 		fwrite(sz_rdp_file_content, strlen(sz_rdp_file_content), 1, f);
 		fclose(f);
 		ex_wstr w_sz_file_name;
-		ex_astr2str(sz_file_name, w_sz_file_name);
+		ex_astr2wstr(sz_file_name, w_sz_file_name);
 
-		swprintf_s(w_szCommandLine, _T("mstsc %s"), w_sz_file_name.c_str());
+		swprintf_s(w_szCommandLine, _T("mstsc \"%s\""), w_sz_file_name.c_str());
 		w_exe_path = w_szCommandLine;
 		//BOOL bRet = DeleteFile(w_sz_file_name.c_str());
 #endif

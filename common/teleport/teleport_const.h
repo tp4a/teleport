@@ -35,7 +35,7 @@
 
 // #define TPE_OPENFILE_ERROR			0x1007	// 无法打开文件
 // #define TPE_GETTEMPPATH_ERROR		0x1007
-
+#define TPE_OPENFILE				300
 
 //-------------------------------------------------------
 // 助手程序专用错误值
