@@ -109,6 +109,11 @@ bool TsEnv::init(bool load_config)
 		EXLOG_LEVEL(log_level);
 	}
 
+	int debug_mode = 0;
+	ps->GetInt(L"debug", debug_mode, 0);
+	if (debug_mode == 1)
+		EXLOG_DEBUG(true);
+
 	ex_wstr tmp;
 	ps = m_ini.GetSection(L"rpc");
 	if (!ps->GetStr(L"bind-ip", tmp))

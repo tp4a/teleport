@@ -18,8 +18,9 @@
 
 
 #define TS_RDP_PROTOCOL_RDP          0
-#define TS_RDP_PROTOCOL_SSL          1
+#define TS_RDP_PROTOCOL_TLS          1
 #define TS_RDP_PROTOCOL_HYBRID       2
+#define TS_RDP_PROTOCOL_RDSTLS       4
 #define TS_RDP_PROTOCOL_HYBRID_EX    8
 
 #define TS_AUTH_MODE_NONE			0

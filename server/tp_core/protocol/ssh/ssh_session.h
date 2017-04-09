@@ -55,7 +55,7 @@ public:
 
 protected:
 	// ¼Ì³Ð×Ô TppSessionBase
-	bool _on_session_begin(TS_SESSION_INFO& info);
+	bool _on_session_begin(const TPP_SESSION_INFO* info);
 	bool _on_session_end(void);
 
 

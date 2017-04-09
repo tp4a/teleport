@@ -142,13 +142,13 @@ public:
 	TppRecBase();
 	virtual ~TppRecBase();
 
-	void begin(const wchar_t* base_path, const wchar_t* base_fname, int record_id, const TS_SESSION_INFO& info);
+	void begin(const wchar_t* base_path, const wchar_t* base_fname, int record_id, const TPP_SESSION_INFO* info);
 	void end(void);
 
 	virtual void record(ex_u8 type, const ex_u8* data, size_t size) = 0;
 
 protected:
-	virtual void _on_begin(const TS_SESSION_INFO& info) = 0;
+	virtual void _on_begin(const TPP_SESSION_INFO* info) = 0;
 	virtual void _on_end(void) = 0;
 
 protected:

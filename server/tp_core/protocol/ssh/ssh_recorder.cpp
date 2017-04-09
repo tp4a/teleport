@@ -15,12 +15,19 @@ TppRec::~TppRec()
 	end();
 }
 
-void TppRec::_on_begin(const TS_SESSION_INFO& info)
+void TppRec::_on_begin(const TPP_SESSION_INFO* info)
 {
-	m_head.port = info.host_port;
-	memcpy(m_head.account, info.account_name.c_str(), info.account_name.length() > 15 ? 15 : info.account_name.length());
-	memcpy(m_head.username, info.user_name.c_str(), info.user_name.length() > 15 ? 15 : info.user_name.length());
-	memcpy(m_head.ip, info.host_ip.c_str(), info.host_ip.length() > 17 ? 17 : info.host_ip.length());
+	if (NULL == info)
+		return;
+
+	m_head.port = info->host_port;
+	// 	memcpy(m_head.account, info.account_name.c_str(), info.account_name.length() > 15 ? 15 : info.account_name.length());
+	// 	memcpy(m_head.username, info.user_name.c_str(), info.user_name.length() > 15 ? 15 : info.user_name.length());
+	// 	memcpy(m_head.ip, info.host_ip.c_str(), info.host_ip.length() > 17 ? 17 : info.host_ip.length());
+
+	memcpy(m_head.account, info->account_name, strlen(info->account_name) > 15 ? 15 : strlen(info->account_name));
+	memcpy(m_head.username, info->user_name, strlen(info->user_name) > 15 ? 15 : strlen(info->user_name));
+	memcpy(m_head.ip, info->host_ip, strlen(info->host_ip) > 17 ? 17 : strlen(info->host_ip));
 }
 
 void TppRec::_on_end(void)

@@ -248,7 +248,7 @@ TppRecBase::~TppRecBase()
 {
 }
 
-void TppRecBase::begin(const wchar_t* base_path, const wchar_t* base_fname, int record_id, const TS_SESSION_INFO& info)
+void TppRecBase::begin(const wchar_t* base_path, const wchar_t* base_fname, int record_id, const TPP_SESSION_INFO* info)
 {
 	m_start_time = ex_get_tick_count();
 
