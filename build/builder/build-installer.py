@@ -128,6 +128,7 @@ class BuilderLinux(BuilderBase):
         utils.copy_ex(out_path, bin_path, 'tp_web')
         utils.copy_ex(out_path, bin_path, 'tp_core')
         utils.copy_ex(out_path, bin_path, 'libtpssh.so')
+        utils.copy_ex(out_path, bin_path, 'libtprdp.so')
 
         utils.copy_ex(os.path.join(env.root_path, 'out', 'pysrt'), bin_path, (ctx.dist_path, 'pysrt'))
 
