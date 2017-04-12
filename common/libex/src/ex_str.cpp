@@ -381,9 +381,9 @@ ex_wstr& ex_replace_all(ex_wstr& str, const ex_wstr& old_value, const ex_wstr& n
 
 #ifndef EX_OS_WIN32
 
-// #define BYTE ts_u8
-// #define DWORD ts_u32
-// #define WCHAR ts_u16
+#define BYTE ex_u8
+#define DWORD ex_u32
+#define WCHAR ex_i16
 #define LPWSTR WCHAR*
 #define BOOL int
 #define TRUE 1

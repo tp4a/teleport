@@ -326,7 +326,7 @@ class BuilderLinux(BuilderBase):
         old_p = os.getcwd()
         os.chdir(self.LIBUV_PATH_SRC)
         os.system('sh autogen.sh')
-        os.system('./configure --prefix={}'.format(self.PATH_RELEASE))
+        os.system('./configure --prefix={} --with-pic'.format(self.PATH_RELEASE))
         os.system('make')
         os.system('make install')
         os.chdir(old_p)
@@ -411,7 +411,7 @@ class BuilderLinux(BuilderBase):
 
         old_p = os.getcwd()
         os.chdir(self.MBEDTLS_PATH_SRC)
-        os.system('make lib')
+        os.system('make CFLAGS="-fPIC" lib')
         os.system('make install')
         os.chdir(old_p)
 
