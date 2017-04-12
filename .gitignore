@@ -71,3 +71,4 @@ __pycache__
 /common/libex/test
 /client/tp_rdp
 /server/tp_core/protocol/rdp
+/client/tools/tprdp

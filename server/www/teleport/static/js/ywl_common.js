@@ -121,6 +121,10 @@ function digital_precision(num, keep) {
 	return Math.round(num * Math.pow(10, keep)) / Math.pow(10, keep);
 }
 
+function prefixInteger(num, length) {
+    return (num / Math.pow(10, length)).toFixed(length).substr(2);
+}
+
 function size2str(size, precision) {
 	precision = precision || 0;
 	var s = 0;
