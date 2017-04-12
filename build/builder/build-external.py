@@ -503,8 +503,8 @@ class BuilderLinux(BuilderBase):
         os.chdir(old_p)
 
     def fix_output(self):
-        # remove .so files, otherwise eom_ts will link to .so but not .a in default.
-        rm = ['libsqlite3.la', 'libsqlite3.so.0', 'libuv.la', 'libuv.so.1', 'libsqlite3.so', 'libsqlite3.so.0.8.6', 'libuv.so', 'libuv.so.1.0.0']
+        # remove .so files, otherwise will link to .so but not .a in default.
+        rm = ['libsqlite3.la', 'libsqlite3.so.0', 'libsqlite3.so', 'libsqlite3.so.0.8.6', 'libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
         for i in rm:
             _path = os.path.join(self.PATH_RELEASE, 'lib', i)
             if os.path.exists(_path):
@@ -551,8 +551,8 @@ def main():
     builder.build_mbedtls()
     builder.build_libssh()
     builder.build_sqlite()
-    #
-    # builder.fix_output()
+
+    builder.fix_output()
 
 
 if __name__ == '__main__':

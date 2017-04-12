@@ -68,6 +68,8 @@ bool TsEnv::init(bool load_config)
 #endif
 	}
 
+	//EXLOGW(L"[core] load config file: %ls.\n", conf_file.c_str());
+
 	if (!m_ini.LoadFromFile(conf_file))
 	{
 		EXLOGE(L"[core] can not load %ls.\n", conf_file.c_str());

@@ -89,7 +89,7 @@ private:
 	int m_retcode;
 	int m_db_id;
 
-	TppRec m_rec;
+	TppSshRec m_rec;
 
 	SshProxy* m_proxy;
 	ssh_session m_cli_session;

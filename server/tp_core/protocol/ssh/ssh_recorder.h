@@ -45,11 +45,11 @@ typedef struct TS_RECORD_WIN_SIZE
 
 #pragma pack(pop)
 
-class TppRec : public TppRecBase
+class TppSshRec : public TppRecBase
 {
 public:
-	TppRec();
-	virtual ~TppRec();
+	TppSshRec();
+	virtual ~TppSshRec();
 
 	void record(ex_u8 type, const ex_u8* data, size_t size);
 	void record_win_size_startup(int width, int height);

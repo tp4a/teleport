@@ -2,7 +2,7 @@
 
 static ex_u8 TPP_RECORD_MAGIC[4] = { 'T', 'P', 'R', 'R' };
 
-TppRec::TppRec()
+TppSshRec::TppSshRec()
 {
 	m_cmd_cache.reserve(MAX_SIZE_PER_FILE);
 
@@ -10,12 +10,12 @@ TppRec::TppRec()
 	memcpy((ex_u8*)(&m_head.magic), TPP_RECORD_MAGIC, sizeof(ex_u32));
 }
 
-TppRec::~TppRec()
+TppSshRec::~TppSshRec()
 {
 	end();
 }
 
-void TppRec::_on_begin(const TPP_SESSION_INFO* info)
+void TppSshRec::_on_begin(const TPP_SESSION_INFO* info)
 {
 	if (NULL == info)
 		return;
@@ -30,7 +30,7 @@ void TppRec::_on_begin(const TPP_SESSION_INFO* info)
 	memcpy(m_head.ip, info->host_ip, strlen(info->host_ip) > 17 ? 17 : strlen(info->host_ip));
 }
 
-void TppRec::_on_end(void)
+void TppSshRec::_on_end(void)
 {
 	// 如果还有剩下未写入的数据，写入文件中。
 	if (m_cache.size() > 0)
@@ -58,7 +58,7 @@ void TppRec::_on_end(void)
 	fclose(f);
 }
 
-void TppRec::record(ex_u8 type, const ex_u8* data, size_t size)
+void TppSshRec::record(ex_u8 type, const ex_u8* data, size_t size)
 {
 	if (data == NULL || 0 == size)
 		return;
@@ -82,13 +82,13 @@ void TppRec::record(ex_u8 type, const ex_u8* data, size_t size)
 	m_cache.append(data, size);
 }
 
-void TppRec::record_win_size_startup(int width, int height)
+void TppSshRec::record_win_size_startup(int width, int height)
 {
 	m_head.width = width;
 	m_head.height = height;
 }
 
-void TppRec::record_win_size_change(int width, int height)
+void TppSshRec::record_win_size_change(int width, int height)
 {
 	TS_RECORD_WIN_SIZE pkg;
 	pkg.width = (ex_u16)width;
@@ -96,7 +96,7 @@ void TppRec::record_win_size_change(int width, int height)
 	record(TS_RECORD_TYPE_SSH_TERM_SIZE, (ex_u8*)&pkg, sizeof(TS_RECORD_WIN_SIZE));
 }
 
-void TppRec::record_command(const ex_astr cmd)
+void TppSshRec::record_command(const ex_astr cmd)
 {
 	char szTime[100] = { 0 };
 #ifdef EX_OS_WIN32
@@ -122,7 +122,7 @@ void TppRec::record_command(const ex_astr cmd)
 	m_cmd_cache.append((ex_u8*)cmd.c_str(), cmd.length());
 }
 
-bool TppRec::_save_to_data_file(void)
+bool TppSshRec::_save_to_data_file(void)
 {
 	wchar_t _str_file_id[24] = { 0 };
 	ex_wcsformat(_str_file_id, 24, L".%03d", m_head.file_count);
@@ -153,7 +153,7 @@ bool TppRec::_save_to_data_file(void)
 	return true;
 }
 
-bool TppRec::_save_to_cmd_file(void)
+bool TppSshRec::_save_to_cmd_file(void)
 {
 	ex_wstr fname = m_base_path;
 	ex_path_join(fname, false, m_base_fname.c_str(), NULL);

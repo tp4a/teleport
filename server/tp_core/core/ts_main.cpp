@@ -148,7 +148,7 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 	ex_path_join(libfile, false, filename.c_str(), NULL);
 	EXLOGV(L"[core] load protocol lib: %ls\n", libfile.c_str());
 
-	TPP_LIB* lib = new  TPP_LIB;
+	TPP_LIB* lib = new TPP_LIB;
 
 	lib->dylib = ex_dlopen(libfile.c_str());
 	if (NULL == lib->dylib)
@@ -214,11 +214,13 @@ void TppManager::stop_all(void)
 
 int ts_main(void)
 {
-	EXLOGI("\n");
-	EXLOGI("###############################################################\n");
-	EXLOGI("Teleport Core Server starting ...\n");
-
 	ExIniFile& ini = g_env.get_ini();
+
+	EXLOGI(L"\n");
+	EXLOGI(L"###############################################################\n");
+	EXLOGI(L"Load config file: %ls.\n", ini.get_filename().c_str());
+	EXLOGI(L"Teleport Core Server starting ...\n");
+
 	ex_ini_sections& secs = ini.GetAllSections();
 	TsHttpRpc rpc;
 
@@ -228,14 +230,14 @@ int ts_main(void)
 	do {
 		if (!g_session_mgr.start())
 		{
-			EXLOGE("[core] failed to start session-id manager.\n");
+			EXLOGE(L"[core] failed to start session-id manager.\n");
 			all_ok = false;
 			break;
 		}
 
 		if (!rpc.init() || !rpc.start())
 		{
-			EXLOGE("[core] rpc init/start failed.\n");
+			EXLOGE(L"[core] rpc init/start failed.\n");
 			all_ok = false;
 			break;
 		}

@@ -232,6 +232,8 @@ bool ExIniFile::LoadFromFile(const ex_wstr& strFileName, bool bClearOld)
 	fseek(f, 0L, SEEK_SET);
 	fread(&vFile[0], 1, ulFileSize, f);
 	fclose(f);
+
+	m_file_path = strFileName;
 #endif
 
 	char *pOffset = &vFile[0];

@@ -3,11 +3,11 @@
 
 #include "../../common/base_env.h"
 
-class TppEnv : public TppEnvBase
+class TppSshEnv : public TppEnvBase
 {
 public:
-	TppEnv();
-	~TppEnv();
+	TppSshEnv();
+	~TppSshEnv();
 
 public:
 	ex_astr bind_ip;
@@ -17,6 +17,6 @@ private:
 	bool _on_init(TPP_INIT_ARGS* args);
 };
 
-extern TppEnv g_ssh_env;
+extern TppSshEnv g_ssh_env;
 
 #endif // __TPP_ENV_H__

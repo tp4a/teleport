@@ -6,7 +6,7 @@
 <%inherit file="../page_base.mako"/>
 
 <%block name="extend_js">
-##     <script type="text/javascript" src="${ static_url('js/ui/teleport.js') }"></script>
+    <script type="text/javascript" src="${ static_url('js/ui/teleport.js') }"></script>
     <script type="text/javascript" src="${ static_url('js/ui/log.js') }"></script>
 </%block>
 
