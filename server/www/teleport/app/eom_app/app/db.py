@@ -57,6 +57,7 @@ class TPDatabase:
             return False
 
         # 看看数据库中是否存在指定的数据表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
+        # ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}account";'.format(self._table_prefix))
         ret = self.is_table_exists('{}group'.format(self._table_prefix))
         if ret is None or not ret:
             log.w('database need create.\n')

@@ -13,3 +13,18 @@ class ExitHandler(TPBaseHandler):
     def get(self):
         self.write('exit ok')
         tornado.ioloop.IOLoop.instance().stop()
+
+
+class UIDesignHandler(TPBaseHandler):
+    def get(self):
+        self.render('uidesign/index.mako')
+
+
+class UIDesignWithoutSidebarHandler(TPBaseHandler):
+    def get(self):
+        self.render('uidesign/without-sidebar.mako')
+
+
+class UIDesignTableHandler(TPBaseHandler):
+    def get(self):
+        self.render('uidesign/table.mako')

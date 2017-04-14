@@ -113,6 +113,8 @@ controllers = [
     (r'/set/', set.IndexHandler),
     (r'/set', set.IndexHandler),
 
-    # 通过访问一个特殊URL来停止WEB服务，仅用于开发阶段，生产系统中请删除下一行
-    (r'/EXIT-4E581FEFD7AB497D833D71A51C61D898', index.ExitHandler),
+    (r'/uidesign', index.UIDesignHandler),
+    (r'/uidesign/without-sidebar', index.UIDesignWithoutSidebarHandler),
+    (r'/uidesign/table', index.UIDesignTableHandler)
+
 ]
