@@ -19,7 +19,7 @@
             },
             {
                 'require_type': 0,
-                'id': 'user',
+                'id': 'table',
                 'link': '/uidesign/table',
                 'name': '表格页面',
                 'icon': 'fa-user',
