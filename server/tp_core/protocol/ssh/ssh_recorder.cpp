@@ -1,6 +1,6 @@
 #include "ssh_recorder.h"
 
-static ex_u8 TPP_RECORD_MAGIC[4] = { 'T', 'P', 'R', 'R' };
+static ex_u8 TPP_RECORD_MAGIC[4] = { 'T', 'P', 'P', 'R' };
 
 TppSshRec::TppSshRec()
 {
@@ -8,6 +8,8 @@ TppSshRec::TppSshRec()
 
 	memset(&m_head, 0, sizeof(TS_RECORD_HEADER));
 	memcpy((ex_u8*)(&m_head.magic), TPP_RECORD_MAGIC, sizeof(ex_u32));
+	m_head.ver = 0x02;
+	m_head.protocol = TS_PROXY_PROTOCOL_SSH;
 }
 
 TppSshRec::~TppSshRec()
