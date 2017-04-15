@@ -44,12 +44,15 @@ End Sub
 手工测试了，ubuntu服务器可以，不知道是否能够支持所有的Linux。SecureCRT对此表示忽略。
 */
 
-//#define RDP_CLIENT_SYSTEM_BUILTIN
+// #define RDP_CLIENT_SYSTEM_BUILTIN
 // #define RDP_CLIENT_SYSTEM_ACTIVE_CONTROL
 #define RDP_CLIENT_FREERDP
 
 
 #ifdef RDP_CLIENT_SYSTEM_BUILTIN
+#include <WinCrypt.h>
+#pragma comment(lib, "Crypt32.lib")
+
 std::string rdp_content = "\
 connect to console:i:%d\n\
 screen mode id:i:%d\n\
@@ -87,6 +90,7 @@ redirectposdevices:i:0\n\
 redirectdirectx:i:0\n\
 autoreconnection enabled:i:0\n\
 drivestoredirect:s:*\n\
+password 51:b:%s\n\
 ";
 
 //password 51:b:01000000D08C9DDF0115D1118C7A00C04FC297EB0100000052A9E191EA75A948B359790578C9371A0000000008000000700073007700000003660000A8000000100000000A1DCCD2E50775CA25EC3857164B34DC0000000004800000A000000010000000FCE1A645B9B61AA450946BB6F955058108020000D83591CA47562D6DDAA689F050AE145039EBE22E00D1D3AEAA98373C7B63C3E8E7149072DF989EA43EFCE20513AD3D27B11BE7F17066A688E1DCE828AF85460AAC327B38E90776DB962888E4393D19637578984B19A187AAD95F6D2726ADE7DD315FF56C15FF5B3031014EDDCC3C24D1B81779AFDB006EE575F5BEFB8D2D2138D9D9D642BBB251CC5ED7226968764856EC660A646BACE748A13D6002A9A537AA70710615650B9387EED66DE28BD57B304BBDD7B581B943DA628EB0289E30A8BA784B76F7885BECCAB4FEF7820E97EE3C6E036EEAF6EAA669288DF2FCACC9BEC045C907EBBDE87AFB8CC6B07A600BD63AC891B61D95C2265DD9FD5E635D61BFBF5EDC28311375066611C610FB533D64515B643C82F57D9B183B05C156D91BC0974D38E546022B139E82452E6F1EDF76E52F732C3904E5E433F8F3D488DB0698427DBB0791A9F207F8CB6654CB8410BAF4A59C4F9E821E589ABC1E6E6E1D432181B690408F6884FE1007895A4D26D4A5A2C7458EE747DA35D44AC9FB08AB5477EA3E7CCDB3E37EE20FAFD0D0CF9584E420598B7003B347943AC28048F45E0FD21AD08148FFADCE0E7877219259A7BE722FFAE845A429BA2CF0A71F2D19EA7495530FABDB5106E8D404A38A7E6394C38457640EA7398C5D55F0C4D342CC6A39C77E10A2A5145AEA40B14F5C7C3760334D83C9BE748383FADE231248537353817D51F7B44F61B406ABC61400000071C354139F458B02D978015F785B97F7F6B307380\n\
@@ -154,6 +158,34 @@ int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_f
 
 	return i >= src_len ? j : -1;
 }
+
+#ifdef RDP_CLIENT_SYSTEM_BUILTIN
+bool calc_psw51b(const char* password, std::string& ret)
+{
+	DATA_BLOB DataIn;
+	DATA_BLOB DataOut;
+
+	ex_wstr w_pswd;
+	ex_astr2wstr(password, w_pswd, EX_CODEPAGE_ACP);
+
+	DataIn.cbData = w_pswd.length() * sizeof(wchar_t);
+	DataIn.pbData = (BYTE*)w_pswd.c_str();
+
+
+	if (!CryptProtectData(&DataIn, L"psw", NULL, NULL, NULL, 0, &DataOut))
+		return false;
+
+	char szRet[5] = {0};
+	for (int i = 0; i < DataOut.cbData; ++i)
+	{
+		sprintf_s(szRet, 5, "%02X", DataOut.pbData[i]);
+		ret += szRet;
+	}
+	
+	LocalFree(DataOut.pbData);
+	return true;
+}
+#endif
 
 TsHttpRpc::TsHttpRpc()
 {
@@ -742,12 +774,21 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 		int split_pos = sid.length() - 2;
 		std::string real_sid = sid.substr(0, split_pos);
 
+		std::string psw51b;
+		if (!calc_psw51b("Abcd1234", psw51b))
+		{
+			printf("calc password failed.\n");
+			_create_json_ret(buf, TPE_FAILED);
+			return;
+		}
+
 		char sz_rdp_file_content[4096] = { 0 };
 		sprintf_s(sz_rdp_file_content, rdp_content.c_str(),
 			console, display, width, higth
 			, cx, cy, cx + width + 20, cy + higth + 40
 			, teleport_ip.c_str(), teleport_port
 			, real_sid.c_str()
+			, psw51b.c_str()
 			);
 
 		char sz_file_name[MAX_PATH] = { 0 };

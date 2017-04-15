@@ -21,7 +21,7 @@ void TppSshRec::_on_begin(const TPP_SESSION_INFO* info)
 {
 	if (NULL == info)
 		return;
-
+	m_head.timestamp = time(NULL);
 	m_head.port = info->host_port;
 	// 	memcpy(m_head.account, info.account_name.c_str(), info.account_name.length() > 15 ? 15 : info.account_name.length());
 	// 	memcpy(m_head.username, info.user_name.c_str(), info.user_name.length() > 15 ? 15 : info.user_name.length());
@@ -41,7 +41,7 @@ void TppSshRec::_on_end(void)
 		_save_to_cmd_file();
 
 	// 更新头信息
-	m_head.timestamp = m_start_time;
+	//m_head.timestamp = m_start_time;
 	m_head.time_ms = (ex_u32)(m_last_time - m_start_time);
 
 	ex_wstr fname = m_base_path;

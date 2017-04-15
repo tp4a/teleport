@@ -1,12 +1,23 @@
 "use strict";
 
-var USER_TYPE_TEAM_MEMBER = 1;
-var USER_TYPE_TEAM_LEADER = 9;
-var USER_TYPE_SYS_ADMIN = 99;
+var PROTOCOL_TYPE_RDP = 1;
+var PROTOCOL_TYPE_SSH = 2;
+var PROTOCOL_TYPE_TELNET = 3;
 
-var AGENT_STAT_ONLINE = 1;
-var AGENT_STAT_OFFLINE = 0;
-// var AGENT_STAT_NOT_ACTIVE = 2;
+var OS_TYPE_WINDOWS = 1;
+var OS_TYPE_LINUX = 2;
+var AUTH_TYPE_PASSWORD = 1;
+var AUTH_TYPE_SSHKEY = 2;
+var AUTH_NONE = 0;
+
+
+//var USER_TYPE_TEAM_MEMBER = 1;
+//var USER_TYPE_TEAM_LEADER = 9;
+//var USER_TYPE_SYS_ADMIN = 99;
+
+//var AGENT_STAT_ONLINE = 1;
+//var AGENT_STAT_OFFLINE = 0;
+//var AGENT_STAT_NOT_ACTIVE = 2;
 
 var HOST_STAT_NOT_ACTIVE = 0;
 var HOST_STAT_ACTIVE = 2;
@@ -87,6 +98,7 @@ var TPE_DATA = 127;	// 数据错误
 
 // #define TPE_OPENFILE_ERROR			0x1007	// 无法打开文件
 // #define TPE_GETTEMPPATH_ERROR		0x1007
+var TPE_OPENFILE = 300; // 无法打开文件
 
 
 //-------------------------------------------------------
@@ -103,4 +115,52 @@ var TPE_START_CLIENT = 100002;	// 无法启动客户端程序（无法创建进�
 var TPE_NO_CORE_SERVER = 200000;	// 未能检测到核心服务
 
 
+function tp_error_msg(error_code) {
+    switch (error_code) {
+        case TPE_FAILED:
+            return '内部错误';
+        case TPE_NETWORK:
+            return '网络错误';
+
+//-------------------------------------------------------
+// HTTP请求相关错误
+//-------------------------------------------------------
+        case TPE_HTTP_METHOD:
+            return '无效/错误的请求方法';
+        case TPE_HTTP_URL_ENCODE:
+            return 'URL编码错误（无法解码）';
+
+        case  TPE_UNKNOWN_CMD:
+            return '未知命令';
+        case TPE_JSON_FORMAT:
+            return '错误的JSON格式数据';
+        case TPE_PARAM:
+            return '参数错误';
+        case  TPE_DATA:
+            return '数据错误';
+
+
+        case  TPE_OPENFILE:
+            return '无法打开文件';
+
+//-------------------------------------------------------
+// 助手程序专用错误值
+//-------------------------------------------------------
+        case  TPE_NO_ASSIST:
+            return '未能检测到助手程序';
+        case TPE_OLD_ASSIST:
+            return '助手程序版本太低';
+        case  TPE_START_CLIENT:
+            return '无法启动客户端程序（无法创建进程）';
+
+//-------------------------------------------------------
+// 核心服务专用错误值
+//-------------------------------------------------------
+        case  TPE_NO_CORE_SERVER:
+            return '未能检测到核心服务';
+
+        default:
+            return '未知错误';
+    }
+}
 

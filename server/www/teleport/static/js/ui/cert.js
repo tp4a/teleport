@@ -1,7 +1,7 @@
-/**
- * Created by mi on 2016/7/4.
- */
+"use strict";
+
 var g_cert_dlg_info = null;
+
 ywl.on_init = function (cb_stack, cb_args) {
 	var dom_id = '#ywl_cert_list';
 
@@ -71,7 +71,7 @@ ywl.on_init = function (cb_stack, cb_args) {
 ywl.on_host_table_created = function (tbl) {
 
 	tbl.on_cell_created = function (row_id, col_key, cell_obj) {
-		if (col_key == 'action') {
+		if (col_key === 'action') {
 			var row_data = tbl.get_row(row_id);
 			//console.log('row_data', row_data);
 			$(cell_obj).find('[ywl-btn-edit]').click(function () {
@@ -82,18 +82,18 @@ ywl.on_host_table_created = function (tbl) {
 				var _fn_sure = function (cb_stack, cb_args) {
 					ywl.ajax_post_json('/host/delete-cert', {cert_id: cert_id},
 						function (ret) {
-							if (ret.code == 0) {
+							if (ret.code === TPE_OK) {
 								tbl.remove_row(row_id);
 								ywl.notify_success('删除成功！');
-							} else if (ret.code == -2) {
+							} else if (ret.code === -2) {
 								ywl.notify_error('不能删除，有主机使用了此密钥！');
 							} else {
-								ywl.notify_error('删除失败！');
+								ywl.notify_error('删除失败！错误代码：'+ret.code);
 							}
 
 						},
-						function (ret) {
-							ywl.notify_error('删除失败');
+						function () {
+							ywl.notify_error('网络通讯失败！');
 						}
 					);
 				};
@@ -189,7 +189,7 @@ ywl.create_cert_info_dlg = function (tbl) {
 			ywl.notify_error('必须填写公钥内容！');
 			return false;
 		}
-		if (cert_info_dlg.update == 0 && cert_info_dlg.cert_pri.length == 0) {
+		if (cert_info_dlg.update === 0 && cert_info_dlg.cert_pri.length === 0) {
 			ywl.notify_error('添加密钥时，必须填写私钥内容！');
 			return false;
 		}
@@ -197,7 +197,7 @@ ywl.create_cert_info_dlg = function (tbl) {
 	};
 
 	cert_info_dlg.post = function () {
-		if (cert_info_dlg.update == 1) {
+		if (cert_info_dlg.update === 1) {
 			ywl.ajax_post_json('/host/update-cert', {cert_id: cert_info_dlg.cert_id, cert_name: cert_info_dlg.cert_name, cert_pub: cert_info_dlg.cert_pub, cert_pri: cert_info_dlg.cert_pri},
 				function (ret) {
 					var update_args = {cert_id: cert_info_dlg.cert_id, cert_name: cert_info_dlg.cert_name};
@@ -205,19 +205,19 @@ ywl.create_cert_info_dlg = function (tbl) {
 					ywl.notify_success('密钥更新成功！');
 					cert_info_dlg.hide();
 				},
-				function (ret) {
+				function () {
 					ywl.notify_error('密钥更新失败！');
 				}
 			);
 		} else {
 			ywl.ajax_post_json('/host/add-cert', {cert_name: cert_info_dlg.cert_name, cert_pub: cert_info_dlg.cert_pub, cert_pri: cert_info_dlg.cert_pri},
 				function (ret) {
-                    if(ret.code == 0){
+                    if(ret.code === TPE_OK){
                         cert_info_dlg.tbl.reload();
                         ywl.notify_success('密钥添加成功！');
                         cert_info_dlg.hide();
-                    }else if(ret.code == -2){
-                        ywl.notify_error('错误,没有启动核心服务！');
+                    }else if(ret.code === TPE_NO_CORE_SERVER){
+                        ywl.notify_error('错误，没有启动核心服务！');
                     }else{
                         ywl.notify_error('密钥添加失败！code:' + ret.code);
                     }

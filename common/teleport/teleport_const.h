@@ -27,8 +27,8 @@
 
 #define TPE_UNKNOWN_CMD				124	// 未知的命令
 #define TPE_JSON_FORMAT				125	// 错误的JSON格式（需要JSON格式数据，但是却无法按JSON格式解码）
-#define TPE_PARAM						126	// 参数错误
-#define TPE_DATA						127	// 数据错误
+#define TPE_PARAM					126	// 参数错误
+#define TPE_DATA					127	// 数据错误
 
 
 
@@ -40,9 +40,9 @@
 //-------------------------------------------------------
 // 助手程序专用错误值
 //-------------------------------------------------------
-#define TPE_NO_ASSIST					100000	// 未能检测到助手程序
+#define TPE_NO_ASSIST				100000	// 未能检测到助手程序
 #define TPE_OLD_ASSIST				100001	// 助手程序版本太低
-#define TPE_START_CLIENT				100002	// 无法启动客户端程序（无法创建进程）
+#define TPE_START_CLIENT			100002	// 无法启动客户端程序（无法创建进程）
 
 
 

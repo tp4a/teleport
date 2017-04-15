@@ -12,7 +12,7 @@
 
 <%block name="breadcrumb">
 	<ol class="breadcrumb">
-		<li><i class="fa fa-server fa-fw"></i> ${self.attr.page_title_}</li>
+		<li><i class="fa fa-user fa-fw"></i> ${self.attr.page_title_}</li>
 	</ol>
 </%block>
 

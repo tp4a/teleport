@@ -1003,20 +1003,20 @@ ywl.create_table_render = function (tbl, on_created) {
 		return ret;
 	};
 
-	_tbl_render.host_status = function (row_id, fields) {
-		if (fields.status == HOST_STAT_ACTIVE) {
-			switch (fields.online) {
-				case AGENT_STAT_ONLINE:
-					return '<span class="badge badge-success">在线</span>';
-				case AGENT_STAT_OFFLINE:
-					return '<span class="badge badge-danger">离线</span>';
-				default:
-					return '<span class="badge badge-warning">未知</span>';
-			}
-		} else {
-			return '<span class="badge badge-ignore">- 未使用 -</span>';
-		}
-	};
+//	_tbl_render.host_status = function (row_id, fields) {
+//		if (fields.status == HOST_STAT_ACTIVE) {
+//			switch (fields.online) {
+//				case AGENT_STAT_ONLINE:
+//					return '<span class="badge badge-success">在线</span>';
+//				case AGENT_STAT_OFFLINE:
+//					return '<span class="badge badge-danger">离线</span>';
+//				default:
+//					return '<span class="badge badge-warning">未知</span>';
+//			}
+//		} else {
+//			return '<span class="badge badge-ignore">- 未使用 -</span>';
+//		}
+//	};
 
 	_tbl_render.sys_type = function (row_id, fields) {
 		switch (fields.sys_type) {

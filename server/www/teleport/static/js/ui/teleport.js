@@ -7,19 +7,18 @@ var g_current_version = "";
 var g_host_name = window.location.hostname;
 
 var error_process = function (ret, func_success, func_error) {
-//	console.log("ret", ret);
 	var code = ret.code;
-	if (code == TPE_OK) {
+	if (code === TPE_OK) {
 		func_success(ret);
 		return;
 	}
 
-	if (code == TPE_START_CLIENT) {
+	if (code === TPE_START_CLIENT) {
 		func_error(TPE_START_CLIENT, '启动本地客户端进程失败，请检查命令行是否正确：' + ret.path);
 		console.log('启动本地进程失败，命令行：', ret.path);
-	} else if (code == TPE_JSON_FORMAT || code == TPE_PARAM) {
+	} else if (code === TPE_JSON_FORMAT || code === TPE_PARAM) {
 		func_error(TPE_START_CLIENT, "启动本地客户端进程失败：启动参数错误！");
-	} else if (code == TPE_OLD_ASSIST) {
+	} else if (code === TPE_OLD_ASSIST) {
 		func_error(TPE_OLD_ASSIST, '助手版本太低，请下载最新版本！');
 	}
 	else {
@@ -47,7 +46,7 @@ var teleport_init = function (last_version, req_version, func_success, func_erro
 				func_error(ret, TPE_OLD_ASSIST, '助手版本太低，请<a style="color:#aaaaff;" target="_blank" href="http://teleport.eomsoft.net/download">下载最新版本</a>！');
 			}
 		},
-		error: function (jqXhr) {
+		error: function () {
 			func_error({}, TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
 		}
 	});
@@ -60,7 +59,6 @@ var version_compare = function () {
 };
 
 var to_teleport = function (url, args, func_success, func_error) {
-
 	var auth_id = args['auth_id'];
 	// 开始Ajax调用
 	var args_ = JSON.stringify({auth_id: auth_id});
@@ -94,7 +92,7 @@ var to_teleport = function (url, args, func_success, func_error) {
 					success: function (ret) {
 						error_process(ret, func_success, func_error);
 					},
-					error: function (jqXhr) {
+					error: function () {
 						func_error(TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
 					}
 				});
@@ -109,7 +107,6 @@ var to_teleport = function (url, args, func_success, func_error) {
 };
 
 var to_admin_teleport = function (url, args, func_success, func_error) {
-
 	var host_auth_id = args['host_auth_id'];
 	// 开始Ajax调用
 	var args_ = JSON.stringify({host_auth_id: host_auth_id});
@@ -124,7 +121,7 @@ var to_admin_teleport = function (url, args, func_success, func_error) {
 			if (ret.code === 0) {
 				var session_id = ret.data.session_id;
 				var data = {
-					server_ip: g_host_name, // args.server_ip,
+					server_ip: g_host_name,
 					server_port: parseInt(args.server_port),
 					host_ip: args.host_ip,
 					size: parseInt(args.size),
@@ -158,7 +155,6 @@ var to_admin_teleport = function (url, args, func_success, func_error) {
 };
 
 var to_admin_fast_teleport = function (url, args, func_success, func_error) {
-
 	// 开始Ajax调用
 	var args_ = JSON.stringify(args);
 	$.ajax({
@@ -172,7 +168,7 @@ var to_admin_fast_teleport = function (url, args, func_success, func_error) {
 			if (ret.code === 0) {
 				var session_id = ret.data.session_id;
 				var data = {
-					server_ip: g_host_name, //args.server_ip,
+					server_ip: g_host_name,
 					server_port: parseInt(args.server_port),
 					host_ip: args.host_ip,
 					size: parseInt(args.size),
@@ -210,7 +206,6 @@ var to_admin_fast_teleport = function (url, args, func_success, func_error) {
 };
 
 var start_rdp_replay = function (args, func_success, func_error) {
-
 	var args_ = encodeURIComponent(JSON.stringify(args));
 	$.ajax({
 		type: 'GET',
@@ -227,7 +222,7 @@ var start_rdp_replay = function (args, func_success, func_error) {
 			console.log('ret', ret);
 		},
 		error: function () {
-			func_error(TPE_NETWORK, '远程网络通讯失败！');
+			func_error(TPE_NETWORK, '与助手的络通讯失败！');
 		}
 	});
 };

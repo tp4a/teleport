@@ -414,7 +414,7 @@ def add_cert(cert_pub, cert_pri, cert_name):
 
 def delete_cert(cert_id):
     db = get_db()
-    sql = 'DELETE FROM `{}key` WHERE `cert_id`={};'.format(int(cert_id))
+    sql = 'DELETE FROM `{}key` WHERE `cert_id`={};'.format(db.table_prefix, int(cert_id))
     return db.exec(sql)
 
 

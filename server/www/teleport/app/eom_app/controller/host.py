@@ -513,22 +513,19 @@ class DeleteCert(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1)
+
         cert_id = args['cert_id']
+
         try:
             ret = host.delete_cert(cert_id)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
-            return
+                return self.write_json(-2)
         except:
-            self.write_json(-1)
-            return
+            return self.write_json(-3)
 
 
 class UpdateCert(TPBaseUserAuthJsonHandler):

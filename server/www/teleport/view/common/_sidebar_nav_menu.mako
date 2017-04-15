@@ -52,27 +52,28 @@
 		'name': '日志查询',
 		'icon': 'fa-database',
 	},
+## 	{
+## 		'require_type': 1,
+## 		'id': 'pwd',
+## 		'link': '/pwd',
+## 		'name': '密码修改',
+## 		'icon': 'fa-pencil-square-o',
+## 	},
+## 	{
+## 		'require_type': 1,
+## 		'id': 'exit',
+## 		'link': '/exit',
+## 		'name': '安全退出',
+## 		'icon': 'fa-sign-out',
+## 	},
 	{
+	    'separator': true,
 		'require_type': 1,
 		'id': 'assist-config',
 		'link': 'http://127.0.0.1:50022/config',
 		'target': '_blank',
 		'name': '助手配置',
-		'icon': 'fa-pencil-square-o',
-	},
-	{
-		'require_type': 1,
-		'id': 'pwd',
-		'link': '/pwd',
-		'name': '密码修改',
-		'icon': 'fa-pencil-square-o',
-	},
-	{
-		'require_type': 1,
-		'id': 'exit',
-		'link': '/exit',
-		'name': '安全退出',
-		'icon': 'fa-sign-out',
+		'icon': 'fa-cog',
 	},
 ]
 %>
@@ -103,7 +104,8 @@
                             <i class="fa fa-caret-right"></i></span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-right">
-                        <li><a href="/auth/logout" id="btn-logout">退出</a></li>
+                        <li><a href="/pwd" id="btn-logout">修改密码</a></li>
+                        <li><a href="/auth/logout" id="btn-logout">安全退出</a></li>
                     </ul>
                 </div>
 
@@ -119,6 +121,10 @@
 
             %for menu in _sidebar:
                 %if menu['require_type'] <= current_user['type']:
+                    %if 'separator' in menu:
+                        <hr style="border:none;border-bottom:1px solid #636363;margin-bottom:0;margin-top:5px;"/>
+                    %endif
+
                     %if 'sub' in menu and len(menu['sub']) > 0:
                         <li id="sidebar_menu_${menu['id']}"><a href="javascript:;"
                                                                onclick="ywl._sidebar_toggle_submenu('${menu['id']}');"><i
@@ -150,7 +156,7 @@
     <hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:0;"/>
     <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:100px;text-align: right">服务端：</span><span class="mono">v${eom_ver.TS_VER}</span></div>
     <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:100px;text-align: right">助手：</span><span class="mono" id="tp-assist-version" req-version=${eom_ver.TP_ASSIST_REQUIRE}>v${eom_ver.TP_ASSIST_LAST_VER}</span></div>
-    <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:100px;text-align: right">当前助手：</span><span class="mono">v${eom_ver.TP_ASSIST_REQUIRE}</span></div>
+    <hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:0;margin-top:5px;"/>
 
 </div>
 <!-- end sidebar scrollbar -->

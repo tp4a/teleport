@@ -25,23 +25,23 @@ ywl.create_app = function () {
 
         $('#captcha_image').click(function () {
             $(this).attr('src', '/auth/get-captcha?' + Math.random());
-            $('#captcha').focus();
+            $('#captcha').focus().val('');
         });
         $('#username_account').keydown(function (event) {
             $('[data-toggle="popover"]').popover('hide');
-            if (event.which == 13) {
+            if (event.which === 13) {
                 $('#password_account').focus();
             }
         });
         $('#password_account').keydown(function (event) {
             $('[data-toggle="popover"]').popover('hide');
-            if (event.which == 13) {
+            if (event.which === 13) {
                 $('#captcha').focus();
             }
         });
         $('#captcha').keydown(function (event) {
             $('[data-toggle="popover"]').popover('hide');
-            if (event.which == 13) {
+            if (event.which === 13) {
                 _app.login_account();
             }
         });
@@ -64,7 +64,6 @@ ywl.create_app = function () {
         str_password = dom_password.val();
         str_captcha = dom_captcha.val();
         is_remember = dom_remember.is(':checked');
-        console.log('xxxx', is_remember);
 
         if (str_username.length === 0) {
             show_op_box('error', '缺少账号！');
@@ -92,7 +91,7 @@ ywl.create_app = function () {
         // 先判断一下captcha是否正确，如果不正确，拒绝登录
         ywl.ajax_post_json('/auth/verify-captcha', {captcha: str_captcha},
             function (ret) {
-                if (ret.code === 0) {
+                if (ret.code === TPE_OK) {
                     // 验证成功
                     hide_op_box();
                     show_op_box('wait', '<i class="fa fa-circle-o-notch fa-spin"></i> 正在登录TELEPORT，请稍候...');
@@ -116,14 +115,11 @@ ywl.create_app = function () {
     };
 
     _app.do_account_login = function (username, userpwd, captcha, is_remember) {
-        console.log('remember', is_remember);
         ywl.ajax_post_json('/auth/verify-user', {username: username, userpwd: userpwd, captcha: captcha, remember: is_remember},
             function (ret) {
-                if (ret.code == 0) {
-                    // 验证成功
+                if (ret.code === TPE_OK) {
                     window.location.href = ywl.page_options.ref;
-                }
-                else {
+                } else {
                     hide_op_box();
                     show_op_box('error', '无法登录TELEPORT：' + ret.message);
                     console.log(ret);
@@ -137,31 +133,6 @@ ywl.create_app = function () {
                 $('#btn_login').removeAttr('disabled');
             }
         );
-
-//        $.ajax({
-//            type: 'GET',
-//            url: '/auth/verify-user',
-//            jsonp: "callback",
-//            data: {username: username, userpwd: userpwd, captcha: captcha},
-//            dataType: 'jsonp',
-//            success: function (data) {
-//                if (data.code == 0) {
-//                    // 验证成功
-//                    window.location.href = ywl.page_options.ref;
-//                }
-//                else {
-//                    hide_op_box();
-//                    show_op_box('error', '无法登录TELEPORT！');
-//                }
-//
-//                $('#btn_login').removeAttr('disabled');
-//            },
-//            error: function () {
-//                hide_op_box();
-//                show_op_box('error', '很抱歉，无法连接服务器！请稍后再试一次！');
-//                $('#btn_login').removeAttr('disabled');
-//            }
-//        });
     };
 
     return _app;
