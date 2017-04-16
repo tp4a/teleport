@@ -65,17 +65,20 @@ class BuilderWin(BuilderBase):
     def _build_installer():
         tmp_path = os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist')
         tmp_app_path = os.path.join(tmp_path, 'apps')
-        tmp_cfg_path = os.path.join(tmp_path, 'cfg')
+        tmp_cfg_path = os.path.join(tmp_app_path, 'cfg')
 
         if os.path.exists(tmp_app_path):
             utils.remove(tmp_app_path)
-        if os.path.exists(tmp_cfg_path):
-            utils.remove(tmp_cfg_path)
+        # if os.path.exists(tmp_cfg_path):
+        #     utils.remove(tmp_cfg_path)
 
         utils.makedirs(tmp_app_path)
         utils.makedirs(tmp_cfg_path)
 
         utils.copy_file(os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_app_path, 'tp_assist.exe')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'ssh.ini')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'scp.ini')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'telnet.ini')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'ssh.ini')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'scp.ini')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'telnet.ini')
