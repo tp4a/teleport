@@ -63,10 +63,12 @@ bool TsEnv::init(bool load_config)
 #else
 		m_etc_path = L"/etc/teleport";
 		conf_file = L"/etc/teleport/core.ini";
-		m_replay_path = L"/var/lib/teleport/data/replay";
+		m_replay_path = L"/var/lib/teleport/replay";
 		log_path = L"/var/log/teleport";
 #endif
 	}
+
+	//EXLOGW(L"[core] load config file: %ls.\n", conf_file.c_str());
 
 	if (!m_ini.LoadFromFile(conf_file))
 	{
@@ -108,6 +110,11 @@ bool TsEnv::init(bool load_config)
 	{
 		EXLOG_LEVEL(log_level);
 	}
+
+	int debug_mode = 0;
+	ps->GetInt(L"debug", debug_mode, 0);
+	if (debug_mode == 1)
+		EXLOG_DEBUG(true);
 
 	ex_wstr tmp;
 	ps = m_ini.GetSection(L"rpc");

@@ -41,7 +41,7 @@ var speed_offset = 0;
 ywl.req_record_info = function (record_id, file_id, repeat) {
     ywl.ajax_post_json_time_out('/log/get-record-file-info', {id: record_id, file_id: file_id}, 30 * 1000,
         function (ret) {
-            if (ret.code == 0) {
+            if (ret.code === TPE_OK) {
                 g_data[file_id] = ret.data;
 
                 if ((g_down_play_file_id + 1) <= g_total_file_count) {
@@ -49,9 +49,7 @@ ywl.req_record_info = function (record_id, file_id, repeat) {
                         ywl.req_record_info(record_id, g_down_play_file_id, true);
                         g_down_play_file_id++;
                     }
-
                 }
-                //console.log('req_record_info successful');
             } else {
                 console.log('req_record_info error ', ret.code);
             }
@@ -77,10 +75,12 @@ ywl.on_init = function (cb_stack, cb_args) {
 
     ywl.ajax_post_json('/log/get-record-header', {id: record_id},
         function (ret) {
-            if (ret.code == 0) {
+            if (ret.code === TPE_OK) {
                 g_header = ret.data.header;
                 g_total_file_count = g_header.file_count;
                 g_total_time = g_header.time_used;
+
+                $('#recorder-info').html(g_header.account + ' 于 ' + format_datetime(g_header.start) + ' 访问 ' + g_header.user_name + '@' + g_header.ip + ':' + g_header.port);
 
                 // 请求第一个录像数据块
                 g_down_play_file_id = 0;

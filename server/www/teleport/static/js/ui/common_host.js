@@ -1,13 +1,13 @@
 "use strict";
 
-var OS_TYPE_WINDOWS = 1;
-var OS_TYPE_LINUX = 2;
-var PROTOCOL_TYPE_RDP = 1;
-var PROTOCOL_TYPE_SSH = 2;
-var PROTOCOL_TYPE_TELNET = 3;
-var AUTH_TYPE_PASSWORD = 1;
-var AUTH_TYPE_SSHKEY = 2;
-var AUTH_NONE = 0;
+//var OS_TYPE_WINDOWS = 1;
+//var OS_TYPE_LINUX = 2;
+//var PROTOCOL_TYPE_RDP = 1;
+//var PROTOCOL_TYPE_SSH = 2;
+//var PROTOCOL_TYPE_TELNET = 3;
+//var AUTH_TYPE_PASSWORD = 1;
+//var AUTH_TYPE_SSHKEY = 2;
+//var AUTH_NONE = 0;
 
 var g_assist = null;
 

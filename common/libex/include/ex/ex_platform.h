@@ -37,7 +37,7 @@
 
 #ifdef EX_OS_WIN32
 #	ifndef _WIN32_WINNT
-#		define _WIN32_WINNT 0x0500     // 0x0500 = Windows2000
+#		define _WIN32_WINNT 0x0502     // 0x0502 = WinServer2003 (libuv need this)  0x0501 = WinXP, 0x0500 = Win2000
 #	endif
 #	define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #	define _CRT_RAND_S		// for rand_s().
@@ -96,6 +96,8 @@
 //#	define DEBUG_CHECKS (1)
 #endif
 
+#define UNREACHABLE() CHECK(!"Unreachable code reached.")
+
 #ifndef UNUSED
 #	if defined(_MSC_VER)
 #		define UNUSED(x) (void)(x)
@@ -107,6 +109,29 @@
 #		define UNUSED(x)
 #	else
 #		define UNUSED(x) (void)(x)
+#	endif
+#endif
+
+/* check endian */
+#if !(defined(L_ENDIAN) || defined(B_ENDIAN))
+#	if !defined(__BYTE_ORDER) && defined(__linux__)
+#		include <endian.h>
+#	endif
+
+#	if defined(BYTE_ORDER)
+#		if BYTE_ORDER == BIG_ENDIAN
+#			define B_ENDIAN
+#		else
+#			define L_ENDIAN
+#		endif
+#	endif
+
+#	if !(defined(L_ENDIAN) || defined(B_ENDIAN))
+#		if defined(__sparc__) || defined(__PPC__) || defined(__ppc__) || defined(__hppa__)
+#			define B_ENDIAN
+#		else
+#			define L_ENDIAN
+#		endif
 #	endif
 #endif
 

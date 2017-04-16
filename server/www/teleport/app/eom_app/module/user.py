@@ -12,7 +12,7 @@ def verify_user(name, password):
     cfg = app_cfg()
     db = get_db()
 
-    sql = 'SELECT `account_id`, `account_type`, `account_name`, `account_pwd` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, name)
+    sql = 'SELECT `account_id`, `account_type`, `account_name`, `account_pwd`, `account_lock` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, name)
     db_ret = db.query(sql)
     if db_ret is None:
         # 特别地，如果无法取得数据库连接，有可能是新安装的系统，尚未建立数据库，此时应该处于维护模式
@@ -20,25 +20,29 @@ def verify_user(name, password):
         if cfg.app_mode == APP_MODE_MAINTENANCE:
             if name == 'admin' and password == 'admin':
                 return 1, 100, 'admin'
-        return 0, 0, ''
+        return 0, 0, '', 0
 
     if len(db_ret) != 1:
-        return 0, 0, ''
+        return 0, 0, '', 0
 
     user_id = db_ret[0][0]
     account_type = db_ret[0][1]
     name = db_ret[0][2]
+    locked = db_ret[0][4]
+    if locked == 1:
+        return 0, 0, '', locked
+
     if not sec_verify_password(password, db_ret[0][3]):
         # 按新方法验证密码失败，可能是旧版本的密码散列格式，再尝试一下
         if db_ret[0][3] != hashlib.sha256(password.encode()).hexdigest():
-            return 0, 0, ''
+            return 0, 0, '', locked
         else:
             # 发现此用户的密码散列格式还是旧的，更新成新的吧！
             _new_sec_password = sec_generate_password(password)
             sql = 'UPDATE `{}account` SET `account_pwd`="{}" WHERE `account_id`={}'.format(db.table_prefix, _new_sec_password, int(user_id))
             db.exec(sql)
 
-    return user_id, account_type, name
+    return user_id, account_type, name, locked
 
 
 def modify_pwd(old_pwd, new_pwd, user_id):

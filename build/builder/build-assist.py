@@ -58,72 +58,27 @@ class BuilderWin(BuilderBase):
 
         self._build_installer()
 
-        # last_ver = 'teleport-assist-last-win.zip'
-        # if os.path.exists(os.path.join(ROOT_PATH, 'dist', last_ver)):
-        #     utils.remove(os.path.join(ROOT_PATH, 'dist', last_ver))
-
-        # utils.copy_file(os.path.join(ROOT_PATH, 'dist'), os.path.join(ROOT_PATH, 'dist'), ('{}.zip'.format(name), last_ver))
-
-        # cc.n('build assist package for backend...')
-        # name = 'teleport-assist-last-win'
-        # utils.remove(os.path.join(ROOT_PATH, 'dist', '{}.zip'.format(name)))
-        # self._build_installer(name)
-
-        # utils.copy_file(os.path.join(ROOT_PATH, 'dist'), os.path.join(ROOT_PATH, 'web', 'site', 'teleport', 'static', 'download'), 'teleport-assist-win.zip')
-
         utils.ensure_file_exists(out_file)
-
-    # @staticmethod
-    # def _build_installer(name):
-    #     base_path = os.path.join(ROOT_PATH, 'out', 'client')
-    #     base_tmp = os.path.join(base_path, '_tmp_')
-    #     tmp_path = os.path.join(base_tmp, name)
-    #
-    #     if os.path.exists(base_tmp):
-    #         utils.remove(base_tmp)
-    #
-    #     utils.makedirs(tmp_path)
-    #
-    #     utils.copy_file(os.path.join(ROOT_PATH, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_path, 'tp_assist.exe')
-    #     utils.copy_file(os.path.join(ROOT_PATH, 'client', 'tp_assist', 'cfg'), tmp_path, ('ssh_client.ini', 'ssh_client.ini'))
-    #     utils.copy_file(os.path.join(ROOT_PATH, 'client', 'tp_assist', 'cfg'), tmp_path, ('scp_client.ini', 'scp_client.ini'))
-    #     utils.copy_file(os.path.join(ROOT_PATH, 'client', 'tp_assist', 'cfg'), tmp_path, ('telnet_client.ini', 'telnet_client.ini'))
-    #
-    #     utils.copy_ex(os.path.join(ROOT_PATH, 'client', 'tp_assist'), tmp_path, 'site')
-    #
-    #     # utils.makedirs(os.path.join(tmp_path, 'tools', 'tprdp'))
-    #     utils.makedirs(os.path.join(tmp_path, 'tools', 'putty'))
-    #     utils.makedirs(os.path.join(tmp_path, 'tools', 'winscp'))
-    #     # utils.copy_file(os.path.join(ROOT_PATH, 'out', 'tp_rdp', ctx.bits_path, ctx.target_path), os.path.join(tmp_path, 'tools', 'tprdp'), 'tp_rdp.exe')
-    #     # utils.copy_file(os.path.join(ROOT_PATH, 'tools', 'tprdp'), os.path.join(tmp_path, 'tools', 'tprdp'), 'tprdp-client.exe')
-    #     # utils.copy_file(os.path.join(ROOT_PATH, 'tools', 'tprdp'), os.path.join(tmp_path, 'tools', 'tprdp'), 'tprdp-replay.exe')
-    #     utils.copy_file(os.path.join(ROOT_PATH, 'client', 'tools', 'putty'), os.path.join(tmp_path, 'tools', 'putty'), 'putty.exe')
-    #     utils.copy_file(os.path.join(ROOT_PATH, 'client', 'tools', 'winscp'), os.path.join(tmp_path, 'tools', 'winscp'), 'WinSCP.exe')
-    #     utils.copy_file(os.path.join(ROOT_PATH, 'client', 'tools', 'winscp'), os.path.join(tmp_path, 'tools', 'winscp'), 'license.txt')
-    #     utils.copy_file(os.path.join(ROOT_PATH, 'client', 'tools'), os.path.join(tmp_path, 'tools'), 'securecrt-telnet.vbs')
-    #
-    #     # utils.makedirs(os.path.join(tmp_path, 'data'))
-    #     # utils.copy_file(os.path.join(ROOT_PATH, 'tp_assist'), os.path.join(tmp_path, 'data'), 'ssl.cert')
-    #
-    #     out_file = os.path.join(ROOT_PATH, 'dist', '{}.zip'.format(name))
-    #     utils.make_zip(base_tmp, out_file)
 
 
     @staticmethod
     def _build_installer():
         tmp_path = os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist')
         tmp_app_path = os.path.join(tmp_path, 'apps')
-        tmp_cfg_path = os.path.join(tmp_path, 'cfg')
+        tmp_cfg_path = os.path.join(tmp_app_path, 'cfg')
 
         if os.path.exists(tmp_app_path):
             utils.remove(tmp_app_path)
-        if os.path.exists(tmp_cfg_path):
-            utils.remove(tmp_cfg_path)
+        # if os.path.exists(tmp_cfg_path):
+        #     utils.remove(tmp_cfg_path)
 
         utils.makedirs(tmp_app_path)
         utils.makedirs(tmp_cfg_path)
 
         utils.copy_file(os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_app_path, 'tp_assist.exe')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'ssh.ini')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'scp.ini')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'telnet.ini')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'ssh.ini')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'scp.ini')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'telnet.ini')
@@ -131,10 +86,18 @@ class BuilderWin(BuilderBase):
         utils.copy_ex(os.path.join(env.root_path, 'client', 'tp_assist'), tmp_app_path, 'site')
 
         utils.makedirs(os.path.join(tmp_app_path, 'tools', 'putty'))
-        utils.makedirs(os.path.join(tmp_app_path, 'tools', 'winscp'))
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'putty'), os.path.join(tmp_app_path, 'tools', 'putty'), 'putty.exe')
+
+        utils.makedirs(os.path.join(tmp_app_path, 'tools', 'winscp'))
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'winscp'), os.path.join(tmp_app_path, 'tools', 'winscp'), 'WinSCP.exe')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'winscp'), os.path.join(tmp_app_path, 'tools', 'winscp'), 'license.txt')
+
+        utils.makedirs(os.path.join(tmp_app_path, 'tools', 'tprdp'))
+        utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'tprdp-client.exe')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'tprdp-replay.exe')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'libeay32.dll')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'ssleay32.dll')
+
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools'), os.path.join(tmp_app_path, 'tools'), 'securecrt-telnet.vbs')
 
         utils.nsis_build(os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist', 'installer.nsi'))

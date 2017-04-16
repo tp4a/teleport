@@ -113,16 +113,19 @@ bool TsSessionManager::take_session(const ex_astr& sid, TS_SESSION_INFO& info)
 		return false;
 
 	info.sid = it->second->sid;
+	info.account_name = it->second->account_name;
 	info.auth_id = it->second->auth_id;
 	info.host_ip = it->second->host_ip;
 	info.host_port = it->second->host_port;
 	info.protocol = it->second->protocol;
-	info.account_name = it->second->account_name;
-	info.sys_type = it->second->sys_type;
 	info.user_name = it->second->user_name;
-	info.user_param = it->second->user_param;
+
 	info.user_auth = it->second->user_auth;
+
+	info.user_param = it->second->user_param;
 	info.auth_mode = it->second->auth_mode;
+	info.sys_type = it->second->sys_type;
+	info.ref_count = it->second->ref_count;
 	info.ticket_start = it->second->ticket_start;
 
 	it->second->ref_count--;
@@ -145,7 +148,7 @@ bool TsSessionManager::_add_session(ex_astr& sid, TS_SESSION_INFO* info)
 	for (;;)
 	{
 		_gen_session_id(_sid, info, 6);
-		it = m_sessions.find(sid);
+		it = m_sessions.find(_sid);
 		if (it == m_sessions.end())
 			break;
 

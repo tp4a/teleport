@@ -11,6 +11,7 @@
 <%block name="breadcrumb">
     <ol class="breadcrumb">
         <li><i class="fa fa-server"></i> ${self.attr.page_title_}</li>
+        <li><span id="recorder-info"></span></li>
     </ol>
 </%block>
 

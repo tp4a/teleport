@@ -71,9 +71,9 @@ void SshSession::_set_stop_flag(void) {
 	}
 }
 
-bool SshSession::_on_session_begin(TS_SESSION_INFO& info)
+bool SshSession::_on_session_begin(const TPP_SESSION_INFO* info)
 {
-	if (!g_ssh_env.session_begin(info, m_db_id))
+	if (!g_ssh_env.session_begin(info, &m_db_id))
 	{
 		EXLOGD("[ssh] session_begin error. %d\n", m_db_id);
 		return false;
@@ -229,12 +229,11 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	_this->m_sid = user;
 	EXLOGV("[ssh] authenticating, session-id: %s\n", _this->m_sid.c_str());
 
-	bool bRet = true;
-	TS_SESSION_INFO sess_info;
-	//bRet = _this->m_proxy->get_session_mgr()->take_session(_this->m_sid, sess_info);
-	bRet = g_ssh_env.take_session(_this->m_sid, sess_info);
+	//bool bRet = true;
+	int protocol = 0;
+	TPP_SESSION_INFO* sess_info = g_ssh_env.take_session(_this->m_sid.c_str());
 
-	if (!bRet) {
+	if (NULL == sess_info) {
 		EXLOGW("[ssh] try to get login-info from ssh-sftp-session.\n");
 		// 尝试从sftp连接记录中获取连接信息（一个ssh会话如果成为sftp会话，内部会将连接信息记录下来备用）
 		TS_SFTP_SESSION_INFO sftp_info;
@@ -251,25 +250,28 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		_this->m_user_name = sftp_info.user_name;
 		_this->m_user_auth = sftp_info.user_auth;
 
-		sess_info.host_ip = sftp_info.host_ip;
-		sess_info.host_port = sftp_info.host_port;
-		sess_info.auth_mode = sftp_info.auth_mode;
-		sess_info.user_name = sftp_info.user_name;
-		sess_info.user_auth = sftp_info.user_auth;
-		sess_info.protocol = TS_PROXY_PROTOCOL_SSH;
+// 		sess_info.host_ip = sftp_info.host_ip;
+// 		sess_info.host_port = sftp_info.host_port;
+// 		sess_info.auth_mode = sftp_info.auth_mode;
+// 		sess_info.user_name = sftp_info.user_name;
+// 		sess_info.user_auth = sftp_info.user_auth;
+// 		sess_info.protocol = TS_PROXY_PROTOCOL_SSH;
+		protocol = TS_PROXY_PROTOCOL_SSH;
 
 		// 因为是从sftp会话得来的登录数据，因此限制本会话只能用于sftp，不允许再使用shell了。
 		_this->_enter_sftp_mode();
 	} else {
-		_this->m_server_ip = sess_info.host_ip;
-		_this->m_server_port = sess_info.host_port;
-		_this->m_auth_mode = sess_info.auth_mode;
-		_this->m_user_name = sess_info.user_name;
-		_this->m_user_auth = sess_info.user_auth;
+		_this->m_server_ip = sess_info->host_ip;
+		_this->m_server_port = sess_info->host_port;
+		_this->m_auth_mode = sess_info->auth_mode;
+		_this->m_user_name = sess_info->user_name;
+		_this->m_user_auth = sess_info->user_auth;
+		protocol = sess_info->protocol;
 	}
 
 	//EXLOGE("[ssh---------1] auth info [password:%s:%s:%d]\n", _this->m_user_name.c_str(),_this->m_user_auth.c_str(), _this->m_auth_mode);
-	if (sess_info.protocol != TS_PROXY_PROTOCOL_SSH) {
+	if (protocol != TS_PROXY_PROTOCOL_SSH) {
+		g_ssh_env.free_session(sess_info);
 		EXLOGE("[ssh] session '%s' is not for SSH.\n", _this->m_sid.c_str());
 		_this->m_have_error = true;
 		_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
@@ -278,19 +280,23 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 
 	if (!_this->_on_session_begin(sess_info))
 	{
+		g_ssh_env.free_session(sess_info);
 		_this->m_have_error = true;
 		_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
 		return SSH_AUTH_DENIED;
 	}
 
-	// 现在尝试根据session-id获取得到的信息，连接并登录真正的SSH服务器
-	EXLOGV("[ssh] try to connect to real SSH server %s:%d\n", sess_info.host_ip.c_str(), sess_info.host_port);
-	_this->m_srv_session = ssh_new();
-	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_HOST, sess_info.host_ip.c_str());
-	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_PORT, &sess_info.host_port);
+	g_ssh_env.free_session(sess_info);
+	sess_info = NULL;
 
-	if (sess_info.auth_mode != TS_AUTH_MODE_NONE)
-		ssh_options_set(_this->m_srv_session, SSH_OPTIONS_USER, sess_info.user_name.c_str());
+	// 现在尝试根据session-id获取得到的信息，连接并登录真正的SSH服务器
+	EXLOGV("[ssh] try to connect to real SSH server %s:%d\n", _this->m_server_ip.c_str(), _this->m_server_port);
+	_this->m_srv_session = ssh_new();
+	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_HOST, _this->m_server_ip.c_str());
+	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_PORT, &_this->m_server_port);
+
+	if (_this->m_auth_mode != TS_AUTH_MODE_NONE)
+		ssh_options_set(_this->m_srv_session, SSH_OPTIONS_USER, _this->m_user_name.c_str());
 
 	int _timeout_us = 30000000; // 30 sec.
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
@@ -298,25 +304,24 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	int rc = 0;
 	rc = ssh_connect(_this->m_srv_session);
 	if (rc != SSH_OK) {
-		EXLOGE("[ssh] can not connect to real SSH server %s:%d.\n", sess_info.host_ip.c_str(), sess_info.host_port);
+		EXLOGE("[ssh] can not connect to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
 		_this->m_have_error = true;
 		_this->m_retcode = SESS_STAT_ERR_CONNECT;
 		return SSH_AUTH_DENIED;
 	}
 
-	if (sess_info.auth_mode == TS_AUTH_MODE_PASSWORD) {
-		rc = ssh_userauth_password(_this->m_srv_session, NULL, sess_info.user_auth.c_str());
+	if (_this->m_auth_mode == TS_AUTH_MODE_PASSWORD) {
+		rc = ssh_userauth_password(_this->m_srv_session, NULL, _this->m_user_auth.c_str());
 		if (rc != SSH_OK) {
-			EXLOGE("[ssh] can not use user/name login to real SSH server %s:%d.\n", sess_info.host_ip.c_str(),
-				sess_info.host_port);
+			EXLOGE("[ssh] can not use user/name login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
 			_this->m_have_error = true;
 			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
 			return SSH_AUTH_DENIED;
 		}
 	}
-	else if (sess_info.auth_mode == TS_AUTH_MODE_PRIVATE_KEY) {
+	else if (_this->m_auth_mode == TS_AUTH_MODE_PRIVATE_KEY) {
 		ssh_key key = NULL;
-		if (SSH_OK != ssh_pki_import_privkey_base64(sess_info.user_auth.c_str(), NULL, NULL, NULL, &key)) {
+		if (SSH_OK != ssh_pki_import_privkey_base64(_this->m_user_auth.c_str(), NULL, NULL, NULL, &key)) {
 			EXLOGE("[ssh] can not import private-key for auth.\n");
 			_this->m_have_error = true;
 			_this->m_retcode = SESS_STAT_ERR_BAD_SSH_KEY;
@@ -326,8 +331,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		rc = ssh_userauth_publickey(_this->m_srv_session, NULL, key);
 		if (rc != SSH_OK) {
 			ssh_key_free(key);
-			EXLOGE("[ssh] can not use private-key login to real SSH server %s:%d.\n", sess_info.host_ip.c_str(),
-				sess_info.host_port);
+			EXLOGE("[ssh] can not use private-key login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
 			_this->m_have_error = true;
 			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
 			return SSH_AUTH_DENIED;
@@ -335,7 +339,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 
 		ssh_key_free(key);
 	}
-	else if (sess_info.auth_mode == TS_AUTH_MODE_NONE)
+	else if (_this->m_auth_mode == TS_AUTH_MODE_NONE)
 	{
 		// do nothing.
 		return SSH_AUTH_DENIED;

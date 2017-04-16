@@ -53,7 +53,8 @@ controllers = [
     # add another path to static-path
 
     # todo: 重放数据路径是动态从core服务的json-rpc接口获取的，因此这里的数据获取方式需要改变
-    (r"/log/replay/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
+    #(r"/log/replay/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
+    (r"/log/replay/(.*)", record.ReplayStaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
 
     (r'/log/list', record.LogList),
     (r'/log/record/(.*)/(.*)', record.RecordHandler),
@@ -113,6 +114,8 @@ controllers = [
     (r'/set/', set.IndexHandler),
     (r'/set', set.IndexHandler),
 
-    # 通过访问一个特殊URL来停止WEB服务，仅用于开发阶段，生产系统中请删除下一行
-    (r'/EXIT-4E581FEFD7AB497D833D71A51C61D898', index.ExitHandler),
+    (r'/uidesign', index.UIDesignHandler),
+    (r'/uidesign/without-sidebar', index.UIDesignWithoutSidebarHandler),
+    (r'/uidesign/table', index.UIDesignTableHandler)
+
 ]

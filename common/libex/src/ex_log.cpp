@@ -31,6 +31,12 @@ void EXLOG_LEVEL(int min_level)
     	g_exlog->min_level = min_level;
 }
 
+void EXLOG_DEBUG(bool debug_mode)
+{
+	if (NULL != g_exlog)
+		g_exlog->debug_mode = debug_mode;
+}
+
 void EXLOG_CONSOLE(bool output_to_console)
 {
     if(NULL != g_exlog)

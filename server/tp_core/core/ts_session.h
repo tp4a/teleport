@@ -6,6 +6,25 @@
 
 #include <ex.h>
 
+typedef struct TS_SESSION_INFO
+{
+	ex_astr sid;
+	ex_astr account_name;	// 申请本次连接的用户名
+
+	int auth_id;
+	ex_astr host_ip;
+	int host_port;
+	int protocol;
+	ex_astr user_name;
+	ex_astr user_auth;
+	ex_astr user_param;
+	int auth_mode;
+	int sys_type;
+
+	int ref_count;	// 这个session可以被take_session()多少次
+	ex_u64 ticket_start;
+}TS_SESSION_INFO;
+
 typedef std::map<ex_astr, TS_SESSION_INFO*> ts_sessiones;
 
 class TsSessionManager : public ExThreadBase

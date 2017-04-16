@@ -155,8 +155,8 @@
                             <label class="col-sm-3 control-label" for="auth-sys-type"><strong>操作系统：</strong></label>
                             <div class="col-sm-6">
                                 <select id="auth-sys-type" class="form-control">
-                                    <option value="2">Linux</option>
-                                    <option value="1">Windows</option>
+                                    <option value=2>Linux</option>
+                                    <option value=1>Windows</option>
                                 </select>
                             </div>
                         </div>
@@ -172,7 +172,6 @@
                                 <input id="auth-host-desc" type="text" class="form-control" placeholder="对此远程主机的简要描述，可以忽略不填。"/>
                             </div>
                         </div>
-
 
                         <div class="form-group form-group-sm">
                             <label class="col-sm-3 control-label" for="dlg-edit-host-group"><strong>主机分组：</strong></label>
@@ -200,110 +199,18 @@
                             </div>
                         </div>
 
-##                         <div class="form-group form-group-sm">
-##                             <label class="col-sm-3 control-label"><strong>远程访问协议：</strong></label>
-##                             <div class="col-sm-9">
-##
-##                                 <div class="dlg-protocol-group">
-##                                     <ul>
-##                                         <li class="item-name"><label><input id="dlg-edit-host-allow-ssh" type="checkbox"> SSH</label></li>
-##                                         <li>端口号</li>
-##                                         <li class="item-input"><input id="dlg-edit-host-ssh-port" type="text" class="form-control" placeholder="默认端口 22" value="22"></li>
-##                                     </ul>
-##                                 </div>
-##
-##                                 <div class="dlg-protocol-group">
-##                                     <ul>
-##                                         <li class="item-name"><label><input type="checkbox" id="dlg-edit-host-allow-rdp"> RDP</label></li>
-##                                         <li>端口号</li>
-##                                         <li class="item-input"><input id="dlg-edit-host-rdp-port" type="text" class="form-control" placeholder="默认端口 3389" value="3389"></li>
-##                                     </ul>
-##                                 </div>
-##
-##                                 <div class="dlg-protocol-group">
-##                                     <ul>
-##                                         <li class="item-name"><label><input type="checkbox" id="dlg-edit-host-allow-telnet"> TELNET</label></li>
-##                                         <li>端口号</li>
-##                                         <li class="item-input"><input id="dlg-edit-host-telnet-port" type="text" class="form-control" placeholder="默认端口 23" value="23"></li>
-##                                     </ul>
-##                                 </div>
-##                             </div>
-##                         </div>
-
                         <hr class="small"/>
-
-                        ##                         <div class="form-group form-group-sm">
-                        ##                             <label class="col-sm-3 control-label" for="auth-protocol-type"><strong>远程访问协议：</strong></label>
-                        ##                             <div class="col-sm-6">
-                        ##                                 <select id="auth-protocol-type" class="form-control">
-                        ##                                     <option value="2">SSH</option>
-                        ##                                     <option value="1">RDP （远程桌面协议）</option>
-                        ##                                 </select>
-                        ##                             </div>
-                        ##                         </div>
-                        ##
-                        ##                         <div class="form-group form-group-sm">
-                        ##                             <label for="auth-host-port" class="col-sm-3 control-label"><strong>远程主机端口：</strong></label>
-                        ##                             <div class="col-sm-6">
-                        ##                                 <input id="auth-host-port" type="text" class="form-control" value="22"/>
-                        ##                             </div>
-                        ##                         </div>
-                        ##
-                        ##                         <div class="form-group form-group-sm">
-                        ##                             <label class="col-sm-3 control-label" for="auth-auth-type"><strong>认证方式：</strong></label>
-                        ##                             <div class="col-sm-6">
-                        ##                                 <select id="auth-auth-type" class="form-control">
-                        ##                                     <option value="1">用户名/密码</option>
-                        ##                                     <option value="2">SSH密钥</option>
-                        ##                                 </select>
-                        ##                             </div>
-                        ##                         </div>
-                        ##
-                        ##                         <div class="form-group form-group-sm">
-                        ##                             <label for="auth-host-username" class="col-sm-3 control-label"><strong>用户名：</strong></label>
-                        ##                             <div class="col-sm-6">
-                        ##                                 <input id="auth-host-username" type="text" class="form-control" value=""/>
-                        ##                             </div>
-                        ##                         </div>
-                        ##
-                        ##                         <div id="auth-block-pswd">
-                        ##                             <div class="form-group form-group-sm">
-                        ##                                 <label for="auth-host-pswd" class="col-sm-3 control-label"><strong>密码：</strong></label>
-                        ##                                 <div class="col-sm-6">
-                        ##                                     <input id="auth-host-pswd" type="password" class="form-control" placeholder="不填写则使用已存储的密码"/>
-                        ##                                 </div>
-                        ##                             </div>
-                        ##                             <div class="form-group form-group-sm">
-                        ##                                 <label for="auth-host-pswd-confirm" class="col-sm-3 control-label"><strong>确认密码：</strong></label>
-                        ##                                 <div class="col-sm-6">
-                        ##                                     <input id="auth-host-pswd-confirm" type="password" class="form-control" placeholder="请再次输入密码"/>
-                        ##                                 </div>
-                        ##                             </div>
-                        ##                         </div>
-                        ##
-                        ##
-                        ##                         <div id="auth-block-sshkey" style="display: none;">
-                        ##                             <div class="form-group form-group-sm">
-                        ##                                 <label class="col-sm-3 control-label" for="auth-sshkey-list"><strong>SSH密钥：</strong></label>
-                        ##                                 <div class="col-sm-6">
-                        ##                                     <select id="auth-sshkey-list" class="form-control"></select>
-                        ##                                 </div>
-                        ##                             </div>
-                        ##                         </div>
-
-
                     </div>
 
                 </div>
                 <div class="modal-footer">
-                    ##                     <button type="button" class="btn btn-sm btn-success" id="test-btn-connect"><i class="fa fa-check fa-fw"></i> 测试连接</button>
-
                     <button type="button" class="btn btn-sm btn-primary" id="host-btn-save"><i class="fa fa-check fa-fw"></i> 保存主机信息</button>
                     <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 取消</button>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="modal fade" id="dialog-host-user-edit" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -314,133 +221,18 @@
                     <div class="form-horizontal">
                         <div class="form-group form-group">
                             <label class="col-sm-2 control-label" for="auth-protocol-type"><strong>登录账号：</strong></label>
-                            <div class="col-sm-10" id="sys-user-list">
-
-                                ## 								<div class="remote-action-group">
-                                ## 									<ul>
-                                ## 										<li class="remote-action-name"></li>
-                                ## 										<li class="remote-action-protocol">Telnet</li>
-                                ## 										<li class="remote-action-noauth">无需认证</li>
-                                ## 										<li class="remote-action-btn">
-                                ## 											<button type="button" class="btn btn-sm btn-primary disabled" disabled data-action="remote" data-sub-protocol="1"><i class="fa fa-edit fa-fw"></i> 修改</button>
-                                ## 										</li>
-                                ## 										<li class="remote-action-btn">
-                                ## 											<button type="button" class="btn btn-sm btn-danger" data-action="remote" data-sub-protocol="2"><i class="fa fa-trash-o fa-fw"></i> 删除</button>
-                                ## 										</li>
-                                ## 									</ul>
-                                ## 								</div>
-
-
-## 								<div class="remote-action-group">
-## 									<ul>
-## 										<li class="remote-action-name">root</li>
-## 										<li class="remote-action-protocol">SSH</li>
-## 										<li class="remote-action-sshkey">私钥认证</li>
-## 										##                                         <li class="remote-action-btn"><button type="button" class="btn btn-sm btn-success" data-action="remote" data-sub-protocol="1"><i class="fa fa-flash fa-fw"></i> 测试</button></li>
-##
-## 										<li class="remote-action-btn">
-## 											<button type="button" class="btn btn-sm btn-primary" data-action="remote" data-sub-protocol="1"><i class="fa fa-edit fa-fw"></i> 修改</button>
-## 										</li>
-## 										<li class="remote-action-btn">
-## 											<button type="button" class="btn btn-sm btn-danger" data-action="remote" data-sub-protocol="2"><i class="fa fa-trash-o fa-fw"></i> 删除</button>
-## 										</li>
-## 									</ul>
-## 								</div>
-
-## 								<div class="remote-action-group">
-## 									<ul>
-## 										<li class="remote-action-name">tester</li>
-## 										<li class="remote-action-protocol">SSH</li>
-## 										<li class="remote-action-password">密码认证</li>
-## 										##                                         <li class="remote-action-btn"><button type="button" class="btn btn-sm btn-success" data-action="remote" data-sub-protocol="1"><i class="fa fa-flash fa-fw"></i> 测试</button></li>
-##
-## 										<li class="remote-action-btn">
-## 											<button type="button" class="btn btn-sm btn-primary" data-action="remote" data-sub-protocol="1"><i class="fa fa-edit fa-fw"></i> 修改</button>
-## 										</li>
-## 										<li class="remote-action-btn">
-## 											<button type="button" class="btn btn-sm btn-danger" data-action="remote" data-sub-protocol="2"><i class="fa fa-trash-o fa-fw"></i> 删除</button>
-## 										</li>
-## 									</ul>
-## 								</div>
-
-
-## 								<button type="button" class="btn btn-sm btn-primary" id="btn-add-user"><i class="fa fa-plus fa-fw"></i> 添加登录账号</button>
-                            </div>
+                            <div class="col-sm-10" id="sys-user-list"></div>
                         </div>
-
-
-                        ##                         <div class="form-group form-group-sm">
-                        ##                             <label class="col-sm-3 control-label" for="auth-protocol-type"><strong>远程访问协议：</strong></label>
-                        ##                             <div class="col-sm-6">
-                        ##                                 <select id="auth-protocol-type" class="form-control">
-                        ##                                     <option value="2">SSH</option>
-                        ##                                     <option value="1">RDP （远程桌面协议）</option>
-                        ##                                 </select>
-                        ##                             </div>
-                        ##                         </div>
-                        ##
-                        ##                         <div class="form-group form-group-sm">
-                        ##                             <label for="auth-host-port" class="col-sm-3 control-label"><strong>远程主机端口：</strong></label>
-                        ##                             <div class="col-sm-6">
-                        ##                                 <input id="auth-host-port" type="text" class="form-control" value="22"/>
-                        ##                             </div>
-                        ##                         </div>
-                        ##
-                        ##                         <div class="form-group form-group-sm">
-                        ##                             <label class="col-sm-3 control-label" for="auth-auth-type"><strong>认证方式：</strong></label>
-                        ##                             <div class="col-sm-6">
-                        ##                                 <select id="auth-auth-type" class="form-control">
-                        ##                                     <option value="1">用户名/密码</option>
-                        ##                                     <option value="2">SSH密钥</option>
-                        ##                                 </select>
-                        ##                             </div>
-                        ##                         </div>
-                        ##
-                        ##                         <div class="form-group form-group-sm">
-                        ##                             <label for="auth-host-username" class="col-sm-3 control-label"><strong>用户名：</strong></label>
-                        ##                             <div class="col-sm-6">
-                        ##                                 <input id="auth-host-username" type="text" class="form-control" value=""/>
-                        ##                             </div>
-                        ##                         </div>
-                        ##
-                        ##                         <div id="auth-block-pswd">
-                        ##                             <div class="form-group form-group-sm">
-                        ##                                 <label for="auth-host-pswd" class="col-sm-3 control-label"><strong>密码：</strong></label>
-                        ##                                 <div class="col-sm-6">
-                        ##                                     <input id="auth-host-pswd" type="password" class="form-control" placeholder="不填写则使用已存储的密码"/>
-                        ##                                 </div>
-                        ##                             </div>
-                        ##                             <div class="form-group form-group-sm">
-                        ##                                 <label for="auth-host-pswd-confirm" class="col-sm-3 control-label"><strong>确认密码：</strong></label>
-                        ##                                 <div class="col-sm-6">
-                        ##                                     <input id="auth-host-pswd-confirm" type="password" class="form-control" placeholder="请再次输入密码"/>
-                        ##                                 </div>
-                        ##                             </div>
-                        ##                         </div>
-                        ##
-                        ##
-                        ##                         <div id="auth-block-sshkey" style="display: none;">
-                        ##                             <div class="form-group form-group-sm">
-                        ##                                 <label class="col-sm-3 control-label" for="auth-sshkey-list"><strong>SSH密钥：</strong></label>
-                        ##                                 <div class="col-sm-6">
-                        ##                                     <select id="auth-sshkey-list" class="form-control"></select>
-                        ##                                 </div>
-                        ##                             </div>
-                        ##                         </div>
-
-
                     </div>
-
                 </div>
                 <div class="modal-footer">
-                    ##                     <button type="button" class="btn btn-sm btn-success" id="test-btn-connect"><i class="fa fa-check fa-fw"></i> 测试连接</button>
-
                     <button type="button" class="btn btn-sm btn-primary" id="host-user-btn-save"><i class="fa fa-check fa-fw"></i> 确定</button>
                     <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 取消</button>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="modal fade" id="dialog_user" tabindex="-1" role="dialog">
         <div class="modal-dialog" style="width:460px;top:80px;">
             <div class="modal-content">
@@ -463,13 +255,6 @@
                                 <p id="add-user-host-ip" class="form-control-static mono" style="color:#0a6aa1;font-weight:bold;">123.45.67.89:123456</p>
                             </div>
                         </div>
-
-                        ##                         <div class="form-group form-group-sm">
-                        ##                             <label for="auth-host-port" class="col-sm-3 control-label"><strong>远程主机端口：</strong></label>
-                        ##                             <div class="col-sm-6">
-                        ##                                 <input id="auth-host-port" type="text" class="form-control" value="22"/>
-                        ##                             </div>
-                        ##                         </div>
 
                         <div class="form-group form-group-sm">
                             <label class="col-sm-4 control-label" for="auth-user-type"><strong>认证方式：</strong></label>
@@ -530,9 +315,7 @@
                             </div>
                         </div>
 
-
                     </div>
-
                 </div>
 
                 <div class="modal-footer">
@@ -594,18 +377,8 @@
 </%block>
 
 
-
 <%block name="embed_js">
     <script type="text/javascript">
-##         ywl.add_page_options({
-##             group_list: ${group_list},
-##             cert_list: ${cert_list},
-##             ts_server: ${ts_server}
-##         });
-##
-##         $(document).ready(function () {
-##         });
         ywl.add_page_options(${page_param});
-
     </script>
 </%block>

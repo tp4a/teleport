@@ -55,7 +55,7 @@ public:
 
 protected:
 	// ¼Ì³Ð×Ô TppSessionBase
-	bool _on_session_begin(TS_SESSION_INFO& info);
+	bool _on_session_begin(const TPP_SESSION_INFO* info);
 	bool _on_session_end(void);
 
 
@@ -89,7 +89,7 @@ private:
 	int m_retcode;
 	int m_db_id;
 
-	TppRec m_rec;
+	TppSshRec m_rec;
 
 	SshProxy* m_proxy;
 	ssh_session m_cli_session;

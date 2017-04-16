@@ -522,10 +522,10 @@ ywl.on_user_host_table_created = function (tbl) {
 					ywl.ajax_post_json('/user/delete-host', {host_list: host_list, user_name: ywl.page_options.user_name},
 						function (ret) {
 							tbl.remove_row(row_id);
-							ywl.notify_success('删除用户拥有主机成功');
+							ywl.notify_success('回收授权成功！');
 						},
 						function () {
-							ywl.notify_error('删除用户拥有主机失败');
+							ywl.notify_error('回收授权失败！');
 						}
 					);
 				};

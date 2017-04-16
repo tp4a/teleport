@@ -61,6 +61,7 @@ protected:
 void EXLOG_USE_LOGGER(ExLogger* logger);
 
 void EXLOG_LEVEL(int min_level);
+void EXLOG_DEBUG(bool debug_mode);
 
 // 设定日志文件名及路径，如未指定路径，则为可执行程序所在目录下的log目录。
 void EXLOG_FILE(const wchar_t* log_file, const wchar_t* log_path = NULL, ex_u32 max_filesize = EX_LOG_FILE_MAX_SIZE, ex_u8 max_filecount = EX_LOG_FILE_MAX_COUNT);

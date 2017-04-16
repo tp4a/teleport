@@ -17,6 +17,7 @@ public:
 	ex_wstr replay_path;
 
 	TPP_TAKE_SESSION_FUNC take_session;
+	TPP_FREE_SESSION_FUNC free_session;
 	TPP_SESSION_BEGIN_FUNC session_begin;
 	TPP_SESSION_END_FUNC session_end;
 

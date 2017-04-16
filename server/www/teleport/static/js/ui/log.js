@@ -173,9 +173,9 @@ ywl.on_host_table_created = function (tbl) {
 			if (protocol == 1) {
 				$(cell_obj).find('[ywl-btn-record]').click(function () {
 					var ip = window.location.hostname;//ywl.page_options.ts_server.ip;
-					var port = ywl.page_options.ts_server.port;
+					var port = parseInt(window.location.port);//ywl.page_options.ts_server.port;
 					var url = 'http://' + ip + ':' + port + '/log/replay/rdp/' + row_data.id;
-                    var tail = 'log/replay/rdp/' + row_data.id;
+					var tail = 'log/replay/rdp/' + prefixInteger(row_data.id, 6);
 					var args = {};
 					args.id = parseInt(row_data.id);
                     args.host = ip;

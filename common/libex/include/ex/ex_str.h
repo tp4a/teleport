@@ -61,6 +61,7 @@ typedef std::wstring ex_wstr;
 
 typedef std::vector<ex_astr> ex_astrs;
 typedef std::vector<ex_wstr> ex_wstrs;
+typedef std::vector<ex_utf16> ex_str_utf16le;
 
 bool ex_wstr2astr(const ex_wstr& in_str, ex_astr& out_str, int code_page = EX_CODEPAGE_DEFAULT);
 bool ex_wstr2astr(const wchar_t* in_str, ex_astr& out_str, int code_page = EX_CODEPAGE_DEFAULT);
@@ -76,6 +77,8 @@ void ex_remove_white_space(ex_wstr& str_fix, int ulFlag = EX_RSC_ALL);
 ex_astr& ex_replace_all(ex_astr& str, const ex_astr& old_value, const ex_astr& new_value);
 ex_wstr& ex_replace_all(ex_wstr& str, const ex_wstr& old_value, const ex_wstr& new_value);
 
+// 将UTF8字符串转换为UTF16-LE字符串（输出结果包含\0结束符）
+bool ex_utf8_to_utf16le(const std::string& from, ex_str_utf16le& to);
 
 #endif
 

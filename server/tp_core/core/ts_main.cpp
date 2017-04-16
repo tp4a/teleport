@@ -9,14 +9,74 @@
 
 bool g_exit_flag = false;
 
-bool tpp_take_session(const ex_astr& sid, TS_SESSION_INFO& info)
+TPP_SESSION_INFO* tpp_take_session(const char* sid)
 {
-	return g_session_mgr.take_session(sid, info);
+	TS_SESSION_INFO sinfo;
+	bool ret = g_session_mgr.take_session(sid, sinfo);
+	if (!ret)
+		return NULL;
+
+	TPP_SESSION_INFO* info = (TPP_SESSION_INFO*)calloc(1, sizeof(TPP_SESSION_INFO));
+
+	info->sid = (char*)calloc(1, sinfo.sid.length() + 1);
+	ex_strcpy(info->sid, sinfo.sid.length() + 1, sinfo.sid.c_str());
+	info->account_name = (char*)calloc(1, sinfo.account_name.length() + 1);
+	ex_strcpy(info->account_name, sinfo.account_name.length() + 1, sinfo.account_name.c_str());
+	info->host_ip = (char*)calloc(1, sinfo.host_ip.length() + 1);
+	ex_strcpy(info->host_ip, sinfo.host_ip.length() + 1, sinfo.host_ip.c_str());
+	info->user_name = (char*)calloc(1, sinfo.user_name.length() + 1);
+	ex_strcpy(info->user_name, sinfo.user_name.length() + 1, sinfo.user_name.c_str());
+	info->user_auth = (char*)calloc(1, sinfo.user_auth.length() + 1);
+	ex_strcpy(info->user_auth, sinfo.user_auth.length() + 1, sinfo.user_auth.c_str());
+	info->user_param = (char*)calloc(1, sinfo.user_param.length() + 1);
+	ex_strcpy(info->user_param, sinfo.user_param.length() + 1, sinfo.user_param.c_str());
+
+	info->auth_id = sinfo.auth_id;
+	info->host_port = sinfo.host_port;
+	info->protocol = sinfo.protocol;
+	info->auth_mode = sinfo.auth_mode;
+	info->sys_type = sinfo.sys_type;
+	info->ref_count = sinfo.ref_count;
+	info->ticket_start = sinfo.ticket_start;
+
+	return info;
 }
 
-bool tpp_session_begin(TS_SESSION_INFO& info, int& db_id)
+void tpp_free_session(TPP_SESSION_INFO* info)
 {
-	return ts_web_rpc_session_begin(info, db_id);
+	if (NULL == info)
+		return;
+
+	free(info->sid);
+	free(info->account_name);
+	free(info->host_ip);
+	free(info->user_name);
+	free(info->user_auth);
+	free(info->user_param);
+	free(info);
+}
+
+bool tpp_session_begin(const TPP_SESSION_INFO* info, int* db_id)
+{
+	if (NULL == info || NULL == db_id)
+		return false;
+
+	TS_SESSION_INFO sinfo;
+	sinfo.sid = info->sid;
+	sinfo.account_name = info->account_name;
+	sinfo.auth_id = info->auth_id;
+	sinfo.host_ip = info->host_ip;
+	sinfo.host_port = info->host_port;
+	sinfo.protocol = info->protocol;
+	sinfo.user_name = info->user_name;
+	sinfo.user_auth = info->user_auth;
+	sinfo.user_param = info->user_param;
+	sinfo.auth_mode = info->auth_mode;
+	sinfo.sys_type = info->sys_type;
+	sinfo.ref_count = info->ref_count;
+	sinfo.ticket_start = info->ticket_start;
+
+	return ts_web_rpc_session_begin(sinfo, *db_id);
 }
 
 bool tpp_session_end(int db_id, int ret)
@@ -88,7 +148,7 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 	ex_path_join(libfile, false, filename.c_str(), NULL);
 	EXLOGV(L"[core] load protocol lib: %ls\n", libfile.c_str());
 
-	TPP_LIB* lib = new  TPP_LIB;
+	TPP_LIB* lib = new TPP_LIB;
 
 	lib->dylib = ex_dlopen(libfile.c_str());
 	if (NULL == lib->dylib)
@@ -122,6 +182,7 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 	init_args.replay_path = g_env.m_replay_path;
 	init_args.cfg = &g_env.get_ini();
 	init_args.func_take_session = tpp_take_session;
+	init_args.func_free_session = tpp_free_session;
 	init_args.func_session_begin = tpp_session_begin;
 	init_args.func_session_end = tpp_session_end;
 
@@ -153,11 +214,13 @@ void TppManager::stop_all(void)
 
 int ts_main(void)
 {
-	EXLOGI("\n");
-	EXLOGI("###############################################################\n");
-	EXLOGI("Teleport Core Server starting ...\n");
-
 	ExIniFile& ini = g_env.get_ini();
+
+	EXLOGI(L"\n");
+	EXLOGI(L"###############################################################\n");
+	EXLOGI(L"Load config file: %ls.\n", ini.get_filename().c_str());
+	EXLOGI(L"Teleport Core Server starting ...\n");
+
 	ex_ini_sections& secs = ini.GetAllSections();
 	TsHttpRpc rpc;
 
@@ -167,14 +230,14 @@ int ts_main(void)
 	do {
 		if (!g_session_mgr.start())
 		{
-			EXLOGE("[core] failed to start session-id manager.\n");
+			EXLOGE(L"[core] failed to start session-id manager.\n");
 			all_ok = false;
 			break;
 		}
 
 		if (!rpc.init() || !rpc.start())
 		{
-			EXLOGE("[core] rpc init/start failed.\n");
+			EXLOGE(L"[core] rpc init/start failed.\n");
 			all_ok = false;
 			break;
 		}

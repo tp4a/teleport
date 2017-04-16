@@ -31,5 +31,13 @@ teleport项目用到的第三方库
   https://git.libssh.org/projects/libssh.git/snapshot
   libssh-0.7.4.zip
   Windows平台使用预制的libssh-static工程进行编译。
+- libuv
+  https://github.com/libuv/libuv
+  v1.11.0.zip
+  注意：teleport项目使用源代码直接编译，因此解压缩源代码到此即可。
+
+
+
+
 
 

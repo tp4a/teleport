@@ -68,9 +68,9 @@ function get_system_group_by_id(gid) {
 }
 
 
-function get_command_name_by_id(cmd_id) {
-	return ywl.assist.get_cache_by_id(CACHE_TYPE_COMMAND, cmd_id);
-}
+//function get_command_name_by_id(cmd_id) {
+//	return ywl.assist.get_cache_by_id(CACHE_TYPE_COMMAND, cmd_id);
+//}
 
 //function notify_error(message_, title_) {
 //	var _title = title_ || '';

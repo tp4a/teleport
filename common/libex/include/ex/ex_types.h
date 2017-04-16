@@ -20,7 +20,7 @@ typedef wchar_t ex_utf16;
 #else
 typedef unsigned long long ex_u64;
 typedef signed long long ex_i64;
-typedef ex_u16 ex_utf16;
+typedef ex_i16 ex_utf16;
 #endif
 
 typedef int EX_BOOL;

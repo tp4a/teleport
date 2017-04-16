@@ -9,6 +9,7 @@ from eom_app.app.configs import app_cfg
 from eom_app.module import record
 from eom_app.module import user
 from .base import TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
+import tornado.web
 
 
 def get_free_space_bytes(folder):
@@ -60,6 +61,12 @@ class RecordHandler(TPBaseAdminAuthHandler):
 #         #     return
 #         # pass
 #         filename = os.path.join(cfg.core.replay_path, 'replay', 'rdp', '{}'.format(record_id), 'tp-rdp.tpr')
+
+class ReplayStaticFileHandler(tornado.web.StaticFileHandler):
+    def initialize(self, path, default_filename=None):
+        super().initialize(path, default_filename)
+        self.root = app_cfg().core.replay_path
+        # self.default_filename = default_filename
 
 
 class ComandLogHandler(TPBaseAdminAuthHandler):

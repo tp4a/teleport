@@ -21,6 +21,7 @@ void ex_free(void* buffer);
 
 // 在haystack（长度为haystacklen字节）中查找needle（长度为needlelen）的起始地址，返回NULL表示没有找到
 const ex_u8* ex_memmem(const ex_u8* haystack, size_t haystacklen, const ex_u8* needle, size_t needlelen);
+void ex_mem_reverse(ex_u8* p, size_t l);
 
 void ex_printf(const char* fmt, ...);
 void ex_wprintf(const wchar_t* fmt, ...);

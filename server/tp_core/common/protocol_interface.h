@@ -14,28 +14,26 @@
 #	define TPP_API
 #endif
 
-typedef struct TS_SESSION_INFO
+typedef struct TPP_SESSION_INFO
 {
-	ex_astr sid;
-	ex_astr account_name;	// 申请本次连接的用户名
-
-	int auth_id;
-	ex_astr host_ip;
+	char* sid;
+	char* account_name;	// 申请本次连接的用户名
+	char* host_ip;
+	char* user_name;
+	char* user_auth;
+	char* user_param;
 	int host_port;
 	int protocol;
-	ex_astr user_name;
-	ex_astr user_auth;
-	ex_astr user_param;
+	int auth_id;
 	int auth_mode;
 	int sys_type;
-
 	int ref_count;	// 这个session可以被take_session()多少次
 	ex_u64 ticket_start;
-}TS_SESSION_INFO;
+}TPP_SESSION_INFO;
 
-
-typedef bool(*TPP_TAKE_SESSION_FUNC)(const ex_astr& sid, TS_SESSION_INFO& info);
-typedef bool(*TPP_SESSION_BEGIN_FUNC)(TS_SESSION_INFO& info, int& db_id);
+typedef TPP_SESSION_INFO* (*TPP_TAKE_SESSION_FUNC)(const char* sid);
+typedef void(*TPP_FREE_SESSION_FUNC)(TPP_SESSION_INFO* info);
+typedef bool(*TPP_SESSION_BEGIN_FUNC)(const TPP_SESSION_INFO* info, int* db_id);
 typedef bool(*TPP_SESSION_END_FUNC)(int db_id, int ret);
 
 
@@ -48,6 +46,7 @@ typedef struct TPP_INIT_ARGS
 	ExIniFile* cfg;
 
 	TPP_TAKE_SESSION_FUNC func_take_session;
+	TPP_FREE_SESSION_FUNC func_free_session;
 	TPP_SESSION_BEGIN_FUNC func_session_begin;
 	TPP_SESSION_END_FUNC func_session_end;
 }TPP_INIT_ARGS;

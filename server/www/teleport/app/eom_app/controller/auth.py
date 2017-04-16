@@ -58,12 +58,14 @@ class VerifyUser(TPBaseJsonHandler):
             return
 
         try:
-            user_id, account_type, nickname = user.verify_user(username, userpwd)
+            user_id, account_type, nickname, locked = user.verify_user(username, userpwd)
+            if locked == 1:
+                return self.write_json(-1, '账号被锁定，请联系管理员！')
             if user_id == 0:
                 if cfg.app_mode == APP_MODE_MAINTENANCE:
-                    self.write_json(-2, '系统维护中，请稍候再试')
+                    self.write_json(-2, '系统维护中，请稍候再试！')
                 else:
-                    self.write_json(-1, '用户名/密码错误')
+                    self.write_json(-1, '用户名/密码错误！')
                 return
 
             _user = self.get_session('user')
@@ -92,7 +94,7 @@ class VerifyUser(TPBaseJsonHandler):
 
         except:
             log.e('can not set session.')
-            self.write_json(-1, '无法记录用户登录状态')
+            self.write_json(-1, '无法记录用户登录状态！')
 
 
 class LogoutHandler(TPBaseUserAuthHandler):

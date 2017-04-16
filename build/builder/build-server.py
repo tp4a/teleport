@@ -25,12 +25,16 @@ class BuilderWin(BuilderBase):
 
     def build_server(self):
         cc.n('build web server ...')
-        sln_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'tp_web.vs2015.sln')
-        out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_web.exe')
-        if os.path.exists(out_file):
-            utils.remove(out_file)
-        utils.msvc_build(sln_file, 'tp_web', ctx.target_path, ctx.bits_path, False)
-        utils.ensure_file_exists(out_file)
+        # notice: now we can not build debug version of tp_web.exe
+        if ctx.target_path == 'debug':
+            cc.w('cannot build debug version of tp_web, skip.')
+        else:
+            sln_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'tp_web.vs2015.sln')
+            out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_web.exe')
+            if os.path.exists(out_file):
+                utils.remove(out_file)
+            utils.msvc_build(sln_file, 'tp_web', ctx.target_path, ctx.bits_path, False)
+            utils.ensure_file_exists(out_file)
 
         cc.n('build core server ...')
         sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'core', 'tp_core.vs2015.sln')
@@ -48,11 +52,14 @@ class BuilderWin(BuilderBase):
         utils.msvc_build(sln_file, 'tpssh', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
 
-        #
-        # s = os.path.join(env.root_path, 'out', 'console', ctx.bits_path, ctx.target_path, 'console.exe')
-        # t = os.path.join(env.root_path, 'out', 'eom_agent', ctx.target_path, ctx.dist_path, 'eom_agent.com')
-        # shutil.copy(s, t)
-        # utils.ensure_file_exists(t)
+        if os.path.exists(os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'ssh', 'tpssh.vs2015.sln')):
+            cc.n('build RDP protocol ...')
+            sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'rdp', 'tprdp.vs2015.sln')
+            out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tprdp.dll')
+            if os.path.exists(out_file):
+                utils.remove(out_file)
+            utils.msvc_build(sln_file, 'tprdp', ctx.target_path, ctx.bits_path, False)
+            utils.ensure_file_exists(out_file)
 
 
 class BuilderLinux(BuilderBase):

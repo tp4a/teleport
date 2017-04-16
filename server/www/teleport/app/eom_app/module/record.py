@@ -19,8 +19,12 @@ def read_record_head(record_id):
         data = file.read()
         offset = 0
 
-        magic, = struct.unpack_from('I', data, offset)  # magic must be 1381126228, 'TPRR'
+        magic, = struct.unpack_from('I', data, offset)  # magic must be 1381126228, 'TPPR'
         offset += 4
+        ver, = struct.unpack_from('H', data, offset)
+        offset += 2
+        protocol, = struct.unpack_from('H', data, offset)
+        offset += 2
         time_start, = struct.unpack_from('Q', data, offset)
         offset += 8
         pkg_count, = struct.unpack_from('I', data, offset)
@@ -42,6 +46,11 @@ def read_record_head(record_id):
         user_name, = struct.unpack_from('16s', data, offset)
         user_name = user_name.decode()
         offset += 16
+        ip, = struct.unpack_from('18s', data, offset)
+        ip = ip.decode()
+        offset += 18
+        port, = struct.unpack_from('H', data, offset)
+        offset += 2
 
     except Exception as e:
         return None
@@ -50,79 +59,17 @@ def read_record_head(record_id):
             file.close()
 
     header = dict()
+    header['start'] = time_start
     header['file_count'] = file_count
     header['time_used'] = time_used
     header['width'] = width
     header['height'] = height
+    header['account'] = account
+    header['user_name'] = user_name
+    header['ip'] = ip
+    header['port'] = port
+
     return header
-
-
-# def read_record_term(record_id):
-#     record_path = os.path.join(cfg.core.replay_path, 'ssh', '{}'.format(record_id))
-#     term_file_path = os.path.join(record_path, 'term.init')
-#     # term_file_path = r"E:\GitWork\teleport\share\data\replay\ssh\103\term.init"
-#
-#     file = None
-#     try:
-#         file = open(term_file_path, 'rb')
-#         data = file.read()
-#         x = len(data)
-#         offset = 0
-#         # data = data.decode()
-#         ID, = struct.unpack_from('16s', data, offset)
-#         ID = ID.decode()
-#         offset += 16
-#
-#         Version, = struct.unpack_from('16s', data, offset)
-#         Version = Version.decode()
-#         offset += 16
-#
-#         t_count, = struct.unpack_from('I', data, offset)
-#         offset += 4
-#         term_list = list()
-#         for i in range(t_count):
-#             # _term, = struct.unpack_from('16s', data, offset)
-#             # _term = _term.decode()
-#             # offset += 16
-#             _time, = struct.unpack_from('I', data, offset)
-#             offset += 4
-#
-#             x, = struct.unpack_from('I', data, offset)
-#             offset += 4
-#
-#             y, = struct.unpack_from('I', data, offset)
-#             offset += 4
-#
-#             # px, = struct.unpack_from('I', data, offset)
-#             # offset += 4
-#             #
-#             # py, = struct.unpack_from('I', data, offset)
-#             # offset += 4
-#             #
-#             # _time, = struct.unpack_from('I', data, offset)
-#             # offset += 4
-#             temp = dict()
-#             # temp['term'] = _term
-#             temp['t'] = _time
-#             temp['w'] = x
-#             temp['h'] = y
-#             # temp['px'] = px
-#             # temp['py'] = py
-#
-#             term_list.append(temp)
-#
-#     except Exception as e:
-#         return None
-#     finally:
-#         if file is not None:
-#             file.close()
-#
-#     header = dict()
-#     header['id'] = ID
-#     header['ver'] = Version
-#     header['count'] = t_count
-#     header['term_list'] = term_list
-#     return header
 
 
 def read_record_info(record_id, file_id):
