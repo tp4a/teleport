@@ -63,7 +63,7 @@ bool TsEnv::init(bool load_config)
 #else
 		m_etc_path = L"/etc/teleport";
 		conf_file = L"/etc/teleport/core.ini";
-		m_replay_path = L"/var/lib/teleport/data/replay";
+		m_replay_path = L"/var/lib/teleport/replay";
 		log_path = L"/var/log/teleport";
 #endif
 	}
