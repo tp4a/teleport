@@ -63,6 +63,9 @@ class Env(object):
         if not self._load_config(warn_miss_tool):
             return False
 
+        if not self._load_version():
+            return False
+
         return True
 
     def _load_config(self, warn_miss_tool):
@@ -73,24 +76,8 @@ class Env(object):
 
         _cfg = configparser.ConfigParser()
         _cfg.read(_cfg_file)
-        if 'external_ver' not in _cfg.sections() or 'toolchain' not in _cfg.sections():
-            cc.e('invalid configuration file: need `external_ver` and `toolchain` section.')
-            return False
-
-        _tmp = _cfg['external_ver']
-        try:
-            _v_openssl = _tmp['openssl'].split(',')
-            self.ver_openssl = _v_openssl[0].strip()
-            self.ver_openssl_number = _v_openssl[1].strip()
-
-            self.ver_libuv = _tmp['libuv']
-            self.ver_mbedtls = _tmp['mbedtls']
-            self.ver_sqlite = _tmp['sqlite']
-            self.ver_libssh = _tmp['libssh']
-            self.ver_jsoncpp = _tmp['jsoncpp']
-            self.ver_mongoose = _tmp['mongoose']
-        except KeyError:
-            cc.e('invalid configuration file: not all necessary external version are set.')
+        if 'toolchain' not in _cfg.sections():
+            cc.e('invalid configuration file: need `toolchain` section.')
             return False
 
         _tmp = _cfg['toolchain']
@@ -120,6 +107,9 @@ class Env(object):
             if self.nasm is None or not os.path.exists(self.nasm):
                 if warn_miss_tool:
                     cc.w(' - can not locate `nasm`, so I can build openssl.')
+            else:
+                _nasm_path = os.path.abspath(os.path.join(self.nasm, '..'))
+                os.environ['path'] = os.environ['path'] + ';' + _nasm_path
 
             if 'perl' in _tmp:
                 self.perl = _tmp['perl']
@@ -162,6 +152,36 @@ class Env(object):
             if not os.path.exists(self.cmake):
                 if warn_miss_tool:
                     cc.e(' - can not locate `cmake`, so I can not build binary from source.')
+
+        return True
+
+    def _load_version(self):
+        _ver_file = os.path.join(self.root_path, 'external', 'version.ini')
+        if not os.path.exists(_ver_file):
+            cc.e('can not load version configuration for external.')
+            return False
+
+        _cfg = configparser.ConfigParser()
+        _cfg.read(_ver_file)
+        if 'external_ver' not in _cfg.sections():
+            cc.e('invalid configuration file: need `external_ver` section.')
+            return False
+
+        _tmp = _cfg['external_ver']
+        try:
+            _v_openssl = _tmp['openssl'].split(',')
+            self.ver_openssl = _v_openssl[0].strip()
+            self.ver_openssl_number = _v_openssl[1].strip()
+
+            self.ver_libuv = _tmp['libuv']
+            self.ver_mbedtls = _tmp['mbedtls']
+            self.ver_sqlite = _tmp['sqlite']
+            self.ver_libssh = _tmp['libssh']
+            self.ver_jsoncpp = _tmp['jsoncpp']
+            self.ver_mongoose = _tmp['mongoose']
+        except KeyError:
+            cc.e('invalid configuration file: not all necessary external version are set.')
+            return False
 
         return True
 

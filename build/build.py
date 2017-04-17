@@ -61,6 +61,9 @@ def main():
         if x == 'c':
             clean_all()
             continue
+        elif x == 'a':
+            clean_everything()
+            continue
 
         try:
             x = int(x)
@@ -90,8 +93,20 @@ def main():
 
 
 def clean_all():
-    cc.e('sorry, clean not implemented yet.')
-    # utils.remove(os.path.join(env.root_path, 'out'))
+    # cc.e('sorry, clean not implemented yet.')
+    utils.remove(os.path.join(env.root_path, 'out'))
+
+
+def clean_everything():
+    utils.remove(os.path.join(env.root_path, 'out'))
+    utils.remove(os.path.join(env.root_path, 'external', 'jsoncpp'))
+    utils.remove(os.path.join(env.root_path, 'external', 'libuv'))
+    utils.remove(os.path.join(env.root_path, 'external', 'mbedtls'))
+    utils.remove(os.path.join(env.root_path, 'external', 'mongoose'))
+    utils.remove(os.path.join(env.root_path, 'external', 'openssl'))
+    utils.remove(os.path.join(env.root_path, 'external', 'python'))
+    utils.remove(os.path.join(env.root_path, 'external', 'libssh-win-static', 'lib'))
+    utils.remove(os.path.join(env.root_path, 'external', 'libssh-win-static', 'src'))
 
 
 def do_opt(opt):
@@ -210,7 +225,7 @@ def get_input(msg, log_func=cc.w):
 def show_logo():
     cc.v('[]=======================================================[]')
     cc.o((cc.CR_VERBOSE, ' | '), (cc.CR_INFO, 'Teleport Projects Builder'), (cc.CR_VERBOSE, '                             |'))
-    cc.v(' | auth: apexliu@eomsoft.net                             |')
+    cc.v(' | auth: apex.liu@qq.com                                 |')
     cc.v('[]=======================================================[]')
 
 
@@ -224,7 +239,8 @@ def show_menu():
         cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, '%2d' % options[o]['id']), (cc.CR_NORMAL, '] ', options[o]['disp']))
 
     cc.v('  -------------------------------------------------------')
-    cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' C'), (cc.CR_NORMAL, '] clean build and dist env.'))
+    cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' C'), (cc.CR_NORMAL, '] clean build and dist.'))
+    cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' A'), (cc.CR_NORMAL, '] clean everything.'))
 
     cc.v('  -------------------------------------------------------')
     cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' Q'), (cc.CR_NORMAL, '] exit'))
