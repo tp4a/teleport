@@ -128,6 +128,14 @@ class TPDatabase:
                 if not os.path.exists(db_path):
                     log.e('can not create folder `{}` to store database file.\n'.format(db_path))
                     return False
+            # 创建一个空数据文件，这样才能进行connect。
+            if not os.path.exists(self.db_source['file']):
+                try:
+                    with open(self.db_source['file'], 'w') as f:
+                        pass
+                except:
+                    log.e('can not create db file `{}`.\n'.format(self.db_source['file']))
+                    return False
 
         if create_and_init(self, step_begin, step_end):
             log.v('database created.\n')
@@ -154,6 +162,7 @@ class TPDatabase:
         fields_names: 如果为None，则不修改字段名，否则应该是一个list，其中每个元素是包含两个str的list，表示将此list第一个指定的字段改名为第二个指定的名称
         @return: None or Boolean
         """
+        # TODO: 此函数尚未完成
         if self.db_source['type'] == self.DB_TYPE_SQLITE:
             if not isinstance(table_names, list) and field_names is None:
                 log.w('nothing to do.\n')
@@ -224,7 +233,8 @@ class TPDatabasePool:
             thread_id = threading.get_ident()
             if thread_id not in self._connections:
                 _conn = self._do_connect()
-                self._connections[thread_id] = _conn
+                if _conn is not None:
+                    self._connections[thread_id] = _conn
             else:
                 _conn = self._connections[thread_id]
 
@@ -246,6 +256,10 @@ class TPSqlitePool(TPDatabasePool):
         self._db_file = db_file
 
     def _do_connect(self):
+        if not os.path.exists(self._db_file):
+            log.e('[sqlite] can not connect, database file not exists.\n')
+            return None
+
         try:
             return sqlite3.connect(self._db_file)
         except:
@@ -259,6 +273,7 @@ class TPSqlitePool(TPDatabasePool):
             db_ret = cursor.fetchall()
             return db_ret
         except sqlite3.OperationalError:
+            # log.e('_do_query() error.\n')
             return None
         finally:
             cursor.close()
@@ -270,6 +285,7 @@ class TPSqlitePool(TPDatabasePool):
             conn.commit()
             return True
         except sqlite3.OperationalError:
+            # log.e('_do_exec() error.\n')
             return False
         finally:
             cursor.close()

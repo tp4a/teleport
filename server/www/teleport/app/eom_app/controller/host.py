@@ -453,16 +453,8 @@ class ExportHostHandler(TPBaseAdminAuthHandler):
 
 class GetCertList(TPBaseUserAuthJsonHandler):
     def post(self):
-        # args = self.get_argument('args', None)
-        # if args is not None:
-        #     args = json.loads(args)
-        #     # print('args', args)
-        # else:
-        #     # ret = {'code':-1}
-        #     self.write_json(-1)
-        #     return
         _certs = host.get_cert_list()
-        if _certs is None:
+        if _certs is None or len(_certs) == 0:
             self.write_json(-1)
             return
         else:
@@ -900,8 +892,12 @@ class SysUserAdd(TPBaseUserAuthJsonHandler):
 
             args['user_pswd'] = return_data['data']
 
-        if host.sys_user_add(args) < 0:
-            return self.write_json(-1)
+        user_id = host.sys_user_add(args)
+        if user_id < 0:
+            if user_id == -100:
+                return self.write_json(user_id, '同名账户已经存在！')
+            else:
+                return self.write_json(user_id, '数据库操作失败！')
 
         return self.write_json(0)
 

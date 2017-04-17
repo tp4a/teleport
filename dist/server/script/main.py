@@ -517,7 +517,7 @@ class InstallerLinux(InstallerBase):
 
     def _fix_path(self):
         self._config_path = '/etc/teleport'
-        self._data_path = os.path.join('/var/teleport')
+        self._data_path = os.path.join('/var/lib/teleport')
         self._log_path = os.path.join('/var/log/teleport')
 
     def _copy_files(self):

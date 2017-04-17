@@ -965,55 +965,55 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
     }
 	else
 	{
-		if (len > 5 && len < 256)
-		{
-			const ex_u8* _begin = ex_memmem((const ex_u8*)data, len, (const ex_u8*)"\033]0;", 4);
-			if (NULL != _begin)
-			{
-				size_t len_before = _begin - (const ex_u8*)data;
-				const ex_u8* _end = ex_memmem(_begin + 4, len - len_before, (const ex_u8*)"\007", 1);
-				if (NULL != _end)
-				{
-					_end++;
-
-					// 这个包中含有改变标题的数据，将标题换为我们想要的
-					size_t len_end = len - (_end - (const ex_u8*)data);
-					MemBuffer mbuf;
-
-					if (len_before > 0)
-						mbuf.append((ex_u8*)data, len_before);
-
-					mbuf.append((ex_u8*)"\033]0;tpssh://", 13);
-					mbuf.append((ex_u8*)_this->m_server_ip.c_str(), _this->m_server_ip.length());
-					mbuf.append((ex_u8*)"\007", 1);
-
-					if (len_end > 0)
-						mbuf.append((ex_u8*)_end, len_end);
-
-                    if(mbuf.size() > 0)
-                    {
-                        ret = ssh_channel_write(info->channel, mbuf.data(), mbuf.size());
-                        if (ret <= 0)
-                            EXLOGE("[ssh] send to client failed (1).\n");
-                        else
-                            ret = len;
-                    }
-                    else
-                    {
-                        ret = ssh_channel_write(info->channel, data, len);
-                    }
-				}
-				else
-				{
-					ret = ssh_channel_write(info->channel, data, len);
-				}
-			}
-			else
-			{
-				ret = ssh_channel_write(info->channel, data, len);
-			}
-		}
-		else
+// 		if (len > 5 && len < 256)
+// 		{
+// 			const ex_u8* _begin = ex_memmem((const ex_u8*)data, len, (const ex_u8*)"\033]0;", 4);
+// 			if (NULL != _begin)
+// 			{
+// 				size_t len_before = _begin - (const ex_u8*)data;
+// 				const ex_u8* _end = ex_memmem(_begin + 4, len - len_before, (const ex_u8*)"\007", 1);
+// 				if (NULL != _end)
+// 				{
+// 					_end++;
+// 
+// 					// 这个包中含有改变标题的数据，将标题换为我们想要的
+// 					size_t len_end = len - (_end - (const ex_u8*)data);
+// 					MemBuffer mbuf;
+// 
+// 					if (len_before > 0)
+// 						mbuf.append((ex_u8*)data, len_before);
+// 
+// 					mbuf.append((ex_u8*)"\033]0;tpssh://", 13);
+// 					mbuf.append((ex_u8*)_this->m_server_ip.c_str(), _this->m_server_ip.length());
+// 					mbuf.append((ex_u8*)"\007", 1);
+// 
+// 					if (len_end > 0)
+// 						mbuf.append((ex_u8*)_end, len_end);
+// 
+//                     if(mbuf.size() > 0)
+//                     {
+//                         ret = ssh_channel_write(info->channel, mbuf.data(), mbuf.size());
+//                         if (ret <= 0)
+//                             EXLOGE("[ssh] send to client failed (1).\n");
+//                         else
+//                             ret = len;
+//                     }
+//                     else
+//                     {
+//                         ret = ssh_channel_write(info->channel, data, len);
+//                     }
+// 				}
+// 				else
+// 				{
+// 					ret = ssh_channel_write(info->channel, data, len);
+// 				}
+// 			}
+// 			else
+// 			{
+// 				ret = ssh_channel_write(info->channel, data, len);
+// 			}
+// 		}
+// 		else
 		{
 			ret = ssh_channel_write(info->channel, data, len);
 		}

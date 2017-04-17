@@ -19,7 +19,7 @@ def verify_user(name, password):
         # 因此可以特别地处理用户验证：用户名admin，密码admin可以登录为管理员
         if cfg.app_mode == APP_MODE_MAINTENANCE:
             if name == 'admin' and password == 'admin':
-                return 1, 100, 'admin'
+                return 1, 100, 'admin', 0
         return 0, 0, '', 0
 
     if len(db_ret) != 1:
