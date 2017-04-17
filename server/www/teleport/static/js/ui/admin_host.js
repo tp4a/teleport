@@ -669,14 +669,11 @@ ywl.create_host_edit_dlg = function (tbl) {
     };
     dlg_edit_host.on_sys_type_change = function () {
         dlg_edit_host.sys_type = parseInt($('#auth-sys-type').val());
-        console.log('sys-type', dlg_edit_host.sys_type, 'protocol:', dlg_edit_host.protocol);
         if (dlg_edit_host.sys_type === OS_TYPE_WINDOWS) {// && dlg_edit_host.protocol === 0) {
             dlg_edit_host.protocol = PROTOCOL_TYPE_RDP;
-            console.log('--1', dlg_edit_host.protocol);
         }
         else if (dlg_edit_host.sys_type === OS_TYPE_LINUX) {// && dlg_edit_host.protocol === 0) {
             dlg_edit_host.protocol = PROTOCOL_TYPE_SSH;
-            console.log('--2', dlg_edit_host.protocol);
         }
 
         $('#host-protocol-type').val(dlg_edit_host.protocol);
@@ -686,7 +683,6 @@ ywl.create_host_edit_dlg = function (tbl) {
 
     dlg_edit_host.on_protocol_change = function () {
         dlg_edit_host.protocol = parseInt($('#host-protocol-type').val());
-        console.log('xx', dlg_edit_host.protocol);
         if (dlg_edit_host.protocol === PROTOCOL_TYPE_RDP)
             $('#dlg-edit-host-protocol-port').val('3389');
         else if (dlg_edit_host.protocol === PROTOCOL_TYPE_SSH)
@@ -1266,7 +1262,7 @@ ywl.create_sys_user = function (tbl) {
     dlg_sys_user.check_args = function () {
 
         dlg_sys_user.auth_mode = parseInt($('#auth-user-type').val());
-        dlg_sys_user.user_name = parseInt($('#auth-user-host-username').val());
+        dlg_sys_user.user_name = $('#auth-user-host-username').val();
         if (dlg_sys_user.auth_mode !== AUTH_NONE &&
             dlg_sys_user.user_name.length === 0) {
             ywl.notify_error('请输入系统用户名！');

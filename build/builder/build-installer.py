@@ -73,6 +73,7 @@ class BuilderWin(BuilderBase):
         utils.copy_ex(out_path, bin_path, 'tp_web.exe')
         utils.copy_ex(out_path, bin_path, 'tp_core.exe')
         utils.copy_ex(out_path, bin_path, 'tpssh.dll')
+        utils.copy_ex(out_path, bin_path, 'tprdp.dll')
 
         utils.copy_ex(os.path.join(env.root_path, 'out', 'pysrt'), bin_path, (ctx.dist_path, 'pysrt'))
 

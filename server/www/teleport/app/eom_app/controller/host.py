@@ -900,8 +900,12 @@ class SysUserAdd(TPBaseUserAuthJsonHandler):
 
             args['user_pswd'] = return_data['data']
 
-        if host.sys_user_add(args) < 0:
-            return self.write_json(-1)
+        user_id = host.sys_user_add(args)
+        if user_id < 0:
+            if user_id == -100:
+                return self.write_json(user_id, '同名账户已经存在！')
+            else:
+                return self.write_json(user_id, '数据库操作失败！')
 
         return self.write_json(0)
 
