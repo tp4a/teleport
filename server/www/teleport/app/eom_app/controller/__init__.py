@@ -50,9 +50,6 @@ controllers = [
     (r'/user', user.IndexHandler),
     (r'/user/list', user.GetListHandler),
 
-    # add another path to static-path
-
-    # todo: 重放数据路径是动态从core服务的json-rpc接口获取的，因此这里的数据获取方式需要改变
     #(r"/log/replay/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
     (r"/log/replay/(.*)", record.ReplayStaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
 

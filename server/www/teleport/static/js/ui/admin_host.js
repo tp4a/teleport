@@ -11,8 +11,8 @@
 
 var g_assist = null;
 var g_host_table = null;
-var g_cert_list = {};
-var g_group_list = {};
+var g_cert_list = [];
+var g_group_list = [];
 var g_dlg_edit_host = null;
 var g_dlg_edit_host_user = null;
 var g_dlg_sys_user = null;

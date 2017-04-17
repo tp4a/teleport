@@ -68,6 +68,11 @@
                 <div id="steps-detail" class="steps-detail"></div>
             </div>
 
+            <div id="step2" style="display:none;">
+                <hr/>
+                <h2>已完成！</h2>
+                <p>是的，没有第二步了，安装配置已经完成了！刷新页面即可进入Teleport主界面啦~~</p>
+            </div>
 
         </div>
     </div>
@@ -157,6 +162,7 @@
 
 
                                 if (!ret.data.running) {
+                                    $('#step2').show('fast');
                                     return;
                                 }
 

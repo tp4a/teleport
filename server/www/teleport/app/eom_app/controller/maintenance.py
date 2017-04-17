@@ -78,7 +78,6 @@ class RpcThreadManage:
                     'steps': self._threads[task_id]['steps']
                 }
                 if not self._threads[task_id]['running']:
-                    print('remove task-id', task_id)
                     del self._threads[task_id]
                 return ret
             else:
@@ -153,14 +152,11 @@ thread_mgr = RpcThreadManage()
 class RpcHandler(TPBaseAdminAuthJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
-        # print('args', args)
         if args is not None:
             args = json.loads(args)
         else:
             self.write_json(-1)
             return
-
-        # print(args)
 
         cmd = args['cmd']
         if cmd == 'create_db':
@@ -176,7 +172,6 @@ class RpcHandler(TPBaseAdminAuthJsonHandler):
             return self.write_json(0, data={"task_id": task_id})
 
         elif cmd == 'get_task_ret':
-            # return self.write_json(-1)
             r = thread_mgr.get_task(args['tid'])
             if r is None:
                 return self.write_json(0, data={'running': False, 'steps': []})

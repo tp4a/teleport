@@ -51,6 +51,8 @@ def get_all_host_info_list(_filter, order, limit, with_pwd=False):
           '{};'.format(db.table_prefix, db.table_prefix, _where)
 
     db_ret = db.query(sql)
+    if db_ret is None:
+        return 0, list()
     total_count = db_ret[0][0]
 
     # 修正分页数据
@@ -88,7 +90,7 @@ def get_all_host_info_list(_filter, order, limit, with_pwd=False):
 
     db_ret = db.query(sql)
     if db_ret is None:
-        return 0, None
+        return 0, list()
 
     ret = list()
     for item in db_ret:
@@ -310,9 +312,11 @@ def get_cert_list():
     sql = 'SELECT {} FROM `{}key` AS a;'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix)
     db_ret = db.query(sql)
 
-    if db_ret is None:
-        return None
     ret = list()
+
+    if db_ret is None:
+        return ret
+
     for item in db_ret:
         x = DbItem()
 

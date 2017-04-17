@@ -453,16 +453,8 @@ class ExportHostHandler(TPBaseAdminAuthHandler):
 
 class GetCertList(TPBaseUserAuthJsonHandler):
     def post(self):
-        # args = self.get_argument('args', None)
-        # if args is not None:
-        #     args = json.loads(args)
-        #     # print('args', args)
-        # else:
-        #     # ret = {'code':-1}
-        #     self.write_json(-1)
-        #     return
         _certs = host.get_cert_list()
-        if _certs is None:
+        if _certs is None or len(_certs) == 0:
             self.write_json(-1)
             return
         else:

@@ -1,6 +1,4 @@
-/**
- * Created by mi on 2016/7/4.
- */
+"use strict";
 
 ywl.on_init = function (cb_stack, cb_args) {
 	var dom_id = '#ywl_log_list';
@@ -36,7 +34,6 @@ ywl.on_init = function (cb_stack, cb_args) {
 				fields: {id: 'id'}
 			},
 			{title: "ID", key: "id"},
-//			{title: "Session", key: "session_id"},
 			{title: "操作者", key: "account_name"},
 			{title: "系统用户", key: "user_name"},
 			{title: "协议", key: "protocol", render: 'protocol', fields: {protocol: 'protocol'}},
@@ -51,7 +48,7 @@ ywl.on_init = function (cb_stack, cb_args) {
 				width: 160,
 				header_align: 'left', cell_align: 'left',
 				render: 'make_action_btn',
-				fields: {ID: 'id', sys_type: 'sys_type', cost_time: 'cost_time', protocol: 'protocol'}
+				fields: {ID: 'id', ret_code:'ret_code', sys_type: 'sys_type', cost_time: 'cost_time', protocol: 'protocol'}
 			}
 		],
 		paging: {selector: dom_id + " [ywl-paging='log-list']", per_page: paging_normal},
@@ -164,16 +161,14 @@ ywl.on_host_table_created = function (tbl) {
 				//ywl.update_add_to_batch_btn();
 			});
 
-		} else if (col_key == 'action') {
+		} else if (col_key === 'action') {
 			var row_data = tbl.get_row(row_id);
-			//console.log('row_data', row_data);
-
 			var protocol = parseInt(row_data.protocol);
 
-			if (protocol == 1) {
+			if (protocol === PROTOCOL_TYPE_RDP) {
 				$(cell_obj).find('[ywl-btn-record]').click(function () {
-					var ip = window.location.hostname;//ywl.page_options.ts_server.ip;
-					var port = parseInt(window.location.port);//ywl.page_options.ts_server.port;
+					var ip = window.location.hostname;
+					var port = parseInt(window.location.port);
 					var url = 'http://' + ip + ':' + port + '/log/replay/rdp/' + row_data.id;
 					var tail = 'log/replay/rdp/' + prefixInteger(row_data.id, 6);
 					var args = {};
@@ -187,7 +182,7 @@ ywl.on_host_table_created = function (tbl) {
 							ywl.notify_success('RDP 录像播放器成功启动！');
 						},
 						function (code, msg) {
-							if (code == TPE_NO_ASSIST)
+							if (code === TPE_NO_ASSIST)
 								g_assist.alert_assist_not_found();
 							else {
 								ywl.notify_error(msg);
@@ -196,7 +191,7 @@ ywl.on_host_table_created = function (tbl) {
 						});
 				});
 			}
-			else if (protocol == 2) {
+			else if (protocol === PROTOCOL_TYPE_SSH) {
 				$(cell_obj).find('[ywl-btn-record]').click(function () {
 					window.open('/log/record/' + parseInt(row_data.protocol) + '/' + row_data.id);
 				});
@@ -214,8 +209,8 @@ ywl.on_host_table_created = function (tbl) {
 			var msg = '';
 			switch (fields.ret_code) {
 				case 0:
-					// return '<span class="badge badge-warning">正在使用中</span>'
-					return '-';
+					return '<span class="badge badge-warning">使用中</span>'
+//					return '-';
 				case 9999:
 					return '<span class="badge badge-success">成功</span>';
 				case 1:
@@ -261,7 +256,7 @@ ywl.on_host_table_created = function (tbl) {
 
 		render.cost_time = function (row_id, fields) {
 			if (fields.ret_code == 0) {
-				return '<span class="badge badge-warning">正在使用中</span>';
+				return '<span class="badge badge-warning">使用中</span>';
 			} else {
 				return '<span class="badge badge-success">' + second2str(fields.cost_time) + '</span>';
 			}
@@ -302,19 +297,17 @@ ywl.on_host_table_created = function (tbl) {
 
 		render.make_action_btn = function (row_id, fields) {
 			var ret = [];
-			if (fields.protocol == 1) {
+			if (fields.protocol === PROTOCOL_TYPE_RDP) {
 				ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" protocol=' + fields.protocol + ' ywl-btn-record="' + fields.ID + '">录像查看</a>&nbsp');
-			} else if (fields.protocol == 2) {
-				if (fields.cost_time > 0) {
+			} else if (fields.protocol === PROTOCOL_TYPE_SSH) {
+				if (fields.ret_code === 9999 && fields.cost_time > 0) {
 					ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" protocol=' + fields.protocol + ' ywl-btn-record="' + fields.ID + '">录像查看</a>&nbsp');
 					ret.push('<a href="javascript:;" class="btn btn-sm btn-success" protocol=' + fields.protocol + ' ywl-btn-log="' + fields.ID + '">日志查看</a>&nbsp');
 				}
-
 			}
 
 			return ret.join('');
 		}
-
 	};
 };
 
@@ -378,7 +371,6 @@ ywl.create_table_filter_user_list = function (tbl, selector, on_created) {
 	_tblf_st._on_select = function () {
 		var user_name = $(this).html();
 
-
 		var cb_stack = CALLBACK_STACK.create();
 		cb_stack
 			.add(_tblf_st._table_ctrl.load_data)
@@ -392,4 +384,3 @@ ywl.create_table_filter_user_list = function (tbl, selector, on_created) {
 
 	return _tblf_st;
 };
-
