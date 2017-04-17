@@ -107,6 +107,13 @@ def clean_everything():
     utils.remove(os.path.join(env.root_path, 'external', 'python'))
     utils.remove(os.path.join(env.root_path, 'external', 'libssh-win-static', 'lib'))
     utils.remove(os.path.join(env.root_path, 'external', 'libssh-win-static', 'src'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'tmp'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libmbedcrypto.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libmbedtls.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libmbedx509.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libsqlite3.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libssh.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libuv.a'))
 
 
 def do_opt(opt):

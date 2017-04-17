@@ -29,3 +29,4 @@ wget = C:\Program Files (x86)\wget\wget.exe
 
 # if not set cmake path, default to '/usr/bin/cmake'
 cmake = /opt/cmake/bin/cmake
+
