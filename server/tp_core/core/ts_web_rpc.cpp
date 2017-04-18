@@ -13,7 +13,8 @@ bool ts_web_rpc_register_core()
 	jreq["method"] = "register_core";
 	//jreq["param"]["ip"] = g_env.rpc_bind_ip.c_str();
 	//jreq["param"]["port"] = g_env.rpc_bind_port;
-	jreq["param"]["rpc"] = "http://127.0.0.1:52080/rpc";
+	//jreq["param"]["rpc"] = "http://127.0.0.1:52080/rpc";
+	jreq["param"]["rpc"] = g_env.core_server_rpc;
 
 // 	ExIniFile& ini = g_env.get_ini();
 // 	ExIniSection* sec = ini.GetSection(L"common");
@@ -33,7 +34,9 @@ bool ts_web_rpc_register_core()
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
 
-	ex_astr url = "http://127.0.0.1:7190/rpc?";
+	//ex_astr url = "http://127.0.0.1:7190/rpc?";
+	ex_astr url = g_env.web_server_rpc;
+	url += "?";
 	url += param;
 
 	ex_astr body;
@@ -52,7 +55,10 @@ bool ts_web_rpc_get_auth_info(int auth_id, Json::Value& jret)
 
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
-	ex_astr url = "http://127.0.0.1:7190/rpc?";
+
+	//ex_astr url = "http://127.0.0.1:7190/rpc?";
+	ex_astr url = g_env.web_server_rpc;
+	url += "?";
 	url += param;
 
 	ex_astr body;
@@ -114,7 +120,10 @@ bool ts_web_rpc_session_begin(TS_SESSION_INFO& info, int& record_id)
 
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
-	ex_astr url = "http://127.0.0.1:7190/rpc?";
+
+	//ex_astr url = "http://127.0.0.1:7190/rpc?";
+	ex_astr url = g_env.web_server_rpc;
+	url += "?";
 	url += param;
 
 	ex_astr body;
@@ -157,13 +166,11 @@ bool ts_web_rpc_session_end(int record_id, int ret_code)
 
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
-	ex_astr url = "http://127.0.0.1:7190/rpc?";
-	url += param;
 
-// 	ex_astr param;
-// 	ts_url_encode("{\"method\":\"session_end\",\"param\":[]}", param);
-// 	ex_astr url = "http://127.0.0.1:7190/rpc?";
-// 	url += param;
+	//ex_astr url = "http://127.0.0.1:7190/rpc?";
+	ex_astr url = g_env.web_server_rpc;
+	url += "?";
+	url += param;
 
 	ex_astr body;
 	return ts_http_get(url, body);

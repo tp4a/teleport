@@ -22,6 +22,9 @@ public:
 	ex_astr rpc_bind_ip;
 	int rpc_bind_port;
 
+	ex_astr web_server_rpc;
+	ex_astr core_server_rpc;
+
 private:
 	ExIniFile m_ini;
 };
