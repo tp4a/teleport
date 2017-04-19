@@ -27,13 +27,13 @@ ywl.on_init = function (cb_stack, cb_args) {
 		}
 		ywl.ajax_post_json('/auth/modify-pwd', {o_pwd: old_pwd, n_pwd: new_pwd_1, callback: 1},
 			function (ret) {
-				if (ret.data.code == 0) {
+				if (ret.code == 0) {
 					ywl.notify_success('密码修改成功！');
 					ywl.clear_input();
-				} else if (ret.data.code == -2) {
+				} else if (ret.code == -2) {
 					ywl.notify_error('密码错误！');
 				} else {
-					ywl.notify_error('密码修改失败！');
+					ywl.notify_error('密码修改失败！errcode:'+ret.code);
 				}
 
 			},
