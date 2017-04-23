@@ -17,8 +17,7 @@ class RpcHandler(TPBaseJsonHandler):
     def get(self):
         _uri = self.request.uri.split('?', 1)
         if len(_uri) != 2:
-            self.write_json(-1, message='need request param.')
-            return
+            return self.write_json(-1, message='need request param.')
 
         yield self._dispatch(urllib.parse.unquote(_uri[1]))
 
@@ -26,8 +25,7 @@ class RpcHandler(TPBaseJsonHandler):
     def post(self):
         req = self.request.body.decode('utf-8')
         if req == '':
-            self.write_json(-1, message='need request param.')
-            return
+            return self.write_json(-1, message='need request param.')
 
         yield self._dispatch(req)
 
@@ -37,11 +35,9 @@ class RpcHandler(TPBaseJsonHandler):
             _req = json.loads(req)
 
             if 'method' not in _req or 'param' not in _req:
-                self.write_json(-1, message='invalid request format.')
-                return
+                return self.write_json(-1, message='invalid request format.')
         except:
-            self.write_json(-1, message='invalid json format.')
-            return
+            return self.write_json(-1, message='invalid json format.')
 
         if 'get_auth_info' == _req['method']:
             return self._get_auth_info(_req['param'])
@@ -56,26 +52,25 @@ class RpcHandler(TPBaseJsonHandler):
         else:
             log.e('WEB-JSON-RPC got unknown method: `{}`.\n'.format(_req['method']))
 
-        self.write_json(-1, message='invalid method.')
+        return self.write_json(-1, message='invalid method.')
 
     def _get_auth_info(self, param):
         # 如果是页面上进行连接测试（增加或修改主机和用户时），信息并不写入数据库，而是在内存中存在，传递给core服务的
         # 应该是负数形式的authid。本接口支持区分这两种认证ID。
 
         if 'authid' not in param:
-            self.write_json(-1, message='invalid request.')
-            return
+            return self.write_json(-1, message='invalid request.')
 
         authid = param['authid']
         if authid > 0:
             # 根据authid从数据库中查询对应的数据，然后返回给调用者
             x = host.get_auth_info(param['authid'])
-            self.write_json(0, data=x)
+            return self.write_json(0, data=x)
         elif authid < 0:
             x = web_session().taken('tmp-auth-info-{}'.format(authid), None)
-            self.write_json(0, data=x)
+            return self.write_json(0, data=x)
         else:
-            self.write_json(-1, message='invalid auth id.')
+            return self.write_json(-1, message='invalid auth id.')
 
     def _session_begin(self, param):
         if 'sid' not in param:
@@ -95,26 +90,25 @@ class RpcHandler(TPBaseJsonHandler):
 
         record_id = record.session_begin(_sid, _acc_name, _host_ip, _sys_type, _host_port, _auth_mode, _user_name, _protocol)
         if record_id <= 0:
-            self.write_json(-1, message='can not write database.')
+            return self.write_json(-1, message='can not write database.')
         else:
-            self.write_json(0, data={'rid': record_id})
+            return self.write_json(0, data={'rid': record_id})
 
     def _session_end(self, param):
         if 'rid' not in param or 'code' not in param:
-            self.write_json(-1, message='invalid request.')
-            return
+            return self.write_json(-1, message='invalid request.')
 
         if not record.session_end(param['rid'], param['code']):
-            self.write_json(-1)
+            return self.write_json(-1, 'can not write database.')
         else:
-            self.write_json(0)
+            return self.write_json(0)
 
     def _register_core(self, param):
         # 因为core服务启动了（之前可能非正常终止了），做一下数据库中会话状态的修复操作
         record.session_fix()
 
         if 'rpc' not in param:
-            return self.write_json(-1)
+            return self.write_json(-1, 'invalid param.')
 
         app_cfg().core_server_rpc = param['rpc']
 
@@ -123,16 +117,16 @@ class RpcHandler(TPBaseJsonHandler):
         _yr = async_post_http(req)
         return_data = yield _yr
         if return_data is None:
-            return self.write_json(-1)
+            return self.write_json(-1, 'get config from core service failed.')
         if 'code' not in return_data:
-            return self.write_json(-2)
+            return self.write_json(-2, 'get config from core service return invalid data.')
         if return_data['code'] != 0:
-            return self.write_json(return_data['code'])
+            return self.write_json(-3, 'get config from core service return code: {}'.format(return_data['code']))
 
         app_cfg().update_core(return_data['data'])
 
-        self.write_json(0)
+        return self.write_json(0)
 
     def _exit(self):
         # set exit flag.
-        self.write_json(0)
+        return self.write_json(0)

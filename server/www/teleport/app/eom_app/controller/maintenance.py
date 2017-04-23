@@ -155,19 +155,18 @@ class RpcHandler(TPBaseAdminAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
 
         cmd = args['cmd']
         if cmd == 'create_db':
             if not get_db().need_create:
-                return self.write_json(-1)
+                return self.write_json(-1, '无需创建')
             task_id = thread_mgr.create_db()
             return self.write_json(0, data={"task_id": task_id})
 
         if cmd == 'upgrade_db':
             if not get_db().need_upgrade:
-                return self.write_json(-1)
+                return self.write_json(-1, '无需升级')
             task_id = thread_mgr.upgrade_db()
             return self.write_json(0, data={"task_id": task_id})
 

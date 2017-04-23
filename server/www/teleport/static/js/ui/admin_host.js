@@ -28,19 +28,17 @@ ywl.do_upload_file = function () {
         data: param,
         success: function (data) {
             $('#upload-file').remove();
-            var obj = JSON.parse(data);
-            if (obj.code === TPE_OK) {
+            var ret = JSON.parse(data);
+            if (ret.code === TPE_OK) {
                 g_host_table.reload();
                 ywl.notify_success('批量导入主机成功！');
-                console.log('msg', obj);
-                if (obj.msg.length > 0) {
-                    console.log(obj.msg);
+                if (ret.data.msg.length > 0) {
                     var html = [];
                     html.push('<ul>');
-                    for (var i = 0, cnt = obj.msg.length; i < cnt; ++i) {
+                    for (var i = 0, cnt = ret.data.msg.length; i < cnt; ++i) {
                         html.push('<li>');
-                        html.push('<span style="font-weight:bold;color:#993333;">' + obj.msg[i].reason + '</span><br/>');
-                        html.push(obj.msg[i].line);
+                        html.push('<span style="font-weight:bold;color:#993333;">' + ret.data.msg[i].reason + '</span><br/>');
+                        html.push(ret.data.msg[i].line);
                         html.push('</li>');
                     }
                     html.push('</ul>');
@@ -49,10 +47,10 @@ ywl.do_upload_file = function () {
                     $('#dialog_batch_add_host').modal({backdrop: 'static'});
                 }
             } else {
-                ywl.notify_error('批量导入主机失败！ 错误号：' + obj.code);
+                ywl.notify_error('批量导入主机失败！ 错误号：' + ret.code);
             }
         },
-        error: function (data, status, e) { // 相当于java中catch语句块的用法
+        error: function () {
             $('#upload-file').remove();
             ywl.notify_error('网络故障，批量导入主机失败！');
         }

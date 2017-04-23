@@ -45,7 +45,7 @@ class IndexHandler(TPBaseUserAuthHandler):
             self.render('host/common_index.mako', page_param=json.dumps(param))
 
 
-class UploadAndImportHandler(TPBaseAdminAuthJsonHandler):
+class UploadAndImportHandler(TPBaseAdminAuthHandler):
     # TODO: 导入操作可能会比较耗时，应该分离导入和获取导入状态两个过程，在页面上可以呈现导入进度，并列出导出成功/失败的项
 
     @tornado.gen.coroutine
@@ -62,11 +62,12 @@ class UploadAndImportHandler(TPBaseAdminAuthJsonHandler):
         """
         ret = dict()
         ret['code'] = 0
-        ret['msg'] = list()  # 记录跳过的行（格式不正确，或者数据重复等）
+        ret['message'] = ''
+        ret['data'] = {}
+        ret['data']['msg'] = list()  # 记录跳过的行（格式不正确，或者数据重复等）
         csv_filename = ''
 
         try:
-            # upload_path = os.path.join(os.path.dirname(__file__), 'csv-files')  # 文件的暂存路径
             upload_path = os.path.join(cfg.data_path, 'tmp')  # 文件的暂存路径
             if not os.path.exists(upload_path):
                 os.mkdir(upload_path)
@@ -75,34 +76,35 @@ class UploadAndImportHandler(TPBaseAdminAuthJsonHandler):
                 now = time.localtime(time.time())
                 tmp_name = 'upload-{:04d}{:02d}{:02d}{:02d}{:02d}{:02d}.csv'.format(now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
                 csv_filename = os.path.join(upload_path, tmp_name)
-                with open(csv_filename, 'wb') as up:
-                    up.write(meta['body'])
+                with open(csv_filename, 'wb') as f:
+                    f.write(meta['body'])
 
             # file encode maybe utf8 or gbk... check it out.
             file_encode = None
-            with open(csv_filename, encoding='gbk') as up:
+            with open(csv_filename, encoding='gbk') as f:
                 try:
-                    up.readlines()
+                    f.readlines()
                     file_encode = 'gbk'
                 except:
-                    log.e('open file:{} -1\n'.format(csv_filename))
+                    pass
 
             if file_encode is None:
-                with open(csv_filename, encoding='utf8') as up:
+                with open(csv_filename, encoding='utf8') as f:
                     try:
-                        up.readlines()
+                        f.readlines()
                         file_encode = 'utf8'
                     except:
-                        log.e('open file:{} -2\n'.format(csv_filename))
+                        pass
 
             if file_encode is None:
                 os.remove(csv_filename)
-                self.write_json(-2)
-                log.e('file {} unknown encode.\n'.format(csv_filename))
-                return
+                log.e('file `{}` unknown encode, neither GBK nor UTF8.\n'.format(csv_filename))
+                ret['code'] = -2
+                ret['message'] = 'upload csv file is neither gbk nor utf8 encode.'
+                return self.write(json.dumps(ret).encode('utf8'))
 
-            with open(csv_filename, encoding=file_encode) as up:
-                csv_reader = csv.reader(up)
+            with open(csv_filename, encoding=file_encode) as f:
+                csv_reader = csv.reader(f)
                 is_first_line = True
                 for csv_recorder in csv_reader:
                     # 跳过第一行，那是格式说明
@@ -118,9 +120,6 @@ class UploadAndImportHandler(TPBaseAdminAuthJsonHandler):
                     if len(csv_recorder) != 13:
                         ret['msg'].append({'reason': '格式错误', 'line': ', '.join(csv_recorder)})
                         continue
-
-                    # pro_type = int(line[6])
-                    # host_port = int(line[3])
 
                     host_args = dict()
                     user_args = dict()
@@ -142,26 +141,28 @@ class UploadAndImportHandler(TPBaseAdminAuthJsonHandler):
                     user_args['host_id'] = host_id
                     user_args['user_name'] = csv_recorder[7]
                     user_pswd = csv_recorder[8]
-                    is_encrpty = int(csv_recorder[9])
+                    is_encrypt = int(csv_recorder[9])
                     user_args['user_param'] = csv_recorder[10].replace('\\n', '\n')
                     user_args['cert_id'] = int(csv_recorder[11])
                     auth_mode = int(csv_recorder[12])
                     user_args['auth_mode'] = auth_mode
                     user_args['user_pswd'] = ''
-                    ret_code = 0
                     if auth_mode == 0:
                         pass
                     elif auth_mode == 1:
                         try:
-                            if is_encrpty == 0:
-                                # ret_code, tmp_pswd = get_enc_data(user_pswd)
+                            if is_encrypt == 0:
                                 _yr = async_enc(user_pswd)
                                 return_data = yield _yr
                                 if return_data is None:
-                                    return self.write_json(-1)
+                                    ret['code'] = -3
+                                    ret['message'] = 'can not encrypt by core server.'
+                                    return self.write(json.dumps(ret).encode('utf8'))
 
                                 if 'code' not in return_data or return_data['code'] != 0:
-                                    return self.write_json(-1)
+                                    ret['code'] = -4
+                                    ret['message'] = 'invalid result from encrypt by core server.'
+                                    return self.write(json.dumps(ret).encode('utf8'))
 
                                 tmp_pswd = return_data['data']
 
@@ -170,38 +171,33 @@ class UploadAndImportHandler(TPBaseAdminAuthJsonHandler):
 
                             user_args['user_pswd'] = tmp_pswd
 
-                        except Exception:
-                            ret_code = -1
-                            log.e('get_enc_data() failed.\n')
-
-                        if 0 != ret_code:
-                            ret['msg'].append({'reason': '加密用户密码失败，可能原因：Teleport核心服务未启动', 'line': ', '.join(csv_recorder)})
-                            log.e('get_enc_data() failed, error={}\n'.format(ret_code))
-                            continue
+                        except:
+                            log.e('can not encrypt user password.\n')
+                            ret['code'] = -5
+                            ret['message'] = '发生异常'
+                            return self.write(json.dumps(ret).encode('utf8'))
 
                     elif auth_mode == 2:
                         pass
-                        # user_args['cert_id'] = int(csv_recorder[7])
                     else:
-                        ret['msg'].append({'reason': '未知的认证模式', 'line': ', '.join(csv_recorder)})
+                        ret['data']['msg'].append({'reason': '未知的认证模式', 'line': ', '.join(csv_recorder)})
                         log.e('auth_mode unknown\n')
                         continue
 
                     uid = host.sys_user_add(user_args)
                     if uid < 0:
                         if uid == -100:
-                            ret['msg'].append({'reason': '添加登录账号失败，账号已存在', 'line': ', '.join(csv_recorder)})
+                            ret['data']['msg'].append({'reason': '添加登录账号失败，账号已存在', 'line': ', '.join(csv_recorder)})
                         else:
-                            ret['msg'].append({'reason': '添加登录账号失败，操作数据库失败', 'line': ', '.join(csv_recorder)})
-                            # log.e('sys_user_add() failed.\n')
+                            ret['data']['msg'].append({'reason': '添加登录账号失败，操作数据库失败', 'line': ', '.join(csv_recorder)})
 
-            ret = json.dumps(ret).encode('utf8')
-            self.write(ret)
+            ret['code'] = 0
+            return self.write(json.dumps(ret).encode('utf8'))
         except:
             log.e('error\n')
-            ret['code'] = -1
-            ret = json.dumps(ret).encode('utf8')
-            self.write(ret)
+            ret['code'] = -6
+            ret['message'] = '发生异常.'
+            return self.write(json.dumps(ret).encode('utf8'))
 
         finally:
             if os.path.exists(csv_filename):
@@ -210,15 +206,11 @@ class UploadAndImportHandler(TPBaseAdminAuthJsonHandler):
 
 class GetListHandler(TPBaseUserAuthJsonHandler):
     def post(self):
-        _user = self.get_session('user')
+        _user = self.get_current_user()
         if _user is None:
-            return self.write(-1)
-
-        _type = _user['type']
-        _uname = _user['name']
+            return self.write_json(-1, '尚未登录')
 
         filter = dict()
-        user = self.get_current_user()
         order = dict()
         order['name'] = 'host_id'
         order['asc'] = True
@@ -264,19 +256,17 @@ class GetListHandler(TPBaseUserAuthJsonHandler):
             if _order is not None:
                 order['name'] = _order['k']
                 order['asc'] = _order['v']
-        if _type == 100:
+        if _user['type'] == 100:
             _total, _hosts = host.get_all_host_info_list(filter, order, limit)
         else:
-            filter['account_name'] = _uname
+            filter['account_name'] = _user['name']
             _total, _hosts = host.get_host_info_list_by_user(filter, order, limit)
-        # print(_hosts)
 
         ret = dict()
         ret['page_index'] = limit['page_index']
         ret['total'] = _total
         ret['data'] = _hosts
         self.write_json(0, data=ret)
-        # self.write(json_encode(data))
 
 
 class GetGrouplist(TPBaseUserAuthJsonHandler):
@@ -290,25 +280,18 @@ class UpdateHandler(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
 
         if 'host_id' not in args or 'kv' not in args:
-            # ret = {'code':-2}
-            self.write_json(-2)
-            return
-
-        # _host_id = args['host_id']
+            self.write_json(-2, '缺少必要参数')
 
         _ret = host.update(args['host_id'], args['kv'])
 
         if _ret:
             self.write_json(0)
         else:
-            self.write_json(-1)
+            self.write_json(-3, '数据库操作失败')
 
 
 class AddHost(TPBaseUserAuthJsonHandler):
@@ -316,22 +299,18 @@ class AddHost(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
 
         try:
             ret = host.add_host(args)
             if ret > 0:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(ret)
-            return
+                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
         except:
-            self.write_json(-1)
-            return
+            log.e('add host failed.\n')
+            return self.write_json(-3, '发生异常')
 
 
 class LockHost(TPBaseUserAuthJsonHandler):
@@ -339,24 +318,20 @@ class LockHost(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
 
         host_id = args['host_id']
         lock = args['lock']
         try:
             ret = host.lock_host(host_id, lock)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
-            return
+                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
         except:
-            self.write_json(-1)
-            return
+            log.e('lock host failed.\n')
+            return self.write_json(-3, '发生异常')
 
 
 class DeleteHost(TPBaseUserAuthJsonHandler):
@@ -364,22 +339,19 @@ class DeleteHost(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
+
         host_list = args['host_list']
         try:
             ret = host.delete_host(host_list)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
-            return
+                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
         except:
-            self.write_json(-1)
-            return
+            log.e('delete host failed.\n')
+            return self.write_json(-3, '发生异常')
 
 
 class ExportHostHandler(TPBaseAdminAuthHandler):
@@ -455,11 +427,9 @@ class GetCertList(TPBaseUserAuthJsonHandler):
     def post(self):
         _certs = host.get_cert_list()
         if _certs is None or len(_certs) == 0:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
         else:
-            self.write_json(0, data=_certs)
-            return
+            return self.write_json(0, data=_certs)
 
 
 class AddCert(TPBaseUserAuthJsonHandler):
@@ -469,24 +439,22 @@ class AddCert(TPBaseUserAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
 
         cert_pub = args['cert_pub']
         cert_pri = args['cert_pri']
         cert_name = args['cert_name']
 
         if len(cert_pri) == 0:
-            self.write_json(-1)
-            return
+            return self.write_json(-2, '参数错误，数据不完整')
 
         _yr = async_enc(cert_pri)
         return_data = yield _yr
         if return_data is None:
-            return self.write_json(-1)
+            return self.write_json(-3, '调用核心服务加密失败')
 
         if 'code' not in return_data or return_data['code'] != 0:
-            return self.write_json(-1)
+            return self.write_json(-4, '核心服务加密返回错误')
 
         cert_pri = return_data['data']
 
@@ -495,9 +463,10 @@ class AddCert(TPBaseUserAuthJsonHandler):
             if ret:
                 return self.write_json(0)
             else:
-                return self.write_json(-1)
+                return self.write_json(-5, '数据库操作失败，errcode:{}'.format(ret))
         except:
-            return self.write_json(-1)
+            log.e('add cert failed.\n')
+            return self.write_json(-6, '发生异常')
 
 
 class DeleteCert(TPBaseUserAuthJsonHandler):
@@ -506,7 +475,7 @@ class DeleteCert(TPBaseUserAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            return self.write_json(-1)
+            return self.write_json(-1, '参数错误')
 
         cert_id = args['cert_id']
 
@@ -515,9 +484,10 @@ class DeleteCert(TPBaseUserAuthJsonHandler):
             if ret:
                 return self.write_json(0)
             else:
-                return self.write_json(-2)
+                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
         except:
-            return self.write_json(-3)
+            log.e('add cert failed.\n')
+            return self.write_json(-3, '发生异常')
 
 
 class UpdateCert(TPBaseUserAuthJsonHandler):
@@ -526,11 +496,9 @@ class UpdateCert(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
+
         cert_id = args['cert_id']
         cert_pub = args['cert_pub']
         cert_pri = args['cert_pri']
@@ -540,23 +508,23 @@ class UpdateCert(TPBaseUserAuthJsonHandler):
             _yr = async_enc(cert_pri)
             return_data = yield _yr
             if return_data is None:
-                return self.write_json(-1)
+                return self.write_json(-2, '调用核心服务加密失败')
 
             if 'code' not in return_data or return_data['code'] != 0:
-                return self.write_json(-1)
+                return self.write_json(-3, '核心服务加密返回错误')
 
             cert_pri = return_data['data']
 
         try:
             ret = host.update_cert(cert_id, cert_pub, cert_pri, cert_name)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
+                return self.write_json(-4, '数据库操作失败，errcode:{}'.format(ret))
             return
         except:
-            self.write_json(-1)
-            return
+            log.e('update cert failed.\n')
+            return self.write_json(-5, '发生异常')
 
 
 class AddGroup(TPBaseUserAuthJsonHandler):
@@ -564,22 +532,19 @@ class AddGroup(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
+
         group_name = args['group_name']
         try:
             ret = host.add_group(group_name)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
-            return
+                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
         except:
-            self.write_json(-1)
-            return
+            log.e('add group failed.\n')
+            return self.write_json(-3, '发生异常')
 
 
 class UpdateGroup(TPBaseUserAuthJsonHandler):
@@ -587,23 +552,20 @@ class UpdateGroup(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
+
         group_id = args['group_id']
         group_name = args['group_name']
         try:
             ret = host.update_group(group_id, group_name)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
-            return
+                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
         except:
-            self.write_json(-1)
-            return
+            log.e('update group failed.\n')
+            return self.write_json(-3, '发生异常')
 
 
 class DeleteGroup(TPBaseUserAuthJsonHandler):
@@ -611,22 +573,19 @@ class DeleteGroup(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
+
         group_id = args['group_id']
         try:
             ret = host.delete_group(group_id)
             if ret == 0:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(ret)
-            return
+                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
         except:
-            self.write_json(-1)
-            return
+            log.e('delete group failed.\n')
+            return self.write_json(-3, '发生异常')
 
 
 class AddHostToGroup(TPBaseUserAuthJsonHandler):
@@ -634,11 +593,9 @@ class AddHostToGroup(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
+
         host_list = args['host_list']
         group_id = args['group_id']
         try:
@@ -646,11 +603,11 @@ class AddHostToGroup(TPBaseUserAuthJsonHandler):
             if ret:
                 self.write_json(0)
             else:
-                self.write_json(-1)
+                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
             return
         except:
-            self.write_json(-1)
-            return
+            log.e('add host to group failed.\n')
+            return self.write_json(-3, '发生异常')
 
 
 class GetSessionId(TPBaseUserAuthJsonHandler):
@@ -659,33 +616,31 @@ class GetSessionId(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
+
         if 'auth_id' not in args:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数缺失')
+
         auth_id = args['auth_id']
 
         req = {'method': 'request_session', 'param': {'authid': auth_id}}
         _yr = async_post_http(req)
         return_data = yield _yr
         if return_data is None:
-            return self.write_json(-1)
+            return self.write_json(-2, '调用核心服务获取会话ID失败')
 
         if 'code' not in return_data:
-            return self.write_json(-1)
+            return self.write_json(-3, '核心服务获取会话ID时返回错误数据')
 
         _code = return_data['code']
         if _code != 0:
-            return self.write_json(_code)
+            return self.write_json(-4, '核心服务获取会话ID时返回错误 {}'.format(_code))
 
         try:
             session_id = return_data['data']['sid']
         except IndexError:
-            return self.write_json(-1)
+            return self.write_json(-5, '核心服务获取会话ID时返回错误数据')
 
         data = dict()
         data['session_id'] = session_id
@@ -700,12 +655,10 @@ class AdminGetSessionId(TPBaseUserAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
 
         if 'host_auth_id' not in args:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数缺失')
 
         _host_auth_id = int(args['host_auth_id'])
 
@@ -716,8 +669,7 @@ class AdminGetSessionId(TPBaseUserAuthJsonHandler):
 
         tmp_auth_info = host.get_host_auth_info(_host_auth_id)
         if tmp_auth_info is None:
-            self.write_json(-1)
-            return
+            return self.write_json(-2, '指定数据不存在')
 
         tmp_auth_info['account_lock'] = 0
         tmp_auth_info['account_name'] = user['name']
@@ -734,19 +686,19 @@ class AdminGetSessionId(TPBaseUserAuthJsonHandler):
         _yr = async_post_http(req)
         return_data = yield _yr
         if return_data is None:
-            return self.write_json(-1)
+            return self.write_json(-3, '调用核心服务获取会话ID失败')
 
         if 'code' not in return_data:
-            return self.write_json(-1)
+            return self.write_json(-4, '核心服务获取会话ID时返回错误数据')
 
         _code = return_data['code']
         if _code != 0:
-            return self.write_json(_code)
+            return self.write_json(-5, '核心服务获取会话ID时返回错误 {}'.format(_code))
 
         try:
             session_id = return_data['data']['sid']
         except IndexError:
-            return self.write_json(-1)
+            return self.write_json(-5, '核心服务获取会话ID时返回错误数据')
 
         data = dict()
         data['session_id'] = session_id
@@ -761,8 +713,7 @@ class AdminFastGetSessionId(TPBaseAdminAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
 
         user = self.get_current_user()
 
@@ -784,8 +735,7 @@ class AdminFastGetSessionId(TPBaseAdminAuthJsonHandler):
             tmp_auth_info['account_lock'] = 0
             tmp_auth_info['account_name'] = user['name']
         except IndexError:
-            self.write_json(-2)
-            return
+            return self.write_json(-2, '参数缺失')
 
         if tmp_auth_info['auth_mode'] == 1:
             if len(_user_pswd) == 0:  # 修改登录用户信息时可能不会修改密码，因此页面上可能不会传来密码，需要从数据库中直接读取
@@ -796,21 +746,21 @@ class AdminFastGetSessionId(TPBaseAdminAuthJsonHandler):
                 _yr = async_post_http(req)
                 return_data = yield _yr
                 if return_data is None:
-                    return self.write_json(-1)
+                    return self.write_json(-3, '调用核心服务加密失败')
                 if 'code' not in return_data or return_data['code'] != 0:
-                    return self.write_json(-1)
+                    return self.write_json(-3, '核心服务加密返回错误')
 
                 tmp_auth_info['user_auth'] = return_data['data']['c']
 
         elif tmp_auth_info['auth_mode'] == 2:
             tmp_auth_info['user_auth'] = host.get_cert_info(_cert_id)
             if tmp_auth_info['user_auth'] is None:
-                self.write_json(-100)
+                self.write_json(-100, '指定私钥不存在')
                 return
         elif tmp_auth_info['auth_mode'] == 0:
             tmp_auth_info['user_auth'] = ''
         else:
-            self.write_json(-101)
+            self.write_json(-101, '认证类型未知')
             return
 
         with tmp_auth_id_lock:
@@ -824,19 +774,19 @@ class AdminFastGetSessionId(TPBaseAdminAuthJsonHandler):
         _yr = async_post_http(req)
         return_data = yield _yr
         if return_data is None:
-            return self.write_json(-1)
+            return self.write_json(-3, '调用核心服务获取会话ID失败')
 
         if 'code' not in return_data:
-            return self.write_json(-1)
+            return self.write_json(-4, '核心服务获取会话ID时返回错误数据')
 
         _code = return_data['code']
         if _code != 0:
-            return self.write_json(_code)
+            return self.write_json(-5, '核心服务获取会话ID时返回错误 {}'.format(_code))
 
         try:
             session_id = return_data['data']['sid']
         except IndexError:
-            return self.write_json(-1)
+            return self.write_json(-5, '核心服务获取会话ID时返回错误数据')
 
         data = dict()
         data['session_id'] = session_id
@@ -850,13 +800,12 @@ class SysUserList(TPBaseUserAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
+
         try:
             host_id = args['host_id']
-        except Exception as e:
-            self.write_json(-2)
-            return
+        except:
+            return self.write_json(-1, '参数缺失')
 
         data = host.sys_user_list(host_id)
         return self.write_json(0, data=data)
@@ -869,26 +818,26 @@ class SysUserAdd(TPBaseUserAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            return self.write_json(-1)
+            return self.write_json(-1, '参数错误')
 
         try:
             auth_mode = args['auth_mode']
             user_pswd = args['user_pswd']
             cert_id = args['cert_id']
-        except IndexError:
-            return self.write_json(-2)
+        except:
+            return self.write_json(-1, '参数缺失')
 
         if auth_mode == 1:
             if 0 == len(args['user_pswd']):
-                return self.write_json(-1)
+                return self.write_json(-2, '参数缺失')
 
             _yr = async_enc(user_pswd)
             return_data = yield _yr
             if return_data is None:
-                return self.write_json(-1)
+                return self.write_json(-3, '调用核心服务加密失败')
 
             if 'code' not in return_data or return_data['code'] != 0:
-                return self.write_json(-1)
+                return self.write_json(-3, '核心服务加密返回错误')
 
             args['user_pswd'] = return_data['data']
 
@@ -909,19 +858,14 @@ class SysUserUpdate(TPBaseUserAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
 
         if 'host_auth_id' not in args or 'kv' not in args:
-            # ret = {'code':-2}
-            self.write_json(-2)
-            return
+            return self.write_json(-2, '参数缺失')
 
         kv = args['kv']
         if 'auth_mode' not in kv or 'user_pswd' not in kv or 'cert_id' not in kv:
-            self.write_json(-3)
-            return
+            return self.write_json(-3, '参数缺失')
 
         auth_mode = kv['auth_mode']
         if 'user_pswd' in kv:
@@ -937,17 +881,17 @@ class SysUserUpdate(TPBaseUserAuthJsonHandler):
             _yr = async_enc(user_pswd)
             return_data = yield _yr
             if return_data is None:
-                return self.write_json(-1)
+                return self.write_json(-4, '调用核心服务加密失败')
 
             if 'code' not in return_data or return_data['code'] != 0:
-                return self.write_json(-1)
+                return self.write_json(-5, '核心服务加密返回错误')
 
             args['kv']['user_pswd'] = return_data['data']
 
         if host.sys_user_update(args['host_auth_id'], args['kv']):
             return self.write_json(0)
 
-        return self.write_json(-1)
+        return self.write_json(-6, '数据库操作失败')
 
 
 class SysUserDelete(TPBaseUserAuthJsonHandler):
@@ -956,15 +900,14 @@ class SysUserDelete(TPBaseUserAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            self.write_json(-2)
-            return
+            return self.write_json(-1, '参数错误')
+
         try:
             host_auth_id = args['host_auth_id']
         except IndexError:
-            self.write_json(-2)
-            return
+            return self.write_json(-2, '参数缺失')
 
         if host.sys_user_delete(host_auth_id):
             return self.write_json(0)
 
-        return self.write_json(-1)
+        return self.write_json(-3, '数据库操作失败')
