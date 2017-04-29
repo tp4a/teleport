@@ -50,12 +50,12 @@ def modify_pwd(old_pwd, new_pwd, user_id):
     sql = 'SELECT `account_pwd` FROM `{}account` WHERE `account_id`={};'.format(db.table_prefix, int(user_id))
     db_ret = db.query(sql)
     if db_ret is None or len(db_ret) != 1:
-        return -2
+        return -100
 
     if not sec_verify_password(old_pwd, db_ret[0][0]):
         # 按新方法验证密码失败，可能是旧版本的密码散列格式，再尝试一下
         if db_ret[0][0] != hashlib.sha256(old_pwd.encode()).hexdigest():
-            return -2
+            return -101
 
     _new_sec_password = sec_generate_password(new_pwd)
     sql = 'UPDATE `{}account` SET `account_pwd`="{}" WHERE `account_id`={}'.format(db.table_prefix, _new_sec_password, int(user_id))
@@ -63,7 +63,7 @@ def modify_pwd(old_pwd, new_pwd, user_id):
     if db_ret:
         return 0
     else:
-        return -3
+        return -102
 
 
 def get_user_list(with_admin=False):
@@ -126,7 +126,7 @@ def add_user(user_name, user_pwd, user_desc):
     sql = 'SELECT `account_id` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, user_name)
     db_ret = db.query(sql)
     if db_ret is None or len(db_ret) != 0:
-        return -2
+        return -100
 
     sec_password = sec_generate_password(user_pwd)
     sql = 'INSERT INTO `{}account` (`account_type`, `account_name`, `account_pwd`, `account_status`,' \
@@ -134,7 +134,7 @@ def add_user(user_name, user_pwd, user_desc):
     ret = db.exec(sql)
     if ret:
         return 0
-    return -3
+    return -101
 
 
 def alloc_host(user_name, host_list):

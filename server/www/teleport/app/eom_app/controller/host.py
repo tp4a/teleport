@@ -307,7 +307,10 @@ class AddHost(TPBaseUserAuthJsonHandler):
             if ret > 0:
                 return self.write_json(0)
             else:
-                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
+                if ret == -100:
+                    return self.write_json(-100, '')
+                else:
+                    return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
         except:
             log.e('add host failed.\n')
             return self.write_json(-3, '发生异常')
@@ -484,10 +487,13 @@ class DeleteCert(TPBaseUserAuthJsonHandler):
             if ret:
                 return self.write_json(0)
             else:
-                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
+                if ret == -2:
+                    return self.write_json(-2, '')
+                else:
+                    return self.write_json(-3, '数据库操作失败，errcode:{}'.format(ret))
         except:
             log.e('add cert failed.\n')
-            return self.write_json(-3, '发生异常')
+            return self.write_json(-4, '发生异常')
 
 
 class UpdateCert(TPBaseUserAuthJsonHandler):
@@ -521,7 +527,6 @@ class UpdateCert(TPBaseUserAuthJsonHandler):
                 return self.write_json(0)
             else:
                 return self.write_json(-4, '数据库操作失败，errcode:{}'.format(ret))
-            return
         except:
             log.e('update cert failed.\n')
             return self.write_json(-5, '发生异常')
@@ -582,10 +587,13 @@ class DeleteGroup(TPBaseUserAuthJsonHandler):
             if ret == 0:
                 return self.write_json(0)
             else:
-                return self.write_json(-2, '数据库操作失败，errcode:{}'.format(ret))
+                if ret == -2:
+                    return self.write_json(-2, '')
+                else:
+                    return self.write_json(-3, '数据库操作失败，errcode:{}'.format(ret))
         except:
             log.e('delete group failed.\n')
-            return self.write_json(-3, '发生异常')
+            return self.write_json(-4, '发生异常')
 
 
 class AddHostToGroup(TPBaseUserAuthJsonHandler):

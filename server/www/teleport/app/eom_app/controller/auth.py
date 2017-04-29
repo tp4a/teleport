@@ -133,12 +133,12 @@ class ModifyPwd(TPBaseUserAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            return self.write_json(-11, '参数错误')
+            return self.write_json(-1, '参数错误')
         _old_pwd = args['o_pwd']
         _new_pwd = args['n_pwd']
 
         if _old_pwd is None or _new_pwd is None:
-            return self.write_json(-12, '参数错误')
+            return self.write_json(-2, '参数错误')
 
         user_info = self.get_current_user()
         try:
@@ -146,7 +146,7 @@ class ModifyPwd(TPBaseUserAuthJsonHandler):
             if 0 == ret:
                 return self.write_json(0)
             else:
-                return self.write_json(-14, '数据库操作错误，errcode：{}'.format(ret))
+                return self.write_json(ret)
         except:
             log.e('modify password failed.')
-            return self.write_json(-13, '发生异常')
+            return self.write_json(-4, '发生异常')

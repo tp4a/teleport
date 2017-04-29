@@ -96,7 +96,7 @@ class AddUser(TPBaseUserAuthJsonHandler):
             if 0 == ret:
                 return self.write_json(0)
             else:
-                return self.write_json(-2, 'database op failed. errcode={}'.format(ret))
+                return self.write_json(ret, 'database op failed. errcode={}'.format(ret))
         except:
             log.e('add user failed.\n')
             return self.write_json(-3, 'got exception.')
