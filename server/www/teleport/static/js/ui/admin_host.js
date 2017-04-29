@@ -245,23 +245,8 @@ ywl.on_init = function (cb_stack, cb_args) {
         update_file.trigger('click');
     });
 
-    $('#btn-batch-export-host').click(function (e) {
+    $('#btn-batch-export-host').click(function () {
         window.location.href = '/host/export-host';
-//		ywl.ajax_post_json('/host/export-host', {},
-//			function (ret) {
-//				console.log('ret', ret);
-//				if (ret.code == 0) {
-//					var url = ret.data.url;
-//					window.location.href = url;
-//					ywl.notify_success('操作成功');
-//				} else {
-//					ywl.notify_error('操作失败');
-//				}
-//			},
-//			function () {
-//				ywl.notify_error('操作失败');
-//			}
-//		);
     });
 
     $("#btn-apply-group").click(function () {
