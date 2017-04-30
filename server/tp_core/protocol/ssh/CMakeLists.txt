@@ -22,4 +22,4 @@ include_directories(
 link_directories(../../../../external/linux/release/lib)
 
 add_library(tpssh SHARED ${DIR_SSH_SRCS})
-target_link_libraries(tpssh ssh ssl crypto mbedx509 mbedtls mbedcrypto dl pthread rt util)
+target_link_libraries(tpssh ssh ssh_threads ssl crypto mbedx509 mbedtls mbedcrypto dl pthread rt util)

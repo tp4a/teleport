@@ -35,4 +35,5 @@ include_directories(
 link_directories(../../../external/linux/release/lib)
 
 add_executable(tp_core ${DIR_SRCS})
-target_link_libraries(tp_core ssl crypto mbedx509 mbedtls mbedcrypto sqlite3 dl pthread rt util)
+#target_link_libraries(tp_core ssl crypto mbedx509 mbedtls mbedcrypto sqlite3 dl pthread rt util)
+target_link_libraries(tp_core ssl crypto mbedx509 mbedtls mbedcrypto dl pthread rt util)
