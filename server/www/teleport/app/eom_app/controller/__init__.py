@@ -106,10 +106,12 @@ controllers = [
     (r'/host/sys-user/update', host.SysUserUpdate),
     (r'/host/sys-user/delete', host.SysUserDelete),
 
-    (r'/set/update-config', set.UpdateConfig),
+    # (r'/set/update-config', set.UpdateConfig),
     # (r'/set/os-operator', set.OsOperator),
-    (r'/set/', set.IndexHandler),
-    (r'/set', set.IndexHandler),
+    (r'/set/info', set.InfoHandler),
+    (r'/set/db', set.DatabaseHandler),
+    # (r'/set/', set.IndexHandler),
+    # (r'/set', set.IndexHandler),
 
     (r'/uidesign', index.UIDesignHandler),
     (r'/uidesign/without-sidebar', index.UIDesignWithoutSidebarHandler),

@@ -579,7 +579,7 @@ class InstallerLinux(InstallerBase):
     def _start_service(self):
         cc.v('')
         cc.o('start services...')
-        _ret, _ = utils.sys_exec('service teleport start', direct_output=True)
+        _ret, _ = utils.sys_exec('/etc/init.d/teleport start', direct_output=True)
         if _ret != 0:
             raise RuntimeError('not all services started.')
 
@@ -612,7 +612,7 @@ class InstallerLinux(InstallerBase):
     def _check_service(self):
         cc.v('')
         cc.o('check services status...')
-        utils.sys_exec('service teleport status', direct_output=True)
+        utils.sys_exec('/etc/init.d/teleport status', direct_output=True)
 
 
 def _main():

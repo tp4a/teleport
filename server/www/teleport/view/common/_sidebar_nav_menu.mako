@@ -41,9 +41,23 @@
 	{
 		'require_type': 100,
 		'id': 'set',
-		'link': '/set',
+		'link': '',
 		'name': '配置管理',
 		'icon': 'fa-cogs',
+		'sub': [
+		    {
+                'require_type': 100,
+                'id': 'info',
+                'link': '/set/info',
+                'name': '配置信息'
+		    },
+		    {
+                'require_type': 100,
+                'id': 'database',
+                'link': '/set/db',
+                'name': '数据库管理'
+		    }
+		]
 	},
 	{
 		'require_type': 100,

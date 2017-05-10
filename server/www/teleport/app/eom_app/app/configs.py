@@ -30,13 +30,13 @@ class ConfigFile(AttrDict):
         self['core'] = AttrDict()
         self['core']['ssh'] = AttrDict()
         self['core']['ssh']['enable'] = False
-        self['core']['ssh']['port'] = 52189
+        self['core']['ssh']['port'] = 0  # 52189
         self['core']['rdp'] = AttrDict()
         self['core']['rdp']['enable'] = False
-        self['core']['rdp']['port'] = 52089
+        self['core']['rdp']['port'] = 0  # 52089
         self['core']['telnet'] = AttrDict()
         self['core']['telnet']['enable'] = False
-        self['core']['telnet']['port'] = 52389
+        self['core']['telnet']['port'] = 0  # 52389
 
     def load(self, cfg_file):
         if not os.path.exists(cfg_file):
@@ -112,6 +112,10 @@ class ConfigFile(AttrDict):
                 self['core']['telnet']['port'] = conf_data['telnet']['port']
 
             self['core']['replay_path'] = conf_data['replay-path']
+
+            # TODO: ...
+            if 'web_server_rpc' in conf_data:
+                self['core']['web_server_rpc'] = conf_data['web_server_rpc']
 
         except IndexError:
             log.e('invalid core config.\n')
