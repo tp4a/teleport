@@ -117,6 +117,16 @@ bool TsEnv::init(bool load_config)
 		EXLOG_DEBUG(true);
 
 	ex_wstr tmp;
+
+	if (!ps->GetStr(L"web-server-rpc", tmp))
+	{
+		web_server_rpc = "http://127.0.0.1:7190/rpc";
+	}
+	else
+	{
+		ex_wstr2astr(tmp, web_server_rpc);
+	}
+
 	ps = m_ini.GetSection(L"rpc");
 	if (!ps->GetStr(L"bind-ip", tmp))
 	{
@@ -125,11 +135,18 @@ bool TsEnv::init(bool load_config)
 	else
 	{
 		ex_wstr2astr(tmp, rpc_bind_ip);
+		if (rpc_bind_ip == "localhost")
+			rpc_bind_ip = "127.0.0.1";
 	}
+
 	if (!ps->GetInt(L"bind-port", rpc_bind_port))
 	{
 		rpc_bind_port = TS_HTTP_RPC_PORT;
 	}
+
+	char port_str[20] = { 0 };
+	ex_strformat(port_str, 20, "%d", rpc_bind_port);
+	core_server_rpc = "http://" + rpc_bind_ip + ":" + port_str + "/rpc";
 
 	return true;
 }

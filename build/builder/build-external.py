@@ -422,7 +422,7 @@ class BuilderLinux(BuilderBase):
             # os.rename(os.path.join(self.PATH_TMP, 'master'), os.path.join(self.PATH_TMP, 'libssh-{}'.format(LIBSSH_VER)))
 
         cc.n('build libssh...', end='')
-        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a')):
+        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a')) and os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh_threads.a')):
             cc.w('already exists, skip.')
             return
         cc.v('')
@@ -482,7 +482,9 @@ class BuilderLinux(BuilderBase):
         # because make install will fail because we can not disable ssh_shared target,
         # so we copy necessary files ourselves.
         utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'libssh.a'))
+        utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads', 'libssh_threads.a'))
         utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh.a')
+        utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh_threads.a')
         utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
 
     def _build_sqlite(self, file_name):
@@ -504,7 +506,8 @@ class BuilderLinux(BuilderBase):
 
     def fix_output(self):
         # remove .so files, otherwise will link to .so but not .a in default.
-        rm = ['libsqlite3.la', 'libsqlite3.so.0', 'libsqlite3.so', 'libsqlite3.so.0.8.6', 'libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
+        # rm = ['libsqlite3.la', 'libsqlite3.so.0', 'libsqlite3.so', 'libsqlite3.so.0.8.6', 'libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
+        rm = ['libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
         for i in rm:
             _path = os.path.join(self.PATH_RELEASE, 'lib', i)
             if os.path.exists(_path):
@@ -550,7 +553,9 @@ def main():
     builder.build_libuv()
     builder.build_mbedtls()
     builder.build_libssh()
-    builder.build_sqlite()
+
+    # do not need sqlite any more.
+    # builder.build_sqlite()
 
     builder.fix_output()
 

@@ -153,7 +153,7 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 	lib->dylib = ex_dlopen(libfile.c_str());
 	if (NULL == lib->dylib)
 	{
-		EXLOGE(L"[core] load dylib `%ls` failed, maybe it not exists.\n", libfile.c_str());
+		EXLOGE(L"[core] load dylib `%ls` failed.\n", libfile.c_str());
 		delete lib;
 		return false;
 	}

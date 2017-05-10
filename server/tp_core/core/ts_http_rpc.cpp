@@ -77,7 +77,11 @@ bool TsHttpRpc::init(void)
 	m_host_port = g_env.rpc_bind_port;
 
 	char addr[128] = { 0 };
-	if (0 == strcmp(m_host_ip.c_str(), "127.0.0.1") || 0 == strcmp(m_host_ip.c_str(), "localhost"))
+// 	if (0 == strcmp(m_host_ip.c_str(), "127.0.0.1") || 0 == strcmp(m_host_ip.c_str(), "localhost"))
+// 		ex_strformat(addr, 128, ":%d", m_host_port);
+// 	else
+// 		ex_strformat(addr, 128, "%s:%d", m_host_ip.c_str(), m_host_port);
+	if (0 == strcmp(m_host_ip.c_str(), "0.0.0.0"))
 		ex_strformat(addr, 128, ":%d", m_host_port);
 	else
 		ex_strformat(addr, 128, "%s:%d", m_host_ip.c_str(), m_host_port);

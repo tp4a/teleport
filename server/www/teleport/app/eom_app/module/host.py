@@ -43,8 +43,6 @@ def get_all_host_info_list(_filter, order, limit, with_pwd=False):
     field_a = ['host_id', 'host_lock', 'host_ip', 'host_port', 'protocol', 'host_desc', 'group_id', 'host_sys_type']
     field_b = ['group_name']
 
-    # field_c = ['id', 'auth_mode', 'user_name']
-
     sql = 'SELECT COUNT(*) ' \
           'FROM `{}host_info` AS a ' \
           'LEFT JOIN `{}group` AS b ON `a`.`group_id`=`b`.`group_id` ' \

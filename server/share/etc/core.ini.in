@@ -17,7 +17,7 @@ debug=0
 
 ; 'replay-path' define the replay file location. if not set, default location
 ; to $INSTDIR%/data/replay/
-;replay-path=/var/lib/teleport/data/replay
+;replay-path=/var/lib/teleport/replay
 
 web-server-rpc=http://127.0.0.1:7190/rpc
 

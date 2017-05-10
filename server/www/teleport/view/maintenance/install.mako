@@ -99,7 +99,7 @@
                 ywl.ajax_post_json('/maintenance/rpc', {cmd: 'create_db'},
                         function (ret) {
                             console.log('create-db:', ret);
-                            if (ret.code == 0) {
+                            if (ret.code === TPE_OK) {
 
                                 var cb_stack = CALLBACK_STACK.create();
                                 cb_stack
@@ -118,7 +118,7 @@
 
             ywl.get_task_ret = function (cb_stack, cb_args) {
                 var task_id = cb_args.task_id || 0;
-                if (task_id == 0) {
+                if (task_id === 0) {
                     console.log('task-id', task_id);
                     return;
                 }
@@ -126,7 +126,7 @@
                 ywl.ajax_post_json('/maintenance/rpc', {cmd: 'get_task_ret', 'tid': task_id},
                         function (ret) {
                             console.log('get_task_ret:', ret);
-                            if (ret.code == 0) {
+                            if (ret.code === TPE_OK) {
 
                                 // show step progress.
                                 var steps = ret.data.steps;
@@ -136,12 +136,12 @@
                                 var icon_class = '';
                                 var err_class = '';
                                 for (var i = 0; i < steps.length; ++i) {
-                                    if (steps[i].stat == 0)
+                                    if (steps[i].stat === 0)
                                         icon_class = 'fa-check';
                                     else
                                         icon_class = 'fa-cog fa-spin';
 
-                                    if (steps[i].code != 0) {
+                                    if (steps[i].code !== 0) {
                                         icon_class = 'fa-exclamation-circle';
                                         err_class = ' class="error"';
                                         steps[i].msg += ' 失败！'

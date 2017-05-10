@@ -176,21 +176,21 @@ ywl.create_table = function (table_options) {
 
 		// 根据数据源的设定加载数据
 		if (_tbl.options.data_source) {
-			if (_tbl.options.data_source.type == 'none') {
+			if (_tbl.options.data_source.type === 'none') {
 				// 外部直接调用set_data()方法来设置数据，无需本控件主动获取
 
-			} else if (_tbl.options.data_source.type == 'callback') {
+			} else if (_tbl.options.data_source.type === 'callback') {
 				// 调用一个函数来加载数据
 				//cb_stack.add(self.load_end);
 				//cb_stack.add(self.set_data);
 				_tbl.options.data_source.fn(cb_stack, {table: _tbl, filter: _filter, order: _order, limit: _limit});
 
-			} else if (_tbl.options.data_source.type == 'ajax-post') {
+			} else if (_tbl.options.data_source.type === 'ajax-post') {
 				var _url = _tbl.options.data_source.url;
 				ywl.ajax_post_json(_url, {filter: _filter, order: _order, limit: _limit},
 					function (ret) {
 						log.d('ajax-return:', ret);
-						if (ret.code != 0) {
+						if (ret.code !== TPE_OK) {
 							ywl.notify_error('');
 						} else {
 							//self.total = ret.data.total;

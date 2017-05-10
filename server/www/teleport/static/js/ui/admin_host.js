@@ -28,19 +28,17 @@ ywl.do_upload_file = function () {
         data: param,
         success: function (data) {
             $('#upload-file').remove();
-            var obj = JSON.parse(data);
-            if (obj.code === TPE_OK) {
+            var ret = JSON.parse(data);
+            if (ret.code === TPE_OK) {
                 g_host_table.reload();
                 ywl.notify_success('批量导入主机成功！');
-                console.log('msg', obj);
-                if (obj.msg.length > 0) {
-                    console.log(obj.msg);
+                if (ret.data.msg.length > 0) {
                     var html = [];
                     html.push('<ul>');
-                    for (var i = 0, cnt = obj.msg.length; i < cnt; ++i) {
+                    for (var i = 0, cnt = ret.data.msg.length; i < cnt; ++i) {
                         html.push('<li>');
-                        html.push('<span style="font-weight:bold;color:#993333;">' + obj.msg[i].reason + '</span><br/>');
-                        html.push(obj.msg[i].line);
+                        html.push('<span style="font-weight:bold;color:#993333;">' + ret.data.msg[i].reason + '</span><br/>');
+                        html.push(ret.data.msg[i].line);
                         html.push('</li>');
                     }
                     html.push('</ul>');
@@ -49,10 +47,10 @@ ywl.do_upload_file = function () {
                     $('#dialog_batch_add_host').modal({backdrop: 'static'});
                 }
             } else {
-                ywl.notify_error('批量导入主机失败！ 错误号：' + obj.code);
+                ywl.notify_error('批量导入主机失败！ 错误号：' + ret.code);
             }
         },
-        error: function (data, status, e) { // 相当于java中catch语句块的用法
+        error: function () {
             $('#upload-file').remove();
             ywl.notify_error('网络故障，批量导入主机失败！');
         }
@@ -211,8 +209,12 @@ ywl.on_init = function (cb_stack, cb_args) {
         var _fn_sure = function (cb_stack, cb_args) {
             ywl.ajax_post_json('/host/delete-host', {host_list: host_list},
                 function (ret) {
-                    g_host_table.reload();
-                    ywl.notify_success('删除主机操作成功！');
+                    if (ret.code === TPE_OK) {
+                        g_host_table.reload();
+                        ywl.notify_success('删除主机操作成功！');
+                    } else {
+                        ywl.notify_error('删除主机操作失败：' + ret.message);
+                    }
                 },
                 function () {
                     ywl.notify_error('网络故障，删除主机操作失败！');
@@ -243,23 +245,8 @@ ywl.on_init = function (cb_stack, cb_args) {
         update_file.trigger('click');
     });
 
-    $('#btn-batch-export-host').click(function (e) {
+    $('#btn-batch-export-host').click(function () {
         window.location.href = '/host/export-host';
-//		ywl.ajax_post_json('/host/export-host', {},
-//			function (ret) {
-//				console.log('ret', ret);
-//				if (ret.code == 0) {
-//					var url = ret.data.url;
-//					window.location.href = url;
-//					ywl.notify_success('操作成功');
-//				} else {
-//					ywl.notify_error('操作失败');
-//				}
-//			},
-//			function () {
-//				ywl.notify_error('操作失败');
-//			}
-//		);
     });
 
     $("#btn-apply-group").click(function () {
@@ -346,12 +333,16 @@ ywl.on_host_table_created = function (tbl) {
                 var _fn_sure = function (cb_stack, cb_args) {
                     ywl.ajax_post_json('/host/lock-host', {host_id: host_id, lock: host_lock},
                         function (ret) {
-                            var update_args = {host_lock: host_lock};
-                            tbl.update_row(row_id, update_args);
-                            ywl.notify_success('操作成功');
+                            if (ret.code === TPE_OK) {
+                                var update_args = {host_lock: host_lock};
+                                tbl.update_row(row_id, update_args);
+                                ywl.notify_success('锁定主机操作成功！');
+                            } else {
+                                ywl.notify_error('锁定主机操作失败：' + ret.message);
+                            }
                         },
                         function () {
-                            ywl.notify_error('操作失败');
+                            ywl.notify_error('网络故障，锁定主机操作失败！');
                         }
                     );
                 };
@@ -372,11 +363,15 @@ ywl.on_host_table_created = function (tbl) {
                     host_list.push(host_id);
                     ywl.ajax_post_json('/host/delete-host', {host_list: host_list},
                         function (ret) {
-                            tbl.remove_row(row_id);
-                            ywl.notify_success('操作成功');
+                            if (ret.code === TPE_OK) {
+                                tbl.remove_row(row_id);
+                                ywl.notify_success('删除主机操作成功！');
+                            } else {
+                                ywl.notify_error('删除主机操作失败：' + ret.message);
+                            }
                         },
                         function () {
-                            ywl.notify_error('操作失败');
+                            ywl.notify_error('网络故障，删除主机操作失败！');
                         }
                     );
                 };
@@ -804,22 +799,26 @@ ywl.create_host_edit_dlg = function (tbl) {
         };
         ywl.ajax_post_json('/host/update', {host_id: host_id, kv: args},
             function (ret) {
-                var update_args = {
-                    host_ip: dlg_edit_host.ip,
-                    group_name: dlg_edit_host.group_name,
-                    group_id: dlg_edit_host.group_id,
-                    host_desc: dlg_edit_host.host_desc,
-                    host_sys_type: dlg_edit_host.sys_type,
-                    protocol: protocol,
-                    host_port: host_port
-                };
+                if (ret.code === TPE_OK) {
+                    var update_args = {
+                        host_ip: dlg_edit_host.ip,
+                        group_name: dlg_edit_host.group_name,
+                        group_id: dlg_edit_host.group_id,
+                        host_desc: dlg_edit_host.host_desc,
+                        host_sys_type: dlg_edit_host.sys_type,
+                        protocol: protocol,
+                        host_port: host_port
+                    };
 
-                dlg_edit_host.tbl.update_row(dlg_edit_host.row_id, update_args);
-                ywl.notify_success('主机 ' + dlg_edit_host.ip + ' 的认证信息已保存！');
-                dlg_edit_host.hide();
+                    dlg_edit_host.tbl.update_row(dlg_edit_host.row_id, update_args);
+                    ywl.notify_success('主机 ' + dlg_edit_host.ip + ' 信息已保存！');
+                    dlg_edit_host.hide();
+                } else {
+                    ywl.notify_error('主机 ' + self.host_ip + ' 信息更新失败：' + ret.message);
+                }
             },
             function () {
-                ywl.notify_error('主机 ' + self.host_ip + ' 更新失败！', '');
+                ywl.notify_error('网络故障，主机 ' + self.host_ip + ' 信息更新失败！');
             }
         );
     };
@@ -839,22 +838,22 @@ ywl.create_host_edit_dlg = function (tbl) {
 
         ywl.ajax_post_json('/host/add-host', args,
             function (ret) {
-                if (ret.code === 0) {
+                if (ret.code === TPE_OK) {
                     dlg_edit_host.tbl.reload();
                     ywl.notify_success('主机 ' + dlg_edit_host.ip + ' 信息已添加！');
                     dlg_edit_host.hide();
                 }
                 else {
                     if (ret.code === -100) {
-                        ywl.notify_error('主机 ' + dlg_edit_host.ip + ' 已经添加，请不要重复添加主机！', '');
+                        ywl.notify_error('主机 ' + dlg_edit_host.ip + ' 已存在，请不要重复添加主机！');
                     } else {
-                        ywl.notify_error('主机 ' + dlg_edit_host.ip + ' 信息保存失败！' + ret.code, '');
+                        ywl.notify_error('主机 ' + dlg_edit_host.ip + ' 信息保存失败！' + ret.message);
                     }
 
                 }
             },
             function () {
-                ywl.notify_error('主机 ' + dlg_edit_host.ip + ' 信息保存失败！', '');
+                ywl.notify_error('网络故障，主机 ' + dlg_edit_host.ip + ' 信息保存失败！', '');
             }
         );
     };
@@ -897,9 +896,15 @@ ywl.create_host_user_edit_dlg = function (tbl) {
         html.push('</li></ul></div>');
         return html.join('');
     };
+
     dlg_user_edit_host.sync_user_info = function (host_id) {
         ywl.ajax_post_json('/host/sys-user/list', {host_id: host_id},
             function (ret) {
+                if (ret.code !== TPE_OK) {
+                    ywl.notify_error('获取主机用户列表失败：' + ret.message);
+                    return;
+                }
+
                 var data = ret.data;
 
                 dlg_user_edit_host.auth_list = data;
@@ -953,18 +958,15 @@ ywl.create_host_user_edit_dlg = function (tbl) {
                     var host_auth_id = parseInt($(this).attr("auth-id"));
                     ywl.ajax_post_json('/host/sys-user/delete', {host_auth_id: host_auth_id},
                         function (ret) {
-                            //console.log("ret,", ret);
                             if (ret.code === TPE_OK) {
-                                ywl.notify_success('系统用户删除成功');
-                                // var host_id = parseInt(dlg_user_edit_host.host_id);
+                                ywl.notify_success('系统用户删除成功！');
                                 g_dlg_edit_host_user.sync_user_info(host_id);
-
                             } else {
-                                ywl.notify_error('系统用户删除失败！' + ret.code);
+                                ywl.notify_error('系统用户删除失败：' + ret.message);
                             }
                         },
                         function () {
-                            ywl.notify_error('系统用户删除失败！');
+                            ywl.notify_error('网络故障：系统用户删除失败！');
                         }
                     );
                 });
@@ -1351,21 +1353,19 @@ ywl.create_sys_user = function (tbl) {
             cert_id: cert_id,
             user_param: dlg_sys_user.user_param
         };
-        //console.log("args:", args);
+
         ywl.ajax_post_json('/host/sys-user/update', {host_auth_id: host_auth_id, kv: args},
             function (ret) {
-                //console.log("ret,", ret);
-                if (ret.code === 0) {
-                    ywl.notify_success('系统用户信息更新成功');
+                if (ret.code === TPE_OK) {
+                    ywl.notify_success('系统用户信息更新成功！');
                     g_dlg_edit_host_user.sync_user_info(host_id);
                     dlg_sys_user.hide();
-
                 } else {
-                    ywl.notify_error('系统用户信息更新失败' + ret.code);
+                    ywl.notify_error('系统用户信息更新失败：' + ret.message);
                 }
             },
             function () {
-                ywl.notify_error('系统用户信息更新失败');
+                ywl.notify_error('网络故障，系统用户信息更新失败！');
             }
         );
     };
@@ -1396,15 +1396,15 @@ ywl.create_sys_user = function (tbl) {
         ywl.ajax_post_json('/host/sys-user/add', args,
             function (ret) {
                 if (ret.code === TPE_OK) {
-                    ywl.notify_success('系统用户添加成功');
+                    ywl.notify_success('系统用户添加成功！');
                     g_dlg_edit_host_user.sync_user_info(host_id);
                     dlg_sys_user.hide();
                 } else {
-                    ywl.notify_error('系统用户添加失败' + ret.code);
+                    ywl.notify_error('系统用户添加失败：' + ret.message);
                 }
             },
             function () {
-                ywl.notify_error('系统用户信息更新失败');
+                ywl.notify_error('网络故障，系统用户信息更新失败！');
             }
         );
     };
@@ -1463,17 +1463,21 @@ ywl.create_batch_join_group_dlg = function (tbl) {
 
         ywl.ajax_post_json('/host/add-host-to-group', {host_list: data_list, group_id: group_id},
             function (ret) {
-                var update_args = {group_name: group_name};
-                for (var i = 0; i < batch_join_dlg.host_list.length; i++) {
-                    var row_id = batch_join_dlg.host_list[i].row_id;
-                    batch_join_dlg.tbl.update_row(row_id, update_args);
-                }
+                if (ret.code === TPE_OK) {
+                    var update_args = {group_name: group_name};
+                    for (var i = 0; i < batch_join_dlg.host_list.length; i++) {
+                        var row_id = batch_join_dlg.host_list[i].row_id;
+                        batch_join_dlg.tbl.update_row(row_id, update_args);
+                    }
 
-                ywl.notify_success("成功设定分组信息！");
-                batch_join_dlg.hide();
+                    ywl.notify_success("成功设定主机分组信息！");
+                    batch_join_dlg.hide();
+                } else {
+                    ywl.notify_error("设定主机分组信息失败：" + ret.message);
+                }
             },
             function () {
-                ywl.notify_error("设定分组信息失败！");
+                ywl.notify_error("网络故障，设定主机分组信息失败！");
             }
         );
     };

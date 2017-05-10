@@ -256,17 +256,15 @@ class EomLogger:
         self._console_set_color(CR_ERROR)
         self._do_log(LOG_ERROR, *args, **kwargs)
 
-        if self._trace_error == self.TRACE_ERROR_NONE:
-            return
-
-        s = traceback.extract_stack()
-        c = len(s)
-        for i in range(c - 1):
-            if i >= self._trace_error:
-                break
-            if s[c - 2 - i][0].startswith('<frozen '):
-                continue
-            self._do_log(LOG_ERROR, '  %s(%d)\n' % (s[c - 2 - i][0], s[c - 2 - i][1]))
+        if self._trace_error != self.TRACE_ERROR_NONE:
+            s = traceback.extract_stack()
+            c = len(s)
+            for i in range(c - 1):
+                if i >= self._trace_error:
+                    break
+                if s[c - 2 - i][0].startswith('<frozen '):
+                    continue
+                self._do_log(LOG_ERROR, '  %s(%d)\n' % (s[c - 2 - i][0], s[c - 2 - i][1]))
 
         _type, _value, _tb = sys.exc_info()
         if _type is not None:

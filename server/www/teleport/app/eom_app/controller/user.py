@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+
 import json
 
 from eom_app.app.configs import app_cfg
 from eom_app.module import host
 from eom_app.module import user
+from eom_common.eomcore.logger import *
 from .base import TPBaseUserAuthJsonHandler, TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
 
 cfg = app_cfg()
@@ -38,22 +40,19 @@ class DeleteUser(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, 'invalid param')
+
         user_id = args['user_id']
         try:
             ret = user.delete_user(user_id)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
-            return
+                return self.write_json(-2, 'database op failed.')
         except:
-            self.write_json(-1)
-            return
+            log.e('delete user failed.\n')
+            return self.write_json(-3, 'got exception.')
 
 
 class ModifyUser(TPBaseUserAuthJsonHandler):
@@ -61,11 +60,8 @@ class ModifyUser(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, 'invalid param.')
 
         user_id = args['user_id']
         user_desc = args['user_desc']
@@ -75,11 +71,11 @@ class ModifyUser(TPBaseUserAuthJsonHandler):
             if ret:
                 self.write_json(0)
             else:
-                self.write_json(-1)
+                self.write_json(-2, 'database op failed.')
             return
         except:
-            self.write_json(-1)
-            return
+            log.e('modify user failed.\n')
+            self.write_json(-3, 'got exception.')
 
 
 class AddUser(TPBaseUserAuthJsonHandler):
@@ -87,11 +83,9 @@ class AddUser(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, 'invalid param.')
+
         user_name = args['user_name']
         user_pwd = '123456'
         user_desc = args['user_desc']
@@ -99,11 +93,13 @@ class AddUser(TPBaseUserAuthJsonHandler):
             user_desc = ''
         try:
             ret = user.add_user(user_name, user_pwd, user_desc)
-            self.write_json(ret)
-            return
+            if 0 == ret:
+                return self.write_json(0)
+            else:
+                return self.write_json(ret, 'database op failed. errcode={}'.format(ret))
         except:
-            self.write_json(-1)
-            return
+            log.e('add user failed.\n')
+            return self.write_json(-3, 'got exception.')
 
 
 class LockUser(TPBaseUserAuthJsonHandler):
@@ -111,24 +107,21 @@ class LockUser(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, 'invalid param.')
+
         user_id = args['user_id']
         lock_status = args['lock_status']
 
         try:
             ret = user.lock_user(user_id, lock_status)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
-            return
+                return self.write_json(-2, 'database op failed.')
         except:
-            self.write_json(-1)
-            return
+            log.e('lock user failed.\m')
+            return self.write_json(-3, 'got exception.')
 
 
 class ResetUser(TPBaseUserAuthJsonHandler):
@@ -136,30 +129,26 @@ class ResetUser(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, 'invalid param.')
+
         user_id = args['user_id']
         # lock_status = args['lock_status']
 
         try:
             ret = user.reset_user(user_id)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
-            return
+                return self.write_json(-2, 'database op failed.')
         except:
-            self.write_json(-1)
-            return
+            log.e('reset user failed.\n')
+            return self.write_json(-3, 'got exception.')
 
 
 class HostList(TPBaseUserAuthJsonHandler):
     def post(self):
         filter = dict()
-        # user = self.get_current_user()
         order = dict()
         order['name'] = 'host_id'
         order['asc'] = True
@@ -170,7 +159,6 @@ class HostList(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
 
             tmp = list()
             _filter = args['filter']
@@ -191,7 +179,6 @@ class HostList(TPBaseUserAuthJsonHandler):
                 del _filter[i]
 
             filter.update(_filter)
-            # print('filter', filter)
 
             _limit = args['limit']
             if _limit['page_index'] < 0:
@@ -207,7 +194,7 @@ class HostList(TPBaseUserAuthJsonHandler):
             if _order is not None:
                 order['name'] = _order['k']
                 order['asc'] = _order['v']
-        # filter['account_name'] = user['name']
+
         _total, _hosts = host.get_host_info_list_by_user(filter, order, limit)
 
         ret = dict()
@@ -222,21 +209,20 @@ class AllocHost(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, 'invalid param.')
+
         user_name = args['user_name']
         host_list = args['host_list']
         try:
             ret = user.alloc_host(user_name, host_list)
             if ret:
-                self.write_json(0)
+                return self.write_json(0)
             else:
-                self.write_json(-1)
+                return self.write_json(-2, 'database op failed.')
         except:
-            self.write_json(-2)
+            log.e('alloc host failed.')
+            self.write_json(-3, 'got exception.')
 
 
 class AllocHostUser(TPBaseUserAuthJsonHandler):
@@ -244,11 +230,9 @@ class AllocHostUser(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, 'invalid param.')
+
         user_name = args['user_name']
         host_auth_id_list = args['host_list']
         try:
@@ -256,9 +240,10 @@ class AllocHostUser(TPBaseUserAuthJsonHandler):
             if ret:
                 self.write_json(0)
             else:
-                self.write_json(-1)
+                self.write_json(-2, 'database op failed.')
         except:
-            self.write_json(-2)
+            log.e('alloc host for user failed.\n')
+            self.write_json(-3, 'got exception.')
 
 
 class DeleteHost(TPBaseUserAuthJsonHandler):
@@ -266,21 +251,21 @@ class DeleteHost(TPBaseUserAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            # print('args', args)
         else:
-            # ret = {'code':-1}
-            self.write_json(-1)
-            return
+            return self.write_json(-1, 'invalid param.')
+
         user_name = args['user_name']
         host_list = args['host_list']
+
         try:
             ret = user.delete_host(user_name, host_list)
             if ret:
                 self.write_json(0)
             else:
-                self.write_json(-1)
+                self.write_json(-2, 'database op failed.')
         except:
-            self.write_json(-2)
+            log.e('delete host failed.\n')
+            self.write_json(-3, 'got exception.')
 
 
 class DeleteHostUser(TPBaseUserAuthJsonHandler):
@@ -289,15 +274,17 @@ class DeleteHostUser(TPBaseUserAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            self.write_json(-1)
-            return
+            self.write_json(-1, 'invalid param.')
+
         user_name = args['user_name']
         auth_id_list = args['auth_id_list']
+
         try:
             ret = user.delete_host_user(user_name, auth_id_list)
             if ret:
                 self.write_json(0)
             else:
-                self.write_json(-1)
+                self.write_json(-2, 'database op failed.')
         except:
-            self.write_json(-2)
+            log.e('delete host for user failed.\n')
+            self.write_json(-3, 'got exception.')

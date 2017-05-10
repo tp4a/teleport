@@ -9,8 +9,6 @@ from eom_common.eomcore.logger import *
 from .base import TPBaseHandler, TPBaseUserAuthHandler, TPBaseJsonHandler, TPBaseUserAuthJsonHandler
 from eom_app.app.util import gen_captcha
 
-cfg = app_cfg()
-
 
 class LoginHandler(TPBaseHandler):
     def get(self):
@@ -37,8 +35,7 @@ class VerifyUser(TPBaseJsonHandler):
     def post(self):
         code = self.get_session('captcha')
         if code is None:
-            self.write_json(-1, '验证码已失效')
-            return
+            return self.write_json(-1, '验证码已失效')
 
         self.del_session('captcha')
 
@@ -50,23 +47,20 @@ class VerifyUser(TPBaseJsonHandler):
             userpwd = args['userpwd']
             remember = args['remember']
         else:
-            self.write_json(-1, '系统内部错误')
-            return
+            return self.write_json(-1, '参数错误')
 
         if code.lower() != captcha.lower():
-            self.write_json(-1, '验证码错误')
-            return
+            return self.write_json(-1, '验证码错误')
 
         try:
             user_id, account_type, nickname, locked = user.verify_user(username, userpwd)
             if locked == 1:
                 return self.write_json(-1, '账号被锁定，请联系管理员！')
             if user_id == 0:
-                if cfg.app_mode == APP_MODE_MAINTENANCE:
-                    self.write_json(-2, '系统维护中，请稍候再试！')
+                if app_cfg().app_mode == APP_MODE_MAINTENANCE:
+                    return self.write_json(-2, '系统维护中，请稍候再试！')
                 else:
-                    self.write_json(-1, '用户名/密码错误！')
-                return
+                    return self.write_json(-1, '用户名/密码错误！')
 
             _user = self.get_session('user')
             if _user is None:
@@ -94,7 +88,7 @@ class VerifyUser(TPBaseJsonHandler):
 
         except:
             log.e('can not set session.')
-            self.write_json(-1, '无法记录用户登录状态！')
+            return self.write_json(-1, '发生异常，无法登录！')
 
 
 class LogoutHandler(TPBaseUserAuthHandler):
@@ -118,22 +112,19 @@ class VerifyCaptchaHandler(TPBaseJsonHandler):
     def post(self):
         code = self.get_session('captcha')
         if code is None:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '验证码已失效')
 
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
             captcha = args['captcha']
         else:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
 
         if code.lower() != captcha.lower():
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '验证码错误')
 
-        self.write_json(0)
+        return self.write_json(0)
 
 
 class ModifyPwd(TPBaseUserAuthJsonHandler):
@@ -142,18 +133,20 @@ class ModifyPwd(TPBaseUserAuthJsonHandler):
         if args is not None:
             args = json.loads(args)
         else:
-            self.write_json(-1)
-            return
+            return self.write_json(-1, '参数错误')
         _old_pwd = args['o_pwd']
         _new_pwd = args['n_pwd']
 
         if _old_pwd is None or _new_pwd is None:
-            self.write_json(-1)
-            return
+            return self.write_json(-2, '参数错误')
 
         user_info = self.get_current_user()
         try:
             ret = user.modify_pwd(_old_pwd, _new_pwd, user_info['id'])
-            self.write_json(0, ret)
+            if 0 == ret:
+                return self.write_json(0)
+            else:
+                return self.write_json(ret)
         except:
-            self.write_json(-1)
+            log.e('modify password failed.')
+            return self.write_json(-4, '发生异常')

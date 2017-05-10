@@ -99,14 +99,18 @@ class RecordGetHeader(TPBaseAdminAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
+        else:
+            return self.write_json(-1, '参数错误')
+
         record_id = args['id']
+
         header = record.read_record_head(record_id)
         if header is None:
-            return self.write_json(-1)
+            return self.write_json(-3, '操作失败')
 
         ret = dict()
         ret['header'] = header
-        self.write_json(0, data=ret)
+        return self.write_json(0, data=ret)
 
 
 class RecordGetInfo(TPBaseAdminAuthJsonHandler):
@@ -114,12 +118,17 @@ class RecordGetInfo(TPBaseAdminAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
+        else:
+            return self.write_json(-1, '参数错误')
+
         record_id = args['id']
         file_id = args['file_id']
+
         data = record.read_record_info(record_id, file_id)
         if data is None:
-            return self.write_json(-1)
-        self.write_json(0, data=data)
+            return self.write_json(-3, '操作失败')
+
+        return self.write_json(0, data=data)
 
 
 class DeleteLog(TPBaseAdminAuthJsonHandler):
@@ -128,10 +137,15 @@ class DeleteLog(TPBaseAdminAuthJsonHandler):
         args = self.get_argument('args', None)
         if args is not None:
             args = json.loads(args)
-            log_list = args['log_list']
+        else:
+            return self.write_json(-1, '参数错误')
+
+        log_list = args['log_list']
+
         if not record.delete_log(log_list):
-            return self.write_json(-1)
-        self.write_json(0)
+            return self.write_json(-3, '操作失败')
+
+        return self.write_json(0)
 
 
 class LogList(TPBaseAdminAuthJsonHandler):
@@ -189,4 +203,4 @@ class LogList(TPBaseAdminAuthJsonHandler):
         ret['total'] = total
         ret['data'] = log_list
 
-        self.write_json(0, data=ret)
+        return self.write_json(0, data=ret)
