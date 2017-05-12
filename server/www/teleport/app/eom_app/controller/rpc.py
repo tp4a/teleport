@@ -68,8 +68,6 @@ class RpcHandler(TPBaseJsonHandler):
             return self.write_json(0, data=x)
         elif authid < 0:
             x = web_session().taken('tmp-auth-info-{}'.format(authid), None)
-            log.d("[rpc] get_auth_info(): ", x)
-            log.d("\n")
             return self.write_json(0, data=x)
         else:
             return self.write_json(-1, message='invalid auth id.')

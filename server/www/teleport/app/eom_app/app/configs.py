@@ -28,15 +28,16 @@ class ConfigFile(AttrDict):
         super().__init__(**kwargs)
 
         self['core'] = AttrDict()
-        self['core']['ssh'] = AttrDict()
-        self['core']['ssh']['enable'] = False
-        self['core']['ssh']['port'] = 0  # 52189
-        self['core']['rdp'] = AttrDict()
-        self['core']['rdp']['enable'] = False
-        self['core']['rdp']['port'] = 0  # 52089
-        self['core']['telnet'] = AttrDict()
-        self['core']['telnet']['enable'] = False
-        self['core']['telnet']['port'] = 0  # 52389
+        self['core']['detected'] = False
+        # self['core']['ssh'] = AttrDict()
+        # self['core']['ssh']['enable'] = False
+        # self['core']['ssh']['port'] = 0  # 52189
+        # self['core']['rdp'] = AttrDict()
+        # self['core']['rdp']['enable'] = False
+        # self['core']['rdp']['port'] = 0  # 52089
+        # self['core']['telnet'] = AttrDict()
+        # self['core']['telnet']['enable'] = False
+        # self['core']['telnet']['port'] = 0  # 52389
 
     def load(self, cfg_file):
         if not os.path.exists(cfg_file):
@@ -87,9 +88,15 @@ class ConfigFile(AttrDict):
         return True
 
     def update_core(self, conf_data):
-        try:
-            self['core'] = AttrDict()
+        log.d('update core server config info.\n')
+        self['core'] = AttrDict()
 
+        if conf_data is None:
+            log.w('core server config info is empty.\n')
+            self['core']['detected'] = False
+            return True
+
+        try:
             self['core']['ssh'] = AttrDict()
             self['core']['ssh']['enable'] = False
             self['core']['ssh']['port'] = 52189
@@ -111,11 +118,15 @@ class ConfigFile(AttrDict):
                 self['core']['telnet']['enable'] = conf_data['telnet']['enable']
                 self['core']['telnet']['port'] = conf_data['telnet']['port']
 
-            self['core']['replay_path'] = conf_data['replay-path']
+            if 'replay-path' in conf_data:
+                self['core']['replay_path'] = conf_data['replay-path']
 
-            # TODO: ...
-            if 'web_server_rpc' in conf_data:
-                self['core']['web_server_rpc'] = conf_data['web_server_rpc']
+            if 'web-server-rpc' in conf_data:
+                self['core']['web_server_rpc'] = conf_data['web-server-rpc']
+            if 'version' in conf_data:
+                self['core']['version'] = conf_data['version']
+
+            self['core']['detected'] = True
 
         except IndexError:
             log.e('invalid core config.\n')

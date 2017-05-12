@@ -4,6 +4,13 @@
 <%
     _sidebar = [
 	{
+		'require_type': 100,
+		'id': 'dashboard',
+		'link': '/dashboard',
+		'name': '信息总览',
+		'icon': 'fa-dashboard',
+	},
+	{
 		'require_type': 1,
 		'id': 'host',
 		'link': '/host',
@@ -17,13 +24,6 @@
 		'name': '用户管理',
 		'icon': 'fa-user',
 	},
-## 	{
-## 		'require_type': 1,
-## 		'id': 'auth',
-## 		'link': '/auth',
-## 		'name': '授权管理',
-## 		'icon': 'fa-user-secret',
-## 	},
 	{
 		'require_type': 100,
 		'id': 'cert',
@@ -66,20 +66,6 @@
 		'name': '日志查询',
 		'icon': 'fa-database',
 	},
-## 	{
-## 		'require_type': 1,
-## 		'id': 'pwd',
-## 		'link': '/pwd',
-## 		'name': '密码修改',
-## 		'icon': 'fa-pencil-square-o',
-## 	},
-## 	{
-## 		'require_type': 1,
-## 		'id': 'exit',
-## 		'link': '/exit',
-## 		'name': '安全退出',
-## 		'icon': 'fa-sign-out',
-## 	},
 	{
 	    'separator': true,
 		'require_type': 1,

@@ -177,6 +177,9 @@
     <ClInclude Include="ts_web_rpc.h">
       <Filter>main app</Filter>
     </ClInclude>
+    <ClInclude Include="ts_ver.h">
+      <Filter>main app</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="tp_core.rc">

@@ -80,7 +80,7 @@ class WebServerCore:
             x = json.loads(body)
             cfg.update_core(x['data'])
         except:
-            log.w('can not connect to core server for get config, maybe it not start yet, ignore.\n')
+            log.w('can not connect to core server to get config, maybe it not start yet, ignore.\n')
 
     def run(self):
 

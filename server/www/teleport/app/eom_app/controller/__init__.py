@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+from . import dashboard
 from . import rpc
 from . import auth
 from . import host
@@ -21,6 +22,8 @@ cfg = app_cfg()
 __all__ = ['controllers']
 
 controllers = [
+    (r'/dashboard', dashboard.IndexHandler),
+
     (r'/', index.IndexHandler),
 
     (r'/maintenance/install', maintenance.InstallHandler),

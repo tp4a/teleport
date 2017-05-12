@@ -1,4 +1,5 @@
 #include "ts_http_rpc.h"
+#include "ts_ver.h"
 #include "ts_env.h"
 #include "ts_session.h"
 #include "ts_crypto.h"
@@ -286,6 +287,12 @@ void TsHttpRpc::_rpc_func_get_config(const Json::Value& json_param, ex_astr& buf
 	ex_astr _replay_name;
 	ex_wstr2astr(g_env.m_replay_path, _replay_name);
 	jr_data["replay-path"] = _replay_name;
+
+	jr_data["web-server-rpc"] = g_env.web_server_rpc;
+
+	ex_astr _version;
+	ex_wstr2astr(TP_SERVER_VER, _version);
+	jr_data["version"] = _version;
 
 	ExIniFile& ini = g_env.get_ini();
 	ex_ini_sections& secs = ini.GetAllSections();

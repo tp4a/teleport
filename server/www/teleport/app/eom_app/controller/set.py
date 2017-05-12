@@ -1,51 +1,39 @@
 # -*- coding: utf-8 -*-
 
 import json
-import os
-import platform
-# import re
-# import socket
-# import subprocess
-import threading
-import time
+import tornado.gen
+import tornado.httpclient
 
+from eom_ver import *
 from eom_app.app.configs import app_cfg
-# from eom_app.module import host
-from eom_app.module import set
+from eom_app.app.util import *
 from .base import TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
 
 cfg = app_cfg()
 
 
-# def get_local_ip():
-#     iplist = []
-#     PLATFORM = platform.system().lower()
-#     try:
-#         if PLATFORM == "windows":
-#             ip_info = socket.gethostbyname_ex(socket.gethostname())
-#             return ip_info[2]
-#         else:
-#             ipstr = '([0-9]{1,3}\.){3}[0-9]{1,3}'
-#             ipconfig_process = subprocess.Popen("ifconfig", stdout=subprocess.PIPE)
-#             output = ipconfig_process.stdout.read()
-#             ip_pattern = re.compile('(inet addr:%s)' % ipstr)
-#             pattern = re.compile(ipstr)
-#
-#             for ipaddr in re.finditer(ip_pattern, str(output)):
-#                 ip = pattern.search(ipaddr.group())
-#                 if ip.group() != "127.0.0.1":
-#                     iplist.append(ip.group())
-#             return iplist
-#     except Exception:
-#         return iplist
-
-
 class InfoHandler(TPBaseAdminAuthHandler):
+    @tornado.gen.coroutine
     def get(self):
+        core_detected = False
+        req = {'method': 'get_config', 'param': []}
+        _yr = async_post_http(req)
+        return_data = yield _yr
+        if return_data is not None:
+            if 'code' in return_data:
+                _code = return_data['code']
+                if _code == 0:
+                    # core['detected'] = True
+                    cfg.update_core(return_data['data'])
+                    core_detected = True
+
+        if not core_detected:
+            cfg.update_core(None)
 
         param = {
             'core': cfg.core,
             'web': {
+                'version': TS_VER,
                 'core_server_rpc': cfg['core_server_rpc']
             }
         }
@@ -56,7 +44,6 @@ class DatabaseHandler(TPBaseAdminAuthHandler):
     def get(self):
         param = {'core_server': cfg.core}
         self.render('set/database.mako', page_param=json.dumps(param))
-
 
 # def _restart_func():
 #     time.sleep(1)
