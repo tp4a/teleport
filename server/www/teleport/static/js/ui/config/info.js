@@ -17,12 +17,13 @@ ywl.on_init = function (cb_stack, cb_args) {
         html.push(ywl._make_info('核心服务版本', ywl.page_options.core.version));
     }
 
+    html.push(ywl._make_info('数据库类型', ywl.page_options.web.database));
     html.push(ywl._make_info('核心服务通讯地址', ywl.page_options.web.core_server_rpc));
     if (ywl.page_options.core.detected) {
         html.push(ywl._make_info('WEB服务通讯地址', ywl.page_options.core.web_server_rpc));
         html.push(ywl._make_protocol_info('RDP 端口', ywl.page_options.core.rdp));
         html.push(ywl._make_protocol_info('SSH 端口', ywl.page_options.core.ssh));
-        html.push(ywl._make_protocol_info('TELNET 端口', ywl.page_options.core.telnet));
+//        html.push(ywl._make_protocol_info('TELNET 端口', ywl.page_options.core.telnet));
         html.push(ywl._make_info('录像文件路径', ywl.page_options.core.replay_path));
     }
 

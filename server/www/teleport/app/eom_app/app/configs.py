@@ -88,7 +88,7 @@ class ConfigFile(AttrDict):
         return True
 
     def update_core(self, conf_data):
-        log.d('update core server config info.\n')
+        # log.d('update core server config info.\n')
         self['core'] = AttrDict()
 
         if conf_data is None:

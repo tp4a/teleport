@@ -5,6 +5,7 @@ import tornado.gen
 import tornado.httpclient
 
 from eom_ver import *
+from eom_app.app.db import get_db
 from eom_app.app.configs import app_cfg
 from eom_app.app.util import *
 from .base import TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
@@ -30,11 +31,19 @@ class InfoHandler(TPBaseAdminAuthHandler):
         if not core_detected:
             cfg.update_core(None)
 
+        _db = get_db()
+        database = '未知'
+        if _db.db_source['type'] == _db.DB_TYPE_SQLITE:
+            database = 'SQLite（{}）'.format(_db.db_source['file'])
+        elif _db.db_source['type'] == _db.DB_TYPE_MYSQL:
+            database = 'MySQL'
+
         param = {
             'core': cfg.core,
             'web': {
                 'version': TS_VER,
-                'core_server_rpc': cfg['core_server_rpc']
+                'core_server_rpc': cfg['core_server_rpc'],
+                'database': database
             }
         }
         self.render('set/info.mako', page_param=json.dumps(param))

@@ -123,6 +123,7 @@ class RpcHandler(TPBaseJsonHandler):
         if return_data['code'] != 0:
             return self.write_json(-3, 'get config from core service return code: {}'.format(return_data['code']))
 
+        log.d('update core server config info.\n')
         app_cfg().update_core(return_data['data'])
 
         return self.write_json(0)

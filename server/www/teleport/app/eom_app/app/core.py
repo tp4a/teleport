@@ -78,6 +78,7 @@ class WebServerCore:
             rep = urllib.request.urlopen(req, timeout=3)
             body = rep.read().decode()
             x = json.loads(body)
+            log.d('update core server config info.\n')
             cfg.update_core(x['data'])
         except:
             log.w('can not connect to core server to get config, maybe it not start yet, ignore.\n')
