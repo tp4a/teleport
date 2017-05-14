@@ -27,6 +27,10 @@ class ConfigFile(AttrDict):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        import builtins
+        if '__web_config__' in builtins.__dict__:
+            raise RuntimeError('WebConfig object exists, you can not create more than one instance.')
+
         self['core'] = AttrDict()
         self['core']['detected'] = False
         # self['core']['ssh'] = AttrDict()
@@ -135,13 +139,26 @@ class ConfigFile(AttrDict):
         return True
 
 
-_g_cfg = ConfigFile()
-del ConfigFile
+class WebConfig:
+    def __init__(self):
+        import builtins
+        if '__web_config__' in builtins.__dict__:
+            raise RuntimeError('WebConfig object exists, you can not create more than one instance.')
+
+        self.cfg = {}
+
+        self.default_cfg = {}
+
+    @property
+    def server_ip(self):
+        return self.cfg['ip']
 
 
 def app_cfg():
-    global _g_cfg
-    return _g_cfg
+    import builtins
+    if '__web_config__' not in builtins.__dict__:
+        builtins.__dict__['__web_config__'] = ConfigFile()
+    return builtins.__dict__['__web_config__']
 
 
 if __name__ == '__main__':

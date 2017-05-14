@@ -51,7 +51,14 @@ class InfoHandler(TPBaseAdminAuthHandler):
 
 class DatabaseHandler(TPBaseAdminAuthHandler):
     def get(self):
-        param = {'core_server': cfg.core}
+        _db = get_db()
+        # database = '未知'
+        # if _db.db_source['type'] == _db.DB_TYPE_SQLITE:
+        #     database = 'SQLite（{}）'.format(_db.db_source['file'])
+        # elif _db.db_source['type'] == _db.DB_TYPE_MYSQL:
+        #     database = 'MySQL'
+
+        param = {'db': _db.db_source}
         self.render('set/database.mako', page_param=json.dumps(param))
 
 # def _restart_func():
