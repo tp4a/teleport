@@ -13,7 +13,7 @@ from .base import TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
 cfg = app_cfg()
 
 
-class InfoHandler(TPBaseAdminAuthHandler):
+class IndexHandler(TPBaseAdminAuthHandler):
     @tornado.gen.coroutine
     def get(self):
         core_detected = False
@@ -32,34 +32,73 @@ class InfoHandler(TPBaseAdminAuthHandler):
             cfg.update_core(None)
 
         _db = get_db()
-        database = '未知'
-        if _db.db_source['type'] == _db.DB_TYPE_SQLITE:
-            database = 'SQLite（{}）'.format(_db.db_source['file'])
-        elif _db.db_source['type'] == _db.DB_TYPE_MYSQL:
-            database = 'MySQL'
+        # database = '未知'
+        db = _db.db_source
+        # if _db.db_source['type'] == _db.DB_TYPE_SQLITE:
+        #     database = 'SQLite（{}）'.format(_db.db_source['file'])
+        # el
+        if _db.db_source['type'] == _db.DB_TYPE_MYSQL:
+            # database = 'MySQL'
+            del db['password']
 
         param = {
             'core': cfg.core,
             'web': {
                 'version': TS_VER,
                 'core_server_rpc': cfg['core_server_rpc'],
-                'database': database
+                # 'database': database,
+                'db': db
             }
         }
-        self.render('set/info.mako', page_param=json.dumps(param))
+        self.render('config/index.mako', page_param=json.dumps(param))
+
+# class InfoHandler(TPBaseAdminAuthHandler):
+#     @tornado.gen.coroutine
+#     def get(self):
+#         core_detected = False
+#         req = {'method': 'get_config', 'param': []}
+#         _yr = async_post_http(req)
+#         return_data = yield _yr
+#         if return_data is not None:
+#             if 'code' in return_data:
+#                 _code = return_data['code']
+#                 if _code == 0:
+#                     # core['detected'] = True
+#                     cfg.update_core(return_data['data'])
+#                     core_detected = True
+#
+#         if not core_detected:
+#             cfg.update_core(None)
+#
+#         _db = get_db()
+#         database = '未知'
+#         if _db.db_source['type'] == _db.DB_TYPE_SQLITE:
+#             database = 'SQLite（{}）'.format(_db.db_source['file'])
+#         elif _db.db_source['type'] == _db.DB_TYPE_MYSQL:
+#             database = 'MySQL'
+#
+#         param = {
+#             'core': cfg.core,
+#             'web': {
+#                 'version': TS_VER,
+#                 'core_server_rpc': cfg['core_server_rpc'],
+#                 'database': database
+#             }
+#         }
+#         self.render('set/info.mako', page_param=json.dumps(param))
 
 
-class DatabaseHandler(TPBaseAdminAuthHandler):
-    def get(self):
-        _db = get_db()
-        # database = '未知'
-        # if _db.db_source['type'] == _db.DB_TYPE_SQLITE:
-        #     database = 'SQLite（{}）'.format(_db.db_source['file'])
-        # elif _db.db_source['type'] == _db.DB_TYPE_MYSQL:
-        #     database = 'MySQL'
-
-        param = {'db': _db.db_source}
-        self.render('set/database.mako', page_param=json.dumps(param))
+# class DatabaseHandler(TPBaseAdminAuthHandler):
+#     def get(self):
+#         _db = get_db()
+#         # database = '未知'
+#         # if _db.db_source['type'] == _db.DB_TYPE_SQLITE:
+#         #     database = 'SQLite（{}）'.format(_db.db_source['file'])
+#         # elif _db.db_source['type'] == _db.DB_TYPE_MYSQL:
+#         #     database = 'MySQL'
+#
+#         param = {'db': _db.db_source}
+#         self.render('set/database.mako', page_param=json.dumps(param))
 
 # def _restart_func():
 #     time.sleep(1)

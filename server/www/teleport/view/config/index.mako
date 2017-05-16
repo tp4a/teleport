@@ -1,7 +1,7 @@
 <%!
     page_title_ = '配置管理'
-    page_menu_ = ['set', 'info']
-    page_id_ = 'set'
+    page_menu_ = ['config']
+    page_id_ = 'config'
 %>
 <%inherit file="../page_base.mako"/>
 
@@ -14,7 +14,6 @@
 <%block name="breadcrumb">
     <ol class="breadcrumb">
         <li><i class="fa fa-cogs fa-fw"></i> ${self.attr.page_title_}</li>
-        <li>配置信息</li>
     </ol>
 </%block>
 
@@ -50,6 +49,11 @@
             <h4><strong>服务器配置信息</strong></h4>
             <table id="info-kv" class="table"></table>
         </div>
+
+##         <div>
+##             <h4><strong>高级设置</strong></h4>
+##             <p><a href="javascript:;" id="btn_maintenance">进入维护模式</a></p>
+##         </div>
 
     </div>
     <!-- end of box -->

@@ -3,13 +3,13 @@
 %>
 <%
     _sidebar = [
-	{
-		'require_type': 100,
-		'id': 'dashboard',
-		'link': '/dashboard',
-		'name': '信息总览',
-		'icon': 'fa-dashboard',
-	},
+## 	{
+## 		'require_type': 100,
+## 		'id': 'dashboard',
+## 		'link': '/dashboard',
+## 		'name': '信息总览',
+## 		'icon': 'fa-dashboard',
+## 	},
 	{
 		'require_type': 1,
 		'id': 'host',
@@ -38,26 +38,33 @@
 		'name': '分组管理',
 		'icon': 'fa-object-group',
 	},
+## 	{
+## 		'require_type': 100,
+## 		'id': 'set',
+## 		'link': '',
+## 		'name': '配置管理',
+## 		'icon': 'fa-cogs',
+## 		'sub': [
+## 		    {
+##                 'require_type': 100,
+##                 'id': 'info',
+##                 'link': '/set/info',
+##                 'name': '配置信息'
+## 		    },
+## 		    {
+##                 'require_type': 100,
+##                 'id': 'database',
+##                 'link': '/set/db',
+##                 'name': '数据库管理'
+## 		    }
+## 		]
+## 	},
 	{
 		'require_type': 100,
-		'id': 'set',
-		'link': '',
+		'id': 'config',
+		'link': '/config',
 		'name': '配置管理',
 		'icon': 'fa-cogs',
-		'sub': [
-		    {
-                'require_type': 100,
-                'id': 'info',
-                'link': '/set/info',
-                'name': '配置信息'
-		    },
-		    {
-                'require_type': 100,
-                'id': 'database',
-                'link': '/set/db',
-                'name': '数据库管理'
-		    }
-		]
 	},
 	{
 		'require_type': 100,

@@ -158,6 +158,10 @@ class RpcHandler(TPBaseAdminAuthJsonHandler):
             return self.write_json(-1, '参数错误')
 
         cmd = args['cmd']
+        if cmd == 'enter_maintenance_mode':
+            cfg.app_mode = APP_MODE_MAINTENANCE
+            return self.write_json(0)
+
         if cmd == 'create_db':
             if not get_db().need_create:
                 return self.write_json(-1, '无需创建')
