@@ -8,4 +8,4 @@ SET PYEXEC=C:\Program Files\Python\python.exe
 
 
 
-%PYEXEC% -B build/build.py %1 %2 %3 %4 %5
+"%PYEXEC%" -B build/build.py %1 %2 %3 %4 %5
