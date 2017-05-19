@@ -53,6 +53,7 @@ def read_record_head(record_id):
         offset += 2
 
     except Exception as e:
+        log.e(e)
         return None
     finally:
         if file is not None:

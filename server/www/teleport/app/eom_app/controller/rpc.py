@@ -110,7 +110,7 @@ class RpcHandler(TPBaseJsonHandler):
         if 'rpc' not in param:
             return self.write_json(-1, 'invalid param.')
 
-        app_cfg().core_server_rpc = param['rpc']
+        app_cfg().common.core_server_rpc = param['rpc']
 
         # 获取core服务的配置信息
         req = {'method': 'get_config', 'param': []}

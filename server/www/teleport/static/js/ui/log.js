@@ -7,8 +7,13 @@ ywl.on_init = function (cb_stack, cb_args) {
     // 创建页面控件对象
     //===================================
     // 表格数据
-    var disk_rate = parseInt(ywl.page_options.free_size * 100 / ywl.page_options.total_size);
-    $('#disk-status').text('日志磁盘大小：' + size2str(ywl.page_options.total_size, 2) + '，剩余空间：' + size2str(ywl.page_options.free_size, 2) + '，空闲' + disk_rate + '%');
+    var disk_rate = 0;
+    if(0 == ywl.page_options.total_size) {
+        $('#disk-status').text('未能连接到核心服务，无法获取操作日志路径');
+    } else {
+        disk_rate = parseInt(ywl.page_options.free_size * 100 / ywl.page_options.total_size);
+        $('#disk-status').text('日志磁盘大小：' + size2str(ywl.page_options.total_size, 2) + '，剩余空间：' + size2str(ywl.page_options.free_size, 2) + '，空闲' + disk_rate + '%');
+    }
     if (disk_rate < 10) {
         $('#disk-status').removeClass().addClass('badge badge-danger');
     } else if (disk_rate < 30) {

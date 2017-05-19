@@ -8,26 +8,19 @@ import threading
 # import time
 import traceback
 
-__all__ = ['log',
-           'CR_DEBUG', 'CR_VERBOSE', 'CR_INFO', 'CR_WARN', 'CR_ERROR',
-           'LOG_DEBUG', 'LOG_VERBOSE', 'LOG_INFO', 'LOG_WARN', 'LOG_ERROR']
+__all__ = ['log']
 
-LOG_DEBUG = 0
-LOG_VERBOSE = 1
-LOG_INFO = 2
-LOG_WARN = 3
-LOG_ERROR = 4
+# LOG_DEBUG = 0
+# LOG_VERBOSE = 1
+# LOG_INFO = 2
+# LOG_WARN = 3
+# LOG_ERROR = 4
 
 USE_TPWEB_LOG = False
 
 try:
     import tpweb
     USE_TPWEB_LOG = True
-    LOG_DEBUG = tpweb.EX_LOG_LEVEL_DEBUG
-    LOG_VERBOSE = tpweb.EX_LOG_LEVEL_VERBOSE
-    LOG_INFO = tpweb.EX_LOG_LEVEL_INFO
-    LOG_WARN = tpweb.EX_LOG_LEVEL_WARN
-    LOG_ERROR = tpweb.EX_LOG_LEVEL_ERROR
 except ImportError:
     pass
 
@@ -83,13 +76,18 @@ COLORS = {
 }
 
 
-class EomLogger:
+class Logger:
     """
     日志记录模块，支持输出到控制台及文件。
 
     :type _file_handle : file
     :type _win_color : Win32ColorConsole
     """
+    LOG_DEBUG = 0
+    LOG_VERBOSE = 1
+    LOG_INFO = 2
+    LOG_WARN = 3
+    LOG_ERROR = 4
 
     TRACE_ERROR_NONE = 0
     TRACE_ERROR_FULL = 999999
@@ -97,22 +95,27 @@ class EomLogger:
     def __init__(self):
         atexit.register(self.finalize)
 
+        if USE_TPWEB_LOG:
+            self.LOG_DEBUG = tpweb.EX_LOG_LEVEL_DEBUG
+            self.LOG_VERBOSE = tpweb.EX_LOG_LEVEL_VERBOSE
+            self.LOG_INFO = tpweb.EX_LOG_LEVEL_INFO
+            self.LOG_WARN = tpweb.EX_LOG_LEVEL_WARN
+            self.LOG_ERROR = tpweb.EX_LOG_LEVEL_ERROR
+            self._do_log = self._do_log_tpweb
+        else:
+            self._do_log = self._do_log_local
+
         self._locker = threading.RLock()
 
         # self._sep = ' '
         # self._end = '\n'
 
-        self._min_level = LOG_INFO  # 大于等于此值的日志信息才会记录
+        self._min_level = self.LOG_INFO  # 大于等于此值的日志信息才会记录
         self._trace_error = self.TRACE_ERROR_NONE  # 记录错误信息时，是否追加记录调用栈
         self._log_datetime = True  # 是否记录日志时间
         self._file_handle = None  # 日志文件的句柄，为None时表示不记录到文件
 
         self._win_color = None
-
-        if USE_TPWEB_LOG:
-            self._do_log = self._do_log_tpweb
-        else:
-            self._do_log = self._do_log_local
 
         self._set_console(True)
         self._set_level(self._min_level)
@@ -157,18 +160,18 @@ class EomLogger:
         self.w = self._log_warn
         self.e = self._log_error
 
-        if LOG_DEBUG == level:
+        if self.LOG_DEBUG == level:
             pass
-        elif LOG_VERBOSE == level:
+        elif self.LOG_VERBOSE == level:
             self.d = self._log_pass
-        elif LOG_INFO == level:
+        elif self.LOG_INFO == level:
             self.d = self._log_pass
             self.v = self._log_pass
-        elif LOG_WARN == level:
+        elif self.LOG_WARN == level:
             self.d = self._log_pass
             self.v = self._log_pass
             self.i = self._log_pass
-        elif LOG_ERROR == level:
+        elif self.LOG_ERROR == level:
             self.d = self._log_pass
             self.v = self._log_pass
             self.i = self._log_pass
@@ -191,7 +194,7 @@ class EomLogger:
             self._console_set_color = self._console_set_color_linux
             self._console_restore_color = self._console_restore_color_linux
         elif _platform == 'windows':
-            if 'TERM' in os.environ and os.environ['TERM'] in ['xterm', 'emacs']:
+            if 'TERM' in os.environ and os.environ['TERM'] in ['xterm', 'emacs', 'cygwin']:
                 self._console_set_color = self._console_set_color_linux
                 self._console_restore_color = self._console_restore_color_linux
 
@@ -234,27 +237,27 @@ class EomLogger:
 
     def _log_debug(self, *args, **kwargs):
         self._console_set_color(CR_DEBUG)
-        self._do_log(LOG_DEBUG, *args, **kwargs)
+        self._do_log(self.LOG_DEBUG, *args, **kwargs)
         self._console_restore_color()
 
     def _log_verbose(self, *args, **kwargs):
         self._console_set_color(CR_VERBOSE)
-        self._do_log(LOG_VERBOSE, *args, **kwargs)
+        self._do_log(self.LOG_VERBOSE, *args, **kwargs)
         self._console_restore_color()
 
     def _log_info(self, *args, **kwargs):
         self._console_set_color(CR_INFO)
-        self._do_log(LOG_INFO, *args, **kwargs)
+        self._do_log(self.LOG_INFO, *args, **kwargs)
         self._console_restore_color()
 
     def _log_warn(self, *args, **kwargs):
         self._console_set_color(CR_WARN)
-        self._do_log(LOG_WARN, *args, **kwargs)
+        self._do_log(self.LOG_WARN, *args, **kwargs)
         self._console_restore_color()
 
     def _log_error(self, *args, **kwargs):
         self._console_set_color(CR_ERROR)
-        self._do_log(LOG_ERROR, *args, **kwargs)
+        self._do_log(self.LOG_ERROR, *args, **kwargs)
 
         if self._trace_error != self.TRACE_ERROR_NONE:
             s = traceback.extract_stack()
@@ -264,14 +267,14 @@ class EomLogger:
                     break
                 if s[c - 2 - i][0].startswith('<frozen '):
                     continue
-                self._do_log(LOG_ERROR, '  %s(%d)\n' % (s[c - 2 - i][0], s[c - 2 - i][1]))
+                self._do_log(self.LOG_ERROR, '  %s(%d)\n' % (s[c - 2 - i][0], s[c - 2 - i][1]))
 
         _type, _value, _tb = sys.exc_info()
         if _type is not None:
             x = traceback.format_exception_only(_type, _value)
-            self._do_log(LOG_ERROR, '[EXCEPTION] %s' % x[0])
+            self._do_log(self.LOG_ERROR, '[EXCEPTION] %s' % x[0])
             x = traceback.extract_tb(_tb)
-            self._do_log(LOG_ERROR, '  %s(%d): %s\n' % (x[-1][0], x[-1][1], x[-1][3]))
+            self._do_log(self.LOG_ERROR, '  %s(%d): %s\n' % (x[-1][0], x[-1][1], x[-1][3]))
 
         self._console_restore_color()
 
@@ -301,10 +304,12 @@ class EomLogger:
         for x in args:
             if isinstance(x, str):
                 sys.stdout.writelines(x)
+                self._log_file(x)
                 continue
 
             else:
                 sys.stdout.writelines(x.__str__())
+                self._log_file(x.__str__())
 
     def _console_set_color_win(self, cr=None):
         if cr is None or USE_TPWEB_LOG:
@@ -339,7 +344,7 @@ class EomLogger:
         # 根据要显示的数组长度，可以计算出需要多少行。
 
         # 仅仅在调试模式下输出二进制。
-        if self._min_level > LOG_DEBUG:
+        if self._min_level > self.LOG_DEBUG:
             return
         # 仅仅输出到控制台，不输出到日志文件
         if self._log_console is None:
@@ -514,19 +519,19 @@ class EomLogger:
         first = True
         for x in args:
             if not first:
-                log._do_log(LOG_VERBOSE, sep, show_datetime=show_datetime)
+                log._do_log(self.LOG_VERBOSE, sep, show_datetime=show_datetime)
 
             first = False
             if isinstance(x, str):
-                log._do_log(LOG_VERBOSE, x, show_datetime=show_datetime)
+                log._do_log(self.LOG_VERBOSE, x, show_datetime=show_datetime)
                 show_datetime = False
                 continue
 
             else:
-                log._do_log(LOG_VERBOSE, x.__str__(), show_datetime=show_datetime)
+                log._do_log(self.LOG_VERBOSE, x.__str__(), show_datetime=show_datetime)
                 show_datetime = False
 
-        log._do_log(LOG_VERBOSE, end, show_datetime=show_datetime)
+        log._do_log(self.LOG_VERBOSE, end, show_datetime=show_datetime)
 
         # s = traceback.extract_stack()
         # c = len(s)
@@ -540,8 +545,8 @@ class EomLogger:
         #     break
 
     def _test(self):
-        self._set_level(LOG_DEBUG)
-        self._trace_error = TRACE_ERROR_FULL
+        self._set_level(self.LOG_DEBUG)
+        self._trace_error = self.TRACE_ERROR_FULL
 
         self.d('This is DEBUG message.\n')
         self.v('This is VERBOSE message.\n')
@@ -622,8 +627,8 @@ class Win32ColorConsole:
         self.__SetConsoleTextAttribute(self.__stdout, color)
 
 
-log = EomLogger()
-del EomLogger
+log = Logger()
+del Logger
 
 # log._test()
 # print('test built-in `print` function.')

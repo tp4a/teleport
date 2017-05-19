@@ -16,9 +16,21 @@ port=7190
 # LOG_LEVEL_ERROR     4   log error message only.
 log-level=2
 
-; running in debug mode. default to 0.
+; 0/1. default to 0.
 ; in debug mode, log-level set to 0 and trace call stack while exception raise.
-debug=0
+debug-mode=0
 
 core-server-rpc=http://127.0.0.1:52080/rpc
 
+[database]
+; sqlite/mysql
+type=sqlite
+
+;sqlite-file=/var/lib/teleport/data/ts_db.db
+
+;mysql-host=127.0.0.1
+;mysql-port=3306
+;mysql-db=teleport
+;mysql-prefix=tp_
+;mysql-user=user
+;mysql-password=password

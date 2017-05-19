@@ -9,11 +9,11 @@ __all__ = ['run']
 def run(options):
     _app = WebServerCore()
 
+    if not _app.init(options):
+        return 1
+
     log.i('\n')
     log.i('###############################################################\n')
     log.i('Teleport Web Server starting ...\n')
-
-    if not _app.init(options):
-        return 1
 
     return _app.run()

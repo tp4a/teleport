@@ -45,7 +45,7 @@ class IndexHandler(TPBaseAdminAuthHandler):
             'core': cfg.core,
             'web': {
                 'version': TS_VER,
-                'core_server_rpc': cfg['core_server_rpc'],
+                'core_server_rpc': cfg.common.core_server_rpc,
                 # 'database': database,
                 'db': db
             }

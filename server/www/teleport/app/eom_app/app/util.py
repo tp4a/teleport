@@ -34,7 +34,7 @@ def async_post_http(post_data):
         data = urllib.parse.quote(v).encode('utf-8')
 
         c = tornado.httpclient.AsyncHTTPClient()
-        r = yield c.fetch(cfg.core_server_rpc, body=data, method='POST')
+        r = yield c.fetch(cfg.common.core_server_rpc, body=data, method='POST')
 
         # print('async_post_http return:', r.body.decode())
         return json.loads(r.body.decode())

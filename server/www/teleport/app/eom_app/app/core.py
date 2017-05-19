@@ -38,8 +38,13 @@ class WebServerCore:
         if not cfg.load(_cfg_file):
             return False
 
-        cfg.log_path = os.path.abspath(options['log_path'])
-        cfg.log_file = os.path.join(cfg.log_path, 'tpweb.log')
+        _log_file, ok = cfg.get_str('common::log-file')
+        if ok:
+            cfg.log_path = os.path.abspath(os.path.dirname(_log_file))
+        else:
+            cfg.log_path = os.path.abspath(options['log_path'])
+            _log_file = os.path.join(cfg.log_path, 'tpweb.log')
+            cfg.set_default('common::log-file', _log_file)
 
         if not os.path.exists(cfg.log_path):
             utils.make_dir(cfg.log_path)
@@ -47,15 +52,33 @@ class WebServerCore:
                 log.e('Can not create log path:{}\n'.format(cfg.log_path))
                 return False
 
-        log.set_attribute(min_level=cfg.log_level, filename=cfg.log_file)
-        if cfg.debug:
-            log.set_attribute(trace_error=log.TRACE_ERROR_FULL)
+        # log.set_attribute(min_level=cfg.common.log_level, filename=cfg.common.log_file)
+        # if cfg.common.debug_mode:
+        #     log.set_attribute(min_level=log.LOG_DEBUG, trace_error=log.TRACE_ERROR_FULL)
 
-        # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口）
+        return True
+
+    def _get_core_server_config(self):
+        try:
+            req = {'method': 'get_config', 'param': []}
+            req_data = json.dumps(req)
+            data = urllib.parse.quote(req_data).encode('utf-8')
+            req = urllib.request.Request(url=cfg.common.core_server_rpc, data=data)
+            rep = urllib.request.urlopen(req, timeout=3)
+            body = rep.read().decode()
+            x = json.loads(body)
+            log.d('connect core server and get config info succeeded.\n')
+            cfg.update_core(x['data'])
+        except:
+            log.w('can not connect to core server to get config, maybe it not start yet, ignore.\n')
+
+    def run(self):
+        # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口以及录像文件存放路径）
         self._get_core_server_config()
 
         if not web_session().init():
-            return False
+            log.e('can not initialize session manager.\n')
+            return 0
 
         # TODO: 根据配置文件来决定使用什么数据库（初始安装时还没有配置数据库信息）
         _db = get_db()
@@ -66,24 +89,6 @@ class WebServerCore:
             cfg.app_mode = APP_MODE_MAINTENANCE
         else:
             cfg.app_mode = APP_MODE_NORMAL
-
-        return True
-
-    def _get_core_server_config(self):
-        try:
-            req = {'method': 'get_config', 'param': []}
-            req_data = json.dumps(req)
-            data = urllib.parse.quote(req_data).encode('utf-8')
-            req = urllib.request.Request(url=cfg.core_server_rpc, data=data)
-            rep = urllib.request.urlopen(req, timeout=3)
-            body = rep.read().decode()
-            x = json.loads(body)
-            log.d('update core server config info.\n')
-            cfg.update_core(x['data'])
-        except:
-            log.w('can not connect to core server to get config, maybe it not start yet, ignore.\n')
-
-    def run(self):
 
         settings = {
             #
@@ -114,11 +119,15 @@ class WebServerCore:
         web_app = tornado.web.Application(controllers, **settings)
 
         server = tornado.httpserver.HTTPServer(web_app)
+
         try:
-            server.listen(cfg.server_port)
-            log.i('works on [http://127.0.0.1:{}]\n'.format(cfg.server_port))
+            server.listen(cfg.common.port, address=cfg.common.ip)
+            if cfg.common.ip == '0.0.0.0':
+                log.i('works on [http://127.0.0.1:{}]\n'.format(cfg.common.port))
+            else:
+                log.i('works on [http://{}:{}]\n'.format(cfg.common.ip, cfg.common.port))
         except:
-            log.e('Can not listen on port {}, maybe it been used by another application.\n'.format(cfg.server_port))
+            log.e('can not listen on port {}:{}, make sure it not been used by another application.\n'.format(cfg.common.ip, cfg.common.port))
             return 0
 
         # 启动session超时管理
