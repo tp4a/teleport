@@ -406,10 +406,9 @@ ywl.on_host_table_created = function (tbl) {
                     pro_port = row_data.pro_port;
                 }
 
-
                 if (pro_type === PROTOCOL_TYPE_RDP) {
                     host_port = ts_rdp_port;
-                    size = parseInt($(this).parent().parent().find('#dlg-rdp-size select').val())
+                    size = parseInt($(this).parent().parent().find('#dlg-rdp-size select').val());
                     if ($(this).parent().parent().find('#dlg-action-rdp-console').is(':checked')) {
                         rdp_console = 1;
                     } else {
@@ -1339,9 +1338,12 @@ ywl.create_sys_user = function (tbl) {
         if (auth_mode === AUTH_TYPE_PASSWORD) {
             user_pswd = dlg_sys_user.user_pswd;
         } else if (auth_mode === AUTH_TYPE_SSHKEY) {
+            if (_.isNull(dlg_sys_user.cert_id)) {
+                ywl.notify_error('请选择一个SSH私钥，如SSH私钥列表为空，请在密钥管理页面中增加！');
+                return;
+            }
             cert_id = parseInt(dlg_sys_user.cert_id);
         } else {
-
         }
         var host_id = parseInt(dlg_sys_user.host_id);
         var host_auth_id = parseInt(dlg_sys_user.host_auth_id);

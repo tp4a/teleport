@@ -43,6 +43,10 @@
             background-color: #cc3632;
             border: 1px solid #9c2a26;
         }
+
+        #sqlite-info, #mysql-info {
+            display: none;
+        }
     </style>
 </%block>
 
@@ -60,7 +64,9 @@
             <div>
                 <p>请选择要使用的数据库类型（暂时仅支持sqlite，其它类型开发中）：</p>
                 <input id="db-sqlite" type="radio" checked="checked" name="database" value="sqlite"/> <label for="db-sqlite">SQLite</label><br/>
-                <input id="db-mysql" type="radio" name="database" value="mysql" disabled="disabled"/> <label for="db-mysql">MySQL（开发中，暂不支持）</label>
+                <input id="db-mysql" type="radio" name="database" value="mysql"/> <label for="db-mysql">MySQL（开发中，暂不支持）</label>
+                <div id="sqlite-info"></div>
+                <div id="mysql-info"></div>
                 <div>
                     <button id="btn-create-db" type="button" class="btn btn-primary"><i class="fa fa-wrench fa-fw"></i> 开始创建</button>
                 </div>
@@ -83,12 +89,22 @@
 <%block name="embed_js">
     <script type="text/javascript">
         "use strict";
+        ywl.add_page_options(${ page_param });
 
         ywl.on_init = function (cb_stack, cb_args) {
             ywl.dom = {
                 btn_create_db: $('#btn-create-db'),
-                steps_detail: $('#steps-detail')
+                steps_detail: $('#steps-detail'),
+                sqlite_info: $('#sqlite-info'),
+                mysql_info: $('#mysql-info')
             };
+
+            if (ywl.page_options.db.type === DB_TYPE_SQLITE) {
+            } else if (ywl.page_options.db.type === DB_TYPE_MYSQL) {
+            } else {
+                ywl.show_message('error', '未知的数据库类型，请检查您的配置文件！');
+                ywl.dom.btn_create_db.attr('disabled', 'disabled').hide();
+            }
 
             ywl.dom.btn_create_db.click(function () {
 

@@ -32,21 +32,21 @@ class IndexHandler(TPBaseAdminAuthHandler):
             cfg.update_core(None)
 
         _db = get_db()
-        # database = '未知'
-        db = _db.db_source
-        # if _db.db_source['type'] == _db.DB_TYPE_SQLITE:
-        #     database = 'SQLite（{}）'.format(_db.db_source['file'])
-        # el
-        if _db.db_source['type'] == _db.DB_TYPE_MYSQL:
-            # database = 'MySQL'
-            del db['password']
+
+        db = {'type': _db.db_type}
+        if _db.db_type == _db.DB_TYPE_SQLITE:
+            db['sqlite_file'] = _db.sqlite_file
+        elif _db.db_type == _db.DB_TYPE_MYSQL:
+            db['mysql_host'] = _db.mysql_host
+            db['mysql_port'] = _db.mysql_port
+            db['mysql_db'] = _db.mysql_db
+            db['mysql_user'] = _db.mysql_user
 
         param = {
             'core': cfg.core,
             'web': {
                 'version': TS_VER,
                 'core_server_rpc': cfg.common.core_server_rpc,
-                # 'database': database,
                 'db': db
             }
         }

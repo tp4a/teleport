@@ -373,10 +373,12 @@ class AppConfig(BaseAppConfig):
 
     def _on_init(self):
         self.set_default('common::ip', '0.0.0.0', 'ip=0.0.0.0')
-        self.set_default('common::port', 7190, 'port=7190')
+        self.set_default('common::port', 7190,
+                         'port listen by web server, default to 7190.\n'
+                         'DO NOT FORGET update common::web-server-rpc in core.ini if you modified this setting.\n'
+                         'port=7190')
         self.set_default('common::log-file', None,
-                         '`log-file` define the log file location. if not set, default location\n'
-                         'to %APPROOT%/log/web.log\n'
+                         'log file of web server, default to /var/log/teleport/tpweb.log\n'
                          'log-file=/var/log/teleport/tpweb.log'
                          )
         self.set_default('common::log-level', 2,
@@ -385,49 +387,116 @@ class AppConfig(BaseAppConfig):
                          'LOG_LEVEL_VERBOSE   1   log every-thing but without debug message.\n'
                          'LOG_LEVEL_INFO      2   log information/warning/error message.\n'
                          'LOG_LEVEL_WARN      3   log warning and error message.\n'
-                         'LOG_LEVEL_ERROR     4   log error message only.'
+                         'LOG_LEVEL_ERROR     4   log error message only.\n'
+                         'log-level=2'
                          )
         self.set_default('common::debug-mode', 0,
-                         'default to `no`.\n'
-                         'in debug mode, `log-level` force to 0 and trace call stack when exception raised.'
+                         '0/1. default to 0.\n'
+                         'in debug mode, `log-level` force to 0 and trace call stack when exception raised.\n'
+                         'debug-mode=0'
                          )
         self.set_default('common::core-server-rpc', 'http://127.0.0.1:52080/rpc',
                          '`core-server-rpc` is the rpc interface of core server.\n'
-                         'DO NOT FORGET update this setting if you modified rpc::bind-port in core.ini.'
+                         'DO NOT FORGET update this setting if you modified rpc::bind-port in core.ini.\n'
+                         'core-server-rpc=http://127.0.0.1:52080/rpc'
                          )
+        self.set_default('database::type', 'sqlite',
+                         'database in use, should be sqlite/mysql, default to sqlite.\n'
+                         'type=sqlite'
+                         )
+        self.set_default('database::sqlite-file', None,
+                         'sqlite-file=/var/lib/teleport/data/ts_db.db'
+                         )
+        # self.set_default('database::mysql-host', None,
+        #                  'mysql-host=127.0.0.1\n'
+        #                  'mysql-port=3306\n'
+        #                  'mysql-db=teleport\n'
+        #                  'mysql-prefix=tp_\n'
+        #                  'mysql-user=teleport\n'
+        #                  'mysql-password=password'
+        #                  )
+        self.set_default('database::mysql-host', '127.0.0.1', 'mysql-host=127.0.0.1')
+        self.set_default('database::mysql-port', 3306, 'mysql-port=3306')
+        self.set_default('database::mysql-db', 'teleport', 'mysql-db=teleport')
+        self.set_default('database::mysql-prefix', 'tp_', 'mysql-prefix=tp_')
+        self.set_default('database::mysql-user', 'teleport', 'mysql-user=teleport')
+        self.set_default('database::mysql-password', None, 'mysql-password=password')
 
     def _on_get_save_info(self):
         return [
             {'common': ['ip', 'port', 'log-file', 'log-level', 'debug-mode', 'core-server-rpc']},
+            {'database': ['type', 'sqlite-file', 'mysql-host', 'mysql-port', 'mysql-db', 'mysql-prefix', 'mysql-user', 'mysql-password']}
         ]
 
     def _on_load(self, cfg_parser):
         if 'common' not in cfg_parser:
+            log.e('invalid config file, need `common` section.\n')
+            return False
+        if 'database' not in cfg_parser:
+            log.e('invalid config file, need `database` section.\n')
             return False
 
-        _comm = cfg_parser['common']
+        _sec = cfg_parser['common']
 
-        _tmp_int = _comm.getint('log-level', -1)
+        _tmp_int = _sec.getint('log-level', -1)
         if log.LOG_DEBUG <= _tmp_int <= log.LOG_ERROR:
             self.set_kv('common::log-level', _tmp_int)
         log.set_attribute(min_level=self.common.log_level)
 
-        _tmp_bool = _comm.getint('debug-mode', False)
+        _tmp_bool = _sec.getint('debug-mode', False)
         self.set_kv('common::debug-mode', _tmp_bool)
         if _tmp_bool:
             log.set_attribute(min_level=log.LOG_DEBUG, trace_error=log.TRACE_ERROR_FULL)
 
-        _tmp_str = _comm.get('ip', '0.0.0.0')
+        _tmp_str = _sec.get('ip', None)
         if _tmp_str is not None:
             self.set_kv('common::ip', _tmp_str)
 
-        _tmp_int = _comm.getint('port', -1)
+        _tmp_int = _sec.getint('port', -1)
         if -1 != _tmp_int:
             self.set_kv('common::port', _tmp_int)
 
-        _tmp_str = _comm.get('log-file', None)
+        _tmp_str = _sec.get('log-file', None)
         if _tmp_str is not None:
             self.set_kv('common::log-file', _tmp_str)
+
+        _tmp_str = _sec.get('core-server-rpc', None)
+        if _tmp_str is not None:
+            self.set_kv('common::core-server-rpc', _tmp_str)
+
+        _sec = cfg_parser['database']
+
+        _tmp_str = _sec.get('type', None)
+        if _tmp_str is not None:
+            self.set_kv('database::type', _tmp_str)
+
+        _tmp_str = _sec.get('sqlite-file', None)
+        if _tmp_str is not None:
+            self.set_kv('database::sqlite-file', _tmp_str)
+
+        _tmp_str = _sec.get('mysql-host', None)
+        if _tmp_str is not None:
+            self.set_kv('database::mysql-host', _tmp_str)
+
+        _tmp_int = _sec.getint('mysql-port', -1)
+        if _tmp_int != -1:
+            self.set_kv('database::mysql-port', _tmp_int)
+
+        _tmp_str = _sec.get('mysql-db', None)
+        if _tmp_str is not None:
+            self.set_kv('database::mysql-db', _tmp_str)
+
+        _tmp_str = _sec.get('mysql-prefix', None)
+        if _tmp_str is not None:
+            self.set_kv('database::mysql-prefix', _tmp_str)
+
+        _tmp_str = _sec.get('mysql-user', None)
+        if _tmp_str is not None:
+            self.set_kv('database::mysql-user', _tmp_str)
+
+        _tmp_str = _sec.get('mysql-password', None)
+        if _tmp_str is not None:
+            self.set_kv('database::mysql-password', _tmp_str)
 
         return True
 
@@ -477,6 +546,7 @@ class AppConfig(BaseAppConfig):
 
         return True
 
+
 def app_cfg():
     import builtins
     if '__app_cfg__' not in builtins.__dict__:
@@ -491,33 +561,33 @@ def app_cfg():
 #     return builtins.__dict__['__web_config__']
 
 
-if __name__ == '__main__':
-    cfg = AppConfig()
-    cfg.set_default('common::log-file', 'E:/test/log/web.log')
-    cfg.load('E:/test/config/web.ini')
-    cfg.aaa = 'this is aaa'
-    cfg.bbb = 123
-    cfg.ccc = False
-
-    print('----usage--------------------')
-    print(cfg.common.port)
-    print(cfg.get_str('aaa'))
-    print(cfg.get_str('bbb'))
-    print(cfg.get_str('ccc'))
-    print('----usage--------------------')
-    print(cfg.get_int('aaa'))
-    print(cfg.get_int('bbb'))
-    print(cfg.get_int('ccc'))
-    print('----usage--------------------')
-    print(cfg.get_bool('aaa'))
-    print(cfg.get_bool('bbb'))
-    print(cfg.get_bool('ccc'))
-    print('----usage--------------------')
-    print(cfg.common)
-    print('----usage--------------------')
-    print(cfg.aaa)
-    print(cfg.bbb)
-    print(cfg.ccc)
-
-    cfg.save('E:/test/config/web-new.ini')
-    cfg.save()
+# if __name__ == '__main__':
+#     cfg = AppConfig()
+#     cfg.set_default('common::log-file', 'E:/test/log/web.log')
+#     cfg.load('E:/test/config/web.ini')
+#     cfg.aaa = 'this is aaa'
+#     cfg.bbb = 123
+#     cfg.ccc = False
+#
+#     print('----usage--------------------')
+#     print(cfg.common.port)
+#     print(cfg.get_str('aaa'))
+#     print(cfg.get_str('bbb'))
+#     print(cfg.get_str('ccc'))
+#     print('----usage--------------------')
+#     print(cfg.get_int('aaa'))
+#     print(cfg.get_int('bbb'))
+#     print(cfg.get_int('ccc'))
+#     print('----usage--------------------')
+#     print(cfg.get_bool('aaa'))
+#     print(cfg.get_bool('bbb'))
+#     print(cfg.get_bool('ccc'))
+#     print('----usage--------------------')
+#     print(cfg.common)
+#     print('----usage--------------------')
+#     print(cfg.aaa)
+#     print(cfg.bbb)
+#     print(cfg.ccc)
+#
+#     cfg.save('E:/test/config/web-new.ini')
+#     cfg.save()

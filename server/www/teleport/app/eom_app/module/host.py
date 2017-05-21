@@ -378,12 +378,11 @@ def add_host(args, must_not_exists=True):
     if not ret:
         return -101
 
-    sql = 'SELECT last_insert_rowid()'
-    db_ret = db.query(sql)
-    if db_ret is None:
+    host_id = db.last_insert_id()
+    if host_id == -1:
         return -102
-    host_id = db_ret[0][0]
-    return host_id
+    else:
+        return host_id
 
 
 def lock_host(host_id, lock):
@@ -636,12 +635,11 @@ def sys_user_add(args):
     if not ret:
         return -101
 
-    sql = 'SELECT last_insert_rowid()'
-    db_ret = db.query(sql)
-    if db_ret is None:
+    user_id = db.last_insert_id()
+    if user_id == -1:
         return -102
-    user_id = db_ret[0][0]
-    return user_id
+    else:
+        return user_id
 
 
 def sys_user_update(_id, kv):

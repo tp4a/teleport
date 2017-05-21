@@ -18,14 +18,19 @@ ywl.on_init = function (cb_stack, cb_args) {
         html.push(ywl._make_info('核心服务版本', ywl.page_options.core.version));
     }
 
-    var db_type = '未知';
     if (ywl.page_options.web.db.type === DB_TYPE_SQLITE) {
-        db_type = 'SQLite（' + ywl.page_options.web.db.file + '）';
+        html.push(ywl._make_info('数据库类型', 'SQLite'));
+        html.push(ywl._make_info('sqlite-file', ywl.page_options.web.db.sqlite_file));
     } else if (ywl.page_options.web.db.type === DB_TYPE_MYSQL) {
-        db_type = 'MySQL';
+        html.push(ywl._make_info('数据库类型', 'MySQL'));
+        html.push(ywl._make_info('mysql-host', ywl.page_options.web.db.mysql_host));
+        html.push(ywl._make_info('mysql-port', ywl.page_options.web.db.mysql_port));
+        html.push(ywl._make_info('mysql-db', ywl.page_options.web.db.mysql_db));
+        html.push(ywl._make_info('mysql-user', ywl.page_options.web.db.mysql_user));
+    } else {
+        html.push(ywl._make_info('数据库类型', '未知'));
     }
 
-    html.push(ywl._make_info('数据库类型', db_type));
     html.push(ywl._make_info('核心服务通讯地址', ywl.page_options.web.core_server_rpc));
     if (ywl.page_options.core.detected) {
         html.push(ywl._make_info('WEB服务通讯地址', ywl.page_options.core.web_server_rpc));

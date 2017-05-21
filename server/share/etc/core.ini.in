@@ -13,7 +13,7 @@
 # LOG_LEVEL_ERROR     4   log error message only.
 log-level=2
 
-debug=0
+debug-mode=0
 
 ; 'replay-path' define the replay file location. if not set, default location
 ; to $INSTDIR%/data/replay/

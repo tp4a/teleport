@@ -19,7 +19,19 @@ class IndexHandler(TPBaseUserAuthHandler):
 class InstallHandler(TPBaseAdminAuthHandler):
     def get(self):
         if get_db().need_create:
-            self.render('maintenance/install.mako')
+            _db = get_db()
+
+            db = {'type': _db.db_type}
+            if _db.db_type == _db.DB_TYPE_SQLITE:
+                db['sqlite_file'] = _db.sqlite_file
+            elif _db.db_type == _db.DB_TYPE_MYSQL:
+                db['mysql_host'] = _db.mysql_host
+                db['mysql_port'] = _db.mysql_port
+                db['mysql_user'] = _db.mysql_user
+                db['mysql_db'] = _db.mysql_db
+
+            param = {'db': db}
+            self.render('maintenance/install.mako', page_param=json.dumps(param))
         elif get_db().need_upgrade:
             return self.redirect('/maintenance/upgrade')
         else:

@@ -76,19 +76,19 @@ class WebServerCore:
         # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口以及录像文件存放路径）
         self._get_core_server_config()
 
-        if not web_session().init():
-            log.e('can not initialize session manager.\n')
+        _db = get_db()
+        if not _db.init():
+            log.e('can not initialize database interface.\n')
             return 0
 
-        # TODO: 根据配置文件来决定使用什么数据库（初始安装时还没有配置数据库信息）
-        _db = get_db()
-        if not _db.init({'type': _db.DB_TYPE_SQLITE, 'file': os.path.join(cfg.data_path, 'ts_db.db')}):
-            log.e('initialize database interface failed.\n')
-            return False
         if _db.need_create or _db.need_upgrade:
             cfg.app_mode = APP_MODE_MAINTENANCE
         else:
             cfg.app_mode = APP_MODE_NORMAL
+
+        if not web_session().init():
+            log.e('can not initialize session manager.\n')
+            return 0
 
         settings = {
             #
