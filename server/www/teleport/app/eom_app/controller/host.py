@@ -49,7 +49,7 @@ class IndexHandler(TPBaseUserAuthHandler):
             param['cert_list'] = host.get_cert_list()
             self.render('host/admin_index.mako', page_param=json.dumps(param))
         else:
-            self.render('host/common_index.mako', page_param=json.dumps(param))
+            self.render('host/user_index.mako', page_param=json.dumps(param))
 
 
 class UploadAndImportHandler(TPBaseAdminAuthHandler):

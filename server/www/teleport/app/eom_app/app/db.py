@@ -181,6 +181,8 @@ class TPDatabase:
         elif self.db_type == self.DB_TYPE_MYSQL:
             # select TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA='dbname' and TABLE_NAME='tablename' ;
             ret = self.query('SELECT TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA="{}" and TABLE_NAME="{}";'.format(self.mysql_db, table_name))
+            if ret is None:
+                return None
             if len(ret) == 0:
                 return None
             else:

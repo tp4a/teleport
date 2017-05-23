@@ -19,7 +19,10 @@ class IndexHandler(TPBaseUserAuthHandler):
 class InstallHandler(TPBaseAdminAuthHandler):
     def get(self):
         if get_db().need_create:
+            cfg.reload()
+
             _db = get_db()
+            _db.init()
 
             db = {'type': _db.db_type}
             if _db.db_type == _db.DB_TYPE_SQLITE:

@@ -3,6 +3,7 @@
 import configparser
 import os
 
+import eom_common.eomcore.utils as utils
 from eom_common.eomcore.logger import log
 
 __all__ = ['app_cfg']
@@ -186,6 +187,13 @@ class BaseAppConfig(dict):
 
     def _on_load(self, cfg_parser):
         raise RuntimeError('can not create instance for base class.')
+
+    def reload(self):
+        self['_cfg_default'] = {}
+        self['_cfg_loaded'] = {}
+        self['_kvs'] = {'_': self['_kvs']['_']}
+        self._on_init()
+        return self.load(self['_cfg_file'])
 
     def set_kv(self, key, val):
         x = key.split('::')
@@ -420,7 +428,7 @@ class AppConfig(BaseAppConfig):
         self.set_default('database::mysql-db', 'teleport', 'mysql-db=teleport')
         self.set_default('database::mysql-prefix', 'tp_', 'mysql-prefix=tp_')
         self.set_default('database::mysql-user', 'teleport', 'mysql-user=teleport')
-        self.set_default('database::mysql-password', None, 'mysql-password=password')
+        self.set_default('database::mysql-password', 'password', 'mysql-password=password')
 
     def _on_get_save_info(self):
         return [
@@ -497,6 +505,21 @@ class AppConfig(BaseAppConfig):
         _tmp_str = _sec.get('mysql-password', None)
         if _tmp_str is not None:
             self.set_kv('database::mysql-password', _tmp_str)
+
+        _log_file, ok = self.get_str('common::log-file')
+        if ok:
+            self.log_path = os.path.abspath(os.path.dirname(_log_file))
+        else:
+            _log_file = os.path.join(self.log_path, 'tpweb.log')
+            self.set_default('common::log-file', _log_file)
+
+        if not os.path.exists(self.log_path):
+            utils.make_dir(self.log_path)
+            if not os.path.exists(self.log_path):
+                log.e('Can not create log path:{}\n'.format(self.log_path))
+                return False
+
+        log.set_attribute(filename=_log_file)
 
         return True
 

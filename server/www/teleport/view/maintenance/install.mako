@@ -26,7 +26,7 @@
 
         .steps-detail {
             display: none;
-            margin: 10px;
+##             margin: 10px;
             padding: 10px;
             border: 1px solid #b4b4b4;
             background-color: #dcdcdc;
@@ -44,8 +44,30 @@
             border: 1px solid #9c2a26;
         }
 
-        #sqlite-info, #mysql-info {
-            display: none;
+            ##         #db-info {
+            ##         }
+
+        .table {
+            width: auto;
+            margin-left: 20px;
+        }
+
+        .table .key {
+            ##             width:240px;
+            text-align: right;
+        }
+
+        .table .value {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .notice-box {
+            border:1px solid #e2cab4;
+            background-color: #ffe4cb;
+            padding:15px;
+            color: #000000;
+            margin-bottom:10px;
         }
     </style>
 </%block>
@@ -62,11 +84,11 @@
 
             <h2>第一步：创建数据表</h2>
             <div>
-                <p>请选择要使用的数据库类型（暂时仅支持sqlite，其它类型开发中）：</p>
-                <input id="db-sqlite" type="radio" checked="checked" name="database" value="sqlite"/> <label for="db-sqlite">SQLite</label><br/>
-                <input id="db-mysql" type="radio" name="database" value="mysql"/> <label for="db-mysql">MySQL（开发中，暂不支持）</label>
-                <div id="sqlite-info"></div>
-                <div id="mysql-info"></div>
+                <p>TELEPORT支持<strong>SQLite</strong>和<strong>MySQL</strong>数据库，根据您的配置，将使用以下信息进行操作：</p>
+                <table id="db-info" class="table"></table>
+                <div class="notice-box">
+                    注意：如果以上配置并不是您所期望的，请修改您的配置文件，然后刷新本页面。
+                </div>
                 <div>
                     <button id="btn-create-db" type="button" class="btn btn-primary"><i class="fa fa-wrench fa-fw"></i> 开始创建</button>
                 </div>
@@ -77,7 +99,7 @@
             <div id="step2" style="display:none;">
                 <hr/>
                 <h2>已完成！</h2>
-                <p>是的，没有第二步了，安装配置已经完成了！刷新页面即可进入Teleport主界面啦~~</p>
+                <p>是的，没有第二步了，安装配置已经完成了！刷新页面即可进入 TELEPORT 主界面啦~~</p>
             </div>
 
         </div>
@@ -91,20 +113,47 @@
         "use strict";
         ywl.add_page_options(${ page_param });
 
+
+        ywl._make_info = function (key, value) {
+            return '<tr><td class="key">' + key + '：</td><td class="value">' + value + '</td></tr>';
+        };
+
         ywl.on_init = function (cb_stack, cb_args) {
             ywl.dom = {
                 btn_create_db: $('#btn-create-db'),
                 steps_detail: $('#steps-detail'),
-                sqlite_info: $('#sqlite-info'),
-                mysql_info: $('#mysql-info')
+                db_info: $('#db-info')
             };
 
+            var html = [];
             if (ywl.page_options.db.type === DB_TYPE_SQLITE) {
+                html.push(ywl._make_info('数据库类型', 'SQLite'));
+                html.push(ywl._make_info('数据库文件', ywl.page_options.db.sqlite_file));
             } else if (ywl.page_options.db.type === DB_TYPE_MYSQL) {
+                html.push(ywl._make_info('数据库类型', 'MySQL'));
+                html.push(ywl._make_info('MySQL主机', ywl.page_options.db.mysql_host));
+                html.push(ywl._make_info('MySQL端口', ywl.page_options.db.mysql_port));
+                html.push(ywl._make_info('数据库名称', ywl.page_options.db.mysql_db));
+                html.push(ywl._make_info('用户名', ywl.page_options.db.mysql_user));
+
+                var _t = [];
+                _t.push('<div class="notice-box">');
+                _t.push('注意：请确保您在执行后续创建操作之前，已经在MySQL数据库中创建了数据库"');
+                _t.push(ywl.page_options.db.mysql_db);
+                _t.push('"和用户"');
+                _t.push(ywl.page_options.db.mysql_user);
+                _t.push('"，并为用户"');
+                _t.push(ywl.page_options.db.mysql_user);
+                _t.push('"设置了在数据库"');
+                _t.push(ywl.page_options.db.mysql_db);
+                _t.push('"创建表的权限！');
+                _t.push('</div>');
+                ywl.dom.db_info.after(_t.join(''));
             } else {
                 ywl.show_message('error', '未知的数据库类型，请检查您的配置文件！');
                 ywl.dom.btn_create_db.attr('disabled', 'disabled').hide();
             }
+            ywl.dom.db_info.append(html.join(''));
 
             ywl.dom.btn_create_db.click(function () {
 
@@ -145,6 +194,7 @@
                             if (ret.code === TPE_OK) {
 
                                 // show step progress.
+                                var all_ok = true;
                                 var steps = ret.data.steps;
                                 ywl.dom.steps_detail.empty();
 
@@ -161,6 +211,7 @@
                                         icon_class = 'fa-exclamation-circle';
                                         err_class = ' class="error"';
                                         steps[i].msg += ' 失败！'
+                                        all_ok = false;
                                     }
                                     else {
                                         err_class = '';
@@ -178,7 +229,9 @@
 
 
                                 if (!ret.data.running) {
-                                    $('#step2').show('fast');
+                                    if (all_ok) {
+                                        $('#step2').show('fast');
+                                    }
                                     return;
                                 }
 
