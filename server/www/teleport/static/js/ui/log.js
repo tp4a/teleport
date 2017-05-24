@@ -9,7 +9,7 @@ ywl.on_init = function (cb_stack, cb_args) {
     // 表格数据
     var disk_rate = 0;
     if(0 == ywl.page_options.total_size) {
-        $('#disk-status').text('未能连接到核心服务，无法获取操作日志路径');
+        $('#disk-status').text('未能获取到录像文件所在磁盘空间信息');
     } else {
         disk_rate = parseInt(ywl.page_options.free_size * 100 / ywl.page_options.total_size);
         $('#disk-status').text('日志磁盘大小：' + size2str(ywl.page_options.total_size, 2) + '，剩余空间：' + size2str(ywl.page_options.free_size, 2) + '，空闲' + disk_rate + '%');
