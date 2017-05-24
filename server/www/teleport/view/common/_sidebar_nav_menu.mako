@@ -3,6 +3,13 @@
 %>
 <%
     _sidebar = [
+## 	{
+## 		'require_type': 100,
+## 		'id': 'dashboard',
+## 		'link': '/dashboard',
+## 		'name': '信息总览',
+## 		'icon': 'fa-dashboard',
+## 	},
 	{
 		'require_type': 1,
 		'id': 'host',
@@ -17,13 +24,6 @@
 		'name': '用户管理',
 		'icon': 'fa-user',
 	},
-## 	{
-## 		'require_type': 1,
-## 		'id': 'auth',
-## 		'link': '/auth',
-## 		'name': '授权管理',
-## 		'icon': 'fa-user-secret',
-## 	},
 	{
 		'require_type': 100,
 		'id': 'cert',
@@ -38,13 +38,27 @@
 		'name': '分组管理',
 		'icon': 'fa-object-group',
 	},
-	{
-		'require_type': 100,
-		'id': 'set',
-		'link': '/set',
-		'name': '配置管理',
-		'icon': 'fa-cogs',
-	},
+## 	{
+## 		'require_type': 100,
+## 		'id': 'set',
+## 		'link': '',
+## 		'name': '配置管理',
+## 		'icon': 'fa-cogs',
+## 		'sub': [
+## 		    {
+##                 'require_type': 100,
+##                 'id': 'info',
+##                 'link': '/set/info',
+##                 'name': '配置信息'
+## 		    },
+## 		    {
+##                 'require_type': 100,
+##                 'id': 'database',
+##                 'link': '/set/db',
+##                 'name': '数据库管理'
+## 		    }
+## 		]
+## 	},
 	{
 		'require_type': 100,
 		'id': 'log',
@@ -52,20 +66,13 @@
 		'name': '日志查询',
 		'icon': 'fa-database',
 	},
-## 	{
-## 		'require_type': 1,
-## 		'id': 'pwd',
-## 		'link': '/pwd',
-## 		'name': '密码修改',
-## 		'icon': 'fa-pencil-square-o',
-## 	},
-## 	{
-## 		'require_type': 1,
-## 		'id': 'exit',
-## 		'link': '/exit',
-## 		'name': '安全退出',
-## 		'icon': 'fa-sign-out',
-## 	},
+	{
+		'require_type': 100,
+		'id': 'config',
+		'link': '/config',
+		'name': '配置管理',
+		'icon': 'fa-cogs',
+	},
 	{
 	    'separator': true,
 		'require_type': 1,

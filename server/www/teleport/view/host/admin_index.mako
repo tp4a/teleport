@@ -7,7 +7,7 @@
 
 <%block name="extend_js">
     <script type="text/javascript" src="${ static_url('js/ui/teleport.js') }"></script>
-    <script type="text/javascript" src="${ static_url('js/ui/admin_host.js') }"></script>
+    <script type="text/javascript" src="${ static_url('js/ui/host/admin.js') }"></script>
 </%block>
 
 <%block name="breadcrumb">

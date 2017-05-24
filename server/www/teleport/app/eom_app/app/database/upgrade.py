@@ -43,11 +43,11 @@ class DatabaseUpgrade:
                 return True
             self.step_end(_step, 0, '需要升级到v2')
 
-            if self.db.db_source['type'] == self.db.DB_TYPE_SQLITE:
+            if self.db.db_type == self.db.DB_TYPE_SQLITE:
                 _step = self.step_begin(' - 备份数据库文件')
-                _bak_file = '{}.before-v1-to-v2'.format(self.db.db_source['file'])
+                _bak_file = '{}.before-v1-to-v2'.format(self.db.sqlite_file)
                 if not os.path.exists(_bak_file):
-                    shutil.copy(self.db.db_source['file'], _bak_file)
+                    shutil.copy(self.db.sqlite_file, _bak_file)
                 self.step_end(_step, 0)
 
             # 将原来的普通用户的account_type从 0 改为 1
@@ -108,11 +108,11 @@ class DatabaseUpgrade:
                 return True
             self.step_end(_step, 0, '需要升级到v3')
 
-            if self.db.db_source['type'] == self.db.DB_TYPE_SQLITE:
+            if self.db.db_type == self.db.DB_TYPE_SQLITE:
                 _step = self.step_begin(' - 备份数据库文件')
-                _bak_file = '{}.before-v2-to-v3'.format(self.db.db_source['file'])
+                _bak_file = '{}.before-v2-to-v3'.format(self.db.sqlite_file)
                 if not os.path.exists(_bak_file):
-                    shutil.copy(self.db.db_source['file'], _bak_file)
+                    shutil.copy(self.db.sqlite_file, _bak_file)
                 self.step_end(_step, 0)
 
             _step = self.step_begin(' - 调整数据表...')
@@ -145,19 +145,19 @@ class DatabaseUpgrade:
 
             # 新建两个表，用于拆分原来的 ts_host 表
             if not self.db.exec("""CREATE TABLE `{}host_info` (
-    `host_id` integer PRIMARY KEY AUTOINCREMENT,
+    `host_id` integer PRIMARY KEY {},
     `group_id`  int(11) DEFAULT 0,
     `host_sys_type`  int(11) DEFAULT 1,
     `host_ip`  varchar(32) DEFAULT '',
     `pro_port`  varchar(256) NULL,
     `host_lock`  int(11) DEFAULT 0,
     `host_desc` varchar(128) DEFAULT ''
-    );""".format(self.db.table_prefix)):
+    );""".format(self.db.table_prefix, self.db.auto_increment)):
                 self.step_end(_step, -1)
                 return False
 
             if not self.db.exec("""CREATE TABLE `{}auth_info` (
-    `id`  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    `id`  INTEGER PRIMARY KEY {},
     `host_id`  INTEGER,
     `pro_type`  INTEGER,
     `auth_mode`  INTEGER,
@@ -166,7 +166,7 @@ class DatabaseUpgrade:
     `cert_id`  INTEGER,
     `encrypt`  INTEGER,
     `log_time`  varchar(60)
-    );""".format(self.db.table_prefix)):
+    );""".format(self.db.table_prefix, self.db.auto_increment)):
                 self.step_end(_step, -1)
                 return False
 
@@ -246,11 +246,11 @@ class DatabaseUpgrade:
                 return True
             self.step_end(_step, 0, '需要升级到v4')
 
-            if self.db.db_source['type'] == self.db.DB_TYPE_SQLITE:
+            if self.db.db_type == self.db.DB_TYPE_SQLITE:
                 _step = self.step_begin(' - 备份数据库文件')
-                _bak_file = '{}.before-v3-to-v4'.format(self.db.db_source['file'])
+                _bak_file = '{}.before-v3-to-v4'.format(self.db.sqlite_file)
                 if not os.path.exists(_bak_file):
-                    shutil.copy(self.db.db_source['file'], _bak_file)
+                    shutil.copy(self.db.sqlite_file, _bak_file)
                 self.step_end(_step, 0)
 
             _step = self.step_begin(' - 为telnet增加默认配置')
@@ -380,16 +380,16 @@ class DatabaseUpgrade:
             # 将整理好的数据写入新的临时表
             # 先创建三个临时表
             if not self.db.exec("""CREATE TABLE `{}auth_tmp` (
-    `auth_id`  INTEGER PRIMARY KEY AUTOINCREMENT,
+    `auth_id`  INTEGER PRIMARY KEY {},
     `account_name`  varchar(256),
     `host_id`  INTEGER,
     `host_auth_id`  int(11) NOT NULL
-    );""".format(self.db.table_prefix)):
+    );""".format(self.db.table_prefix, self.db.auto_increment)):
                 self.step_end(_step, -1, '无法创建认证数据临时表')
                 return False
 
             if not self.db.exec("""CREATE TABLE `{}host_info_tmp` (
-    `host_id`  integer PRIMARY KEY AUTOINCREMENT,
+    `host_id`  integer PRIMARY KEY {},
     `group_id`  int(11) DEFAULT 0,
     `host_sys_type`  int(11) DEFAULT 1,
     `host_ip`  varchar(32) DEFAULT '',
@@ -397,12 +397,12 @@ class DatabaseUpgrade:
     `protocol`  int(11) DEFAULT 0,
     `host_lock`  int(11) DEFAULT 0,
     `host_desc`   DEFAULT ''
-    );""".format(self.db.table_prefix)):
+    );""".format(self.db.table_prefix, self.db.auto_increment)):
                 self.step_end(_step, -1, '无法创建主机信息数据临时表')
                 return False
 
             if not self.db.exec("""CREATE TABLE `{}auth_info_tmp` (
-    `id`  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    `id`  INTEGER PRIMARY KEY {},
     `host_id`  INTEGER,
     `auth_mode`  INTEGER,
     `user_name`  varchar(256),
@@ -411,7 +411,7 @@ class DatabaseUpgrade:
     `cert_id`  INTEGER,
     `encrypt`  INTEGER,
     `log_time`  varchar(60)
-    );""".format(self.db.table_prefix)):
+    );""".format(self.db.table_prefix, self.db.auto_increment)):
                 self.step_end(_step, -1, '无法创建认证信息数据临时表')
                 return False
 

@@ -14,10 +14,10 @@ import os
 import platform
 import sys
 
-__all__ = ['PATH_APP_ROOT', 'PATH_LOG', 'PATH_CONF', 'PATH_DATA']
+__all__ = ['PATH_APP_ROOT', 'PATH_DATA']
 
-PATH_LOG = ''
-PATH_CONF = ''
+# PATH_LOG = ''
+# PATH_CONF = ''
 PATH_DATA = ''
 
 # 将Python安装的扩展库移除，避免开发调试与正式发布所依赖的库文件不一致导致发布的版本无法运行
@@ -54,17 +54,17 @@ if _ext_path not in sys.path:
 # 确定一些路径
 if os.path.exists(os.path.join(os.path.dirname(sys.executable), 'dev_mode')):
     # 开发调试模式
-    PATH_LOG = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'log'))
-    PATH_CONF = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'etc'))
-    PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'data'))
+    PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share'))
+    # PATH_LOG = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'log'))
+    # PATH_CONF = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share', 'etc'))
 
 else:
-    PATH_LOG = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'log'))
-    PATH_CONF = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'etc'))
     PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'data'))
+    # PATH_LOG = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'data', 'log'))
+    # PATH_CONF = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'data', 'etc'))
 
-    if PLATFORM == 'linux':
-        # 根据Linux目录规范建议设置各个必要的路径
-        PATH_LOG = '/var/log/teleport'
-        PATH_CONF = '/etc/teleport'
-        PATH_DATA = '/var/lib/teleport'
+    # if PLATFORM == 'linux':
+    #     # 根据Linux目录规范建议设置各个必要的路径
+    #     PATH_LOG = '/var/log/teleport'
+    #     PATH_CONF = '/etc/teleport'
+    #     PATH_DATA = '/var/lib/teleport'

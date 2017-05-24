@@ -22,16 +22,24 @@ def get_free_space_bytes(folder):
         total_bytes = _total_bytes.value
         free_bytes = _free_bytes.value
     else:
-        st = os.statvfs(folder)
-        total_bytes = st.f_blocks * st.f_frsize
-        free_bytes = st.f_bavail * st.f_frsize
+        try:
+            st = os.statvfs(folder)
+            total_bytes = st.f_blocks * st.f_frsize
+            free_bytes = st.f_bavail * st.f_frsize
+        except:
+            total_bytes = 0
+            free_bytes = 0
 
     return total_bytes, free_bytes
 
 
 class LogHandler(TPBaseAdminAuthHandler):
     def get(self):
-        total_size, free_size = get_free_space_bytes(app_cfg().data_path)
+        if not app_cfg().core.detected:
+            total_size = 0
+            free_size = 0
+        else:
+            total_size, free_size = get_free_space_bytes(app_cfg().core.replay_path)
 
         param = {
             'user_list': user.get_user_list(with_admin=True),

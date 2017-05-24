@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import os
+from . import dashboard
 from . import rpc
 from . import auth
 from . import host
 from . import cert
 from . import user
 from . import pwd
-from . import set
+from . import config
 from . import group
 from . import index
 from . import record
 from . import maintenance
-import tornado.web
+# import tornado.web
 
 from eom_app.app.configs import app_cfg
 
@@ -21,13 +22,15 @@ cfg = app_cfg()
 __all__ = ['controllers']
 
 controllers = [
+    (r'/dashboard', dashboard.IndexHandler),
+
     (r'/', index.IndexHandler),
 
     (r'/maintenance/install', maintenance.InstallHandler),
     (r'/maintenance/upgrade', maintenance.UpgradeHandler),
     (r'/maintenance/rpc', maintenance.RpcHandler),
-    (r'/maintenance/', maintenance.IndexHandler),
-    (r'/maintenance', maintenance.IndexHandler),
+    (r'/maintenance/index', maintenance.IndexHandler),
+    # (r'/maintenance', maintenance.IndexHandler),
 
     (r'/rpc', rpc.RpcHandler),
 
@@ -106,10 +109,12 @@ controllers = [
     (r'/host/sys-user/update', host.SysUserUpdate),
     (r'/host/sys-user/delete', host.SysUserDelete),
 
-    (r'/set/update-config', set.UpdateConfig),
+    # (r'/set/update-config', set.UpdateConfig),
     # (r'/set/os-operator', set.OsOperator),
-    (r'/set/', set.IndexHandler),
-    (r'/set', set.IndexHandler),
+    # (r'/set/info', config.InfoHandler),
+    # (r'/set/db', config.DatabaseHandler),
+    (r'/config/', config.IndexHandler),
+    (r'/config', config.IndexHandler),
 
     (r'/uidesign', index.UIDesignHandler),
     (r'/uidesign/without-sidebar', index.UIDesignWithoutSidebarHandler),

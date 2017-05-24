@@ -30,11 +30,18 @@ class IndexHandler(TPBaseUserAuthHandler):
 
         param = dict()
 
-        param['core'] = {
-            'ssh_port': cfg.core.ssh.port,
-            'rdp_port': cfg.core.rdp.port,
-            'telnet_port': cfg.core.telnet.port
-        }
+        if cfg.core.detected:
+            param['core'] = {
+                'ssh_port': cfg.core.ssh.port,
+                'rdp_port': cfg.core.rdp.port,
+                'telnet_port': cfg.core.telnet.port
+            }
+        else:
+            param['core'] = {
+                'ssh_port': 0,
+                'rdp_port': 0,
+                'telnet_port': 0
+            }
 
         param['group_list'] = host.get_group_list()
 
@@ -42,7 +49,7 @@ class IndexHandler(TPBaseUserAuthHandler):
             param['cert_list'] = host.get_cert_list()
             self.render('host/admin_index.mako', page_param=json.dumps(param))
         else:
-            self.render('host/common_index.mako', page_param=json.dumps(param))
+            self.render('host/user_index.mako', page_param=json.dumps(param))
 
 
 class UploadAndImportHandler(TPBaseAdminAuthHandler):

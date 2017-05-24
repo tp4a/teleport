@@ -57,10 +57,9 @@ __pycache__
 
 /server/share/etc/core.ini
 /server/share/etc/web.ini
-/server/share/data
+/server/share/db
 /server/share/log
-/server/www/teleport/.idea/vcs.xml
-/server/www/packages/packages-windows/x64
+/server/share/replay
 
 
 # for generated files.

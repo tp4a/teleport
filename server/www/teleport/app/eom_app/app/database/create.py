@@ -18,32 +18,32 @@ def _db_exec(db, step_begin, step_end, msg, sql):
 def create_and_init(db, step_begin, step_end):
     try:
         _db_exec(db, step_begin, step_end, '创建表 account', """CREATE TABLE `{}account` (
-`account_id` integer PRIMARY KEY AUTOINCREMENT,
+`account_id` integer PRIMARY KEY {},
 `account_type` int(11) DEFAULT 0,
 `account_name` varchar(32) DEFAULT NULL,
-`account_pwd` varchar(32) DEFAULT NULL,
+`account_pwd` varchar(128) DEFAULT NULL,
 `account_status` int(11) DEFAULT 0,
 `account_lock` int(11) DEFAULT 0,
 `account_desc` varchar(255)
-);""".format(db.table_prefix))
+);""".format(db.table_prefix, db.auto_increment))
 
         _db_exec(db, step_begin, step_end, '创建表 auth', """CREATE TABLE `{}auth`(
-`auth_id`  INTEGER PRIMARY KEY AUTOINCREMENT,
+`auth_id`  INTEGER PRIMARY KEY {},
 `account_name`  varchar(256),
 `host_id`  INTEGER,
 `host_auth_id`  int(11) NOT NULL
-);""".format(db.table_prefix))
+);""".format(db.table_prefix, db.auto_increment))
 
         # 注意，这个key表原名为cert，考虑到其中存放的是ssh密钥对，与证书无关，因此改名为key
         # 这也是升级到数据库版本5的标志！
         _db_exec(db, step_begin, step_end, '创建表 key', """CREATE TABLE `{}key` (
-`cert_id`  integer PRIMARY KEY AUTOINCREMENT,
+`cert_id`  integer PRIMARY KEY {},
 `cert_name`  varchar(256),
 `cert_pub`  varchar(2048) DEFAULT '',
 `cert_pri`  varchar(4096) DEFAULT '',
 `cert_desc`  varchar(256)
 );
-""".format(db.table_prefix))
+""".format(db.table_prefix, db.auto_increment))
 
         _db_exec(db, step_begin, step_end, '创建表 config', """CREATE TABLE `{}config` (
 `name`  varchar(256) NOT NULL,
@@ -52,23 +52,23 @@ PRIMARY KEY (`name` ASC)
 );""".format(db.table_prefix))
 
         _db_exec(db, step_begin, step_end, '创建表 group', """CREATE TABLE `{}group` (
-`group_id` integer PRIMARY KEY AUTOINCREMENT,
+`group_id` integer PRIMARY KEY {},
 `group_name` varchar(255) DEFAULT''
-);""".format(db.table_prefix))
+);""".format(db.table_prefix, db.auto_increment))
 
         _db_exec(db, step_begin, step_end, '创建表 host_info', """CREATE TABLE `{}host_info`(
-`host_id`  integer PRIMARY KEY AUTOINCREMENT,
+`host_id`  integer PRIMARY KEY {},
 `group_id`  int(11) DEFAULT 0,
 `host_sys_type`  int(11) DEFAULT 1,
 `host_ip`  varchar(32) DEFAULT '',
 `host_port`  int(11) DEFAULT 0,
 `protocol`  int(11) DEFAULT 0,
 `host_lock`  int(11) DEFAULT 0,
-`host_desc`   DEFAULT ''
-);""".format(db.table_prefix))
+`host_desc`  varchar(256) DEFAULT ''
+);""".format(db.table_prefix, db.auto_increment))
 
         _db_exec(db, step_begin, step_end, '创建表 auth_info', """CREATE TABLE `{}auth_info`(
-`id`  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+`id`  INTEGER PRIMARY KEY {},
 `host_id`  INTEGER,
 `auth_mode`  INTEGER,
 `user_name`  varchar(256),
@@ -77,10 +77,10 @@ PRIMARY KEY (`name` ASC)
 `cert_id`  INTEGER,
 `encrypt`  INTEGER,
 `log_time`  varchar(60)
-);""".format(db.table_prefix))
+);""".format(db.table_prefix, db.auto_increment))
 
         _db_exec(db, step_begin, step_end, '创建表 key', """CREATE TABLE `{}log` (
-`id`  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+`id`  INTEGER PRIMARY KEY {},
 `session_id`  varchar(32),
 `account_name`  varchar(64),
 `host_ip`  varchar(32),
@@ -93,7 +93,7 @@ PRIMARY KEY (`name` ASC)
 `begin_time`  INTEGER,
 `end_time`  INTEGER,
 `log_time`  varchar(64)
-);""".format(db.table_prefix))
+);""".format(db.table_prefix, db.auto_increment))
 
         _admin_sec_password = sec_generate_password('admin')
 

@@ -42,30 +42,41 @@ bool TsEnv::init(bool load_config)
 		ex_path_join(conf_file, false, L"core.ini", NULL);
 
 		m_replay_path = base_path;
-		ex_path_join(m_replay_path, false, L"share", L"data", L"replay", NULL);
+		ex_path_join(m_replay_path, false, L"share", L"replay", NULL);
 
 		log_path = base_path;
 		ex_path_join(log_path, false, L"share", L"log", NULL);
 	}
 	else	// not in development mode
 	{
-#ifdef EX_OS_WIN32
+// #ifdef EX_OS_WIN32
+// 		base_path = m_exec_path;
+// 		ex_path_join(base_path, true, L"..", NULL);
+// 		m_etc_path = base_path;
+// 		ex_path_join(m_etc_path, false, L"etc", NULL);
+// 		conf_file = m_etc_path;
+// 		ex_path_join(conf_file, false, L"core.ini", NULL);
+// 		m_replay_path = base_path;
+// 		ex_path_join(m_replay_path, false, L"data", L"replay", NULL);
+// 		log_path = base_path;
+// 		ex_path_join(log_path, false, L"log", NULL);
+// #else
+// 		m_etc_path = L"/etc/teleport";
+// 		conf_file = L"/etc/teleport/core.ini";
+// 		m_replay_path = L"/var/lib/teleport/replay";
+// 		log_path = L"/var/log/teleport";
+// #endif
+
 		base_path = m_exec_path;
-		ex_path_join(base_path, true, L"..", NULL);
+		ex_path_join(base_path, true, L"..", L"data", NULL);
 		m_etc_path = base_path;
 		ex_path_join(m_etc_path, false, L"etc", NULL);
 		conf_file = m_etc_path;
 		ex_path_join(conf_file, false, L"core.ini", NULL);
 		m_replay_path = base_path;
-		ex_path_join(m_replay_path, false, L"data", L"replay", NULL);
+		ex_path_join(m_replay_path, false, L"replay", NULL);
 		log_path = base_path;
 		ex_path_join(log_path, false, L"log", NULL);
-#else
-		m_etc_path = L"/etc/teleport";
-		conf_file = L"/etc/teleport/core.ini";
-		m_replay_path = L"/var/lib/teleport/replay";
-		log_path = L"/var/log/teleport";
-#endif
 	}
 
 	//EXLOGW(L"[core] load config file: %ls.\n", conf_file.c_str());
@@ -112,7 +123,7 @@ bool TsEnv::init(bool load_config)
 	}
 
 	int debug_mode = 0;
-	ps->GetInt(L"debug", debug_mode, 0);
+	ps->GetInt(L"debug-mode", debug_mode, 0);
 	if (debug_mode == 1)
 		EXLOG_DEBUG(true);
 

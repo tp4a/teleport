@@ -12,10 +12,10 @@ def main():
         'app_path': PATH_APP_ROOT,
 
         # cfg_path 网站配置文件路径
-        'cfg_path': PATH_CONF,
+        # 'cfg_path': PATH_CONF,
 
         # log_path 网站运行时日志文件路径
-        'log_path': PATH_LOG,
+        # 'log_path': PATH_LOG,
 
         # static_path 网站静态文件路径
         'static_path': os.path.join(PATH_APP_ROOT, 'static'),

@@ -53,6 +53,7 @@ def read_record_head(record_id):
         offset += 2
 
     except Exception as e:
+        log.e(e)
         return None
     finally:
         if file is not None:
@@ -182,12 +183,11 @@ def session_begin(sid, acc_name, host_ip, sys_type, host_port, auth_mode, user_n
         if not ret:
             return -101
 
-        sql = 'SELECT last_insert_rowid()'
-        db_ret = db.query(sql)
-        if db_ret is None:
+        user_id = db.last_insert_id()
+        if user_id == -1:
             return -102
-        user_id = db_ret[0][0]
-        return user_id
+        else:
+            return user_id
 
     except:
         return False

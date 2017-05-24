@@ -29,43 +29,18 @@ class WebServerCore:
 
         cfg.app_path = os.path.abspath(options['app_path'])
         cfg.static_path = os.path.abspath(options['static_path'])
-        cfg.data_path = os.path.abspath(options['data_path'])
         cfg.template_path = os.path.abspath(options['template_path'])
         cfg.res_path = os.path.abspath(options['res_path'])
-        cfg.cfg_path = os.path.abspath(options['cfg_path'])
+
+        cfg.data_path = os.path.abspath(options['data_path'])
+        # cfg.cfg_path = os.path.abspath(options['cfg_path'])
+        # cfg.log_path = os.path.abspath(options['log_path'])
+        cfg.cfg_path = os.path.join(cfg.data_path, 'etc')
+        cfg.log_path = os.path.join(cfg.data_path, 'log')
 
         _cfg_file = os.path.join(cfg.cfg_path, 'web.ini')
         if not cfg.load(_cfg_file):
             return False
-
-        cfg.log_path = os.path.abspath(options['log_path'])
-        cfg.log_file = os.path.join(cfg.log_path, 'tpweb.log')
-
-        if not os.path.exists(cfg.log_path):
-            utils.make_dir(cfg.log_path)
-            if not os.path.exists(cfg.log_path):
-                log.e('Can not create log path:{}\n'.format(cfg.log_path))
-                return False
-
-        log.set_attribute(min_level=cfg.log_level, filename=cfg.log_file)
-        if cfg.debug:
-            log.set_attribute(trace_error=log.TRACE_ERROR_FULL)
-
-        # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口）
-        self._get_core_server_config()
-
-        if not web_session().init():
-            return False
-
-        # TODO: 根据配置文件来决定使用什么数据库（初始安装时还没有配置数据库信息）
-        _db = get_db()
-        if not _db.init({'type': _db.DB_TYPE_SQLITE, 'file': os.path.join(cfg.data_path, 'ts_db.db')}):
-            log.e('initialize database interface failed.\n')
-            return False
-        if _db.need_create or _db.need_upgrade:
-            cfg.app_mode = APP_MODE_MAINTENANCE
-        else:
-            cfg.app_mode = APP_MODE_NORMAL
 
         return True
 
@@ -74,15 +49,32 @@ class WebServerCore:
             req = {'method': 'get_config', 'param': []}
             req_data = json.dumps(req)
             data = urllib.parse.quote(req_data).encode('utf-8')
-            req = urllib.request.Request(url=cfg.core_server_rpc, data=data)
+            req = urllib.request.Request(url=cfg.common.core_server_rpc, data=data)
             rep = urllib.request.urlopen(req, timeout=3)
             body = rep.read().decode()
             x = json.loads(body)
+            log.d('connect core server and get config info succeeded.\n')
             cfg.update_core(x['data'])
         except:
-            log.w('can not connect to core server for get config, maybe it not start yet, ignore.\n')
+            log.w('can not connect to core server to get config, maybe it not start yet, ignore.\n')
 
     def run(self):
+        # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口以及录像文件存放路径）
+        self._get_core_server_config()
+
+        _db = get_db()
+        if not _db.init():
+            log.e('can not initialize database interface.\n')
+            return 0
+
+        if _db.need_create or _db.need_upgrade:
+            cfg.app_mode = APP_MODE_MAINTENANCE
+        else:
+            cfg.app_mode = APP_MODE_NORMAL
+
+        if not web_session().init():
+            log.e('can not initialize session manager.\n')
+            return 0
 
         settings = {
             #
@@ -113,11 +105,15 @@ class WebServerCore:
         web_app = tornado.web.Application(controllers, **settings)
 
         server = tornado.httpserver.HTTPServer(web_app)
+
         try:
-            server.listen(cfg.server_port)
-            log.i('works on [http://127.0.0.1:{}]\n'.format(cfg.server_port))
+            server.listen(cfg.common.port, address=cfg.common.ip)
+            if cfg.common.ip == '0.0.0.0':
+                log.i('works on [http://127.0.0.1:{}]\n'.format(cfg.common.port))
+            else:
+                log.i('works on [http://{}:{}]\n'.format(cfg.common.ip, cfg.common.port))
         except:
-            log.e('Can not listen on port {}, maybe it been used by another application.\n'.format(cfg.server_port))
+            log.e('can not listen on port {}:{}, make sure it not been used by another application.\n'.format(cfg.common.ip, cfg.common.port))
             return 0
 
         # 启动session超时管理

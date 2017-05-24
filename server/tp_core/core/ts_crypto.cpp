@@ -82,7 +82,7 @@ bool ts_db_field_encrypt(const ex_bin& bin_dec, ex_astr& str_enc)
 	mbedtls_aes_init(&ctx);
 	if (0 != mbedtls_aes_setkey_enc(&ctx, g_db_field_aes_key, 256))
 	{
-		EXLOGE("invalid AES key.\n");
+		EXLOGE("[core] invalid AES key.\n");
 		return false;
 	}
 
@@ -91,7 +91,7 @@ bool ts_db_field_encrypt(const ex_bin& bin_dec, ex_astr& str_enc)
 	memset(iv, 0, 16);
 	if (0 != mbedtls_aes_crypt_cbc(&ctx, MBEDTLS_AES_ENCRYPT, enc_size, iv, &bin_be_enc[0], &bin_enc[0]))
 	{
-		EXLOGE("AES-CBC encrypt failed.\n");
+		EXLOGE("[core] AES-CBC encrypt failed.\n");
 		mbedtls_aes_free(&ctx);
 		return false;
 	}
@@ -104,7 +104,7 @@ bool ts_db_field_encrypt(const ex_bin& bin_dec, ex_astr& str_enc)
 	size_t olen = 0;
 	if (0 != mbedtls_base64_encode(&enc_b64[0], enc_size * 2, &olen, &bin_enc[0], enc_size))
 	{
-		EXLOGE("BASE64 encode failed.\n");
+		EXLOGE("[core] BASE64 encode failed.\n");
 		return false;
 	}
 	enc_b64[olen] = 0;
@@ -123,13 +123,13 @@ bool ts_db_field_decrypt(const ex_astr& str_enc, ex_bin& bin_dec)
 	size_t enc_size = 0;
 	if (0 != mbedtls_base64_decode(&bin_enc[0], bin_enc.size(), &enc_size, (const unsigned char*)str_enc.c_str(), str_enc.length()))
 	{
-		EXLOGE("BASE64 decode failed.\n");
+		EXLOGE("[core] BASE64 decode failed.\n");
 		return false;
 	}
 	bin_enc.resize(enc_size);
 	if (bin_enc.size() % 16 != 0)
 	{
-		EXLOGE("invalid cipher-data.\n");
+		EXLOGE("[core] invalid cipher-data.\n");
 		return false;
 	}
 
@@ -143,7 +143,7 @@ bool ts_db_field_decrypt(const ex_astr& str_enc, ex_bin& bin_dec)
 	mbedtls_aes_init(&ctx);
 	if (0 != mbedtls_aes_setkey_dec(&ctx, g_db_field_aes_key, 256))
 	{
-		EXLOGE("invalid AES key.\n");
+		EXLOGE("[core] invalid AES key.\n");
 		return false;
 	}
 
@@ -152,7 +152,7 @@ bool ts_db_field_decrypt(const ex_astr& str_enc, ex_bin& bin_dec)
 	memset(iv, 0, 16);
 	if (0 != mbedtls_aes_crypt_cbc(&ctx, MBEDTLS_AES_DECRYPT, enc_size, iv, &bin_enc[0], &bin_tmp[0]))
 	{
-		EXLOGE("AES-CBC decrypt failed.\n");
+		EXLOGE("[core] AES-CBC decrypt failed.\n");
 		mbedtls_aes_free(&ctx);
 		return false;
 	}
@@ -162,13 +162,13 @@ bool ts_db_field_decrypt(const ex_astr& str_enc, ex_bin& bin_dec)
 	unsigned char pad = bin_tmp[bin_tmp.size() - 1];
 	if (pad == 0 || pad > 16)
 	{
-		EXLOGE("invalid padding.\n");
+		EXLOGE("[core] invalid padding.\n");
 		return false;
 	}
 	bin_tmp.resize(bin_tmp.size() - pad);
 	if (bin_tmp.size() < 16)
 	{
-		EXLOGE("invalid decrypted data.\n");
+		EXLOGE("[core] invalid decrypted data.\n");
 		return false;
 	}
 

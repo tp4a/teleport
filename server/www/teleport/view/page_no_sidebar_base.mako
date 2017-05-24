@@ -34,7 +34,7 @@
 	<div id="header" class="header header-fixed-top">
 
 		<div class="container-fluid top-navbar">
-			<div class="brand"><div class="site-logo"></div></div>
+            <div class="brand"><a href="http://teleport.eomsoft.net" target="_blank"><span class="navbar-logo"></span></a></div>
 			<div class="breadcrumb-container">
 				<%block name="breadcrumb" />
 			</div>

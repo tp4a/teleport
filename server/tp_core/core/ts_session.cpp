@@ -53,7 +53,7 @@ void TsSessionManager::_check_sessions(void)
 		if (_now - it->second->ticket_start >= 10000)
 #endif
 		{
-			EXLOGV("remove session: %s\n", it->first.c_str());
+			EXLOGV("[core] remove session: %s\n", it->first.c_str());
 			delete it->second;
 			m_sessions.erase(it++);
 		}

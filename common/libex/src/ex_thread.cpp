@@ -104,7 +104,7 @@ ExThreadManager::~ExThreadManager()
 {
 	if (m_threads.size() > 0)
 	{
-		EXLOGE("[ERROR] when destroy thread manager, there are %d thread not exit.\n", m_threads.size());
+		EXLOGE("when destroy thread manager, there are %d thread not exit.\n", m_threads.size());
 		stop_all();
 	}
 }
@@ -130,7 +130,7 @@ void ExThreadManager::add(ExThreadBase* tb)
 	{
 		if ((*it) == tb)
 		{
-			EXLOGE("[ERROR] when add thread to manager, it already exist.\n");
+			EXLOGE("when add thread to manager, it already exist.\n");
 			return;
 		}
 	}
@@ -152,7 +152,7 @@ void ExThreadManager::remove(ExThreadBase* tb)
 			return;
 		}
 	}
-	EXLOGE("[ERROR] when remove thread from manager, it not exist.\n");
+	EXLOGE("when remove thread from manager, it not exist.\n");
 }
 
 //=========================================================
