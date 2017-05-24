@@ -433,6 +433,7 @@ class TPMysqlPool(TPDatabasePool):
         try:
             cursor.execute(sql)
             db_ret = cursor.fetchall()
+            conn.commit()
             return db_ret
         except Exception as e:
             log.e('[mysql] _do_query() failed: {}\n'.format(e.__str__()))
@@ -457,6 +458,7 @@ class TPMysqlPool(TPDatabasePool):
         try:
             cursor.execute('SELECT LAST_INSERT_ID();')
             db_ret = cursor.fetchall()
+            conn.commit()
             return db_ret[0][0]
         except Exception as e:
             log.e('[sqlite] _last_insert_id() failed: {}\n'.format(e.__str__()))

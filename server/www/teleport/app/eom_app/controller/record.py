@@ -22,9 +22,13 @@ def get_free_space_bytes(folder):
         total_bytes = _total_bytes.value
         free_bytes = _free_bytes.value
     else:
-        st = os.statvfs(folder)
-        total_bytes = st.f_blocks * st.f_frsize
-        free_bytes = st.f_bavail * st.f_frsize
+        try:
+            st = os.statvfs(folder)
+            total_bytes = st.f_blocks * st.f_frsize
+            free_bytes = st.f_bavail * st.f_frsize
+        except:
+            total_bytes = 0
+            free_bytes = 0
 
     return total_bytes, free_bytes
 
