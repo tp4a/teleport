@@ -202,7 +202,7 @@ bool SshProxy::get_sftp_session_info(const ex_astr& sid, TS_SFTP_SESSION_INFO& i
 	ts_sftp_sessions::iterator it = m_sftp_sessions.find(sid);
 	if (it == m_sftp_sessions.end())
 	{
-		EXLOGD("sftp-session '%s' not exists.\n", sid.c_str());
+		EXLOGD("[ssh] sftp-session '%s' not exists.\n", sid.c_str());
 		return false;
 	}
 

@@ -376,9 +376,9 @@ class InstallerWin(InstallerBase):
             return
 
     def _fix_path(self):
-        self._config_path = os.path.join(self._install_path, 'etc')
         self._data_path = os.path.join(self._install_path, 'data')
-        self._log_path = os.path.join(self._install_path, 'log')
+        self._config_path = os.path.join(self._data_path, 'etc')
+        self._log_path = os.path.join(self._data_path, 'log')
 
     def _copy_files(self):
         utils.copy_ex(os.path.join(env.src_path, 'bin'), os.path.join(self._install_path, 'bin'))
@@ -392,8 +392,8 @@ class InstallerWin(InstallerBase):
         utils.remove(os.path.join(self._install_path, 'www'))
         if del_settings:
             utils.remove(self._data_path)
-            utils.remove(self._config_path)
-            utils.remove(self._log_path)
+            # utils.remove(self._config_path)
+            # utils.remove(self._log_path)
 
             # only remove the installation path when it empty.
             try:
@@ -516,9 +516,12 @@ class InstallerLinux(InstallerBase):
             return
 
     def _fix_path(self):
-        self._config_path = '/etc/teleport'
-        self._data_path = os.path.join('/var/lib/teleport')
-        self._log_path = os.path.join('/var/log/teleport')
+        # self._config_path = '/etc/teleport'
+        # self._data_path = os.path.join('/var/lib/teleport')
+        # self._log_path = os.path.join('/var/log/teleport')
+        self._data_path = os.path.join(self._install_path, 'data')
+        self._config_path = os.path.join(self._data_path, 'etc')
+        self._log_path = os.path.join(self._data_path, 'log')
 
     def _copy_files(self):
         utils.copy_ex(os.path.join(env.src_path, 'bin'), os.path.join(self._install_path, 'bin'))
@@ -543,8 +546,8 @@ class InstallerLinux(InstallerBase):
 
         if del_settings:
             utils.remove(self._data_path)
-            utils.remove(self._config_path)
-            utils.remove(self._log_path)
+            # utils.remove(self._config_path)
+            # utils.remove(self._log_path)
 
     def _install_service(self):
         daemon_files = [

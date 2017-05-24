@@ -61,17 +61,17 @@
 ## 	},
 	{
 		'require_type': 100,
-		'id': 'config',
-		'link': '/config',
-		'name': '配置管理',
-		'icon': 'fa-cogs',
-	},
-	{
-		'require_type': 100,
 		'id': 'log',
 		'link': '/log',
 		'name': '日志查询',
 		'icon': 'fa-database',
+	},
+	{
+		'require_type': 100,
+		'id': 'config',
+		'link': '/config',
+		'name': '配置管理',
+		'icon': 'fa-cogs',
 	},
 	{
 	    'separator': true,

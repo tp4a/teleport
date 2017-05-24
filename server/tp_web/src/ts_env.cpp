@@ -44,16 +44,16 @@ bool TsEnv::init(bool load_config)
 		base_path = m_exec_path;
 		ex_path_join(base_path, true, L"..", NULL);
 
-#ifdef EX_OS_WIN32
+// #ifdef EX_OS_WIN32
 		conf_file = base_path;
-		ex_path_join(conf_file, false, L"etc", L"web.ini", NULL);
+		ex_path_join(conf_file, false, L"data", L"etc", L"web.ini", NULL);
 		log_path = base_path;
-		ex_path_join(log_path, false, L"log", NULL);
-#else
-		conf_file = L"/etc/teleport/web.ini";
-		log_path = L"/var/log/teleport";
-
-#endif
+		ex_path_join(log_path, false, L"data", L"log", NULL);
+// #else
+// 		conf_file = L"/etc/teleport/web.ini";
+// 		log_path = L"/var/log/teleport";
+// 
+// #endif
 	}
 
 	m_www_path = base_path;
@@ -74,7 +74,7 @@ bool TsEnv::init(bool load_config)
 
 	ex_wstr log_file;
 	ExIniSection* ps = cfg.GetDumySection();
-	if (!ps->GetStr(L"log_file", log_file))
+	if (!ps->GetStr(L"log-file", log_file))
 	{
 		EXLOG_FILE(L"tpweb.log", log_path.c_str());
 	}
@@ -95,10 +95,21 @@ bool TsEnv::init(bool load_config)
 	}
 
 	int log_level = EX_LOG_LEVEL_INFO;
-	if (ps->GetInt(L"log_level", log_level))
+	if (ps->GetInt(L"log-level", log_level))
 	{
 		EXLOGV("[tpweb] log-level: %d\n", log_level);
 		EXLOG_LEVEL(log_level);
+	}
+
+	int debug_mode = 0;
+	if (ps->GetInt(L"debug-mode", debug_mode))
+	{
+		EXLOGV("[tpweb] debug-mode: %d\n", debug_mode);
+//		EXLOG_LEVEL(log_level);
+	}
+
+	if (1 == debug_mode) {
+		EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
 	}
 
 	return true;

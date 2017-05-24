@@ -51,7 +51,7 @@ void TppSshRec::_on_end(void)
 	FILE* f = ex_fopen(fname, L"wb");
 	if (NULL == f)
 	{
-		EXLOGE("[record] can not open file for write.\n");
+		EXLOGE("[ssh] can not open record file for write.\n");
 		return;
 	}
 
@@ -137,7 +137,7 @@ bool TppSshRec::_save_to_data_file(void)
 
 	if (NULL == f)
 	{
-		EXLOGE("[record] can not open data-file for write.\n");
+		EXLOGE("[ssh] can not open record data-file for write.\n");
 		m_cache.empty();
 		return false;
 	}

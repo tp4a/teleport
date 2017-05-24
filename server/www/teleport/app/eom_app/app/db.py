@@ -53,7 +53,7 @@ class TPDatabase:
         cfg = app_cfg()
         if 'sqlite' == cfg.database.type:
             if cfg.database.sqlite_file is None:
-                cfg.set_default('database::sqlite-file', os.path.join(cfg.data_path, 'ts_db.db'))
+                cfg.set_default('database::sqlite-file', os.path.join(cfg.data_path, 'db', 'ts_db.db'))
             if not self._init_sqlite(cfg.database.sqlite_file):
                 return False
         elif 'mysql' == cfg.database.type:

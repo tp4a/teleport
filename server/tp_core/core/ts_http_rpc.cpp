@@ -55,14 +55,14 @@ TsHttpRpc::~TsHttpRpc()
 
 void TsHttpRpc::_thread_loop(void)
 {
-	EXLOGV("[core-rpc] TeleportServer-HTTP-RPC ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
+	EXLOGV("[core] rpc TeleportServer-HTTP-RPC ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 
 	while(!m_stop_flag)
 	{
 		mg_mgr_poll(&m_mg_mgr, 500);
 	}
 
-	EXLOGV("[core-rpc] main loop end.\n");
+	EXLOGV("[core] rpc main loop end.\n");
 }
 
 void TsHttpRpc::_set_stop_flag(void)
@@ -90,7 +90,7 @@ bool TsHttpRpc::init(void)
 	nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
 	if (NULL == nc)
 	{
-		EXLOGE("[core-rpc] listener failed to bind at %s.\n", addr);
+		EXLOGE("[core] rpc listener failed to bind at %s.\n", addr);
 		return false;
 	}
 
@@ -114,7 +114,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 	TsHttpRpc* _this = (TsHttpRpc*)nc->user_data;
 	if (NULL == _this)
 	{
-		EXLOGE("[core-rpc] invalid http request.\n");
+		EXLOGE("[core] rpc invalid http request.\n");
 		return;
 	}
 
@@ -127,7 +127,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		ex_astr uri;
 		uri.assign(hm->uri.p, hm->uri.len);
 
-		EXLOGD("got request: %s\n", uri.c_str());
+		EXLOGD("[core] rpc got request: %s\n", uri.c_str());
 
 		if (uri == "/rpc")
 		{
@@ -137,18 +137,18 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 			ex_rv rv = _this->_parse_request(hm, method, json_param);
 			if (TSR_OK != rv)
 			{
-				EXLOGE("[core-rpc] got invalid request.\n");
+				EXLOGE("[core] rpc got invalid request.\n");
 				_this->_create_json_ret(ret_buf, rv);
 			}
 			else
 			{
-				EXLOGD("[core-rpc] got request method `%s`\n", method.c_str());
+				EXLOGD("[core] rpc got request method `%s`\n", method.c_str());
 				_this->_process_request(method, json_param, ret_buf);
 			}
 		}
 		else
 		{
-			EXLOGE("[core-rpc] got invalid request: not `rpc` uri.\n");
+			EXLOGE("[core] rpc got invalid request: not `rpc` uri.\n");
 			_this->_create_json_ret(ret_buf, TSR_INVALID_REQUEST, "not a `rpc` request.");
 		}
 
@@ -267,7 +267,7 @@ void TsHttpRpc::_process_request(const ex_astr& func_cmd, const Json::Value& jso
 	}
 	else
 	{
-		EXLOGE("[core-rpc] got unknown command: %s\n", func_cmd.c_str());
+		EXLOGE("[core] rpc got unknown command: %s\n", func_cmd.c_str());
 		_create_json_ret(buf, TSR_NO_SUCH_METHOD);
 	}
 }
@@ -428,7 +428,7 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 		return;
 	}
 
-	EXLOGD("[core-rpc] new session-id: %s\n", sid.c_str());
+	EXLOGD("[core] rpc new session-id: %s\n", sid.c_str());
 
 	Json::Value jr_data;
 	jr_data["sid"] = sid;
@@ -594,7 +594,7 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 // 		return;
 // 	}
 // 
-// 	EXLOGD("[core-rpc] new session-id: %s\n", sid.c_str());
+// 	EXLOGD("[core] rpc new session-id: %s\n", sid.c_str());
 // 
 // 	Json::Value jr_root;
 // 	jr_root["code"] = TSR_OK;

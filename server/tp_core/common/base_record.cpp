@@ -38,7 +38,7 @@ void TppRecBase::end()
 #ifdef EX_DEBUG
 	if (m_cache.size() > 0)
 	{
-		EXLOGE("[ssh] not all record data saved.\n");
+		EXLOGE("not all record data saved.\n");
 	}
 #endif
 }

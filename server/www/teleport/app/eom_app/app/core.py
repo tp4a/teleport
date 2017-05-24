@@ -29,33 +29,18 @@ class WebServerCore:
 
         cfg.app_path = os.path.abspath(options['app_path'])
         cfg.static_path = os.path.abspath(options['static_path'])
-        cfg.data_path = os.path.abspath(options['data_path'])
         cfg.template_path = os.path.abspath(options['template_path'])
         cfg.res_path = os.path.abspath(options['res_path'])
-        cfg.cfg_path = os.path.abspath(options['cfg_path'])
-        cfg.log_path = os.path.abspath(options['log_path'])
+
+        cfg.data_path = os.path.abspath(options['data_path'])
+        # cfg.cfg_path = os.path.abspath(options['cfg_path'])
+        # cfg.log_path = os.path.abspath(options['log_path'])
+        cfg.cfg_path = os.path.join(cfg.data_path, 'etc')
+        cfg.log_path = os.path.join(cfg.data_path, 'log')
 
         _cfg_file = os.path.join(cfg.cfg_path, 'web.ini')
         if not cfg.load(_cfg_file):
             return False
-
-        # _log_file, ok = cfg.get_str('common::log-file')
-        # if ok:
-        #     cfg.log_path = os.path.abspath(os.path.dirname(_log_file))
-        # else:
-        #     cfg.log_path = os.path.abspath(options['log_path'])
-        #     _log_file = os.path.join(cfg.log_path, 'tpweb.log')
-        #     cfg.set_default('common::log-file', _log_file)
-        #
-        # if not os.path.exists(cfg.log_path):
-        #     utils.make_dir(cfg.log_path)
-        #     if not os.path.exists(cfg.log_path):
-        #         log.e('Can not create log path:{}\n'.format(cfg.log_path))
-        #         return False
-
-        # log.set_attribute(min_level=cfg.common.log_level, filename=cfg.common.log_file)
-        # if cfg.common.debug_mode:
-        #     log.set_attribute(min_level=log.LOG_DEBUG, trace_error=log.TRACE_ERROR_FULL)
 
         return True
 
