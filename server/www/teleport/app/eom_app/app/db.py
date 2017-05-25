@@ -302,6 +302,13 @@ class TPDatabase:
             log.e('Unknown database type.\n')
             return False
 
+    def export_to_sql(self):
+        # TODO: not implement.
+        ret = []
+        ret.append('{}'.format(self.db_type))
+        ret.append('export to sql not implement.')
+        return '\n'.join(ret)
+
 
 class TPDatabasePool:
     def __init__(self):
@@ -349,6 +356,7 @@ class TPDatabasePool:
 
     def _last_insert_id(self, conn):
         return -1
+
 
 class TPSqlitePool(TPDatabasePool):
     def __init__(self, db_file):

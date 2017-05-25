@@ -29,7 +29,7 @@ def create_and_init(db, step_begin, step_end):
 
         _db_exec(db, step_begin, step_end, '创建表 auth', """CREATE TABLE `{}auth`(
 `auth_id`  INTEGER PRIMARY KEY {},
-`account_name`  varchar(256),
+`account_name`  varchar(255),
 `host_id`  INTEGER,
 `host_auth_id`  int(11) NOT NULL
 );""".format(db.table_prefix, db.auto_increment))
@@ -38,16 +38,16 @@ def create_and_init(db, step_begin, step_end):
         # 这也是升级到数据库版本5的标志！
         _db_exec(db, step_begin, step_end, '创建表 key', """CREATE TABLE `{}key` (
 `cert_id`  integer PRIMARY KEY {},
-`cert_name`  varchar(256),
+`cert_name`  varchar(255),
 `cert_pub`  varchar(2048) DEFAULT '',
 `cert_pri`  varchar(4096) DEFAULT '',
-`cert_desc`  varchar(256)
+`cert_desc`  varchar(255)
 );
 """.format(db.table_prefix, db.auto_increment))
 
         _db_exec(db, step_begin, step_end, '创建表 config', """CREATE TABLE `{}config` (
-`name`  varchar(256) NOT NULL,
-`value`  varchar(256),
+`name`  varchar(128) NOT NULL,
+`value`  varchar(255),
 PRIMARY KEY (`name` ASC)
 );""".format(db.table_prefix))
 
@@ -64,16 +64,16 @@ PRIMARY KEY (`name` ASC)
 `host_port`  int(11) DEFAULT 0,
 `protocol`  int(11) DEFAULT 0,
 `host_lock`  int(11) DEFAULT 0,
-`host_desc`  varchar(256) DEFAULT ''
+`host_desc`  varchar(255) DEFAULT ''
 );""".format(db.table_prefix, db.auto_increment))
 
         _db_exec(db, step_begin, step_end, '创建表 auth_info', """CREATE TABLE `{}auth_info`(
 `id`  INTEGER PRIMARY KEY {},
 `host_id`  INTEGER,
 `auth_mode`  INTEGER,
-`user_name`  varchar(256),
-`user_pswd`  varchar(256),
-`user_param` varchar(256),
+`user_name`  varchar(255),
+`user_pswd`  varchar(255),
+`user_param` varchar(255),
 `cert_id`  INTEGER,
 `encrypt`  INTEGER,
 `log_time`  varchar(60)

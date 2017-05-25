@@ -149,7 +149,7 @@ class DatabaseUpgrade:
     `group_id`  int(11) DEFAULT 0,
     `host_sys_type`  int(11) DEFAULT 1,
     `host_ip`  varchar(32) DEFAULT '',
-    `pro_port`  varchar(256) NULL,
+    `pro_port`  varchar(255) NULL,
     `host_lock`  int(11) DEFAULT 0,
     `host_desc` varchar(128) DEFAULT ''
     );""".format(self.db.table_prefix, self.db.auto_increment)):
@@ -161,8 +161,8 @@ class DatabaseUpgrade:
     `host_id`  INTEGER,
     `pro_type`  INTEGER,
     `auth_mode`  INTEGER,
-    `user_name`  varchar(256),
-    `user_pswd`  varchar(256),
+    `user_name`  varchar(255),
+    `user_pswd`  varchar(255),
     `cert_id`  INTEGER,
     `encrypt`  INTEGER,
     `log_time`  varchar(60)
@@ -381,7 +381,7 @@ class DatabaseUpgrade:
             # 先创建三个临时表
             if not self.db.exec("""CREATE TABLE `{}auth_tmp` (
     `auth_id`  INTEGER PRIMARY KEY {},
-    `account_name`  varchar(256),
+    `account_name`  varchar(255),
     `host_id`  INTEGER,
     `host_auth_id`  int(11) NOT NULL
     );""".format(self.db.table_prefix, self.db.auto_increment)):
@@ -405,9 +405,9 @@ class DatabaseUpgrade:
     `id`  INTEGER PRIMARY KEY {},
     `host_id`  INTEGER,
     `auth_mode`  INTEGER,
-    `user_name`  varchar(256),
-    `user_pswd`  varchar(256),
-    `user_param` varchar(256),
+    `user_name`  varchar(255),
+    `user_pswd`  varchar(255),
+    `user_param` varchar(255),
     `cert_id`  INTEGER,
     `encrypt`  INTEGER,
     `log_time`  varchar(60)
@@ -492,8 +492,8 @@ class DatabaseUpgrade:
 
             if not self.db.is_table_exists('{}config'.format(self.db.table_prefix)):
                 if not self.db.exec("""CREATE TABLE `{}config` (
-    `name`  varchar(256) NOT NULL,
-    `value`  varchar(256),
+    `name`  varchar(128) NOT NULL,
+    `value`  varchar(255),
     PRIMARY KEY (`name` ASC)
 );""".format(self.db.table_prefix)):
                     self.step_end(_step, -1, 'config表不存在且无法创建')

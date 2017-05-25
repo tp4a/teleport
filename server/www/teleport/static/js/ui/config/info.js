@@ -4,8 +4,10 @@ ywl.on_init = function (cb_stack, cb_args) {
     console.log(ywl.page_options);
 
     var dom = {
-        info: $('#info-kv')
+        info: $('#info-kv'),
 //        , btn_maintance: $('#btn_maintenance')
+        btn_db_export: $('#btn-db-export'),
+        btn_db_import: $('#btn-db-import'),
     };
 
     var html = [];
@@ -66,7 +68,77 @@ ywl.on_init = function (cb_stack, cb_args) {
 //        });
 //    });
 //
+
+    dom.btn_db_export.click(function () {
+        alert('not implement.');
+        window.location.href = '/config/export-database'
+    });
+    dom.btn_db_import.click(function () {
+        alert('not implement.');
+
+        var _fn_sure = function (cb_stack, cb_args) {
+            var html = '<input id="upload-file" type="file" name="sqlfile" class="hidden" value="" style="display: none;"/>';
+            dom.btn_db_import.after($(html));
+            var update_file = $("#upload-file");
+
+            update_file.change(function () {
+                var file_path = $(this).val();
+                if (file_path === null || file_path === undefined || file_path === '') {
+                    return;
+                }
+                ywl.do_upload_sql_file();
+            });
+
+            update_file.trigger('click');
+        };
+
+        var cb_stack = CALLBACK_STACK.create();
+        ywl.dlg_confirm(cb_stack, {
+            msg: '<p><strong>注意：操作不可恢复！！</strong></p><p>您确定要清除所有现有数据，然后导入sql文件吗？</p>',
+            fn_yes: _fn_sure
+        });
+    });
+
     cb_stack.exec();
+};
+
+ywl.do_upload_sql_file = function () {
+    var param = {};
+    $.ajaxFileUpload({
+        url: "/config/import-database",// 需要链接到服务器地址
+        secureuri: false,
+        fileElementId: "upload-file", // 文件选择框的id属性
+        dataType: 'text', // 服务器返回的格式，可以是json
+        data: param,
+        success: function (data) {
+            $('#upload-file').remove();
+            var ret = JSON.parse(data);
+            if (ret.code === TPE_OK) {
+//                g_host_table.reload();
+                ywl.notify_success('导入sql成功！');
+//                if (ret.data.msg.length > 0) {
+//                    var html = [];
+//                    html.push('<ul>');
+//                    for (var i = 0, cnt = ret.data.msg.length; i < cnt; ++i) {
+//                        html.push('<li>');
+//                        html.push('<span style="font-weight:bold;color:#993333;">' + ret.data.msg[i].reason + '</span><br/>');
+//                        html.push(ret.data.msg[i].line);
+//                        html.push('</li>');
+//                    }
+//                    html.push('</ul>');
+//
+//                    // $('#batch_add_host_result').html(html.join(''));
+////                    $('#dialog_batch_add_host').modal({backdrop: 'static'});
+//                }
+            } else {
+                ywl.notify_error('导入sql失败！ 错误号：' + ret.code);
+            }
+        },
+        error: function () {
+            $('#upload-file').remove();
+            ywl.notify_error('网络故障，导入sql失败！');
+        }
+    });
 };
 
 ywl._make_protocol_info = function (name, p) {

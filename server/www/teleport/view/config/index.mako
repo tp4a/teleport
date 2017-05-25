@@ -19,6 +19,24 @@
 
 <%block name="extend_css">
     <style type="text/css">
+        .box {
+            padding-left: 30px;
+        }
+
+        h2 {
+            margin-left:-20px;
+            font-size:160%;
+        }
+
+        h3 {
+            font-size: 120%;
+            font-weight: bold;
+        }
+
+        .table {
+            width: auto;
+        }
+
         .table .key {
             text-align: right;
         }
@@ -35,6 +53,19 @@
         .table .value .disabled {
             color: #ffa861;
         }
+
+        .db-box {
+            margin-bottom: 20px;
+        }
+
+        .notice-box {
+            border: 1px solid #e2cab4;
+            background-color: #ffe4cb;
+            padding: 15px;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+
     </style>
 </%block>
 
@@ -46,14 +77,27 @@
     <div class="box">
 
         <div>
-            <h4><strong>服务器配置信息</strong></h4>
+            <h2><strong>服务器配置信息</strong></h2>
             <table id="info-kv" class="table"></table>
         </div>
 
-##         <div>
-##             <h4><strong>高级设置</strong></h4>
-##             <p><a href="javascript:;" id="btn_maintenance">进入维护模式</a></p>
-##         </div>
+        <div>
+            <hr/>
+            <h2><strong>数据库管理</strong></h2>
+
+            <div class="db-box">
+                <h3>导出</h3>
+                <p>将数据库中所有数据导出到sql文件，可用作备份。</p>
+                <button type="button" id="btn-db-export" class="btn btn-sm btn-primary"><i class="fa fa-sign-out fa-fw"></i> 导出数据库</button>
+            </div>
+
+            <div class="db-box">
+                <h3>导入</h3>
+                <p>清空当前数据库中所有数据，然后从sql文件中导入数据到数据库中。</p>
+                <p class="notice-box">注意！导入操作将导致现有数据被清除且无法恢复，请谨慎使用！</p>
+                <button type="button" id="btn-db-import" class="btn btn-sm btn-danger"><i class="fa fa-sign-in fa-fw"></i> 导入数据库</button>
+            </div>
+        </div>
 
     </div>
     <!-- end of box -->

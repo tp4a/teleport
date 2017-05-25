@@ -113,6 +113,8 @@ controllers = [
     # (r'/set/os-operator', set.OsOperator),
     # (r'/set/info', config.InfoHandler),
     # (r'/set/db', config.DatabaseHandler),
+    (r'/config/export-database', config.ExportDatabaseHandler),
+    (r'/config/import-database', config.ImportDatabaseHandler),
     (r'/config/', config.IndexHandler),
     (r'/config', config.IndexHandler),
 
