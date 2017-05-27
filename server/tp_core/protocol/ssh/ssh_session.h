@@ -62,7 +62,8 @@ protected:
 	void _thread_loop(void);
 	void _set_stop_flag(void);
 
-	void _process_command(int from, const ex_u8* data, int len);
+	void _process_ssh_command(int from, const ex_u8* data, int len);
+	void _process_sftp_command(const ex_u8* data, int len);
 
 private:
 	void _run(void);

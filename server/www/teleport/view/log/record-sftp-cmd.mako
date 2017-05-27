@@ -1,5 +1,5 @@
 <%!
-    page_title_ = 'SSH操作记录'
+    page_title_ = 'SFTP操作记录'
 %>
 
 <%inherit file="../page_no_sidebar_base.mako"/>
@@ -37,8 +37,9 @@
             margin-bottom: 3px;
         }
 
-        .time, .cmd {
+        .time, .cmd, .path {
             font-family: Consolas, Lucida Console, Monaco, Courier, 'Courier New', monospace;
+            font-size:13px;
             line-height: 15px;
             padding: 0 5px;
             border-radius: 3px;
@@ -47,6 +48,10 @@
         .time {
             margin-right: 15px;
             background-color: #d8d8d8;
+        }
+
+        .path {
+            margin:0 5px 0 5px;
         }
 
         .cmd-danger {
@@ -72,10 +77,8 @@
 
         ywl.add_page_options(${page_param});
 
-        var danger_cmd = ['chmod', 'chown', 'kill', 'rm', 'su', 'sudo'];
-        var info_cmd = ['exit'];
-
         ywl.on_init = function (cb_stack, cb_args) {
+
             if (ywl.page_options.count === 0) {
                 $('#no-op-msg').show();
             } else {
@@ -85,16 +88,33 @@
                 var dom_op_list = $('#op-list');
                 var html = [];
                 for (var i = 0; i < ywl.page_options.count; i++) {
-                    var cmd_list = ywl.page_options.op[i].c.split(' ');
+                    html.push('<div class="op-item"><span class="time">' + ywl.page_options.op[i].t + '</span> ');
 
-                    var cmd_class = '';
-                    if (_.intersection(cmd_list, danger_cmd).length > 0) {
-                        cmd_class = ' cmd-danger';
-                    } else if (_.intersection(cmd_list, info_cmd).length > 0) {
-                        cmd_class = ' cmd-info';
+                    if (ywl.page_options.op[i].c === '3') {
+                        html.push('<span class="cmd">打开文件</span>');
+                        html.push('<span class="path">' + ywl.page_options.op[i].p1 + '</span>');
+                    } else if (ywl.page_options.op[i].c === '13') {
+                        html.push('<span class="cmd cmd-danger">删除文件</span>');
+                        html.push('<span class="path cmd-danger">' + ywl.page_options.op[i].p1 + '</span>');
+                    } else if (ywl.page_options.op[i].c === '14') {
+                        html.push('<span class="cmd">创建目录</span>');
+                        html.push('<span class="path">' + ywl.page_options.op[i].p1 + '</span>');
+                    } else if (ywl.page_options.op[i].c === '15') {
+                        html.push('<span class="cmd cmd-danger">删除目录</span>');
+                        html.push('<span class="path cmd-danger">' + ywl.page_options.op[i].p1 + '</span>');
+                    } else if (ywl.page_options.op[i].c === '18') {
+                        html.push('<span class="cmd cmd-info">更改名称</span>');
+                        html.push('<span class="path cmd-info">' + ywl.page_options.op[i].p1 + '</span>');
+                        html.push('<i class="fa fa-arrow-circle-right"></i>');
+                        html.push('<span class="path cmd-info">' + ywl.page_options.op[i].p2 + '</span>');
+                    } else if (ywl.page_options.op[i].c === '21') {
+                        html.push('<span class="cmd">创建链接</span>');
+                        html.push('<span class="path">' + ywl.page_options.op[i].p2 + '</span>');
+                        html.push('<i class="fa fa-arrow-right"></i>');
+                        html.push('<span class="path">' + ywl.page_options.op[i].p1 + '</span>');
                     }
 
-                    html.push('<div class="op-item"><span class="time">' + ywl.page_options.op[i].t + '</span> <span class="cmd' + cmd_class + '">' + ywl.page_options.op[i].c + '</span></div>');
+                    html.push('</div>');
                 }
                 dom_op_list.append(html.join(''));
                 dom_op_list.show();

@@ -409,7 +409,7 @@ TS_SSH_CHANNEL_INFO *SshSession::_get_srv_channel(ssh_channel cli_channel) {
 		return it->second;
 }
 
-void SshSession::_process_command(int from, const ex_u8* data, int len)
+void SshSession::_process_ssh_command(int from, const ex_u8* data, int len)
 {
 	if (TS_SSH_DATA_FROM_CLIENT == from)
 	{
@@ -683,6 +683,100 @@ void SshSession::_process_command(int from, const ex_u8* data, int len)
 	return;
 }
 
+void SshSession::_process_sftp_command(const ex_u8* data, int len) {
+	// SFTP protocol: https://tools.ietf.org/html/draft-ietf-secsh-filexfer-13
+	//EXLOG_BIN(data, len, "[sftp] client channel data");
+
+	if (len < 9)
+		return;
+
+	int pkg_len = (int)((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]);
+	if (pkg_len + 4 != len)
+		return;
+
+	ex_u8 sftp_cmd = data[4];
+
+	if (sftp_cmd == 0x01) {
+		// 0x01 = 1 = SSH_FXP_INIT
+		m_rec.record_command("SFTP INITIALIZE\r\n");
+		return;
+	}
+	
+	// 需要的数据至少14字节
+	// uint32 + byte + uint32 + (uint32 + char + ...)
+	// pkg_len + cmd + req_id + string( length + content...)
+	if (len < 14)
+		return;
+
+	ex_u8* str1_ptr = (ex_u8*)data + 9;
+	int str1_len = (int)((str1_ptr[0] << 24) | (str1_ptr[1] << 16) | (str1_ptr[2] << 8) | str1_ptr[3]);
+// 	if (str1_len + 9 != pkg_len)
+// 		return;
+	ex_u8* str2_ptr = NULL;// (ex_u8*)data + 13;
+	int str2_len = 0;// (int)((data[9] << 24) | (data[10] << 16) | (data[11] << 8) | data[12]);
+
+	
+	char* act = NULL;
+	switch (sftp_cmd) {
+	case 0x03:
+		// 0x03 = 3 = SSH_FXP_OPEN
+		act = "open file";
+		break;
+// 	case 0x0b:
+// 		// 0x0b = 11 = SSH_FXP_OPENDIR
+// 		act = "open dir";
+// 		break;
+	case 0x0d:
+		// 0x0d = 13 = SSH_FXP_REMOVE
+		act = "remove file";
+		break;
+	case 0x0e:
+		// 0x0e = 14 = SSH_FXP_MKDIR
+		act = "create dir";
+		break;
+	case 0x0f:
+		// 0x0f = 15 = SSH_FXP_RMDIR
+		act = "remove dir";
+		break;
+	case 0x12:
+		// 0x12 = 18 = SSH_FXP_RENAME
+		// rename操作数据中包含两个字符串
+		act = "rename";
+		str2_ptr = str1_ptr + str1_len + 4;
+		str2_len = (int)((str2_ptr[0] << 24) | (str2_ptr[1] << 16) | (str2_ptr[2] << 8) | str2_ptr[3]);
+		break;
+	case 0x15:
+		// 0x15 = 21 = SSH_FXP_LINK
+		// link操作数据中包含两个字符串，前者是新的链接文件名，后者是现有被链接的文件名
+		act = "create link";
+		str2_ptr = str1_ptr + str1_len + 4;
+		str2_len = (int)((str2_ptr[0] << 24) | (str2_ptr[1] << 16) | (str2_ptr[2] << 8) | str2_ptr[3]);
+		break;
+	default:
+		return;
+	}
+
+	int total_len = 5 + str1_len + 4;
+	if (str2_len > 0)
+		total_len += str2_len + 4;
+	if (total_len > pkg_len)
+		return;
+
+	char msg[2048] = { 0 };
+	if (str2_len == 0) {
+		ex_astr str1((char*)((ex_u8*)data + 13), str1_len);
+		ex_strformat(msg, 2048, "%d:%s:%s:\r\n", sftp_cmd, act, str1.c_str());
+	}
+	else {
+		ex_astr str1((char*)(str1_ptr + 4), str1_len);
+		ex_astr str2((char*)(str2_ptr + 4), str2_len);
+		ex_strformat(msg, 2048, "%d:%s:%s:%s\r\n", sftp_cmd, act, str1.c_str(), str2.c_str());
+	}
+
+	m_rec.record_command(msg);
+}
+
+
 int SshSession::_on_client_pty_request(ssh_session session, ssh_channel channel, const char *term, int x, int y, int px,
 	int py, void *userdata) {
 	SshSession *_this = (SshSession *)userdata;
@@ -809,11 +903,15 @@ int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel
 	{
 		try
 		{
-			_this->_process_command(TS_SSH_DATA_FROM_CLIENT, (ex_u8*)data, len);
+			_this->_process_ssh_command(TS_SSH_DATA_FROM_CLIENT, (ex_u8*)data, len);
 		}
 		catch (...)
 		{
 		}
+	}
+	else
+	{
+		_this->_process_sftp_command((ex_u8*)data, len);
 	}
 
 	int ret = 0;
@@ -908,7 +1006,7 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 	{
 		try
 		{
-			_this->_process_command(TS_SSH_DATA_FROM_SERVER, (ex_u8*)data, len);
+			_this->_process_ssh_command(TS_SSH_DATA_FROM_SERVER, (ex_u8*)data, len);
 			_this->m_rec.record(TS_RECORD_TYPE_SSH_DATA, (unsigned char *)data, len);
 		}
 		catch (...)
