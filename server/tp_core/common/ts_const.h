@@ -63,6 +63,8 @@
 #define SESS_STAT_ERR_UNSUPPORT_PROTOCOL	5	// 会话结束，因为协议不支持(RDP)
 #define SESS_STAT_ERR_BAD_PKG			6		// 会话结束，因为收到错误的报文
 #define SESS_STAT_ERR_RESET				7		// 会话结束，因为teleport核心服务重置了
+#define SESS_STAT_ERR_IO				8		// 会话结束，因为网络中断
+#define SESS_STAT_ERR_SESSION			9		// 会话结束，因为无效的会话ID
 
 
 #endif // __TS_ERRNO_H__
