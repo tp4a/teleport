@@ -310,34 +310,93 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		return SSH_AUTH_DENIED;
 	}
 
+	// 检查服务端支持的认证协议
+	ssh_userauth_none(_this->m_srv_session, NULL);
+	int auth_methods = ssh_userauth_list(_this->m_srv_session, NULL);
+	//(auth_methods & SSH_AUTH_METHOD_INTERACTIVE);
+
+
 	if (_this->m_auth_mode == TS_AUTH_MODE_PASSWORD) {
-		rc = ssh_userauth_password(_this->m_srv_session, NULL, _this->m_user_auth.c_str());
-		if (rc != SSH_OK) {
-			EXLOGE("[ssh] can not use user/name login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+		if (auth_methods & SSH_AUTH_METHOD_PASSWORD) {
+			rc = ssh_userauth_password(_this->m_srv_session, NULL, _this->m_user_auth.c_str());
+			if (rc != SSH_AUTH_SUCCESS) {
+				EXLOGE("[ssh] invalid password for password mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+				_this->m_have_error = true;
+				_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
+				return SSH_AUTH_DENIED;
+			}
+		}
+		else if (auth_methods & SSH_AUTH_METHOD_INTERACTIVE) {
+			bool is_login = false;
+			for (;;) {
+				rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
+				if (rc != SSH_AUTH_INFO)
+					break;
+
+				if(ssh_userauth_kbdint_getnprompts(_this->m_srv_session) != 1)
+					break;
+
+				rc = ssh_userauth_kbdint_setanswer(_this->m_srv_session, 0, _this->m_user_auth.c_str());
+				if (rc < 0)
+					break;
+
+				// 有时候服务端会再发一个空的提示来完成交互
+				rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
+				if (rc == SSH_AUTH_INFO) {
+					if (ssh_userauth_kbdint_getnprompts(_this->m_srv_session) != 0)
+						break;
+					rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
+					if (rc < 0)
+						break;
+				}
+
+				if(rc == SSH_AUTH_SUCCESS)
+					is_login = true;
+				break;
+			}
+
+			if (!is_login) {
+				EXLOGE("[ssh] invalid password for keyboard-interactive mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+				_this->m_have_error = true;
+				_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
+				return SSH_AUTH_DENIED;
+			}
+		}
+		else {
+			EXLOGE("[ssh] real SSH server [%s:%d] does not support password or keyboard-interactive login.\n", _this->m_server_ip.c_str(), _this->m_server_port);
 			_this->m_have_error = true;
 			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
 			return SSH_AUTH_DENIED;
 		}
 	}
 	else if (_this->m_auth_mode == TS_AUTH_MODE_PRIVATE_KEY) {
-		ssh_key key = NULL;
-		if (SSH_OK != ssh_pki_import_privkey_base64(_this->m_user_auth.c_str(), NULL, NULL, NULL, &key)) {
-			EXLOGE("[ssh] can not import private-key for auth.\n");
-			_this->m_have_error = true;
-			_this->m_retcode = SESS_STAT_ERR_BAD_SSH_KEY;
-			return SSH_AUTH_DENIED;
-		}
+		if (auth_methods & SSH_AUTH_METHOD_PUBLICKEY) {
+			ssh_key key = NULL;
+			if (SSH_OK != ssh_pki_import_privkey_base64(_this->m_user_auth.c_str(), NULL, NULL, NULL, &key)) {
+				EXLOGE("[ssh] can not import private-key for auth.\n");
+				_this->m_have_error = true;
+				_this->m_retcode = SESS_STAT_ERR_BAD_SSH_KEY;
+				return SSH_AUTH_DENIED;
+			}
 
-		rc = ssh_userauth_publickey(_this->m_srv_session, NULL, key);
-		if (rc != SSH_OK) {
+			rc = ssh_userauth_publickey(_this->m_srv_session, NULL, key);
+			if (rc != SSH_OK) {
+				ssh_key_free(key);
+				EXLOGE("[ssh] invalid private-key for login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+				_this->m_have_error = true;
+				_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
+				return SSH_AUTH_DENIED;
+			}
+
 			ssh_key_free(key);
-			EXLOGE("[ssh] can not use private-key login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+		}
+		else {
+			EXLOGE("[ssh] real SSH server [%s:%d] does not support public key login.\n", _this->m_server_ip.c_str(), _this->m_server_port);
 			_this->m_have_error = true;
 			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
 			return SSH_AUTH_DENIED;
 		}
 
-		ssh_key_free(key);
 	}
 	else if (_this->m_auth_mode == TS_AUTH_MODE_NONE)
 	{
