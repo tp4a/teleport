@@ -192,7 +192,7 @@ void SshSession::_run(void) {
 		return;
 	}
 
-	EXLOGW("[ssh] Authenticated and got a channel.\n");
+	EXLOGW("[ssh] authenticated and got a channel.\n");
 
 	// 现在双方的连接已经建立好了，开始转发
 	ssh_event_add_session(event_loop, m_srv_session);
@@ -202,15 +202,12 @@ void SshSession::_run(void) {
 			if (0 != ssh_get_error_code(m_cli_session))
 			{
 				EXLOGE("[ssh] ssh_event_dopoll() [cli] %s\n", ssh_get_error(m_cli_session));
-				//ssh_disconnect(m_cli_session);
 			}
 			else if (0 != ssh_get_error_code(m_srv_session))
 			{
 				EXLOGE("[ssh] ssh_event_dopoll() [srv] %s\n", ssh_get_error(m_srv_session));
-				//ssh_disconnect(m_srv_session);
 			}
 
-			// EXLOGE("[ssh] ssh_event_dopoll() [cli] %s, [srv] %s\n", ssh_get_error(m_cli_session), ssh_get_error(m_srv_session));
 			_close_channels();
 		}
 	} while (m_channel_cli_srv.size() > 0);
@@ -229,7 +226,6 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	_this->m_sid = user;
 	EXLOGV("[ssh] authenticating, session-id: %s\n", _this->m_sid.c_str());
 
-	//bool bRet = true;
 	int protocol = 0;
 	TPP_SESSION_INFO* sess_info = g_ssh_env.take_session(_this->m_sid.c_str());
 
@@ -249,13 +245,6 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		_this->m_auth_mode = sftp_info.auth_mode;
 		_this->m_user_name = sftp_info.user_name;
 		_this->m_user_auth = sftp_info.user_auth;
-
-// 		sess_info.host_ip = sftp_info.host_ip;
-// 		sess_info.host_port = sftp_info.host_port;
-// 		sess_info.auth_mode = sftp_info.auth_mode;
-// 		sess_info.user_name = sftp_info.user_name;
-// 		sess_info.user_auth = sftp_info.user_auth;
-// 		sess_info.protocol = TS_PROXY_PROTOCOL_SSH;
 		protocol = TS_PROXY_PROTOCOL_SSH;
 
 		// 因为是从sftp会话得来的登录数据，因此限制本会话只能用于sftp，不允许再使用shell了。
@@ -269,7 +258,6 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		protocol = sess_info->protocol;
 	}
 
-	//EXLOGE("[ssh---------1] auth info [password:%s:%s:%d]\n", _this->m_user_name.c_str(),_this->m_user_auth.c_str(), _this->m_auth_mode);
 	if (protocol != TS_PROXY_PROTOCOL_SSH) {
 		g_ssh_env.free_session(sess_info);
 		EXLOGE("[ssh] session '%s' is not for SSH.\n", _this->m_sid.c_str());
@@ -293,28 +281,36 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	EXLOGV("[ssh] try to connect to real SSH server %s:%d\n", _this->m_server_ip.c_str(), _this->m_server_port);
 	_this->m_srv_session = ssh_new();
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_HOST, _this->m_server_ip.c_str());
-	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_PORT, &_this->m_server_port);
+	int port = (int)_this->m_server_port;
+	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_PORT, &port);
+#ifdef EX_DEBUG
+// 	int flag = SSH_LOG_FUNCTIONS;
+// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_LOG_VERBOSITY, &flag);
+#endif
 
 	if (_this->m_auth_mode != TS_AUTH_MODE_NONE)
 		ssh_options_set(_this->m_srv_session, SSH_OPTIONS_USER, _this->m_user_name.c_str());
 
-	int _timeout_us = 30000000; // 30 sec.
+#ifdef EX_DEBUG
+// 	int _timeout_us = 500000000; // 5 sec.
+// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
+#else
+	int _timeout_us = 10000000; // 10 sec.
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
+#endif
 
 	int rc = 0;
 	rc = ssh_connect(_this->m_srv_session);
 	if (rc != SSH_OK) {
-		EXLOGE("[ssh] can not connect to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+		EXLOGE("[ssh] can not connect to real SSH server %s:%d. [%d]%s\n", _this->m_server_ip.c_str(), _this->m_server_port, rc, ssh_get_error(_this->m_srv_session));
 		_this->m_have_error = true;
 		_this->m_retcode = SESS_STAT_ERR_CONNECT;
-		return SSH_AUTH_DENIED;
+		return SSH_AUTH_ERROR;
 	}
 
 	// 检查服务端支持的认证协议
 	ssh_userauth_none(_this->m_srv_session, NULL);
 	int auth_methods = ssh_userauth_list(_this->m_srv_session, NULL);
-	//(auth_methods & SSH_AUTH_METHOD_INTERACTIVE);
-
 
 	if (_this->m_auth_mode == TS_AUTH_MODE_PASSWORD) {
 		if (auth_methods & SSH_AUTH_METHOD_PASSWORD) {
@@ -557,10 +553,11 @@ void SshSession::_process_ssh_command(int from, const ex_u8* data, int len)
 
 				if (m_cmd_char_list.size() > 0)
 				{
-					m_cmd_char_list.push_back(0x0d);
-					m_cmd_char_list.push_back(0x0a);
 					ex_astr str(m_cmd_char_list.begin(), m_cmd_char_list.end());
-					// EXLOGD("[ssh] save cmd: %s", str.c_str());
+					ex_replace_all(str, "\r", "");
+					ex_replace_all(str, "\n", "");
+					//EXLOGD("[ssh] save cmd: [%s]", str.c_str());
+					str += "\r\n";
 					m_rec.record_command(str);
 				}
 				m_cmd_char_list.clear();
@@ -836,13 +833,12 @@ void SshSession::_process_sftp_command(const ex_u8* data, int len) {
 }
 
 
-int SshSession::_on_client_pty_request(ssh_session session, ssh_channel channel, const char *term, int x, int y, int px,
-	int py, void *userdata) {
+int SshSession::_on_client_pty_request(ssh_session session, ssh_channel channel, const char *term, int x, int y, int px, int py, void *userdata) {
 	SshSession *_this = (SshSession *)userdata;
 
 	if (_this->m_is_sftp) {
 		EXLOGE("[ssh] try to request pty on a sftp-session.\n");
-		return SSH_FATAL;
+		return SSH_ERROR;
 	}
 
 	EXLOGD("[ssh] client request terminal: %s, (%d, %d) / (%d, %d)\n", term, x, y, px, py);
@@ -850,7 +846,7 @@ int SshSession::_on_client_pty_request(ssh_session session, ssh_channel channel,
 	TS_SSH_CHANNEL_INFO *info = _this->_get_srv_channel(channel);
 	if (NULL == info || NULL == info->channel) {
 		EXLOGE("[ssh] when client request pty, not found server channel.\n");
-		return SSH_FATAL;
+		return SSH_ERROR;
 	}
 
 	return ssh_channel_request_pty_size(info->channel, term, x, y);
@@ -858,39 +854,36 @@ int SshSession::_on_client_pty_request(ssh_session session, ssh_channel channel,
 
 int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channel, void *userdata) {
 	SshSession *_this = (SshSession *)userdata;
-	char buf[2048] = { 0 };
 
 	if (_this->m_is_sftp) {
 		EXLOGE("[ssh] try to request shell on a sftp-session.\n");
-
-		snprintf(buf, sizeof(buf),
-			"\r\n\r\n"\
-			"!! ERROR !!\r\n"\
-			"Session-ID '%s' has been used for SFTP.\r\n"\
-			"\r\n", _this->m_sid.c_str()
-			);
-		ssh_channel_write(channel, buf, strlen(buf));
-
-		return SSH_FATAL;
+// 		char buf[2048] = { 0 };
+// 		snprintf(buf, sizeof(buf),
+// 			"\r\n\r\n"\
+// 			"!! ERROR !!\r\n"\
+// 			"Session-ID '%s' has been used for SFTP.\r\n"\
+// 			"\r\n", _this->m_sid.c_str()
+// 			);
+// 		ssh_channel_write(channel, buf, strlen(buf));
+// 
+		return SSH_ERROR;
 	}
 
 	EXLOGD("[ssh] client request shell\n");
 
-
 	TS_SSH_CHANNEL_INFO *srv_info = _this->_get_srv_channel(channel);
 	if (NULL == srv_info || NULL == srv_info->channel) {
 		EXLOGE("[ssh] when client request shell, not found server channel.\n");
-		return SSH_FATAL;
+		return SSH_ERROR;
 	}
 	srv_info->type = TS_SSH_CHANNEL_TYPE_SHELL;
 
 	TS_SSH_CHANNEL_INFO *cli_info = _this->_get_cli_channel(srv_info->channel);
 	if (NULL == cli_info || NULL == cli_info->channel) {
 		EXLOGE("[ssh] when client request shell, not found client channel.\n");
-		return SSH_FATAL;
+		return SSH_ERROR;
 	}
 	cli_info->type = TS_SSH_CHANNEL_TYPE_SHELL;
-
 
 	return ssh_channel_request_shell(srv_info->channel);
 }
@@ -941,19 +934,20 @@ void SshSession::_on_client_channel_close(ssh_session session, ssh_channel chann
 
 int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata)
 {
+	//EXLOG_BIN((ex_u8*)data, len, "on_client_channel_data [is_stderr=%d]:", is_stderr);
+
 	SshSession *_this = (SshSession *)userdata;
 
 	// 当前线程正在接收服务端返回的数据，因此我们直接返回，这样紧跟着会重新再发送此数据的
 	if (_this->m_recving_from_srv)
 		return 0;
-
 	if (_this->m_recving_from_cli)
 		return 0;
 
 	TS_SSH_CHANNEL_INFO *info = _this->_get_srv_channel(channel);
 	if (NULL == info || NULL == info->channel) {
 		EXLOGE("[ssh] when receive client channel data, not found server channel.\n");
-		return SSH_FATAL;
+		return SSH_ERROR;
 	}
 
 	_this->m_recving_from_cli = true;
@@ -983,16 +977,16 @@ int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel
 
 	_this->m_recving_from_cli = false;
 
-	return ret;
+	return len;
 }
 
-int SshSession::_on_client_pty_win_change(ssh_session session, ssh_channel channel, int width, int height, int pxwidth, 	int pwheight, void *userdata) {
+int SshSession::_on_client_pty_win_change(ssh_session session, ssh_channel channel, int width, int height, int pxwidth, int pwheight, void *userdata) {
 	EXLOGD("[ssh] client pty win size change to: (%d, %d)\n", width, height);
 	SshSession *_this = (SshSession *)userdata;
 	TS_SSH_CHANNEL_INFO *info = _this->_get_srv_channel(channel);
 	if (NULL == info || NULL == info->channel) {
 		EXLOGE("[ssh] when client pty win change, not found server channel.\n");
-		return SSH_FATAL;
+		return SSH_ERROR;
 	}
 
 	_this->m_rec.record_win_size_change(width, height);
@@ -1014,14 +1008,14 @@ int SshSession::_on_client_channel_subsystem_request(ssh_session session, ssh_ch
 	TS_SSH_CHANNEL_INFO *srv_info = _this->_get_srv_channel(channel);
 	if (NULL == srv_info || NULL == srv_info->channel) {
 		EXLOGE("[ssh] when receive client channel subsystem request, not found server channel.\n");
-		return SSH_FATAL;
+		return SSH_ERROR;
 	}
 	srv_info->type = TS_SSH_CHANNEL_TYPE_SFTP;
 
 	TS_SSH_CHANNEL_INFO *cli_info = _this->_get_cli_channel(srv_info->channel);
 	if (NULL == cli_info || NULL == cli_info->channel) {
 		EXLOGE("[ssh] when client request shell, not found client channel.\n");
-		return SSH_FATAL;
+		return SSH_ERROR;
 	}
 	cli_info->type = TS_SSH_CHANNEL_TYPE_SFTP;
 
@@ -1043,8 +1037,10 @@ int SshSession::_on_client_channel_exec_request(ssh_session session, ssh_channel
 	return 0;
 }
 
+typedef int (*_ssh_channel_write_func)(ssh_channel channel, const void *data, uint32_t len);
 int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata)
 {
+	//EXLOG_BIN((ex_u8*)data, len, "on_server_channel_data [is_stderr=%d]:", is_stderr);
 	SshSession *_this = (SshSession *)userdata;
 
 	if (_this->m_recving_from_cli)
@@ -1056,12 +1052,29 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 	if (NULL == info || NULL == info->channel) {
 		EXLOGE("[ssh] when receive server channel data, not found client channel.\n");
 		_this->m_retcode = SESS_STAT_ERR_INTERNAL;
-		return SSH_FATAL;
+		return SSH_ERROR;
 	}
+
+	// TODO: hard code not good... :(
+	// 偶尔，某次操作会导致ssh_session->session_state为SSH_SESSION_STATE_ERROR
+	// 但是将其强制改为SSH_SESSION_STATE_AUTHENTICATED，后续操作仍然能成功（主要在向客户端发送第一包数据时）
+	ex_u8* _t = (ex_u8*)(ssh_channel_get_session(info->channel));
+	if (_t[1116] == 9) // SSH_SESSION_STATE_AUTHENTICATED = 8, SSH_SESSION_STATE_ERROR = 9
+	{
+		EXLOGW(" --- [ssh] hard code to fix client connect session error state.\n");
+		_t[1116] = 8;
+	}
+
+
+	_ssh_channel_write_func _write = NULL;
+	if (is_stderr)
+		_write = ssh_channel_write_stderr;
+	else
+		_write = ssh_channel_write;
 
 	_this->m_recving_from_srv = true;
 
-	if (info->type == TS_SSH_CHANNEL_TYPE_SHELL)
+	if (info->type == TS_SSH_CHANNEL_TYPE_SHELL && !is_stderr)
 	{
 		try
 		{
@@ -1070,10 +1083,14 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 		}
 		catch (...)
 		{
+			EXLOGE("[ssh] process ssh command got exception.\n");
 		}
 	}
 
+	int ret = 0;
+
 	// 收到第一包服务端返回的数据时，在输出数据之前显示一些自定义的信息
+#if 1
 	if (!is_stderr && _this->m_is_first_server_data)
 	{
 		_this->m_is_first_server_data = false;
@@ -1097,88 +1114,38 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 				"  - teleport to %s:%d\r\n"\
 				"  - authroized by %s\r\n"\
 				"=============================================\r\n"\
-				"\r\n"\
-				"\033]0;tpssh://%s\007",
+				"\r\n",
+//				\
+//				"\033]0;tpssh://%s\007\r\n",
 				_this->m_server_ip.c_str(),
-				_this->m_server_port, auth_mode,
-				_this->m_server_ip.c_str()
+				_this->m_server_port, auth_mode
+//				,
+//				_this->m_server_ip.c_str()
 				);
+
+			int buf_len = strlen(buf);
+			ex_bin _data;
+			_data.resize(buf_len + len);
+			memcpy(&_data[0], buf, buf_len);
+			memcpy(&_data[buf_len], data, len);
 
 			// 注意，这里虽然可以改变窗口（或者标签页）的标题，但是因为这是服务端发回的第一个包，后面服务端可能还会发类似的包（仅一次）来改变标题
 			// 导致窗口标题又被改变，因此理论上应该解析服务端发回的包，如果包含上述格式的，需要替换一次。
+			//_write(info->channel, buf, strlen(buf));
+			_write(info->channel, &_data[0], _data.size());
 
-			ssh_channel_write(info->channel, buf, strlen(buf));
+			_this->m_recving_from_srv = false;
+			return len;
 		}
 	}
+#endif
 
-	int ret = 0;
-	if (is_stderr)
-	{
-		ret = ssh_channel_write_stderr(info->channel, data, len);
+	ret = _write(info->channel, data, len);
+	if (ret == SSH_ERROR) {
+		EXLOGE("[ssh] send data(%dB) to client failed (2). [%d][%s][%s]\n", len, ret, ssh_get_error(_this->m_cli_session), ssh_get_error(_this->m_cli_session));
 	}
-	else if(info->type != TS_SSH_CHANNEL_TYPE_SHELL)
-    {
-        ret = ssh_channel_write(info->channel, data, len);
-    }
-	else
-	{
-// 		if (len > 5 && len < 256)
-// 		{
-// 			const ex_u8* _begin = ex_memmem((const ex_u8*)data, len, (const ex_u8*)"\033]0;", 4);
-// 			if (NULL != _begin)
-// 			{
-// 				size_t len_before = _begin - (const ex_u8*)data;
-// 				const ex_u8* _end = ex_memmem(_begin + 4, len - len_before, (const ex_u8*)"\007", 1);
-// 				if (NULL != _end)
-// 				{
-// 					_end++;
-// 
-// 					// 这个包中含有改变标题的数据，将标题换为我们想要的
-// 					size_t len_end = len - (_end - (const ex_u8*)data);
-// 					MemBuffer mbuf;
-// 
-// 					if (len_before > 0)
-// 						mbuf.append((ex_u8*)data, len_before);
-// 
-// 					mbuf.append((ex_u8*)"\033]0;tpssh://", 13);
-// 					mbuf.append((ex_u8*)_this->m_server_ip.c_str(), _this->m_server_ip.length());
-// 					mbuf.append((ex_u8*)"\007", 1);
-// 
-// 					if (len_end > 0)
-// 						mbuf.append((ex_u8*)_end, len_end);
-// 
-//                     if(mbuf.size() > 0)
-//                     {
-//                         ret = ssh_channel_write(info->channel, mbuf.data(), mbuf.size());
-//                         if (ret <= 0)
-//                             EXLOGE("[ssh] send to client failed (1).\n");
-//                         else
-//                             ret = len;
-//                     }
-//                     else
-//                     {
-//                         ret = ssh_channel_write(info->channel, data, len);
-//                     }
-// 				}
-// 				else
-// 				{
-// 					ret = ssh_channel_write(info->channel, data, len);
-// 				}
-// 			}
-// 			else
-// 			{
-// 				ret = ssh_channel_write(info->channel, data, len);
-// 			}
-// 		}
-// 		else
-		{
-			ret = ssh_channel_write(info->channel, data, len);
-		}
-	}
+
 	_this->m_recving_from_srv = false;
-	if (ret <= 0)
-		EXLOGE("[ssh] send to client failed (2).\n");
-
 	return ret;
 }
 

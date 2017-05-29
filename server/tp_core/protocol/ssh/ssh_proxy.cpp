@@ -29,7 +29,6 @@ bool SshProxy::init(void)
 	m_host_ip = g_ssh_env.bind_ip;
 	m_host_port = g_ssh_env.bind_port;
 
-
 	m_bind = ssh_bind_new();
 	if (NULL == m_bind)
 	{
@@ -106,6 +105,10 @@ void SshProxy::_run(void)
 	{
 		// 注意，ssh_new()出来的指针，如果遇到停止标志，本函数内部就释放了，否则这个指针交给了SshSession类实例管理，其析构时会释放。
 		ssh_session sess_to_client = ssh_new();
+#ifdef EX_DEBUG
+		int flag = SSH_LOG_FUNCTIONS;
+		ssh_options_set(sess_to_client, SSH_OPTIONS_LOG_VERBOSITY, &flag);
+#endif
 
 		struct sockaddr_storage sock_client;
 		char ip[32] = { 0 };

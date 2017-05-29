@@ -6,6 +6,8 @@ TPP_API ex_rv tpp_init(TPP_INIT_ARGS* init_args)
 #ifdef EX_OS_UNIX
 	ssh_threads_set_callbacks(ssh_threads_get_pthread());
 	ssh_init();
+#else
+	ssh_init();
 #endif
 
 	if (!g_ssh_env.init(init_args))
