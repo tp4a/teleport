@@ -772,7 +772,7 @@ void SshSession::_process_sftp_command(const ex_u8* data, int len) {
 	int str2_len = 0;// (int)((data[9] << 24) | (data[10] << 16) | (data[11] << 8) | data[12]);
 
 	
-	char* act = NULL;
+	const char* act = NULL;
 	switch (sftp_cmd) {
 	case 0x03:
 		// 0x03 = 3 = SSH_FXP_OPEN
@@ -1037,7 +1037,6 @@ int SshSession::_on_client_channel_exec_request(ssh_session session, ssh_channel
 	return 0;
 }
 
-typedef int (*_ssh_channel_write_func)(ssh_channel channel, const void *data, uint32_t len);
 int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata)
 {
 	//EXLOG_BIN((ex_u8*)data, len, "on_server_channel_data [is_stderr=%d]:", is_stderr);
@@ -1055,6 +1054,7 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 		return SSH_ERROR;
 	}
 
+#ifdef EX_OS_WIN32
 	// TODO: hard code not good... :(
 	// 偶尔，某次操作会导致ssh_session->session_state为SSH_SESSION_STATE_ERROR
 	// 但是将其强制改为SSH_SESSION_STATE_AUTHENTICATED，后续操作仍然能成功（主要在向客户端发送第一包数据时）
@@ -1064,13 +1064,7 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 		EXLOGW(" --- [ssh] hard code to fix client connect session error state.\n");
 		_t[1116] = 8;
 	}
-
-
-	_ssh_channel_write_func _write = NULL;
-	if (is_stderr)
-		_write = ssh_channel_write_stderr;
-	else
-		_write = ssh_channel_write;
+#endif
 
 	_this->m_recving_from_srv = true;
 
@@ -1132,7 +1126,8 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 			// 注意，这里虽然可以改变窗口（或者标签页）的标题，但是因为这是服务端发回的第一个包，后面服务端可能还会发类似的包（仅一次）来改变标题
 			// 导致窗口标题又被改变，因此理论上应该解析服务端发回的包，如果包含上述格式的，需要替换一次。
 			//_write(info->channel, buf, strlen(buf));
-			_write(info->channel, &_data[0], _data.size());
+			ret = ssh_channel_write(info->channel, &_data[0], _data.size());
+			//EXLOGD("--- first send to client : %d %d %d\n", _data.size(), ret, len);
 
 			_this->m_recving_from_srv = false;
 			return len;
@@ -1140,10 +1135,15 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 	}
 #endif
 
-	ret = _write(info->channel, data, len);
+	if(is_stderr)
+		ret = ssh_channel_write_stderr(info->channel, data, len);
+	else
+		ret = ssh_channel_write(info->channel, data, len);
 	if (ret == SSH_ERROR) {
 		EXLOGE("[ssh] send data(%dB) to client failed (2). [%d][%s][%s]\n", len, ret, ssh_get_error(_this->m_cli_session), ssh_get_error(_this->m_cli_session));
 	}
+
+	//EXLOGD("--- send to client: %d %d\n", ret, len);
 
 	_this->m_recving_from_srv = false;
 	return ret;
