@@ -55,7 +55,7 @@ TsHttpRpc::~TsHttpRpc()
 
 void TsHttpRpc::_thread_loop(void)
 {
-	EXLOGV("[core] rpc TeleportServer-HTTP-RPC ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
+	EXLOGV("[core] TeleportServer-RPC ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 
 	while(!m_stop_flag)
 	{
@@ -127,7 +127,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		ex_astr uri;
 		uri.assign(hm->uri.p, hm->uri.len);
 
-		EXLOGD("[core] rpc got request: %s\n", uri.c_str());
+		//EXLOGD("[core] rpc got request: %s\n", uri.c_str());
 
 		if (uri == "/rpc")
 		{
@@ -151,9 +151,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 			EXLOGE("[core] rpc got invalid request: not `rpc` uri.\n");
 			_this->_create_json_ret(ret_buf, TSR_INVALID_REQUEST, "not a `rpc` request.");
 		}
-
-
-
+		
 		mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: application/json\r\n\r\n%s", (int)ret_buf.size() - 1, &ret_buf[0]);
 		nc->flags |= MG_F_SEND_AND_CLOSE;
 	}

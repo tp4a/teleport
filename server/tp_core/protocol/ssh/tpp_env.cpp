@@ -29,7 +29,5 @@ bool TppSshEnv::_on_init(TPP_INIT_ARGS* args) {
 		bind_port = TS_SSH_PROXY_PORT;
 	}
 
-	EXLOGW(L"[ssh] listen on %s:%d\n", bind_ip.c_str(), bind_port);
-
 	return true;
 }
