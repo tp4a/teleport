@@ -866,7 +866,7 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
 // 			);
 // 		ssh_channel_write(channel, buf, strlen(buf));
 // 
-		return SSH_ERROR;
+		return 1;
 	}
 
 	EXLOGD("[ssh] client request shell\n");
@@ -874,14 +874,14 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
 	TS_SSH_CHANNEL_INFO *srv_info = _this->_get_srv_channel(channel);
 	if (NULL == srv_info || NULL == srv_info->channel) {
 		EXLOGE("[ssh] when client request shell, not found server channel.\n");
-		return SSH_ERROR;
+		return 1;
 	}
 	srv_info->type = TS_SSH_CHANNEL_TYPE_SHELL;
 
 	TS_SSH_CHANNEL_INFO *cli_info = _this->_get_cli_channel(srv_info->channel);
 	if (NULL == cli_info || NULL == cli_info->channel) {
 		EXLOGE("[ssh] when client request shell, not found client channel.\n");
-		return SSH_ERROR;
+		return 1;
 	}
 	cli_info->type = TS_SSH_CHANNEL_TYPE_SHELL;
 

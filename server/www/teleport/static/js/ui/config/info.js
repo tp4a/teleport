@@ -70,12 +70,9 @@ ywl.on_init = function (cb_stack, cb_args) {
 //
 
     dom.btn_db_export.click(function () {
-        alert('not implement.');
         window.location.href = '/config/export-database'
     });
     dom.btn_db_import.click(function () {
-        alert('not implement.');
-
         var _fn_sure = function (cb_stack, cb_args) {
             var html = '<input id="upload-file" type="file" name="sqlfile" class="hidden" value="" style="display: none;"/>';
             dom.btn_db_import.after($(html));

@@ -57,8 +57,11 @@ class IndexHandler(TPBaseAdminAuthHandler):
 
 class ExportDatabaseHandler(TPBaseAdminAuthHandler):
     def get(self):
+        now = time.localtime(time.time())
+        dt = '{:04d}{:02d}{:02d}-{:02d}{:02d}{:02d}'.format(now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
+
         self.set_header('Content-Type', 'application/octet-stream')
-        self.set_header('Content-Disposition', 'attachment; filename=teleport-database-export.sql')
+        self.set_header('Content-Disposition', 'attachment; filename=teleport-database-export-{}.sql'.format(dt))
 
         sql = get_db().export_to_sql()
 
@@ -112,10 +115,39 @@ class ImportDatabaseHandler(TPBaseAdminAuthHandler):
                 return self.write(json.dumps(ret).encode('utf8'))
 
             with open(sql_filename, encoding=file_encode) as f:
+                db = get_db()
+                sql = []
                 lines = f.readlines()
                 for line in lines:
-                    print(line)
-                pass
+                    line = line.strip('\r\n')
+                    if line .startswith('TRUNCATE TABLE '):
+                        x = line.split(' ', 2)
+                        _table_name = '`{}{}`'.format(get_db().table_prefix, x[2][1:-2])
+                        if db.db_type == db.DB_TYPE_MYSQL:
+                            x[2] = _table_name
+                            line = ' '.join(x)
+                            line += ';'
+                            sql.append(line)
+                        elif db.db_type == db.DB_TYPE_SQLITE:
+                            #delete from TableName;  //清空数据
+                            # update sqlite_sequence SET seq = 0 where name ='TableName';//自增长ID为0
+                            sql.append('DELETE FROM {};'.format(_table_name))
+                            sql.append('UPDATE `sqlite_sequence` SET `seq`=0 WHERE `name`="{}";'.format(_table_name[1:-1]))
+
+                    if line.startswith('INSERT INTO '):
+                        x = line.split(' ', 3)
+                        _table_name = '`{}{}`'.format(db.table_prefix, x[2][1:-1])
+                        x[2] = _table_name
+                        line = ' '.join(x)
+                        # print(line)
+                        sql.append(line)
+
+                for line in sql:
+                    db_ret = get_db().exec(line)
+                    if not db_ret:
+                        ret['code'] = -1
+                        ret['message'] = 'SQL语句执行出错: {}'.format(line)
+                        return self.write(json.dumps(ret).encode('utf8'))
 
             ret['code'] = 0
             return self.write(json.dumps(ret).encode('utf8'))

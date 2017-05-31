@@ -12,6 +12,7 @@ from eom_common.eomcore import utils
 from eom_common.eomcore.logger import log
 from .database.create import create_and_init
 from .database.upgrade import DatabaseUpgrade
+from .database.export import export_database
 
 __all__ = ['get_db', 'DbItem']
 
@@ -304,10 +305,8 @@ class TPDatabase:
 
     def export_to_sql(self):
         # TODO: not implement.
-        ret = []
-        ret.append('{}'.format(self.db_type))
-        ret.append('export to sql not implement.')
-        return '\n'.join(ret)
+
+        return export_database(self)
 
 
 class TPDatabasePool:
@@ -385,6 +384,7 @@ class TPSqlitePool(TPDatabasePool):
         #     return None
         except Exception as e:
             log.e('[sqlite] _do_query() failed: {}\n'.format(e.__str__()))
+            log.e('[sqlite] SQL={}'.format(sql))
         finally:
             cursor.close()
 
@@ -397,6 +397,7 @@ class TPSqlitePool(TPDatabasePool):
         # except sqlite3.OperationalError as e:
         except Exception as e:
             log.e('[sqlite] _do_exec() failed: {}\n'.format(e.__str__()))
+            log.e('[sqlite] SQL={}'.format(sql))
             return False
         finally:
             cursor.close()
@@ -444,6 +445,7 @@ class TPMysqlPool(TPDatabasePool):
             conn.commit()
             return db_ret
         except Exception as e:
+            log.v('[mysql] SQL={}\n'.format(sql))
             log.e('[mysql] _do_query() failed: {}\n'.format(e.__str__()))
             return None
         finally:
@@ -457,6 +459,7 @@ class TPMysqlPool(TPDatabasePool):
             return True
         except Exception as e:
             log.e('[mysql] _do_exec() failed: {}\n'.format(e.__str__()))
+            log.e('[mysql] SQL={}'.format(sql))
             return None
         finally:
             cursor.close()

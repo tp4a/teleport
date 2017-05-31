@@ -8,33 +8,28 @@ TppSshEnv::TppSshEnv()
 TppSshEnv::~TppSshEnv()
 {}
 
-bool TppSshEnv::_on_init(TPP_INIT_ARGS* args)
-{
+bool TppSshEnv::_on_init(TPP_INIT_ARGS* args) {
 	ex_path_join(replay_path, false, L"ssh", NULL);
 
 	ExIniSection* ps = args->cfg->GetSection(L"protocol-ssh");
-	if (NULL == ps)
-	{
+	if (NULL == ps) {
 		EXLOGE("[ssh] invalid config(2).\n");
 		return false;
 	}
 
 	ex_wstr tmp;
-	if (!ps->GetStr(L"bind-ip", tmp))
-	{
+	if (!ps->GetStr(L"bind-ip", tmp)) {
 		bind_ip = TS_SSH_PROXY_HOST;
 	}
-	else
-	{
+	else {
 		ex_wstr2astr(tmp, bind_ip);
 	}
-	EXLOGW("[ssh] bind-ip: %s\n", bind_ip.c_str());
 
-	if (!ps->GetInt(L"bind-port", bind_port))
-	{
+	if (!ps->GetInt(L"bind-port", bind_port)) {
 		bind_port = TS_SSH_PROXY_PORT;
 	}
-	EXLOGW(L"[ssh] bind-port: %d\n", bind_port);
+
+	EXLOGW(L"[ssh] listen on %s:%d\n", bind_ip.c_str(), bind_port);
 
 	return true;
 }
