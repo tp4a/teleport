@@ -208,6 +208,14 @@ class TPDatabase:
         # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
         return ret
 
+    def transaction(self, sql_list):
+        # _start = datetime.datetime.utcnow().timestamp()
+        ret = self._conn_pool.transaction(sql_list)
+        # _end = datetime.datetime.utcnow().timestamp()
+        # log.d('[db] transaction\n')
+        # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
+        return ret
+
     def last_insert_id(self):
         return self._conn_pool.last_insert_id()
 
@@ -326,6 +334,12 @@ class TPDatabasePool:
             return False
         return self._do_exec(_conn, sql)
 
+    def transaction(self, sql_list):
+        _conn = self._get_connect()
+        if _conn is None:
+            return False
+        return self._do_transaction(_conn, sql_list)
+
     def last_insert_id(self):
         _conn = self._get_connect()
         if _conn is None:
@@ -353,6 +367,9 @@ class TPDatabasePool:
     def _do_exec(self, conn, sql):
         return None
 
+    def _do_transaction(self, conn, sql_list):
+        return False
+
     def _last_insert_id(self, conn):
         return -1
 
@@ -379,9 +396,6 @@ class TPSqlitePool(TPDatabasePool):
             cursor.execute(sql)
             db_ret = cursor.fetchall()
             return db_ret
-        # except sqlite3.OperationalError:
-        #     # log.e('_do_query() error.\n')
-        #     return None
         except Exception as e:
             log.e('[sqlite] _do_query() failed: {}\n'.format(e.__str__()))
             log.e('[sqlite] SQL={}'.format(sql))
@@ -389,18 +403,25 @@ class TPSqlitePool(TPDatabasePool):
             cursor.close()
 
     def _do_exec(self, conn, sql):
-        cursor = conn.cursor()
         try:
-            cursor.execute(sql)
-            conn.commit()
+            with conn:
+                conn.execute(sql)
             return True
-        # except sqlite3.OperationalError as e:
         except Exception as e:
             log.e('[sqlite] _do_exec() failed: {}\n'.format(e.__str__()))
             log.e('[sqlite] SQL={}'.format(sql))
             return False
-        finally:
-            cursor.close()
+
+    def _do_transaction(self, conn, sql_list):
+        try:
+            # 使用context manager，发生异常时会自动rollback，正常执行完毕后会自动commit
+            with conn:
+                for sql in sql_list:
+                    conn.execute(sql)
+            return True
+        except Exception as e:
+            log.e('[sqlite] _do_transaction() failed: {}\n'.format(e.__str__()))
+            return False
 
     def _last_insert_id(self, conn):
         cursor = conn.cursor()
@@ -431,6 +452,7 @@ class TPMysqlPool(TPDatabasePool):
                                    passwd=self._password,
                                    db=self._db_name,
                                    port=self._port,
+                                   autocommit=False,
                                    connect_timeout=3.0,
                                    charset='utf8')
         except Exception as e:
@@ -461,6 +483,24 @@ class TPMysqlPool(TPDatabasePool):
             log.e('[mysql] _do_exec() failed: {}\n'.format(e.__str__()))
             log.e('[mysql] SQL={}'.format(sql))
             return None
+        finally:
+            cursor.close()
+
+    def _do_transaction(self, conn, sql_list):
+        cursor = conn.cursor()
+        try:
+            # cursor.execute('BEGIN;')
+            conn.begin()
+            for sql in sql_list:
+                cursor.execute(sql)
+            # cursor.execute('COMMIT;')
+            conn.commit()
+            return True
+        except Exception as e:
+            # cursor.execute('ROLLBACK;')
+            conn.rollback()
+            log.e('[mysql] _do_transaction() failed: {}\n'.format(e.__str__()))
+            return False
         finally:
             cursor.close()
 

@@ -142,12 +142,18 @@ class ImportDatabaseHandler(TPBaseAdminAuthHandler):
                         # print(line)
                         sql.append(line)
 
-                for line in sql:
-                    db_ret = get_db().exec(line)
-                    if not db_ret:
-                        ret['code'] = -1
-                        ret['message'] = 'SQL语句执行出错: {}'.format(line)
-                        return self.write(json.dumps(ret).encode('utf8'))
+                db_ret = db.transaction(sql)
+                if not db_ret:
+                    ret['code'] = -1
+                    ret['message'] = 'SQL语句执行出错'
+                    return self.write(json.dumps(ret).encode('utf8'))
+
+                # for line in sql:
+                #     db_ret = get_db().exec(line)
+                #     if not db_ret:
+                #         ret['code'] = -1
+                #         ret['message'] = 'SQL语句执行出错: {}'.format(line)
+                #         return self.write(json.dumps(ret).encode('utf8'))
 
             ret['code'] = 0
             return self.write(json.dumps(ret).encode('utf8'))
