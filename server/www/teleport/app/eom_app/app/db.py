@@ -489,15 +489,12 @@ class TPMysqlPool(TPDatabasePool):
     def _do_transaction(self, conn, sql_list):
         cursor = conn.cursor()
         try:
-            # cursor.execute('BEGIN;')
             conn.begin()
             for sql in sql_list:
                 cursor.execute(sql)
-            # cursor.execute('COMMIT;')
             conn.commit()
             return True
         except Exception as e:
-            # cursor.execute('ROLLBACK;')
             conn.rollback()
             log.e('[mysql] _do_transaction() failed: {}\n'.format(e.__str__()))
             return False
@@ -512,7 +509,7 @@ class TPMysqlPool(TPDatabasePool):
             conn.commit()
             return db_ret[0][0]
         except Exception as e:
-            log.e('[sqlite] _last_insert_id() failed: {}\n'.format(e.__str__()))
+            log.e('[mysql] _last_insert_id() failed: {}\n'.format(e.__str__()))
             return -1
         finally:
             cursor.close()
