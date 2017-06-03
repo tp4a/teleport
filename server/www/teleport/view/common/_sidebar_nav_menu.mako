@@ -101,18 +101,19 @@
                 <div class="dropdown">
                     <a class="title" href="#" id="user-profile" data-target="#" data-toggle="dropdown" role="button"
                        aria-haspopup="true" aria-expanded="false">
-                        <span class="name">${ current_user['nick_name'] }</span>
+                        <span class="name">${ current_user['name'] }</span>
                         <span class="role">
 %if current_user['type'] == 100:
-    平台管理员
+    系统管理员
 %else:
-    普通用户
+    运维人员
 %endif
                             <i class="fa fa-caret-right"></i></span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-right">
-                        <li><a href="/pwd" id="btn-logout">修改密码</a></li>
-                        <li><a href="/auth/logout" id="btn-logout">安全退出</a></li>
+##                         <li><a href="/pwd" id="btn-logout">修改密码</a></li>
+                        <li><a href="/user/personal">个人中心</a></li>
+                        <li><a href="/auth/logout">安全退出</a></li>
                     </ul>
                 </div>
 

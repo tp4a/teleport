@@ -40,6 +40,10 @@ controllers = [
     (r'/auth/get-captcha', auth.GetCaptchaHandler),
     (r'/auth/verify-captcha', auth.VerifyCaptchaHandler),
     (r'/auth/modify-pwd', auth.ModifyPwd),
+    (r'/auth/oath-verify', auth.OathVerifyHandler),
+    (r'/auth/oath-secret-qrcode', auth.OathSecretQrCodeHandler),
+    (r'/auth/oath-secret-reset', auth.OathSecretResetHandler),
+    (r'/auth/oath-update-secret', auth.OathUpdateSecretHandler),
 
     (r'/group/list', group.GetListHandler),
     (r'/group/', group.IndexHandler),
@@ -49,9 +53,10 @@ controllers = [
     (r'/cert/', cert.IndexHandler),
     (r'/cert', cert.IndexHandler),
 
-    (r'/pwd', pwd.IndexHandler),
+    # (r'/pwd', pwd.IndexHandler),
     (r'/user', user.IndexHandler),
     (r'/user/list', user.GetListHandler),
+    (r'/user/personal', user.PersonalHandler),
 
     #(r"/log/replay/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
     (r"/log/replay/(.*)", record.ReplayStaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
@@ -120,6 +125,8 @@ controllers = [
 
     (r'/uidesign', index.UIDesignHandler),
     (r'/uidesign/without-sidebar', index.UIDesignWithoutSidebarHandler),
-    (r'/uidesign/table', index.UIDesignTableHandler)
+    (r'/uidesign/table', index.UIDesignTableHandler),
+
+    # (r'/test/oath-code', index.OathCodeHandler)
 
 ]

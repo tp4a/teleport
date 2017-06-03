@@ -24,7 +24,8 @@ def create_and_init(db, step_begin, step_end):
 `account_pwd` varchar(128) DEFAULT NULL,
 `account_status` int(11) DEFAULT 0,
 `account_lock` int(11) DEFAULT 0,
-`account_desc` varchar(255)
+`account_desc` varchar(255),
+`oath_secret` varchar(64),
 );""".format(db.table_prefix, db.auto_increment))
 
         _db_exec(db, step_begin, step_end, '创建表 auth', """CREATE TABLE `{}auth`(
@@ -53,7 +54,7 @@ PRIMARY KEY (`name` ASC)
 
         _db_exec(db, step_begin, step_end, '创建表 group', """CREATE TABLE `{}group` (
 `group_id` integer PRIMARY KEY {},
-`group_name` varchar(255) DEFAULT''
+`group_name` varchar(255) DEFAULT ''
 );""".format(db.table_prefix, db.auto_increment))
 
         _db_exec(db, step_begin, step_end, '创建表 host_info', """CREATE TABLE `{}host_info`(
@@ -99,7 +100,7 @@ PRIMARY KEY (`name` ASC)
 
         _db_exec(db, step_begin, step_end,
                  '建立管理员账号',
-                 'INSERT INTO `{}account` VALUES (1, 100, "admin", "{}", 0, 0, "超级管理员");'.format(db.table_prefix, _admin_sec_password)
+                 'INSERT INTO `{}account` VALUES (1, 100, "admin", "{}", 0, 0, "超级管理员", "");'.format(db.table_prefix, _admin_sec_password)
                  )
 
         _db_exec(db, step_begin, step_end,
