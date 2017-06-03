@@ -34,10 +34,6 @@
 
 <div class="page-content">
     <div class="box">
-        <img src="/test/oath-code?">
-    </div>
-
-    <div class="box">
         <h1>这是一级标题，This is H1.</h1>
         <h2>这是二级标题，This is H2.</h2>
         <h3>这是三级标题，This is H3.</h3>

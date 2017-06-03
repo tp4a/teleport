@@ -26,8 +26,8 @@
     <div class="col-md-5">
         <div class="auth-box auth-box-lg">
             <div class="header">
-                <a id="login-type-password" class="title selected" href="javascript:;">账号/密码 登录</a>
-                <a id="login-type-oath" class="title" href="javascript:;">身份验证器</a>
+                <a id="login-type-password" class="title selected" href="javascript:;">账号/密码登录</a>
+                <a id="login-type-oath" class="title" href="javascript:;">身份验证器登录</a>
             </div>
 
             <div class="inputarea">
@@ -61,8 +61,8 @@
                 <div id="login-area-oath" style="display:none;">
                     <div class="inputbox">
                         <div class="input-group input-group-lg">
-                            <span class="input-group-addon"><i class="fa fa-google fa-fw"></i></span>
-                            <input id="oath-code" type="text" class="form-control" placeholder="谷歌身份验证器动态验证码">
+                            <span class="input-group-addon"><i class="fa fa-clock-o fa-fw"></i></span>
+                            <input id="oath-code" type="text" class="form-control" placeholder="6位数字身份验证器动态验证码">
                         </div>
                     </div>
                 </div>
