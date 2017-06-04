@@ -1,7 +1,9 @@
 <!DOCTYPE html>
     <%!
+        import time
         page_title_ = ''
         page_menu_ = []
+        time_now = int(time.time())
     %>
 <!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->
 <!--[if !IE]><!-->
@@ -37,6 +39,9 @@
             <div class="brand"><a href="http://teleport.eomsoft.net" target="_blank"><span class="navbar-logo"></span></a></div>
             <div class="breadcrumb-container">
                     <%block name="breadcrumb" />
+            </div>
+            <div style="display:inline-block;float:right;padding-top:12px;">
+                系统时间：<span id="system-timer">111</span>
             </div>
         </div>
     </div>
@@ -81,8 +86,6 @@
 </div>
 
     <%block name="extend_content" />
-    ## <script type="text/javascript" src="${ static_url('js/var.js') }"></script>
-
 <script type="text/javascript" src="${ static_url('plugins/underscore/underscore.js') }"></script>
 <script type="text/javascript" src="${ static_url('plugins/jquery/jquery.min.js') }"></script>
 <script type="text/javascript" src="${ static_url('plugins/jquery/ajaxfileupload.js') }"></script>
@@ -102,7 +105,6 @@
 
     <%block name="extend_js"/>
 
-
 <script type="text/javascript">
     ywl.add_page_options({
         ## 	有些参数由后台python脚本生成到模板中，无法直接生成到js文件中，所以必须通过这种方式传递参数到js脚本中。
@@ -110,10 +112,15 @@
     });
 
     $(document).ready(function () {
-        // once page ready, init ywl object.
-        ## 		var teleport_ip_info = "请核对您的堡垒机IP地址，当前为 " + teleport_ip;
-        ## 		$("#teleport-server-ip").text(teleport_ip_info);
         ywl.init();
+
+        var g_time_now = ${time_now};
+        var g_dom_timer = $('#system-timer');
+        g_dom_timer.text(format_datetime(g_time_now));
+        setInterval(function(){
+            g_dom_timer.text(format_datetime(g_time_now));
+            g_time_now += 1;
+        }, 1000);
     });
 
 </script>

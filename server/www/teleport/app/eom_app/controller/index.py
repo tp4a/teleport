@@ -27,4 +27,11 @@ class UIDesignWithoutSidebarHandler(TPBaseHandler):
 
 class UIDesignTableHandler(TPBaseHandler):
     def get(self):
+        # from hashlib import sha1
+        # import hmac
+        # my_sign = hmac.new('key', 'msg', sha1).digest()
+        # # my_sign = base64.b64encode(my_sign)
+        # # print my_sign
+
         self.render('uidesign/table.mako')
+

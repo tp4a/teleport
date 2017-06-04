@@ -80,10 +80,20 @@ class ReplayStaticFileHandler(tornado.web.StaticFileHandler):
 class ComandLogHandler(TPBaseAdminAuthHandler):
     def get(self, protocol, record_id):
 
+        header = record.read_record_head(record_id)
+        if header is None:
+            return self.write_json(-3, '操作失败')
+
+        # ret = dict()
+        # ret['header'] = header
+        # return self.write_json(0, data=ret)
+
         param = dict()
+        param['header'] = header
         param['count'] = 0
         param['op'] = list()
 
+        cmd_type = 0  # 0 = ssh, 1 = sftp
         protocol = int(protocol)
         if protocol == 1:
             pass
@@ -94,12 +104,26 @@ class ComandLogHandler(TPBaseAdminAuthHandler):
                 file = open(file_info, 'r')
                 data = file.readlines()
                 for i in range(len(data)):
-                    param['op'].append({'t': data[i][1:20], 'c': data[i][22:-1]})
+                    if 0 == i:
+                        cmd = data[i][22:-1]
+                        if 'SFTP INITIALIZE' == cmd:
+                            cmd_type = 1
+                            continue
+                    if cmd_type == 0:
+                        param['op'].append({'t': data[i][1:20], 'c': data[i][22:-1]})
+                    else:
+                        cmd_info = data[i][22:-1].split(':')
+                        if len(cmd_info) != 4:
+                            continue
+                        param['op'].append({'t': data[i][1:20], 'c': cmd_info[0], 'p1': cmd_info[2], 'p2': cmd_info[3]})
             except:
                 pass
             param['count'] = len(param['op'])
 
-        self.render('log/record-ssh-cmd.mako', page_param=json.dumps(param))
+        if cmd_type == 0:
+            self.render('log/record-ssh-cmd.mako', page_param=json.dumps(param))
+        else:
+            self.render('log/record-sftp-cmd.mako', page_param=json.dumps(param))
 
 
 class RecordGetHeader(TPBaseAdminAuthJsonHandler):

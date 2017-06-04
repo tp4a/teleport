@@ -29,7 +29,6 @@ bool SshProxy::init(void)
 	m_host_ip = g_ssh_env.bind_ip;
 	m_host_port = g_ssh_env.bind_port;
 
-
 	m_bind = ssh_bind_new();
 	if (NULL == m_bind)
 	{

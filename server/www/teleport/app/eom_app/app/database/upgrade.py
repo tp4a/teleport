@@ -149,7 +149,7 @@ class DatabaseUpgrade:
     `group_id`  int(11) DEFAULT 0,
     `host_sys_type`  int(11) DEFAULT 1,
     `host_ip`  varchar(32) DEFAULT '',
-    `pro_port`  varchar(256) NULL,
+    `pro_port`  varchar(255) NULL,
     `host_lock`  int(11) DEFAULT 0,
     `host_desc` varchar(128) DEFAULT ''
     );""".format(self.db.table_prefix, self.db.auto_increment)):
@@ -161,8 +161,8 @@ class DatabaseUpgrade:
     `host_id`  INTEGER,
     `pro_type`  INTEGER,
     `auth_mode`  INTEGER,
-    `user_name`  varchar(256),
-    `user_pswd`  varchar(256),
+    `user_name`  varchar(255),
+    `user_pswd`  varchar(255),
     `cert_id`  INTEGER,
     `encrypt`  INTEGER,
     `log_time`  varchar(60)
@@ -381,7 +381,7 @@ class DatabaseUpgrade:
             # 先创建三个临时表
             if not self.db.exec("""CREATE TABLE `{}auth_tmp` (
     `auth_id`  INTEGER PRIMARY KEY {},
-    `account_name`  varchar(256),
+    `account_name`  varchar(255),
     `host_id`  INTEGER,
     `host_auth_id`  int(11) NOT NULL
     );""".format(self.db.table_prefix, self.db.auto_increment)):
@@ -405,9 +405,9 @@ class DatabaseUpgrade:
     `id`  INTEGER PRIMARY KEY {},
     `host_id`  INTEGER,
     `auth_mode`  INTEGER,
-    `user_name`  varchar(256),
-    `user_pswd`  varchar(256),
-    `user_param` varchar(256),
+    `user_name`  varchar(255),
+    `user_pswd`  varchar(255),
+    `user_param` varchar(255),
     `cert_id`  INTEGER,
     `encrypt`  INTEGER,
     `log_time`  varchar(60)
@@ -492,8 +492,8 @@ class DatabaseUpgrade:
 
             if not self.db.is_table_exists('{}config'.format(self.db.table_prefix)):
                 if not self.db.exec("""CREATE TABLE `{}config` (
-    `name`  varchar(256) NOT NULL,
-    `value`  varchar(256),
+    `name`  varchar(128) NOT NULL,
+    `value`  varchar(255),
     PRIMARY KEY (`name` ASC)
 );""".format(self.db.table_prefix)):
                     self.step_end(_step, -1, 'config表不存在且无法创建')
@@ -517,6 +517,40 @@ class DatabaseUpgrade:
             _step = self.step_begin(' - 更新数据库版本号')
             if not self.db.exec('INSERT INTO `{}config` VALUES ("db_ver", "{}");'.format(self.db.table_prefix, self.db.DB_VERSION)):
                 self.step_end(_step, -1)
+                return False
+            else:
+                self.step_end(_step, 0)
+                return True
+
+        except:
+            log.e('failed.\n')
+            self.step_end(_step, -1)
+            return False
+
+    def _upgrade_to_v6(self):
+        _step = self.step_begin('检查数据库版本v6...')
+
+        # 服务端升级到版本2.2.9时，为增加双因子认证，为account表增加oath_secret字段
+        db_ret = self.db.is_field_exists('{}account'.format(self.db.table_prefix), 'oath_secret')
+        if db_ret is None:
+            self.step_end(_step, -1, '无法连接到数据库')
+            return False
+        if db_ret:
+            self.step_end(_step, 0, '跳过 v5 到 v6 的升级操作')
+            return True
+
+        self.step_end(_step, 0, '需要升级到v6')
+
+        try:
+
+            _step = self.step_begin(' - 在account表中加入oath_secret字段')
+            if not self.db.exec('ALTER TABLE {}account ADD oath_secret VARCHAR(64) DEFAULT ""'.format(self.db.table_prefix)):
+                self.step_end(_step, -1, '失败')
+                return False
+
+            _step = self.step_begin(' - 更新数据库版本号')
+            if not self.db.exec('UPDATE `{}config` SET `value`="6" WHERE `name`="db_ver";'.format(self.db.table_prefix)):
+                self.step_end(_step, -1, '无法更新数据库版本号')
                 return False
             else:
                 self.step_end(_step, 0)

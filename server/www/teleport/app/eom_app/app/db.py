@@ -12,13 +12,14 @@ from eom_common.eomcore import utils
 from eom_common.eomcore.logger import log
 from .database.create import create_and_init
 from .database.upgrade import DatabaseUpgrade
+from .database.export import export_database
 
 __all__ = ['get_db', 'DbItem']
 
 
 class TPDatabase:
     # 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
-    DB_VERSION = 5
+    DB_VERSION = 6
 
     DB_TYPE_UNKNOWN = 0
     DB_TYPE_SQLITE = 1
@@ -44,6 +45,10 @@ class TPDatabase:
 
         self._table_prefix = ''
         self._conn_pool = None
+
+        self._stop_flag = False
+        self._thread_keep_alive_handle = None
+        self._thread_keep_alive_cond = threading.Condition()
 
     @property
     def table_prefix(self):
@@ -90,6 +95,30 @@ class TPDatabase:
 
         return True
 
+    def start_keep_alive(self):
+        self._thread_keep_alive_handle = threading.Thread(target=self._thread_keep_alive)
+        self._thread_keep_alive_handle.start()
+
+    def stop_keep_alive(self):
+        self._stop_flag = True
+        self._thread_keep_alive_cond.acquire()
+        self._thread_keep_alive_cond.notify()
+        self._thread_keep_alive_cond.release()
+        if self._thread_keep_alive_handle is not None:
+            self._thread_keep_alive_handle.join()
+        log.v('database-keep-alive-thread stopped.\n')
+
+    def _thread_keep_alive(self):
+        while True:
+            self._thread_keep_alive_cond.acquire()
+            # 每一小时醒来执行一次查询，避免连接丢失
+            self._thread_keep_alive_cond.wait(3600)
+            self._thread_keep_alive_cond.release()
+            if self._stop_flag:
+                break
+
+            self.query('SELECT `value` FROM `{}config` WHERE `name`="db_ver";'.format(self._table_prefix))
+
     def _init_sqlite(self, db_file):
         self.db_type = self.DB_TYPE_SQLITE
         self.auto_increment = 'AUTOINCREMENT'
@@ -120,49 +149,6 @@ class TPDatabase:
 
         return True
 
-    # def init__(self, db_source):
-    #     self.db_source = db_source
-    #
-    #     if db_source['type'] == self.DB_TYPE_MYSQL:
-    #         log.e('MySQL not supported yet.')
-    #         return False
-    #     elif db_source['type'] == self.DB_TYPE_SQLITE:
-    #         self._table_prefix = 'ts_'
-    #         self._conn_pool = TPSqlitePool(db_source['file'])
-    #
-    #         if not os.path.exists(db_source['file']):
-    #             log.w('database need create.\n')
-    #             self.need_create = True
-    #             return True
-    #     else:
-    #         log.e('Unknown database type: {}'.format(db_source['type']))
-    #         return False
-    #
-    #     # 看看数据库中是否存在指定的数据表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
-    #     # ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}account";'.format(self._table_prefix))
-    #     ret = self.is_table_exists('{}group'.format(self._table_prefix))
-    #     if ret is None or not ret:
-    #         log.w('database need create.\n')
-    #         self.need_create = True
-    #         return True
-    #
-    #     # 尝试从配置表中读取当前数据库版本号（如果不存在，说明是比较旧的版本了）
-    #     ret = self.query('SELECT `value` FROM `{}config` WHERE `name`="db_ver";'.format(self._table_prefix))
-    #     if ret is None or 0 == len(ret):
-    #         self.current_ver = 1
-    #     else:
-    #         self.current_ver = int(ret[0][0])
-    #
-    #     if self.current_ver < self.DB_VERSION:
-    #         log.w('database need upgrade.\n')
-    #         self.need_upgrade = True
-    #         return True
-    #
-    #     # DO TEST
-    #     # self.alter_table('ts_account', [['account_id', 'id'], ['account_type', 'type']])
-    #
-    #     return True
-
     def is_table_exists(self, table_name):
         """
         判断指定的表是否存在
@@ -179,12 +165,34 @@ class TPDatabase:
                 return False
             return True
         elif self.db_type == self.DB_TYPE_MYSQL:
-            # select TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA='dbname' and TABLE_NAME='tablename' ;
             ret = self.query('SELECT TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA="{}" and TABLE_NAME="{}";'.format(self.mysql_db, table_name))
             if ret is None:
                 return None
             if len(ret) == 0:
+                return False
+            else:
+                return True
+        else:
+            log.e('Unknown database type.\n')
+            return None
+
+    def is_field_exists(self, table_name, field_name):
+        if self.db_type == self.DB_TYPE_SQLITE:
+            ret = self.query('PRAGMA table_info(`{}`);'.format(table_name))
+            print(ret)
+            if ret is None:
                 return None
+            if len(ret) == 0:
+                return False
+            else:
+                return True
+        elif self.db_type == self.DB_TYPE_MYSQL:
+            ret = self.query('DESC `{}` `{}`;'.format(table_name, field_name))
+            print(ret)
+            if ret is None:
+                return None
+            if len(ret) == 0:
+                return False
             else:
                 return True
         else:
@@ -204,6 +212,14 @@ class TPDatabase:
         ret = self._conn_pool.exec(sql)
         # _end = datetime.datetime.utcnow().timestamp()
         # log.d('[db] {}\n'.format(sql))
+        # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
+        return ret
+
+    def transaction(self, sql_list):
+        # _start = datetime.datetime.utcnow().timestamp()
+        ret = self._conn_pool.transaction(sql_list)
+        # _end = datetime.datetime.utcnow().timestamp()
+        # log.d('[db] transaction\n')
         # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
         return ret
 
@@ -302,6 +318,9 @@ class TPDatabase:
             log.e('Unknown database type.\n')
             return False
 
+    def export_to_sql(self):
+        return export_database(self)
+
 
 class TPDatabasePool:
     def __init__(self):
@@ -319,6 +338,12 @@ class TPDatabasePool:
         if _conn is None:
             return False
         return self._do_exec(_conn, sql)
+
+    def transaction(self, sql_list):
+        _conn = self._get_connect()
+        if _conn is None:
+            return False
+        return self._do_transaction(_conn, sql_list)
 
     def last_insert_id(self):
         _conn = self._get_connect()
@@ -347,8 +372,12 @@ class TPDatabasePool:
     def _do_exec(self, conn, sql):
         return None
 
+    def _do_transaction(self, conn, sql_list):
+        return False
+
     def _last_insert_id(self, conn):
         return -1
+
 
 class TPSqlitePool(TPDatabasePool):
     def __init__(self, db_file):
@@ -372,26 +401,32 @@ class TPSqlitePool(TPDatabasePool):
             cursor.execute(sql)
             db_ret = cursor.fetchall()
             return db_ret
-        # except sqlite3.OperationalError:
-        #     # log.e('_do_query() error.\n')
-        #     return None
         except Exception as e:
             log.e('[sqlite] _do_query() failed: {}\n'.format(e.__str__()))
+            log.e('[sqlite] SQL={}'.format(sql))
         finally:
             cursor.close()
 
     def _do_exec(self, conn, sql):
-        cursor = conn.cursor()
         try:
-            cursor.execute(sql)
-            conn.commit()
+            with conn:
+                conn.execute(sql)
             return True
-        # except sqlite3.OperationalError as e:
         except Exception as e:
             log.e('[sqlite] _do_exec() failed: {}\n'.format(e.__str__()))
+            log.e('[sqlite] SQL={}'.format(sql))
             return False
-        finally:
-            cursor.close()
+
+    def _do_transaction(self, conn, sql_list):
+        try:
+            # 使用context manager，发生异常时会自动rollback，正常执行完毕后会自动commit
+            with conn:
+                for sql in sql_list:
+                    conn.execute(sql)
+            return True
+        except Exception as e:
+            log.e('[sqlite] _do_transaction() failed: {}\n'.format(e.__str__()))
+            return False
 
     def _last_insert_id(self, conn):
         cursor = conn.cursor()
@@ -422,6 +457,7 @@ class TPMysqlPool(TPDatabasePool):
                                    passwd=self._password,
                                    db=self._db_name,
                                    port=self._port,
+                                   autocommit=False,
                                    connect_timeout=3.0,
                                    charset='utf8')
         except Exception as e:
@@ -436,6 +472,7 @@ class TPMysqlPool(TPDatabasePool):
             conn.commit()
             return db_ret
         except Exception as e:
+            log.v('[mysql] SQL={}\n'.format(sql))
             log.e('[mysql] _do_query() failed: {}\n'.format(e.__str__()))
             return None
         finally:
@@ -449,7 +486,23 @@ class TPMysqlPool(TPDatabasePool):
             return True
         except Exception as e:
             log.e('[mysql] _do_exec() failed: {}\n'.format(e.__str__()))
+            log.e('[mysql] SQL={}'.format(sql))
             return None
+        finally:
+            cursor.close()
+
+    def _do_transaction(self, conn, sql_list):
+        cursor = conn.cursor()
+        try:
+            conn.begin()
+            for sql in sql_list:
+                cursor.execute(sql)
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            log.e('[mysql] _do_transaction() failed: {}\n'.format(e.__str__()))
+            return False
         finally:
             cursor.close()
 
@@ -461,7 +514,7 @@ class TPMysqlPool(TPDatabasePool):
             conn.commit()
             return db_ret[0][0]
         except Exception as e:
-            log.e('[sqlite] _last_insert_id() failed: {}\n'.format(e.__str__()))
+            log.e('[mysql] _last_insert_id() failed: {}\n'.format(e.__str__()))
             return -1
         finally:
             cursor.close()

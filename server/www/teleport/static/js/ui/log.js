@@ -8,7 +8,7 @@ ywl.on_init = function (cb_stack, cb_args) {
     //===================================
     // 表格数据
     var disk_rate = 0;
-    if(0 == ywl.page_options.total_size) {
+    if(0 === ywl.page_options.total_size) {
         $('#disk-status').text('未能获取到录像文件所在磁盘空间信息');
     } else {
         disk_rate = parseInt(ywl.page_options.free_size * 100 / ywl.page_options.total_size);
@@ -238,10 +238,16 @@ ywl.on_host_table_created = function (tbl) {
                     msg = '协议不支持';
                     break;
                 case 6:
-                    msg = '通讯错误';
+                    msg = '数据格式错误';
                     break;
                 case 7:
-                    msg = '错误重置';
+                    msg = '核心服务重置';
+                    break;
+                case 8:
+                    msg = '网络通讯故障';
+                    break;
+                case 9:
+                    msg = '无效会话';
                     break;
                 default:
                     msg = fields.ret_code;
@@ -286,7 +292,9 @@ ywl.on_host_table_created = function (tbl) {
         render.make_action_btn = function (row_id, fields) {
             var ret = [];
             if (fields.protocol === PROTOCOL_TYPE_RDP) {
-                ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" protocol=' + fields.protocol + ' ywl-btn-record="' + fields.ID + '">录像查看</a>&nbsp');
+                if(fields.ret_code === 9999) {
+                    ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" protocol=' + fields.protocol + ' ywl-btn-record="' + fields.ID + '">录像查看</a>&nbsp');
+                }
             } else if (fields.protocol === PROTOCOL_TYPE_SSH) {
                 if (fields.ret_code === 9999 && fields.cost_time > 0) {
                     ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" protocol=' + fields.protocol + ' ywl-btn-record="' + fields.ID + '">录像查看</a>&nbsp');

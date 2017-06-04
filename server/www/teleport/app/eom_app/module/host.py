@@ -730,7 +730,7 @@ def get_auth_info(auth_id):
     elif db_item.c_auth_mode == 2:
         cert_id = db_item.c_cert_id
 
-        sql = 'SELECT `cert_pri` FROM `{}key` WHERE `cert_id`={}'.format(int(cert_id))
+        sql = 'SELECT `cert_pri` FROM `{}key` WHERE `cert_id`={}'.format(db.table_prefix, int(cert_id))
         db_ret = db.query(sql)
         if db_ret is None or len(db_ret) > 1:
             return None

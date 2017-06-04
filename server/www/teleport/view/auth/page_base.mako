@@ -55,7 +55,7 @@
 <div id="foot">
 	<nav class="navbar navbar-default navbar-fixed-bottom">
 		<div class="container">
-			<p>触维软件旗下产品 | TELEPORT v${eom_ver.TS_VER} | &copy;2015 - 2017 <a href="http://www.eomsoft.net/" target="_blank">触维软件</a>，保留所有权利。</p>
+			<p>触维软件旗下产品 | TELEPORT v${eom_ver.TS_VER} | &copy;2015 - 2017 <a href="http://teleport.eomsoft.net/" target="_blank">触维软件</a>，保留所有权利。</p>
 		</div>
 	</nav>
 </div>

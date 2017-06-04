@@ -49,24 +49,6 @@ bool TsEnv::init(bool load_config)
 	}
 	else	// not in development mode
 	{
-// #ifdef EX_OS_WIN32
-// 		base_path = m_exec_path;
-// 		ex_path_join(base_path, true, L"..", NULL);
-// 		m_etc_path = base_path;
-// 		ex_path_join(m_etc_path, false, L"etc", NULL);
-// 		conf_file = m_etc_path;
-// 		ex_path_join(conf_file, false, L"core.ini", NULL);
-// 		m_replay_path = base_path;
-// 		ex_path_join(m_replay_path, false, L"data", L"replay", NULL);
-// 		log_path = base_path;
-// 		ex_path_join(log_path, false, L"log", NULL);
-// #else
-// 		m_etc_path = L"/etc/teleport";
-// 		conf_file = L"/etc/teleport/core.ini";
-// 		m_replay_path = L"/var/lib/teleport/replay";
-// 		log_path = L"/var/log/teleport";
-// #endif
-
 		base_path = m_exec_path;
 		ex_path_join(base_path, true, L"..", L"data", NULL);
 		m_etc_path = base_path;
@@ -78,8 +60,6 @@ bool TsEnv::init(bool load_config)
 		log_path = base_path;
 		ex_path_join(log_path, false, L"log", NULL);
 	}
-
-	//EXLOGW(L"[core] load config file: %ls.\n", conf_file.c_str());
 
 	if (!m_ini.LoadFromFile(conf_file))
 	{

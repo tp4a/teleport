@@ -16,6 +16,12 @@ class IndexHandler(TPBaseAdminAuthHandler):
         self.render('user/index.mako')
 
 
+class PersonalHandler(TPBaseAdminAuthHandler):
+    def get(self):
+        user_info = self.get_current_user()
+        self.render('user/personal.mako', user=user_info)
+
+
 class AuthHandler(TPBaseAdminAuthHandler):
     def get(self, user_name):
         group_list = host.get_group_list()

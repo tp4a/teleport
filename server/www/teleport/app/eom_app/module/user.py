@@ -6,20 +6,21 @@ from eom_app.app.configs import app_cfg
 from eom_app.app.const import *
 from eom_app.app.db import get_db, DbItem
 from eom_app.app.util import sec_generate_password, sec_verify_password
+from eom_app.app.oath import verify_oath_code
 
 
-def verify_user(name, password):
+def verify_user(name, password, oath_code):
     cfg = app_cfg()
     db = get_db()
 
-    sql = 'SELECT `account_id`, `account_type`, `account_name`, `account_pwd`, `account_lock` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, name)
+    sql = 'SELECT `account_id`, `account_type`, `account_desc`, `account_pwd`, `account_lock` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, name)
     db_ret = db.query(sql)
     if db_ret is None:
         # 特别地，如果无法取得数据库连接，有可能是新安装的系统，尚未建立数据库，此时应该处于维护模式
         # 因此可以特别地处理用户验证：用户名admin，密码admin可以登录为管理员
         if cfg.app_mode == APP_MODE_MAINTENANCE:
             if name == 'admin' and password == 'admin':
-                return 1, 100, 'admin', 0
+                return 1, 100, '系统管理员', 0
         return 0, 0, '', 0
 
     if len(db_ret) != 1:
@@ -27,7 +28,7 @@ def verify_user(name, password):
 
     user_id = db_ret[0][0]
     account_type = db_ret[0][1]
-    name = db_ret[0][2]
+    desc = db_ret[0][2]
     locked = db_ret[0][4]
     if locked == 1:
         return 0, 0, '', locked
@@ -42,7 +43,27 @@ def verify_user(name, password):
             sql = 'UPDATE `{}account` SET `account_pwd`="{}" WHERE `account_id`={}'.format(db.table_prefix, _new_sec_password, int(user_id))
             db.exec(sql)
 
-    return user_id, account_type, name, locked
+    if oath_code is not None:
+        if not verify_oath(user_id, oath_code):
+            return 0, 0, '', 0
+
+    return user_id, account_type, desc, locked
+
+
+def verify_oath(user_id, oath_code):
+    db = get_db()
+
+    sql = 'SELECT `oath_secret` FROM `{}account` WHERE `account_id`={};'.format(db.table_prefix, user_id)
+    db_ret = db.query(sql)
+    if db_ret is None:
+        return False
+
+    if len(db_ret) != 1:
+        return False
+
+    oath_secret = db_ret[0][0]
+
+    return verify_oath_code(oath_secret, oath_code)
 
 
 def modify_pwd(old_pwd, new_pwd, user_id):
@@ -59,6 +80,16 @@ def modify_pwd(old_pwd, new_pwd, user_id):
 
     _new_sec_password = sec_generate_password(new_pwd)
     sql = 'UPDATE `{}account` SET `account_pwd`="{}" WHERE `account_id`={}'.format(db.table_prefix, _new_sec_password, int(user_id))
+    db_ret = db.exec(sql)
+    if db_ret:
+        return 0
+    else:
+        return -102
+
+
+def update_oath_secret(user_id, oath_secret):
+    db = get_db()
+    sql = 'UPDATE `{}account` SET `oath_secret`="{}" WHERE `account_id`={}'.format(db.table_prefix, oath_secret, int(user_id))
     db_ret = db.exec(sql)
     if db_ret:
         return 0

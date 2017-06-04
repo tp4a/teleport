@@ -251,15 +251,17 @@ ywl.create_dlg_modify_host_desc = function (tbl, row_id, host_id, host_ip, host_
     self._make_dialog_box = function () {
         var _html = [
             '<div class="popover-inline-edit" id="' + self.dlg_id + '">',
-            '	<div class="popover fade bottom in" role="tooltip" ywl-dlg="modify-host-desc">',
-            '		<div class="arrow" style="left:50px;"></div>',
-            '		<h3 class="popover-title">为主机 ' + self.host_ip + ' 添加备注，以便识别</h3>',
+            '	<div class="popover fade bottom in" ywl-dlg="modify-host-desc">',
+            '		<div class="arrow" style="left:70px;"></div>',
+            '		<h3 class="popover-title">编辑备注</h3>',
             '		<div class="popover-content">',
+            '           <div>为主机 ' + self.host_ip + ' 设置备注，以便识别：</div>',
             '			<div style="display:inline-block;float:right;">',
-            '				<a href="javascript:;" class="btn btn-success btn-sm" ywl-btn="ok"><i class="glyphicon glyphicon-ok"></i></a>',
-            '				<a href="javascript:;" class="btn btn-danger btn-sm" ywl-btn="cancel"><i class="glyphicon glyphicon-remove"></i></a>',
+//            '				<a href="javascript:;" class="btn btn-success btn-sm" ywl-btn="ok"><i class="glyphicon glyphicon-ok"></i></a>',
+            '				<a href="javascript:;" class="btn btn-success btn-sm" ywl-btn="ok"><i class="fa fa-check"></i> 确定</a>',
+            '				<a href="javascript:;" class="btn btn-danger btn-sm" ywl-btn="cancel"><i class="fa fa-close"></i> 取消</a>',
             '			</div>',
-            '			<div style="padding-right:80px;">',
+            '			<div style="padding-right:120px;">',
             '				<input type="text" ywl-input="desc" class="form-control" value="' + self.host_desc + '">',
             '			</div>',
             '		</div>',
@@ -277,9 +279,9 @@ ywl.create_dlg_modify_host_desc = function (tbl, row_id, host_id, host_ip, host_
         });
         // 绑定“修改主机描述” 对话框中的输入框的回车事件
         $('#' + self.dlg_id + " [ywl-input='desc']").keydown(function (event) {
-            if (event.which == 13) {
+            if (event.which === 13) {
                 self._save();
-            } else if (event.which == 27) {
+            } else if (event.which === 27) {
                 self._destroy();
             }
         });

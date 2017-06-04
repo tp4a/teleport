@@ -4,8 +4,10 @@ ywl.on_init = function (cb_stack, cb_args) {
     console.log(ywl.page_options);
 
     var dom = {
-        info: $('#info-kv')
+        info: $('#info-kv'),
 //        , btn_maintance: $('#btn_maintenance')
+        btn_db_export: $('#btn-db-export'),
+        btn_db_import: $('#btn-db-import'),
     };
 
     var html = [];
@@ -66,13 +68,64 @@ ywl.on_init = function (cb_stack, cb_args) {
 //        });
 //    });
 //
+
+    dom.btn_db_export.click(function () {
+        window.location.href = '/config/export-database'
+    });
+    dom.btn_db_import.click(function () {
+        var _fn_sure = function (cb_stack, cb_args) {
+            var html = '<input id="upload-file" type="file" name="sqlfile" class="hidden" value="" style="display: none;"/>';
+            dom.btn_db_import.after($(html));
+            var update_file = $("#upload-file");
+
+            update_file.change(function () {
+                var file_path = $(this).val();
+                if (file_path === null || file_path === undefined || file_path === '') {
+                    return;
+                }
+                ywl.do_upload_sql_file();
+            });
+
+            update_file.trigger('click');
+        };
+
+        var cb_stack = CALLBACK_STACK.create();
+        ywl.dlg_confirm(cb_stack, {
+            msg: '<p><strong>注意：操作不可恢复！！</strong></p><p>您确定要清除所有现有数据，然后导入sql文件吗？</p>',
+            fn_yes: _fn_sure
+        });
+    });
+
     cb_stack.exec();
+};
+
+ywl.do_upload_sql_file = function () {
+    var param = {};
+    $.ajaxFileUpload({
+        url: "/config/import-database",// 需要链接到服务器地址
+        secureuri: false,
+        fileElementId: "upload-file", // 文件选择框的id属性
+        dataType: 'text', // 服务器返回的格式，可以是json
+        data: param,
+        success: function (data) {
+            $('#upload-file').remove();
+            var ret = JSON.parse(data);
+            if (ret.code === TPE_OK) {
+                ywl.notify_success('导入sql成功！');
+            } else {
+                ywl.notify_error('导入sql失败！<br/>[' + ret.code+'] '+ret.message);
+            }
+        },
+        error: function () {
+            $('#upload-file').remove();
+            ywl.notify_error('网络故障，导入sql失败！');
+        }
+    });
 };
 
 ywl._make_protocol_info = function (name, p) {
     if (_.isUndefined(p))
         return ywl._make_info(name, '未能检测到');
-    // <tr><td class="key">RDP 端口：</td><td class="value">52089</td></tr>
     var val = p.port;
     if (!p.enable) {
         val = '<span class="disabled">' + val + '（未启用）</span>';

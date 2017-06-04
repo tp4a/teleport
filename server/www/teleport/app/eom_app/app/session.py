@@ -31,17 +31,28 @@ class WebSession(threading.Thread):
 
         self._lock = threading.RLock()
         self._stop_flag = False
+        self._timer_cond = threading.Condition()
 
     def init(self):
         return True
 
     def stop(self):
         self._stop_flag = True
+        self._timer_cond.acquire()
+        self._timer_cond.notify()
+        self._timer_cond.release()
         self.join()
-        log.v('{} stopped.'.format(self.name))
+        log.v('{} stopped.\n'.format(self.name))
 
     def run(self):
         while True:
+            self._timer_cond.acquire()
+            # 每隔一分钟醒来检查一次超时的会话
+            self._timer_cond.wait(60)
+            self._timer_cond.release()
+            if self._stop_flag:
+                break
+
             _now = int(datetime.datetime.utcnow().timestamp())
             with self._lock:
                 _keys = [k for k in self._session_dict]
@@ -51,10 +62,9 @@ class WebSession(threading.Thread):
                     if _now - self._session_dict[k]['t'] > self._session_dict[k]['e']:
                         del self._session_dict[k]
 
-            # 每隔一分钟检查一次超时的会话
-            for i in range(60):
-                if not self._stop_flag:
-                    time.sleep(1)
+            # for i in range(60):
+            #     if not self._stop_flag:
+            #         time.sleep(1)
 
     def set(self, s_id, value, expire=SESSION_EXPIRE):
         """

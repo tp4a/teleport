@@ -1,5 +1,5 @@
 <%!
-    page_title_ = '操作记录'
+    page_title_ = 'SSH操作记录'
 %>
 
 <%inherit file="../page_no_sidebar_base.mako"/>
@@ -8,7 +8,8 @@
 
 <%block name="breadcrumb">
     <ol class="breadcrumb">
-        <li><i class="fa fa-server"></i> ${self.attr.page_title_}</li>
+        <li><i class="fa fa-file-text-o"></i> ${self.attr.page_title_}</li>
+        <li><span id="recorder-info"></span></li>
     </ol>
 </%block>
 
@@ -75,9 +76,12 @@
         var info_cmd = ['exit'];
 
         ywl.on_init = function (cb_stack, cb_args) {
-            if (ywl.page_options.count == 0) {
+            if (ywl.page_options.count === 0) {
                 $('#no-op-msg').show();
             } else {
+                var header = ywl.page_options.header;
+                $('#recorder-info').html(header.account + ' 于 ' + format_datetime(header.start) + ' 访问 ' + header.user_name + '@' + header.ip + ':' + header.port);
+
                 var dom_op_list = $('#op-list');
                 var html = [];
                 for (var i = 0; i < ywl.page_options.count; i++) {
@@ -90,7 +94,7 @@
                         cmd_class = ' cmd-info';
                     }
 
-                    html.push('<div class="op-item"><span class="time">' + ywl.page_options.op[i].t + '</span> <span class="cmd' + cmd_class + '">' + ywl.page_options.op[i].c + '</span></li></div>');
+                    html.push('<div class="op-item"><span class="time">' + ywl.page_options.op[i].t + '</span> <span class="cmd' + cmd_class + '">' + ywl.page_options.op[i].c + '</span></div>');
                 }
                 dom_op_list.append(html.join(''));
                 dom_op_list.show();

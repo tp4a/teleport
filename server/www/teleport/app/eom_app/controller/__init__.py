@@ -7,24 +7,21 @@ from . import auth
 from . import host
 from . import cert
 from . import user
-from . import pwd
 from . import config
 from . import group
 from . import index
 from . import record
 from . import maintenance
-# import tornado.web
 
 from eom_app.app.configs import app_cfg
 
 cfg = app_cfg()
 
-__all__ = ['controllers']
+__all__ = ['controllers', 'fix_controller']
 
 controllers = [
-    (r'/dashboard', dashboard.IndexHandler),
-
     (r'/', index.IndexHandler),
+    (r'/dashboard', dashboard.IndexHandler),
 
     (r'/maintenance/install', maintenance.InstallHandler),
     (r'/maintenance/upgrade', maintenance.UpgradeHandler),
@@ -40,6 +37,10 @@ controllers = [
     (r'/auth/get-captcha', auth.GetCaptchaHandler),
     (r'/auth/verify-captcha', auth.VerifyCaptchaHandler),
     (r'/auth/modify-pwd', auth.ModifyPwd),
+    (r'/auth/oath-verify', auth.OathVerifyHandler),
+    (r'/auth/oath-secret-qrcode', auth.OathSecretQrCodeHandler),
+    (r'/auth/oath-secret-reset', auth.OathSecretResetHandler),
+    (r'/auth/oath-update-secret', auth.OathUpdateSecretHandler),
 
     (r'/group/list', group.GetListHandler),
     (r'/group/', group.IndexHandler),
@@ -49,9 +50,9 @@ controllers = [
     (r'/cert/', cert.IndexHandler),
     (r'/cert', cert.IndexHandler),
 
-    (r'/pwd', pwd.IndexHandler),
     (r'/user', user.IndexHandler),
     (r'/user/list', user.GetListHandler),
+    (r'/user/personal', user.PersonalHandler),
 
     #(r"/log/replay/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
     (r"/log/replay/(.*)", record.ReplayStaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
@@ -65,8 +66,6 @@ controllers = [
     # (r'/log/play-rdp/(.*)/(.*)', record.PlayRdpHandler),
     (r'/log/', record.LogHandler),
     (r'/log', record.LogHandler),
-
-    (r'/exit', auth.LogoutHandler),
 
     (r'/user/delete-user', user.DeleteUser),
     (r'/user/modify-user', user.ModifyUser),
@@ -109,15 +108,17 @@ controllers = [
     (r'/host/sys-user/update', host.SysUserUpdate),
     (r'/host/sys-user/delete', host.SysUserDelete),
 
-    # (r'/set/update-config', set.UpdateConfig),
-    # (r'/set/os-operator', set.OsOperator),
-    # (r'/set/info', config.InfoHandler),
-    # (r'/set/db', config.DatabaseHandler),
+    (r'/config/export-database', config.ExportDatabaseHandler),
+    (r'/config/import-database', config.ImportDatabaseHandler),
     (r'/config/', config.IndexHandler),
     (r'/config', config.IndexHandler),
-
-    (r'/uidesign', index.UIDesignHandler),
-    (r'/uidesign/without-sidebar', index.UIDesignWithoutSidebarHandler),
-    (r'/uidesign/table', index.UIDesignTableHandler)
-
 ]
+
+
+def fix_controller():
+    dbg_mode, _ = cfg.get_bool('common::debug-mode', False)
+    if dbg_mode:
+        controllers.append((r'/exit/9E37CBAEE2294D9D9965112025CEE87F', index.ExitHandler))
+        controllers.append((r'/uidesign', index.UIDesignHandler))
+        controllers.append((r'/uidesign/without-sidebar', index.UIDesignWithoutSidebarHandler))
+        controllers.append((r'/uidesign/table', index.UIDesignTableHandler))
