@@ -46,7 +46,13 @@ def export_database(db):
     elif db.db_type == db.DB_TYPE_MYSQL:
         ret.append('-- export from MySQL Database')
     else:
-        return 'Unknown Database Type'
+        return '未知的数据库类型', False
+
+    db_ret = db.query('SELECT `value` FROM `{}config` WHERE `name`="db_ver";'.format(db.table_prefix))
+    if db_ret is None or 0 == len(db_ret):
+        return '无法获取数据库版本', False
+    else:
+        ret.append('-- DATABASE VERSION {}'.format(db_ret[0][0]))
 
     _fields = ['account_id', 'account_type', 'account_name', 'account_pwd', 'account_status', 'account_lock', 'account_desc', 'oath_secret']
     ret.append(_export_table(db, 'account', _fields))
@@ -65,4 +71,4 @@ def export_database(db):
     _fields = ['id', 'session_id', 'account_name', 'host_ip', 'host_port', 'sys_type', 'auth_type', 'protocol', 'user_name', 'ret_code', 'begin_time', 'end_time', 'log_time']
     ret.append(_export_table(db, 'log', _fields))
 
-    return '\r\n'.join(ret)
+    return '\r\n'.join(ret), True

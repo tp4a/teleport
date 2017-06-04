@@ -11,14 +11,9 @@ from eom_app.app.oath import verify_oath_code
 
 def verify_user(name, password, oath_code):
     cfg = app_cfg()
-
-    if cfg.app_mode == APP_MODE_MAINTENANCE:
-        if name == 'admin' and password == 'admin':
-            return 1, 100, '系统管理员', 0
-
     db = get_db()
 
-    sql = 'SELECT `account_id`, `account_type`, `account_desc`, `account_pwd`, `account_lock`, `oath_secret` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, name)
+    sql = 'SELECT `account_id`, `account_type`, `account_desc`, `account_pwd`, `account_lock` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, name)
     db_ret = db.query(sql)
     if db_ret is None:
         # 特别地，如果无法取得数据库连接，有可能是新安装的系统，尚未建立数据库，此时应该处于维护模式
@@ -35,7 +30,6 @@ def verify_user(name, password, oath_code):
     account_type = db_ret[0][1]
     desc = db_ret[0][2]
     locked = db_ret[0][4]
-    oath_secret = db_ret[0][5]
     if locked == 1:
         return 0, 0, '', locked
 
@@ -50,7 +44,7 @@ def verify_user(name, password, oath_code):
             db.exec(sql)
 
     if oath_code is not None:
-        if not verify_oath_code(oath_secret, oath_code):
+        if not verify_oath(user_id, oath_code):
             return 0, 0, '', 0
 
     return user_id, account_type, desc, locked

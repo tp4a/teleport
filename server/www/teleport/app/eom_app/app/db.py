@@ -46,6 +46,10 @@ class TPDatabase:
         self._table_prefix = ''
         self._conn_pool = None
 
+        self._stop_flag = False
+        self._thread_keep_alive_handle = None
+        self._thread_keep_alive_cond = threading.Condition()
+
     @property
     def table_prefix(self):
         return self._table_prefix
@@ -91,6 +95,30 @@ class TPDatabase:
 
         return True
 
+    def start_keep_alive(self):
+        self._thread_keep_alive_handle = threading.Thread(target=self._thread_keep_alive)
+        self._thread_keep_alive_handle.start()
+
+    def stop_keep_alive(self):
+        self._stop_flag = True
+        self._thread_keep_alive_cond.acquire()
+        self._thread_keep_alive_cond.notify()
+        self._thread_keep_alive_cond.release()
+        if self._thread_keep_alive_handle is not None:
+            self._thread_keep_alive_handle.join()
+        log.v('database-keep-alive-thread stopped.\n')
+
+    def _thread_keep_alive(self):
+        while True:
+            self._thread_keep_alive_cond.acquire()
+            # 每一小时醒来执行一次查询，避免连接丢失
+            self._thread_keep_alive_cond.wait(3600)
+            self._thread_keep_alive_cond.release()
+            if self._stop_flag:
+                break
+
+            self.query('SELECT `value` FROM `{}config` WHERE `name`="db_ver";'.format(self._table_prefix))
+
     def _init_sqlite(self, db_file):
         self.db_type = self.DB_TYPE_SQLITE
         self.auto_increment = 'AUTOINCREMENT'
@@ -121,49 +149,6 @@ class TPDatabase:
 
         return True
 
-    # def init__(self, db_source):
-    #     self.db_source = db_source
-    #
-    #     if db_source['type'] == self.DB_TYPE_MYSQL:
-    #         log.e('MySQL not supported yet.')
-    #         return False
-    #     elif db_source['type'] == self.DB_TYPE_SQLITE:
-    #         self._table_prefix = 'ts_'
-    #         self._conn_pool = TPSqlitePool(db_source['file'])
-    #
-    #         if not os.path.exists(db_source['file']):
-    #             log.w('database need create.\n')
-    #             self.need_create = True
-    #             return True
-    #     else:
-    #         log.e('Unknown database type: {}'.format(db_source['type']))
-    #         return False
-    #
-    #     # 看看数据库中是否存在指定的数据表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
-    #     # ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}account";'.format(self._table_prefix))
-    #     ret = self.is_table_exists('{}group'.format(self._table_prefix))
-    #     if ret is None or not ret:
-    #         log.w('database need create.\n')
-    #         self.need_create = True
-    #         return True
-    #
-    #     # 尝试从配置表中读取当前数据库版本号（如果不存在，说明是比较旧的版本了）
-    #     ret = self.query('SELECT `value` FROM `{}config` WHERE `name`="db_ver";'.format(self._table_prefix))
-    #     if ret is None or 0 == len(ret):
-    #         self.current_ver = 1
-    #     else:
-    #         self.current_ver = int(ret[0][0])
-    #
-    #     if self.current_ver < self.DB_VERSION:
-    #         log.w('database need upgrade.\n')
-    #         self.need_upgrade = True
-    #         return True
-    #
-    #     # DO TEST
-    #     # self.alter_table('ts_account', [['account_id', 'id'], ['account_type', 'type']])
-    #
-    #     return True
-
     def is_table_exists(self, table_name):
         """
         判断指定的表是否存在
@@ -180,7 +165,6 @@ class TPDatabase:
                 return False
             return True
         elif self.db_type == self.DB_TYPE_MYSQL:
-            # select TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA='dbname' and TABLE_NAME='tablename' ;
             ret = self.query('SELECT TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA="{}" and TABLE_NAME="{}";'.format(self.mysql_db, table_name))
             if ret is None:
                 return None

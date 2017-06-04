@@ -111,24 +111,9 @@ ywl.do_upload_sql_file = function () {
             $('#upload-file').remove();
             var ret = JSON.parse(data);
             if (ret.code === TPE_OK) {
-//                g_host_table.reload();
                 ywl.notify_success('导入sql成功！');
-//                if (ret.data.msg.length > 0) {
-//                    var html = [];
-//                    html.push('<ul>');
-//                    for (var i = 0, cnt = ret.data.msg.length; i < cnt; ++i) {
-//                        html.push('<li>');
-//                        html.push('<span style="font-weight:bold;color:#993333;">' + ret.data.msg[i].reason + '</span><br/>');
-//                        html.push(ret.data.msg[i].line);
-//                        html.push('</li>');
-//                    }
-//                    html.push('</ul>');
-//
-//                    // $('#batch_add_host_result').html(html.join(''));
-////                    $('#dialog_batch_add_host').modal({backdrop: 'static'});
-//                }
             } else {
-                ywl.notify_error('导入sql失败！ 错误号：' + ret.code);
+                ywl.notify_error('导入sql失败！<br/>[' + ret.code+'] '+ret.message);
             }
         },
         error: function () {
@@ -141,7 +126,6 @@ ywl.do_upload_sql_file = function () {
 ywl._make_protocol_info = function (name, p) {
     if (_.isUndefined(p))
         return ywl._make_info(name, '未能检测到');
-    // <tr><td class="key">RDP 端口：</td><td class="value">52089</td></tr>
     var val = p.port;
     if (!p.enable) {
         val = '<span class="disabled">' + val + '（未启用）</span>';

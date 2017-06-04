@@ -530,14 +530,14 @@ class DatabaseUpgrade:
     def _upgrade_to_v6(self):
         _step = self.step_begin('检查数据库版本v6...')
 
-        # 服务端升级到版本2.2.9.1时，为增加双因子认证，为account表增加oath_secret字段
-        # db_ret = self.db.is_field_exists('{}account'.format(self.db.table_prefix), 'oath_secret')
-        # if db_ret is None:
-        #     self.step_end(_step, -1, '无法连接到数据库')
-        #     return False
-        # if db_ret:
-        #     self.step_end(_step, 0, '跳过 v5 到 v6 的升级操作')
-        #     return True
+        # 服务端升级到版本2.2.9时，为增加双因子认证，为account表增加oath_secret字段
+        db_ret = self.db.is_field_exists('{}account'.format(self.db.table_prefix), 'oath_secret')
+        if db_ret is None:
+            self.step_end(_step, -1, '无法连接到数据库')
+            return False
+        if db_ret:
+            self.step_end(_step, 0, '跳过 v5 到 v6 的升级操作')
+            return True
 
         self.step_end(_step, 0, '需要升级到v6')
 
@@ -555,7 +555,6 @@ class DatabaseUpgrade:
             else:
                 self.step_end(_step, 0)
                 return True
-
 
         except:
             log.e('failed.\n')

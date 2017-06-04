@@ -156,11 +156,12 @@ class BaseAppConfig(dict):
         self._on_init()
 
     def __getattr__(self, name):
-        if name in self['_kvs']:
-            return self['_kvs'][name]
+        _name = name.replace('-', '_')
+        if _name in self['_kvs']:
+            return self['_kvs'][_name]
         else:
-            if name in self['_kvs']['_']:
-                return self['_kvs']['_'][name]
+            if _name in self['_kvs']['_']:
+                return self['_kvs']['_'][_name]
             else:
                 return AttrDict()
 
@@ -168,7 +169,7 @@ class BaseAppConfig(dict):
         x = key.split('::')
         if 1 == len(x):
             _sec = '_'
-            _key = x[0]
+            _key = x[0].replace('-', '_')
         elif 2 == len(x):
             _sec = x[0].replace('-', '_')
             _key = x[1].replace('-', '_')
@@ -199,7 +200,7 @@ class BaseAppConfig(dict):
         x = key.split('::')
         if 1 == len(x):
             _sec = '_'
-            _key = x[0]
+            _key = x[0].replace('-', '_')
         elif 2 == len(x):
             _sec = x[0].replace('-', '_')
             _key = x[1].replace('-', '_')
@@ -215,7 +216,7 @@ class BaseAppConfig(dict):
         x = key.split('::')
         if 1 == len(x):
             _sec = '_'
-            _key = x[0]
+            _key = x[0].replace('-', '_')
         elif 2 == len(x):
             _sec = x[0].replace('-', '_')
             _key = x[1].replace('-', '_')
@@ -311,10 +312,10 @@ class BaseAppConfig(dict):
         x = key.split('::')
         if 1 == len(x):
             _sec = '_'
-            _key = x[0]
+            _key = x[0].replace('-', '_')
         elif 2 == len(x):
-            _sec = x[0]
-            _key = x[1]
+            _sec = x[0].replace('-', '_')
+            _key = x[1].replace('-', '_')
         else:
             return def_value, False
 
@@ -322,22 +323,29 @@ class BaseAppConfig(dict):
             return def_value, False
         if _key not in self['_kvs'][_sec]:
             return def_value, False
+
+        if self['_kvs'][_sec][_key] is None:
+            return def_value, False
+
         return str(self['_kvs'][_sec][_key]), True
 
     def get_int(self, key, def_value=-1):
         x = key.split('::')
         if 1 == len(x):
             _sec = '_'
-            _key = x[0]
+            _key = x[0].replace('-', '_')
         elif 2 == len(x):
-            _sec = x[0]
-            _key = x[1]
+            _sec = x[0].replace('-', '_')
+            _key = x[1].replace('-', '_')
         else:
             return def_value, False
 
         if _sec not in self['_kvs']:
             return def_value, False
         if _key not in self['_kvs'][_sec]:
+            return def_value, False
+
+        if self['_kvs'][_sec][_key] is None:
             return def_value, False
 
         try:
@@ -350,16 +358,19 @@ class BaseAppConfig(dict):
         x = key.split('::')
         if 1 == len(x):
             _sec = '_'
-            _key = x[0]
+            _key = x[0].replace('-', '_')
         elif 2 == len(x):
-            _sec = x[0]
-            _key = x[1]
+            _sec = x[0].replace('-', '_')
+            _key = x[1].replace('-', '_')
         else:
             return def_value, False
 
         if _sec not in self['_kvs']:
             return def_value, False
         if _key not in self['_kvs'][_sec]:
+            return def_value, False
+
+        if self['_kvs'][_sec][_key] is None:
             return def_value, False
 
         tmp = str(self['_kvs'][_sec][_key]).lower()
@@ -415,14 +426,6 @@ class AppConfig(BaseAppConfig):
         self.set_default('database::sqlite-file', None,
                          'sqlite-file=/var/lib/teleport/data/ts_db.db'
                          )
-        # self.set_default('database::mysql-host', None,
-        #                  'mysql-host=127.0.0.1\n'
-        #                  'mysql-port=3306\n'
-        #                  'mysql-db=teleport\n'
-        #                  'mysql-prefix=tp_\n'
-        #                  'mysql-user=teleport\n'
-        #                  'mysql-password=password'
-        #                  )
         self.set_default('database::mysql-host', '127.0.0.1', 'mysql-host=127.0.0.1')
         self.set_default('database::mysql-port', 3306, 'mysql-port=3306')
         self.set_default('database::mysql-db', 'teleport', 'mysql-db=teleport')
@@ -507,7 +510,7 @@ class AppConfig(BaseAppConfig):
             self.set_kv('database::mysql-password', _tmp_str)
 
         _log_file, ok = self.get_str('common::log-file')
-        if ok:
+        if ok and _log_file:
             self.log_path = os.path.abspath(os.path.dirname(_log_file))
         else:
             _log_file = os.path.join(self.log_path, 'tpweb.log')
