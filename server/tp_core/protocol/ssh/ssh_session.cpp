@@ -249,7 +249,8 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 
 		// 因为是从sftp会话得来的登录数据，因此限制本会话只能用于sftp，不允许再使用shell了。
 		_this->_enter_sftp_mode();
-	} else {
+	}
+	else {
 		_this->m_server_ip = sess_info->host_ip;
 		_this->m_server_port = sess_info->host_port;
 		_this->m_auth_mode = sess_info->auth_mode;
@@ -284,16 +285,16 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	int port = (int)_this->m_server_port;
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_PORT, &port);
 #ifdef EX_DEBUG
-// 	int flag = SSH_LOG_FUNCTIONS;
-// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_LOG_VERBOSITY, &flag);
+	// 	int flag = SSH_LOG_FUNCTIONS;
+	// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_LOG_VERBOSITY, &flag);
 #endif
 
 	if (_this->m_auth_mode != TS_AUTH_MODE_NONE)
 		ssh_options_set(_this->m_srv_session, SSH_OPTIONS_USER, _this->m_user_name.c_str());
 
 #ifdef EX_DEBUG
-// 	int _timeout_us = 500000000; // 5 sec.
-// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
+	// 	int _timeout_us = 500000000; // 5 sec.
+	// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
 #else
 	int _timeout_us = 10000000; // 10 sec.
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
@@ -310,104 +311,96 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 
 	// 检查服务端支持的认证协议
 	ssh_userauth_none(_this->m_srv_session, NULL);
-	int auth_methods = ssh_userauth_list(_this->m_srv_session, NULL);
+	// int auth_methods = ssh_userauth_list(_this->m_srv_session, NULL);
 
 	if (_this->m_auth_mode == TS_AUTH_MODE_PASSWORD) {
-		if (auth_methods & SSH_AUTH_METHOD_PASSWORD) {
-			rc = ssh_userauth_password(_this->m_srv_session, NULL, _this->m_user_auth.c_str());
-			if (rc != SSH_AUTH_SUCCESS) {
-				EXLOGE("[ssh] invalid password for password mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
-				_this->m_have_error = true;
-				_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
-				return SSH_AUTH_DENIED;
-			}
+		rc = ssh_userauth_password(_this->m_srv_session, NULL, _this->m_user_auth.c_str());
+		if (rc == SSH_AUTH_SUCCESS) {
+			_this->m_is_logon = true;
+			return SSH_AUTH_SUCCESS;
 		}
-		else if (auth_methods & SSH_AUTH_METHOD_INTERACTIVE) {
-			bool is_login = false;
-			for (;;) {
-				rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
-				if (rc != SSH_AUTH_INFO)
-					break;
+		else if (rc == SSH_AUTH_ERROR) {
+			EXLOGE("[ssh] invalid password for password mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+			_this->m_have_error = true;
+			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
+			return SSH_AUTH_ERROR;
+		}
 
-				if(ssh_userauth_kbdint_getnprompts(_this->m_srv_session) != 1)
-					break;
-
-				rc = ssh_userauth_kbdint_setanswer(_this->m_srv_session, 0, _this->m_user_auth.c_str());
-				if (rc < 0)
-					break;
-
-				// 有时候服务端会再发一个空的提示来完成交互
-				rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
-				if (rc == SSH_AUTH_INFO) {
-					if (ssh_userauth_kbdint_getnprompts(_this->m_srv_session) != 0)
-						break;
-					rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
-					if (rc < 0)
-						break;
-				}
-
-				if(rc == SSH_AUTH_SUCCESS)
-					is_login = true;
+		// 可能远程主机不允许用密码登录，试试交互式登录
+		for (;;) {
+			rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
+			if (rc != SSH_AUTH_INFO) {
+				EXLOGE("[ssh] try ssh interactive login failed at init, errcode=%d.\n", rc);
 				break;
 			}
 
-			if (!is_login) {
-				EXLOGE("[ssh] invalid password for keyboard-interactive mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+			if (ssh_userauth_kbdint_getnprompts(_this->m_srv_session) != 1) {
+				EXLOGE("[ssh] ssh interactive login, prompt count not 1.\n");
+				break;
+			}
+
+			rc = ssh_userauth_kbdint_setanswer(_this->m_srv_session, 0, _this->m_user_auth.c_str());
+			if (rc != SSH_AUTH_SUCCESS) {
+				EXLOGE("[ssh] invalid password for interactive mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
 				_this->m_have_error = true;
 				_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
-				return SSH_AUTH_DENIED;
+				return SSH_AUTH_ERROR;
 			}
+
+			// 有时候服务端会再发一个空的提示来完成交互
+			rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
+			if (rc == SSH_AUTH_INFO) {
+				if (ssh_userauth_kbdint_getnprompts(_this->m_srv_session) != 0)
+					break;
+				rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
+				if (rc < 0)
+					break;
+			}
+
+			if (rc == SSH_AUTH_SUCCESS) {
+				_this->m_is_logon = true;
+				return SSH_AUTH_SUCCESS;
+			}
+			break;
 		}
-		else {
-			EXLOGE("[ssh] real SSH server [%s:%d] does not support password or keyboard-interactive login.\n", _this->m_server_ip.c_str(), _this->m_server_port);
-			_this->m_have_error = true;
-			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
-			return SSH_AUTH_DENIED;
-		}
+
+		EXLOGE("[ssh] can not use password mode or interactive mode ot login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+		_this->m_have_error = true;
+		_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
+		return SSH_AUTH_ERROR;
 	}
 	else if (_this->m_auth_mode == TS_AUTH_MODE_PRIVATE_KEY) {
-		if (auth_methods & SSH_AUTH_METHOD_PUBLICKEY) {
-			ssh_key key = NULL;
-			if (SSH_OK != ssh_pki_import_privkey_base64(_this->m_user_auth.c_str(), NULL, NULL, NULL, &key)) {
-				EXLOGE("[ssh] can not import private-key for auth.\n");
-				_this->m_have_error = true;
-				_this->m_retcode = SESS_STAT_ERR_BAD_SSH_KEY;
-				return SSH_AUTH_DENIED;
-			}
+		ssh_key key = NULL;
+		if (SSH_OK != ssh_pki_import_privkey_base64(_this->m_user_auth.c_str(), NULL, NULL, NULL, &key)) {
+			EXLOGE("[ssh] can not import private-key for auth.\n");
+			_this->m_have_error = true;
+			_this->m_retcode = SESS_STAT_ERR_BAD_SSH_KEY;
+			return SSH_AUTH_ERROR;
+		}
 
-			rc = ssh_userauth_publickey(_this->m_srv_session, NULL, key);
-			if (rc != SSH_OK) {
-				ssh_key_free(key);
-				EXLOGE("[ssh] invalid private-key for login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
-				_this->m_have_error = true;
-				_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
-				return SSH_AUTH_DENIED;
-			}
+		rc = ssh_userauth_publickey(_this->m_srv_session, NULL, key);
+		ssh_key_free(key);
 
-			ssh_key_free(key);
+		if (rc == SSH_AUTH_SUCCESS) {
+			_this->m_is_logon = true;
+			return SSH_AUTH_SUCCESS;
 		}
 		else {
-			EXLOGE("[ssh] real SSH server [%s:%d] does not support public key login.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+			EXLOGE("[ssh] failed to use private-key to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
 			_this->m_have_error = true;
 			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
-			return SSH_AUTH_DENIED;
+			return SSH_AUTH_ERROR;
 		}
-
 	}
-	else if (_this->m_auth_mode == TS_AUTH_MODE_NONE)
-	{
-		// do nothing.
-		return SSH_AUTH_DENIED;
+	else if (_this->m_auth_mode == TS_AUTH_MODE_NONE) {
+		return SSH_AUTH_ERROR;
 	}
 	else {
 		EXLOGE("[ssh] invalid auth mode.\n");
 		_this->m_have_error = true;
 		_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
-		return SSH_AUTH_DENIED;
+		return SSH_AUTH_ERROR;
 	}
-
-	_this->m_is_logon = true;
-	return SSH_AUTH_SUCCESS;
 }
 
 ssh_channel SshSession::_on_new_channel_request(ssh_session session, void *userdata) {
@@ -757,7 +750,7 @@ void SshSession::_process_sftp_command(const ex_u8* data, int len) {
 		m_rec.record_command("SFTP INITIALIZE\r\n");
 		return;
 	}
-	
+
 	// 需要的数据至少14字节
 	// uint32 + byte + uint32 + (uint32 + char + ...)
 	// pkg_len + cmd + req_id + string( length + content...)
@@ -766,22 +759,22 @@ void SshSession::_process_sftp_command(const ex_u8* data, int len) {
 
 	ex_u8* str1_ptr = (ex_u8*)data + 9;
 	int str1_len = (int)((str1_ptr[0] << 24) | (str1_ptr[1] << 16) | (str1_ptr[2] << 8) | str1_ptr[3]);
-// 	if (str1_len + 9 != pkg_len)
-// 		return;
+	// 	if (str1_len + 9 != pkg_len)
+	// 		return;
 	ex_u8* str2_ptr = NULL;// (ex_u8*)data + 13;
 	int str2_len = 0;// (int)((data[9] << 24) | (data[10] << 16) | (data[11] << 8) | data[12]);
 
-	
+
 	const char* act = NULL;
 	switch (sftp_cmd) {
 	case 0x03:
 		// 0x03 = 3 = SSH_FXP_OPEN
 		act = "open file";
 		break;
-// 	case 0x0b:
-// 		// 0x0b = 11 = SSH_FXP_OPENDIR
-// 		act = "open dir";
-// 		break;
+		// 	case 0x0b:
+		// 		// 0x0b = 11 = SSH_FXP_OPENDIR
+		// 		act = "open dir";
+		// 		break;
 	case 0x0d:
 		// 0x0d = 13 = SSH_FXP_REMOVE
 		act = "remove file";
@@ -857,15 +850,15 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
 
 	if (_this->m_is_sftp) {
 		EXLOGE("[ssh] try to request shell on a sftp-session.\n");
-// 		char buf[2048] = { 0 };
-// 		snprintf(buf, sizeof(buf),
-// 			"\r\n\r\n"\
-// 			"!! ERROR !!\r\n"\
-// 			"Session-ID '%s' has been used for SFTP.\r\n"\
-// 			"\r\n", _this->m_sid.c_str()
-// 			);
-// 		ssh_channel_write(channel, buf, strlen(buf));
-// 
+		// 		char buf[2048] = { 0 };
+		// 		snprintf(buf, sizeof(buf),
+		// 			"\r\n\r\n"\
+		// 			"!! ERROR !!\r\n"\
+		// 			"Session-ID '%s' has been used for SFTP.\r\n"\
+		// 			"\r\n", _this->m_sid.c_str()
+		// 			);
+		// 		ssh_channel_write(channel, buf, strlen(buf));
+		// 
 		return 1;
 	}
 
@@ -1109,12 +1102,12 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 				"  - authroized by %s\r\n"\
 				"=============================================\r\n"\
 				"\r\n",
-//				\
-//				"\033]0;tpssh://%s\007\r\n",
+				//				\
+				//				"\033]0;tpssh://%s\007\r\n",
 				_this->m_server_ip.c_str(),
 				_this->m_server_port, auth_mode
-//				,
-//				_this->m_server_ip.c_str()
+				//				,
+				//				_this->m_server_ip.c_str()
 				);
 
 			int buf_len = strlen(buf);
@@ -1135,7 +1128,7 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 	}
 #endif
 
-	if(is_stderr)
+	if (is_stderr)
 		ret = ssh_channel_write_stderr(info->channel, data, len);
 	else
 		ret = ssh_channel_write(info->channel, data, len);
