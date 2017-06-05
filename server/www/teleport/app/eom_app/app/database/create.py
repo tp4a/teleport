@@ -25,7 +25,7 @@ def create_and_init(db, step_begin, step_end):
 `account_status` int(11) DEFAULT 0,
 `account_lock` int(11) DEFAULT 0,
 `account_desc` varchar(255),
-`oath_secret` varchar(64),
+`oath_secret` varchar(64)
 );""".format(db.table_prefix, db.auto_increment))
 
         _db_exec(db, step_begin, step_end, '创建表 auth', """CREATE TABLE `{}auth`(
