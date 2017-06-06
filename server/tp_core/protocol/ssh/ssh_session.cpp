@@ -292,13 +292,13 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	if (_this->m_auth_mode != TS_AUTH_MODE_NONE)
 		ssh_options_set(_this->m_srv_session, SSH_OPTIONS_USER, _this->m_user_name.c_str());
 
-#ifdef EX_DEBUG
-	// 	int _timeout_us = 500000000; // 5 sec.
-	// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
-#else
-	int _timeout_us = 10000000; // 10 sec.
-	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
-#endif
+//#ifdef EX_DEBUG
+//	// 	int _timeout_us = 500000000; // 5 sec.
+//	// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
+//#else
+//	int _timeout_us = 10000000; // 10 sec.
+//	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
+//#endif
 
 	int rc = 0;
 	rc = ssh_connect(_this->m_srv_session);
@@ -325,29 +325,21 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 
 
 	if (_this->m_auth_mode == TS_AUTH_MODE_PASSWORD) {
-// 		//rc = ssh_userauth_password(_this->m_srv_session, NULL, _this->m_user_auth.c_str());
-// 		rc = SSH_AUTH_DENIED;
-// 		if (rc == SSH_AUTH_SUCCESS) {
-// 			_this->m_is_logon = true;
-// 			return SSH_AUTH_SUCCESS;
-// 		}
-// 		else if (rc == SSH_AUTH_ERROR) {
-// 			EXLOGE("[ssh] invalid password for password mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
-// 			_this->m_have_error = true;
-// 			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
-// 			return SSH_AUTH_ERROR;
-// 		}
-
 		// 优先尝试交互式登录（SSHv2推荐）
 		rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
 		while(rc == SSH_AUTH_INFO) {
 			int nprompts = ssh_userauth_kbdint_getnprompts(_this->m_srv_session);
+			if(0 == nprompts) {
+				rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
+				continue;
+			}
+
 			for (int iprompt = 0; iprompt < nprompts; ++iprompt) {
 				char echo = 0;
-				const char* prompt = ssh_userauth_kbdint_getprompt(session, iprompt, &echo);
+				const char* prompt = ssh_userauth_kbdint_getprompt(_this->m_srv_session, iprompt, &echo);
 				EXLOGV("[ssh] interactive login prompt: %s\n", prompt);
 
-				rc = ssh_userauth_kbdint_setanswer(_this->m_srv_session, 0, _this->m_user_auth.c_str());
+				rc = ssh_userauth_kbdint_setanswer(_this->m_srv_session, iprompt, _this->m_user_auth.c_str());
 				if (rc < 0) {
 					EXLOGE("[ssh] invalid password for interactive mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
 					_this->m_have_error = true;
@@ -355,6 +347,8 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 					return SSH_AUTH_ERROR;
 				}
 			}
+
+			rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
 		}
 
 		if (rc == SSH_AUTH_SUCCESS) {
@@ -419,15 +413,23 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 
 ssh_channel SshSession::_on_new_channel_request(ssh_session session, void *userdata) {
 	// 客户端尝试打开一个通道（然后才能通过这个通道发控制命令或者收发数据）
-	EXLOGV("[ssh] allocated session channel\n");
+	EXLOGV("[ssh] client open channel\n");
 
 	SshSession *_this = (SshSession *)userdata;
 
 	ssh_channel cli_channel = ssh_channel_new(session);
+	if(cli_channel == NULL) {
+		EXLOGE("[ssh] can not create channel for client.\n");
+		return NULL;
+	}
 	ssh_set_channel_callbacks(cli_channel, &_this->m_cli_channel_cb);
 
 	// 我们也要向真正的服务器申请打开一个通道，来进行转发
 	ssh_channel srv_channel = ssh_channel_new(_this->m_srv_session);
+	if(srv_channel == NULL) {
+		EXLOGE("[ssh] can not create channel for server.\n");
+		return NULL;
+	}
 	if (ssh_channel_open_session(srv_channel)) {
 		EXLOGE("[ssh] error opening channel to real server: %s\n", ssh_get_error(session));
 		ssh_channel_free(cli_channel);
@@ -450,6 +452,7 @@ ssh_channel SshSession::_on_new_channel_request(ssh_session session, void *userd
 		_this->m_channel_srv_cli.insert(std::make_pair(srv_channel, cli_info));
 	}
 
+	EXLOGD("[ssh] channel for client and server created.\n");
 	return cli_channel;
 }
 
@@ -863,17 +866,8 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
 	SshSession *_this = (SshSession *)userdata;
 
 	if (_this->m_is_sftp) {
-		EXLOGE("[ssh] try to request shell on a sftp-session.\n");
-		// 		char buf[2048] = { 0 };
-		// 		snprintf(buf, sizeof(buf),
-		// 			"\r\n\r\n"\
-		// 			"!! ERROR !!\r\n"\
-		// 			"Session-ID '%s' has been used for SFTP.\r\n"\
-		// 			"\r\n", _this->m_sid.c_str()
-		// 			);
-		// 		ssh_channel_write(channel, buf, strlen(buf));
-		// 
-		return 1;
+		EXLOGE("[ssh] request shell on a sftp-session is denied.\n");
+		return SSH_ERROR;
 	}
 
 	EXLOGD("[ssh] client request shell\n");
@@ -881,17 +875,20 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
 	TS_SSH_CHANNEL_INFO *srv_info = _this->_get_srv_channel(channel);
 	if (NULL == srv_info || NULL == srv_info->channel) {
 		EXLOGE("[ssh] when client request shell, not found server channel.\n");
-		return 1;
+		return SSH_ERROR;
 	}
 	srv_info->type = TS_SSH_CHANNEL_TYPE_SHELL;
 
 	TS_SSH_CHANNEL_INFO *cli_info = _this->_get_cli_channel(srv_info->channel);
 	if (NULL == cli_info || NULL == cli_info->channel) {
 		EXLOGE("[ssh] when client request shell, not found client channel.\n");
-		return 1;
+		return SSH_ERROR;
 	}
 	cli_info->type = TS_SSH_CHANNEL_TYPE_SHELL;
 
+	// FIXME: if client is putty, it will block here. the following function will never return.
+	// at this time, can not write data to this channel. read from this channel with timeout, got 0 byte.
+	// I have no idea how to fix it...  :(
 	return ssh_channel_request_shell(srv_info->channel);
 }
 
@@ -1116,12 +1113,8 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 				"  - authroized by %s\r\n"\
 				"=============================================\r\n"\
 				"\r\n",
-				//				\
-				//				"\033]0;tpssh://%s\007\r\n",
 				_this->m_server_ip.c_str(),
 				_this->m_server_port, auth_mode
-				//				,
-				//				_this->m_server_ip.c_str()
 				);
 
 			int buf_len = strlen(buf);
@@ -1130,11 +1123,7 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 			memcpy(&_data[0], buf, buf_len);
 			memcpy(&_data[buf_len], data, len);
 
-			// 注意，这里虽然可以改变窗口（或者标签页）的标题，但是因为这是服务端发回的第一个包，后面服务端可能还会发类似的包（仅一次）来改变标题
-			// 导致窗口标题又被改变，因此理论上应该解析服务端发回的包，如果包含上述格式的，需要替换一次。
-			//_write(info->channel, buf, strlen(buf));
 			ret = ssh_channel_write(info->channel, &_data[0], _data.size());
-			//EXLOGD("--- first send to client : %d %d %d\n", _data.size(), ret, len);
 
 			_this->m_recving_from_srv = false;
 			return len;
@@ -1149,8 +1138,6 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 	if (ret == SSH_ERROR) {
 		EXLOGE("[ssh] send data(%dB) to client failed (2). [%d][%s][%s]\n", len, ret, ssh_get_error(_this->m_cli_session), ssh_get_error(_this->m_cli_session));
 	}
-
-	//EXLOGD("--- send to client: %d %d\n", ret, len);
 
 	_this->m_recving_from_srv = false;
 	return ret;
