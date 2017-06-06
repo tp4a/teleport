@@ -179,13 +179,15 @@ class TPDatabase:
     def is_field_exists(self, table_name, field_name):
         if self.db_type == self.DB_TYPE_SQLITE:
             ret = self.query('PRAGMA table_info(`{}`);'.format(table_name))
-            print(ret)
             if ret is None:
                 return None
             if len(ret) == 0:
                 return False
             else:
-                return True
+                for f in ret:
+                    if f[1] == field_name:
+                        return True
+                return False
         elif self.db_type == self.DB_TYPE_MYSQL:
             ret = self.query('DESC `{}` `{}`;'.format(table_name, field_name))
             print(ret)

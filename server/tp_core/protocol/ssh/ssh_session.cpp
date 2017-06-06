@@ -309,59 +309,72 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		return SSH_AUTH_ERROR;
 	}
 
-	// 检查服务端支持的认证协议
-	ssh_userauth_none(_this->m_srv_session, NULL);
-	// int auth_methods = ssh_userauth_list(_this->m_srv_session, NULL);
+// 	// 检查服务端支持的认证协议
+// 	rc = ssh_userauth_none(_this->m_srv_session, NULL);
+// 	if (rc == SSH_AUTH_ERROR) {
+// 			EXLOGE("[ssh] invalid password for password mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+// 			_this->m_have_error = true;
+// 			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
+// 			return SSH_AUTH_ERROR;
+// 	}
+// 	// int auth_methods = ssh_userauth_list(_this->m_srv_session, NULL);
+// 	const char* banner = ssh_get_issue_banner(_this->m_srv_session);
+// 	if (NULL != banner) {
+// 		EXLOGE("[ssh] issue banner: %s\n", banner);
+// 	}
+
 
 	if (_this->m_auth_mode == TS_AUTH_MODE_PASSWORD) {
-		rc = ssh_userauth_password(_this->m_srv_session, NULL, _this->m_user_auth.c_str());
+// 		//rc = ssh_userauth_password(_this->m_srv_session, NULL, _this->m_user_auth.c_str());
+// 		rc = SSH_AUTH_DENIED;
+// 		if (rc == SSH_AUTH_SUCCESS) {
+// 			_this->m_is_logon = true;
+// 			return SSH_AUTH_SUCCESS;
+// 		}
+// 		else if (rc == SSH_AUTH_ERROR) {
+// 			EXLOGE("[ssh] invalid password for password mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+// 			_this->m_have_error = true;
+// 			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
+// 			return SSH_AUTH_ERROR;
+// 		}
+
+		// 优先尝试交互式登录（SSHv2推荐）
+		rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
+		while(rc == SSH_AUTH_INFO) {
+			int nprompts = ssh_userauth_kbdint_getnprompts(_this->m_srv_session);
+			for (int iprompt = 0; iprompt < nprompts; ++iprompt) {
+				char echo = 0;
+				const char* prompt = ssh_userauth_kbdint_getprompt(session, iprompt, &echo);
+				EXLOGV("[ssh] interactive login prompt: %s\n", prompt);
+
+				rc = ssh_userauth_kbdint_setanswer(_this->m_srv_session, 0, _this->m_user_auth.c_str());
+				if (rc < 0) {
+					EXLOGE("[ssh] invalid password for interactive mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+					_this->m_have_error = true;
+					_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
+					return SSH_AUTH_ERROR;
+				}
+			}
+		}
+
 		if (rc == SSH_AUTH_SUCCESS) {
+			EXLOGW("[ssh] logon with keyboard interactive mode.\n");
 			_this->m_is_logon = true;
 			return SSH_AUTH_SUCCESS;
 		}
-		else if (rc == SSH_AUTH_ERROR) {
-			EXLOGE("[ssh] invalid password for password mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
-			_this->m_have_error = true;
-			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
-			return SSH_AUTH_ERROR;
+		else {
+			EXLOGD("[ssh] failed to login with keyboard interactive mode, got %d, try password mode.\n", rc);
 		}
 
-		// 可能远程主机不允许用密码登录，试试交互式登录
-		for (;;) {
-			rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
-			if (rc != SSH_AUTH_INFO) {
-				EXLOGE("[ssh] try ssh interactive login failed at init, errcode=%d.\n", rc);
-				break;
-			}
-
-			if (ssh_userauth_kbdint_getnprompts(_this->m_srv_session) != 1) {
-				EXLOGE("[ssh] ssh interactive login, prompt count not 1.\n");
-				break;
-			}
-
-			rc = ssh_userauth_kbdint_setanswer(_this->m_srv_session, 0, _this->m_user_auth.c_str());
-			if (rc != SSH_AUTH_SUCCESS) {
-				EXLOGE("[ssh] invalid password for interactive mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
-				_this->m_have_error = true;
-				_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
-				return SSH_AUTH_ERROR;
-			}
-
-			// 有时候服务端会再发一个空的提示来完成交互
-			rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
-			if (rc == SSH_AUTH_INFO) {
-				if (ssh_userauth_kbdint_getnprompts(_this->m_srv_session) != 0)
-					break;
-				rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
-				if (rc < 0)
-					break;
-			}
-
-			if (rc == SSH_AUTH_SUCCESS) {
-				_this->m_is_logon = true;
-				return SSH_AUTH_SUCCESS;
-			}
-			break;
+		// 不支持交互式登录，则尝试密码方式
+		rc = ssh_userauth_password(_this->m_srv_session, NULL, _this->m_user_auth.c_str());
+		if (rc == SSH_AUTH_SUCCESS) {
+			EXLOGW("[ssh] logon with password mode.\n");
+			_this->m_is_logon = true;
+			return SSH_AUTH_SUCCESS;
+		}
+		else {
+			EXLOGD("[ssh] failed to login with password mode, got %d.\n", rc);
 		}
 
 		EXLOGE("[ssh] can not use password mode or interactive mode ot login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
@@ -382,6 +395,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		ssh_key_free(key);
 
 		if (rc == SSH_AUTH_SUCCESS) {
+			EXLOGW("[ssh] logon with public-key mode.\n");
 			_this->m_is_logon = true;
 			return SSH_AUTH_SUCCESS;
 		}

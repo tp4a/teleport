@@ -193,7 +193,6 @@ class OathVerifyHandler(TPBaseUserAuthJsonHandler):
 class OathSecretQrCodeHandler(TPBaseUserAuthJsonHandler):
     def get(self):
         secret = self.get_session('tmp_oath_secret', None)
-        print('tmp-oath-secret:', secret)
 
         user_info = self.get_current_user()
         img_data = gen_oath_qrcode(user_info['name'], secret)
