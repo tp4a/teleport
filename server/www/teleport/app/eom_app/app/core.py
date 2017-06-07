@@ -119,12 +119,9 @@ class WebServerCore:
 
         # 启动session超时管理
         web_session().start()
-        # 启动数据库定时事务（例如MySQL防丢失连接）
-        get_db().start_keep_alive()
 
         tornado.ioloop.IOLoop.instance().start()
 
-        get_db().stop_keep_alive()
         web_session().stop()
 
         return 0

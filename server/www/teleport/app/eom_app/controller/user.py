@@ -6,7 +6,7 @@ from eom_app.app.configs import app_cfg
 from eom_app.module import host
 from eom_app.module import user
 from eom_common.eomcore.logger import *
-from .base import TPBaseUserAuthJsonHandler, TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
+from .base import TPBaseUserAuthHandler, TPBaseUserAuthJsonHandler, TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
 
 cfg = app_cfg()
 
@@ -16,7 +16,7 @@ class IndexHandler(TPBaseAdminAuthHandler):
         self.render('user/index.mako')
 
 
-class PersonalHandler(TPBaseAdminAuthHandler):
+class PersonalHandler(TPBaseUserAuthHandler):
     def get(self):
         user_info = self.get_current_user()
         self.render('user/personal.mako', user=user_info)

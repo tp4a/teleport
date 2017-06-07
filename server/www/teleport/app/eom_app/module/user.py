@@ -61,7 +61,9 @@ def verify_oath(user_id, oath_code):
     if len(db_ret) != 1:
         return False
 
-    oath_secret = db_ret[0][0]
+    oath_secret = str(db_ret[0][0]).strip()
+    if 0 == len(oath_secret):
+        return False
 
     return verify_oath_code(oath_secret, oath_code)
 

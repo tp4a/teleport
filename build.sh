@@ -1,8 +1,7 @@
 #!/bin/bash
 
+
 PATH_ROOT=$(cd "$(dirname "$0")"; pwd)
-PYEXEC=${PATH_ROOT}/external/linux/release/bin/python3.4
-PYSTATIC=${PATH_ROOT}/external/linux/release/lib/libpython3.4m.a
 
 function on_error()
 {
@@ -14,14 +13,34 @@ function on_error()
 	exit 1
 }
 
-if [ ! -f "${PYSTATIC}" ]; then
-	echo "python static not found, now build it..."
-	"${PATH_ROOT}/build/build-py-static.sh"
+function build_linux
+{
+	PYEXEC=${PATH_ROOT}/external/linux/release/bin/python3.4
+	PYSTATIC=${PATH_ROOT}/external/linux/release/lib/libpython3.4m.a
 
 	if [ ! -f "${PYSTATIC}" ]; then
-		on_error "can not build python static."
+		echo "python static not found, now build it..."
+		"${PATH_ROOT}/build/build-py-static.sh"
+
+		if [ ! -f "${PYSTATIC}" ]; then
+			on_error "can not build python static."
+		fi
 	fi
+
+
+	${PYEXEC} -B "${PATH_ROOT}/build/build.py" $@
+}
+
+function build_macos
+{
+	python3 -B "${PATH_ROOT}/build/build.py" $@
+}
+
+SYSTEM=`uname -s`
+if [ $SYSTEM = "Linux" ] ; then
+	build_linux
+elif [ $SYSTEM = "Darwin" ] ; then   
+	build_macos
+else 
+	echo "Unsupported platform."
 fi
-
-
-${PYEXEC} -B "${PATH_ROOT}/build/build.py" $@
