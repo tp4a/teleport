@@ -178,7 +178,7 @@ ywl.on_host_table_created = function (tbl) {
             if (protocol === PROTOCOL_TYPE_RDP) {
                 $(cell_obj).find('[ywl-btn-record]').click(function () {
                     var ip = window.location.hostname;
-                    var port = parseInt(window.location.port);
+                    var port = (window.location.port === "") ? 80 : parseInt(window.location.port);
                     var url = 'http://' + ip + ':' + port + '/log/replay/rdp/' + row_data.id;
                     var tail = 'log/replay/rdp/' + prefixInteger(row_data.id, 6);
                     var args = {};
