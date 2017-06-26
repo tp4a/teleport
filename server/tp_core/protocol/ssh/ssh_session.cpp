@@ -326,8 +326,20 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 
 	if (_this->m_auth_mode == TS_AUTH_MODE_PASSWORD) {
 		// 优先尝试交互式登录（SSHv2推荐）
+		int retry_count = 0;
 		rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
-		while(rc == SSH_AUTH_INFO) {
+		for (;;) {
+			if (rc == SSH_AUTH_AGAIN) {
+				retry_count += 1;
+				if (retry_count >= 5)
+					break;
+				rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
+				continue;
+			}
+
+			if (rc != SSH_AUTH_INFO)
+				break;
+
 			int nprompts = ssh_userauth_kbdint_getnprompts(_this->m_srv_session);
 			if(0 == nprompts) {
 				rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);

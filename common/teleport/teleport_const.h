@@ -44,8 +44,9 @@
 #define TPE_OATH_MISMATCH			10002	// 身份验证器动态验证码错误
 #define TPE_SYS_MAINTENANCE			10003	// 系统维护中
 
-#define TPE_USER_LOCKED				10100	// 用户已经被锁定
-#define TPE_USER_AUTH				10101	// 身份验证失败
+#define TPE_USER_LOCKED				10100	// 用户已经被锁定（连续多次错误密码）
+#define TPE_USER_BAN				10101	// 用户已经被禁用
+#define TPE_USER_AUTH				10102	// 身份验证失败
 
 //-------------------------------------------------------
 // 助手程序专用错误值
