@@ -15,11 +15,13 @@
 #define TPE_NEED_MORE_DATA			1	// 需要更多数据（不一定是错误）
 #define TPE_NEED_LOGIN				2	// 需要登录
 #define TPE_PRIVILEGE				3	// 没有操作权限
+#define TPE_EXISTS					8	// 目标已经存在
 
 // 100~299是通用错误值
 
 #define TPE_FAILED					100	// 内部错误
 #define TPE_NETWORK					101	// 网络错误
+#define TPE_DATABASE				102 // 数据库操作失败
 
 // HTTP请求相关错误
 #define TPE_HTTP_METHOD				120	// 无效的请求方法（不是GET/POST等），或者错误的请求方法（例如需要POST，却使用GET方式请求）
