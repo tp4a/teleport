@@ -68,6 +68,8 @@ bool TsEnv::init(bool load_config)
 	}
 
 	ExIniSection* ps = m_ini.GetSection(L"common");
+	if(NULL == ps)
+		ps = m_ini.GetDumySection();
 
 	ex_wstr replay_path;
 	if (ps->GetStr(L"replay-path", replay_path))
