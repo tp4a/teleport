@@ -73,7 +73,10 @@ bool TsEnv::init(bool load_config)
 	}
 
 	ex_wstr log_file;
-	ExIniSection* ps = cfg.GetDumySection();
+	// 	ExIniSection* ps = cfg.GetDumySection();
+	ExIniSection* ps = cfg.GetSection(L"common");
+	if (NULL == ps)
+		ps = cfg.GetDumySection();
 	if (!ps->GetStr(L"log-file", log_file))
 	{
 		EXLOG_FILE(L"tpweb.log", log_path.c_str());
