@@ -15,10 +15,8 @@ Teleport非常小巧且极易安装部署：**仅需一分钟，就可以安装�
 
 ## 支持的操作系统
 
-Teleport支持部署到Windows或Linux系统中，目前支持的系统版本如下：
+Teleport支持部署到Linux系统中，目前支持的系统版本如下：
 
-- Windows Server 2008 及以上版本
-- Windows 7 及以上版本
 - Ubuntu 14.04 64位 及以上版本
 - CentOS 6.2 64位 及以上版本
 - Debian 6.0 64位 及以上版本
