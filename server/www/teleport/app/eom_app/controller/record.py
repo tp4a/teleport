@@ -5,6 +5,7 @@ import json
 import os
 import platform
 
+from eom_common.eomcore.logger import log
 from eom_app.app.configs import app_cfg
 from eom_app.module import record
 from eom_app.module import user
@@ -161,6 +162,29 @@ class RecordGetInfo(TPBaseAdminAuthJsonHandler):
             return self.write_json(-3, '操作失败')
 
         return self.write_json(0, data=data)
+
+
+# class RecordGetInfo(TPBaseAdminAuthHandler):
+#     def post(self):
+#         args = self.get_argument('args', None)
+#         if args is not None:
+#             args = json.loads(args)
+#         else:
+#             return self.write(-1)
+#
+#         record_id = args['id']
+#         file_id = args['file_id']
+#
+#         record_path = os.path.join(app_cfg().core.replay_path, 'ssh', '{:06d}'.format(int(record_id)))
+#         file_info = os.path.join(record_path, 'tp-ssh.{:03d}'.format(int(file_id)))
+#         try:
+#             with open(file_info, 'rb') as f:
+#                 data = f.read()
+#                 log.v('data size:', len(data), '\n')
+#                 self.write(data)
+#         except:
+#             log.e('\n')
+#             self.write(-1)
 
 
 class DeleteLog(TPBaseAdminAuthJsonHandler):

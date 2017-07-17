@@ -115,6 +115,7 @@ class Logger:
         self._log_datetime = True  # 是否记录日志时间
         self._file_handle = None  # 日志文件的句柄，为None时表示不记录到文件
 
+        self._log_console = self._log_pass
         self._win_color = None
 
         self._set_console(True)

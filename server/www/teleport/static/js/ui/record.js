@@ -16,6 +16,7 @@ var g_total_file_count = 0;
 var g_process = 0;
 var g_playing = false;
 var g_need_stop = false;
+var g_skip = true;
 var g_timer = null;
 var g_console_term = null;
 var g_current_time;
@@ -25,6 +26,7 @@ var g_req_count = 0;
 var g_dom_time = null;
 var g_dom_btn_play = null;
 var g_dom_btn_speed = null;
+var g_dom_btn_skip = null;
 var g_dom_progress = null;
 var g_dom_status = null;
 
@@ -68,6 +70,7 @@ ywl.on_init = function (cb_stack, cb_args) {
     g_dom_time = $('#play-time');
     g_dom_btn_play = $('#btn-play');
     g_dom_btn_speed = $('#btn-speed');
+    g_dom_btn_skip = $('#btn-skip');
     g_dom_progress = $('#progress');
     g_dom_status = $('#play-status');
 
@@ -96,11 +99,25 @@ ywl.on_init = function (cb_stack, cb_args) {
             ywl.notify_error('网络通讯失败');
         }
     );
+
     g_dom_btn_play.click(function () {
         if (g_playing)
             pause();
         else
             play();
+    });
+
+    g_dom_btn_skip.click(function () {
+        var obj = $('#btn-skip i');
+        if (g_skip) {
+            g_skip = false;
+            obj.removeClass('fa-check-square-o').addClass('fa-square-o');
+        } else {
+            g_skip = true;
+            obj.removeClass('fa-square-o').addClass('fa-check-square-o');
+        }
+
+        console.log('skip:', g_skip);
     });
 
     $('#btn-restart').click(function () {
@@ -131,7 +148,7 @@ ywl.on_init = function (cb_stack, cb_args) {
     function init() {
         g_last_time = 0;
 
-        if (g_console_term != null) {
+        if (!_.isNull(g_console_term)) {
             g_console_term.destroy();
         }
         g_console_term = new Terminal({
@@ -162,7 +179,7 @@ ywl.on_init = function (cb_stack, cb_args) {
             return;
         }
 
-        if (typeof(g_data[g_cur_play_file_id]) == "undefined") {
+        if (_.isUndefined(g_data[g_cur_play_file_id])) {
             g_req_count++;
             if (g_req_count > 2000) {
                 g_req_count = 0;
@@ -183,26 +200,25 @@ ywl.on_init = function (cb_stack, cb_args) {
             return;
         }
         g_dom_status.text("正在播放");
-        g_current_time += record_tick;
+        g_current_time += record_tick * speed_table[speed_offset].speed;
         internal_tick += record_tick;
         var play_data = g_data[g_cur_play_file_id][g_cur_play_file_offset];
-        var temp_time = g_current_time * speed_table[speed_offset].speed;
 
         //播放
-        if (play_data.t < temp_time) {
+        if (play_data.a === 1 || play_data.t < g_current_time) {
             var rec_length = g_data[g_cur_play_file_id].length;
             g_last_time = play_data.t;
             internal_tick = 0;
 
-            if (play_data.a == 1) {
+            if (play_data.a === 1)
                 g_console_term.resize(play_data.w, play_data.h);
-            }
-            else {
+            else if (play_data.a === 2)
                 g_console_term.write(play_data.d);
-            }
+            else
+                g_console_term.write(base64_decode(play_data.d));
 
-            if ((g_cur_play_file_offset + 1) == rec_length) {
-                if ((g_cur_play_file_id + 1) == g_total_file_count) {
+            if ((g_cur_play_file_offset + 1) === rec_length) {
+                if ((g_cur_play_file_id + 1) === g_total_file_count) {
                     g_dom_progress.val(100);
                     g_dom_status.text('播放完成');
                     g_dom_time.text(parseInt(g_total_time / 1000) + '秒');
@@ -220,8 +236,14 @@ ywl.on_init = function (cb_stack, cb_args) {
                 g_cur_play_file_offset++;
             }
         } else {
-            //不播放
+            if (g_skip) {
+                if (play_data.t - g_current_time > 1000) {
+                    g_current_time = play_data.t - 999;
+                }
+            }
         }
+
+
         g_process = parseInt((g_last_time + internal_tick) * 100 / g_total_time);
         g_dom_progress.val(g_process);
         var temp = parseInt((g_last_time + internal_tick) / 1000);

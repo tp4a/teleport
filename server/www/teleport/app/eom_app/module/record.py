@@ -3,6 +3,7 @@
 import os
 import shutil
 import struct
+import base64
 
 from eom_app.app.configs import app_cfg
 from eom_app.app.db import get_db
@@ -113,9 +114,13 @@ def read_record_info(record_id, file_id):
                 temp['w'] = w
                 temp['h'] = h
             elif action == 2:
-                _data = _data.decode()
-                # this is ssh data.
-                temp['d'] = _data
+                try:
+                    _d = _data.decode()
+                    temp['d'] = _d
+                except:
+                    _data = base64.b64encode(_data)
+                    temp['a'] = 3
+                    temp['d'] = _data.decode()
             else:
                 return None
 
