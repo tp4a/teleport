@@ -383,7 +383,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 			EXLOGD("[ssh] failed to login with password mode, got %d.\n", rc);
 		}
 
-		EXLOGE("[ssh] can not use password mode or interactive mode ot login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+		EXLOGE("[ssh] can not use password mode or interactive mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
 		_this->m_have_error = true;
 		_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
 		return SSH_AUTH_ERROR;
