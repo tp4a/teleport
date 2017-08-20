@@ -5,28 +5,14 @@
 #include "../common/ts_const.h"
 
 #include <ex/ex_str.h>
+#include <teleport_const.h>
 
 bool ts_web_rpc_register_core()
 {
 	Json::FastWriter json_writer;
 	Json::Value jreq;
 	jreq["method"] = "register_core";
-	//jreq["param"]["ip"] = g_env.rpc_bind_ip.c_str();
-	//jreq["param"]["port"] = g_env.rpc_bind_port;
-	//jreq["param"]["rpc"] = "http://127.0.0.1:52080/rpc";
 	jreq["param"]["rpc"] = g_env.core_server_rpc;
-
-// 	ExIniFile& ini = g_env.get_ini();
-// 	ExIniSection* sec = ini.GetSection(L"common");
-// 	if (NULL == sec)
-// 	{
-// 		return false;
-// 	}
-// 
-// 	ex_wstr rpc;
-// 	if (!sec->GetStr(L"", L""))
-// 		return false;
-
 
 	ex_astr json_param;
 	json_param = json_writer.write(jreq);
@@ -34,7 +20,6 @@ bool ts_web_rpc_register_core()
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
 
-	//ex_astr url = "http://127.0.0.1:7190/rpc?";
 	ex_astr url = g_env.web_server_rpc;
 	url += "?";
 	url += param;
@@ -43,12 +28,12 @@ bool ts_web_rpc_register_core()
 	return ts_http_get(url, body);
 }
 
-bool ts_web_rpc_get_auth_info(int auth_id, Json::Value& jret)
+int ts_web_rpc_get_conn_info(int conn_id, Json::Value& jret)
 {
 	Json::FastWriter json_writer;
 	Json::Value jreq;
-	jreq["method"] = "get_auth_info";
-	jreq["param"]["authid"] = auth_id;
+	jreq["method"] = "get_conn_info";
+	jreq["param"]["conn_id"] = conn_id;
 
 	ex_astr json_param;
 	json_param = json_writer.write(jreq);
@@ -56,7 +41,6 @@ bool ts_web_rpc_get_auth_info(int auth_id, Json::Value& jret)
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
 
-	//ex_astr url = "http://127.0.0.1:7190/rpc?";
 	ex_astr url = g_env.web_server_rpc;
 	url += "?";
 	url += param;
@@ -67,37 +51,45 @@ bool ts_web_rpc_get_auth_info(int auth_id, Json::Value& jret)
 // 		EXLOGV("request `get_auth_info` from web return: ");
 // 		EXLOGV(body.c_str());
 // 		EXLOGV("\n");
-		return false;
+		return TPE_NETWORK;
 	}
 
 	Json::Reader jreader;
 
 	if (!jreader.parse(body.c_str(), jret))
-		return false;
+		return TPE_PARAM;
 	if (!jret.isObject())
-		return false;
+		return TPE_PARAM;
 	if (!jret["data"].isObject())
-		return false;
+		return TPE_PARAM;
 
 	Json::Value& _jret = jret["data"];
 
 	if (
 		!_jret["host_ip"].isString()
 		|| !_jret["host_port"].isInt()
-		|| !_jret["sys_type"].isInt()
-		|| !_jret["protocol"].isInt()
-		|| !_jret["auth_mode"].isInt()
-		|| !_jret["account_lock"].isInt()
-		|| !_jret["user_name"].isString()
-		|| !_jret["user_auth"].isString()
-		|| !_jret["user_param"].isString()
+//		|| !_jret["sys_type"].isInt()
+
+		|| !_jret["protocol_type"].isInt()
+		|| !_jret["protocol_sub_type"].isInt()
+		|| !_jret["auth_type"].isInt()
 		|| !_jret["account_name"].isString()
+		|| !_jret["secret"].isString()
+//		|| !_jret["user_param"].isString()
+//		|| !_jret["conn_param"].isInt()
+
+		|| !_jret["user_name"].isString()
+		|| !_jret["client_ip"].isString()
+
+		|| !_jret["_enc"].isInt()
+		|| !_jret["_test"].isInt()
 		)
 	{
-		return false;
+		EXLOGE("got connection info from web-server, but not all info valid.\n");
+		return TPE_PARAM;
 	}
 
-	return true;
+	return TPE_OK;
 }
 
 bool ts_web_rpc_session_begin(TS_SESSION_INFO& info, int& record_id)
@@ -121,7 +113,6 @@ bool ts_web_rpc_session_begin(TS_SESSION_INFO& info, int& record_id)
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
 
-	//ex_astr url = "http://127.0.0.1:7190/rpc?";
 	ex_astr url = g_env.web_server_rpc;
 	url += "?";
 	url += param;
@@ -129,7 +120,7 @@ bool ts_web_rpc_session_begin(TS_SESSION_INFO& info, int& record_id)
 	ex_astr body;
 	if (!ts_http_get(url, body))
 	{
-		// 		EXLOGV("request `get_auth_info` from web return: ");
+		// 		EXLOGV("request `rpc::session_begin` from web return: ");
 		// 		EXLOGV(body.c_str());
 		// 		EXLOGV("\n");
 		return false;
@@ -167,7 +158,6 @@ bool ts_web_rpc_session_end(int record_id, int ret_code)
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
 
-	//ex_astr url = "http://127.0.0.1:7190/rpc?";
 	ex_astr url = g_env.web_server_rpc;
 	url += "?";
 	url += param;

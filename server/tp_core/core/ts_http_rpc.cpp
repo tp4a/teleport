@@ -5,6 +5,8 @@
 #include "ts_crypto.h"
 #include "ts_web_rpc.h"
 
+#include <teleport_const.h>
+
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
 int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_form_url_encoded)
@@ -135,7 +137,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 			Json::Value json_param;
 
 			ex_rv rv = _this->_parse_request(hm, method, json_param);
-			if (TSR_OK != rv)
+			if (TPE_OK != rv)
 			{
 				EXLOGE("[core] rpc got invalid request.\n");
 				_this->_create_json_ret(ret_buf, rv);
@@ -149,7 +151,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		else
 		{
 			EXLOGE("[core] rpc got invalid request: not `rpc` uri.\n");
-			_this->_create_json_ret(ret_buf, TSR_INVALID_REQUEST, "not a `rpc` request.");
+			_this->_create_json_ret(ret_buf, TPE_PARAM, "not a `rpc` request.");
 		}
 		
 		mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: application/json\r\n\r\n%s", (int)ret_buf.size() - 1, &ret_buf[0]);
@@ -164,7 +166,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Json::Value& json_param)
 {
 	if (NULL == req)
-		return TSR_INVALID_REQUEST;
+		return TPE_PARAM;
 
 	bool is_get = true;
 	if (req->method.len == 3 && 0 == memcmp(req->method.p, "GET", req->method.len))
@@ -172,7 +174,7 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
 	else if (req->method.len == 4 && 0 == memcmp(req->method.p, "POST", req->method.len))
 		is_get = false;
 	else
-		return TSR_INVALID_REQUEST;
+		return TPE_HTTP_METHOD;
 
 	ex_astr json_str;
 	if (is_get)
@@ -181,7 +183,7 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
 		json_str.assign(req->body.p, req->body.len);
 
 	if (0 == json_str.length())
-		return TSR_INVALID_REQUEST;
+		return TPE_PARAM;
 
 	// 将参数进行 url-decode 解码
 	int len = json_str.length() * 2;
@@ -189,25 +191,25 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
 	sztmp.resize(len);
 	memset(&sztmp[0], 0, len);
 	if (-1 == ts_url_decode(json_str.c_str(), json_str.length(), &sztmp[0], len, 0))
-		return TSR_INVALID_URL_ENCODE;
+		return TPE_HTTP_URL_ENCODE;
 
 	json_str = &sztmp[0];
 
 	Json::Reader jreader;
 
 	if (!jreader.parse(json_str.c_str(), json_param))
-		return TSR_INVALID_JSON_FORMAT;
+		return TPE_JSON_FORMAT;
 
 	if (json_param.isArray())
-		return TSR_INVALID_JSON_PARAM;
+		return TPE_PARAM;
 
 	if (json_param["method"].isNull() || !json_param["method"].isString())
-		return TSR_INVALID_JSON_PARAM;
+		return TPE_PARAM;
 
 	func_cmd = json_param["method"].asCString();
 	json_param = json_param["param"];
 
-	return TSR_OK;
+	return TPE_OK;
 }
 
 void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode, const Json::Value& jr_data)
@@ -266,7 +268,7 @@ void TsHttpRpc::_process_request(const ex_astr& func_cmd, const Json::Value& jso
 	else
 	{
 		EXLOGE("[core] rpc got unknown command: %s\n", func_cmd.c_str());
-		_create_json_ret(buf, TSR_NO_SUCH_METHOD);
+		_create_json_ret(buf, TPE_UNKNOWN_CMD);
 	}
 }
 
@@ -275,7 +277,7 @@ void TsHttpRpc::_rpc_func_exit(const Json::Value& json_param, ex_astr& buf)
 {
 	// 设置一个全局退出标志
 	g_exit_flag = true;
-	_create_json_ret(buf, TSR_OK);
+	_create_json_ret(buf, TPE_OK);
 }
 
 void TsHttpRpc::_rpc_func_get_config(const Json::Value& json_param, ex_astr& buf)
@@ -322,7 +324,7 @@ void TsHttpRpc::_rpc_func_get_config(const Json::Value& json_param, ex_astr& buf
 		}
 	}
 
-	_create_json_ret(buf, TSR_OK, jr_data);
+	_create_json_ret(buf, TPE_OK, jr_data);
 }
 
 
@@ -330,7 +332,8 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 {
 	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#request_session
 
-	int authid = 0;
+	int conn_id = 0;
+	ex_rv rv = TPE_OK;
 
 	ex_astr host_ip;
 	int host_port = 0;
@@ -347,28 +350,28 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 
 	// 如果authid为正整数，这是一个长期保留的认证ID，如果是负整数，这是一个临时的认证ID（用于连接测试），如果为0，则报错
 
-	if (json_param["authid"].isNull())
+	if (json_param["conn_id"].isNull())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
-	if (!json_param["authid"].isInt())
+	if (!json_param["conn_id"].isInt())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
-	authid = json_param["authid"].asInt();
-	if (0 == authid)
+	conn_id = json_param["conn_id"].asInt();
+	if (0 == conn_id)
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
 	Json::Value jret;
-	if (!ts_web_rpc_get_auth_info(authid, jret))
+	if ((rv = ts_web_rpc_get_conn_info(conn_id, jret)) != TPE_OK)
 	{
-		_create_json_ret(buf, TSR_GETAUTH_INFO_ERROR);
+		_create_json_ret(buf, rv);
 		return;
 	}
 
@@ -377,25 +380,25 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 	host_ip = _jret["host_ip"].asString();
 	host_port = _jret["host_port"].asInt();
 	//host_lock = 0;
-	sys_type = _jret["sys_type"].asInt();
-	protocol = _jret["protocol"].asInt();
-	is_enc = _jret["encrypt"].asInt() == 0 ? false : true;
-	auth_mode = _jret["auth_mode"].asInt();
-	account_lock = _jret["account_lock"].asInt() == 0 ? true : false;
+	sys_type = 1;// _jret["sys_type"].asInt();
+	protocol = _jret["protocol_type"].asInt();
+	is_enc = _jret["_enc"].asInt() == 0 ? false : true;
+	auth_mode = _jret["auth_type"].asInt();
+	//account_lock = _jret["account_lock"].asInt() == 0 ? true : false;
 	user_name = _jret["user_name"].asString();
-	user_auth = _jret["user_auth"].asString();
-	user_param = _jret["user_param"].asString();
+	user_auth = _jret["secret"].asString();
+	user_param = "";// _jret["user_param"].asString();
 	account_name = _jret["account_name"].asString();
 
 
 	// 进一步判断参数是否合法
 	if (host_ip.length() == 0 || host_port >= 65535 || account_name.length() == 0 
-		|| !(auth_mode == TS_AUTH_MODE_NONE || auth_mode == TS_AUTH_MODE_PASSWORD || auth_mode == TS_AUTH_MODE_PRIVATE_KEY)
-		|| !(protocol == TS_PROXY_PROTOCOL_RDP || protocol == TS_PROXY_PROTOCOL_SSH || protocol == TS_PROXY_PROTOCOL_TELNET)
+		|| !(auth_mode == TP_AUTH_TYPE_NONE || auth_mode == TP_AUTH_TYPE_PASSWORD || auth_mode == TP_AUTH_TYPE_PRIVATE_KEY)
+		|| !(protocol == TP_PROTOCOL_TYPE_RDP || protocol == TP_PROTOCOL_TYPE_SSH || protocol == TP_PROTOCOL_TYPE_TELNET)
 		//|| !(is_enc == 0 || is_enc == 1)
 		)
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
@@ -407,7 +410,7 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 			ex_astr _auth;
 			if (!ts_db_field_decrypt(user_auth, _auth))
 			{
-				_create_json_ret(buf, TSR_FAILED);
+				_create_json_ret(buf, TPE_FAILED);
 				return;
 			}
 
@@ -417,10 +420,9 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 
 	// 生成一个session-id（内部会避免重复）
 	ex_astr sid;
-	ex_rv rv = g_session_mgr.request_session(sid, account_name, authid, 
+	if((rv = g_session_mgr.request_session(sid, account_name, conn_id, 
 		host_ip, host_port, sys_type, protocol, 
-		user_name, user_auth, user_param, auth_mode);
-	if (rv != TSR_OK)
+		user_name, user_auth, user_param, auth_mode)) != TPE_OK)
 	{
 		_create_json_ret(buf, rv);
 		return;
@@ -431,7 +433,7 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 	Json::Value jr_data;
 	jr_data["sid"] = sid;
 
-	_create_json_ret(buf, TSR_OK, jr_data);
+	_create_json_ret(buf, TPE_OK, jr_data);
 }
 
 // void TsHttpRpc::_rpc_func_request_session(const ex_astr& func_args, ex_astr& buf)
@@ -615,7 +617,7 @@ void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 
 	if (json_param.isArray())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
@@ -623,27 +625,27 @@ void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 
 	if (json_param["p"].isNull() || !json_param["p"].isString())
 	{
-		_create_json_ret(buf, TSR_INVALID_JSON_PARAM);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
 	plain_text = json_param["p"].asCString();
 	if (plain_text.length() == 0)
 	{
-		_create_json_ret(buf, TSR_DATA_LEN_ZERO);
+		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 	ex_astr cipher_text;
 
 	if (!ts_db_field_encrypt(plain_text, cipher_text))
 	{
-		_create_json_ret(buf, TSR_FAILED);
+		_create_json_ret(buf, TPE_FAILED);
 		return;
 	}
 
 	Json::Value jr_data;
 	jr_data["c"] = cipher_text;
-	_create_json_ret(buf, TSR_OK, jr_data);
+	_create_json_ret(buf, TPE_OK, jr_data);
 }
 
 #if 0

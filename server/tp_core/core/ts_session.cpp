@@ -2,6 +2,7 @@
 #include "ts_env.h"
 
 #include <mbedtls/sha1.h>
+#include <teleport_const.h>
 
 TsSessionManager g_session_mgr;
 
@@ -89,7 +90,7 @@ ex_rv TsSessionManager::request_session(
 	info->user_auth = user_auth;
 	info->auth_mode = auth_mode;
 	info->user_param = user_param;
-	if (protocol == TS_PROXY_PROTOCOL_RDP)
+	if (protocol == TP_PROTOCOL_TYPE_RDP)
 		info->ref_count = 2;
 	else
 		info->ref_count = 1;

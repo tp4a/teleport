@@ -180,6 +180,9 @@
     <ClInclude Include="ts_ver.h">
       <Filter>main app</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\common\teleport\teleport_const.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="tp_core.rc">

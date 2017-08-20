@@ -100,7 +100,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WINSOCK_DEPRECATED_NO_WARNINGS;MG_ENABLE_THREADS;MG_DISABLE_HTTP_DIGEST_AUTH;MG_DISABLE_MQTT;MG_DISABLE_SSI;MG_DISABLE_FILESYSTEM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../../common/libex/include;../../../external/jsoncpp/include;../../../external/mbedtls/include;../../../external/mongoose</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../common/teleport;../../../common/libex/include;../../../external/jsoncpp/include;../../../external/mbedtls/include;../../../external/mongoose</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -137,7 +137,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;MG_ENABLE_THREADS;MG_DISABLE_HTTP_DIGEST_AUTH;MG_DISABLE_MQTT;MG_DISABLE_SSI;MG_DISABLE_FILESYSTEM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../../common/libex/include;../../../external/jsoncpp/include;../../../external/mbedtls/include;../../../external/mongoose</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../common/teleport;../../../common/libex/include;../../../external/jsoncpp/include;../../../external/mbedtls/include;../../../external/mongoose</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -204,6 +204,7 @@
     <ClInclude Include="..\..\..\common\libex\include\ex\ex_types.h" />
     <ClInclude Include="..\..\..\common\libex\include\ex\ex_util.h" />
     <ClInclude Include="..\..\..\common\libex\include\ex\ex_winsrv.h" />
+    <ClInclude Include="..\..\..\common\teleport\teleport_const.h" />
     <ClInclude Include="..\..\..\external\jsoncpp\include\json\json.h" />
     <ClInclude Include="..\..\..\external\mongoose\mongoose.h" />
     <ClInclude Include="..\common\protocol_interface.h" />
