@@ -11,7 +11,7 @@ typedef struct TS_SESSION_INFO
 	ex_astr sid;
 	ex_astr account_name;	// 申请本次连接的用户名
 
-	int auth_id;
+	//int auth_id;
 	ex_astr host_ip;
 	int host_port;
 	int protocol;
@@ -21,7 +21,7 @@ typedef struct TS_SESSION_INFO
 	int auth_mode;
 	int sys_type;
 
-	int ref_count;	// 这个session可以被take_session()多少次
+	int ref_count;
 	ex_u64 ticket_start;
 }TS_SESSION_INFO;
 
@@ -48,8 +48,8 @@ public:
 		int auth_mode // 认证方式，1=password，2=private-key
 	);
 
-	// 根据sid得到session信息，然后被查询的sid被从session管理器列表中移除
-	bool take_session(const ex_astr& sid, TS_SESSION_INFO& info);
+	// 根据sid得到session信息
+	bool get_session(const ex_astr& sid, TS_SESSION_INFO& info);
 
 protected:
 	// 线程循环

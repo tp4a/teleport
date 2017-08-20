@@ -144,8 +144,11 @@ bool ts_web_rpc_session_begin(TS_SESSION_INFO& info, int& record_id)
 }
 
 //session 结束
-bool ts_web_rpc_session_end(int record_id, int ret_code)
+bool ts_web_rpc_session_end(const char* sid, int record_id, int ret_code)
 {
+	// TODO: 对指定的sid相关的会话的引用计数减一（但减到0时销毁）
+
+
 	Json::FastWriter json_writer;
 	Json::Value jreq;
 	jreq["method"] = "session_end";

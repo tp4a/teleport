@@ -560,24 +560,25 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 	}
 
 	// 判断参数是否正确
-	if (!jsRoot["server_ip"].isString() || !jsRoot["size"].isNumeric()
-		|| !jsRoot["server_port"].isNumeric() || !jsRoot["host_ip"].isString()
-		|| !jsRoot["session_id"].isString() || !jsRoot["pro_type"].isNumeric()
+	if (!jsRoot["teleport_ip"].isString() || !jsRoot["size"].isNumeric()
+		|| !jsRoot["teleport_port"].isNumeric() || !jsRoot["remote_host_ip"].isString()
+		|| !jsRoot["session_id"].isString() || !jsRoot["protocol_type"].isNumeric() || !jsRoot["protocol_sub_type"].isNumeric()
 		)
 	{
 		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
-	int pro_sub = 1;
-	if (!jsRoot["pro_sub"].isNull()) {
-		if (jsRoot["pro_sub"].isNumeric()) {
-			pro_sub = jsRoot["pro_sub"].asInt();
-		}
-	}
+// 	int pro_sub = 0;
+// 	if (!jsRoot["protocol_sub_type"].isNull()) {
+// 		if (jsRoot["protocol_sub_type"].isNumeric()) {
+// 			pro_sub = jsRoot["protocol_sub_type"].asInt();
+// 		}
+// 	}
+	int pro_sub = jsRoot["protocol_sub_type"].asInt();
 
-	std::string teleport_ip = jsRoot["server_ip"].asCString();
-	int teleport_port = jsRoot["server_port"].asUInt();
+	std::string teleport_ip = jsRoot["teleport_ip"].asCString();
+	int teleport_port = jsRoot["teleport_port"].asUInt();
 
 	int windows_size = 2;
 	if (jsRoot["size"].isNull())
@@ -591,10 +592,10 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 	else
 		console = jsRoot["console"].asUInt();
 
-	std::string real_host_ip = jsRoot["host_ip"].asCString();
+	std::string real_host_ip = jsRoot["remote_host_ip"].asCString();
 	std::string sid = jsRoot["session_id"].asCString();
 
-	int pro_type = jsRoot["pro_type"].asUInt();
+	int pro_type = jsRoot["protocol_type"].asUInt();
 
 	ex_wstr w_exe_path;
 	WCHAR w_szCommandLine[MAX_PATH] = { 0 };
@@ -610,7 +611,7 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 	swprintf_s(w_port, _T("%d"), teleport_port);
 
 
-	if (pro_type == 1)
+	if (pro_type == TP_PROTOCOL_TYPE_RDP)
 	{
 		//==============================================
 		// RDP
@@ -827,13 +828,13 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 		//BOOL bRet = DeleteFile(w_sz_file_name.c_str());
 #endif
 	}
-	else if (pro_type == 2)
+	else if (pro_type == TP_PROTOCOL_TYPE_SSH)
 	{
 		//==============================================
 		// SSH
 		//==============================================
 
-		if (pro_sub == 1)
+		if (pro_sub == TP_PROTOCOL_SUB_TYPE_SSH)
 		{
 			clientsetmap::iterator it = g_cfgSSH.m_clientsetmap.find(g_cfgSSH.m_current_client);
 			if (it == g_cfgSSH.m_clientsetmap.end())
@@ -866,7 +867,7 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 			}
 		}
 	}
-	else if (pro_type == 3)
+	else if (pro_type == TP_PROTOCOL_TYPE_TELNET)
 	{
 		//==============================================
 		// TELNET

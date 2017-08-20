@@ -11,29 +11,50 @@
 
 #pragma pack(push,1)
 
-// 录像文件头
-typedef struct TS_RECORD_HEADER
+// 录像文件头(随着录像数据写入，会改变的部分)
+typedef struct TS_RECORD_HEADER_INFO
 {
-	ex_u32 magic;		// "TPPR" 标志 TelePort Protocol Record
-	ex_u16 ver;			// 录像文件版本，目前为2
-	ex_u16 protocol;	// 协议：1=RDP, 2=SSH, 3=Telnet
-	ex_u64 timestamp;	// 本次录像的起始时间（UTC时间戳）
 	ex_u32 packages;	// 总包数
 	ex_u32 time_ms;		// 总耗时（毫秒）
+	ex_u32 file_size;	// 数据总大小（不包括文件头）
+}TS_RECORD_HEADER_INFO;
+
+// 录像文件头(固定不变部分)
+typedef struct TS_RECORD_HEADER_BASIC
+{
+	ex_u32 magic;		// "TPPR" 标志 TelePort Protocol Record
+	ex_u16 ver;			// 录像文件版本，目前为3
+
+	ex_u16 protocol_type;		// 协议：1=RDP, 2=SSH, 3=Telnet
+	ex_u16 protocol_sub_type;	// 子协议：100=RDP, 200=SSH, 201=SFTP, 300=Telnet
+	ex_u64 timestamp;	// 本次录像的起始时间（UTC时间戳）
 	ex_u16 width;		// 初始屏幕尺寸：宽
 	ex_u16 height;		// 初始屏幕尺寸：高
-	ex_u16 file_count;	// 数据文件总数
-	ex_u32 file_size;	// 所有数据文件的总大小（不包括每个数据文件的头，即4字节的每文件大小）
-	char account[16];	// teleport账号
-	char username[16];	// 远程主机用户名
-	char ip[18];
-	ex_u16 port;
+	char user_name[32];	// teleport账号
+	char account_name[32];	// 远程主机用户名
+
+	char real_remote_host_ip[40];	// 远程主机IP
+	char remote_host_ip[40];	// 远程主机IP
+	ex_u16 remote_host_port;	// 远程主机端口
+
+	char client_ip[40];		// 客户端IP
 
 	// RDP专有
 	ex_u8 rdp_security;	// 0 = RDP, 1 = TLS
 
-	ex_u8 reserve[128 - 4 - 2 - 2 - 8 - 4 - 4 - 2 - 2 - 2 - 4 - 16 - 16 - 18 - 2 - 1];	// 保留
+	ex_u8 reserve[256 - 4 - 2 - 2 - 2 - 8 - 2 - 2 - 32 - 32 - 40 - 2 - 40 - 40 - 1 - 12];	// 保留，其中，最后12B是为header-info留出的空间
+}TS_RECORD_HEADER_BASIC;
+#define ts_record_header_basic_size sizeof(TS_RECORD_HEADER_BASIC)
+
+typedef struct TS_RECORD_HEADER
+{
+	TS_RECORD_HEADER_INFO info;
+	TS_RECORD_HEADER_BASIC basic;
 }TS_RECORD_HEADER;
+
+// header部分（header-info + header-basic） = 256B
+#define ts_record_header_size sizeof(TS_RECORD_HEADER)
+
 
 // 一个数据包的头
 typedef struct TS_RECORD_PKG
@@ -52,13 +73,13 @@ public:
 	TppRecBase();
 	virtual ~TppRecBase();
 
-	void begin(const wchar_t* base_path, const wchar_t* base_fname, int record_id, const TPP_SESSION_INFO* info);
+	void begin(const wchar_t* base_path, const wchar_t* base_fname, int record_id, const TPP_CONNECT_INFO* info);
 	void end(void);
 
 	virtual void record(ex_u8 type, const ex_u8* data, size_t size) = 0;
 
 protected:
-	virtual void _on_begin(const TPP_SESSION_INFO* info) = 0;
+	virtual void _on_begin(const TPP_CONNECT_INFO* info) = 0;
 	virtual void _on_end(void) = 0;
 
 protected:

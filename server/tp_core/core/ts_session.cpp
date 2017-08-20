@@ -105,7 +105,7 @@ ex_rv TsSessionManager::request_session(
 	return EXRV_FAILED;
 }
 
-bool TsSessionManager::take_session(const ex_astr& sid, TS_SESSION_INFO& info)
+bool TsSessionManager::get_session(const ex_astr& sid, TS_SESSION_INFO& info)
 {
 	ExThreadSmartLock locker(m_lock);
 
@@ -129,12 +129,12 @@ bool TsSessionManager::take_session(const ex_astr& sid, TS_SESSION_INFO& info)
 	info.ref_count = it->second->ref_count;
 	info.ticket_start = it->second->ticket_start;
 
-	it->second->ref_count--;
-	if (it->second->ref_count <= 0)
-	{
-		delete it->second;
-		m_sessions.erase(it);
-	}
+	it->second->ref_count++;
+// 	if (it->second->ref_count <= 0)
+// 	{
+// 		delete it->second;
+// 		m_sessions.erase(it);
+// 	}
 
 	return true;
 }

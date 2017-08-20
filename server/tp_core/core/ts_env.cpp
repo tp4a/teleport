@@ -128,8 +128,8 @@ bool TsEnv::init(bool load_config)
 	else
 	{
 		ex_wstr2astr(tmp, rpc_bind_ip);
-		if (rpc_bind_ip == "localhost")
-			rpc_bind_ip = "127.0.0.1";
+		//if (rpc_bind_ip == "localhost")
+		//	rpc_bind_ip = "127.0.0.1";
 	}
 
 	if (!ps->GetInt(L"bind-port", rpc_bind_port))

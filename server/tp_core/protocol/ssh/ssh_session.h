@@ -55,7 +55,7 @@ public:
 
 protected:
 	// ¼Ì³Ð×Ô TppSessionBase
-	bool _on_session_begin(const TPP_SESSION_INFO* info);
+	bool _on_session_begin(const TPP_CONNECT_INFO* info);
 	bool _on_session_end(void);
 
 
@@ -102,11 +102,11 @@ private:
 	ex_u16 m_client_port;
 
 	ex_astr m_sid;
-	ex_astr m_server_ip;
-	ex_u16 m_server_port;
-	ex_astr m_user_name;
-	ex_astr m_user_auth;
-	int m_auth_mode;
+	ex_astr m_remote_host_ip;
+	ex_u16 m_remote_host_port;
+	ex_astr m_account_name;
+	ex_astr m_account_secret;
+	int m_auth_type;
 
 	bool m_is_first_server_data;
 	bool m_is_sftp;

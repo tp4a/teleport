@@ -1,4 +1,5 @@
 #include "ssh_recorder.h"
+#include <teleport_const.h>
 
 static ex_u8 TPP_RECORD_MAGIC[4] = { 'T', 'P', 'P', 'R' };
 
@@ -7,9 +8,8 @@ TppSshRec::TppSshRec()
 	m_cmd_cache.reserve(MAX_SIZE_PER_FILE);
 
 	memset(&m_head, 0, sizeof(TS_RECORD_HEADER));
-	memcpy((ex_u8*)(&m_head.magic), TPP_RECORD_MAGIC, sizeof(ex_u32));
-	m_head.ver = 0x02;
-	m_head.protocol = TS_PROXY_PROTOCOL_SSH;
+	memcpy((ex_u8*)(&m_head.basic.magic), TPP_RECORD_MAGIC, sizeof(ex_u32));
+	m_head.basic.ver = 0x02;
 }
 
 TppSshRec::~TppSshRec()
@@ -17,19 +17,22 @@ TppSshRec::~TppSshRec()
 	end();
 }
 
-void TppSshRec::_on_begin(const TPP_SESSION_INFO* info)
+void TppSshRec::_on_begin(const TPP_CONNECT_INFO* info)
 {
 	if (NULL == info)
 		return;
-	m_head.timestamp = time(NULL);
-	m_head.port = info->host_port;
+	m_head.basic.timestamp = time(NULL);
+	m_head.basic.protocol_type = info->protocol_type;
+	m_head.basic.protocol_sub_type = info->protocol_sub_type;
+	m_head.basic.remote_host_port = info->remote_host_port;
 	// 	memcpy(m_head.account, info.account_name.c_str(), info.account_name.length() > 15 ? 15 : info.account_name.length());
 	// 	memcpy(m_head.username, info.user_name.c_str(), info.user_name.length() > 15 ? 15 : info.user_name.length());
 	// 	memcpy(m_head.ip, info.host_ip.c_str(), info.host_ip.length() > 17 ? 17 : info.host_ip.length());
 
-	memcpy(m_head.account, info->account_name, strlen(info->account_name) > 15 ? 15 : strlen(info->account_name));
-	memcpy(m_head.username, info->user_name, strlen(info->user_name) > 15 ? 15 : strlen(info->user_name));
-	memcpy(m_head.ip, info->host_ip, strlen(info->host_ip) > 17 ? 17 : strlen(info->host_ip));
+	memcpy(m_head.basic.account_name, info->account_name, strlen(info->account_name) >= 31 ? 31 : strlen(info->account_name));
+	memcpy(m_head.basic.user_name, info->user_name, strlen(info->user_name) >= 31 ? 31 : strlen(info->user_name));
+	memcpy(m_head.basic.real_remote_host_ip, info->real_remote_host_ip, strlen(info->real_remote_host_ip) >= 39 ? 39 : strlen(info->real_remote_host_ip));
+	memcpy(m_head.basic.remote_host_ip, info->remote_host_ip, strlen(info->remote_host_ip) >= 39 ? 39 : strlen(info->remote_host_ip));
 }
 
 void TppSshRec::_on_end(void)
@@ -42,7 +45,7 @@ void TppSshRec::_on_end(void)
 
 	// 更新头信息
 	//m_head.timestamp = m_start_time;
-	m_head.time_ms = (ex_u32)(m_last_time - m_start_time);
+	m_head.info.time_ms = (ex_u32)(m_last_time - m_start_time);
 
 	ex_wstr fname = m_base_path;
 	ex_path_join(fname, false, m_base_fname.c_str(), NULL);
@@ -64,7 +67,7 @@ void TppSshRec::record(ex_u8 type, const ex_u8* data, size_t size)
 {
 	if (data == NULL || 0 == size)
 		return;
-	m_head.packages++;
+	m_head.info.packages++;
 
 	if (sizeof(TS_RECORD_PKG) + size + m_cache.size() > m_cache.buffer_size())
 		_save_to_data_file();
@@ -86,8 +89,8 @@ void TppSshRec::record(ex_u8 type, const ex_u8* data, size_t size)
 
 void TppSshRec::record_win_size_startup(int width, int height)
 {
-	m_head.width = width;
-	m_head.height = height;
+	m_head.basic.width = width;
+	m_head.basic.height = height;
 }
 
 void TppSshRec::record_win_size_change(int width, int height)
@@ -127,7 +130,7 @@ void TppSshRec::record_command(const ex_astr cmd)
 bool TppSshRec::_save_to_data_file(void)
 {
 	wchar_t _str_file_id[24] = { 0 };
-	ex_wcsformat(_str_file_id, 24, L".%03d", m_head.file_count);
+	ex_wcsformat(_str_file_id, 24, L".%03d", 0);// m_head.file_count);
 
 	ex_wstr fname = m_base_path;
 	ex_path_join(fname, false, m_base_fname.c_str(), NULL);
@@ -148,8 +151,8 @@ bool TppSshRec::_save_to_data_file(void)
 	fflush(f);
 	fclose(f);
 
-	m_head.file_count++;
-	m_head.file_size += m_cache.size();
+	//m_head.file_count++;
+	//m_head.file_size += m_cache.size();
 
 	m_cache.empty();
 	return true;

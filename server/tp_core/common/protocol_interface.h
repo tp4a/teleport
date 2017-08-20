@@ -14,27 +14,29 @@
 #	define TPP_API
 #endif
 
-typedef struct TPP_SESSION_INFO
+typedef struct TPP_CONNECT_INFO
 {
 	char* sid;
-	char* account_name;	// 申请本次连接的用户名
-	char* host_ip;
-	char* user_name;
-	char* user_auth;
+	char* user_name;		// 申请本次连接的用户名
+	char* real_remote_host_ip;	// 真正的远程主机IP（如果是直接连接模式，则与remote_host_ip相同）
+	char* remote_host_ip;	// 要连接的远程主机的IP（如果是端口映射模式，则为路由主机的IP）
+	char* account_name;		// 远程主机的账号
+	char* account_secret;	// 远程主机账号的密码（或者私钥）
 	char* user_param;
-	int host_port;
-	int protocol;
-	int auth_id;
-	int auth_mode;
+	int remote_host_port;	// 要连接的远程主机的端口（如果是端口映射模式，则为路由主机的端口）
+	int protocol_type;
+	int protocol_sub_type;
+	//int auth_id;
+	int auth_type;
 	int sys_type;
-	int ref_count;	// 这个session可以被take_session()多少次
-	ex_u64 ticket_start;
-}TPP_SESSION_INFO;
+	int ref_count;			// 这个连接信息的引用计数，如果创建的连接信息从来未被使用，则超过60秒后自动销毁
+	ex_u64 ticket_start;	// 此连接信息的创建时间（用于超时未使用就销毁的功能）
+}TPP_CONNECT_INFO;
 
-typedef TPP_SESSION_INFO* (*TPP_TAKE_SESSION_FUNC)(const char* sid);
-typedef void(*TPP_FREE_SESSION_FUNC)(TPP_SESSION_INFO* info);
-typedef bool(*TPP_SESSION_BEGIN_FUNC)(const TPP_SESSION_INFO* info, int* db_id);
-typedef bool(*TPP_SESSION_END_FUNC)(int db_id, int ret);
+typedef TPP_CONNECT_INFO* (*TPP_GET_CONNNECT_INFO_FUNC)(const char* sid);
+typedef void(*TPP_FREE_CONNECT_INFO_FUNC)(TPP_CONNECT_INFO* info);
+typedef bool(*TPP_SESSION_BEGIN_FUNC)(const TPP_CONNECT_INFO* info, int* db_id);
+typedef bool(*TPP_SESSION_END_FUNC)(const char* sid, int db_id, int ret);
 
 
 typedef struct TPP_INIT_ARGS
@@ -45,8 +47,8 @@ typedef struct TPP_INIT_ARGS
 	ex_wstr replay_path;
 	ExIniFile* cfg;
 
-	TPP_TAKE_SESSION_FUNC func_take_session;
-	TPP_FREE_SESSION_FUNC func_free_session;
+	TPP_GET_CONNNECT_INFO_FUNC func_get_connect_info;
+	TPP_FREE_CONNECT_INFO_FUNC func_free_connect_info;
 	TPP_SESSION_BEGIN_FUNC func_session_begin;
 	TPP_SESSION_END_FUNC func_session_end;
 }TPP_INIT_ARGS;

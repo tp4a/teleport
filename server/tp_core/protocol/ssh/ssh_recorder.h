@@ -57,7 +57,7 @@ public:
 	void record_command(const ex_astr cmd);
 
 protected:
-	void _on_begin(const TPP_SESSION_INFO* info);
+	void _on_begin(const TPP_CONNECT_INFO* info);
 	void _on_end(void);
 
 	bool _save_to_data_file(void);

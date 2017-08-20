@@ -9,32 +9,34 @@
 
 bool g_exit_flag = false;
 
-TPP_SESSION_INFO* tpp_take_session(const char* sid)
+TPP_CONNECT_INFO* tpp_get_session(const char* sid)
 {
 	TS_SESSION_INFO sinfo;
 	bool ret = g_session_mgr.take_session(sid, sinfo);
 	if (!ret)
 		return NULL;
 
-	TPP_SESSION_INFO* info = (TPP_SESSION_INFO*)calloc(1, sizeof(TPP_SESSION_INFO));
+	TPP_CONNECT_INFO* info = (TPP_CONNECT_INFO*)calloc(1, sizeof(TPP_CONNECT_INFO));
 
 	info->sid = (char*)calloc(1, sinfo.sid.length() + 1);
 	ex_strcpy(info->sid, sinfo.sid.length() + 1, sinfo.sid.c_str());
 	info->account_name = (char*)calloc(1, sinfo.account_name.length() + 1);
 	ex_strcpy(info->account_name, sinfo.account_name.length() + 1, sinfo.account_name.c_str());
-	info->host_ip = (char*)calloc(1, sinfo.host_ip.length() + 1);
-	ex_strcpy(info->host_ip, sinfo.host_ip.length() + 1, sinfo.host_ip.c_str());
+	info->real_remote_host_ip = (char*)calloc(1, sinfo.host_ip.length() + 1);
+	ex_strcpy(info->real_remote_host_ip, sinfo.host_ip.length() + 1, sinfo.host_ip.c_str());
+	info->remote_host_ip = (char*)calloc(1, sinfo.host_ip.length() + 1);
+	ex_strcpy(info->remote_host_ip, sinfo.host_ip.length() + 1, sinfo.host_ip.c_str());
 	info->user_name = (char*)calloc(1, sinfo.user_name.length() + 1);
 	ex_strcpy(info->user_name, sinfo.user_name.length() + 1, sinfo.user_name.c_str());
-	info->user_auth = (char*)calloc(1, sinfo.user_auth.length() + 1);
-	ex_strcpy(info->user_auth, sinfo.user_auth.length() + 1, sinfo.user_auth.c_str());
+	info->account_secret = (char*)calloc(1, sinfo.user_auth.length() + 1);
+	ex_strcpy(info->account_secret, sinfo.user_auth.length() + 1, sinfo.user_auth.c_str());
 	info->user_param = (char*)calloc(1, sinfo.user_param.length() + 1);
 	ex_strcpy(info->user_param, sinfo.user_param.length() + 1, sinfo.user_param.c_str());
 
-	info->auth_id = sinfo.auth_id;
-	info->host_port = sinfo.host_port;
-	info->protocol = sinfo.protocol;
-	info->auth_mode = sinfo.auth_mode;
+	//info->auth_id = sinfo.auth_id;
+	info->remote_host_port = sinfo.host_port;
+	info->protocol_type = sinfo.protocol;
+	info->auth_type= sinfo.auth_mode;
 	info->sys_type = sinfo.sys_type;
 	info->ref_count = sinfo.ref_count;
 	info->ticket_start = sinfo.ticket_start;
@@ -42,21 +44,22 @@ TPP_SESSION_INFO* tpp_take_session(const char* sid)
 	return info;
 }
 
-void tpp_free_session(TPP_SESSION_INFO* info)
+void tpp_free_session(TPP_CONNECT_INFO* info)
 {
 	if (NULL == info)
 		return;
 
 	free(info->sid);
-	free(info->account_name);
-	free(info->host_ip);
 	free(info->user_name);
-	free(info->user_auth);
+	free(info->real_remote_host_ip);
+	free(info->remote_host_ip);
+	free(info->account_name);
+	free(info->account_secret);
 	free(info->user_param);
 	free(info);
 }
 
-bool tpp_session_begin(const TPP_SESSION_INFO* info, int* db_id)
+bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id)
 {
 	if (NULL == info || NULL == db_id)
 		return false;
@@ -79,9 +82,9 @@ bool tpp_session_begin(const TPP_SESSION_INFO* info, int* db_id)
 	return ts_web_rpc_session_begin(sinfo, *db_id);
 }
 
-bool tpp_session_end(int db_id, int ret)
+bool tpp_session_end(const char* sid, int db_id, int ret)
 {
-	return ts_web_rpc_session_end(db_id, ret);
+	return ts_web_rpc_session_end(sid, db_id, ret);
 }
 
 typedef struct TPP_LIB
