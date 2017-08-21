@@ -17,20 +17,30 @@
 typedef struct TPP_CONNECT_INFO
 {
 	char* sid;
+
+	// 与此连接信息相关的三个要素的ID
+	int user_id;
+	int host_id;
+	int account_id;
+
 	char* user_name;		// 申请本次连接的用户名
+
 	char* real_remote_host_ip;	// 真正的远程主机IP（如果是直接连接模式，则与remote_host_ip相同）
 	char* remote_host_ip;	// 要连接的远程主机的IP（如果是端口映射模式，则为路由主机的IP）
+	int remote_host_port;	// 要连接的远程主机的端口（如果是端口映射模式，则为路由主机的端口）
+	char* client_ip;
+
 	char* account_name;		// 远程主机的账号
 	char* account_secret;	// 远程主机账号的密码（或者私钥）
-	char* user_param;
-	int remote_host_port;	// 要连接的远程主机的端口（如果是端口映射模式，则为路由主机的端口）
+	char* account_param;
+
 	int protocol_type;
 	int protocol_sub_type;
-	//int auth_id;
 	int auth_type;
 	int sys_type;
-	int ref_count;			// 这个连接信息的引用计数，如果创建的连接信息从来未被使用，则超过60秒后自动销毁
-	ex_u64 ticket_start;	// 此连接信息的创建时间（用于超时未使用就销毁的功能）
+
+//	int ref_count;			// 这个连接信息的引用计数，如果创建的连接信息从来未被使用，则超过60秒后自动销毁
+//	ex_u64 ticket_start;	// 此连接信息的创建时间（用于超时未使用就销毁的功能）
 }TPP_CONNECT_INFO;
 
 typedef TPP_CONNECT_INFO* (*TPP_GET_CONNNECT_INFO_FUNC)(const char* sid);

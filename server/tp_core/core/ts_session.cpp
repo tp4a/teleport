@@ -13,12 +13,12 @@ TsSessionManager::TsSessionManager() :
 
 TsSessionManager::~TsSessionManager()
 {
-	ts_sessiones::iterator it = m_sessions.begin();
-	for (; it != m_sessions.end(); ++it)
+	ts_connections::iterator it_conn = m_connections.begin();
+	for (; it_conn != m_connections.end(); ++it_conn)
 	{
-		delete it->second;
+		delete it_conn->second;
 	}
-	m_sessions.clear();
+	m_connections.clear();
 }
 
 void TsSessionManager::_thread_loop(void)
@@ -28,7 +28,7 @@ void TsSessionManager::_thread_loop(void)
 		ex_sleep_ms(1000);
 		if (m_stop_flag)
 			return;
-		_check_sessions();
+		_check_connect_info();
 	}
 }
 
@@ -38,25 +38,25 @@ void TsSessionManager::_set_stop_flag(void)
 }
 
 
-void TsSessionManager::_check_sessions(void)
+void TsSessionManager::_check_connect_info(void)
 {
-	// 超过10秒未进行连接的session-id会被移除
+	// 超过30秒未进行连接的connect-info会被移除
 
 	ExThreadSmartLock locker(m_lock);
 
 	ex_u64 _now = ex_get_tick_count();
-	ts_sessiones::iterator it = m_sessions.begin();
-	for (; it != m_sessions.end(); )
+	ts_connections::iterator it = m_connections.begin();
+	for (; it != m_connections.end(); )
 	{
 #ifdef EX_DEBUG
-		if (_now - it->second->ticket_start >= 60*1000*60)
+		if (it->second->ref_count == 0 && _now - it->second->ticket_start >= 60*1000*60)
 #else
-		if (_now - it->second->ticket_start >= 10000)
+		if (it->second->ref_count == 0 && _now - it->second->ticket_start >= 30000)
 #endif
 		{
-			EXLOGV("[core] remove session: %s\n", it->first.c_str());
+			EXLOGV("[core] remove connection info: %s\n", it->first.c_str());
 			delete it->second;
-			m_sessions.erase(it++);
+			m_connections.erase(it++);
 		}
 		else
 		{
@@ -98,19 +98,19 @@ ex_rv TsSessionManager::request_session(
 
 	EXLOGD("[core] request session: user-name: [%s], protocol: [%d], auth-mode: [%d]\n", info->user_name.c_str(), info->protocol, info->auth_mode);
 
-	if (_add_session(sid, info))
+	if (_add_connect_info(sid, info))
 		return EXRV_OK;
 
 	delete info;
 	return EXRV_FAILED;
 }
 
-bool TsSessionManager::get_session(const ex_astr& sid, TS_SESSION_INFO& info)
+bool TsSessionManager::get_connect_info(const ex_astr& sid, TS_CONNECT_INFO& info)
 {
 	ExThreadSmartLock locker(m_lock);
 
-	ts_sessiones::iterator it = m_sessions.find(sid);
-	if (it == m_sessions.end())
+	ts_connections::iterator it = m_connections.find(sid);
+	if (it == m_connections.end())
 		return false;
 
 	info.sid = it->second->sid;
@@ -139,18 +139,18 @@ bool TsSessionManager::get_session(const ex_astr& sid, TS_SESSION_INFO& info)
 	return true;
 }
 
-bool TsSessionManager::_add_session(ex_astr& sid, TS_SESSION_INFO* info)
+bool TsSessionManager::_add_connect_info(ex_astr& sid, TS_CONNECT_INFO* info)
 {
 	ExThreadSmartLock locker(m_lock);
 
 	ex_astr _sid;
 	int retried = 0;
-	ts_sessiones::iterator it;
+	ts_connections::iterator it;
 	for (;;)
 	{
 		_gen_session_id(_sid, info, 6);
-		it = m_sessions.find(_sid);
-		if (it == m_sessions.end())
+		it = m_connections.find(_sid);
+		if (it == m_connections.end())
 			break;
 
 		retried++;
@@ -159,20 +159,20 @@ bool TsSessionManager::_add_session(ex_astr& sid, TS_SESSION_INFO* info)
 	}
 
 	info->sid = _sid;
-	m_sessions.insert(std::make_pair(_sid, info));
+	m_connections.insert(std::make_pair(_sid, info));
 
 	sid = _sid;
-	if (info->protocol == 1)
+	if (info->protocol_type == TP_PROTOCOL_TYPE_RDP)
 	{
 		char szTmp[8] = { 0 };
-		snprintf(szTmp, 8, "%02X", (unsigned char)(info->user_name.length() + info->user_auth.length()));
+		snprintf(szTmp, 8, "%02X", (unsigned char)(info->account_name.length() + info->account_secret.length()));
 		sid += szTmp;
 	}
 
 	return true;
 }
 
-void TsSessionManager::_gen_session_id(ex_astr& sid, const TS_SESSION_INFO* info, int len)
+void TsSessionManager::_gen_session_id(ex_astr& sid, const TS_CONNECT_INFO* info, int len)
 {
 	mbedtls_sha1_context sha;
 	ex_u8 sha_digist[20] = { 0 };
@@ -184,8 +184,9 @@ void TsSessionManager::_gen_session_id(ex_astr& sid, const TS_SESSION_INFO* info
 	mbedtls_sha1_starts(&sha);
 	mbedtls_sha1_update(&sha, (const unsigned char*)&_tick, sizeof(ex_u64));
 	mbedtls_sha1_update(&sha, (const unsigned char*)&_tid, sizeof(ex_u64));
-	mbedtls_sha1_update(&sha, (const unsigned char*)info->host_ip.c_str(), info->host_ip.length());
-	mbedtls_sha1_update(&sha, (const unsigned char*)info->user_name.c_str(), info->user_name.length());
+	mbedtls_sha1_update(&sha, (const unsigned char*)info->remote_host_ip.c_str(), info->remote_host_ip.length());
+	mbedtls_sha1_update(&sha, (const unsigned char*)info->client_ip.c_str(), info->client_ip.length());
+	mbedtls_sha1_update(&sha, (const unsigned char*)info->account_name.c_str(), info->account_name.length());
 	mbedtls_sha1_finish(&sha, sha_digist);
 	mbedtls_sha1_free(&sha);
 

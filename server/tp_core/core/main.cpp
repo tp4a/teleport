@@ -17,11 +17,10 @@ ExLogger g_ex_logger;
 bool g_is_debug = false;
 
 #define RUN_UNKNOWN			0
-#define RUN_CORE				1
+#define RUN_CORE			1
 #define RUN_INSTALL_SRV		2
 #define RUN_UNINST_SRV		3
 static ex_u8 g_run_type = RUN_UNKNOWN;
-
 
 #define EOM_CORE_SERVICE_NAME	L"Teleport Core Service"
 

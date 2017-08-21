@@ -12,7 +12,7 @@ bool ts_web_rpc_register_core();
 int ts_web_rpc_get_conn_info(int conn_id, Json::Value& jret);
 
 // 记录会话的开始
-bool ts_web_rpc_session_begin(TS_SESSION_INFO& info, int& record_id);
+bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id);
 //session 结束
 bool ts_web_rpc_session_end(const char* sid, int id, int ret_code);
 

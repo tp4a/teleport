@@ -3,10 +3,6 @@
 
 #include <ex/ex_str.h>
 
-// #include<map>
-// using namespace std;
-//map<unsigned int, unsigned int> session_map;
-
 void ts_url_encode(const char *src, ex_astr& out)
 {
 	static const char *dont_escape = "._-$,;~()/";
@@ -42,8 +38,6 @@ typedef struct HTTP_DATA {
 	bool have_error;
 	ex_astr body;
 }HTTP_DATA;
-
-//int s_exit_flag = 0;
 
 static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 {

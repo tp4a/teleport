@@ -113,7 +113,7 @@ bool TsEnv::init(bool load_config)
 
 	if (!ps->GetStr(L"web-server-rpc", tmp))
 	{
-		web_server_rpc = "http://127.0.0.1:7190/rpc";
+		web_server_rpc = "http://localhost:7190/rpc";
 	}
 	else
 	{

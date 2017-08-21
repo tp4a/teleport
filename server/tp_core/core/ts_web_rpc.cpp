@@ -92,20 +92,23 @@ int ts_web_rpc_get_conn_info(int conn_id, Json::Value& jret)
 	return TPE_OK;
 }
 
-bool ts_web_rpc_session_begin(TS_SESSION_INFO& info, int& record_id)
+bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id)
 {
 	Json::FastWriter json_writer;
 	Json::Value jreq;
 
 	jreq["method"] = "session_begin";
 	jreq["param"]["sid"] = info.sid.c_str();
-	jreq["param"]["account_name"] = info.account_name.c_str();
-	jreq["param"]["host_ip"] = info.host_ip.c_str();
-	jreq["param"]["sys_type"] = info.sys_type;
-	jreq["param"]["host_port"] = info.host_port;
-	jreq["param"]["auth_mode"] = info.auth_mode,
 	jreq["param"]["user_name"] = info.user_name.c_str();
-	jreq["param"]["protocol"] = info.protocol;
+	jreq["param"]["account_name"] = info.account_name.c_str();
+	jreq["param"]["real_remote_host_ip"] = info.real_remote_host_ip.c_str();
+	jreq["param"]["remote_host_ip"] = info.remote_host_ip.c_str();
+	jreq["param"]["client_ip"] = info.client_ip.c_str();
+	jreq["param"]["sys_type"] = info.sys_type;
+	jreq["param"]["remote_host_port"] = info.remote_host_port;
+	jreq["param"]["auth_type"] = info.auth_type;
+	jreq["param"]["protocol_type"] = info.protocol_type;
+	jreq["param"]["protocol_sub_type"] = info.protocol_sub_type;
 
 	ex_astr json_param;
 	json_param = json_writer.write(jreq);

@@ -228,7 +228,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	EXLOGV("[ssh] authenticating, session-id: %s\n", _this->m_sid.c_str());
 
 	int protocol = 0;
-	TPP_CONNECT_INFO* sess_info = g_ssh_env.get_session(_this->m_sid.c_str());
+	TPP_CONNECT_INFO* sess_info = g_ssh_env.get_connect_info(_this->m_sid.c_str());
 
 	if (NULL == sess_info) {
 //		EXLOGW("[ssh] try to get login-info from ssh-sftp-session.\n");
@@ -261,7 +261,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	}
 
 	if (protocol != TP_PROTOCOL_TYPE_SSH) {
-		g_ssh_env.free_session(sess_info);
+		g_ssh_env.free_connect_info(sess_info);
 		EXLOGE("[ssh] session '%s' is not for SSH.\n", _this->m_sid.c_str());
 		_this->m_have_error = true;
 		_this->m_retcode = TP_SESS_STAT_ERR_AUTH_DENIED;
@@ -270,13 +270,13 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 
 	if (!_this->_on_session_begin(sess_info))
 	{
-		g_ssh_env.free_session(sess_info);
+		g_ssh_env.free_connect_info(sess_info);
 		_this->m_have_error = true;
 		_this->m_retcode = TP_SESS_STAT_ERR_AUTH_DENIED;
 		return SSH_AUTH_DENIED;
 	}
 
-	g_ssh_env.free_session(sess_info);
+	g_ssh_env.free_connect_info(sess_info);
 	sess_info = NULL;
 
 	// 现在尝试根据session-id获取得到的信息，连接并登录真正的SSH服务器
