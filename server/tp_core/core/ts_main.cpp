@@ -288,8 +288,7 @@ int ts_main(void)
 		g_exit_flag = true;
 	}
 
-	if (!g_exit_flag)
-	{
+	if (!g_exit_flag) {
 		ts_web_rpc_register_core();
 
 		EXLOGV("[core] ---- initialized, ready for service ----\n");
