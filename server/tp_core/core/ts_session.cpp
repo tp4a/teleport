@@ -65,46 +65,6 @@ void TsSessionManager::_check_connect_info(void)
 	}
 }
 
-ex_rv TsSessionManager::request_session(
-	ex_astr& sid,	// 返回的session-id
-	ex_astr account_name,
-	int auth_id,
-	const ex_astr& host_ip, // 要连接的主机IP
-	int host_port,  // 要连接的主机端口
-	int sys_type,
-	int protocol,  // 要使用的协议，1=rdp, 2=ssh
-	const ex_astr& user_name, // 认证信息中的用户名
-	const ex_astr& user_auth, // 认证信息，密码或私钥
-	const ex_astr& user_param, //
-	int auth_mode // 认证方式，1=password，2=private-key
-	)
-{
-	TS_SESSION_INFO* info = new TS_SESSION_INFO;
-	info->account_name = account_name;
-	info->auth_id = auth_id;
-	info->host_ip = host_ip;
-	info->host_port = host_port;
-	info->sys_type = sys_type;
-	info->protocol = protocol;
-	info->user_name = user_name;
-	info->user_auth = user_auth;
-	info->auth_mode = auth_mode;
-	info->user_param = user_param;
-	if (protocol == TP_PROTOCOL_TYPE_RDP)
-		info->ref_count = 2;
-	else
-		info->ref_count = 1;
-	info->ticket_start = ex_get_tick_count();
-
-	EXLOGD("[core] request session: user-name: [%s], protocol: [%d], auth-mode: [%d]\n", info->user_name.c_str(), info->protocol, info->auth_mode);
-
-	if (_add_connect_info(sid, info))
-		return EXRV_OK;
-
-	delete info;
-	return EXRV_FAILED;
-}
-
 bool TsSessionManager::get_connect_info(const ex_astr& sid, TS_CONNECT_INFO& info)
 {
 	ExThreadSmartLock locker(m_lock);
@@ -114,34 +74,33 @@ bool TsSessionManager::get_connect_info(const ex_astr& sid, TS_CONNECT_INFO& inf
 		return false;
 
 	info.sid = it->second->sid;
-	info.account_name = it->second->account_name;
-	info.auth_id = it->second->auth_id;
-	info.host_ip = it->second->host_ip;
-	info.host_port = it->second->host_port;
-	info.protocol = it->second->protocol;
+	info.user_id = it->second->user_id;
+	info.host_id = it->second->host_id;
+	info.account_id = it->second->account_id;
 	info.user_name = it->second->user_name;
-
-	info.user_auth = it->second->user_auth;
-
-	info.user_param = it->second->user_param;
-	info.auth_mode = it->second->auth_mode;
-	info.sys_type = it->second->sys_type;
-	info.ref_count = it->second->ref_count;
-	info.ticket_start = it->second->ticket_start;
+	info.real_remote_host_ip = it->second->real_remote_host_ip;
+	info.remote_host_ip = it->second->remote_host_ip;
+	info.remote_host_port = it->second->remote_host_port;
+	info.client_ip = it->second->client_ip;
+	info.account_name = it->second->account_name;
+	info.account_secret = it->second->account_secret;
+	info.username_prompt = it->second->username_prompt;
+	info.password_prompt = it->second->password_prompt;
+	info.connect_flag = it->second->connect_flag;
+	info.protocol_type = it->second->protocol_type;
+	info.protocol_sub_type = it->second->protocol_sub_type;
+	info.auth_type = it->second->auth_type;
 
 	it->second->ref_count++;
-// 	if (it->second->ref_count <= 0)
-// 	{
-// 		delete it->second;
-// 		m_sessions.erase(it);
-// 	}
 
 	return true;
 }
 
-bool TsSessionManager::_add_connect_info(ex_astr& sid, TS_CONNECT_INFO* info)
+bool TsSessionManager::request_session(ex_astr& sid, TS_CONNECT_INFO* info)
 {
 	ExThreadSmartLock locker(m_lock);
+
+	EXLOGD("[core] request session: account: [%s], protocol: [%d], auth-mode: [%d]\n", info->account_name.c_str(), info->protocol_type, info->auth_type);
 
 	ex_astr _sid;
 	int retried = 0;

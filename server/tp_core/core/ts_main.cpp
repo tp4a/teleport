@@ -32,8 +32,10 @@ TPP_CONNECT_INFO* tpp_get_connect_info(const char* sid)
 	ex_strcpy(info->account_name, sinfo.account_name.length() + 1, sinfo.account_name.c_str());
 	info->account_secret = (char*)calloc(1, sinfo.account_secret.length() + 1);
 	ex_strcpy(info->account_secret, sinfo.account_secret.length() + 1, sinfo.account_secret.c_str());
-	info->account_param = (char*)calloc(1, sinfo.account_param.length() + 1);
-	ex_strcpy(info->account_param, sinfo.account_param.length() + 1, sinfo.account_param.c_str());
+	info->username_prompt = (char*)calloc(1, sinfo.username_prompt.length() + 1);
+	ex_strcpy(info->username_prompt, sinfo.username_prompt.length() + 1, sinfo.username_prompt.c_str());
+	info->password_prompt = (char*)calloc(1, sinfo.password_prompt.length() + 1);
+	ex_strcpy(info->password_prompt, sinfo.password_prompt.length() + 1, sinfo.password_prompt.c_str());
 
 	info->user_id = sinfo.user_id;
 	info->host_id = sinfo.host_id;
@@ -42,7 +44,7 @@ TPP_CONNECT_INFO* tpp_get_connect_info(const char* sid)
 	info->protocol_type = sinfo.protocol_type;
 	info->protocol_sub_type = sinfo.protocol_sub_type;
 	info->auth_type= sinfo.auth_type;
-	info->sys_type = sinfo.sys_type;
+	info->connect_flag = sinfo.connect_flag;
 
 	return info;
 }
@@ -59,7 +61,8 @@ void tpp_free_connect_info(TPP_CONNECT_INFO* info)
 	free(info->client_ip);
 	free(info->account_name);
 	free(info->account_secret);
-	free(info->account_param);
+	free(info->username_prompt);
+	free(info->password_prompt);
 	free(info);
 }
 
@@ -80,7 +83,7 @@ bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id)
 	sinfo.protocol_type = info->protocol_type;
 	sinfo.protocol_sub_type = info->protocol_sub_type;
 	sinfo.auth_type = info->auth_type;
-	sinfo.sys_type = info->sys_type;
+	//sinfo.connect_flag = info->connect_flag;
 
 	return ts_web_rpc_session_begin(sinfo, *db_id);
 }

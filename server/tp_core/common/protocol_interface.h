@@ -32,15 +32,14 @@ typedef struct TPP_CONNECT_INFO
 
 	char* account_name;		// 远程主机的账号
 	char* account_secret;	// 远程主机账号的密码（或者私钥）
-	char* account_param;
+	//char* account_param;
+	char* username_prompt;	// for telnet
+	char* password_prompt;	// for telnet
 
 	int protocol_type;
 	int protocol_sub_type;
 	int auth_type;
-	int sys_type;
-
-//	int ref_count;			// 这个连接信息的引用计数，如果创建的连接信息从来未被使用，则超过60秒后自动销毁
-//	ex_u64 ticket_start;	// 此连接信息的创建时间（用于超时未使用就销毁的功能）
+	int connect_flag;
 }TPP_CONNECT_INFO;
 
 typedef TPP_CONNECT_INFO* (*TPP_GET_CONNNECT_INFO_FUNC)(const char* sid);

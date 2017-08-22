@@ -16,8 +16,8 @@ public:
 	ex_wstr etc_path;	// 配置文件、SSH服务器的私钥文件的存放路径
 	ex_wstr replay_path;
 
-	TPP_GET_CONNNECT_INFO_FUNC get_session;
-	TPP_FREE_CONNECT_INFO_FUNC free_session;
+	TPP_GET_CONNNECT_INFO_FUNC get_connect_info;
+	TPP_FREE_CONNECT_INFO_FUNC free_connect_info;
 	TPP_SESSION_BEGIN_FUNC session_begin;
 	TPP_SESSION_END_FUNC session_end;
 

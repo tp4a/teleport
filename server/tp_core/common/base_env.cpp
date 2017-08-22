@@ -20,12 +20,12 @@ bool TppEnvBase::init(TPP_INIT_ARGS* args)
 	etc_path = args->etc_path;
 	replay_path = args->replay_path;
 
-	get_session = args->func_get_connect_info;
-	free_session = args->func_free_connect_info;
+	get_connect_info = args->func_get_connect_info;
+	free_connect_info = args->func_free_connect_info;
 	session_begin = args->func_session_begin;
 	session_end = args->func_session_end;
 
-	if (NULL == get_session || NULL == free_session || NULL == session_begin || NULL == session_end)
+	if (NULL == get_connect_info || NULL == free_connect_info || NULL == session_begin || NULL == session_end)
 	{
 		EXLOGE("invalid init args(2).\n");
 		return false;
