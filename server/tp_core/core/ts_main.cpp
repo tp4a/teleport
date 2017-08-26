@@ -73,6 +73,9 @@ bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id)
 
 	TS_CONNECT_INFO sinfo;
 	sinfo.sid = info->sid;
+	sinfo.user_id = info->user_id;
+	sinfo.host_id = info->host_id;
+	sinfo.account_id = info->account_id;
 	sinfo.user_name = info->user_name;
 	sinfo.real_remote_host_ip = info->real_remote_host_ip;
 	sinfo.remote_host_ip = info->remote_host_ip;

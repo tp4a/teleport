@@ -179,6 +179,9 @@ bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id)
 
 	jreq["method"] = "session_begin";
 	jreq["param"]["sid"] = info.sid.c_str();
+	jreq["param"]["user_id"] = info.user_id;
+	jreq["param"]["host_id"] = info.host_id;
+	jreq["param"]["account_id"] = info.account_id;
 	jreq["param"]["user_name"] = info.user_name.c_str();
 	jreq["param"]["account_name"] = info.account_name.c_str();
 	jreq["param"]["real_remote_host_ip"] = info.real_remote_host_ip.c_str();
