@@ -422,3 +422,62 @@ void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 	jr_data["c"] = cipher_text;
 	_create_json_ret(buf, TPE_OK, jr_data);
 }
+
+/*
+void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
+{
+	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#enc
+	// 加密多个个字符串 [ p=plain-text, c=cipher-text ]
+	// 入参: {"p":["need be encrypt", "plain to cipher"]}
+	// 示例: {"p":["password-for-A"]}
+	//   p: 被加密的字符串
+	// 返回：
+	//   data域中的"c"的内容是加密后密文的base64编码结果
+	// 示例: {"code":0, "data":{"c":["Mxs340a9r3fs+3sdf=="]}}
+	//   错误返回： {"code":1234}
+
+	if (json_param.isArray())
+	{
+		_create_json_ret(buf, TPE_PARAM);
+		return;
+	}
+
+	ex_astr plain_text;
+
+	if (json_param["p"].isNull() || !json_param["p"].isArray())
+	{
+		_create_json_ret(buf, TPE_PARAM);
+		return;
+	}
+
+	Json::Value c;
+
+	Json::Value p = json_param["p"];
+	int cnt = p.size();
+	for (int i = 0; i < cnt; ++i)
+	{
+		if (!p[i].isString()) {
+			_create_json_ret(buf, TPE_PARAM);
+			return;
+		}
+
+		ex_astr p_txt = p[i].asCString();
+		if (p_txt.length() == 0) {
+			c["c"].append("");
+		}
+
+		ex_astr c_txt;
+		if (!ts_db_field_encrypt(p_txt, c_txt))
+		{
+			_create_json_ret(buf, TPE_FAILED);
+			return;
+		}
+
+		c["c"].append(c_txt);
+	}
+
+	Json::Value jr_data;
+	jr_data["c"] = c;
+	_create_json_ret(buf, TPE_OK, jr_data);
+}
+*/
