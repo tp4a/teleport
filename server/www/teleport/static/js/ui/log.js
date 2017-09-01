@@ -184,7 +184,12 @@ ywl.on_host_table_created = function (tbl) {
                     var args = {};
                     args.id = parseInt(row_data.id);
                     args.host = ip;
-                    args.port = port;
+                    if (port) {
+			args.port = port;
+		    }
+		    else {
+			args.port = 80;
+		    }
                     args.tail = tail;
                     args.url = url;
                     start_rdp_replay(args,
