@@ -96,7 +96,7 @@
 #define TPE_SYS_MAINTENANCE			10003	// 系统维护中
 
 #define TPE_USER_LOCKED				10100	// 用户已经被锁定（连续多次错误密码）
-#define TPE_USER_BAN				10101	// 用户已经被禁用
+#define TPE_USER_DISABLED			10101	// 用户已经被禁用
 #define TPE_USER_AUTH				10102	// 身份验证失败
 
 //-------------------------------------------------------

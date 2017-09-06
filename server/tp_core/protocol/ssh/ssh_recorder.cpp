@@ -24,15 +24,15 @@ void TppSshRec::_on_begin(const TPP_CONNECT_INFO* info)
 	m_head.basic.timestamp = time(NULL);
 	m_head.basic.protocol_type = info->protocol_type;
 	m_head.basic.protocol_sub_type = info->protocol_sub_type;
-	m_head.basic.remote_host_port = info->remote_host_port;
-	// 	memcpy(m_head.account, info.account_name.c_str(), info.account_name.length() > 15 ? 15 : info.account_name.length());
-	// 	memcpy(m_head.username, info.user_name.c_str(), info.user_name.length() > 15 ? 15 : info.user_name.length());
+	m_head.basic.conn_port = info->conn_port;
+	// 	memcpy(m_head.account, info.acc_username.c_str(), info.acc_username.length() > 15 ? 15 : info.acc_username.length());
+	// 	memcpy(m_head.username, info.user_username.c_str(), info.user_username.length() > 15 ? 15 : info.user_username.length());
 	// 	memcpy(m_head.ip, info.host_ip.c_str(), info.host_ip.length() > 17 ? 17 : info.host_ip.length());
 
-	memcpy(m_head.basic.account_name, info->account_name, strlen(info->account_name) >= 31 ? 31 : strlen(info->account_name));
-	memcpy(m_head.basic.user_name, info->user_name, strlen(info->user_name) >= 31 ? 31 : strlen(info->user_name));
-	memcpy(m_head.basic.real_remote_host_ip, info->real_remote_host_ip, strlen(info->real_remote_host_ip) >= 39 ? 39 : strlen(info->real_remote_host_ip));
-	memcpy(m_head.basic.remote_host_ip, info->remote_host_ip, strlen(info->remote_host_ip) >= 39 ? 39 : strlen(info->remote_host_ip));
+	memcpy(m_head.basic.acc_username, info->acc_username, strlen(info->acc_username) >= 31 ? 31 : strlen(info->acc_username));
+	memcpy(m_head.basic.user_username, info->user_username, strlen(info->user_username) >= 31 ? 31 : strlen(info->user_username));
+	memcpy(m_head.basic.host_ip, info->host_ip, strlen(info->host_ip) >= 39 ? 39 : strlen(info->host_ip));
+	memcpy(m_head.basic.conn_ip, info->conn_ip, strlen(info->conn_ip) >= 39 ? 39 : strlen(info->conn_ip));
 }
 
 void TppSshRec::_on_end(void)

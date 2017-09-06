@@ -30,12 +30,12 @@ typedef struct TS_RECORD_HEADER_BASIC
 	ex_u64 timestamp;	// 本次录像的起始时间（UTC时间戳）
 	ex_u16 width;		// 初始屏幕尺寸：宽
 	ex_u16 height;		// 初始屏幕尺寸：高
-	char user_name[32];	// teleport账号
-	char account_name[32];	// 远程主机用户名
+	char user_username[32];	// teleport账号
+	char acc_username[32];	// 远程主机用户名
 
-	char real_remote_host_ip[40];	// 远程主机IP
-	char remote_host_ip[40];	// 远程主机IP
-	ex_u16 remote_host_port;	// 远程主机端口
+	char host_ip[40];	// 远程主机IP
+	char conn_ip[40];	// 远程主机IP
+	ex_u16 conn_port;	// 远程主机端口
 
 	char client_ip[40];		// 客户端IP
 

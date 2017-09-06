@@ -20,18 +20,18 @@ TPP_CONNECT_INFO* tpp_get_connect_info(const char* sid)
 	
 	info->sid = (char*)calloc(1, sinfo.sid.length() + 1);
 	ex_strcpy(info->sid, sinfo.sid.length() + 1, sinfo.sid.c_str());
-	info->user_name = (char*)calloc(1, sinfo.user_name.length() + 1);
-	ex_strcpy(info->user_name, sinfo.user_name.length() + 1, sinfo.user_name.c_str());
-	info->real_remote_host_ip = (char*)calloc(1, sinfo.real_remote_host_ip.length() + 1);
-	ex_strcpy(info->real_remote_host_ip, sinfo.real_remote_host_ip.length() + 1, sinfo.real_remote_host_ip.c_str());
-	info->remote_host_ip = (char*)calloc(1, sinfo.remote_host_ip.length() + 1);
-	ex_strcpy(info->remote_host_ip, sinfo.remote_host_ip.length() + 1, sinfo.remote_host_ip.c_str());
+	info->user_username = (char*)calloc(1, sinfo.user_username.length() + 1);
+	ex_strcpy(info->user_username, sinfo.user_username.length() + 1, sinfo.user_username.c_str());
+	info->host_ip = (char*)calloc(1, sinfo.host_ip.length() + 1);
+	ex_strcpy(info->host_ip, sinfo.host_ip.length() + 1, sinfo.host_ip.c_str());
+	info->conn_ip = (char*)calloc(1, sinfo.conn_ip.length() + 1);
+	ex_strcpy(info->conn_ip, sinfo.conn_ip.length() + 1, sinfo.conn_ip.c_str());
 	info->client_ip = (char*)calloc(1, sinfo.client_ip.length() + 1);
 	ex_strcpy(info->client_ip, sinfo.client_ip.length() + 1, sinfo.client_ip.c_str());
-	info->account_name = (char*)calloc(1, sinfo.account_name.length() + 1);
-	ex_strcpy(info->account_name, sinfo.account_name.length() + 1, sinfo.account_name.c_str());
-	info->account_secret = (char*)calloc(1, sinfo.account_secret.length() + 1);
-	ex_strcpy(info->account_secret, sinfo.account_secret.length() + 1, sinfo.account_secret.c_str());
+	info->acc_username = (char*)calloc(1, sinfo.acc_username.length() + 1);
+	ex_strcpy(info->acc_username, sinfo.acc_username.length() + 1, sinfo.acc_username.c_str());
+	info->acc_secret = (char*)calloc(1, sinfo.acc_secret.length() + 1);
+	ex_strcpy(info->acc_secret, sinfo.acc_secret.length() + 1, sinfo.acc_secret.c_str());
 	info->username_prompt = (char*)calloc(1, sinfo.username_prompt.length() + 1);
 	ex_strcpy(info->username_prompt, sinfo.username_prompt.length() + 1, sinfo.username_prompt.c_str());
 	info->password_prompt = (char*)calloc(1, sinfo.password_prompt.length() + 1);
@@ -39,12 +39,12 @@ TPP_CONNECT_INFO* tpp_get_connect_info(const char* sid)
 
 	info->user_id = sinfo.user_id;
 	info->host_id = sinfo.host_id;
-	info->account_id = sinfo.account_id;
-	info->remote_host_port = sinfo.remote_host_port;
+	info->acc_id = sinfo.acc_id;
+	info->conn_port = sinfo.conn_port;
 	info->protocol_type = sinfo.protocol_type;
 	info->protocol_sub_type = sinfo.protocol_sub_type;
+	info->protocol_flag = sinfo.protocol_flag;
 	info->auth_type= sinfo.auth_type;
-	info->connect_flag = sinfo.connect_flag;
 
 	return info;
 }
@@ -55,12 +55,12 @@ void tpp_free_connect_info(TPP_CONNECT_INFO* info)
 		return;
 
 	free(info->sid);
-	free(info->user_name);
-	free(info->real_remote_host_ip);
-	free(info->remote_host_ip);
+	free(info->user_username);
+	free(info->host_ip);
+	free(info->conn_ip);
 	free(info->client_ip);
-	free(info->account_name);
-	free(info->account_secret);
+	free(info->acc_username);
+	free(info->acc_secret);
 	free(info->username_prompt);
 	free(info->password_prompt);
 	free(info);
@@ -75,18 +75,18 @@ bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id)
 	sinfo.sid = info->sid;
 	sinfo.user_id = info->user_id;
 	sinfo.host_id = info->host_id;
-	sinfo.account_id = info->account_id;
-	sinfo.user_name = info->user_name;
-	sinfo.real_remote_host_ip = info->real_remote_host_ip;
-	sinfo.remote_host_ip = info->remote_host_ip;
+	sinfo.acc_id = info->acc_id;
+	sinfo.user_username = info->user_username;
+	sinfo.host_ip = info->host_ip;
+	sinfo.conn_ip = info->conn_ip;
 	sinfo.client_ip = info->client_ip;
-	sinfo.account_name = info->account_name;
+	sinfo.acc_username = info->acc_username;
 
-	sinfo.remote_host_port = info->remote_host_port;
+	sinfo.conn_port = info->conn_port;
 	sinfo.protocol_type = info->protocol_type;
 	sinfo.protocol_sub_type = info->protocol_sub_type;
+	//sinfo.protocol_flag = info->protocol_flag;
 	sinfo.auth_type = info->auth_type;
-	//sinfo.connect_flag = info->connect_flag;
 
 	return ts_web_rpc_session_begin(sinfo, *db_id);
 }

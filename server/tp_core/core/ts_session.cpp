@@ -76,19 +76,19 @@ bool TsSessionManager::get_connect_info(const ex_astr& sid, TS_CONNECT_INFO& inf
 	info.sid = it->second->sid;
 	info.user_id = it->second->user_id;
 	info.host_id = it->second->host_id;
-	info.account_id = it->second->account_id;
-	info.user_name = it->second->user_name;
-	info.real_remote_host_ip = it->second->real_remote_host_ip;
-	info.remote_host_ip = it->second->remote_host_ip;
-	info.remote_host_port = it->second->remote_host_port;
+	info.acc_id = it->second->acc_id;
+	info.user_username = it->second->user_username;
+	info.host_ip = it->second->host_ip;
+	info.conn_ip = it->second->conn_ip;
+	info.conn_port = it->second->conn_port;
 	info.client_ip = it->second->client_ip;
-	info.account_name = it->second->account_name;
-	info.account_secret = it->second->account_secret;
+	info.acc_username = it->second->acc_username;
+	info.acc_secret = it->second->acc_secret;
 	info.username_prompt = it->second->username_prompt;
 	info.password_prompt = it->second->password_prompt;
-	info.connect_flag = it->second->connect_flag;
 	info.protocol_type = it->second->protocol_type;
 	info.protocol_sub_type = it->second->protocol_sub_type;
+	info.protocol_flag = it->second->protocol_flag;
 	info.auth_type = it->second->auth_type;
 
 	it->second->ref_count++;
@@ -100,7 +100,7 @@ bool TsSessionManager::request_session(ex_astr& sid, TS_CONNECT_INFO* info)
 {
 	ExThreadSmartLock locker(m_lock);
 
-	EXLOGD("[core] request session: account: [%s], protocol: [%d], auth-mode: [%d]\n", info->account_name.c_str(), info->protocol_type, info->auth_type);
+	EXLOGD("[core] request session: account: [%s], protocol: [%d], auth-mode: [%d]\n", info->acc_username.c_str(), info->protocol_type, info->auth_type);
 
 	ex_astr _sid;
 	int retried = 0;
@@ -124,7 +124,7 @@ bool TsSessionManager::request_session(ex_astr& sid, TS_CONNECT_INFO* info)
 	if (info->protocol_type == TP_PROTOCOL_TYPE_RDP)
 	{
 		char szTmp[8] = { 0 };
-		snprintf(szTmp, 8, "%02X", (unsigned char)(info->account_name.length() + info->account_secret.length()));
+		snprintf(szTmp, 8, "%02X", (unsigned char)(info->acc_username.length() + info->acc_secret.length()));
 		sid += szTmp;
 	}
 
@@ -143,9 +143,9 @@ void TsSessionManager::_gen_session_id(ex_astr& sid, const TS_CONNECT_INFO* info
 	mbedtls_sha1_starts(&sha);
 	mbedtls_sha1_update(&sha, (const unsigned char*)&_tick, sizeof(ex_u64));
 	mbedtls_sha1_update(&sha, (const unsigned char*)&_tid, sizeof(ex_u64));
-	mbedtls_sha1_update(&sha, (const unsigned char*)info->remote_host_ip.c_str(), info->remote_host_ip.length());
+	mbedtls_sha1_update(&sha, (const unsigned char*)info->conn_ip.c_str(), info->conn_ip.length());
 	mbedtls_sha1_update(&sha, (const unsigned char*)info->client_ip.c_str(), info->client_ip.length());
-	mbedtls_sha1_update(&sha, (const unsigned char*)info->account_name.c_str(), info->account_name.length());
+	mbedtls_sha1_update(&sha, (const unsigned char*)info->acc_username.c_str(), info->acc_username.length());
 	mbedtls_sha1_finish(&sha, sha_digist);
 	mbedtls_sha1_free(&sha);
 

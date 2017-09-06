@@ -21,25 +21,24 @@ typedef struct TPP_CONNECT_INFO
 	// 与此连接信息相关的三个要素的ID
 	int user_id;
 	int host_id;
-	int account_id;
+	int acc_id;
 
-	char* user_name;		// 申请本次连接的用户名
+	char* user_username;		// 申请本次连接的用户名
 
-	char* real_remote_host_ip;	// 真正的远程主机IP（如果是直接连接模式，则与remote_host_ip相同）
-	char* remote_host_ip;	// 要连接的远程主机的IP（如果是端口映射模式，则为路由主机的IP）
-	int remote_host_port;	// 要连接的远程主机的端口（如果是端口映射模式，则为路由主机的端口）
+	char* host_ip;	// 真正的远程主机IP（如果是直接连接模式，则与remote_host_ip相同）
+	char* conn_ip;	// 要连接的远程主机的IP（如果是端口映射模式，则为路由主机的IP）
+	int conn_port;	// 要连接的远程主机的端口（如果是端口映射模式，则为路由主机的端口）
 	char* client_ip;
 
-	char* account_name;		// 远程主机的账号
-	char* account_secret;	// 远程主机账号的密码（或者私钥）
-	//char* account_param;
+	char* acc_username;		// 远程主机的账号
+	char* acc_secret;	// 远程主机账号的密码（或者私钥）
 	char* username_prompt;	// for telnet
 	char* password_prompt;	// for telnet
 
 	int protocol_type;
 	int protocol_sub_type;
+	int protocol_flag;
 	int auth_type;
-	int connect_flag;
 }TPP_CONNECT_INFO;
 
 typedef TPP_CONNECT_INFO* (*TPP_GET_CONNNECT_INFO_FUNC)(const char* sid);

@@ -102,10 +102,10 @@ private:
 	ex_u16 m_client_port;
 
 	ex_astr m_sid;
-	ex_astr m_remote_host_ip;
-	ex_u16 m_remote_host_port;
-	ex_astr m_account_name;
-	ex_astr m_account_secret;
+	ex_astr m_conn_ip;
+	ex_u16 m_conn_port;
+	ex_astr m_acc_name;
+	ex_astr m_acc_secret;
 	int m_auth_type;
 
 	bool m_is_first_server_data;
