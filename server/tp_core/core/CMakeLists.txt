@@ -16,24 +16,51 @@ ADD_DEFINITIONS(
         -DDISABLE_MD5
 )
 
-set(CMAKE_EXE_LINKER_FLAGS "-export-dynamic")
+#set(CMAKE_EXE_LINKER_FLAGS "-export-dynamic")
 
 aux_source_directory(. DIR_SRCS)
 aux_source_directory(../../../common/libex/src DIR_SRCS)
 aux_source_directory(../../../external/mongoose DIR_SRCS)
 aux_source_directory(../../../external/jsoncpp/src/lib_json DIR_SRCS)
 
+
 #list(REMOVE_ITEM DIR_SRCS "./src/ts_win_service_helper.cpp")
 
 include_directories(
         ../../../common/libex/include
+        ../../../common/teleport
         ../../../external/mongoose
         ../../../external/jsoncpp/include
-        ../../../external/linux/release/include
 )
 
-link_directories(../../../external/linux/release/lib)
+IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+        set(CMAKE_EXE_LINKER_FLAGS "-export-dynamic")
+        include_directories(
+                ../../../external/linux/release/include
+        )
+        link_directories(../../../external/linux/release/lib)
+ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+        include_directories(
+                ../../../external/macos/release/include
+        )
+        link_directories(../../../external/macos/release/lib)
+ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+
+
+#include_directories(
+#        ../../../common/libex/include
+#        ../../../external/mongoose
+#        ../../../external/jsoncpp/include
+#        ../../../external/linux/release/include
+#)
+#link_directories(../../../external/linux/release/lib)
 
 add_executable(tp_core ${DIR_SRCS})
 #target_link_libraries(tp_core ssl crypto mbedx509 mbedtls mbedcrypto sqlite3 dl pthread rt util)
-target_link_libraries(tp_core ssl crypto mbedx509 mbedtls mbedcrypto dl pthread rt util)
+#target_link_libraries(tp_core ssl crypto mbedx509 mbedtls mbedcrypto dl pthread rt util)
+
+IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+        target_link_libraries(tp_core ssl crypto mbedx509 mbedtls mbedcrypto dl pthread rt util)
+ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+        target_link_libraries(tp_core ssl crypto mbedx509 mbedtls mbedcrypto dl pthread util)
+ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")

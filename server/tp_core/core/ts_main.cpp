@@ -150,10 +150,14 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 	ex_wstr filename;
 #ifdef EX_OS_WIN32
 	filename = libname + L".dll";
-#else
+#elif defined (EX_OS_LINUX)
     filename = L"lib";
     filename += libname;
 	filename += L".so";
+#elif defined (EX_OS_MACOS)
+	filename = L"lib";
+    filename += libname;
+	filename += L".dylib";
 #endif
 
 	ex_wstr libfile = g_env.m_exec_path;

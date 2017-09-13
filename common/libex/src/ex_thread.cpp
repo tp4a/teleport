@@ -236,6 +236,6 @@ ex_u64 ex_get_thread_id(void)
 #ifdef EX_OS_WIN32
 	return GetCurrentThreadId();
 #else
-	return pthread_self();
+	return (ex_u64)pthread_self();
 #endif
 }

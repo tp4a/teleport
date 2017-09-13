@@ -171,7 +171,7 @@ EX_BOOL ex_localtime_now(int* t, struct tm* dt)
 	time(&timep);
 	_tmp = localtime(&timep);   //get server's time
 	if (_tmp == NULL)
-		return NULL;
+		return EX_FALSE;
 	if(NULL != dt)
 		memcpy(dt, _tmp, sizeof(struct tm));
 #endif

@@ -63,9 +63,10 @@ def download_file(desc, url, target_path, file_name):
     if env.is_win:
         cmd = '""{}" --no-check-certificate {} -O "{}""'.format(env.wget, url, local_file_name)
         os.system(cmd)
-    elif env.is_linux:
+    elif env.is_linux or env.is_macos:
         os.system('wget --no-check-certificate {} -O "{}"'.format(url, local_file_name))
     else:
+        cc.e('can not download, no download tool.')
         return False
 
     if not os.path.exists(local_file_name) or not _check_download_file(local_file_name):
@@ -278,7 +279,7 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
         line = line.rstrip('\r\n')
 
         if direct_output:
-            cc.o((cc.CR_GRAY, line), end='\n')
+            cc.o((cc.CR_CYAN, line), end='\n')
 
         output.append(line)
 
@@ -334,6 +335,7 @@ def cmake(work_path, target, force_rebuild, cmake_define=''):
     else:
         target = 'Release'
     cmd = '"{}" -DCMAKE_BUILD_TYPE={} {} ..;make'.format(env.cmake, target, cmake_define)
+    cc.o(cmd)
     ret, _ = sys_exec(cmd, direct_output=True)
     os.chdir(old_p)
     if ret != 0:

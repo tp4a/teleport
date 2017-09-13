@@ -1,3 +1,5 @@
+MESSAGE(STATUS "operation system is ${CMAKE_SYSTEM}")
+
 cmake_minimum_required(VERSION 3.5)
 #project(teleport)
 
@@ -7,8 +9,18 @@ cmake_minimum_required(VERSION 3.5)
 #add_executable(teleport ${SOURCE_FILES})
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${teleport_SOURCE_DIR}/../out/server/x64/bin")
 
-add_subdirectory(tp_web/src)
+
+IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+	MESSAGE(STATUS "build on Linux...")
+	add_subdirectory(tp_web/src)
+ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+	MESSAGE(FATAL_ERROR "unsupported platform: Windows")
+ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+	MESSAGE(STATUS "build on MacOS...")
+ELSE ()
+	MESSAGE(FATAL_ERROR "unsupported platform: ${CMAKE_SYSTEM_NAME}")
+ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+
 add_subdirectory(tp_core/core)
 add_subdirectory(tp_core/protocol/ssh)
-add_subdirectory(tp_core/protocol/rdp)
-
+#add_subdirectory(tp_core/protocol/rdp)

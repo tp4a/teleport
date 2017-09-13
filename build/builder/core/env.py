@@ -143,7 +143,7 @@ class Env(object):
                 if warn_miss_tool:
                     cc.w(' - can not locate `nsis`, so I can not make installer.')
 
-        elif self.is_linux:
+        elif self.is_linux or self.is_macos:
             if 'cmake' in _tmp:
                 self.cmake = _tmp['cmake']
             else:

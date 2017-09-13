@@ -64,6 +64,9 @@
 #	include <sys/socket.h>
 #	include <netinet/in.h>
 #endif
+#ifdef EX_OS_MACOS
+#   include <mach-o/dyld.h> // for _NSGetExecutablePath
+#endif
 
 
 /*

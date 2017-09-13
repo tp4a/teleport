@@ -87,11 +87,38 @@ class BuilderLinux(BuilderBase):
                 utils.ensure_file_exists(f)
 
 
+class BuilderMacOS(BuilderBase):
+    def __init__(self):
+        super().__init__()
+
+    def build_server(self):
+        cc.n('build server app (tp_core/libtpssh/tp_web)...')
+
+        out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
+        out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'libtpssh.so'),
+                     os.path.join(out_path, 'tp_web')]
+
+        for f in out_files:
+            if os.path.exists(f):
+                utils.remove(f)
+
+        utils.makedirs(out_path)
+
+        utils.cmake(os.path.join(env.root_path, 'server', 'cmake-build'), ctx.target_path, False)
+        # utils.strip(out_file)
+
+        for f in out_files:
+            if os.path.exists(f):
+                utils.ensure_file_exists(f)
+
+
 def gen_builder(dist):
     if dist == 'windows':
         builder = BuilderWin()
     elif dist == 'linux':
         builder = BuilderLinux()
+    elif dist == 'macos':
+        builder = BuilderMacOS()
     else:
         raise RuntimeError('unsupported platform.')
 

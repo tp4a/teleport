@@ -174,7 +174,7 @@ bool ex_exec_file(ex_wstr& out_filename)
 	uint32_t length = EX_PATH_MAX;
 
 	memset(buffer, 0, EX_PATH_MAX);
-	memset(out_path, 0, EX_PATH_MAX);
+	//memset(out_filename, 0, EX_PATH_MAX);
 
 	/* Mac OS X has special function to obtain path to executable.
 	* This may return a symlink.
@@ -182,7 +182,7 @@ bool ex_exec_file(ex_wstr& out_filename)
 	if (_NSGetExecutablePath(buffer, &length) != 0)
 		return false;
 
-	if (!ex_astr2wstr(out_filename, buffer))
+	if (!ex_astr2wstr(buffer, out_filename))
 		return false;
 
 	return ex_abspath(out_filename);

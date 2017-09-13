@@ -521,7 +521,7 @@ class BuilderMacOS(BuilderBase):
     def _init_path(self):
         self.PATH_TMP = os.path.join(PATH_EXTERNAL, 'macos', 'tmp')
         self.PATH_RELEASE = os.path.join(PATH_EXTERNAL, 'macos', 'release')
-        self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-{}'.format(env.ver_openssl))
+        self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-OpenSSL_{}'.format(env.ver_openssl.replace('.', '_')))
         self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(env.ver_libuv))
         self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls))
         self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(env.ver_libssh))
@@ -552,23 +552,24 @@ class BuilderMacOS(BuilderBase):
             cc.w('already exists, skip.')
 
     def _build_openssl(self, file_name):
-        pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
+        # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
 
-        # if not os.path.exists(self.OPENSSL_PATH_SRC):
-        #     os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-        #
-        # cc.n('build openssl static...')
-        # if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
-        #     cc.w('already exists, skip.')
-        #     return
-        #
-        # old_p = os.getcwd()
-        # os.chdir(self.OPENSSL_PATH_SRC)
-        # #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        # os.system('./config --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        # os.system('make')
-        # os.system('make install')
-        # os.chdir(old_p)
+        if not os.path.exists(self.OPENSSL_PATH_SRC):
+            os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+
+        cc.n('build openssl static...')
+        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
+            cc.w('already exists, skip.')
+            return
+
+        old_p = os.getcwd()
+        os.chdir(self.OPENSSL_PATH_SRC)
+        #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        # os.system('./Configure darwin64-x86_64-cc')
+        os.system('./Configure darwin64-x86_64-cc --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        os.system('make')
+        os.system('make install')
+        os.chdir(old_p)
 
     def _build_libuv(self, file_name):
         cc.w('build libuv...skip')
@@ -735,7 +736,7 @@ class BuilderMacOS(BuilderBase):
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
                        ' -DWITH_NACL=OFF' \
-                       ' ..'.format(self.PATH_RELEASE, env.ver_openssl_number, self.PATH_RELEASE, self.PATH_RELEASE)
+                       ''.format(self.PATH_RELEASE, env.ver_openssl_number, self.PATH_RELEASE, self.PATH_RELEASE)
 
         try:
             utils.cmake(build_path, 'Release', False, cmake_define)

@@ -35,6 +35,7 @@ __pycache__
 /out
 /external/_download_
 /external/linux
+/external/macos
 /external/jsoncpp
 /external/mongoose
 /external/openssl
