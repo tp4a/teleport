@@ -1,8 +1,8 @@
 #ifndef __LIB_EX_UTIL_H__
 #define __LIB_EX_UTIL_H__
 
-#include <ex/ex_types.h>
-#include <ex/ex_str.h>
+#include "ex_types.h"
+#include "ex_str.h"
 
 #ifdef EX_OS_WIN32
 #	include <time.h>

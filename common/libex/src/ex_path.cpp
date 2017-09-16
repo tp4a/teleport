@@ -185,7 +185,8 @@ bool ex_exec_file(ex_wstr& out_filename)
 	if (!ex_astr2wstr(buffer, out_filename))
 		return false;
 
-	return ex_abspath(out_filename);
+	//return ex_abspath(out_filename);
+	return true;
 
 #else
 	char buffer[EX_PATH_MAX];

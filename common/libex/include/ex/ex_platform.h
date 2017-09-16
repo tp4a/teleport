@@ -66,6 +66,9 @@
 #endif
 #ifdef EX_OS_MACOS
 #   include <mach-o/dyld.h> // for _NSGetExecutablePath
+#   ifndef _T
+#       define _T(x) L##x
+#   endif
 #endif
 
 

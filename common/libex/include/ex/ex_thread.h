@@ -1,7 +1,7 @@
 #ifndef __EX_THREAD_H__
 #define __EX_THREAD_H__
 
-#include <ex/ex_str.h>
+#include "ex_str.h"
 
 #include <list>
 

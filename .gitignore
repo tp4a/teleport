@@ -48,7 +48,7 @@ __pycache__
 /external/libuv
 /client/tools/putty
 /client/tools/winscp
-
+/client/tp_assist_macos/DerivedData
 
 # for dist folder
 **/_tmp_
@@ -72,3 +72,4 @@ __pycache__
 /client/tp_rdp
 /server/tp_core/protocol/rdp
 /client/tools/tprdp
+/client/tp_assist_macos

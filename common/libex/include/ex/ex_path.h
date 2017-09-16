@@ -1,9 +1,9 @@
 #ifndef __LIB_EX_PATH_H__
 #define __LIB_EX_PATH_H__
 
-#include <ex/ex_platform.h>
-#include <ex/ex_types.h>
-#include <ex/ex_str.h>
+#include "ex_platform.h"
+#include "ex_types.h"
+#include "ex_str.h"
 
 // fix `in_path` for current platform.
 // must use ex_free() to release returned value.
