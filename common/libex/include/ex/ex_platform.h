@@ -34,6 +34,12 @@
 #	endif
 #endif
 
+#ifdef EX_OS_MACOS
+#	ifdef DEBUG
+#		define EX_DEBUG
+#	endif
+#endif
+
 
 #ifdef EX_OS_WIN32
 #	ifndef _WIN32_WINNT

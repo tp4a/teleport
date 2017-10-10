@@ -1,0 +1,33 @@
+
+/* Class = "NSMenu"; title = "AMainMenu"; ObjectID = "29"; */
+"29.title" = "AMainMenu";
+
+/* Class = "NSMenuItem"; title = "TPAssist"; ObjectID = "56"; */
+"56.title" = "TPAssist";
+
+/* Class = "NSMenu"; title = "TPAssist"; ObjectID = "57"; */
+"57.title" = "TPAssist";
+
+/* Class = "NSMenuItem"; title = "关于 TPAssist"; ObjectID = "58"; */
+"58.title" = "关于 TPAssist";
+
+/* Class = "NSMenuItem"; title = "退出 TPAssist"; ObjectID = "136"; */
+"136.title" = "退出 TPAssist";
+
+/* Class = "NSMenuItem"; title = "关于"; ObjectID = "638"; */
+"638.title" = "关于";
+
+/* Class = "NSMenuItem"; title = "退出"; ObjectID = "644"; */
+"644.title" = "退出";
+
+/* Class = "NSMenuItem"; title = "设置"; ObjectID = "646"; */
+"646.title" = "设置";
+
+/* Class = "NSMenu"; title = "设置"; ObjectID = "647"; */
+"647.title" = "设置";
+
+/* Class = "NSMenuItem"; title = "编辑"; ObjectID = "648"; */
+"648.title" = "编辑";
+
+/* Class = "NSMenuItem"; title = "Quit"; ObjectID = "649"; */
+"649.title" = "Quit";

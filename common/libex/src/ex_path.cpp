@@ -111,9 +111,9 @@ bool ex_dirname(ex_wstr& inout_filename)
 		inout_filename = EX_CURRENT_DIR_STR;
 		return true;
 	}
-
-	ex_free(ret);
-	return false;
+//
+//	ex_free(ret);
+//	return false;
 }
 
 
