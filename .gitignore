@@ -92,3 +92,4 @@ xcuserdata
 profile
 *.moved-aside
 
+/client/tp_assist_win/site/css/*.map

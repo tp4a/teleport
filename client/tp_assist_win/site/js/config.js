@@ -1,29 +1,23 @@
 "use strict";
-var g_ssh_config_dict = [];
-var g_current_ssh = "";
 
-var g_sftp_config_dict = [];
-var g_current_sftp = "";
+var g_url_base = 'http://127.0.0.1:50022';
 
-var g_telnet_config_dict = [];
-var g_current_telnet = "";
+var g_cfg = null;
 
-var get_client_config_list = function (type) {
-	var type = type;
-	var data = {
-		type: type
-	};
-	var args_ = encodeURIComponent(JSON.stringify(data));
 
+
+var get_config = function () {
 	$.ajax({
 		type: 'GET',
 		timeout: 5000,
-		url: 'http://127.0.0.1:50022/ts_get_config/' + args_,
+		url: g_url_base + '/api/get_config',
 		jsonp: 'callback',
 		dataType: 'json',
 		success: function (ret) {
 			if (ret.code == 0) {
-				init_config_list(type, ret.config_list);
+				console.log(ret.data);
+				g_cfg = ret.data;
+				//init_config_list(type, ret.config_list);
 			} else {
 				alert("获取配置信息失败!");
 			}
@@ -167,10 +161,10 @@ var init_config_param = function (type, build_in, path, command_line) {
 }
 
 $(document).ready(function () {
-
-	get_client_config_list(1);
-	get_client_config_list(2);
-	get_client_config_list(3);
+	get_config();
+	// get_client_config_list(1);
+	// get_client_config_list(2);
+	// get_client_config_list(3);
 
 	$("#ssh-client-type").change(function () {
 		var i = 0;

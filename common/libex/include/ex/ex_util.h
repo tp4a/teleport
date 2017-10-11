@@ -33,6 +33,7 @@ EX_BOOL ex_localtime_now(int* t, struct tm* dt);
 
 
 FILE* ex_fopen(const ex_wstr& filename, const wchar_t* mode);
+FILE* ex_fopen(const ex_astr& filename, const char* mode);
 
 // open a text file and read all content.
 bool ex_read_text_file(const ex_wstr& file_name, ex_astr& file_content);

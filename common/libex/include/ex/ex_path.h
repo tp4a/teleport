@@ -19,6 +19,8 @@ wchar_t* ex_dirname(const wchar_t* in_filename);	// must use ex_free() to releas
 EX_BOOL ex_is_dir_exists(const wchar_t* in_path);
 EX_BOOL ex_is_file_exists(const wchar_t* in_file);
 
+EX_BOOL ex_copy_file(const wchar_t* from_file, const wchar_t* to_file);
+
 // join a path, last param must be NULL.
 // must use ex_free() to release returned value.
 wchar_t* ex_path_join(const wchar_t* in_path, EX_BOOL auto_abspath, ...);

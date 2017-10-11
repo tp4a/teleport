@@ -190,6 +190,22 @@ FILE *ex_fopen(const ex_wstr &filename, const wchar_t *mode) {
 #endif
 }
 
+FILE* ex_fopen(const ex_astr& filename, const char* mode) {
+	FILE *f = NULL;
+#ifdef EX_OS_WIN32
+	errno_t err = 0;
+	err = fopen_s(&f, filename.c_str(), mode);
+	if (0 == err)
+		return f;
+	else
+		return NULL;
+#else
+	f = fopen(filename.c_str(), mode.c_str());
+	return f;
+#endif
+}
+
+
 bool ex_read_text_file(const ex_wstr &strFileName, ex_astr& file_content) {
     std::vector<char> tmp;
 

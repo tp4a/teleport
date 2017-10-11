@@ -74,9 +74,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 
 	EXLOG_FILE(L"tp_assist.log", g_env.m_log_path.c_str(), EX_LOG_FILE_MAX_SIZE, EX_LOG_FILE_MAX_COUNT);
 
-	g_cfgSSH.init();
-	g_cfgScp.init();
-	g_cfgTelnet.init();
+// 	g_cfgSSH.init();
+// 	g_cfgScp.init();
+// 	g_cfgTelnet.init();
+	g_cfg.init();
 
 	g_hInstance = hInstance;
 	_stprintf_s(szKernalName, MAX_PATH, _T("%s_%s"), EOM_ASSIST_GUID, EOM_ASSIST_INSTANCE);

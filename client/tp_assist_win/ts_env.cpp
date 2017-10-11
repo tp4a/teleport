@@ -28,17 +28,23 @@ bool TsEnv::init(void)
 	if (!ex_dirname(m_exec_path))
 		return false;
 
-	m_ssh_client_conf_file = m_exec_path;
-	ex_path_join(m_ssh_client_conf_file, false, L"cfg", L"ssh.ini", NULL);
+	m_cfg_file = m_exec_path;
+	ex_path_join(m_cfg_file, false, L"cfg", L"tp-assist.json", NULL);
 
-	m_scp_client_conf_file = m_exec_path;
-	ex_path_join(m_scp_client_conf_file, false, L"cfg", L"scp.ini", NULL);
 
-	m_telnet_client_conf_file = m_exec_path;
-	ex_path_join(m_telnet_client_conf_file, false, L"cfg", L"telnet.ini", NULL);
+// 	m_ssh_client_conf_file = m_exec_path;
+// 	ex_path_join(m_ssh_client_conf_file, false, L"cfg", L"ssh.ini", NULL);
+// 
+// 	m_scp_client_conf_file = m_exec_path;
+// 	ex_path_join(m_scp_client_conf_file, false, L"cfg", L"scp.ini", NULL);
+// 
+// 	m_telnet_client_conf_file = m_exec_path;
+// 	ex_path_join(m_telnet_client_conf_file, false, L"cfg", L"telnet.ini", NULL);
 
 	m_log_path = m_exec_path;
 	ex_path_join(m_log_path, false, L"log", NULL);
+
+	ex_wstr cfg_default;
 
 #ifdef _DEBUG
 // 	m_ssh_client_conf_file = m_exec_path;
@@ -54,10 +60,13 @@ bool TsEnv::init(void)
 // 	ex_path_join(m_log_path, false, L"log", NULL);
 
 	m_site_path = m_exec_path;
-	ex_path_join(m_site_path, true, L"..", L"..", L"..", L"..", L"client", L"tp_assist", L"site", NULL);
+	ex_path_join(m_site_path, true, L"..", L"..", L"..", L"..", L"client", L"tp_assist_win", L"site", NULL);
 
 	m_tools_path = m_exec_path;
 	ex_path_join(m_tools_path, true, L"..", L"..", L"..", L"..", L"client", L"tools", NULL);
+
+	cfg_default = m_exec_path;
+	ex_path_join(cfg_default, true, L"..", L"..", L"..", L"..", L"client", L"tp_assist_win", L"cfg", L"tp-assist.default.json", NULL);
 
 #else
 // 	TCHAR szBuf[PATH_MAX] = { 0 };
@@ -80,7 +89,20 @@ bool TsEnv::init(void)
 
 	m_tools_path = m_exec_path;
 	ex_path_join(m_tools_path, false, L"tools", NULL);
+
+	cfg_default = m_exec_path;
+	ex_path_join(cfg_default, false, L"tp-assist.default.json", NULL);
 #endif
+
+	if (!ex_is_file_exists(m_cfg_file.c_str())) {
+		ex_wstr cfg_path = m_exec_path;
+		ex_path_join(cfg_path, false, L"cfg", NULL);
+
+		ex_mkdirs(cfg_path);
+
+		if (!ex_copy_file(cfg_default.c_str(), m_cfg_file.c_str()))
+			return false;
+}
 
 	return true;
 }

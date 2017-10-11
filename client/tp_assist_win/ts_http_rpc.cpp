@@ -220,9 +220,9 @@ bool TsHttpRpc::init(const char* ip, int port)
 
 	char addr[128] = { 0 };
 	if (0 == strcmp(ip, "127.0.0.1") || 0 == strcmp(ip, "localhost"))
-		sprintf_s(addr, 128, ":%d", port);
+		ex_strformat(addr, 128, ":%d", port);
 	else
-		sprintf_s(addr, 128, "%s:%d", ip, port);
+		ex_strformat(addr, 128, "%s:%d", ip, port);
 
 	nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
 	if (nc == NULL)
@@ -308,82 +308,87 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 			nc->flags |= MG_F_SEND_AND_CLOSE;
 			return;
 		}
-		else if (uri == "/config")
+
+		if (uri == "/config")
 		{
 			uri = "/index.html";
 			b_is_index = true;
 		}
 
+		ex_astr temp;
+		int offset = uri.find("/", 1);
+		if (offset > 0)
 		{
-			while (true)
-			{
-				int offset = uri.find("/");
-				if (offset < 0)
-				{
-					break;
-				}
-				uri = uri.replace(offset, 1, "\\");
-			}
-			ex_astr file_suffix;
-			int offset = uri.rfind(".");
-			if (offset > 0)
-			{
-				file_suffix = uri.substr(offset, uri.length());
-			}
+			temp = uri.substr(1, offset-1);
 
-			ex_astr temp;
-			ex_wstr2astr(g_env.m_site_path, temp);
-			ex_astr index_path = temp + uri;
-			FILE* file = NULL;
-			//fopen(index_path.c_str(), "rb");
-			fopen_s(&file, index_path.c_str(), "rb");
+			if(temp == "api") {
+				ex_astr method;
+				ex_astr json_param;
+				int rv = _this->_parse_request(hm, method, json_param);
+				if (0 != rv)
+				{
+					EXLOGE("[ERROR] http-rpc got invalid request.\n");
+					_this->_create_json_ret(ret_buf, rv);
+				}
+				else
+				{
+					_this->_process_js_request(method, json_param, ret_buf);
+				}
+				
+				mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %ld\r\nContent-Type: application/json\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
+				nc->flags |= MG_F_SEND_AND_CLOSE;
+				return;
+			}
+		}
+
+		
+		ex_astr file_suffix;
+		offset = uri.rfind(".");
+		if (offset > 0)
+		{
+			file_suffix = uri.substr(offset, uri.length());
+		}
+		
+		ex_wstr2astr(g_env.m_site_path, temp);
+		ex_astr index_path = temp + uri;
+		
+
+		FILE* file = ex_fopen(index_path.c_str(), "rb");
+// 
+// 		FILE* file = NULL;
+// 		file = fopen(index_path.c_str(), "rb");
+		if (file)
+		{
 			unsigned long file_size = 0;
 			char* buf = 0;
-			int ret = 0;
-			if (file)
-			{
-				fseek(file, 0, SEEK_END);
-				file_size = ftell(file);
-				buf = new char[file_size];
-				memset(buf, 0, file_size);
-				fseek(file, 0, SEEK_SET);
-				ret = fread(buf, 1, file_size, file);
-				fclose(file);
+			size_t ret = 0;
 
-				ex_astr content_type = _this->get_content_type(file_suffix);
-
-				mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: %s\r\n\r\n", file_size, content_type.c_str());
-				mg_send(nc, buf, file_size);
-				delete []buf;
-				nc->flags |= MG_F_SEND_AND_CLOSE;
-				return;
-			}
-			else if (b_is_index)
-			{
-				ex_wstr page = L"<html lang=\"zh_CN\"><html><head><title>404 Not Found</title></head><body bgcolor=\"white\"><center><h1>404 Not Found</h1></center><hr><center><p>未能找到TELEPORT助手配置页面文件！</p></center></body></html>";
-				ex_wstr2astr(page, ret_buf, EX_CODEPAGE_UTF8);
-
-				mg_printf(nc, "HTTP/1.0 404 File Not Found\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: text/html\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
-				nc->flags |= MG_F_SEND_AND_CLOSE;
-				return;
-			}
+			fseek(file, 0, SEEK_END);
+			file_size = ftell(file);
+			buf = new char[file_size];
+			memset(buf, 0, file_size);
+			fseek(file, 0, SEEK_SET);
+			ret = fread(buf, 1, file_size, file);
+			fclose(file);
+			
+			ex_astr content_type = _this->get_content_type(file_suffix);
+			
+			mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %ld\r\nContent-Type: %s\r\n\r\n", file_size, content_type.c_str());
+			mg_send(nc, buf, (int)file_size);
+			delete []buf;
+			nc->flags |= MG_F_SEND_AND_CLOSE;
+			return;
 		}
-
-		ex_astr method;
-		ex_astr json_param;
-		int rv = _this->_parse_request(hm, method, json_param);
-		if (0 != rv)
+		else if (b_is_index)
 		{
-			EXLOGE("[ERROR] http-rpc got invalid request.\n");
-			_this->_create_json_ret(ret_buf, rv);
+			ex_wstr page = L"<html lang=\"zh_CN\"><html><head><title>404 Not Found</title></head><body bgcolor=\"white\"><center><h1>404 Not Found</h1></center><hr><center><p>Teleport Assistor configuration page not found.</p></center></body></html>";
+			ex_wstr2astr(page, ret_buf, EX_CODEPAGE_UTF8);
+			
+			mg_printf(nc, "HTTP/1.0 404 File Not Found\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %ld\r\nContent-Type: text/html\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
+			nc->flags |= MG_F_SEND_AND_CLOSE;
+			return;
 		}
-		else
-		{
-			_this->_process_js_request(method, json_param, ret_buf);
-		}
-
-		mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: application/json\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
-		nc->flags |= MG_F_SEND_AND_CLOSE;
+		
 	}
 	break;
 	default:
@@ -429,19 +434,19 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 		strs.push_back(tmp_uri);
 	}
 
-	if (0 == strs.size())
+	if (0 == strs.size() || strs[0] != "api")
 		return TPE_PARAM;
 
 	if (is_get)
 	{
-		if (1 == strs.size())
+		if (2 == strs.size())
 		{
-			func_cmd = strs[0];
+			func_cmd = strs[1];
 		}
-		else if (2 == strs.size())
+		else if (3 == strs.size())
 		{
-			func_cmd = strs[0];
-			func_args = strs[1];
+			func_cmd = strs[1];
+			func_args = strs[2];
 		}
 		else
 		{
@@ -450,9 +455,9 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 	}
 	else
 	{
-		if (1 == strs.size())
+		if (2 == strs.size())
 		{
-			func_cmd = strs[0];
+			func_cmd = strs[1];
 		}
 		else
 		{
@@ -485,31 +490,31 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 
 void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func_args, ex_astr& buf)
 {
-	if (func_cmd == "ts_get_version")
+	if (func_cmd == "get_version")
 	{
 		_rpc_func_get_version(func_args, buf);
 	}
-	else if (func_cmd == "ts_op")
+	else if (func_cmd == "run")
 	{
-		_rpc_func_create_ts_client(func_args, buf);
+		_rpc_func_run_client(func_args, buf);
 	}
-	else if (func_cmd == "ts_check")
+	else if (func_cmd == "check")
 	{
-		_rpc_func_ts_check(func_args, buf);
+		_rpc_func_check(func_args, buf);
 	}
-	else if (func_cmd == "ts_rdp_play")
+	else if (func_cmd == "rdp_play")
 	{
-		_rpc_func_ts_rdp_play(func_args, buf);
+		_rpc_func_rdp_play(func_args, buf);
 	}
-	else if (func_cmd == "ts_get_config")
+	else if (func_cmd == "get_config")
 	{
 		_rpc_func_get_config(func_args, buf);
 	}
-	else if (func_cmd == "ts_set_config")
+	else if (func_cmd == "set_config")
 	{
 		_rpc_func_set_config(func_args, buf);
 	}
-	else if (func_cmd == "ts_file_action")
+	else if (func_cmd == "file_action")
 	{
 		_rpc_func_file_action(func_args, buf);
 	}
@@ -537,7 +542,7 @@ void TsHttpRpc::_create_json_ret(ex_astr& buf, Json::Value& jr_root)
 	buf = jr_writer.write(jr_root);
 }
 
-void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& buf)
+void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 {
 	// 入参：{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
 	//   authmode: 1=password, 2=private-key
@@ -553,7 +558,7 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 		_create_json_ret(buf, TPE_JSON_FORMAT);
 		return;
 	}
-	if (jsRoot.isArray())
+	if (!jsRoot.isObject())
 	{
 		_create_json_ret(buf, TPE_PARAM);
 		return;
@@ -577,7 +582,7 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 // 	}
 	int pro_sub = jsRoot["protocol_sub_type"].asInt();
 
-	std::string teleport_ip = jsRoot["teleport_ip"].asCString();
+	ex_astr teleport_ip = jsRoot["teleport_ip"].asCString();
 	int teleport_port = jsRoot["teleport_port"].asUInt();
 
 	int windows_size = 2;
@@ -592,8 +597,8 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 	else
 		console = jsRoot["console"].asUInt();
 
-	std::string real_host_ip = jsRoot["remote_host_ip"].asCString();
-	std::string sid = jsRoot["session_id"].asCString();
+	ex_astr real_host_ip = jsRoot["remote_host_ip"].asCString();
+	ex_astr sid = jsRoot["session_id"].asCString();
 
 	int pro_type = jsRoot["protocol_type"].asUInt();
 
@@ -836,35 +841,44 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 
 		if (pro_sub == TP_PROTOCOL_SUB_TYPE_SSH)
 		{
-			clientsetmap::iterator it = g_cfgSSH.m_clientsetmap.find(g_cfgSSH.m_current_client);
-			if (it == g_cfgSSH.m_clientsetmap.end())
-			{
-				w_exe_path = _T("\"");
-				w_exe_path += g_env.m_tools_path;
-				w_exe_path += _T("\\putty\\putty.exe\"");
-				w_exe_path += _T(" -ssh -pw **** -P {host_port} -l {user_name} {host_ip}");
-			}
-			else
-			{
-				w_exe_path = _T("\"");
-				w_exe_path += it->second.path + _T("\" ");
-				w_exe_path += it->second.commandline;
-			}
+			w_exe_path = _T("\"");
+			w_exe_path += g_cfg.ssh_app + _T("\" ");
+			w_exe_path += g_cfg.ssh_cmdline;
+
+
+// 			clientsetmap::iterator it = g_cfgSSH.m_clientsetmap.find(g_cfgSSH.m_current_client);
+// 			if (it == g_cfgSSH.m_clientsetmap.end())
+// 			{
+// 				w_exe_path = _T("\"");
+// 				w_exe_path += g_env.m_tools_path;
+// 				w_exe_path += _T("\\putty\\putty.exe\"");
+// 				w_exe_path += _T(" -ssh -pw **** -P {host_port} -l {user_name} {host_ip}");
+// 			}
+// 			else
+// 			{
+// 				w_exe_path = _T("\"");
+// 				w_exe_path += it->second.path + _T("\" ");
+// 				w_exe_path += it->second.commandline;
+// 			}
 		}
 		else
 		{
-			clientsetmap::iterator it = g_cfgScp.m_clientsetmap.find(g_cfgScp.m_current_client);
-			if (it == g_cfgScp.m_clientsetmap.end())
-			{
-				w_exe_path = _T("\"");
-				w_exe_path += g_env.m_tools_path;
-				w_exe_path += _T("\\winscp\\winscp.exe\"");
-				w_exe_path += _T(" /sessionname=\"TP#{real_ip}\" {user_name}:****@{host_ip}:{host_port}");
-			}
-			else {
-				w_exe_path = it->second.path + _T(" ");
-				w_exe_path += it->second.commandline;
-			}
+			w_exe_path = _T("\"");
+			w_exe_path += g_cfg.scp_app + _T("\" ");
+			w_exe_path += g_cfg.scp_cmdline;
+
+// 			clientsetmap::iterator it = g_cfgScp.m_clientsetmap.find(g_cfgScp.m_current_client);
+// 			if (it == g_cfgScp.m_clientsetmap.end())
+// 			{
+// 				w_exe_path = _T("\"");
+// 				w_exe_path += g_env.m_tools_path;
+// 				w_exe_path += _T("\\winscp\\winscp.exe\"");
+// 				w_exe_path += _T(" /sessionname=\"TP#{real_ip}\" {user_name}:****@{host_ip}:{host_port}");
+// 			}
+// 			else {
+// 				w_exe_path = it->second.path + _T(" ");
+// 				w_exe_path += it->second.commandline;
+// 			}
 		}
 	}
 	else if (pro_type == TP_PROTOCOL_TYPE_TELNET)
@@ -872,21 +886,24 @@ void TsHttpRpc::_rpc_func_create_ts_client(const ex_astr& func_args, ex_astr& bu
 		//==============================================
 		// TELNET
 		//==============================================
+		w_exe_path = _T("\"");
+		w_exe_path += g_cfg.telnet_app + _T("\" ");
+		w_exe_path += g_cfg.telnet_cmdline;
 
-		clientsetmap::iterator it = g_cfgTelnet.m_clientsetmap.find(g_cfgTelnet.m_current_client);
-		if (it == g_cfgTelnet.m_clientsetmap.end())
-		{
-			w_exe_path = _T("\"");
-			w_exe_path += g_env.m_tools_path;
-			w_exe_path += _T("\\putty\\putty.exe\"");
-			w_exe_path += _T(" telnet://{user_name}@{host_ip}:{host_port}");
-		}
-		else
-		{
-			w_exe_path = _T("\"");
-			w_exe_path += it->second.path + _T("\" ");
-			w_exe_path += it->second.commandline;
-		}
+// 		clientsetmap::iterator it = g_cfgTelnet.m_clientsetmap.find(g_cfgTelnet.m_current_client);
+// 		if (it == g_cfgTelnet.m_clientsetmap.end())
+// 		{
+// 			w_exe_path = _T("\"");
+// 			w_exe_path += g_env.m_tools_path;
+// 			w_exe_path += _T("\\putty\\putty.exe\"");
+// 			w_exe_path += _T(" telnet://{user_name}@{host_ip}:{host_port}");
+// 		}
+// 		else
+// 		{
+// 			w_exe_path = _T("\"");
+// 			w_exe_path += it->second.path + _T("\" ");
+// 			w_exe_path += it->second.commandline;
+// 		}
 	}
 
 	ex_replace_all(w_exe_path, _T("{host_port}"), w_port);
@@ -955,7 +972,7 @@ bool isIPAddress(const char *s)
 	return rv;
 }
 
-void TsHttpRpc::_rpc_func_ts_check(const ex_astr& func_args, ex_astr& buf)
+void TsHttpRpc::_rpc_func_check(const ex_astr& func_args, ex_astr& buf)
 {
 	// 入参：{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
 	//   authmode: 1=password, 2=private-key
@@ -1060,7 +1077,7 @@ void TsHttpRpc::_rpc_func_ts_check(const ex_astr& func_args, ex_astr& buf)
 	return;
 }
 
-void TsHttpRpc::_rpc_func_ts_rdp_play(const ex_astr& func_args, ex_astr& buf)
+void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 {
 	Json::Reader jreader;
 	Json::Value jsRoot;
@@ -1181,272 +1198,26 @@ void TsHttpRpc::_rpc_func_ts_rdp_play(const ex_astr& func_args, ex_astr& buf)
 
 void TsHttpRpc::_rpc_func_get_config(const ex_astr& func_args, ex_astr& buf)
 {
-	Json::Reader jreader;
-	Json::Value jsRoot;
-
-	if (!jreader.parse(func_args.c_str(), jsRoot))
-	{
-		_create_json_ret(buf, TPE_JSON_FORMAT);
-		return;
-	}
-	// 判断参数是否正确
-	if (!jsRoot["type"].isNumeric())
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-	int type = jsRoot["type"].asUInt();
-	if (type == 1)
-	{
-		Json::Value jr_root;
-		Json::Value config_list;
-
-		jr_root["code"] = 0;
-
-		clientsetmap::iterator it;
-		for (it = g_cfgSSH.m_clientsetmap.begin(); it != g_cfgSSH.m_clientsetmap.end(); it++)
-		{
-
-			Json::Value config;
-			ex_astr temp;
-			ex_wstr2astr(it->first, temp, EX_CODEPAGE_UTF8);
-			config["name"] = temp;
-
-			ex_wstr2astr(it->second.path, temp, EX_CODEPAGE_UTF8);
-			config["path"] = temp;
-
-			ex_wstr2astr(it->second.commandline, temp, EX_CODEPAGE_UTF8);
-			config["commandline"] = temp;
-
-			ex_wstr2astr(it->second.alias_name, temp, EX_CODEPAGE_UTF8);
-			config["alias_name"] = temp;
-
-			ex_wstr2astr(it->second.desc, temp, EX_CODEPAGE_UTF8);
-			config["desc"] = temp;
-
-			config["build_in"] = it->second.is_default ? 1 : 0;
-			if (it->first == g_cfgSSH.m_current_client)
-			{
-				config["current"] = 1;
-			}
-			else {
-				config["current"] = 0;
-			}
-
-
-			config_list.append(config);
-		}
-
-		jr_root["config_list"] = config_list;
-		_create_json_ret(buf, jr_root);
-
-		return;
-	}
-	else if (type == 2)
-	{
-		Json::Value jr_root;
-		Json::Value config_list;
-
-		jr_root["code"] = 0;
-
-		clientsetmap::iterator it;
-		for (it = g_cfgScp.m_clientsetmap.begin(); it != g_cfgScp.m_clientsetmap.end(); it++)
-		{
-
-			Json::Value config;
-			ex_astr temp;
-			ex_wstr2astr(it->first, temp, EX_CODEPAGE_UTF8);
-			config["name"] = temp;
-
-			ex_wstr2astr(it->second.path, temp, EX_CODEPAGE_UTF8);
-			config["path"] = temp;
-
-			ex_wstr2astr(it->second.commandline, temp, EX_CODEPAGE_UTF8);
-			config["commandline"] = temp;
-
-			ex_wstr2astr(it->second.desc, temp, EX_CODEPAGE_UTF8);
-			config["desc"] = temp;
-
-			ex_wstr2astr(it->second.alias_name, temp, EX_CODEPAGE_UTF8);
-			config["alias_name"] = temp;
-
-			config["build_in"] = it->second.is_default ? 1 : 0;
-
-			if (it->first == g_cfgScp.m_current_client)
-				config["current"] = 1;
-			else
-				config["current"] = 0;
-
-			config_list.append(config);
-		}
-
-		jr_root["config_list"] = config_list;
-		_create_json_ret(buf, jr_root);
-		return;
-	}
-	else if (type == 3)
-	{
-		Json::Value jr_root;
-		Json::Value config_list;
-
-		jr_root["code"] = 0;
-
-		clientsetmap::iterator it;
-		for (it = g_cfgTelnet.m_clientsetmap.begin(); it != g_cfgTelnet.m_clientsetmap.end(); it++)
-		{
-			Json::Value config;
-			ex_astr temp;
-			ex_wstr2astr(it->first, temp, EX_CODEPAGE_UTF8);
-			config["name"] = temp;
-
-			ex_wstr2astr(it->second.path, temp, EX_CODEPAGE_UTF8);
-			config["path"] = temp;
-
-			ex_wstr2astr(it->second.commandline, temp, EX_CODEPAGE_UTF8);
-			config["commandline"] = temp;
-
-			ex_wstr2astr(it->second.desc, temp, EX_CODEPAGE_UTF8);
-			config["desc"] = temp;
-
-			ex_wstr2astr(it->second.alias_name, temp, EX_CODEPAGE_UTF8);
-			config["alias_name"] = temp;
-
-			config["build_in"] = it->second.is_default ? 1 : 0;
-
-			if (it->first == g_cfgTelnet.m_current_client)
-				config["current"] = 1;
-			else
-				config["current"] = 0;
-
-			config_list.append(config);
-		}
-
-		jr_root["config_list"] = config_list;
-		_create_json_ret(buf, jr_root);
-		return;
-	}
-	else
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
+	Json::Value jr_root;
+	jr_root["code"] = 0;
+	jr_root["data"] = g_cfg.get_root();
+	_create_json_ret(buf, jr_root);
 }
 
 void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 {
 	Json::Reader jreader;
 	Json::Value jsRoot;
-
 	if (!jreader.parse(func_args.c_str(), jsRoot))
 	{
 		_create_json_ret(buf, TPE_JSON_FORMAT);
 		return;
 	}
-	if (jsRoot.isArray())
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
 
-	// 判断参数是否正确
-	if (!jsRoot["name"].isString() || !jsRoot["path"].isString() ||
-		!jsRoot["commandline"].isString() ||
-		!jsRoot["type"].isNumeric())
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-	int type = jsRoot["type"].asUInt();
-	ex_astr name = jsRoot["name"].asCString();
-	ex_astr path = jsRoot["path"].asCString();
-	ex_astr commandline = jsRoot["commandline"].asCString();
-
-	ex_wstr w_path;
-	ex_astr2wstr(path, w_path, EX_CODEPAGE_UTF8);
-	ex_wstr w_name;
-	ex_astr2wstr(name, w_name, EX_CODEPAGE_UTF8);
-
-	ex_wstr w_commandline;
-	ex_astr2wstr(commandline, w_commandline, EX_CODEPAGE_UTF8);
-
-	if (type == 1)
-	{
-
-		clientsetmap::iterator it = g_cfgSSH.m_clientsetmap.find(w_name);
-		if (it == g_cfgSSH.m_clientsetmap.end()) {
-			_create_json_ret(buf, TPE_PARAM);
-			return;
-		}
-		if (it->second.is_default)
-		{
-			g_cfgSSH.set(_T("common"), _T("current_client"), w_name);
-			g_cfgSSH.save();
-			g_cfgSSH.init();
-			_create_json_ret(buf, TPE_OK);
-			return;
-		}
-		g_cfgSSH.set(w_name, _T("path"), w_path);
-		g_cfgSSH.set(w_name, _T("command_line"), w_commandline);
-		g_cfgSSH.set(_T("common"), _T("current_client"), w_name);
-
-		g_cfgSSH.save();
-		g_cfgSSH.init();
+	if(!g_cfg.save(func_args))
+		_create_json_ret(buf, TPE_FAILED);
+	else
 		_create_json_ret(buf, TPE_OK);
-		return;
-
-	}
-	else if (type == 2)
-	{
-		clientsetmap::iterator it = g_cfgScp.m_clientsetmap.find(w_name);
-		if (it == g_cfgScp.m_clientsetmap.end()) {
-			_create_json_ret(buf, TPE_PARAM);
-			return;
-		}
-		if (it->second.is_default)
-		{
-			g_cfgScp.set(_T("common"), _T("current_client"), w_name);
-			g_cfgScp.save();
-			g_cfgScp.init();
-			_create_json_ret(buf, TPE_OK);
-			return;
-		}
-		g_cfgScp.set(w_name, _T("path"), w_path);
-		g_cfgScp.set(w_name, _T("command_line"), w_commandline);
-		g_cfgScp.set(_T("common"), _T("current_client"), w_name);
-
-		g_cfgScp.save();
-		g_cfgScp.init();
-		_create_json_ret(buf, TPE_OK);
-		return;
-	}
-	else if (type == 3)
-	{
-		clientsetmap::iterator it = g_cfgTelnet.m_clientsetmap.find(w_name);
-		if (it == g_cfgTelnet.m_clientsetmap.end()) {
-			_create_json_ret(buf, TPE_PARAM);
-			return;
-		}
-		if (it->second.is_default)
-		{
-			g_cfgTelnet.set(_T("common"), _T("current_client"), w_name);
-			g_cfgTelnet.save();
-			g_cfgTelnet.init();
-			_create_json_ret(buf, TPE_OK);
-			return;
-		}
-		g_cfgTelnet.set(w_name, _T("path"), w_path);
-		g_cfgTelnet.set(w_name, _T("command_line"), w_commandline);
-		g_cfgTelnet.set(_T("common"), _T("current_client"), w_name);
-
-		g_cfgTelnet.save();
-		g_cfgTelnet.init();
-		_create_json_ret(buf, TPE_OK);
-		return;
-	}
-	else {
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
 }
 
 void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
