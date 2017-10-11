@@ -56,35 +56,35 @@
 
         <div class="form-horizontal">
             <div class="form-group form-group-sm">
-                <label for="ssh-client-type" class="col-sm-1 control-label"><strong>客户端：</strong></label>
-                <div class="col-sm-2">
-                    <select id="ssh-client-type" class="form-control"></select>
+                <label for="ssh-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
+                <div class="col-sm-4">
+                    <select id="ssh-type" class="form-control"></select>
                 </div>
             </div>
 
             <div class="form-group form-group-sm">
-                <label for="ssh-exec-path" class="col-sm-1 control-label"><strong>程序路径：</strong></label>
-                <div class="col-sm-6">
+                <label for="ssh-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
+                <div class="col-sm-9">
                     <div class="input-group">
-                        <input id="ssh-exec-path" type="text" class="form-control" placeholder="客户端可执行程序文件路径" readonly="readonly">
-                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="ssh-select-path">选择...</button></span>
+                        <input id="ssh-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
+                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="ssh-select-app">选择...</button></span>
                     </div>
                 </div>
             </div>
 
             <div class="form-group form-group-sm">
-                <label for="ssh-exec-args" class="col-sm-1 control-label"><strong>命令参数：</strong></label>
-                <div class="col-sm-6">
-                    <input id="ssh-exec-args" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
+                <label for="ssh-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
+                <div class="col-sm-9">
+                    <input id="ssh-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
-                <div class="col-sm-1"></div>
-                <div class="col-sm-6">
-                    <a id="ssh-btn-save" class="btn btn-primary" href="javascript:;"><i class="fa fa-check fa-fw"></i> 保存设置！</a>
-                </div>
-            </div>
+            <!--<div class="form-group form-group-sm">-->
+                <!--<div class="col-sm-2"></div>-->
+                <!--<div class="col-sm-6">-->
+                    <!--<a id="ssh-btn-save" class="btn btn-primary" href="javascript:;"><i class="fa fa-check fa-fw"></i> 保存设置！</a>-->
+                <!--</div>-->
+            <!--</div>-->
         </div>
 
 
@@ -94,35 +94,35 @@
 
         <div class="form-horizontal">
             <div class="form-group form-group-sm">
-                <label for="sftp-client-type" class="col-sm-1 control-label"><strong>客户端：</strong></label>
-                <div class="col-sm-2">
-                    <select id="sftp-client-type" class="form-control"></select>
+                <label for="scp-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
+                <div class="col-sm-4">
+                    <select id="scp-type" class="form-control"></select>
                 </div>
             </div>
 
             <div class="form-group form-group-sm">
-                <label for="sftp-exec-path" class="col-sm-1 control-label"><strong>程序路径：</strong></label>
-                <div class="col-sm-6">
+                <label for="scp-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
+                <div class="col-sm-9">
                     <div class="input-group">
-                        <input id="sftp-exec-path" type="text" class="form-control" placeholder="客户端可执行程序文件路径" readonly="readonly">
-                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="sftp-select-path">选择...</button></span>
+                        <input id="scp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
+                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="scp-select-app">选择...</button></span>
                     </div>
                 </div>
             </div>
 
             <div class="form-group form-group-sm">
-                <label for="sftp-exec-args" class="col-sm-1 control-label"><strong>命令参数：</strong></label>
-                <div class="col-sm-6">
-                    <input id="sftp-exec-args" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
+                <label for="scp-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
+                <div class="col-sm-9">
+                    <input id="scp-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
-                <div class="col-sm-1"></div>
-                <div class="col-sm-6">
-                    <a id="sftp-btn-save" class="btn btn-primary" href="javascript:;"><i class="fa fa-check fa-fw"></i> 保存设置！</a>
-                </div>
-            </div>
+            <!--<div class="form-group form-group-sm">-->
+                <!--<div class="col-sm-1"></div>-->
+                <!--<div class="col-sm-6">-->
+                    <!--<a id="sftp-btn-save" class="btn btn-primary" href="javascript:;"><i class="fa fa-check fa-fw"></i> 保存设置！</a>-->
+                <!--</div>-->
+            <!--</div>-->
         </div>
 
 
@@ -131,38 +131,40 @@
 
         <div class="form-horizontal">
             <div class="form-group form-group-sm">
-                <label for="telnet-client-type" class="col-sm-1 control-label"><strong>客户端：</strong></label>
-                <div class="col-sm-2">
-                    <select id="telnet-client-type" class="form-control"></select>
+                <label for="telnet-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
+                <div class="col-sm-4">
+                    <select id="telnet-type" class="form-control"></select>
                 </div>
             </div>
 
             <div class="form-group form-group-sm">
-                <label for="telnet-exec-path" class="col-sm-1 control-label"><strong>程序路径：</strong></label>
-                <div class="col-sm-6">
+                <label for="telnet-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
+                <div class="col-sm-9">
                     <div class="input-group">
-                        <input id="telnet-exec-path" type="text" class="form-control" placeholder="客户端可执行程序文件路径" readonly="readonly">
-                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="telnet-select-path">选择...</button></span>
+                        <input id="telnet-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
+                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="telnet-select-app">选择...</button></span>
                     </div>
                 </div>
             </div>
 
             <div class="form-group form-group-sm">
-                <label for="telnet-exec-args" class="col-sm-1 control-label"><strong>命令参数：</strong></label>
-                <div class="col-sm-6">
-                    <input id="telnet-exec-args" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
+                <label for="telnet-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
+                <div class="col-sm-9">
+                    <input id="telnet-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
                 </div>
             </div>
 
+        </div>
+
+        <hr/>
+        <div class="form-horizontal">
             <div class="form-group form-group-sm">
-                <div class="col-sm-1"></div>
+                <div class="col-sm-2"></div>
                 <div class="col-sm-6">
-                    <a id="telnet-btn-save" class="btn btn-primary" href="javascript:;"><i class="fa fa-check fa-fw"></i> 保存设置！</a>
+                    <a id="btn-save" class="btn btn-primary" href="javascript:;"><i class="fa fa-check fa-fw"></i> 保存设置！</a>
                 </div>
             </div>
         </div>
-
-
     </div>
 
 </div>

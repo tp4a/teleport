@@ -4,260 +4,399 @@ var g_url_base = 'http://127.0.0.1:50022';
 
 var g_cfg = null;
 
+var dom = {
+    ssh_type: $('#ssh-type'),
+    ssh_app: $('#ssh-app'),
+    ssh_cmdline: $('#ssh-cmdline'),
+    ssh_select_app: $('#ssh-select-app'),
 
+    scp_type: $('#scp-type'),
+    scp_app: $('#scp-app'),
+    scp_cmdline: $('#scp-cmdline'),
+    scp_select_app: $('#scp-select-app'),
 
-var get_config = function () {
-	$.ajax({
-		type: 'GET',
-		timeout: 5000,
-		url: g_url_base + '/api/get_config',
-		jsonp: 'callback',
-		dataType: 'json',
-		success: function (ret) {
-			if (ret.code == 0) {
-				console.log(ret.data);
-				g_cfg = ret.data;
-				//init_config_list(type, ret.config_list);
-			} else {
-				alert("获取配置信息失败!");
-			}
-		},
-		error: function (jqXhr, _error, _e) {
-			console.log('state:', jqXhr.state());
-			alert("获取配置信息失败!");
-		}
-	});
+    telnet_type: $('#telnet-type'),
+    telnet_app: $('#telnet-app'),
+    telnet_cmdline: $('#telnet-cmdline'),
+    telnet_select_app: $('#telnet-select-app'),
+
+    btn_save: $('#btn-save')
+};
+
+function get_config() {
+    $.ajax({
+        type: 'GET',
+        timeout: 5000,
+        url: g_url_base + '/api/get_config',
+        jsonp: 'callback',
+        dataType: 'json',
+        success: function (ret) {
+            if (ret.code == 0) {
+                console.log(ret.data);
+                g_cfg = ret.data;
+                update_dom();
+            } else {
+                alert("获取配置信息失败!");
+            }
+        },
+        error: function (jqXhr, _error, _e) {
+            console.log('state:', jqXhr.state());
+            alert("获取配置信息失败!");
+        }
+    });
 }
 
-var set_current_client_config = function (tpye, name, path, commandline, desc) {
-	var data = {
-		type: tpye,
-		name: name,
-		path: path,
-		commandline: commandline
-	};
-	var args_ = encodeURIComponent(JSON.stringify(data));
+function update_dom() {
+    if (_.isNull(g_cfg))
+        return;
 
-	$.ajax({
-		type: 'GET',
-		timeout: 5000,
-		url: 'http://127.0.0.1:50022/ts_set_config/' + args_,
-		jsonp: 'callback',
-		dataType: 'json',
-		success: function (ret) {
-			if (ret.code == 0) {
-				alert("保存成功");
-			} else {
-				alert("保存成功" + ret.code);
-			}
+    dom.ssh_type.html('');
+    if (!_.isUndefined(g_cfg.ssh)) {
+        if (_.isUndefined(g_cfg.ssh.selected)) {
+            g_cfg.ssh.selected = '';
+        }
 
-		},
-		error: function (jqXhr, _error, _e) {
-			console.log('state:', jqXhr.state());
-			alert("保存失败");
-		}
-	});
+        if (!_.isUndefined(g_cfg.ssh.available) && g_cfg.ssh.available.length > 0) {
+            var selected = '';
+            var app = '';
+            var cmdline = '';
+
+            var html = [];
+            for (var i = 0; i < g_cfg.ssh.available.length; i++) {
+                var item = g_cfg.ssh.available[i];
+
+                if (selected === '' || item.name === g_cfg.ssh.selected) {
+                    selected = item.name;
+                    app = item.app;
+                    cmdline = item.cmdline;
+                }
+
+                html.push('<option value="' + item.name + '">' + item.display + '</option>');
+            }
+
+            dom.ssh_type.html(html.join(''));
+
+            dom.ssh_type.val(selected);
+            dom.ssh_app.val(app);
+            dom.ssh_cmdline.val(cmdline);
+        }
+    }
+
+
+
+    dom.scp_type.html('');
+    if (!_.isUndefined(g_cfg.scp)) {
+        if (_.isUndefined(g_cfg.scp.selected)) {
+            g_cfg.scp.selected = '';
+        }
+
+        if (!_.isUndefined(g_cfg.scp.available) && g_cfg.scp.available.length > 0) {
+            var selected = '';
+            var app = '';
+            var cmdline = '';
+
+            var html = [];
+            for (var i = 0; i < g_cfg.scp.available.length; i++) {
+                var item = g_cfg.scp.available[i];
+
+                if (selected === '' || item.name === g_cfg.scp.selected) {
+                    selected = item.name;
+                    app = item.app;
+                    cmdline = item.cmdline;
+                }
+
+                html.push('<option value="' + item.name + '">' + item.display + '</option>');
+            }
+
+            dom.scp_type.html(html.join(''));
+
+            dom.scp_type.val(selected);
+            dom.scp_app.val(app);
+            dom.scp_cmdline.val(cmdline);
+        }
+    }
+
+
+    dom.telnet_type.html('');
+    if (!_.isUndefined(g_cfg.telnet)) {
+        if (_.isUndefined(g_cfg.telnet.selected)) {
+            g_cfg.telnet.selected = '';
+        }
+
+        if (!_.isUndefined(g_cfg.telnet.available) && g_cfg.telnet.available.length > 0) {
+            var selected = '';
+            var app = '';
+            var cmdline = '';
+
+            var html = [];
+            for (var i = 0; i < g_cfg.telnet.available.length; i++) {
+                var item = g_cfg.telnet.available[i];
+
+                if (selected === '' || item.name === g_cfg.telnet.selected) {
+                    selected = item.name;
+                    app = item.app;
+                    cmdline = item.cmdline;
+                }
+
+                html.push('<option value="' + item.name + '">' + item.display + '</option>');
+            }
+
+            dom.telnet_type.html(html.join(''));
+
+            dom.telnet_type.val(selected);
+            dom.telnet_app.val(app);
+            dom.telnet_cmdline.val(cmdline);
+        }
+    }
 }
 
-var open_exist_file = function (callback) {
-	var data = {
-		action: 1
-	};
-	var args_ = encodeURIComponent(JSON.stringify(data));
+function on_save() {
+    if (g_cfg === null)
+        return;
 
-	$.ajax({
-		type: 'GET',
-		timeout: -1,
-		url: 'http://127.0.0.1:50022/ts_file_action/' + args_,
-		jsonp: 'callback',
-		dataType: 'json',
-		success: function (ret) {
-			callback(0, ret.path);
-		},
-		error: function (jqXhr, _error, _e) {
-			console.log('state:', jqXhr.state());
-			callback(-1, "");
-		}
-	});
+    var i = 0;
+    for (i = 0; i < g_cfg.ssh.available.length; i++) {
+        var item = g_cfg.ssh.available[i];
+        if (item.name === g_cfg.ssh.selected) {
+            item.app = dom.ssh_app.val();
+            item.cmdline = dom.ssh_cmdline.val();
+            break;
+        }
+    }
+    for (i = 0; i < g_cfg.scp.available.length; i++) {
+        var item = g_cfg.scp.available[i];
+        if (item.name === g_cfg.scp.selected) {
+            item.app = dom.scp_app.val();
+            item.cmdline = dom.scp_cmdline.val();
+            break;
+        }
+    }
+    for (i = 0; i < g_cfg.telnet.available.length; i++) {
+        var item = g_cfg.telnet.available[i];
+        if (item.name === g_cfg.telnet.selected) {
+            item.app = dom.telnet_app.val();
+            item.cmdline = dom.telnet_cmdline.val();
+            break;
+        }
+    }
+
+    var args_ = encodeURIComponent(JSON.stringify(g_cfg));
+
+    $.ajax({
+        type: 'GET',
+        timeout: 5000,
+        url: g_url_base + '/api/set_config/' + args_,
+        jsonp: 'callback',
+        dataType: 'json',
+        success: function (ret) {
+            if (ret.code == 0) {
+                notify_success('设置保存成功！');
+            } else {
+                notify_error('设置保存失败！' + ret.code);
+            }
+
+        },
+        error: function () {
+            notify_error('网络故障，设置保存失败');
+        }
+    });
 }
 
-var init_config_list = function (type, config_list) {
+var select_local_file = function (callback) {
+    var data = {
+        action: 1
+    };
+    var args_ = encodeURIComponent(JSON.stringify(data));
 
-	var html = "";
-	if (type == 1) {
-		$("#ssh-client-type").html(html);
-		for (var i = 0; i < config_list.length; i++) {
-			var item = config_list[i];
-			html = '<option id="ssh-' + item.name + '" value="' + item.name + '">' + item.alias_name + '</option>';
-			$('#ssh-client-type').append(html);
-			if (item.current == 1) {
-				$('#ssh-' + item.name).attr('selected', true);
-				init_config_param(type, item.build_in, item.path, item.commandline);
-				g_current_ssh = item.name;
-			}
-			g_ssh_config_dict[item.name] = item;
-		}
-	} else if(type == 2) {
-		$('#sftp-client-type').html(html);
-		for (var i = 0; i < config_list.length; i++) {
-			var item = config_list[i];
-			html = '<option id="sftp-' + item.name + '" value="' + item.name + '">' + item.alias_name + '</option>';
-			$('#sftp-client-type').append(html);
-			if (item.current == 1) {
-				$('#sftp-' + item.name).attr('selected', true);
-				init_config_param(type, item.build_in, item.path, item.commandline);
-				g_current_sftp = item.name;
-			}
-			g_sftp_config_dict[item.name] = item;
-		}
-	} else if(type == 3) {
-		$('#telnet-client-type').html(html);
-		for (var i = 0; i < config_list.length; i++) {
-			var item = config_list[i];
-			html = '<option id="telnet-' + item.name + '" value="' + item.name + '">' + item.alias_name + '</option>';
-			$("#telnet-client-type").append(html);
-			if (item.current == 1) {
-				$('#telnet-' + item.name).attr('selected', true);
-				init_config_param(type, item.build_in, item.path, item.commandline);
-				g_current_telnet = item.name;
-			}
-			g_telnet_config_dict[item.name] = item;
-		}
-	}
+    $.ajax({
+        type: 'GET',
+        timeout: -1,
+        url: g_url_base + '/api/file_action/' + args_,
+        jsonp: 'callback',
+        dataType: 'json',
+        success: function (ret) {
+            callback(0, ret.path);
+        },
+        error: function (jqXhr, _error, _e) {
+            console.log('state:', jqXhr.state());
+            callback(-1, "");
+        }
+    });
 }
 
-var init_config_param = function (type, build_in, path, command_line) {
-	if (type == 1) {
-		if (build_in == 1) {
-			$("#ssh-exec-args").attr("readonly", "readonly");
-			$("#ssh-select-path").attr("disabled", "disabled");
-		} else {
-			$("#ssh-exec-args").removeAttr("readonly");
-			$("#ssh-select-path").removeAttr("disabled");
-		}
-		$("#ssh-exec-path").val(path);
-		$("#ssh-exec-args").val(command_line);
-	} else if (type == 2) {
-		if (build_in == 1) {
-			$("#sftp-exec-args").attr("readonly", "readonly");
-			$("#sftp-select-path").attr("disabled", "disabled");
-		} else {
-			$("#sftp-exec-args").removeAttr("readonly");
-			$("#sftp-select-path").removeAttr("disabled");
-		}
-		$("#sftp-exec-path").val(path);
-		$("#sftp-exec-args").val(command_line);
-	} else if(type == 3) {
-		if (build_in == 1) {
-			$("#telnet-exec-args").attr("readonly", "readonly");
-			$("#telnet-select-path").attr("disabled", "disabled");
-		} else {
-			$("#telnet-exec-args").removeAttr("readonly");
-			$("#telnet-select-path").removeAttr("disabled");
-		}
-		$("#telnet-exec-path").val(path);
-		$("#telnet-exec-args").val(command_line);
-	}
-}
+
+function notify_error(message_, title_) {
+    var _title = title_ || '';
+    $.gritter.add({
+        class_name: 'gritter-error',
+        time: 10000,
+        title: '<i class="fa fa-warning fa-fw"></i> 错误：' + _title,
+        text: message_
+    });
+    console.error('错误', _title, message_);
+};
+
+function notify_success(message_, title_) {
+    var _title = title_ || null;
+    if (_title !== null)
+        _title = '<i class="fa fa-check-square fa-fw"></i> ' + _title;
+    $.gritter.add({
+        class_name: 'gritter-success',
+        time: 5000,
+        title: _title,
+        text: message_
+    });
+};
 
 $(document).ready(function () {
-	get_config();
-	// get_client_config_list(1);
-	// get_client_config_list(2);
-	// get_client_config_list(3);
+    get_config();
 
-	$("#ssh-client-type").change(function () {
-		var i = 0;
-		var name = $("#ssh-client-type").val();
-		var item = g_ssh_config_dict[name];
-		init_config_param(1, item.build_in, item.path, item.commandline);
-		g_current_ssh = item.name;
-	});
-	$("#ssh-select-path").click(function () {
-		open_exist_file(function (code, path) {
-			if (code == 0) {
-				$("#ssh-exec-path").val(path);
-			} else {
-				console.log("can not select file.");
-			}
-		});
-	});
-	$("#ssh-btn-save").click(function () {
-		var name = $("#ssh-client-type").val();
-		var path = $("#ssh-exec-path").val();
-		if (path == "") {
-			alert("请选择路径");
-			return;
-		}
-		var command_line = $("#ssh-exec-args").val();
-		if (command_line == "") {
-			alert("请输入命令行");
-			return;
-		}
-		set_current_client_config(1, name, path, command_line);
-	});
+    dom.ssh_type.change(function () {
+        g_cfg.ssh.selected = dom.ssh_type.val();
+        for (var i = 0; i < g_cfg.ssh.available.length; i++) {
+            var item = g_cfg.ssh.available[i];
+            if (item.name === g_cfg.ssh.selected) {
+                dom.ssh_app.val(item.app);
+                dom.ssh_cmdline.val(item.cmdline);
+                return;
+            }
+        }
+        notify_error('所选的配置项不存在！');
+    });
+    dom.ssh_select_app.click(function () {
+        select_local_file(function (code, path) {
+            if (code == 0) {
+                dom.ssh_app.val(path);
+            } else {
+                console.log("can not select file.");
+            }
+        });
+    });
 
 
-	$("#sftp-client-type").change(function () {
-		var i = 0;
-		var name = $("#sftp-client-type").val();
-		var item = g_sftp_config_dict[name];
-		init_config_param(2, item.build_in, item.path, item.commandline);
-		g_current_sftp = item.name;
-	});
-	$("#sftp-select-path").click(function () {
-		open_exist_file(function (code, path) {
-			if (code == 0) {
-				$("#sftp-exec-path").val(path);
-			} else {
-				console.log("can not select file.");
-			}
-		});
-	});
-	$("#sftp-btn-save").click(function () {
-		var name = $("#sftp-client-type").val();
-		var path = $("#sftp-exec-path").val();
-		if (path == "") {
-			alert("请选择路径");
-			return;
-		}
-		var command_line = $("#sftp-exec-args").val();
-		if (command_line == "") {
-			alert("请输入命令行");
-			return;
-		}
-		set_current_client_config(2, name, path, command_line);
-	});
+    dom.scp_type.change(function () {
+        g_cfg.scp.selected = dom.scp_type.val();
+        for (var i = 0; i < g_cfg.scp.available.length; i++) {
+            var item = g_cfg.scp.available[i];
+            if (item.name === g_cfg.scp.selected) {
+                dom.scp_app.val(item.app);
+                dom.scp_cmdline.val(item.cmdline);
+                return;
+            }
+        }
+        notify_error('所选的配置项不存在！');
+    });
+    dom.scp_select_app.click(function () {
+        select_local_file(function (code, path) {
+            if (code == 0) {
+                dom.scp_app.val(path);
+            } else {
+                console.log("can not select file.");
+            }
+        });
+    });
 
 
-	$("#telnet-client-type").change(function () {
-		var i = 0;
-		var name = $("#telnet-client-type").val();
-		var item = g_telnet_config_dict[name];
-		init_config_param(3, item.build_in, item.path, item.commandline);
-		g_current_telnet = item.name;
-	});
-	$("#telnet-select-path").click(function () {
-		open_exist_file(function (code, path) {
-			if (code == 0) {
-				$("#telnet-exec-path").val(path);
-			} else {
-				console.log("can not select file.");
-			}
-		});
-	});
-	$("#telnet-btn-save").click(function () {
-		var name = $("#telnet-client-type").val();
-		var path = $("#telnet-exec-path").val();
-		if (path == "") {
-			alert("请选择路径");
-			return;
-		}
-		var command_line = $("#telnet-exec-args").val();
-		if (command_line == "") {
-			alert("请输入命令行");
-			return;
-		}
-		set_current_client_config(3, name, path, command_line);
-	});
+    dom.telnet_type.change(function () {
+        g_cfg.telnet.selected = dom.telnet_type.val();
+        for (var i = 0; i < g_cfg.telnet.available.length; i++) {
+            var item = g_cfg.telnet.available[i];
+            if (item.name === g_cfg.telnet.selected) {
+                dom.telnet_app.val(item.app);
+                dom.telnet_cmdline.val(item.cmdline);
+                return;
+            }
+        }
+        notify_error('所选的配置项不存在！');
+    });
+    dom.telnet_select_app.click(function () {
+        select_local_file(function (code, path) {
+            if (code == 0) {
+                dom.telnet_app.val(path);
+            } else {
+                console.log("can not select file.");
+            }
+        });
+    });
+
+
+    dom.btn_save.click(function () {
+        on_save();
+        // var name = $("#ssh-client-type").val();
+        // var path = $("#ssh-exec-path").val();
+        // if (path == "") {
+        //     alert("请选择路径");
+        //     return;
+        // }
+        // var command_line = $("#ssh-exec-args").val();
+        // if (command_line == "") {
+        //     alert("请输入命令行");
+        //     return;
+        // }
+        // set_current_client_config(1, name, path, command_line);
+    });
+
+
+    // $("#sftp-client-type").change(function () {
+    //     var i = 0;
+    //     var name = $("#sftp-client-type").val();
+    //     var item = g_sftp_config_dict[name];
+    //     init_config_param(2, item.build_in, item.path, item.commandline);
+    //     g_current_sftp = item.name;
+    // });
+    // $("#sftp-select-path").click(function () {
+    //     open_exist_file(function (code, path) {
+    //         if (code == 0) {
+    //             $("#sftp-exec-path").val(path);
+    //         } else {
+    //             console.log("can not select file.");
+    //         }
+    //     });
+    // });
+    // $("#sftp-btn-save").click(function () {
+    //     var name = $("#sftp-client-type").val();
+    //     var path = $("#sftp-exec-path").val();
+    //     if (path == "") {
+    //         alert("请选择路径");
+    //         return;
+    //     }
+    //     var command_line = $("#sftp-exec-args").val();
+    //     if (command_line == "") {
+    //         alert("请输入命令行");
+    //         return;
+    //     }
+    //     set_current_client_config(2, name, path, command_line);
+    // });
+    //
+    //
+    // $("#telnet-client-type").change(function () {
+    //     var i = 0;
+    //     var name = $("#telnet-client-type").val();
+    //     var item = g_telnet_config_dict[name];
+    //     init_config_param(3, item.build_in, item.path, item.commandline);
+    //     g_current_telnet = item.name;
+    // });
+    // $("#telnet-select-path").click(function () {
+    //     open_exist_file(function (code, path) {
+    //         if (code == 0) {
+    //             $("#telnet-exec-path").val(path);
+    //         } else {
+    //             console.log("can not select file.");
+    //         }
+    //     });
+    // });
+    // $("#telnet-btn-save").click(function () {
+    //     var name = $("#telnet-client-type").val();
+    //     var path = $("#telnet-exec-path").val();
+    //     if (path == "") {
+    //         alert("请选择路径");
+    //         return;
+    //     }
+    //     var command_line = $("#telnet-exec-args").val();
+    //     if (command_line == "") {
+    //         alert("请输入命令行");
+    //         return;
+    //     }
+    //     set_current_client_config(3, name, path, command_line);
+    // });
 });
