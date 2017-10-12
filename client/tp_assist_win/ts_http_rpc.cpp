@@ -1331,6 +1331,7 @@ void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
 			ex_astr utf8_path;
 			ex_wstr2astr(wszReturnPath, utf8_path, EX_CODEPAGE_UTF8);
 			Json::Value root;
+			root["code"] = TPE_OK;
 			root["path"] = utf8_path;
 			_create_json_ret(buf, root);
 

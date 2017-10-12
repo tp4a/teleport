@@ -114,6 +114,7 @@ typedef struct TPP_LIB
 	TPP_INIT_FUNC init;
 	TPP_START_FUNC start;
 	TPP_STOP_FUNC stop;
+	TPP_TIMER_FUNC timer;
 }TPP_LIB;
 
 typedef std::list<TPP_LIB*> tpp_libs;
@@ -136,6 +137,7 @@ public:
 
 	bool load_tpp(const ex_wstr& libfile);
 	void stop_all(void);
+	void timer(void); // 大约1秒调用一次
 	int count(void) { return m_libs.size(); }
 
 private:
@@ -178,13 +180,15 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 	lib->init = (TPP_INIT_FUNC)GetProcAddress(lib->dylib, "tpp_init");
 	lib->start = (TPP_START_FUNC)GetProcAddress(lib->dylib, "tpp_start");
 	lib->stop = (TPP_STOP_FUNC)GetProcAddress(lib->dylib, "tpp_stop");
+	lib->timer = (TPP_TIMER_FUNC)GetProcAddress(lib->dylib, "tpp_timer");
 #else
     lib->init = (TPP_INIT_FUNC)dlsym(lib->dylib, "tpp_init");
     lib->start = (TPP_START_FUNC)dlsym(lib->dylib, "tpp_start");
-    lib->stop = (TPP_STOP_FUNC)dlsym(lib->dylib, "tpp_stop");
+	lib->stop = (TPP_STOP_FUNC)dlsym(lib->dylib, "tpp_stop");
+	lib->timer = (TPP_TIMER_FUNC)dlsym(lib->dylib, "tpp_timer");
 #endif
 
-	if (lib->init == NULL || lib->start == NULL || lib->stop == NULL)
+	if (lib->init == NULL || lib->start == NULL || lib->stop == NULL || lib->timer == NULL)
 	{
 		EXLOGE(L"[core] load dylib `%ls` failed, can not locate all functions.\n", libfile.c_str());
 		delete lib;
@@ -219,12 +223,19 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 	return true;
 }
 
-void TppManager::stop_all(void)
-{
+void TppManager::stop_all(void) {
 	tpp_libs::iterator it = m_libs.begin();
 	for (; it != m_libs.end(); ++it)
 	{
 		(*it)->stop();
+	}
+}
+
+void TppManager::timer(void) {
+	tpp_libs::iterator it = m_libs.begin();
+	for (; it != m_libs.end(); ++it)
+	{
+		(*it)->timer();
 	}
 }
 
@@ -302,6 +313,7 @@ int ts_main(void)
 		while (!g_exit_flag)
 		{
 			ex_sleep_ms(1000);
+			g_tpp_mgr.timer();
 		}
 	}
 

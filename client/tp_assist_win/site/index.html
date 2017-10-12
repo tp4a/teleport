@@ -23,7 +23,7 @@
 <div class="header">
     <div class="container">
         <span class="title"><i class="fa fa-cog fa-fw"></i> Teleport助手本地配置</span>
-        <span class="sub-title">此处配置保存到本地计算机上，如果更换计算机，需要重新配置！</span>
+        <span class="sub-title" id="version"></span>
     </div>
 </div>
 <div class="header-fix"></div>
@@ -40,6 +40,7 @@
     <div class="content">
 
         <div class="arg-detail arg-detail-common">
+            <p><strong>此处配置保存到本地计算机上，如果更换计算机，需要重新配置！</strong></p>
             <span><strong>注意：</strong>命令参数设置中，如需传递主机信息和登录信息，可以用以下变量替换（注意大小写！）：</span>
             <ul>
                 <li><span class="arg-varb">{host_ip}</span> 替换主机IP地址</li>
@@ -78,13 +79,6 @@
                     <input id="ssh-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
                 </div>
             </div>
-
-            <!--<div class="form-group form-group-sm">-->
-                <!--<div class="col-sm-2"></div>-->
-                <!--<div class="col-sm-6">-->
-                    <!--<a id="ssh-btn-save" class="btn btn-primary" href="javascript:;"><i class="fa fa-check fa-fw"></i> 保存设置！</a>-->
-                <!--</div>-->
-            <!--</div>-->
         </div>
 
 
@@ -117,12 +111,6 @@
                 </div>
             </div>
 
-            <!--<div class="form-group form-group-sm">-->
-                <!--<div class="col-sm-1"></div>-->
-                <!--<div class="col-sm-6">-->
-                    <!--<a id="sftp-btn-save" class="btn btn-primary" href="javascript:;"><i class="fa fa-check fa-fw"></i> 保存设置！</a>-->
-                <!--</div>-->
-            <!--</div>-->
         </div>
 
 

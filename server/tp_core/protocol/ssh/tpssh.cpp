@@ -33,3 +33,7 @@ TPP_API ex_rv tpp_stop(void)
 	g_ssh_proxy.stop();
 	return 0;
 }
+
+TPP_API void tpp_timer(void) {
+	g_ssh_proxy.timer();
+}

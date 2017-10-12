@@ -68,6 +68,10 @@ bool SshProxy::init(void)
 	return true;
 }
 
+void SshProxy::timer(void) {
+	EXLOGV("[ssh] on-timer.\n");
+}
+
 void SshProxy::_thread_loop(void)
 {
 	EXLOGV("[ssh] TeleportServer-SSH ready on %s:%d\n", m_host_ip.c_str(), m_host_port);

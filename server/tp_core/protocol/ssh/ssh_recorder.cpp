@@ -29,8 +29,8 @@ void TppSshRec::_on_begin(const TPP_CONNECT_INFO* info)
 	// 	memcpy(m_head.username, info.user_username.c_str(), info.user_username.length() > 15 ? 15 : info.user_username.length());
 	// 	memcpy(m_head.ip, info.host_ip.c_str(), info.host_ip.length() > 17 ? 17 : info.host_ip.length());
 
-	memcpy(m_head.basic.acc_username, info->acc_username, strlen(info->acc_username) >= 31 ? 31 : strlen(info->acc_username));
-	memcpy(m_head.basic.user_username, info->user_username, strlen(info->user_username) >= 31 ? 31 : strlen(info->user_username));
+	memcpy(m_head.basic.acc_username, info->acc_username, strlen(info->acc_username) >= 63 ? 63 : strlen(info->acc_username));
+	memcpy(m_head.basic.user_username, info->user_username, strlen(info->user_username) >= 63 ? 63 : strlen(info->user_username));
 	memcpy(m_head.basic.host_ip, info->host_ip, strlen(info->host_ip) >= 39 ? 39 : strlen(info->host_ip));
 	memcpy(m_head.basic.conn_ip, info->conn_ip, strlen(info->conn_ip) >= 39 ? 39 : strlen(info->conn_ip));
 }

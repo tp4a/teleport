@@ -327,7 +327,6 @@ void TsHttpRpc::_rpc_func_get_config(const Json::Value& json_param, ex_astr& buf
 	_create_json_ret(buf, TPE_OK, jr_data);
 }
 
-
 void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr& buf)
 {
 	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#request_session

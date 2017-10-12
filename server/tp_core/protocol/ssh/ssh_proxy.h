@@ -26,6 +26,7 @@ public:
 	~SshProxy();
 
 	bool init(void);
+	void timer(void);
 
 	void add_sftp_session_info(
 		const ex_astr& sid,

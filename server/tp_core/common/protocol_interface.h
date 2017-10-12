@@ -71,6 +71,7 @@ extern "C"
 	TPP_API ex_rv tpp_init(TPP_INIT_ARGS* init_args);
 	TPP_API ex_rv tpp_start(void);
 	TPP_API ex_rv tpp_stop(void);
+	TPP_API void tpp_timer(void);
 
 #ifdef __cplusplus
 }
@@ -78,6 +79,7 @@ extern "C"
 
 typedef ex_rv (*TPP_INIT_FUNC)(TPP_INIT_ARGS* init_args);
 typedef ex_rv (*TPP_START_FUNC)(void);
-typedef ex_rv (*TPP_STOP_FUNC)(void);
+typedef ex_rv(*TPP_STOP_FUNC)(void);
+typedef void(*TPP_TIMER_FUNC)(void);
 
 #endif // __TP_PROTOCOL_INTERFACE_H__

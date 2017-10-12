@@ -30,8 +30,8 @@ typedef struct TS_RECORD_HEADER_BASIC
 	ex_u64 timestamp;	// 本次录像的起始时间（UTC时间戳）
 	ex_u16 width;		// 初始屏幕尺寸：宽
 	ex_u16 height;		// 初始屏幕尺寸：高
-	char user_username[32];	// teleport账号
-	char acc_username[32];	// 远程主机用户名
+	char user_username[64];	// teleport账号
+	char acc_username[64];	// 远程主机用户名
 
 	char host_ip[40];	// 远程主机IP
 	char conn_ip[40];	// 远程主机IP
@@ -42,7 +42,7 @@ typedef struct TS_RECORD_HEADER_BASIC
 	// RDP专有
 	ex_u8 rdp_security;	// 0 = RDP, 1 = TLS
 
-	ex_u8 reserve[256 - 4 - 2 - 2 - 2 - 8 - 2 - 2 - 32 - 32 - 40 - 2 - 40 - 40 - 1 - 12];	// 保留，其中，最后12B是为header-info留出的空间
+	ex_u8 reserve[512 - 4 - 2 - 2 - 2 - 8 - 2 - 2 - 64 - 64 - 40 - 2 - 40 - 40 - 1 - 12];	// 保留，其中，12B是为header-info留出的空间
 }TS_RECORD_HEADER_BASIC;
 #define ts_record_header_basic_size sizeof(TS_RECORD_HEADER_BASIC)
 
@@ -52,7 +52,7 @@ typedef struct TS_RECORD_HEADER
 	TS_RECORD_HEADER_BASIC basic;
 }TS_RECORD_HEADER;
 
-// header部分（header-info + header-basic） = 256B
+// header部分（header-info + header-basic） = 512B
 #define ts_record_header_size sizeof(TS_RECORD_HEADER)
 
 
