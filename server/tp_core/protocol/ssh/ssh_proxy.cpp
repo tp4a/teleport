@@ -69,7 +69,7 @@ bool SshProxy::init(void)
 }
 
 void SshProxy::timer(void) {
-	EXLOGV("[ssh] on-timer.\n");
+	// EXLOGV("[ssh] on-timer.\n");
 }
 
 void SshProxy::_thread_loop(void)

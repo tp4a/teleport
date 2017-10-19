@@ -64,12 +64,15 @@
 #	include <stdlib.h>	// free()
 #	include <stdarg.h>	// va_start()
 #	include <unistd.h>	// readlink()
+#	include <fcntl.h>   // O_RDONLY, etc.
+#	include <errno.h>
 #	include <wchar.h>
 #	include <sys/stat.h>
 #	include <sys/types.h>
 #	include <sys/socket.h>
 #	include <netinet/in.h>
 #endif
+
 #ifdef EX_OS_MACOS
 #   include <mach-o/dyld.h> // for _NSGetExecutablePath
 #   ifndef _T

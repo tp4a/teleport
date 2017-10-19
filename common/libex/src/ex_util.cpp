@@ -200,7 +200,7 @@ FILE* ex_fopen(const ex_astr& filename, const char* mode) {
 	else
 		return NULL;
 #else
-	f = fopen(filename.c_str(), mode.c_str());
+	f = fopen(filename.c_str(), mode);
 	return f;
 #endif
 }
