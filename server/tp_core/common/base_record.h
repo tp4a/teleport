@@ -27,7 +27,7 @@ typedef struct TS_RECORD_HEADER_INFO
 	ex_u16 ver;			// 录像文件版本，目前为3
 	ex_u32 packages;	// 总包数
 	ex_u32 time_ms;		// 总耗时（毫秒）
-	ex_u32 file_size;	// 数据文件大小
+	//ex_u32 file_size;	// 数据文件大小
 }TS_RECORD_HEADER_INFO;
 #define ts_record_header_info_size sizeof(TS_RECORD_HEADER_INFO)
 

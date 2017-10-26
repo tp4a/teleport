@@ -15,7 +15,6 @@ TppRecBase::TppRecBase()
 
 TppRecBase::~TppRecBase()
 {
-    end();
 }
 
 bool TppRecBase::begin(const wchar_t* base_path, const wchar_t* base_fname, int record_id, const TPP_CONNECT_INFO* info)

@@ -18,55 +18,23 @@ TppSshRec::TppSshRec()
 
 TppSshRec::~TppSshRec()
 {
+	end();
 }
 
 bool TppSshRec::_on_begin(const TPP_CONNECT_INFO* info)
 {
 	if (NULL == info)
 		return false;
-	m_head.basic.timestamp = (ex_u64)time(NULL);
+	m_head.basic.timestamp = m_start_time;//(ex_u64)time(NULL);
 	m_head.basic.protocol_type = (ex_u16)info->protocol_type;
 	m_head.basic.protocol_sub_type = (ex_u16)info->protocol_sub_type;
 	m_head.basic.conn_port = (ex_u16)info->conn_port;
-	// 	memcpy(m_head.account, info.acc_username.c_str(), info.acc_username.length() > 15 ? 15 : info.acc_username.length());
-	// 	memcpy(m_head.username, info.user_username.c_str(), info.user_username.length() > 15 ? 15 : info.user_username.length());
-	// 	memcpy(m_head.ip, info.host_ip.c_str(), info.host_ip.length() > 17 ? 17 : info.host_ip.length());
 
 	memcpy(m_head.basic.acc_username, info->acc_username, strlen(info->acc_username) >= 63 ? 63 : strlen(info->acc_username));
 	memcpy(m_head.basic.user_username, info->user_username, strlen(info->user_username) >= 63 ? 63 : strlen(info->user_username));
 	memcpy(m_head.basic.host_ip, info->host_ip, strlen(info->host_ip) >= 39 ? 39 : strlen(info->host_ip));
 	memcpy(m_head.basic.conn_ip, info->conn_ip, strlen(info->conn_ip) >= 39 ? 39 : strlen(info->conn_ip));
-
-
-
-    ex_wstr fname_info = m_base_path;
-    ex_path_join(fname_info, false, m_base_fname.c_str(), NULL);
-    fname_info += L".tpr";
-    ex_wstr fname_data = m_base_path;
-    ex_path_join(fname_data, false, m_base_fname.c_str(), NULL);
-    fname_data += L".dat";
-    ex_wstr fname_cmd = m_base_path;
-    ex_path_join(fname_cmd, false, m_base_fname.c_str(), NULL);
-    fname_cmd += L"-cmd.txt";
-
-    m_file_info = ex_fopen(fname_info, L"wb");
-    if (NULL == m_file_info)
-    {
-        EXLOGE("[ssh] can not open record info-file for write.\n");
-        return false;
-    }
-    m_file_data = ex_fopen(fname_data, L"wb");
-    if (NULL == m_file_data)
-    {
-        EXLOGE("[ssh] can not open record data-file for write.\n");
-        return false;
-    }
-    m_file_cmd = ex_fopen(fname_cmd, L"wb");
-    if (NULL == m_file_cmd)
-    {
-        EXLOGE("[ssh] can not open record cmd-file for write.\n");
-        return false;
-    }
+    memcpy(m_head.basic.client_ip, info->client_ip, strlen(info->client_ip) >= 39 ? 39 : strlen(info->client_ip));
 
     return true;
 }
@@ -98,9 +66,12 @@ bool TppSshRec::_on_end()
 //	fflush(f);
 //	fclose(f);
 
-    fclose(m_file_info);
-    fclose(m_file_data);
-    fclose(m_file_cmd);
+    if(m_file_info != NULL)
+        fclose(m_file_info);
+    if(m_file_data != NULL)
+        fclose(m_file_data);
+    if(m_file_cmd != NULL)
+        fclose(m_file_cmd);
 
     return true;
 }
@@ -179,6 +150,36 @@ void TppSshRec::record_command(const ex_astr& cmd)
 
 bool TppSshRec::_save_to_data_file()
 {
+    if(m_file_info == NULL) {
+        ex_wstr fname = m_base_path;
+        ex_path_join(fname, false, m_base_fname.c_str(), NULL);
+        fname += L".tpr";
+
+        m_file_info = ex_fopen(fname, L"wb");
+        if (NULL == m_file_info)
+        {
+            EXLOGE("[ssh] can not open record info-file for write.\n");
+            return false;
+        }
+
+        // first time to save header, write whole header.
+        fwrite(&m_head, ts_record_header_size, 1, m_file_info);
+    }
+
+    if(m_file_data == NULL) {
+        ex_wstr fname = m_base_path;
+        ex_path_join(fname, false, m_base_fname.c_str(), NULL);
+        fname += L".dat";
+
+        m_file_data = ex_fopen(fname, L"wb");
+        if (NULL == m_file_data)
+        {
+            EXLOGE("[ssh] can not open record data-file for write.\n");
+            return false;
+        }
+    }
+
+
 //	wchar_t _str_file_id[24] = { 0 };
 //	ex_wcsformat(_str_file_id, 24, L".%03d", 0);// m_head.file_count);
 //
@@ -195,11 +196,14 @@ bool TppSshRec::_save_to_data_file()
 //		return false;
 //	}
 
-	ex_u32 size = m_cache.size();
+	ex_u32 size = (ex_u32)m_cache.size();
 	fwrite(&size, sizeof(ex_u32), 1, m_file_data);
 	fwrite(m_cache.data(), m_cache.size(), 1, m_file_data);
 //	fflush(f);
 //	fclose(f);
+
+    fseek(m_file_info, 0L, SEEK_SET);
+    fwrite(&m_head.info, ts_record_header_info_size, 1, m_file_info);
 
 	//m_head.file_count++;
 	//m_head.file_size += m_cache.size();
@@ -210,20 +214,34 @@ bool TppSshRec::_save_to_data_file()
 
 bool TppSshRec::_save_to_cmd_file()
 {
-	ex_wstr fname = m_base_path;
-	ex_path_join(fname, false, m_base_fname.c_str(), NULL);
-	fname += L"-cmd.txt";
+    if(NULL == m_file_cmd) {
+        ex_wstr fname = m_base_path;
+        ex_path_join(fname, false, m_base_fname.c_str(), NULL);
+        fname += L"-cmd.txt";
+        m_file_cmd = ex_fopen(fname, L"wb");
+        if (NULL == m_file_cmd)
+        {
+            EXLOGE("[ssh] can not open record cmd-file for write.\n");
+            return false;
+        }
+    }
 
-	FILE* f = ex_fopen(fname, L"ab");
-	if (NULL == f)
-	{
-		m_cmd_cache.empty();
-		return false;
-	}
 
-	fwrite(m_cmd_cache.data(), m_cmd_cache.size(), 1, f);
-	fflush(f);
-	fclose(f);
+
+//	ex_wstr fname = m_base_path;
+//	ex_path_join(fname, false, m_base_fname.c_str(), NULL);
+//	fname += L"-cmd.txt";
+//
+//	FILE* f = ex_fopen(fname, L"ab");
+//	if (NULL == f)
+//	{
+//		m_cmd_cache.empty();
+//		return false;
+//	}
+
+	fwrite(m_cmd_cache.data(), m_cmd_cache.size(), 1, m_file_cmd);
+//	fflush(f);
+//	fclose(f);
 
 	m_cmd_cache.empty();
 
