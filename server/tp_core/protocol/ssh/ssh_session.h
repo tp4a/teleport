@@ -53,6 +53,8 @@ public:
 	void client_port(ex_u16 port) { m_client_port = port; }
 	ex_u16 client_port(void) const { return m_client_port; }
 
+	void flush_record();
+
 protected:
 	// ¼Ì³Ð×Ô TppSessionBase
 	bool _on_session_begin(const TPP_CONNECT_INFO* info);

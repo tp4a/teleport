@@ -54,19 +54,25 @@ public:
 	void record(ex_u8 type, const ex_u8* data, size_t size);
 	void record_win_size_startup(int width, int height);
 	void record_win_size_change(int width, int height);
-	void record_command(const ex_astr cmd);
+	void record_command(const ex_astr& cmd);
+
+    void flush_record();
 
 protected:
-	void _on_begin(const TPP_CONNECT_INFO* info);
-	void _on_end(void);
+	bool _on_begin(const TPP_CONNECT_INFO* info);
+	bool _on_end();
 
-	bool _save_to_data_file(void);
-	bool _save_to_cmd_file(void);
+	bool _save_to_data_file();
+	bool _save_to_cmd_file();
 
 protected:
 	TS_RECORD_HEADER m_head;
 
 	MemBuffer m_cmd_cache;
+
+    FILE* m_file_info;
+    FILE* m_file_data;
+    FILE* m_file_cmd;
 };
 
 #endif // __TPP_SSH_RECORDER_H__

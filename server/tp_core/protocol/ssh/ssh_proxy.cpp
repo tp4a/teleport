@@ -7,6 +7,7 @@ SshProxy::SshProxy() :
 	ExThreadBase("ssh-proxy-thread"),
 	m_bind(NULL)
 {
+	m_timer_counter = 0;
 }
 
 SshProxy::~SshProxy()
@@ -16,8 +17,8 @@ SshProxy::~SshProxy()
 
 	ssh_finalize();
 
-	ts_sftp_sessions::iterator it = m_sftp_sessions.begin();
-	for (; it != m_sftp_sessions.end(); ++it)
+	ts_sftp_sessions::iterator it;
+	for (it = m_sftp_sessions.begin(); it != m_sftp_sessions.end(); ++it)
 	{
 		delete it->second;
 	}
@@ -69,7 +70,20 @@ bool SshProxy::init(void)
 }
 
 void SshProxy::timer(void) {
+	// be called per one second.
 	// EXLOGV("[ssh] on-timer.\n");
+	m_timer_counter++;
+	if(m_timer_counter < 5)
+		return;
+
+	m_timer_counter = 0;
+
+	ExThreadSmartLock locker(m_lock);
+
+	ts_ssh_sessions::iterator it;
+	for(it = m_sessions.begin(); it != m_sessions.end(); ++it) {
+		it->first->flush_record();
+	}
 }
 
 void SshProxy::_thread_loop(void)

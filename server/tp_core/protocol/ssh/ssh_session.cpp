@@ -220,6 +220,10 @@ void SshSession::_run(void) {
 	ssh_event_free(event_loop);
 }
 
+void SshSession::flush_record() {
+	m_rec.flush_record();
+}
+
 
 int SshSession::_on_auth_password_request(ssh_session session, const char *user, const char *password, void *userdata) {
 	// 这里拿到的user就是我们要的session-id，password可以用ticket来填充，作为额外判断用户是否被允许访问的依据。

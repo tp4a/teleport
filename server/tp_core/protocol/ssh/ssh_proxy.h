@@ -52,7 +52,8 @@ private:
 
 private:
 	ssh_bind m_bind;
-	bool m_stop_flag;
+	//bool m_stop_flag;
+	int m_timer_counter;
 
 	ExThreadLock m_lock;
 

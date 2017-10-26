@@ -35,5 +35,6 @@ TPP_API ex_rv tpp_stop(void)
 }
 
 TPP_API void tpp_timer(void) {
+	// be called per one second.
 	g_ssh_proxy.timer();
 }
