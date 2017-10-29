@@ -14,6 +14,8 @@ TppSshRec::TppSshRec()
     m_file_info = NULL;
     m_file_data = NULL;
     m_file_cmd = NULL;
+
+    m_save_full_header = false;
 }
 
 TppSshRec::~TppSshRec()
@@ -25,7 +27,7 @@ bool TppSshRec::_on_begin(const TPP_CONNECT_INFO* info)
 {
 	if (NULL == info)
 		return false;
-	m_head.basic.timestamp = m_start_time;//(ex_u64)time(NULL);
+	m_head.basic.timestamp = (ex_u64)time(NULL);
 	m_head.basic.protocol_type = (ex_u16)info->protocol_type;
 	m_head.basic.protocol_sub_type = (ex_u16)info->protocol_sub_type;
 	m_head.basic.conn_port = (ex_u16)info->conn_port;
@@ -87,8 +89,6 @@ void TppSshRec::record(ex_u8 type, const ex_u8* data, size_t size)
 {
 	if (data == NULL || 0 == size)
 		return;
-	m_head.info.packages++;
-    m_head.info.time_ms = (ex_u32)(m_last_time - m_start_time);
 
 	if (sizeof(TS_RECORD_PKG) + size + m_cache.size() > m_cache.buffer_size())
 		_save_to_data_file();
@@ -102,7 +102,11 @@ void TppSshRec::record(ex_u8 type, const ex_u8* data, size_t size)
 	{
 		m_last_time = ex_get_tick_count();
 		pkg.time_ms = (ex_u32)(m_last_time - m_start_time);
+
+        m_head.info.time_ms = pkg.time_ms;
 	}
+
+    m_head.info.packages++;
 
 	m_cache.append((ex_u8*)&pkg, sizeof(TS_RECORD_PKG));
 	m_cache.append(data, size);
@@ -112,6 +116,7 @@ void TppSshRec::record_win_size_startup(int width, int height)
 {
 	m_head.basic.width = (ex_u16)width;
 	m_head.basic.height = (ex_u16)height;
+    m_save_full_header = true;
 }
 
 void TppSshRec::record_win_size_change(int width, int height)
@@ -163,7 +168,7 @@ bool TppSshRec::_save_to_data_file()
         }
 
         // first time to save header, write whole header.
-        fwrite(&m_head, ts_record_header_size, 1, m_file_info);
+        m_save_full_header = true;
     }
 
     if(m_file_data == NULL) {
@@ -196,17 +201,21 @@ bool TppSshRec::_save_to_data_file()
 //		return false;
 //	}
 
-	ex_u32 size = (ex_u32)m_cache.size();
-	fwrite(&size, sizeof(ex_u32), 1, m_file_data);
-	fwrite(m_cache.data(), m_cache.size(), 1, m_file_data);
-//	fflush(f);
-//	fclose(f);
+    if(m_cache.size() > 0) {
+        fwrite(m_cache.data(), m_cache.size(), 1, m_file_data);
+        fflush(m_file_data);
+    }
+
 
     fseek(m_file_info, 0L, SEEK_SET);
-    fwrite(&m_head.info, ts_record_header_info_size, 1, m_file_info);
-
-	//m_head.file_count++;
-	//m_head.file_size += m_cache.size();
+    if(m_save_full_header) {
+        fwrite(&m_head, ts_record_header_size, 1, m_file_info);
+        fflush(m_file_info);
+        m_save_full_header = false;
+    } else {
+        fwrite(&m_head.info, ts_record_header_info_size, 1, m_file_info);
+        fflush(m_file_info);
+    }
 
 	m_cache.empty();
 	return true;
@@ -240,7 +249,7 @@ bool TppSshRec::_save_to_cmd_file()
 //	}
 
 	fwrite(m_cmd_cache.data(), m_cmd_cache.size(), 1, m_file_cmd);
-//	fflush(f);
+	fflush(m_file_cmd);
 //	fclose(f);
 
 	m_cmd_cache.empty();

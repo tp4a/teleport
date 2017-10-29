@@ -51,7 +51,7 @@ typedef struct TS_RECORD_HEADER_BASIC
 	// RDP×¨ÓÐ
 	ex_u8 rdp_security;	// 0 = RDP, 1 = TLS
 
-	ex_u8 _reserve[512 - 4 - 2 - 2 - 2 - 8 - 2 - 2 - 64 - 64 - 40 - 2 - 40 - 40 - 1 - ts_record_header_info_size];
+	ex_u8 _reserve[512 - 2 - 2 - 8 - 2 - 2 - 64 - 64 - 40 - 40 - 2 - 40 - 1 - ts_record_header_info_size];
 }TS_RECORD_HEADER_BASIC;
 #define ts_record_header_basic_size sizeof(TS_RECORD_HEADER_BASIC)
 

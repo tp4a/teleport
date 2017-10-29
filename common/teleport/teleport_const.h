@@ -25,10 +25,10 @@
 //=======================================================
 // 远程连接子协议
 //=======================================================
-#define TP_PROTOCOL_SUB_TYPE_RDP		100
-#define TP_PROTOCOL_SUB_TYPE_SSH		200
-#define TP_PROTOCOL_SUB_TYPE_SFTP		201
-#define TP_PROTOCOL_SUB_TYPE_TELNET		300
+#define TP_PROTOCOL_TYPE_RDP_DESKTOP		100
+#define TP_PROTOCOL_TYPE_SSH_SHELL		    200
+#define TP_PROTOCOL_TYPE_SSH_SFTP	    	201
+#define TP_PROTOCOL_TYPE_TELNET_SHELL		300
 
 
 //=======================================================

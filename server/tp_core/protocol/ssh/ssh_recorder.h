@@ -70,6 +70,8 @@ protected:
 
 	MemBuffer m_cmd_cache;
 
+    bool m_save_full_header;
+
     FILE* m_file_info;
     FILE* m_file_data;
     FILE* m_file_cmd;
