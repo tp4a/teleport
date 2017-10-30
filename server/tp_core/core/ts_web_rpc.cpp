@@ -67,6 +67,41 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 
 	Json::Value& _jret = jret["data"];
 
+    if(!_jret["user_id"].isInt())
+        EXLOGE("connection info: need `user_id`.\n");
+    if(!_jret["host_id"].isInt())
+        EXLOGE("connection info: need `host_id`.\n");
+    if(!_jret["acc_id"].isInt())
+        EXLOGE("connection info: need `acc_id`.\n");
+    if(!_jret["conn_port"].isInt())
+        EXLOGE("connection info: need `conn_port`.\n");
+    if(!_jret["protocol_type"].isInt())
+        EXLOGE("connection info: need `protocol_type`.\n");
+    if(!_jret["protocol_sub_type"].isInt())
+        EXLOGE("connection info: need `protocol_sub_type`.\n");
+    if(!_jret["auth_type"].isInt())
+        EXLOGE("connection info: need `auth_type`.\n");
+    if(!_jret["protocol_flag"].isInt())
+        EXLOGE("connection info: need `protocol_flag`.\n");
+    if(!_jret["_enc"].isInt())
+        EXLOGE("connection info: need `_enc`.\n");
+    if(!_jret["user_username"].isString())
+        EXLOGE("connection info: need `user_username`.\n");
+    if(!_jret["host_ip"].isString())
+        EXLOGE("connection info: need `host_ip`.\n");
+    if(!_jret["conn_ip"].isString())
+        EXLOGE("connection info: need `conn_ip`.\n");
+    if(!_jret["client_ip"].isString())
+        EXLOGE("connection info: need `client_ip`.\n");
+    if(!_jret["acc_username"].isString())
+        EXLOGE("connection info: need `acc_username`.\n");
+    if(!_jret["acc_secret"].isString())
+        EXLOGE("connection info: need `acc_secret`.\n");
+    if(!_jret["username_prompt"].isString())
+        EXLOGE("connection info: need `username_prompt`.\n");
+    if(!_jret["password_prompt"].isString())
+        EXLOGE("connection info: need `password_prompt`.\n");
+
 	if (
 		!_jret["user_id"].isInt()
 		|| !_jret["host_id"].isInt()
@@ -228,11 +263,32 @@ bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id)
 	return true;
 }
 
+bool ts_web_rpc_session_update(int record_id, int state) {
+	Json::FastWriter json_writer;
+	Json::Value jreq;
+	jreq["method"] = "session_update";
+	jreq["param"]["rid"] = record_id;
+	jreq["param"]["code"] = state;
+
+	ex_astr json_param;
+	json_param = json_writer.write(jreq);
+
+	ex_astr param;
+	ts_url_encode(json_param.c_str(), param);
+
+	ex_astr url = g_env.web_server_rpc;
+	url += "?";
+	url += param;
+
+	ex_astr body;
+	return ts_http_get(url, body);
+}
+
+
 //session 结束
 bool ts_web_rpc_session_end(const char* sid, int record_id, int ret_code)
 {
 	// TODO: 对指定的sid相关的会话的引用计数减一（但减到0时销毁）
-
 
 	Json::FastWriter json_writer;
 	Json::Value jreq;

@@ -220,8 +220,8 @@ void SshSession::_run(void) {
 	ssh_event_free(event_loop);
 }
 
-void SshSession::flush_record() {
-	m_rec.flush_record();
+void SshSession::save_record() {
+	m_rec.save_record();
 }
 
 
@@ -312,6 +312,12 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		_this->m_have_error = true;
 		_this->m_retcode = TP_SESS_STAT_ERR_CONNECT;
 		return SSH_AUTH_ERROR;
+	}
+
+	if (!g_ssh_env.session_update(_this->m_db_id, TP_SESS_STAT_STARTED))
+	{
+		EXLOGD("[ssh] session_update error. %d\n", _this->m_db_id);
+		return false;
 	}
 
 // 	// 检查服务端支持的认证协议

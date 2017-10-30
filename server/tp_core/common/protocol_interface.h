@@ -44,6 +44,7 @@ typedef struct TPP_CONNECT_INFO
 typedef TPP_CONNECT_INFO* (*TPP_GET_CONNNECT_INFO_FUNC)(const char* sid);
 typedef void(*TPP_FREE_CONNECT_INFO_FUNC)(TPP_CONNECT_INFO* info);
 typedef bool(*TPP_SESSION_BEGIN_FUNC)(const TPP_CONNECT_INFO* info, int* db_id);
+typedef bool(*TPP_SESSION_UPDATE_FUNC)(int db_id, int state);
 typedef bool(*TPP_SESSION_END_FUNC)(const char* sid, int db_id, int ret);
 
 
@@ -58,6 +59,7 @@ typedef struct TPP_INIT_ARGS
 	TPP_GET_CONNNECT_INFO_FUNC func_get_connect_info;
 	TPP_FREE_CONNECT_INFO_FUNC func_free_connect_info;
 	TPP_SESSION_BEGIN_FUNC func_session_begin;
+	TPP_SESSION_UPDATE_FUNC func_session_update;
 	TPP_SESSION_END_FUNC func_session_end;
 }TPP_INIT_ARGS;
 

@@ -91,6 +91,10 @@ bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id)
 	return ts_web_rpc_session_begin(sinfo, *db_id);
 }
 
+bool tpp_session_update(int db_id, int state) {
+	return ts_web_rpc_session_update(db_id, state);
+}
+
 bool tpp_session_end(const char* sid, int db_id, int ret)
 {
 	return ts_web_rpc_session_end(sid, db_id, ret);
@@ -204,6 +208,7 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 	init_args.func_get_connect_info = tpp_get_connect_info;
 	init_args.func_free_connect_info = tpp_free_connect_info;
 	init_args.func_session_begin = tpp_session_begin;
+	init_args.func_session_update = tpp_session_update;
 	init_args.func_session_end = tpp_session_end;
 
 	if (EXRV_OK != lib->init(&init_args))

@@ -13,6 +13,8 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info);
 
 // 记录会话的开始
 bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id);
+// update session state
+bool ts_web_rpc_session_update(int id, int state);
 //session 结束
 bool ts_web_rpc_session_end(const char* sid, int id, int ret_code);
 

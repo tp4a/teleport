@@ -82,7 +82,7 @@ void SshProxy::timer(void) {
 
 	ts_ssh_sessions::iterator it;
 	for(it = m_sessions.begin(); it != m_sessions.end(); ++it) {
-		it->first->flush_record();
+		it->first->save_record();
 	}
 }
 

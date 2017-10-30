@@ -19,6 +19,7 @@ public:
 	TPP_GET_CONNNECT_INFO_FUNC get_connect_info;
 	TPP_FREE_CONNECT_INFO_FUNC free_connect_info;
 	TPP_SESSION_BEGIN_FUNC session_begin;
+	TPP_SESSION_UPDATE_FUNC session_update;
 	TPP_SESSION_END_FUNC session_end;
 
 protected:

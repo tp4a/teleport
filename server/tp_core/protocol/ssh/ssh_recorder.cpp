@@ -78,7 +78,7 @@ bool TppSshRec::_on_end()
     return true;
 }
 
-void TppSshRec::flush_record() {
+void TppSshRec::save_record() {
     if (m_cache.size() > 0)
         _save_to_data_file();
     if (m_cmd_cache.size() > 0)

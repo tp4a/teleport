@@ -56,7 +56,7 @@ public:
 	void record_win_size_change(int width, int height);
 	void record_command(const ex_astr& cmd);
 
-    void flush_record();
+    void save_record();
 
 protected:
 	bool _on_begin(const TPP_CONNECT_INFO* info);
