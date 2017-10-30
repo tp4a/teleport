@@ -85,7 +85,6 @@ bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id)
 	sinfo.conn_port = info->conn_port;
 	sinfo.protocol_type = info->protocol_type;
 	sinfo.protocol_sub_type = info->protocol_sub_type;
-	//sinfo.protocol_flag = info->protocol_flag;
 	sinfo.auth_type = info->auth_type;
 
 	return ts_web_rpc_session_begin(sinfo, *db_id);

@@ -25,8 +25,8 @@ public:
 	SshProxy();
 	~SshProxy();
 
-	bool init(void);
-	void timer(void);
+	bool init();
+	void timer();
 
 	void add_sftp_session_info(
 		const ex_astr& sid,
@@ -42,13 +42,13 @@ public:
 	void session_finished(SshSession* sess);
 
 protected:
-	void _thread_loop(void);
-	void _set_stop_flag(void);
+	void _thread_loop();
+	void _set_stop_flag();
 
-	void _run(void);
+	void _run();
 
 private:
-	void _dump_sftp_sessions(void);
+	void _dump_sftp_sessions();
 
 private:
 	ssh_bind m_bind;

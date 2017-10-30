@@ -8,6 +8,9 @@
 
 typedef struct TS_CONNECT_INFO
 {
+	// TODO:
+	//TPP_CONNECT_INFO conn;
+
 	ex_astr sid;
 
 	// 与此连接信息相关的三个要素的ID
@@ -36,7 +39,7 @@ typedef struct TS_CONNECT_INFO
 	ex_u64 ticket_start;// 此连接信息的创建时间（用于超时未使用就销毁的功能）
 }TS_CONNECT_INFO;
 
-typedef std::map<ex_astr, TS_CONNECT_INFO*> ts_connections;
+typedef std::map<ex_astr, TS_CONNECT_INFO*> ts_connections;  // sid -> TS_CONNECT_INFO
 
 class TsSessionManager : public ExThreadBase
 {
@@ -44,7 +47,20 @@ public:
 	TsSessionManager();
 	~TsSessionManager();
 
+	// generate a sid for connection info.
 	bool request_session(ex_astr& sid, TS_CONNECT_INFO* info);
+
+	// +ref for connection-info.
+	bool session_connect(const ex_astr& sid, TPP_CONNECT_INFO** info);
+
+	// free connection-info created by session_connect().
+	bool free_connect_info(TPP_CONNECT_INFO* info);
+
+	// -ref for connecton-info, and release it when ref is 0.
+	bool session_end(const ex_astr& sid);
+
+	// TODO:
+	void timer();
 
 	// 根据sid得到session信息
 	bool get_connect_info(const ex_astr& sid, TS_CONNECT_INFO& info);

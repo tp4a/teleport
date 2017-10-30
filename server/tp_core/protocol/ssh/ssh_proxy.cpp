@@ -25,7 +25,7 @@ SshProxy::~SshProxy()
 	m_sftp_sessions.clear();
 }
 
-bool SshProxy::init(void)
+bool SshProxy::init()
 {
 	m_host_ip = g_ssh_env.bind_ip;
 	m_host_port = g_ssh_env.bind_port;
@@ -69,9 +69,8 @@ bool SshProxy::init(void)
 	return true;
 }
 
-void SshProxy::timer(void) {
+void SshProxy::timer() {
 	// be called per one second.
-	// EXLOGV("[ssh] on-timer.\n");
 	m_timer_counter++;
 	if(m_timer_counter < 5)
 		return;
@@ -86,14 +85,14 @@ void SshProxy::timer(void) {
 	}
 }
 
-void SshProxy::_thread_loop(void)
+void SshProxy::_thread_loop()
 {
 	EXLOGV("[ssh] TeleportServer-SSH ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 	_run();
 	EXLOGV("[ssh] main-loop end.\n");
 }
 
-void SshProxy::_set_stop_flag(void)
+void SshProxy::_set_stop_flag()
 {
 	m_stop_flag = true;
 
@@ -108,8 +107,8 @@ void SshProxy::_set_stop_flag(void)
 		ssh_options_set(_session, SSH_OPTIONS_HOST, host_ip.c_str());
 		ssh_options_set(_session, SSH_OPTIONS_PORT, &m_host_port);
 
-		int _timeout_us = 100000;
-		ssh_options_set(_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
+		int _timeout_us = 10;
+		ssh_options_set(_session, SSH_OPTIONS_TIMEOUT, &_timeout_us);
 		ssh_connect(_session);
 		ssh_free(_session);
 	}
@@ -117,7 +116,7 @@ void SshProxy::_set_stop_flag(void)
 	m_thread_mgr.stop_all();
 }
 
-void SshProxy::_run(void)
+void SshProxy::_run()
 {
 	for (;;)
 	{
@@ -172,7 +171,7 @@ void SshProxy::_run(void)
 	m_thread_mgr.stop_all();
 }
 
-void SshProxy::_dump_sftp_sessions(void)
+void SshProxy::_dump_sftp_sessions()
 {
 	ts_sftp_sessions::iterator it = m_sftp_sessions.begin();
 	for (; it != m_sftp_sessions.end(); ++it)
