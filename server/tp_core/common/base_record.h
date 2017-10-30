@@ -92,13 +92,10 @@ protected:
 	virtual bool _on_end() = 0;
 
 protected:
-	//int m_protocol;
-
 	ex_wstr m_base_path;		// 录像文件基础路径，例如 /usr/local/eom/teleport/data/replay/ssh/123，数字编号是内部附加的，作为本次会话录像文件的目录名称
 	ex_wstr m_base_fname;		// 录像文件的文件名，不含扩展名部分，内部会以此为基础合成文件全名，并将录像文件存放在 m_base_path 指向的目录中
 
 	ex_u64 m_start_time;
-	ex_u64 m_last_time;
 
 	MemBuffer m_cache;
 };

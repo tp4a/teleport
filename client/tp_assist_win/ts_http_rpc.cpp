@@ -839,7 +839,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		// SSH
 		//==============================================
 
-		if (pro_sub == TP_PROTOCOL_SUB_TYPE_SSH)
+		if (pro_sub == TP_PROTOCOL_TYPE_SSH_SHELL)
 		{
 			w_exe_path = _T("\"");
 			w_exe_path += g_cfg.ssh_app + _T("\" ");

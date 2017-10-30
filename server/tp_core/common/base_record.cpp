@@ -9,8 +9,6 @@ TppRecBase::TppRecBase()
 {
 	m_cache.reserve(MAX_SIZE_PER_FILE);
 	m_start_time = 0;
-	m_last_time = 0;
-	//m_protocol =
 }
 
 TppRecBase::~TppRecBase()

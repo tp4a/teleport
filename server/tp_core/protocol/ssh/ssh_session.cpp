@@ -297,13 +297,9 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	if (_this->m_auth_type != TP_AUTH_TYPE_NONE)
 		ssh_options_set(_this->m_srv_session, SSH_OPTIONS_USER, _this->m_acc_name.c_str());
 
-//#ifdef EX_DEBUG
-//	// 	int _timeout_us = 500000000; // 5 sec.
-//	// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
-//#else
-//	int _timeout_us = 10000000; // 10 sec.
-//	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
-//#endif
+	// default timeout is 10 seconds.
+	int _timeout = 30; // 30 sec.
+	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
 	int rc = 0;
 	rc = ssh_connect(_this->m_srv_session);
@@ -321,6 +317,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	}
 
 // 	// 检查服务端支持的认证协议
+	ssh_userauth_none(_this->m_srv_session, NULL);
 // 	rc = ssh_userauth_none(_this->m_srv_session, NULL);
 // 	if (rc == SSH_AUTH_ERROR) {
 // 			EXLOGE("[ssh] invalid password for password mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
@@ -344,6 +341,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 				retry_count += 1;
 				if (retry_count >= 5)
 					break;
+				ex_sleep_ms(500);
 				rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
 				continue;
 			}
@@ -394,7 +392,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 			EXLOGD("[ssh] failed to login with password mode, got %d.\n", rc);
 		}
 
-		EXLOGE("[ssh] can not use password mode or interactive mode ot login to real SSH server %s:%d.\n", _this->m_conn_ip.c_str(), _this->m_conn_port);
+		EXLOGE("[ssh] can not use password mode or interactive mode to login to real SSH server %s:%d.\n", _this->m_conn_ip.c_str(), _this->m_conn_port);
 		_this->m_have_error = true;
 		_this->m_retcode = TP_SESS_STAT_ERR_AUTH_DENIED;
 		return SSH_AUTH_ERROR;
