@@ -1,35 +1,27 @@
 <%!
-    page_title_ = '系统总览'
-    page_menu_ = ['dashboard']
-    page_id_ = 'dashboard'
+    page_icon_class_ = 'fa fa-dashboard fa-fw'
+    page_title_ = ['系统总览']
+    page_id_ = ['dashboard']
 %>
 <%inherit file="../page_base.mako"/>
 
-<%block name="extend_js">
-    ##     <script type="text/javascript" src="${ static_url('js/ui/teleport.js') }"></script>
-
+## <%block name="extend_js_file">
 ##     <script type="text/javascript" src="${ static_url('js/ui/config/info.js') }"></script>
-</%block>
+## </%block>
 
-<%block name="breadcrumb">
-    <ol class="breadcrumb">
-        <li><i class="fa fa-dashboard fa-fw"></i> ${self.attr.page_title_}</li>
-    </ol>
-</%block>
-
-<%block name="extend_css">
+<%block name="extend_css_file">
     <link href="${ static_url('css/dashboard.css') }" rel="stylesheet" type="text/css"/>
 </%block>
 
 ## Begin Main Body.
 
-<div class="page-content">
+<div class="page-content-inner">
 
     <div class="row">
-        <div class="col-sm-4">
+        <div class="col-sm-3">
             <div class="stats stats-box stats-id-host">
                 <div class="stats-icon">
-                    <i class="fa fa-server"></i>
+                    <i class="fa fa-cubes fa-fw"></i>
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">主机</div>
@@ -37,10 +29,10 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-3">
             <div class="stats stats-box stats-id-user">
                 <div class="stats-icon">
-                    <i class="fa fa-user"></i>
+                    <i class="fa fa-id-card-o fa-fw"></i>
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">用户</div>
@@ -48,10 +40,21 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-3">
+            <div class="stats stats-box stats-id-account">
+                <div class="stats-icon">
+                    <i class="fa fa-user-circle fa-fw"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-name">主机账号</div>
+                    <div class="stats-value">63</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
             <div class="stats stats-box stats-id-connect">
                 <div class="stats-icon">
-                    <i class="fa fa-link"></i>
+                    <i class="fa fa-link fa-fw"></i>
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">当前连接</div>

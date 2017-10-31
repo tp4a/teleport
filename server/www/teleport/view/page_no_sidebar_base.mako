@@ -16,12 +16,12 @@
 	<title>${self.attr.page_title_}::TELEPORT</title>
 	<link rel="shortcut icon" href="${ static_url('favicon.png') }">
 
-	<link href="${ static_url('plugins/google-cache/open-sans.css') }" rel="stylesheet">
+## 	<link href="${ static_url('plugins/google-cache/open-sans.css') }" rel="stylesheet">
 	<link href="${ static_url('plugins/bootstrap/css/bootstrap.min.css') }" rel="stylesheet" type="text/css"/>
 	<link href="${ static_url('plugins/font-awesome/css/font-awesome.min.css') }" rel="stylesheet">
 	<link href="${ static_url('plugins/gritter/css/jquery.gritter.css') }" rel="stylesheet">
 
-	<link href="${ static_url('css/sub.css') }" rel="stylesheet" type="text/css"/>
+	<link href="${ static_url('css/single.css') }" rel="stylesheet" type="text/css"/>
 
 	<%block name="extend_css"/>
 	<%block name="embed_css"/>
@@ -64,24 +64,24 @@
 	<%block name="extend_content" />
 
 <script type="text/javascript" src="${ static_url('plugins/underscore/underscore.js') }"></script>
-<script type="text/javascript" src="${ static_url('plugins/jquery/jquery.min.js') }"></script>
+<script type="text/javascript" src="${ static_url('plugins/jquery/jquery-2.2.3.min.js') }"></script>
+<script type="text/javascript" src="${ static_url('plugins/jquery/js.cookie.js') }"></script>
 <script type="text/javascript" src="${ static_url('plugins/bootstrap/js/bootstrap.min.js') }"></script>
 <!--[if lt IE 9]>
-<script src="${ static_url('plugins/html5shiv/html5shiv.min.js') }"></script>
+<script type="text/javascript" src="${ static_url('plugins/html5shiv/html5shiv.min.js') }"></script>
+<script type="text/javascript" src="${ static_url('plugins/json2/json2.js') }"></script>
 <![endif]-->
-	## <script type="text/javascript" src="${ static_url('js/json2.js') }"></script>
 
+<script type="text/javascript" src="${ static_url('plugins/jquery/jquery.mousewheel.min.js') }"></script>
 <script type="text/javascript" src="${ static_url('plugins/gritter/js/jquery.gritter.js') }"></script>
-<script type="text/javascript" src="${ static_url('plugins/jstree/jstree.js') }"></script>
 
 <script type="text/javascript" src="${ static_url('plugins/keypress/keypress.js') }"></script>
 
-<script type="text/javascript" src="${ static_url('js/ywl_const.js') }"></script>
-<script type="text/javascript" src="${ static_url('js/ywl_common.js') }"></script>
-<script type="text/javascript" src="${ static_url('js/ywl.js') }"></script>
-<script type="text/javascript" src="${ static_url('js/ywl_assist.js') }"></script>
-<script type="text/javascript" src="${ static_url('js/ui/common.js') }"></script>
-<script type="text/javascript" src="${ static_url('js/ui/controls.js') }"></script>
+<script type="text/javascript" src="${ static_url('js/tp-utils.js') }"></script>
+<script type="text/javascript" src="${ static_url('js/tp-const.js') }"></script>
+<script type="text/javascript" src="${ static_url('js/teleport.js') }"></script>
+<script type="text/javascript" src="${ static_url('js/teleport/common.js') }"></script>
+<script type="text/javascript" src="${ static_url('js/teleport/controls.js') }"></script>
 
 
 	<%block name="extend_js"/>
@@ -90,10 +90,10 @@
 
 <script type="text/javascript">
 
-	$(document).ready(function () {
-		// once page ready, init ywl object.
-		ywl.init();
-	});
+## 	$(document).ready(function () {
+## 		// once page ready, init ywl object.
+## 		ywl.init();
+## 	});
 
 </script>
 
