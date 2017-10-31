@@ -58,7 +58,7 @@
 				"name": "crt",
 				"display": "SecureCRT",
 				"app": "",
-				"cmdline": "/T /N \"TP#telnet://{real_ip}\" /ARG {user_name} /SCRIPT \"{assist_tools_path}\securecrt-telnet.vbs\" /TELNET {host_ip} {host_port}"
+				"cmdline": "/T /N \"TP#telnet://{real_ip}\" /ARG {user_name} /SCRIPT \"{assist_tools_path}\\securecrt-telnet.vbs\" /TELNET {host_ip} {host_port}"
 			},
 			{
 				"name": "other",
@@ -67,5 +67,5 @@
 				"cmdline": ""
 			}
 		]
-	},
+	}
 }

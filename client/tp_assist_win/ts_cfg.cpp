@@ -44,7 +44,7 @@ bool TsCfg::_load(const ex_astr& str_json) {
 	Json::Reader jreader;
 
 	if (!jreader.parse(str_json.c_str(), m_root)) {
-		EXLOGE("can not parse new config data, not in json format?\n");
+		EXLOGE("can not parse new config data, not in json format? %s\n", jreader.getFormattedErrorMessages().c_str());
 		return false;
 	}
 
