@@ -250,58 +250,30 @@ def update_account(handler, host_id, acc_id, args):
     return TPE_OK
 
 
-def lock_account(handler, host_id, acc_id):
+def update_account_state(handler, host_id, acc_id, state):
     db = get_db()
 
     # 1. 判断是否存在
-    sql = 'SELECT id FROM {}acc WHERE id={};'.format(db.table_prefix, acc_id)
+    sql = 'SELECT id FROM {}acc WHERE host_id={host_id} AND id={acc_id};'.format(db.table_prefix, host_id=host_id, acc_id=acc_id)
     db_ret = db.query(sql)
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
-    sql = list()
-    sql.append('UPDATE `{}acc` SET'.format(db.table_prefix))
+    sql_list = []
 
-    _set = list()
-    _set.append('state={}'.format(TP_STATE_DISABLED))
+    sql = 'UPDATE `{}acc` SET state={state} WHERE id={acc_id};' \
+          ''.format(db.table_prefix, state=state, acc_id=acc_id)
+    sql_list.append(sql)
 
-    sql.append(','.join(_set))
-    sql.append('WHERE id={};'.format(acc_id))
+    # sync to update the ops-audit table.
+    sql = 'UPDATE `{}ops_map` SET a_state={state} WHERE a_id={acc_id};' \
+          ''.format(db.table_prefix, state=state, acc_id=acc_id)
+    sql_list.append(sql)
 
-    db_ret = db.exec(' '.join(sql))
-    if not db_ret:
+    if db.transaction(sql_list):
+        return TPE_OK
+    else:
         return TPE_DATABASE
-
-    # TODO: update ops_map.
-
-    return TPE_OK
-
-
-def unlock_account(handler, host_id, acc_id):
-    db = get_db()
-
-    # 1. 判断是否存在
-    sql = 'SELECT id FROM {}acc WHERE id={};'.format(db.table_prefix, acc_id)
-    db_ret = db.query(sql)
-    if db_ret is None or len(db_ret) == 0:
-        return TPE_NOT_EXISTS
-
-    sql = list()
-    sql.append('UPDATE `{}acc` SET'.format(db.table_prefix))
-
-    _set = list()
-    _set.append('state={}'.format(TP_STATE_NORMAL))
-
-    sql.append(','.join(_set))
-    sql.append('WHERE id={};'.format(acc_id))
-
-    db_ret = db.exec(' '.join(sql))
-    if not db_ret:
-        return TPE_DATABASE
-
-    # TODO: update ops_map.
-
-    return TPE_OK
 
 
 def remove_account(handler, host_id, acc_id):
@@ -324,22 +296,26 @@ def remove_account(handler, host_id, acc_id):
     if len(s.recorder[0]['router_ip']) > 0:
         acc_name += '（由{}:{}路由）'.format(s.recorder[0]['router_ip'], s.recorder[0]['router_port'])
 
+    sql_list = []
+
     sql = 'DELETE FROM `{}group_map` WHERE type={} AND mid={};'.format(db.table_prefix, TP_GROUP_ACCOUNT, acc_id)
-    db_ret = db.exec(sql)
-    if not db_ret:
-        return TPE_DATABASE
+    sql_list.append(sql)
 
     sql = 'DELETE FROM `{}acc` WHERE id={} AND host_id={};'.format(db.table_prefix, acc_id, host_id)
-    db_ret = db.exec(sql)
-    if not db_ret:
-        return TPE_DATABASE
+    sql_list.append(sql)
 
     # 更新主机相关账号数量
-    sql = 'UPDATE `{}host` SET acc_count=acc_count-1 WHERE id={host_id};' \
-          ''.format(db.table_prefix, host_id=host_id)
-    db_ret = db.exec(sql)
+    sql = 'UPDATE `{}host` SET acc_count=acc_count-1 WHERE id={host_id};'.format(db.table_prefix, host_id=host_id)
+    sql_list.append(sql)
 
-    # TODO: update ops_map.
+    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid={rid};'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=acc_id)
+    sql_list.append(sql)
+
+    sql = 'DELETE FROM `{}ops_map` WHERE a_id={acc_id};'.format(db.table_prefix, acc_id=acc_id)
+    sql_list.append(sql)
+
+    if not db.transaction(sql_list):
+        return TPE_DATABASE
 
     syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除账号：{}".format(acc_name))
 

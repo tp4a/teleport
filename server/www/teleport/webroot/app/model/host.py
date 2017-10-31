@@ -120,22 +120,20 @@ def add_host(handler, args):
 def remove_hosts(handler, hosts):
     db = get_db()
 
-    host_ids = [str(i) for i in hosts]
+    host_ids = ','.join([str(i) for i in hosts])
+
+    sql_list = []
 
     # step 1. 处理主机对应的账号
 
     # 1.1 获取账号列表
     s = SQL(db)
     s.select_from('acc', ['id', 'host_ip', 'router_ip', 'router_port', 'username'], alt_name='a')
-    s.where('a.host_id IN ({})'.format(','.join(host_ids)))
+    s.where('a.host_id IN ({})'.format(host_ids))
     err = s.query()
     if err != TPE_OK:
         return err
-    # sql = 'SELECT id, host_ip, router_ip, router_port FROM {}acc WHERE {};'.format(db.table_prefix, where)
-    # db_ret = db.query(sql)
-    # if db_ret is None:
-    #     return TPE_DATABASE
-    #
+
     acc_ids = []
     acc_names = []
     for acc in s.recorder:
@@ -151,22 +149,27 @@ def remove_hosts(handler, hosts):
         # 1.2 将账号从所在组中移除
         where = 'mid IN ({})'.format(','.join(acc_ids))
         sql = 'DELETE FROM `{}group_map` WHERE (type={} AND {});'.format(db.table_prefix, TP_GROUP_ACCOUNT, where)
-        if not db.exec(sql):
-            return TPE_DATABASE
+        sql_list.append(sql)
+        # if not db.exec(sql):
+        #     return TPE_DATABASE
 
         # 1.3 将账号删除
         where = 'id IN ({})'.format(','.join(acc_ids))
         sql = 'DELETE FROM `{}acc` WHERE {};'.format(db.table_prefix, where)
-        if not db.exec(sql):
-            return TPE_DATABASE
+        sql_list.append(sql)
+        # if not db.exec(sql):
+        #     return TPE_DATABASE
 
-    if len(acc_names) > 0:
-        syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除账号：{}".format('，'.join(acc_names)))
+        sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN({rid});'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=','.join(acc_ids))
+        sql_list.append(sql)
+
+        sql = 'DELETE FROM `{}ops_map` WHERE a_id IN({});'.format(db.table_prefix, ','.join(acc_ids))
+        sql_list.append(sql)
 
     # step 2. 处理主机
     s = SQL(db)
     s.select_from('host', ['ip', 'router_ip', 'router_port'], alt_name='h')
-    s.where('h.id IN ({})'.format(','.join(host_ids)))
+    s.where('h.id IN ({})'.format(host_ids))
     err = s.query()
     if err != TPE_OK:
         return err
@@ -180,17 +183,25 @@ def remove_hosts(handler, hosts):
             host_names.append(h_name)
 
     # 2.1 将主机从所在组中移除
-    where = 'mid IN ({})'.format(','.join(host_ids))
+    where = 'mid IN ({})'.format(host_ids)
     sql = 'DELETE FROM `{}group_map` WHERE (type={} AND {});'.format(db.table_prefix, TP_GROUP_HOST, where)
-    if not db.exec(sql):
-        return TPE_DATABASE
+    sql_list.append(sql)
 
     # 2.2 将主机删除
-    where = 'id IN ({})'.format(','.join(host_ids))
+    where = 'id IN ({})'.format(host_ids)
     sql = 'DELETE FROM `{}host` WHERE {};'.format(db.table_prefix, where)
-    if not db.exec(sql):
+    sql_list.append(sql)
+
+    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN({rid});'.format(db.table_prefix, rtype=TP_HOST, rid=','.join(host_ids))
+    sql_list.append(sql)
+    sql = 'DELETE FROM `{}ops_map` WHERE h_id IN({});'.format(db.table_prefix, ','.join(host_ids))
+    sql_list.append(sql)
+
+    if not db.transaction(sql_list):
         return TPE_DATABASE
 
+    if len(acc_names) > 0:
+        syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除账号：{}".format('，'.join(acc_names)))
     if len(host_names) > 0:
         syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除主机：{}".format('，'.join(host_names)))
 
@@ -209,57 +220,65 @@ def update_host(handler, args):
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
+    sql_list = []
     sql = 'UPDATE `{}host` SET os_type="{os_type}", name="{name}", ip="{ip}", router_ip="{router_ip}", router_port={router_port}, cid="{cid}", desc="{desc}" WHERE id={host_id};' \
           ''.format(db.table_prefix,
                     os_type=args['os_type'], name=args['name'], ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'],
                     cid=args['cid'], desc=args['desc'], host_id=args['id']
                     )
-    db_ret = db.exec(sql)
-    if not db_ret:
-        return TPE_DATABASE
+    sql_list.append(sql)
 
     # 更新所有此主机相关的账号
-    # host_addr = args['ip']
-    # if len(args['router_addr']) > 0:
-    #     host_addr += '/'
-    #     host_addr += args['router_addr']
-
     sql = 'UPDATE `{}acc` SET ip="{ip}", router_ip="{router_ip}", router_port={router_port} WHERE host_id={id};' \
           ''.format(db.table_prefix,
                     ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'], id=args['id'])
-    db_ret = db.exec(sql)
+    sql_list.append(sql)
 
-    return TPE_OK
-
-
-def lock_hosts(handler, host_ids):
-    db = get_db()
-
-    ids = [str(i) for i in host_ids]
-
-    sql = 'UPDATE `{}host` SET state={state} WHERE id IN ({ids});' \
-          ''.format(db.table_prefix,
-                    state=TP_STATE_DISABLED, ids=','.join(ids))
-    db_ret = db.exec(sql)
-    if not db_ret:
+    if db.transaction(sql_list):
+        return TPE_OK
+    else:
         return TPE_DATABASE
 
-    return TPE_OK
 
-
-def unlock_hosts(handler, host_ids):
+def update_hosts_state(handler, host_ids, state):
     db = get_db()
 
-    ids = [str(i) for i in host_ids]
+    host_ids = ','.join([str(i) for i in host_ids])
 
-    sql = 'UPDATE `{}host` SET state={state} WHERE id IN ({ids});' \
-          ''.format(db.table_prefix,
-                    state=TP_STATE_NORMAL, ids=','.join(ids))
-    db_ret = db.exec(sql)
-    if not db_ret:
+    sql_list = []
+
+    sql = 'UPDATE `{}host` SET state={state} WHERE id IN ({host_ids});' \
+          ''.format(db.table_prefix, state=state, host_ids=host_ids)
+    sql_list.append(sql)
+
+    # sync to update the ops-audit table.
+    sql = 'UPDATE `{}ops_map` SET h_state={state} WHERE h_id IN({host_ids});' \
+          ''.format(db.table_prefix, state=state, host_ids=host_ids)
+    sql_list.append(sql)
+
+    if db.transaction(sql_list):
+        return TPE_OK
+    else:
         return TPE_DATABASE
 
-    return TPE_OK
+#
+# def unlock_hosts(handler, host_ids):
+#     db = get_db()
+#
+#     host_ids = ','.join([str(i) for i in host_ids])
+#     sql_list = []
+#
+#     sql = 'UPDATE `{}host` SET state={state} WHERE id IN ({host_ids});' \
+#           ''.format(db.table_prefix, state=TP_STATE_NORMAL, host_ids=host_ids)
+#     sql_list.append(sql)
+#     sql = 'UPDATE `{}ops_map` SET h_state={state} WHERE h_id IN({host_ids});' \
+#           ''.format(db.table_prefix, state=TP_STATE_NORMAL, host_ids=host_ids)
+#     sql_list.append(sql)
+#
+#     if db.transaction(sql_list):
+#         return TPE_OK
+#     else:
+#         return TPE_DATABASE
 
 
 def get_group_with_member(sql_filter, sql_order, sql_limit):

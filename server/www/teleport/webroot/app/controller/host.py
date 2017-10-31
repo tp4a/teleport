@@ -573,6 +573,7 @@ class DoUpdateHostHandler(TPBaseJsonHandler):
             args['cid'] = args['cid'].strip()
             args['desc'] = args['desc'].strip()
         except:
+            log.e('\n')
             return self.write_json(TPE_PARAM)
 
         if len(args['ip']) == 0:
@@ -611,10 +612,10 @@ class DoUpdateHostsHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         if action == 'lock':
-            err = host.lock_hosts(self, host_ids)
+            err = host.update_hosts_state(self, host_ids, TP_STATE_DISABLED)
             return self.write_json(err)
         elif action == 'unlock':
-            err = host.unlock_hosts(self, host_ids)
+            err = host.update_hosts_state(self, host_ids, TP_STATE_NORMAL)
             return self.write_json(err)
         elif action == 'remove':
             err = host.remove_hosts(self, host_ids)

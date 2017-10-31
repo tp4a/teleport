@@ -820,6 +820,8 @@ $app.create_dlg_edit_host = function () {
             } else {
                 dlg.dom.edit_router_port.val('' + dlg.field_router_port);
             }
+        } else {
+            dlg.field_router_port = 0;
         }
 
         return true;
@@ -836,18 +838,20 @@ $app.create_dlg_edit_host = function () {
         //     router_addr = dlg.field_router_ip + ':' + dlg.field_router_port;
         // }
 
+        var args = {
+            id: dlg.field_id,
+            os_type: dlg.field_os_type,
+            ip: dlg.field_ip,
+            router_ip: dlg.field_router_ip,
+            router_port: dlg.field_router_port,
+            name: dlg.field_name,
+            cid: dlg.field_cid,
+            desc: dlg.field_desc
+        };
+        console.log(args);
+
         // 如果id为-1表示创建，否则表示更新
-        $tp.ajax_post_json('/asset/update-host', {
-                id: dlg.field_id,
-                // role: dlg.field_role,
-                os_type: dlg.field_os_type,
-                ip: dlg.field_ip,
-                router_ip: dlg.field_router_ip,
-                router_port: dlg.field_router_port,
-                name: dlg.field_name,
-                cid: dlg.field_cid,
-                desc: dlg.field_desc
-            },
+        $tp.ajax_post_json('/asset/update-host', args,
             function (ret) {
                 if (ret.code === TPE_OK) {
                     $tp.notify_success('远程主机' + action + '成功！');
@@ -1306,7 +1310,8 @@ $app.create_dlg_edit_account = function () {
         }
 
         dlg.dom.auth_type.empty().append($(html.join('')));
-        dlg.dom.auth_type.val(dlg.account.auth_type);
+        //console.log(dlg.account);
+        //dlg.dom.auth_type.val(dlg.account.auth_type);
         dlg.on_auth_change();
     };
 

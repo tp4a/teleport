@@ -4,7 +4,7 @@ import json
 
 from app.const import *
 from app.base.logger import log
-from app.base.db import get_db, SQL, MSQL
+from app.base.db import get_db, SQL
 from app.model import syslog
 from app.base.utils import AttrDict, tp_timestamp_utc_now
 
@@ -673,11 +673,17 @@ def build_auz_map():
         _accs[i.id] = i
 
     # 加载所有的组
-    err = s.reset().select_from('group', ['id', 'state'], alt_name='g').query()
+    err = s.reset().select_from('group', ['id', 'type', 'state'], alt_name='g').query()
     if err != TPE_OK:
         return err
     for i in s.recorder:
         _groups[i.id] = i
+        if i.type == TP_GROUP_USER:
+            _gusers[i.id] = []
+        elif i.type == TP_GROUP_HOST:
+            _ghosts[i.id] = []
+        elif i.type == TP_GROUP_ACCOUNT:
+            _gaccs[i.id] = []
 
     # 加载所有的组
     err = s.reset().select_from('group_map', ['id', 'type', 'gid', 'mid'], alt_name='g').query()
@@ -685,16 +691,16 @@ def build_auz_map():
         return err
     for g in s.recorder:
         if g.type == TP_GROUP_USER:
-            if g.gid not in _gusers:
-                _gusers[g.gid] = []
+            # if g.gid not in _gusers:
+            #     _gusers[g.gid] = []
             _gusers[g.gid].append(_users[g.mid])
         elif g.type == TP_GROUP_HOST:
-            if g.gid not in _ghosts:
-                _ghosts[g.gid] = []
+            # if g.gid not in _ghosts:
+            #     _ghosts[g.gid] = []
             _ghosts[g.gid].append(_hosts[g.mid])
         elif g.type == TP_GROUP_ACCOUNT:
-            if g.gid not in _gaccs:
-                _gaccs[g.gid] = []
+            # if g.gid not in _gaccs:
+            #     _gaccs[g.gid] = []
             _gaccs[g.gid].append(_accs[g.mid])
 
     # 加载所有策略明细

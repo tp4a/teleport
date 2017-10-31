@@ -223,10 +223,10 @@ class DoUpdateAccountHandler(TPBaseJsonHandler):
             err = account.remove_account(self, host_id, acc_id)
             return self.write_json(err)
         elif action == 'lock':
-            err = account.lock_account(self, host_id, acc_id)
+            err = account.update_account_state(self, host_id, acc_id, TP_STATE_DISABLED)
             return self.write_json(err)
         elif action == 'unlock':
-            err = account.unlock_account(self, host_id, acc_id)
+            err = account.update_account_state(self, host_id, acc_id, TP_STATE_NORMAL)
             return self.write_json(err)
         elif action == 'update':
             try:
