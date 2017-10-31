@@ -142,42 +142,48 @@ def update_policy(handler, args):
     return TPE_OK
 
 
-# def remove_policy(handler, policies):
-#     s = SQL(get_db())
-#
-#     user_list = [str(i) for i in users]
-#
-#     # 1. 获取用户名称，用于记录系统日志
-#     where = 'u.id IN ({})'.format(','.join(user_list))
-#     err = s.select_from('user', ['username'], alt_name='u').where(where).query()
-#     if err != TPE_OK:
-#         return err
-#     if len(s.recorder) == 0:
-#         return TPE_NOT_EXISTS
-#
-#     name_list = [n['username'] for n in s.recorder]
-#
-#     # 将用户从所在组中移除
-#     where = 'type={} AND mid IN ({})'.format(TP_GROUP_USER, ','.join(user_list))
-#     err = s.reset().delete_from('group_map').where(where).exec()
-#     if err != TPE_OK:
-#         return err
-#
-#     # sql = 'DELETE FROM `{}group_map` WHERE (type=1 AND ({}));'.format(db.table_prefix, where)
-#     # if not db.exec(sql):
-#     #     return TPE_DATABASE
-#
-#     where = 'id IN ({})'.format(','.join(user_list))
-#     err = s.reset().delete_from('user').where(where).exec()
-#     if err != TPE_OK:
-#         return err
-#     # sql = 'DELETE FROM `{}user` WHERE {};'.format(db.table_prefix, where)
-#     # if not db.exec(sql):
-#     #     return TPE_DATABASE
-#
-#     syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除用户：{}".format('，'.join(name_list)))
-#
-#     return TPE_OK
+def update_policies_state(handler, p_ids, state):
+    db = get_db()
+
+    p_ids = ','.join([str(i) for i in p_ids])
+
+    sql_list = []
+
+    sql = 'UPDATE `{}ops_policy` SET state={state} WHERE id IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
+    sql_list.append(sql)
+
+    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE policy_id IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
+    sql_list.append(sql)
+
+    sql = 'UPDATE `{}ops_map` SET p_state={state} WHERE p_id IN({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
+    sql_list.append(sql)
+
+    if db.transaction(sql_list):
+        return TPE_OK
+    else:
+        return TPE_DATABASE
+
+
+def remove_policies(handler, p_ids):
+    db = get_db()
+
+    p_ids = ','.join([str(i) for i in p_ids])
+
+    sql_list = []
+
+    sql = 'DELETE FROM `{}ops_policy` WHERE id IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
+    sql_list.append(sql)
+
+    sql = 'DELETE FROM `{}ops_auz` WHERE policy_id IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
+    sql_list.append(sql)
+
+    sql = 'DELETE FROM `{}ops_map` WHERE p_id IN({p_ids});'.format(db.table_prefix, p_ids=p_ids)
+    sql_list.append(sql)
+
+    if db.transaction(sql_list):
+        return TPE_OK
+    else:
+        return TPE_DATABASE
 
 
 def add_members(handler, policy_id, policy_type, ref_type, members):

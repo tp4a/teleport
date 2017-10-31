@@ -342,6 +342,40 @@ class DoUpdatePolicyHandler(TPBaseJsonHandler):
         self.write_json(err, data=info)
 
 
+class DoUpdatePoliciesHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            action = args['action']
+            p_ids = args['policy_ids']
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        if action == 'lock':
+            err = ops.update_policies_state(self, p_ids, TP_STATE_DISABLED)
+            return self.write_json(err)
+        elif action == 'unlock':
+            err = ops.update_policies_state(self, p_ids, TP_STATE_NORMAL)
+            return self.write_json(err)
+        elif action == 'remove':
+            err = ops.remove_policies(self, p_ids)
+            return self.write_json(err)
+        else:
+            return self.write_json(TPE_PARAM)
+
+
 class DoAddMembersHandler(TPBaseJsonHandler):
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)

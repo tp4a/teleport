@@ -143,6 +143,8 @@ controllers = [
     (r'/ops/get-policies', ops.DoGetPoliciesHandler),
     #  - [json] 添加/更新策略
     (r'/ops/policy/update', ops.DoUpdatePolicyHandler),
+    #  - [json] 禁用/解禁/删除策略
+    (r'/ops/policies/update', ops.DoUpdatePoliciesHandler),
     #  - [json] 向指定策略中添加对象（操作者或资产）
     (r'/ops/policy/add-members', ops.DoAddMembersHandler),
     #  - [json] 从指定策略中移除对象（操作者或资产）

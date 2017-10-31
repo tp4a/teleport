@@ -501,33 +501,86 @@ $app.get_selected_policy = function (tbl) {
 };
 
 $app.on_btn_lock_click = function () {
+    var items = $app.get_selected_policy($app.table_policy);
+    if (items.length === 0) {
+        $tp.notify_error('请选择要禁用的授权策略！');
+        return;
+    }
+
+    $tp.ajax_post_json('/ops/policies/update', {
+            action: 'lock',
+            policy_ids: items
+        },
+        function (ret) {
+            if (ret.code === TPE_OK) {
+                CALLBACK_STACK.create()
+                    .add($app.check_host_all_selected)
+                    .add($app.table_policy.load_data)
+                    .exec();
+                $tp.notify_success('禁用授权策略操作成功！');
+            } else {
+                $tp.notify_error('禁用授权策略操作失败：' + tp_error_msg(ret.code, ret.message));
+            }
+        },
+        function () {
+            $tp.notify_error('网络故障，禁用授权策略操作失败！');
+        }
+    );
 };
 
 $app.on_btn_unlock_click = function () {
+    var items = $app.get_selected_policy($app.table_policy);
+    if (items.length === 0) {
+        $tp.notify_error('请选择要解禁的授权策略！');
+        return;
+    }
+
+    $tp.ajax_post_json('/ops/policies/update', {
+            action: 'unlock',
+            policy_ids: items
+        },
+        function (ret) {
+            if (ret.code === TPE_OK) {
+                CALLBACK_STACK.create()
+                    .add($app.check_host_all_selected)
+                    .add($app.table_policy.load_data)
+                    .exec();
+                $tp.notify_success('解禁授权策略操作成功！');
+            } else {
+                $tp.notify_error('解禁授权策略操作失败：' + tp_error_msg(ret.code, ret.message));
+            }
+        },
+        function () {
+            $tp.notify_error('网络故障，解禁授权策略操作失败！');
+        }
+    );
 };
 
 $app.on_btn_remove_click = function () {
     var items = $app.get_selected_policy($app.table_policy);
     if (items.length === 0) {
-        $tp.notify_error('请选择要删除的主机！');
+        $tp.notify_error('请选择要删除的授权策略！');
         return;
     }
 
     var _fn_sure = function (cb_stack, cb_args) {
-        $tp.ajax_post_json('/asset/remove-hosts', {hosts: items},
+        $tp.ajax_post_json('/ops/policies/update', {
+                action: 'remove',
+                policy_ids: items
+            },
             function (ret) {
                 if (ret.code === TPE_OK) {
                     cb_stack.add($app.check_host_all_selected);
                     cb_stack.add($app.table_policy.load_data);
-                    $tp.notify_success('删除主机操作成功！');
+                    $tp.notify_success('删除授权策略操作成功！');
                 } else {
-                    $tp.notify_error('删除主机操作失败：' + tp_error_msg(ret.code, ret.message));
+                    $tp.notify_error('删除授权策略操作失败：' + tp_error_msg(ret.code, ret.message));
                 }
 
                 cb_stack.exec();
             },
             function () {
-                $tp.notify_error('网络故障，删除主机操作失败！');
+                $tp.notify_error('网络故障，删除授权策略操作失败！');
                 cb_stack.exec();
             }
         );
@@ -535,7 +588,7 @@ $app.on_btn_remove_click = function () {
 
     var cb_stack = CALLBACK_STACK.create();
     $tp.dlg_confirm(cb_stack, {
-        msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除主机将同时删除与之相关的账号，并将主机和账号从所在分组中移除，同时删除所有相关授权！</p></div><p>如果您希望临时禁止登录指定主机，可将其“禁用”！</p><p>您确定要移除选定的' + items.length + '个主机吗？</p>',
+        msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p></div><p>如果您希望临时禁止指定的授权策略，可将其“禁用”！</p><p>您确定要移除选定的' + items.length + '个授权策略吗？</p>',
         fn_yes: _fn_sure
     });
 
