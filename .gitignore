@@ -31,6 +31,8 @@ __pycache__
 **/.idea/inspectionProfiles
 **/.idea/vcs.xml
 
+*.css.map
+
 # for tmp folder or files.
 /out
 /external/_download_
@@ -91,5 +93,3 @@ build/*
 xcuserdata
 profile
 *.moved-aside
-
-/client/tp_assist_win/site/css/*.map
