@@ -155,7 +155,7 @@ def update_policies_state(handler, p_ids, state):
     sql = 'UPDATE `{}ops_auz` SET state={state} WHERE policy_id IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
     sql_list.append(sql)
 
-    sql = 'UPDATE `{}ops_map` SET p_state={state} WHERE p_id IN({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
+    sql = 'UPDATE `{}ops_map` SET p_state={state} WHERE p_id IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
     sql_list.append(sql)
 
     if db.transaction(sql_list):
@@ -177,7 +177,7 @@ def remove_policies(handler, p_ids):
     sql = 'DELETE FROM `{}ops_auz` WHERE policy_id IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
     sql_list.append(sql)
 
-    sql = 'DELETE FROM `{}ops_map` WHERE p_id IN({p_ids});'.format(db.table_prefix, p_ids=p_ids)
+    sql = 'DELETE FROM `{}ops_map` WHERE p_id IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
     sql_list.append(sql)
 
     if db.transaction(sql_list):

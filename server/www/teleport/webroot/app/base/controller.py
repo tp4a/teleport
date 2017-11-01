@@ -108,15 +108,15 @@ class TPBaseHandler(tornado.web.RequestHandler):
         self._user = _user
 
     def set_session(self, name, value, expire=None):
-        k = '{}-{}'.format(self._s_id, name)
+        k = '{}-{}'.format(name, self._s_id)
         session_manager().set(k, value, expire)
 
     def get_session(self, name, _default=None):
-        k = '{}-{}'.format(self._s_id, name)
+        k = '{}-{}'.format(name, self._s_id)
         return session_manager().get(k, _default)
 
     def del_session(self, name):
-        k = '{}-{}'.format(self._s_id, name)
+        k = '{}-{}'.format(name, self._s_id)
         return session_manager().set(k, '', -1)
 
     def get_current_user(self):

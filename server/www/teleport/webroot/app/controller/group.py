@@ -48,7 +48,7 @@ class DoLockGroupHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
-        err = group.lock(self, gtype, glist)
+        err = group.update_groups_state(self, gtype, glist, TP_STATE_DISABLED)
 
         self.write_json(err)
 
@@ -69,7 +69,7 @@ class DoUnlockGroupHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
-        err = group.unlock(self, gtype, glist)
+        err = group.update_groups_state(self, gtype, glist, TP_STATE_NORMAL)
 
         self.write_json(err)
 

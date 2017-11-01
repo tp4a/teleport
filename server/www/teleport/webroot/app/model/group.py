@@ -39,40 +39,41 @@ def create(handler, gtype, name, desc):
     return TPE_OK, _id
 
 
-def lock(handler, gtype, glist):
+def update_groups_state(handler, gtype, glist, state):
     if gtype not in TP_GROUP_TYPES:
         return TPE_PARAM
 
-    group_list = [str(i) for i in glist]
-
-    db = get_db()
-
-    # 2. 更新记录
-    sql = 'UPDATE `{dbtp}group` SET state={state} WHERE id IN ({gids});' \
-          ''.format(dbtp=db.table_prefix, state=TP_STATE_DISABLED, gids=','.join(group_list))
-    db_ret = db.exec(sql)
-    if not db_ret:
-        return TPE_DATABASE
-
-    return TPE_OK
-
-
-def unlock(handler, gtype, glist):
-    if gtype not in TP_GROUP_TYPES:
+    if gtype == TP_GROUP_USER:
+        gname = 'gu'
+    elif gtype == TP_GROUP_HOST:
+        gname = 'gh'
+    elif gtype == TP_GROUP_ACCOUNT:
+        gname = 'ga'
+    else:
         return TPE_PARAM
 
-    group_list = [str(i) for i in glist]
+    group_list = ','.join([str(i) for i in glist])
 
     db = get_db()
+    sql_list = []
 
     # 2. 更新记录
-    sql = 'UPDATE `{dbtp}group` SET state={state} WHERE id IN ({gids});' \
-          ''.format(dbtp=db.table_prefix, state=TP_STATE_NORMAL, gids=','.join(group_list))
-    db_ret = db.exec(sql)
-    if not db_ret:
-        return TPE_DATABASE
+    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE rtype={rtype} AND rid={rid};' \
+          ''.format(db.table_prefix, state=state, rtype=gtype, rid=group_list)
+    sql_list.append(sql)
 
-    return TPE_OK
+    sql = 'UPDATE `{}ops_map` SET {gname}_state={state} WHERE {gname}_id IN ({gids});' \
+          ''.format(db.table_prefix, state=state, gname=gname, gids=group_list)
+    sql_list.append(sql)
+
+    sql = 'UPDATE `{dbtp}group` SET state={state} WHERE id IN ({gids});' \
+          ''.format(dbtp=db.table_prefix, state=state, gids=group_list)
+    sql_list.append(sql)
+
+    if db.transaction(sql_list):
+        return TPE_OK
+    else:
+        return TPE_DATABASE
 
 
 def remove(handler, gtype, glist):
@@ -166,10 +167,30 @@ def add_members(gtype, gid, members):
 def remove_members(gtype, gid, members):
     db = get_db()
 
-    _where = 'WHERE (type={gtype} AND gid={gid} AND mid IN ({mid}))'.format(gtype=gtype, gid=gid, mid=','.join([str(uid) for uid in members]))
+    if gtype == TP_GROUP_USER:
+        name = 'u'
+        gname = 'gu'
+    elif gtype == TP_GROUP_HOST:
+        name = 'h'
+        gname = 'gh'
+    elif gtype == TP_GROUP_ACCOUNT:
+        name = 'a'
+        gname = 'ga'
+    else:
+        return TPE_PARAM
 
+    mids = ','.join([str(uid) for uid in members])
+
+    sql_list = []
+
+    _where = 'WHERE (type={gtype} AND gid={gid} AND mid IN ({mid}))'.format(gtype=gtype, gid=gid, mid=mids)
     sql = 'DELETE FROM `{dbtp}group_map` {where};'.format(dbtp=db.table_prefix, where=_where)
-    if db.exec(sql):
+    sql_list.append(sql)
+
+    sql = 'DELETE FROM `{}ops_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
+    sql_list.append(sql)
+
+    if db.transaction(sql_list):
         return TPE_OK
     else:
         return TPE_DATABASE

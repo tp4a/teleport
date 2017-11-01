@@ -260,6 +260,31 @@ def update_login_info(handler, user_id):
     db_ret = db.exec(sql)
 
 
+def update_users_state(handler, user_ids, state):
+    db = get_db()
+
+    user_ids = ','.join([str(i) for i in user_ids])
+
+    sql_list = []
+
+    sql = 'UPDATE `{}user` SET state={state} WHERE id IN ({ids});' \
+          ''.format(db.table_prefix, state=state, ids=user_ids)
+    sql_list.append(sql)
+
+    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE rtype={rtype} AND rid IN ({rid});' \
+          ''.format(db.table_prefix, state=state, rtype=TP_USER, rid=user_ids)
+    sql_list.append(sql)
+
+    sql = 'UPDATE `{}ops_map` SET u_state={state} WHERE u_id IN ({ids});' \
+          ''.format(db.table_prefix, state=state, ids=user_ids)
+    sql_list.append(sql)
+
+    if db.transaction(sql_list):
+        return TPE_OK
+    else:
+        return TPE_DATABASE
+
+
 def remove_users(handler, users):
     s = SQL(get_db())
 
@@ -527,7 +552,7 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
     """
     # 首先获取要查询的组的信息
     sg = SQL(get_db())
-    sg.select_from('group', ['id', 'name', 'desc'], alt_name='g')
+    sg.select_from('group', ['id', 'state', 'name', 'desc'], alt_name='g')
 
     _where = list()
     _where.append('g.type={}'.format(TP_GROUP_USER))
@@ -536,6 +561,8 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
         for k in sql_filter:
             if k == 'search':
                 _where.append('(g.name LIKE "%{filter}%" OR g.desc LIKE "%{filter}%")'.format(filter=sql_filter[k]))
+            elif k == 'state':
+                _where.append('(g.state={filter})'.format(filter=sql_filter[k]))
 
     if len(_where) > 0:
         sg.where('( {} )'.format(' AND '.join(_where)))
@@ -544,6 +571,8 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
         _sort = False if not sql_order['asc'] else True
         if 'name' == sql_order['name']:
             sg.order_by('g.name', _sort)
+        elif 'state' == sql_order['name']:
+            sg.order_by('g.state', _sort)
         else:
             log.e('unknown order field.\n')
             return TPE_PARAM, sg.total_count, sg.recorder

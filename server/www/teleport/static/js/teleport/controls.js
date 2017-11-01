@@ -1645,6 +1645,8 @@ $tp.create_table_header_filter_state = function (tbl, name, states, exclude_ids)
 
     _tblf.get_filter = function () {
         var ret = {};
+        if(_tblf.default_value === _tblf.filter_value)
+            return ret;
         ret[_tblf.name] = _tblf.filter_value;
         return ret;
     };

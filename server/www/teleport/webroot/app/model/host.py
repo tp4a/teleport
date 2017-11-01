@@ -160,10 +160,10 @@ def remove_hosts(handler, hosts):
         # if not db.exec(sql):
         #     return TPE_DATABASE
 
-        sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN({rid});'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=','.join(acc_ids))
+        sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=','.join(acc_ids))
         sql_list.append(sql)
 
-        sql = 'DELETE FROM `{}ops_map` WHERE a_id IN({});'.format(db.table_prefix, ','.join(acc_ids))
+        sql = 'DELETE FROM `{}ops_map` WHERE a_id IN ({});'.format(db.table_prefix, ','.join(acc_ids))
         sql_list.append(sql)
 
     # step 2. 处理主机
@@ -192,9 +192,9 @@ def remove_hosts(handler, hosts):
     sql = 'DELETE FROM `{}host` WHERE {};'.format(db.table_prefix, where)
     sql_list.append(sql)
 
-    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN({rid});'.format(db.table_prefix, rtype=TP_HOST, rid=','.join(host_ids))
+    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_HOST, rid=','.join(host_ids))
     sql_list.append(sql)
-    sql = 'DELETE FROM `{}ops_map` WHERE h_id IN({});'.format(db.table_prefix, ','.join(host_ids))
+    sql = 'DELETE FROM `{}ops_map` WHERE h_id IN ({});'.format(db.table_prefix, ','.join(host_ids))
     sql_list.append(sql)
 
     if not db.transaction(sql_list):
@@ -252,7 +252,11 @@ def update_hosts_state(handler, host_ids, state):
     sql_list.append(sql)
 
     # sync to update the ops-audit table.
-    sql = 'UPDATE `{}ops_map` SET h_state={state} WHERE h_id IN({host_ids});' \
+    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE rtype={rtype} AND rid IN ({rid});' \
+          ''.format(db.table_prefix, state=state, rtype=TP_ACCOUNT, rid=host_ids)
+    sql_list.append(sql)
+
+    sql = 'UPDATE `{}ops_map` SET h_state={state} WHERE h_id IN ({host_ids});' \
           ''.format(db.table_prefix, state=state, host_ids=host_ids)
     sql_list.append(sql)
 
@@ -271,7 +275,7 @@ def update_hosts_state(handler, host_ids, state):
 #     sql = 'UPDATE `{}host` SET state={state} WHERE id IN ({host_ids});' \
 #           ''.format(db.table_prefix, state=TP_STATE_NORMAL, host_ids=host_ids)
 #     sql_list.append(sql)
-#     sql = 'UPDATE `{}ops_map` SET h_state={state} WHERE h_id IN({host_ids});' \
+#     sql = 'UPDATE `{}ops_map` SET h_state={state} WHERE h_id IN ({host_ids});' \
 #           ''.format(db.table_prefix, state=TP_STATE_NORMAL, host_ids=host_ids)
 #     sql_list.append(sql)
 #
@@ -296,6 +300,8 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
         for k in sql_filter:
             if k == 'search':
                 _where.append('(g.name LIKE "%{}%" OR g.desc LIKE "%{}%")'.format(sql_filter[k], sql_filter[k]))
+            elif k == 'state':
+                _where.append('(g.state={filter})'.format(filter=sql_filter[k]))
 
     if len(_where) > 0:
         sg.where('( {} )'.format(' AND '.join(_where)))
@@ -304,6 +310,8 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
         _sort = False if not sql_order['asc'] else True
         if 'name' == sql_order['name']:
             sg.order_by('g.name', _sort)
+        elif 'state' == sql_order['name']:
+            sg.order_by('g.state', _sort)
         else:
             log.e('unknown order field.\n')
             return TPE_PARAM, sg.total_count, sg.recorder

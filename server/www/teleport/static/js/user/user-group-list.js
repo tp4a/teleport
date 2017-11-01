@@ -6,9 +6,8 @@ $app.on_init = function (cb_stack) {
         btn_create_group: $('#btn-create-group'),
         chkbox_groups_select_all: $('#table-groups-select-all'),
 
-        // btn_edit_user: $('#btn-edit-user'),
-        // btn_lock_user: $('#btn-lock-user'),
-        // btn_unlock_user: $('#btn-unlock-user'),
+        // btn_lock_group: $('#btn-lock-group'),
+        // btn_unlock_group: $('#btn-unlock-group'),
         btn_remove_group: $('#btn-remove-group'),
 
         chkbox_user_list_select_all: $('#table-user-list-select-all')
@@ -75,6 +74,16 @@ $app.create_controls = function (cb_stack) {
                 render: 'members',
                 fields: {id: 'id', member_count: 'member_count', members: 'members'}
             },
+            // {
+            //     title: "状态",
+            //     key: "state",
+            //     sort: true,
+            //     width: 90,
+            //     align: 'center',
+            //     header_render: 'filter_state',
+            //     render: 'group_state',
+            //     fields: {state: 'state'}
+            // },
             {
                 title: '操作',
                 key: 'actions',
@@ -83,16 +92,6 @@ $app.create_controls = function (cb_stack) {
                 render: 'make_action_btn',
                 fields: {id: 'id'}
             }
-            // {
-            //     title: "状态",
-            //     key: "state",
-            //     sort: true,
-            //     width: 120,
-            //     align: 'center',
-            //     header_render: 'filter_user_state',
-            //     render: 'user_state',
-            //     fields: {state: 'state'}
-            // }
         ],
 
         // 重载回调函数
@@ -113,13 +112,10 @@ $app.create_controls = function (cb_stack) {
         name: 'search_group',
         place_holder: '搜索：用户组名称/描述'
     });
-    // $app.table_groups_role_filter = $tp.create_table_filter_role($app.table_groups, $app.role_list);
-    // $app.table_groups_user_state_filter = $tp.create_table_filter_user_state($app.table_groups, $app.user_states);
-    // 从cookie中读取用户分页限制的选择
-    var _per_page = Cookies.get($app.page_id('user_group') + '_per_page');
+    $tp.create_table_header_filter_state($app.table_groups, 'state', $app.obj_states, [TP_STATE_LOCKED]);
     $app.table_groups_paging = $tp.create_table_paging($app.table_groups, 'table-groups-paging',
         {
-            per_page: _per_page,
+            per_page: Cookies.get($app.page_id('user_group') + '_per_page'),
             on_per_page_changed: function (per_page) {
                 Cookies.set($app.page_id('user_group') + '_per_page', per_page, {expires: 365});
             }
@@ -155,9 +151,13 @@ $app.create_controls = function (cb_stack) {
             });
         }
     });
-    // $app.dom.btn_edit_user.click($app.on_btn_edit_user_click);
-    // $app.dom.btn_lock_user.click($app.on_btn_lock_user_click);
-    // $app.dom.btn_unlock_user.click($app.on_btn_unlock_user_click);
+
+    // $app.dom.btn_lock_group.click(function () {
+    //     $app.on_btn_lock_group_click();
+    // });
+    // $app.dom.btn_unlock_group.click(function () {
+    //     $app.on_btn_unlock_group_click();
+    // });
     $app.dom.btn_remove_group.click(function(){
         $app.on_btn_remove_group_click();
     });
@@ -200,19 +200,19 @@ $app.check_groups_all_selected = function () {
 };
 
 $app.on_table_groups_render_created = function (render) {
-    render.filter_role = function (header, title, col) {
-        var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
-        _ret.push('<div class="tp-table-filter-inner">');
-        _ret.push('<div class="search-title">' + title + '</div>');
-
-        // 表格内嵌过滤器的DOM实体在这时生成
-        var filter_ctrl = header._table_ctrl.get_filter_ctrl('role');
-        _ret.push(filter_ctrl.render());
-
-        _ret.push('</div></div>');
-
-        return _ret.join('');
-    };
+    // render.filter_role = function (header, title, col) {
+    //     var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+    //     _ret.push('<div class="tp-table-filter-inner">');
+    //     _ret.push('<div class="search-title">' + title + '</div>');
+    //
+    //     // 表格内嵌过滤器的DOM实体在这时生成
+    //     var filter_ctrl = header._table_ctrl.get_filter_ctrl('role');
+    //     _ret.push(filter_ctrl.render());
+    //
+    //     _ret.push('</div></div>');
+    //
+    //     return _ret.join('');
+    // };
 
     render.filter_group_search = function (header, title, col) {
         var _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
@@ -226,6 +226,38 @@ $app.on_table_groups_render_created = function (render) {
         _ret.push('</div></div>');
 
         return _ret.join('');
+    };
+
+    render.filter_state = function (header, title, col) {
+        var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+        _ret.push('<div class="tp-table-filter-inner">');
+        _ret.push('<div class="search-title">' + title + '</div>');
+
+        // 表格内嵌过滤器的DOM实体在这时生成
+        var filter_ctrl = header._table_ctrl.get_filter_ctrl('state');
+        _ret.push(filter_ctrl.render());
+
+        _ret.push('</div></div>');
+
+        return _ret.join('');
+    };
+
+    render.group_state = function (row_id, fields) {
+        var _style, _state;
+
+        for (var i = 0; i < $app.obj_states.length; ++i) {
+            if ($app.obj_states[i].id === fields.state) {
+                _style = $app.obj_states[i].style;
+                _state = $app.obj_states[i].name;
+                break;
+            }
+        }
+        if (i === $app.obj_states.length) {
+            _style = 'info';
+            _state = '<i class="fa fa-question-circle"></i> 未知';
+        }
+
+        return '<span class="label label-sm label-' + _style + '">' + _state + '</span>'
     };
 
     render.make_check_box = function (row_id, fields) {
@@ -276,8 +308,7 @@ $app.on_table_groups_render_created = function (render) {
 };
 
 $app.on_table_groups_header_created = function (header) {
-    $app.dom.btn_table_groups_reset_filter = $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]');
-    $app.dom.btn_table_groups_reset_filter.click(function () {
+    $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
         CALLBACK_STACK.create()
             .add(header._table_ctrl.load_data)
             .add(header._table_ctrl.reset_filters)
@@ -286,6 +317,7 @@ $app.on_table_groups_header_created = function (header) {
 
     // 表格内嵌过滤器的事件绑定在这时进行（也可以延期到整个表格创建完成时进行）
     header._table_ctrl.get_filter_ctrl('search_group').on_created();
+    header._table_ctrl.get_filter_ctrl('state').on_created();
 };
 
 $app.get_selected_group = function (tbl) {
@@ -300,6 +332,75 @@ $app.get_selected_group = function (tbl) {
     return groups;
 };
 
+
+// $app.on_btn_lock_group_click = function (_row_id) {
+//     var group_list = [];
+//
+//     if (_.isUndefined(_row_id)) {
+//         var groups = $app.get_selected_group($app.table_groups);
+//         if (groups.length === 0) {
+//             $tp.notify_error('请选择要禁用的分组！');
+//             return;
+//         }
+//
+//         $.each(groups, function (i, g) {
+//             group_list.push(g.id);
+//         });
+//     } else {
+//         var _row_data = $app.table_groups.get_row(_row_id);
+//         group_list.push(_row_data.id);
+//     }
+//
+//     $tp.ajax_post_json('/group/lock', {gtype: TP_GROUP_USER, glist: group_list},
+//         function (ret) {
+//             if (ret.code === TPE_OK) {
+//                 $app.table_groups.load_data();
+//                 $tp.notify_success('禁用分组操作成功！');
+//             } else {
+//                 $tp.notify_error('禁用分组操作失败：' + tp_error_msg(ret.code, ret.message));
+//             }
+//         },
+//         function () {
+//             $tp.notify_error('网络故障，禁用分组操作失败！');
+//         }
+//     );
+//
+// };
+//
+// $app.on_btn_unlock_group_click = function (_row_id) {
+//     var group_list = [];
+//
+//     if (_.isUndefined(_row_id)) {
+//         var groups = $app.get_selected_group($app.table_groups);
+//         if (groups.length === 0) {
+//             $tp.notify_error('请选择要解禁的分组！');
+//             return;
+//         }
+//
+//         $.each(groups, function (i, g) {
+//             group_list.push(g.id);
+//         });
+//     } else {
+//         var _row_data = $app.table_groups.get_row(_row_id);
+//         group_list.push(_row_data.id);
+//     }
+//
+//     $tp.ajax_post_json('/group/unlock', {gtype: TP_GROUP_USER, glist: group_list},
+//         function (ret) {
+//             if (ret.code === TPE_OK) {
+//                 $app.table_groups.load_data();
+//                 $tp.notify_success('分组解禁操作成功！');
+//             } else {
+//                 $tp.notify_error('分组解禁操作失败：' + tp_error_msg(ret.code, ret.message));
+//             }
+//         },
+//         function () {
+//             $tp.notify_error('网络故障，分组解禁操作失败！');
+//         }
+//     );
+//
+// };
+//
 $app.on_btn_remove_group_click = function (_row_id) {
     var group_list = [];
 

@@ -7,7 +7,7 @@ import csv
 
 from app.const import *
 from app.base.configs import get_cfg
-# from app.module import host
+from app.base.session import session_manager
 from app.base import mail
 from app.model import user
 from app.model import group
@@ -16,18 +16,6 @@ import tornado.gen
 from app.base.logger import *
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 
-
-# , TPBaseAdminAuthHandler, TPBaseAdminAuthJsonHandler
-
-# cfg = get_cfg()
-
-
-# class IndexHandler(TPBaseHandler):
-#     def get(self):
-#         ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE | TP_PRIVILEGE_USER_GROUP)
-#         if ret != TPE_OK:
-#             return
-#         self.render('user/index.mako')
 
 class UserListHandler(TPBaseHandler):
     def get(self):
@@ -185,7 +173,7 @@ class DoImportHandler(TPBaseHandler):
         每一行的数据格式：  用户账号,用户姓名,登录认证方式,email地址,Mobile,QQ,WeChat,所属组,描述
         在导入时：
           0. 以“#”作为行注释。
-          1. 用户账号和email地址是必须填写的，其他均为可选。
+          1. 用户账号是必须填写的，其他均为可选。
           2. 一个用户属于多个组，可以用“|”将组分隔，如果某个组并不存在，则会创建这个组。
           3. 空行跳过，数据格式不正确的跳过。
         """
@@ -498,7 +486,7 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
             self.write_json(TPE_PARAM)
 
 
-class DoRemoveUserHandler(TPBaseJsonHandler):
+class DoUpdateUsersHandler(TPBaseJsonHandler):
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_USER_DELETE)
         if ret != TPE_OK:
@@ -513,11 +501,29 @@ class DoRemoveUserHandler(TPBaseJsonHandler):
             return self.write_json(TPE_JSON_FORMAT)
 
         try:
+            action = args['action']
             users = args['users']
         except:
             return self.write_json(TPE_PARAM)
 
-        err = user.remove_users(self, users)
+        if action == 'lock':
+            err = user.update_users_state(self, users, TP_STATE_DISABLED)
+        elif action == 'unlock':
+            err = user.update_users_state(self, users, TP_STATE_NORMAL)
+        elif action == 'remove':
+            err = user.remove_users(self, users)
+        else:
+            err = TPE_PARAM
+
+        if err != TPE_OK:
+            return self.write_json(err)
+
+        if action == 'lock' or action == 'remove':
+            v = session_manager().get_start_with('user-')
+            for k in v:
+                if v[k]['v']['id'] in users:
+                    session_manager().taken(k)
+
         self.write_json(err)
 
 

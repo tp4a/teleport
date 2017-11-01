@@ -21,7 +21,7 @@ $app.on_init = function (cb_stack) {
     };
 
     cb_stack
-        // .add($app.test)
+    // .add($app.test)
         .add($app.create_controls)
         .add($app.load_role_list);
 
@@ -41,7 +41,7 @@ $app.create_controls = function (cb_stack) {
     //-------------------------------
     // 用户列表表格
     //-------------------------------
-    var table_user_list_options = {
+    var table_users_options = {
         dom_id: 'table-user-list',
         data_source: {
             type: 'ajax-post',
@@ -98,34 +98,34 @@ $app.create_controls = function (cb_stack) {
         ],
 
         // 重载回调函数
-        on_header_created: $app.on_table_user_list_header_created,
-        on_render_created: $app.on_table_user_list_render_created,
-        on_cell_created: $app.on_table_user_list_cell_created
+        on_header_created: $app.on_table_users_header_created,
+        on_render_created: $app.on_table_users_render_created,
+        on_cell_created: $app.on_table_users_cell_created
     };
 
-    $app.table_user_list = $tp.create_table(table_user_list_options);
+    $app.table_users = $tp.create_table(table_users_options);
     cb_stack
-        .add($app.table_user_list.load_data)
-        .add($app.table_user_list.init);
+        .add($app.table_users.load_data)
+        .add($app.table_users.init);
 
     //-------------------------------
     // 用户列表相关过滤器
     //-------------------------------
-    $tp.create_table_header_filter_search($app.table_user_list, {
+    $tp.create_table_header_filter_search($app.table_users, {
         name: 'search',
         place_holder: '搜索：用户账号/姓名/邮箱/描述/等等...'
     });
-    $tp.create_table_filter_role($app.table_user_list, $app.role_list);
-    $tp.create_table_header_filter_state($app.table_user_list, 'state', $app.obj_states);
+    $tp.create_table_filter_role($app.table_users, $app.role_list);
+    $tp.create_table_header_filter_state($app.table_users, 'state', $app.obj_states);
     // 从cookie中读取用户分页限制的选择
-    $tp.create_table_paging($app.table_user_list, 'table-user-list-paging',
+    $tp.create_table_paging($app.table_users, 'table-user-list-paging',
         {
             per_page: Cookies.get($app.page_id('user_user') + '_per_page'),
             on_per_page_changed: function (per_page) {
                 Cookies.set($app.page_id('user_user') + '_per_page', per_page, {expires: 365});
             }
         });
-    $tp.create_table_pagination($app.table_user_list, 'table-user-list-pagination');
+    $tp.create_table_pagination($app.table_users, 'table-user-list-pagination');
 
     //-------------------------------
     // 对话框
@@ -144,7 +144,7 @@ $app.create_controls = function (cb_stack) {
         $app.dlg_edit_user.show_create();
     });
     $app.dom.btn_refresh_user_list.click(function () {
-        $app.table_user_list.load_data();
+        $app.table_users.load_data();
     });
     $app.dom.btn_select_file.click($app.on_btn_select_file_click);
     $app.dom.btn_do_upload.click($app.on_btn_do_upload_click);
@@ -155,7 +155,7 @@ $app.create_controls = function (cb_stack) {
         $app.dom.dlg_import_user.modal({backdrop: 'static'});
     });
     $app.dom.chkbox_user_list_select_all.click(function () {
-        var _objects = $('#' + $app.table_user_list.dom_id + ' tbody').find('[data-check-box]');
+        var _objects = $('#' + $app.table_users.dom_id + ' tbody').find('[data-check-box]');
         if ($(this).is(':checked')) {
             $.each(_objects, function (i, _obj) {
                 $(_obj).prop('checked', true);
@@ -185,7 +185,7 @@ $app.create_controls = function (cb_stack) {
     cb_stack.exec();
 };
 
-$app.on_table_user_list_cell_created = function (tbl, row_id, col_key, cell_obj) {
+$app.on_table_users_cell_created = function (tbl, row_id, col_key, cell_obj) {
     if (col_key === 'chkbox') {
         cell_obj.find('[data-check-box]').click(function () {
             $app.check_user_list_all_selected();
@@ -194,11 +194,18 @@ $app.on_table_user_list_cell_created = function (tbl, row_id, col_key, cell_obj)
 
     else if (col_key === 'action') {
         cell_obj.find('[data-action]').click(function () {
-            var cmd = $(this).attr('data-action');
-            if (cmd === 'edit') {
+            var user = $app.table_users.get_row(row_id);
+            var action = $(this).attr('data-action');
+            if (action === 'edit') {
                 $app.dlg_edit_user.show_edit(row_id);
-            } else if (cmd === 'reset-password') {
+            } else if (action === 'reset-password') {
                 $app.dlg_reset_password.show_edit(row_id);
+            } else if(action === 'lock') {
+                $app._lock_users([user.id]);
+            } else if(action === 'unlock') {
+                $app._unlock_users([user.id]);
+            } else if(action === 'remove') {
+                $app._remove_users([user.id]);
             }
         });
     }
@@ -206,7 +213,7 @@ $app.on_table_user_list_cell_created = function (tbl, row_id, col_key, cell_obj)
 
 $app.check_user_list_all_selected = function (cb_stack) {
     var _all_checked = true;
-    var _objs = $('#' + $app.table_user_list.dom_id + ' tbody').find('[data-check-box]');
+    var _objs = $('#' + $app.table_users.dom_id + ' tbody').find('[data-check-box]');
     if (_objs.length === 0) {
         _all_checked = false;
     } else {
@@ -228,7 +235,7 @@ $app.check_user_list_all_selected = function (cb_stack) {
         cb_stack.exec();
 };
 
-$app.on_table_user_list_render_created = function (render) {
+$app.on_table_users_render_created = function (render) {
     render.filter_role = function (header, title, col) {
         var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
         _ret.push('<div class="tp-table-filter-inner">');
@@ -340,7 +347,7 @@ $app.on_table_user_list_render_created = function (render) {
         h.push('<li role="separator" class="divider"></li>');
         h.push('<li><a href="javascript:;" data-action="reset-password"><i class="fa fa-street-view fa-fw"></i> 重置密码</a></li>');
         h.push('<li role="separator" class="divider"></li>');
-        h.push('<li><a href="javascript:;" data-action="delete"><i class="fa fa-times-circle fa-fw"></i> 删除</a></li>');
+        h.push('<li><a href="javascript:;" data-action="remove"><i class="fa fa-times-circle fa-fw"></i> 删除</a></li>');
         h.push('</ul>');
         h.push('</div>');
 
@@ -348,7 +355,7 @@ $app.on_table_user_list_render_created = function (render) {
     };
 };
 
-$app.on_table_user_list_header_created = function (header) {
+$app.on_table_users_header_created = function (header) {
     $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
         CALLBACK_STACK.create()
             .add(header._table_ctrl.load_data)
@@ -358,11 +365,11 @@ $app.on_table_user_list_header_created = function (header) {
 
     // // TODO: 当过滤器不是默认值时，让“重置过滤器按钮”有呼吸效果，避免用户混淆 - 实验性质
     // var t1 = function(){
-    //     $app.dom.btn_table_user_list_reset_filter.fadeTo(1000, 1.0, function(){
-    //         $app.dom.btn_table_user_list_reset_filter.fadeTo(1000, 0.2, t1);
+    //     $app.dom.btn_table_users_reset_filter.fadeTo(1000, 1.0, function(){
+    //         $app.dom.btn_table_users_reset_filter.fadeTo(1000, 0.2, t1);
     //     });
     // };
-    // $app.dom.btn_table_user_list_reset_filter.fadeTo(1000, 0.2, t1);
+    // $app.dom.btn_table_users_reset_filter.fadeTo(1000, 0.2, t1);
 
     // 表格内嵌过滤器的事件绑定在这时进行（也可以延期到整个表格创建完成时进行）
     header._table_ctrl.get_filter_ctrl('search').on_created();
@@ -454,7 +461,7 @@ $app.on_btn_do_upload_click = function () {
                     .addClass('alert-success')
                     .html('<i class="fa fa-check-square-o fa-fw"></i> 用户导入成功：' + ret.message);
 
-                $app.table_user_list.load_data();
+                $app.table_users.load_data();
             } else {
                 var err_msg = ['<i class="fa fa-times-circle-o fa-fw"></i> 用户导入失败：' + ret.message];
                 if (!_.isUndefined(ret.data)) {
@@ -466,7 +473,7 @@ $app.on_btn_do_upload_click = function () {
                     err_msg.push(err_lines.join('<br/>'));
                     err_msg.push('</div>');
 
-                    $app.table_user_list.load_data();
+                    $app.table_users.load_data();
                 }
 
                 $app.dom.upload_file_message
@@ -488,10 +495,10 @@ $app.show_user_info = function (row_id) {
 
 $app.get_selected_user = function () {
     var items = [];
-    var _objs = $('#' + $app.table_user_list.dom_id + ' tbody tr td input[data-check-box]');
+    var _objs = $('#' + $app.table_users.dom_id + ' tbody tr td input[data-check-box]');
     $.each(_objs, function (i, _obj) {
         if ($(_obj).is(':checked')) {
-            var _row_data = $app.table_user_list.get_row(_obj);
+            var _row_data = $app.table_users.get_row(_obj);
             items.push(_row_data.id);
         }
     });
@@ -507,7 +514,7 @@ $app.on_btn_set_role_click = function () {
 };
 
 $app.set_selected_to_role = function (role_id, role_name) {
-    var users = $app.get_selected_user($app.table_user_list);
+    var users = $app.get_selected_user($app.table_users);
     if (users.length === 0) {
         return;
     }
@@ -517,7 +524,7 @@ $app.set_selected_to_role = function (role_id, role_name) {
             function (ret) {
                 if (ret.code === TPE_OK) {
                     cb_stack.add($app.check_user_list_all_selected);
-                    cb_stack.add($app.table_user_list.load_data);
+                    cb_stack.add($app.table_users.load_data);
                     $tp.notify_success('设置用户角色操作成功！');
                 } else {
                     $tp.notify_error('设置用户角色操作失败：' + tp_error_msg(ret.code, ret.message));
@@ -540,25 +547,71 @@ $app.set_selected_to_role = function (role_id, role_name) {
 
 };
 
+$app._lock_users = function(users) {
+    $tp.ajax_post_json('/user/update-users', {action: 'lock', users: users},
+        function (ret) {
+            if (ret.code === TPE_OK) {
+                CALLBACK_STACK.create()
+                    .add($app.check_user_list_all_selected)
+                    .add($app.table_users.load_data)
+                    .exec();
+                $tp.notify_success('禁用用户账号操作成功！');
+            } else {
+                $tp.notify_error('禁用用户账号操作失败：' + tp_error_msg(ret.code, ret.message));
+            }
+        },
+        function () {
+            $tp.notify_error('网络故障，禁用用户账号操作失败！');
+        }
+    );
+};
+
 $app.on_btn_lock_user_click = function () {
-};
-
-$app.on_btn_unlock_user_click = function () {
-};
-
-$app.on_btn_remove_user_click = function () {
-    var users = $app.get_selected_user($app.table_user_list);
+    var users = $app.get_selected_user($app.table_users);
     if (users.length === 0) {
-        $tp.notify_error('请选择要删除的用户！');
+        $tp.notify_error('请选择要禁用的用户！');
         return;
     }
 
+    $app._lock_hosts(users);
+};
+
+$app._unlock_users = function(users) {
+    $tp.ajax_post_json('/user/update-users', {action: 'unlock', users: users},
+        function (ret) {
+            if (ret.code === TPE_OK) {
+                CALLBACK_STACK.create()
+                    .add($app.check_user_list_all_selected)
+                    .add($app.table_users.load_data)
+                    .exec();
+                $tp.notify_success('解禁用户账号操作成功！');
+            } else {
+                $tp.notify_error('解禁用户账号操作失败：' + tp_error_msg(ret.code, ret.message));
+            }
+        },
+        function () {
+            $tp.notify_error('网络故障，解禁用户账号操作失败！');
+        }
+    );
+};
+
+$app.on_btn_unlock_user_click = function () {
+    var users = $app.get_selected_user($app.table_users);
+    if (users.length === 0) {
+        $tp.notify_error('请选择要解禁的用户！');
+        return;
+    }
+
+    $app._unlock_users(users);
+};
+
+$app._remove_users = function(users) {
     var _fn_sure = function (cb_stack, cb_args) {
-        $tp.ajax_post_json('/user/remove-user', {users: users},
+        $tp.ajax_post_json('/user/update-users', {action: 'remove', users: users},
             function (ret) {
                 if (ret.code === TPE_OK) {
                     cb_stack.add($app.check_user_list_all_selected);
-                    cb_stack.add($app.table_user_list.load_data);
+                    cb_stack.add($app.table_users.load_data);
                     $tp.notify_success('删除用户账号操作成功！');
                 } else {
                     $tp.notify_error('删除用户账号操作失败：' + tp_error_msg(ret.code, ret.message));
@@ -578,7 +631,16 @@ $app.on_btn_remove_user_click = function () {
         msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除用户账号将同时将其从所在用户组中移除，并且删除所有分配给此用户的授权！</p></div><p>如果您希望禁止某个用户登录本系统，可对其进行“禁用”操作！</p><p>您确定要移除所有选定的 <strong>' + users.length + '个</strong> 用户账号吗？</p>',
         fn_yes: _fn_sure
     });
+};
 
+$app.on_btn_remove_user_click = function () {
+    var users = $app.get_selected_user($app.table_users);
+    if (users.length === 0) {
+        $tp.notify_error('请选择要删除的用户！');
+        return;
+    }
+
+    $app._remove_users(users);
 };
 
 $app.create_dlg_edit_user = function () {
@@ -687,7 +749,7 @@ $app.create_dlg_edit_user = function () {
     };
 
     dlg.show_edit = function (row_id) {
-        var user = $app.table_user_list.get_row(row_id);
+        var user = $app.table_users.get_row(row_id);
         console.log(user);
         dlg.init_fields(user);
         dlg.dom.dialog.modal({backdrop: 'static'});
@@ -750,7 +812,7 @@ $app.create_dlg_edit_user = function () {
             function (ret) {
                 if (ret.code === TPE_OK) {
                     $tp.notify_success('用户账号' + action + '成功！');
-                    $app.table_user_list.load_data();
+                    $app.table_users.load_data();
                     dlg.dom.dialog.modal('hide');
                 } else {
                     $tp.notify_error('用户账号' + action + '失败：' + tp_error_msg(ret.code, ret.message));
@@ -798,7 +860,7 @@ $app.create_dlg_user_info = function () {
         dlg.row_id = row_id;
         dlg.need_edit = false;
 
-        var _row_data = $app.table_user_list.get_row(dlg.row_id);
+        var _row_data = $app.table_users.get_row(dlg.row_id);
 
         // 表格加载时，是不会读取用户的 desc 字段的，因此可以判断此用户是否已经读取过详细信息了
         if (_.isUndefined(_row_data.desc)) {
@@ -806,7 +868,7 @@ $app.create_dlg_user_info = function () {
             $tp.ajax_post_json('/user/get-user/' + _row_data.id, {},
                 function (ret) {
                     if (ret.code === TPE_OK) {
-                        $app.table_user_list.update_row(dlg.row_id, ret.data);
+                        $app.table_users.update_row(dlg.row_id, ret.data);
                         dlg.show_info(ret.data);
                     } else {
                         $tp.notify_error('无法获取用户详细信息：' + tp_error_msg(ret.code, ret.message));
@@ -919,7 +981,7 @@ $app.create_dlg_reset_password = function () {
     };
 
     dlg.show_edit = function (row_id) {
-        var user = $app.table_user_list.get_row(row_id);
+        var user = $app.table_users.get_row(row_id);
         dlg.init_fields(user);
         dlg.dom.dialog.modal({backdrop: 'static'});
     };
@@ -934,7 +996,7 @@ $app.create_dlg_reset_password = function () {
             function (ret) {
                 if (ret.code === TPE_OK) {
                     $tp.notify_success('用户密码重置成功！');
-                    // $app.table_user_list.load_data();
+                    // $app.table_users.load_data();
                     dlg.dom.dialog.modal('hide');
                 } else {
                     $tp.notify_error('用户密码重置失败：' + tp_error_msg(ret.code, ret.message));
@@ -964,7 +1026,7 @@ $app.create_dlg_reset_password = function () {
             function (ret) {
                 if (ret.code === TPE_OK) {
                     $tp.notify_success('用户密码重置成功！');
-                    // $app.table_user_list.load_data();
+                    // $app.table_users.load_data();
                     dlg.dom.dialog.modal('hide');
                 } else {
                     $tp.notify_error('用户密码重置失败：' + tp_error_msg(ret.code, ret.message));

@@ -149,7 +149,7 @@ $app.create_controls = function (cb_stack) {
             });
         }
     });
-    // $app.dom.btn_edit_user.click($app.on_btn_edit_user_click);
+
     $app.dom.btn_lock_group.click(function () {
         $app.on_btn_lock_group_click();
     });
@@ -433,7 +433,7 @@ $app.on_btn_remove_group_click = function (_row_id) {
     if (group_list.length > 1)
         _msg_remove = '您确定要移除选定的 <strong>' + group_list.length + '个</strong> 分组吗？';
     $tp.dlg_confirm(cb_stack, {
-        msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除分组将同时删除所有分配给此分组成员的授权！</p></div><div class="alert alert-info">删除分组不会删除组内的成员账号！</div><p>' + _msg_remove + '</p>',
+        msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除分组将同时删除所有分配给此分组成员的授权！</p></div><div class="alert alert-info">删除分组不会删除组内的成员主机！</div><p>' + _msg_remove + '</p>',
         fn_yes: _fn_sure
     });
 

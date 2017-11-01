@@ -65,7 +65,10 @@
             <div class="table-extend-cell checkbox-select-all"><input id="table-groups-select-all" type="checkbox"/></div>
             <div class="table-extend-cell group-actions">
                 <div class="btn-group" role="group">
-                    <button id="btn-remove-group" type="button" class="btn btn-danger"><i class="fa fa-times-circle fa-fw"></i> 批量删除</button>
+##                     <button id="btn-remove-group" type="button" class="btn btn-danger"><i class="fa fa-times-circle fa-fw"></i> 批量删除</button>
+                    <button id="btn-lock-group" type="button" class="btn btn-default"><i class="fa fa-lock fa-fw"></i> 禁用</button>
+                    <button id="btn-unlock-group" type="button" class="btn btn-default"><i class="fa fa-unlock fa-fw"></i> 解禁</button>
+                    <button id="btn-remove-group" type="button" class="btn btn-default"><i class="fa fa-times-circle fa-fw"></i> 删除</button>
                 </div>
             </div>
             <div class="table-extend-cell table-item-counter">

@@ -88,6 +88,15 @@ class SessionManager(threading.Thread):
             else:
                 return _default
 
+    def get_start_with(self, key_start):
+        with self._lock:
+            ret = {}
+            for k in self._session_dict:
+                if k.startswith(key_start):
+                    ret[k] = self._session_dict[k]
+
+            return ret
+
     def taken(self, s_id, _default=None):
         # 从session中取走一个数据（读取并删除）
         with self._lock:

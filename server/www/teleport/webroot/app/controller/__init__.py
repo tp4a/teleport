@@ -79,8 +79,8 @@ controllers = [
     (r'/user/get-user/(.*)', user.DoGetUserInfoHandler),
     #  - [json] 创建/更新用户
     (r'/user/update-user', user.DoUpdateUserHandler),
-    #  - [json] 删除用户
-    (r'/user/remove-user', user.DoRemoveUserHandler),
+    #  - [json] 禁用/解禁/删除用户
+    (r'/user/update-users', user.DoUpdateUsersHandler),
     #  - [json] 获取用户列表
     (r'/user/get-users', user.DoGetUsersHandler),
     #  - [json] 重置密码
