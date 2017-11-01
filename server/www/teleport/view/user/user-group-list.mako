@@ -88,7 +88,6 @@
         <p>说明：</p>
         <ul class="help-list">
             <li>可以通过表格标题栏进行搜索或过滤，以便快速定位你需要的信息。标题栏左侧的 <i class="fa fa-rotate-left fa-fw"></i> 可以重置过滤器。</li>
-            <li>禁用用户分组并不会影响组内成员用户登录teleport系统，但会影响运维授权策略。</li>
         </ul>
     </div>
 </div>

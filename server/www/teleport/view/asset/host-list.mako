@@ -29,7 +29,8 @@
             </div>
             <div class="table-extend-cell table-extend-cell-right group-actions">
                 <button id="btn-add-host" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 添加主机</button>
-##                 <button id="btn-add-temp-account" class="btn btn-sm btn-success"><i class="fa fa-plus-circle fa-fw"></i> 添加主机</button>
+                ##                 <button id="btn-add-temp-account" class="btn btn-sm btn-success"><i class="fa fa-plus-circle fa-fw"></i> 添加主机</button>
+
                 <button id="btn-import-asset" class="btn btn-sm btn-default"><i class="fa fa-plus-square fa-fw"></i> 导入主机和账号</button>
             </div>
         </div>
@@ -113,14 +114,8 @@
                         <div class="form-group form-group-sm">
                             <label for="edit-host-os-type" class="col-sm-3 control-label require">远程主机系统：</label>
                             <div class="col-sm-4">
-                                ## <div id="edit-host-os" class="btn-group btn-group-sm"></div>
                                 <select id="edit-host-os-type" class="form-control"></select>
                             </div>
-                            ##                             <div class="col-sm-1">
-                            ##                                 <div class="control-desc">
-                            ##                                     <a id="help-host-os" tabindex="0" role="button" data-toggle="popover" data-placement="bottom"><i class="fa fa-question-circle fw"></i></a>
-                            ##                                 </div>
-                            ##                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
@@ -128,18 +123,6 @@
                             <div class="col-sm-4">
                                 <input id="edit-host-ip" type="text" class="form-control" placeholder="远程主机IP地址"/>
                             </div>
-##                             <label for="edit-host-port" class="col-sm-1 control-label">端口：</label>
-##                             <div class="col-sm-2">
-##                                 <input id="edit-host-port" type="text" class="form-control" value="0"/>
-##                             </div>
-##                             <div class="col-sm-2">
-##                                 <div class="control-desc">
-##                                     <a id="help-host-port" tabindex="0" role="button" data-toggle="popover" data-placement="bottom"
-##                                        data-html="true" data-title="远程主机端口说明"
-##                                        data-content='<div style="width:400px;"><strong>直接连接</strong><br/>远程主机可以由teleport直接连接时，请填写远程主机的IP地址，并将端口留空或者填0。<br/><br/><strong>端口映射</strong><br/>远程主机需要通过另一台路由主机以端口映射方式访问时，请填写路由主机的IP地址及映射的端口号，并建议在名称一栏注明远程主机的IP地址以便区分。</div>'
-##                                     ><i class="fa fa-question-circle fw"></i> 这是什么？</a>
-##                                 </div>
-##                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
@@ -170,14 +153,6 @@
                                 <div class="col-sm-2">
                                     <input id="edit-host-router-port" type="text" class="form-control"/>
                                 </div>
-##                                 <div class="col-sm-2">
-##                                     <div class="control-desc">
-##                                         <a id="help-host-router" tabindex="0" role="button" data-toggle="popover" data-placement="bottom"
-##                                            data-html="true" data-title="远程主机端口说明"
-##                                            data-content='<div style="width:400px;"><strong>直接连接</strong><br/>远程主机可以由teleport直接连接时，请填写远程主机的IP地址，并将端口留空或者填0。<br/><br/><strong>端口映射</strong><br/>远程主机需要通过另一台路由主机以端口映射方式访问时，请填写路由主机的IP地址及映射的端口号，并建议在名称一栏注明远程主机的IP地址以便区分。</div>'
-##                                         ><i class="fa fa-question-circle fw"></i> 这是什么？</a>
-##                                     </div>
-##                                 </div>
                             </div>
                         </div>
 
@@ -238,7 +213,46 @@
 
                 <div class="modal-body">
                     <div data-field="account-list"></div>
-                    <button type="button" class="btn btn-sm btn-primary" data-btn="btn-add-account" style="margin-top:8px;"><i class="fa fa-plus-circle fa-fw"></i> 添加账号</button>
+
+
+                    <div class="table-prefix-area">
+                        <div class="table-extend-cell">
+                            <span class="table-name"><i class="fa fa-list fa-fw"></i> 账号列表</span>
+                            <button id="btn-refresh-acc" class="btn btn-sm btn-default"><i class="fa fa-rotate-right fa-fw"></i> 刷新列表</button>
+                        </div>
+                        <div class="table-extend-cell table-extend-cell-right group-actions">
+                            <button id="btn-add-acc" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 添加账号</button>
+                        </div>
+                    </div>
+
+                    <table id="table-acc" class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
+
+                    <div class="table-extend-area">
+                        <div class="table-extend-cell checkbox-select-all"><input id="table-acc-select-all" type="checkbox"/></div>
+                        <div class="table-extend-cell group-actions">
+                            <div class="btn-group" role="group">
+                                <button id="btn-lock-acc" type="button" class="btn btn-default"><i class="fa fa-lock fa-fw"></i> 禁用</button>
+                                <button id="btn-unlock-acc" type="button" class="btn btn-default"><i class="fa fa-unlock fa-fw"></i> 解禁</button>
+                                <button id="btn-remove-acc" type="button" class="btn btn-default"><i class="fa fa-times-circle fa-fw"></i> 删除</button>
+                            </div>
+                        </div>
+##                         <div class="table-extend-cell table-item-counter">
+##                             <ol id="table-acc-paging"></ol>
+##                         </div>
+                    </div>
+
+##                     <div class="table-extend-area">
+##                         <div class="table-extend-cell">
+##                             <div style="text-align:right;">
+##                                 <nav>
+##                                     <ul id="table-acc-pagination" class="pagination"></ul>
+##                                 </nav>
+##                             </div>
+##                         </div>
+##                     </div>
+
+
+##                     <button type="button" class="btn btn-sm btn-primary" data-btn="btn-add-account" style="margin-top:8px;"><i class="fa fa-plus-circle fa-fw"></i> 添加账号</button>
                 </div>
 
                 <div class="modal-footer">
@@ -277,38 +291,6 @@
                                 ##                                 <p id="account-protocol-port-static" class="form-control-static mono" style="color:#0a6aa1;font-weight:bold;display:none;"></p>
                             </div>
                         </div>
-
-##                         <div id="block-ssh-param" class="form-group form-group-sm">
-##                             <div class="col-sm-9 col-sm-offset-3">
-##                                 <div>
-##                                     <div id="btn-allow-ssh" class="tp-checkbox tp-editable tp-selected">允许 SSH</div>
-##                                 </div>
-##                                 <div>
-##                                     <div id="btn-allow-sftp" class="tp-checkbox tp-editable tp-selected">允许 SFTP</div>
-##                                 </div>
-##                             </div>
-##                         </div>
-##                         <div id="block-rdp-param" class="form-group form-group-sm">
-##                             <div class="col-sm-9 col-sm-offset-3">
-##                                 <div>
-##                                     <div id="btn-allow-rdp-desktop" class="tp-checkbox tp-editable tp-selected">允许 远程桌面</div>
-##                                 </div>
-##                                 ##                                 <div>
-##                                 ##                                     <div id="btn-allow-rdp-remote-app" class="tp-checkbox tp-editable tp-selected">允许 远程应用</div>
-##                                 ##                                 </div>
-##
-##                                 <div>
-##                                     <div id="btn-allow-rdp-clipboard" class="tp-checkbox tp-editable tp-selected">允许 剪贴板</div>
-##                                 </div>
-##                                 <div>
-##                                     <div id="btn-allow-rdp-driver-map" class="tp-checkbox tp-editable tp-selected">允许 驱动器映射</div>
-##                                 </div>
-##                                 <div>
-##                                     <div id="btn-allow-rdp-console" class="tp-checkbox tp-editable tp-selected">允许 管理员连接（Console模式）</div>
-##                                 </div>
-##                             </div>
-##                         </div>
-
 
                         <div class="form-group form-group-sm">
                             <label class="col-sm-3 control-label" for="account-auth-type"><strong>认证方式：</strong></label>

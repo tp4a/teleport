@@ -3,7 +3,7 @@
 $app.on_init = function (cb_stack) {
     $app.dom = {
         btn_refresh_host: $('#btn-refresh-host'),
-        btn_add_user: $('#btn-add-host'),
+        btn_add_host: $('#btn-add-host'),
         chkbox_host_select_all: $('#table-host-select-all'),
 
         btn_lock_host: $('#btn-lock-host'),
@@ -31,7 +31,7 @@ $app.on_init = function (cb_stack) {
 $app.create_controls = function (cb_stack) {
 
     //-------------------------------
-    // 资产列表表格
+    // 主机列表表格
     //-------------------------------
     var table_host_options = {
         dom_id: 'table-host',
@@ -118,7 +118,7 @@ $app.create_controls = function (cb_stack) {
         .add($app.table_host.init);
 
     //-------------------------------
-    // 用户列表相关过滤器
+    // 主机列表相关过滤器
     //-------------------------------
     $tp.create_table_header_filter_search($app.table_host, {
         name: 'search',
@@ -138,13 +138,12 @@ $app.create_controls = function (cb_stack) {
         });
     $tp.create_table_pagination($app.table_host, 'table-host-pagination');
 
+
     //-------------------------------
     // 对话框
     //-------------------------------
     $app.dlg_edit_host = $app.create_dlg_edit_host();
     cb_stack.add($app.dlg_edit_host.init);
-    // $app.dlg_host_info = $app.create_dlg_host_info();
-    // cb_stack.add($app.dlg_host_info.init);
     $app.dlg_accounts = $app.create_dlg_accounts();
     cb_stack.add($app.dlg_accounts.init);
     $app.dlg_edit_account = $app.create_dlg_edit_account();
@@ -153,8 +152,7 @@ $app.create_controls = function (cb_stack) {
     //-------------------------------
     // 页面控件事件绑定
     //-------------------------------
-    $app.dom.btn_add_user.click(function () {
-        // $app.dom.dlg_edit_user.modal();
+    $app.dom.btn_add_host.click(function () {
         $app.dlg_edit_host.show_add();
     });
     $app.dom.btn_refresh_host.click(function () {
@@ -169,7 +167,6 @@ $app.create_controls = function (cb_stack) {
         $app.dom.dlg_import_asset.modal({backdrop: 'static'});
     });
     $app.dom.chkbox_host_select_all.click(function () {
-        console.log('----');
         var _objects = $('#' + $app.table_host.dom_id + ' tbody').find('[data-check-box]');
         if ($(this).is(':checked')) {
             $.each(_objects, function (i, _obj) {
@@ -181,12 +178,23 @@ $app.create_controls = function (cb_stack) {
             });
         }
     });
-    $app.dom.btn_lock_host.click($app.on_btn_lock_host_click);
-    $app.dom.btn_unlock_host.click($app.on_btn_unlock_host_click);
-    $app.dom.btn_remove_host.click($app.on_btn_remove_host_click);
+    $app.dom.btn_lock_host.click(function () {
+        $app.on_btn_lock_host_click();
+    });
+    $app.dom.btn_unlock_host.click(function () {
+        $app.on_btn_unlock_host_click();
+    });
+    $app.dom.btn_remove_host.click(function () {
+        $app.on_btn_remove_host_click();
+    });
 
     cb_stack.exec();
 };
+
+
+//-------------------------------
+// 主机表格相关
+//-------------------------------
 
 $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
     if (col_key === 'chkbox') {
@@ -223,30 +231,6 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
             $app.dlg_accounts.show(row_id);
         });
     }
-};
-
-$app.check_host_all_selected = function (cb_stack) {
-    var _all_checked = true;
-    var _objs = $('#' + $app.table_host.dom_id + ' tbody').find('[data-check-box]');
-    if (_objs.length === 0) {
-        _all_checked = false;
-    } else {
-        $.each(_objs, function (i, _obj) {
-            if (!$(_obj).is(':checked')) {
-                _all_checked = false;
-                return false;
-            }
-        });
-    }
-
-    if (_all_checked) {
-        $app.dom.chkbox_host_select_all.prop('checked', true);
-    } else {
-        $app.dom.chkbox_host_select_all.prop('checked', false);
-    }
-
-    if (cb_stack)
-        cb_stack.exec();
 };
 
 $app.on_table_host_render_created = function (render) {
@@ -395,6 +379,30 @@ $app.on_table_host_header_created = function (header) {
     header._table_ctrl.get_filter_ctrl('state').on_created();
 };
 
+$app.check_host_all_selected = function (cb_stack) {
+    var _all_checked = true;
+    var _objs = $('#' + $app.table_host.dom_id + ' tbody').find('[data-check-box]');
+    if (_objs.length === 0) {
+        _all_checked = false;
+    } else {
+        $.each(_objs, function (i, _obj) {
+            if (!$(_obj).is(':checked')) {
+                _all_checked = false;
+                return false;
+            }
+        });
+    }
+
+    if (_all_checked) {
+        $app.dom.chkbox_host_select_all.prop('checked', true);
+    } else {
+        $app.dom.chkbox_host_select_all.prop('checked', false);
+    }
+
+    if (cb_stack)
+        cb_stack.exec();
+};
+
 $app.on_btn_select_file_click = function () {
 
     var html = '<input id="file-selector" type="file" name="csvfile" accept=".csv,text/csv,text/comma-separated-values" class="hidden" value="" style="display: none;"/>';
@@ -503,16 +511,16 @@ $app.show_user_info = function (row_id) {
 };
 
 $app.get_selected_host = function (tbl) {
-    var users = [];
+    var items = [];
     var _objs = $('#' + $app.table_host.dom_id + ' tbody tr td input[data-check-box]');
     $.each(_objs, function (i, _obj) {
         if ($(_obj).is(':checked')) {
             var _row_data = tbl.get_row(_obj);
             // _all_checked = false;
-            users.push(_row_data.id);
+            items.push(_row_data.id);
         }
     });
-    return users;
+    return items;
 };
 
 $app._lock_hosts = function (host_ids) {
@@ -964,7 +972,16 @@ $app.create_dlg_accounts = function () {
         dialog: $('#' + dlg.dom_id),
         dlg_title: $('#' + dlg.dom_id + ' [data-field="dlg-title"]'),
         // info: $('#' + dlg.dom_id + ' [data-field="user-info"]'),
-        btn_add: $('#' + dlg.dom_id + ' [data-btn="btn-add-account"]'),
+        //btn_add: $('#' + dlg.dom_id + ' [data-btn="btn-add-account"]'),
+
+        btn_refresh_acc: $('#btn-refresh-acc'),
+        btn_add_acc: $('#btn-add-acc'),
+        chkbox_acc_select_all: $('#table-acc-select-all'),
+
+        btn_lock_acc: $('#btn-lock-acc'),
+        btn_unlock_acc: $('#btn-unlock-acc'),
+        btn_remove_acc: $('#btn-remove-acc'),
+
         acc_list: $('#' + dlg.dom_id + ' [data-field="account-list"]')
     };
 
@@ -975,13 +992,235 @@ $app.create_dlg_accounts = function () {
         //     $app.dlg_edit_account.show_edit(dlg.row_id);
         // });
 
-        dlg.dom.btn_add.click(function () {
+        //-------------------------------
+        // 账号列表表格
+        //-------------------------------
+
+        var table_acc_options = {
+            dom_id: 'table-acc',
+            data_source: {
+                type: 'none'
+            },
+            column_default: {sort: false, align: 'left'},
+            columns: [
+                {
+                    //title: '<input type="checkbox" id="user-list-select-all" value="">',
+                    // title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                    title: '',
+                    key: 'chkbox',
+                    sort: false,
+                    width: 36,
+                    align: 'center',
+                    render: 'make_check_box',
+                    fields: {id: 'id'}
+                },
+                {
+                    title: "账号",
+                    key: "username",
+                    //sort: true,
+                    //header_render: 'filter_search',
+                    render: 'acc_info',
+                    fields: {username: 'username'}
+                },
+                {
+                    title: "协议",
+                    key: "protocol_type",
+                    //sort: true,
+                    width: 60,
+                    align: 'center',
+                    render: 'protocol',
+                    fields: {protocol_type: 'protocol_type'}
+                },
+                {
+                    title: "认证方式",
+                    key: "auth_type",
+                    width: 60,
+                    align: 'center',
+                    render: 'auth_type',
+                    fields: {auth_type: 'auth_type'}
+                },
+                {
+                    title: "状态",
+                    key: "state",
+                    //sort: true,
+                    width: 60,
+                    align: 'center',
+                    render: 'acc_state',
+                    fields: {state: 'state'}
+                },
+                {
+                    title: '',
+                    key: 'action',
+                    sort: false,
+                    width: 180,
+                    align: 'center',
+                    //width: 70,
+                    render: 'make_host_action_btn',
+                    fields: {id: 'id', state: 'state'}
+                }
+            ],
+
+            // 重载回调函数
+            on_header_created: dlg.on_table_acc_header_created,
+            on_render_created: dlg.on_table_acc_render_created,
+            on_cell_created: dlg.on_table_acc_cell_created
+        };
+
+        $app.table_acc = $tp.create_table(table_acc_options);
+        cb_stack
+        //.add($app.table_host.load_data)
+            .add($app.table_acc.init);
+
+        //-------------------------------
+        // 账号列表相关过滤器
+        //-------------------------------
+        // $tp.create_table_header_filter_search($app.table_host, {
+        //     name: 'search',
+        //     place_holder: '搜索：主机IP/名称/描述/资产编号/等等...'
+        // });
+        // $app.table_host_role_filter = $tp.create_table_filter_role($app.table_host, $app.role_list);
+        // 主机没有“临时锁定”状态，因此要排除掉
+        // $tp.create_table_header_filter_state($app.table_host, 'state', $app.obj_states, [TP_STATE_LOCKED]);
+
+        // 从cookie中读取用户分页限制的选择
+        // $tp.create_table_paging($app.table_acc, 'table-acc-paging',
+        //     {
+        //         per_page: Cookies.get($app.page_id('asset_host') + '_acc_per_page'),
+        //         on_per_page_changed: function (per_page) {
+        //             Cookies.set($app.page_id('asset_host') + '_acc_per_page', per_page, {expires: 365});
+        //         }
+        //     });
+        // $tp.create_table_pagination($app.table_acc, 'table-acc-pagination');
+
+
+        dlg.dom.btn_add_acc.click(function () {
             // dlg.show_edit_account = true;
             $app.dlg_edit_account.show_add(dlg.host_row_id);
         });
 
+
+        dlg.dom.btn_refresh_acc.click(function () {
+            dlg.load_accounts();
+        });
+
+        dlg.dom.chkbox_acc_select_all.click(function () {
+            var _objects = $('#' + $app.table_acc.dom_id + ' tbody').find('[data-check-box]');
+            if ($(this).is(':checked')) {
+                $.each(_objects, function (i, _obj) {
+                    $(_obj).prop('checked', true);
+                });
+            } else {
+                $.each(_objects, function (i, _obj) {
+                    $(_obj).prop('checked', false);
+                });
+            }
+        });
+        dlg.dom.btn_lock_acc.click(function () {
+            $app.on_btn_lock_acc_click();
+        });
+        dlg.dom.btn_unlock_acc.click(function () {
+            $app.on_btn_unlock_acc_click();
+        });
+        dlg.dom.btn_remove_acc.click(function () {
+            $app.on_btn_remove_acc_click();
+        });
+
         cb_stack.exec();
     };
+
+    dlg.get_selected_host = function (tbl) {
+        var items = [];
+        var _objs = $('#' + $app.table_acc.dom_id + ' tbody tr td input[data-check-box]');
+        $.each(_objs, function (i, _obj) {
+            if ($(_obj).is(':checked')) {
+                var _row_data = tbl.get_row(_obj);
+                // _all_checked = false;
+                items.push(_row_data.id);
+            }
+        });
+        return items;
+    };
+
+    dlg._lock_acc = function (acc_ids) {
+        $tp.ajax_post_json('/asset/update-hosts', {action: 'lock', hosts: host_ids},
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    $app.table_host.load_data();
+                    $tp.notify_success('禁用主机操作成功！');
+                } else {
+                    $tp.notify_error('禁用主机操作失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                $tp.notify_error('网络故障，禁用主机操作失败！');
+            }
+        );
+    };
+
+    dlg.on_btn_lock_host_click = function () {
+        var items = dlg.get_selected_acc($app.table_acc);
+        if (items.length === 0) {
+            $tp.notify_error('请选择要禁用的主机！');
+            return;
+        }
+
+        $app._lock_hosts(items);
+    };
+
+    $app._unlock_hosts = function (host_ids) {
+        $tp.ajax_post_json('/asset/update-hosts', {action: 'unlock', hosts: host_ids},
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    $app.table_host.load_data();
+                    $tp.notify_success('解禁主机操作成功！');
+                } else {
+                    $tp.notify_error('解禁主机操作失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                $tp.notify_error('网络故障，解禁主机操作失败！');
+            }
+        );
+    };
+
+    $app.on_btn_unlock_host_click = function () {
+        var items = $app.get_selected_host($app.table_host);
+        if (items.length === 0) {
+            $tp.notify_error('请选择要解禁的主机！');
+            return;
+        }
+
+        $app._unlock_hosts(items);
+    };
+
+    $app._remove_hosts = function (host_ids) {
+        var _fn_sure = function (cb_stack) {
+            $tp.ajax_post_json('/asset/update-hosts', {action: 'remove', hosts: host_ids},
+                function (ret) {
+                    if (ret.code === TPE_OK) {
+                        cb_stack.add($app.check_host_all_selected);
+                        cb_stack.add($app.table_host.load_data);
+                        $tp.notify_success('删除主机操作成功！');
+                    } else {
+                        $tp.notify_error('删除主机操作失败：' + tp_error_msg(ret.code, ret.message));
+                    }
+
+                    cb_stack.exec();
+                },
+                function () {
+                    $tp.notify_error('网络故障，删除主机操作失败！');
+                    cb_stack.exec();
+                }
+            );
+        };
+
+        var cb_stack = CALLBACK_STACK.create();
+        $tp.dlg_confirm(cb_stack, {
+            msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除主机将同时删除与之相关的账号，并将主机和账号从所在分组中移除，同时删除所有相关授权！</p></div><p>如果您希望临时禁止登录指定主机，可将其“禁用”！</p><p>您确定要移除选定的' + host_ids.length + '个主机吗？</p>',
+            fn_yes: _fn_sure
+        });
+    };
+
 
     dlg.show = function (host_row_id) {
         dlg.dom.acc_list.empty().html('<i class="fa fa-spinner fa-spin"></i> 正在加载...');
@@ -998,6 +1237,9 @@ $app.create_dlg_accounts = function () {
             function (ret) {
                 if (ret.code === TPE_OK) {
                     console.log('account:', ret.data);
+                    var cb_stack = CALLBACK_STACK.create();
+                    $app.table_acc.set_data(cb_stack, {}, {total: ret.data.length, page_index: 1, data: ret.data});
+                    //$app.table_acc.set_data(cb_stack, {}, ret.data);
                     dlg.accounts = ret.data;
                 } else {
                     // $tp.notify_error('远程账号' + action + '失败：' + tp_error_msg(ret.code, ret.message));
@@ -1153,6 +1395,200 @@ $app.create_dlg_accounts = function () {
         });
     };
 
+    //-------------------------------
+    // 账号表格相关
+    //-------------------------------
+
+    dlg.on_table_acc_cell_created = function (tbl, row_id, col_key, cell_obj) {
+        if (col_key === 'chkbox') {
+            cell_obj.find('[data-check-box]').click(function () {
+                dlg.check_acc_all_selected();
+            });
+        } else if (col_key === 'action') {
+            // 绑定系统选择框事件
+            cell_obj.find('[data-action]').click(function () {
+
+                var action = $(this).attr('data-action');
+                var acc_id = $(this).attr('data-id');
+                var acc = tbl.get_row(row_id);
+
+                if (action === 'edit') {
+                    $app.dlg_edit_account.show_edit(dlg.host_row_id, acc);
+                } else if (action === 'lock') {
+                    dlg._lock_acc([acc_id]);
+                } else if (action === 'unlock') {
+                    dlg._unlock_acc([acc_id]);
+                } else if (action === 'remove') {
+                    dlg._remove_acc([acc_id]);
+                }
+            });
+        }
+    };
+
+    dlg.on_table_acc_render_created = function (render) {
+
+        // render.filter_state = function (header, title, col) {
+        //     var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+        //     _ret.push('<div class="tp-table-filter-inner">');
+        //     _ret.push('<div class="search-title">' + title + '</div>');
+        //
+        //     // 表格内嵌过滤器的DOM实体在这时生成
+        //     var filter_ctrl = header._table_ctrl.get_filter_ctrl('state');
+        //     _ret.push(filter_ctrl.render());
+        //
+        //     _ret.push('</div></div>');
+        //
+        //     return _ret.join('');
+        // };
+        //
+        // render.filter_search = function (header, title, col) {
+        //     var _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
+        //     _ret.push('<div class="tp-table-filter-inner">');
+        //     _ret.push('<div class="search-title">' + title + '</div>');
+        //
+        //     // 表格内嵌过滤器的DOM实体在这时生成
+        //     var filter_ctrl = header._table_ctrl.get_filter_ctrl('search');
+        //     _ret.push(filter_ctrl.render());
+        //
+        //     _ret.push('</div></div>');
+        //
+        //     return _ret.join('');
+        // };
+
+        render.make_check_box = function (row_id, fields) {
+            return '<span><input type="checkbox" data-check-box="' + fields.id + '" data-row-id="' + row_id + '"></span>';
+        };
+
+        render.acc_info = function (row_id, fields) {
+            return fields.username;
+            // var ret = [];
+            //
+            // ret.push('<span class="user-surname">' + fields.username + '@' + fields.host_ip + '</span>');
+            // if (fields.router_ip.length > 0)
+            //     ret.push('<span class="user-account">由 ' + fields.router_ip + ':' + fields.router_port + ' 路由</span>');
+            //
+            // return ret.join('');
+        };
+
+        render.protocol = function (row_id, fields) {
+            switch (fields.protocol_type) {
+                case TP_PROTOCOL_TYPE_RDP:
+                    return '<span class="label label-success"><i class="fa fa-desktop fa-fw"></i> RDP</span>';
+                case TP_PROTOCOL_TYPE_SSH:
+                    return '<span class="label label-primary"><i class="fa fa-keyboard-o fa-fw"></i> SSH</span>';
+                case TP_PROTOCOL_TYPE_TELNET:
+                    return '<span class="label label-info"><i class="fa fa-keyboard-o fa-fw"></i> TELNET</span>';
+                default:
+                    return '<span class="label label-ignore"><i class="fa fa-question-circle-o fa-fw"></i> 未设置</span>';
+            }
+        };
+
+        render.auth_type = function (row_id, fields) {
+            switch (fields.auth_type) {
+                case TP_AUTH_TYPE_NONE:
+                    return '<span class="label label-warning">无</span>';
+                case TP_AUTH_TYPE_PASSWORD:
+                    return '<span class="label label-primary">密码</span>';
+                case TP_AUTH_TYPE_PRIVATE_KEY:
+                    return '<span class="label label-success">私钥</span>';
+                default:
+                    return '<span class="label label-ignore">未设置</span>';
+            }
+        };
+
+        render.acc_state = function (row_id, fields) {
+            var _style, _state;
+
+            for (var i = 0; i < $app.obj_states.length; ++i) {
+                if ($app.obj_states[i].id === fields.state) {
+                    _style = $app.obj_states[i].style;
+                    _state = $app.obj_states[i].name;
+                    break;
+                }
+            }
+            if (i === $app.obj_states.length) {
+                _style = 'info';
+                _state = '<i class="fa fa-question-circle"></i> 未知';
+            }
+
+            return '<span class="label label-sm label-' + _style + '">' + _state + '</span>'
+        };
+
+        render.make_host_action_btn = function (row_id, fields) {
+            // var h = [];
+            // h.push('<div class="btn-group btn-group-sm">');
+            // h.push('<button type="button" class="btn btn-no-border dropdown-toggle" data-toggle="dropdown">');
+            // h.push('<span data-selected-action>操作</span> <i class="fa fa-caret-right"></i></button>');
+            // h.push('<ul class="dropdown-menu dropdown-menu-right dropdown-menu-sm">');
+            // h.push('<li><a href="javascript:;" data-action="edit"><i class="fa fa-edit fa-fw"></i> 编辑</a></li>');
+            // h.push('<li><a href="javascript:;" data-action="lock"><i class="fa fa-lock fa-fw"></i> 禁用</a></li>');
+            // h.push('<li><a href="javascript:;" data-action="unlock"><i class="fa fa-unlock fa-fw"></i> 解禁</a></li>');
+            // h.push('<li role="separator" class="divider"></li>');
+            // h.push('<li><a href="javascript:;" data-action="account"><i class="fa fa-user-secret fa-fw"></i> 管理远程账号</a></li>');
+            // h.push('<li role="separator" class="divider"></li>');
+            // h.push('<li><a href="javascript:;" data-action="duplicate"><i class="fa fa-cubes fa-fw"></i> 复制主机</a></li>');
+            // h.push('<li><a href="javascript:;" data-action="remove"><i class="fa fa-times-circle fa-fw"></i> 删除</a></li>');
+            // h.push('</ul>');
+            // h.push('</div>');
+            //
+            // return h.join('');
+
+
+            var ret = [];
+            ret.push('<div class="btn-group btn-group-sm" role="group">');
+            ret.push('<btn class="btn btn-primary" data-action="edit" data-id="' + fields.id + '"><i class="fa fa-edit"></i> 编辑</btn>');
+
+            if (fields.state === TP_STATE_NORMAL) {
+                ret.push('<btn class="btn btn-warning" data-action="lock" data-id="' + fields.id + '"><i class="fa fa-lock fa-fw"></i> 禁用</btn>');
+            } else {
+                ret.push('<btn class="btn btn-info" data-action="unlock" data-id="' + fields.id + '"><i class="fa fa-unlock fa-fw"></i> 解禁</btn>');
+            }
+
+            ret.push('<btn class="btn btn-danger" data-action="remove" data-id="' + fields.id + '"><i class="fa fa-trash-o"></i> 删除</btn>');
+            ret.push('</div>');
+            return ret.join('');
+        };
+    };
+
+    dlg.on_table_acc_header_created = function (header) {
+        // $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
+        //     CALLBACK_STACK.create()
+        //         .add(header._table_ctrl.load_data)
+        //         .add(header._table_ctrl.reset_filters)
+        //         .exec();
+        // });
+        //
+        // // 表格内嵌过滤器的事件绑定在这时进行（也可以延期到整个表格创建完成时进行）
+        // header._table_ctrl.get_filter_ctrl('search').on_created();
+        // // header._table_ctrl.get_filter_ctrl('role').on_created();
+        // header._table_ctrl.get_filter_ctrl('state').on_created();
+    };
+
+    dlg.check_acc_all_selected = function (cb_stack) {
+        var _all_checked = true;
+        var _objs = $('#' + $app.table_acc.dom_id + ' tbody').find('[data-check-box]');
+        if (_objs.length === 0) {
+            _all_checked = false;
+        } else {
+            $.each(_objs, function (i, _obj) {
+                if (!$(_obj).is(':checked')) {
+                    _all_checked = false;
+                    return false;
+                }
+            });
+        }
+
+        if (_all_checked) {
+            $app.dlg_accounts.dom.chkbox_acc_select_all.prop('checked', true);
+        } else {
+            $app.dlg_accounts.dom.chkbox_acc_select_all.prop('checked', false);
+        }
+
+        if (cb_stack)
+            cb_stack.exec();
+    };
+
+
     return dlg;
 };
 
@@ -1278,13 +1714,9 @@ $app.create_dlg_edit_account = function () {
 
             dlg.protocol_sub_type = TP_PROTOCOL_TYPE_RDP_DESKTOP;
         } else if (dlg.field_protocol === TP_PROTOCOL_TYPE_SSH) {
-            // $('#dlg-edit-host-protocol-port').val('22');
             dlg.dom.block_rdp_param.hide();
             dlg.dom.block_ssh_param.show();
             dlg.dom.block_prompt.hide();
-            // dlg.dom.block_sshkey.hide();
-            // dlg.dom.block_password.show();
-            // dlg.dom.block_username.show();
 
             html.push('<option value="1">用户名/密码 认证</option>');
             html.push('<option value="2">SSH私钥 认证</option>');
