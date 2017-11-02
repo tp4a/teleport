@@ -17,7 +17,7 @@
     <div class="container">
         <div class="row">
             <div id="slogan-box" class="col-md-5">
-                <div id="msg-slogan"></div>
+                <div id="msg-slogan" style="display: none;"></div>
             </div>
 
             <div class="col-md-6">

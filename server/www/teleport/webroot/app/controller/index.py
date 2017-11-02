@@ -9,7 +9,17 @@ from tornado.escape import json_encode
 
 class IndexHandler(TPBaseHandler):
     def get(self):
-        # self.redirect('/system/role')
+        ret = self.check_privilege(TP_PRIVILEGE_LOGIN_WEB)
+        if ret != TPE_OK:
+            return
+
+        up = self._user['privilege']
+
+        if (up & TP_PRIVILEGE_SYS_CONFIG) != 0:
+            return self.redirect('/dashboard')
+        elif (up & TP_PRIVILEGE_OPS) != 0:
+            return self.redirect('/ops/remote')
+
         self.redirect('/user/me')
 
 

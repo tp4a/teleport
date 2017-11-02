@@ -1,6 +1,15 @@
 "use strict";
 
-var BLUR_BG_COUNT = 8;
+var BLUR_BG_IMG = [
+    'login-bg-0.png',
+    'login-bg-1.png',
+    'login-bg-2.png',
+    'login-bg-3.png',
+    'login-bg-4.png',
+    'login-bg-5.png',
+    'login-bg-6.png',
+    'login-bg-7.png'
+];
 var SLOGAN = [
     '我感谢那段时光，<br/>因为不曾把我打倒的，<br/>最终让我变得更加强大！',
     '宁愿在做事中犯错，<br/>也不要为了不犯错而什么都不做。',
@@ -33,6 +42,9 @@ $app.on_init = function (cb_stack) {
 
         message: $('#message')
     };
+
+    $app.last_img_idx = 0;
+    $app.last_slogan_idx = 0;
 
     console.log($app.options);
     if ($app.options.username.length > 0) {
@@ -207,31 +219,47 @@ $app.on_screen_resize = function () {
 };
 
 $app.init_blur_bg = function () {
-    var img_id = Math.floor(Math.random() * (BLUR_BG_COUNT));
+    $app.last_img_idx = Math.floor(Math.random() * (BLUR_BG_IMG.length));
     $('body').backgroundBlur({
-        imageURL: '/static/img/login/login-bg-' + img_id + '.png?' + Math.random(),
-        blurAmount: 10,
+        imageURL: '/static/img/login/' + BLUR_BG_IMG[$app.last_img_idx] + '?' + Math.random(),
+        blurAmount: 15,
         duration: 1000,
         imageClass: 'bg-blur',
         overlayClass: 'bg-blur-overlay'
     });
 
-    setInterval($app._update_blur_bg, 20000);
+    setInterval($app._update_blur_bg, 20500);
 };
 
 $app._update_blur_bg = function () {
-    var img_id = Math.floor(Math.random() * (BLUR_BG_COUNT));
-    $('body').backgroundBlur('/static/img/login/login-bg-' + img_id + '.png?' + Math.random());
+    for(;;) {
+        var img_id = Math.floor(Math.random() * (BLUR_BG_IMG.length));
+        if(img_id !== $app.last_img_idx) {
+            $app.last_img_idx = img_id;
+            break;
+        }
+    }
+    $('body').backgroundBlur('/static/img/login/' + BLUR_BG_IMG[$app.last_img_idx] + '?' + Math.random());
 };
 
 $app.init_slogan = function () {
-    $app._update_slogan();
-    setInterval($app._update_slogan, 8000);
+    $app.last_slogan_idx = Math.floor(Math.random() * SLOGAN.length);
+    $app.dom.slogan.html(SLOGAN[$app.last_slogan_idx]).fadeIn(1000);
+
+    // $app._update_slogan();
+    setInterval($app._update_slogan, 8100);
 };
 
 $app._update_slogan = function () {
-    var msg_id = Math.floor(Math.random() * SLOGAN.length);
+    for(;;) {
+        var msg_id = Math.floor(Math.random() * (SLOGAN.length));
+        if(msg_id !== $app.last_slogan_idx) {
+            $app.last_slogan_idx = msg_id;
+            break;
+        }
+    }
+
     $app.dom.slogan.fadeOut(1000, function () {
-        $(this).html(SLOGAN[msg_id]).fadeIn(1000);
+        $(this).html(SLOGAN[$app.last_slogan_idx]).fadeIn(1000);
     });
 };

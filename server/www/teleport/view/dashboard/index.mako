@@ -17,18 +17,9 @@
 
 <div class="page-content-inner">
 
+    <div class="sys-msg">abc</div>
+
     <div class="row">
-        <div class="col-sm-3">
-            <div class="stats stats-box stats-id-host">
-                <div class="stats-icon">
-                    <i class="fa fa-cubes fa-fw"></i>
-                </div>
-                <div class="stats-content">
-                    <div class="stats-name">主机</div>
-                    <div class="stats-value">128</div>
-                </div>
-            </div>
-        </div>
         <div class="col-sm-3">
             <div class="stats stats-box stats-id-user">
                 <div class="stats-icon">
@@ -41,9 +32,20 @@
             </div>
         </div>
         <div class="col-sm-3">
+            <div class="stats stats-box stats-id-host">
+                <div class="stats-icon">
+                    <i class="fa fa-cubes fa-fw"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-name">主机</div>
+                    <div class="stats-value">128</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
             <div class="stats stats-box stats-id-account">
                 <div class="stats-icon">
-                    <i class="fa fa-user-circle fa-fw"></i>
+                    <i class="fa fa-user-secret fa-fw"></i>
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">主机账号</div>

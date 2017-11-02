@@ -204,7 +204,7 @@
     </div>
 
     <div class="modal fade" id="dlg-accounts" tabindex="-1">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog" style="width:800px;">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
@@ -212,8 +212,6 @@
                 </div>
 
                 <div class="modal-body">
-                    <div data-field="account-list"></div>
-
 
                     <div class="table-prefix-area">
                         <div class="table-extend-cell">
@@ -236,27 +234,12 @@
                                 <button id="btn-remove-acc" type="button" class="btn btn-default"><i class="fa fa-times-circle fa-fw"></i> 删除</button>
                             </div>
                         </div>
-##                         <div class="table-extend-cell table-item-counter">
-##                             <ol id="table-acc-paging"></ol>
-##                         </div>
                     </div>
 
-##                     <div class="table-extend-area">
-##                         <div class="table-extend-cell">
-##                             <div style="text-align:right;">
-##                                 <nav>
-##                                     <ul id="table-acc-pagination" class="pagination"></ul>
-##                                 </nav>
-##                             </div>
-##                         </div>
-##                     </div>
-
-
-##                     <button type="button" class="btn btn-sm btn-primary" data-btn="btn-add-account" style="margin-top:8px;"><i class="fa fa-plus-circle fa-fw"></i> 添加账号</button>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 完成</button>
                 </div>
             </div>
         </div>

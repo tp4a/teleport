@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
-# import tornado.ioloop
+from app.const import *
 from app.base.controller import TPBaseHandler
 
 
 class IndexHandler(TPBaseHandler):
     def get(self):
+        ret = self.check_privilege(TP_PRIVILEGE_LOGIN_WEB)
+        if ret != TPE_OK:
+            return
+
         self.render('dashboard/index.mako')

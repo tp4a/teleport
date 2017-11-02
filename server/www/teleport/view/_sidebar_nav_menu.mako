@@ -98,7 +98,7 @@
                 'name': '审计授权',
             },
 			{
-                'privilege': const.TP_PRIVILEGE_AUDIT_OPS_HISTORY,
+                'privilege': const.TP_PRIVILEGE_AUDIT_OPS_HISTORY | const.TP_PRIVILEGE_OPS,
                 'id': 'record',
                 'link': '/audit/record',
                 'name': '会话审计',
@@ -180,7 +180,7 @@
                                 </a>
                                 <ul class="sub-menu" id="sidebar_submenu_${menu['id']}" style="display:none;">
                                     %for sub in menu['sub']:
-                                        %if menu['privilege'] & current_user['privilege'] != 0:
+                                        %if (sub['privilege'] & current_user['privilege']) != 0:
                                             <li id="sidebar_menu_${menu['id']}_${sub['id']}"><a href="${sub['link']}"><span>${sub['name']}</span></a></li>
                                         %endif
                                     %endfor

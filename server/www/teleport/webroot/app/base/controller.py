@@ -132,7 +132,7 @@ class TPBaseHandler(tornado.web.RequestHandler):
                 raise RuntimeError("invalid request mode.")
             return TPE_NEED_LOGIN
         else:
-            if self._user['privilege'] & require_privilege != 0:
+            if (self._user['privilege'] & require_privilege) != 0:
                 return TPE_OK
 
         if self._mode == self.MODE_HTTP:

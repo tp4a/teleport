@@ -212,72 +212,93 @@ class DoUpdateAccountHandler(TPBaseJsonHandler):
             return self.write_json(TPE_JSON_FORMAT)
 
         try:
-            action = args['action']
             host_id = int(args['host_id'])
             acc_id = int(args['acc_id'])
         except:
             log.e('\n')
             return self.write_json(TPE_PARAM)
 
-        if action == 'remove':
-            err = account.remove_account(self, host_id, acc_id)
-            return self.write_json(err)
-        elif action == 'lock':
-            err = account.update_account_state(self, host_id, acc_id, TP_STATE_DISABLED)
-            return self.write_json(err)
-        elif action == 'unlock':
-            err = account.update_account_state(self, host_id, acc_id, TP_STATE_NORMAL)
-            return self.write_json(err)
-        elif action == 'update':
-            try:
-                param = dict()
-                # args['id'] = int(args['id'])
-                # args['host_id'] = int(args['host_id'])
-                param['host_ip'] = args['param']['host_ip']
-                param['router_ip'] = args['param']['router_ip']
-                param['router_port'] = args['param']['router_port']
-                param['protocol_type'] = int(args['param']['protocol'])
-                param['protocol_port'] = int(args['param']['port'])
-                param['auth_type'] = int(args['param']['auth_type'])
-                param['username'] = args['param']['username'].strip()
-                param['password'] = args['param']['password']
-                param['pri_key'] = args['param']['pri_key'].strip()
-            except:
-                log.e('\n')
-                return self.write_json(TPE_PARAM)
-
-            if len(param['username']) == 0:
-                return self.write_json(TPE_PARAM)
-
-            if acc_id == -1:
-                # 新增账号
-                if param['auth_type'] == TP_AUTH_TYPE_PASSWORD and len(param['password']) == 0:
-                    return self.write_json(TPE_PARAM)
-                elif param['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY and len(param['pri_key']) == 0:
-                    return self.write_json(TPE_PARAM)
-
-            if param['auth_type'] == TP_AUTH_TYPE_PASSWORD and len(param['password']) > 0:
-                code, ret_data = yield core_service_async_enc(param['password'])
-                if code != TPE_OK:
-                    return self.write_json(code, '无法加密存储密码！')
-                else:
-                    param['password'] = ret_data
-            elif param['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY and len(param['pri_key']) > 0:
-                code, ret_data = yield core_service_async_enc(param['pri_key'])
-                if code != TPE_OK:
-                    return self.write_json(code, '无法加密存储私钥！')
-                else:
-                    param['pri_key'] = ret_data
-
-            if acc_id == -1:
-                err, info = account.add_account(self, host_id, param)
-            else:
-                err = account.update_account(self, host_id, acc_id, param)
-                info = {}
-            return self.write_json(err, data=info)
-        else:
+        try:
+            param = dict()
+            param['host_ip'] = args['param']['host_ip']
+            param['router_ip'] = args['param']['router_ip']
+            param['router_port'] = args['param']['router_port']
+            param['protocol_type'] = int(args['param']['protocol'])
+            param['protocol_port'] = int(args['param']['port'])
+            param['auth_type'] = int(args['param']['auth_type'])
+            param['username'] = args['param']['username'].strip()
+            param['password'] = args['param']['password']
+            param['pri_key'] = args['param']['pri_key'].strip()
+        except:
+            log.e('\n')
             return self.write_json(TPE_PARAM)
 
+        if len(param['username']) == 0:
+            return self.write_json(TPE_PARAM)
+
+        if acc_id == -1:
+            # 新增账号
+            if param['auth_type'] == TP_AUTH_TYPE_PASSWORD and len(param['password']) == 0:
+                return self.write_json(TPE_PARAM)
+            elif param['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY and len(param['pri_key']) == 0:
+                return self.write_json(TPE_PARAM)
+
+        if param['auth_type'] == TP_AUTH_TYPE_PASSWORD and len(param['password']) > 0:
+            code, ret_data = yield core_service_async_enc(param['password'])
+            if code != TPE_OK:
+                return self.write_json(code, '无法加密存储密码！')
+            else:
+                param['password'] = ret_data
+        elif param['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY and len(param['pri_key']) > 0:
+            code, ret_data = yield core_service_async_enc(param['pri_key'])
+            if code != TPE_OK:
+                return self.write_json(code, '无法加密存储私钥！')
+            else:
+                param['pri_key'] = ret_data
+
+        if acc_id == -1:
+            err, info = account.add_account(self, host_id, param)
+        else:
+            err = account.update_account(self, host_id, acc_id, param)
+            info = {}
+
+        self.write_json(err, data=info)
+
+
+class DoUpdateAccountsHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_ACCOUNT | TP_PRIVILEGE_ACCOUNT_GROUP)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            action = args['action']
+            host_id = int(args['host_id'])
+            accounts = args['accounts']
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        if action == 'remove':
+            err = account.remove_accounts(self, host_id, accounts)
+            return self.write_json(err)
+        elif action == 'lock':
+            err = account.update_accounts_state(self, host_id, accounts, TP_STATE_DISABLED)
+            return self.write_json(err)
+        elif action == 'unlock':
+            err = account.update_accounts_state(self, host_id, accounts, TP_STATE_NORMAL)
+            return self.write_json(err)
+        else:
+            return self.write_json(TPE_PARAM)
 
 # class DoRemoveAccountHandler(TPBaseJsonHandler):
 #     def post(self):

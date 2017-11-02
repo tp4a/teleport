@@ -965,14 +965,10 @@ $app.create_dlg_accounts = function () {
     dlg.dom_id = 'dlg-accounts';
     dlg.host_row_id = -1;
     dlg.host = null;
-    dlg.accounts = [];
-    // dlg.row_id = -1;
 
     dlg.dom = {
         dialog: $('#' + dlg.dom_id),
         dlg_title: $('#' + dlg.dom_id + ' [data-field="dlg-title"]'),
-        // info: $('#' + dlg.dom_id + ' [data-field="user-info"]'),
-        //btn_add: $('#' + dlg.dom_id + ' [data-btn="btn-add-account"]'),
 
         btn_refresh_acc: $('#btn-refresh-acc'),
         btn_add_acc: $('#btn-add-acc'),
@@ -980,9 +976,7 @@ $app.create_dlg_accounts = function () {
 
         btn_lock_acc: $('#btn-lock-acc'),
         btn_unlock_acc: $('#btn-unlock-acc'),
-        btn_remove_acc: $('#btn-remove-acc'),
-
-        acc_list: $('#' + dlg.dom_id + ' [data-field="account-list"]')
+        btn_remove_acc: $('#btn-remove-acc')
     };
 
     dlg.init = function (cb_stack) {
@@ -1067,40 +1061,24 @@ $app.create_dlg_accounts = function () {
         };
 
         $app.table_acc = $tp.create_table(table_acc_options);
-        cb_stack
-        //.add($app.table_host.load_data)
-            .add($app.table_acc.init);
-
-        //-------------------------------
-        // 账号列表相关过滤器
-        //-------------------------------
-        // $tp.create_table_header_filter_search($app.table_host, {
-        //     name: 'search',
-        //     place_holder: '搜索：主机IP/名称/描述/资产编号/等等...'
-        // });
-        // $app.table_host_role_filter = $tp.create_table_filter_role($app.table_host, $app.role_list);
-        // 主机没有“临时锁定”状态，因此要排除掉
-        // $tp.create_table_header_filter_state($app.table_host, 'state', $app.obj_states, [TP_STATE_LOCKED]);
-
-        // 从cookie中读取用户分页限制的选择
-        // $tp.create_table_paging($app.table_acc, 'table-acc-paging',
-        //     {
-        //         per_page: Cookies.get($app.page_id('asset_host') + '_acc_per_page'),
-        //         on_per_page_changed: function (per_page) {
-        //             Cookies.set($app.page_id('asset_host') + '_acc_per_page', per_page, {expires: 365});
-        //         }
-        //     });
-        // $tp.create_table_pagination($app.table_acc, 'table-acc-pagination');
-
+        cb_stack.add($app.table_acc.init);
 
         dlg.dom.btn_add_acc.click(function () {
-            // dlg.show_edit_account = true;
             $app.dlg_edit_account.show_add(dlg.host_row_id);
         });
 
-
         dlg.dom.btn_refresh_acc.click(function () {
             dlg.load_accounts();
+        });
+
+        dlg.dom.btn_lock_acc.click(function () {
+            dlg.on_btn_lock_acc_click();
+        });
+        dlg.dom.btn_unlock_acc.click(function () {
+            dlg.on_btn_unlock_acc_click();
+        });
+        dlg.dom.btn_remove_acc.click(function () {
+            dlg.on_btn_remove_acc_click();
         });
 
         dlg.dom.chkbox_acc_select_all.click(function () {
@@ -1115,26 +1093,16 @@ $app.create_dlg_accounts = function () {
                 });
             }
         });
-        dlg.dom.btn_lock_acc.click(function () {
-            $app.on_btn_lock_acc_click();
-        });
-        dlg.dom.btn_unlock_acc.click(function () {
-            $app.on_btn_unlock_acc_click();
-        });
-        dlg.dom.btn_remove_acc.click(function () {
-            $app.on_btn_remove_acc_click();
-        });
 
         cb_stack.exec();
     };
 
-    dlg.get_selected_host = function (tbl) {
+    dlg.get_selected_acc = function (tbl) {
         var items = [];
-        var _objs = $('#' + $app.table_acc.dom_id + ' tbody tr td input[data-check-box]');
+        var _objs = $('#' + tbl.dom_id + ' tbody tr td input[data-check-box]');
         $.each(_objs, function (i, _obj) {
             if ($(_obj).is(':checked')) {
                 var _row_data = tbl.get_row(_obj);
-                // _all_checked = false;
                 items.push(_row_data.id);
             }
         });
@@ -1142,65 +1110,80 @@ $app.create_dlg_accounts = function () {
     };
 
     dlg._lock_acc = function (acc_ids) {
-        $tp.ajax_post_json('/asset/update-hosts', {action: 'lock', hosts: host_ids},
+        $tp.ajax_post_json('/asset/update-accounts', {action: 'lock', host_id: dlg.host.id, accounts: acc_ids},
             function (ret) {
                 if (ret.code === TPE_OK) {
-                    $app.table_host.load_data();
-                    $tp.notify_success('禁用主机操作成功！');
+                    CALLBACK_STACK.create()
+                        .add(dlg.check_acc_all_selected)
+                        .add(dlg.load_accounts)
+                        .exec();
+                    $tp.notify_success('禁用账号操作成功！');
                 } else {
-                    $tp.notify_error('禁用主机操作失败：' + tp_error_msg(ret.code, ret.message));
+                    $tp.notify_error('禁用账号操作失败：' + tp_error_msg(ret.code, ret.message));
                 }
             },
             function () {
-                $tp.notify_error('网络故障，禁用主机操作失败！');
+                $tp.notify_error('网络故障，禁用账号操作失败！');
             }
         );
     };
 
-    dlg.on_btn_lock_host_click = function () {
+    dlg.on_btn_lock_acc_click = function () {
         var items = dlg.get_selected_acc($app.table_acc);
         if (items.length === 0) {
-            $tp.notify_error('请选择要禁用的主机！');
+            $tp.notify_error('请选择要禁用的账号！');
             return;
         }
 
-        $app._lock_hosts(items);
+        dlg._lock_acc(items);
     };
 
-    $app._unlock_hosts = function (host_ids) {
-        $tp.ajax_post_json('/asset/update-hosts', {action: 'unlock', hosts: host_ids},
+    dlg._unlock_acc = function (acc_ids) {
+        $tp.ajax_post_json('/asset/update-accounts', {action: 'unlock', host_id: dlg.host.id, accounts: acc_ids},
             function (ret) {
                 if (ret.code === TPE_OK) {
-                    $app.table_host.load_data();
-                    $tp.notify_success('解禁主机操作成功！');
+                    CALLBACK_STACK.create()
+                        .add(dlg.check_acc_all_selected)
+                        .add(dlg.load_accounts)
+                        .exec();
+                    dlg.load_accounts();
+                    $tp.notify_success('解禁账号操作成功！');
                 } else {
-                    $tp.notify_error('解禁主机操作失败：' + tp_error_msg(ret.code, ret.message));
+                    $tp.notify_error('解禁账号操作失败：' + tp_error_msg(ret.code, ret.message));
                 }
             },
             function () {
-                $tp.notify_error('网络故障，解禁主机操作失败！');
+                $tp.notify_error('网络故障，解禁账号操作失败！');
             }
         );
     };
 
-    $app.on_btn_unlock_host_click = function () {
-        var items = $app.get_selected_host($app.table_host);
+    dlg.on_btn_unlock_acc_click = function () {
+        var items = dlg.get_selected_acc($app.table_acc);
         if (items.length === 0) {
-            $tp.notify_error('请选择要解禁的主机！');
+            $tp.notify_error('请选择要解禁的账号！');
             return;
         }
 
-        $app._unlock_hosts(items);
+        dlg._unlock_acc(items);
     };
 
-    $app._remove_hosts = function (host_ids) {
+    dlg._remove_acc = function (acc_ids) {
         var _fn_sure = function (cb_stack) {
-            $tp.ajax_post_json('/asset/update-hosts', {action: 'remove', hosts: host_ids},
+            $tp.ajax_post_json('/asset/update-accounts', {action: 'remove', host_id: dlg.host.id, accounts: acc_ids},
                 function (ret) {
                     if (ret.code === TPE_OK) {
-                        cb_stack.add($app.check_host_all_selected);
-                        cb_stack.add($app.table_host.load_data);
+                        cb_stack
+                            .add(dlg.check_acc_all_selected)
+                            .add(dlg.load_accounts)
+                            .exec();
                         $tp.notify_success('删除主机操作成功！');
+
+                        var update_args = {
+                            acc_count: dlg.host.acc_count - acc_ids.length
+                        };
+                        $app.table_host.update_row(dlg.host_row_id, update_args);
+
                     } else {
                         $tp.notify_error('删除主机操作失败：' + tp_error_msg(ret.code, ret.message));
                     }
@@ -1216,183 +1199,47 @@ $app.create_dlg_accounts = function () {
 
         var cb_stack = CALLBACK_STACK.create();
         $tp.dlg_confirm(cb_stack, {
-            msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除主机将同时删除与之相关的账号，并将主机和账号从所在分组中移除，同时删除所有相关授权！</p></div><p>如果您希望临时禁止登录指定主机，可将其“禁用”！</p><p>您确定要移除选定的' + host_ids.length + '个主机吗？</p>',
+            msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p></div><p>如果您希望临时禁止以指定账号登录远程主机，可将其“禁用”！</p><p>您确定要移除选定的' + acc_ids.length + '个账号吗？</p>',
             fn_yes: _fn_sure
         });
     };
 
+    dlg.on_btn_remove_acc_click = function () {
+        var items = dlg.get_selected_acc($app.table_acc);
+        if (items.length === 0) {
+            $tp.notify_error('请选择要删除的账号！');
+            return;
+        }
+
+        dlg._remove_acc(items);
+    };
 
     dlg.show = function (host_row_id) {
-        dlg.dom.acc_list.empty().html('<i class="fa fa-spinner fa-spin"></i> 正在加载...');
         dlg.host_row_id = host_row_id;
         dlg.host = $app.table_host.get_row(host_row_id);
         dlg.dom.dialog.modal();
         dlg.load_accounts();
     };
 
-    dlg.load_accounts = function () {
-        $tp.ajax_post_json('/asset/get-accounts', {
-                host_id: dlg.host.id
-            },
+    dlg.load_accounts = function (cb_stack) {
+        cb_stack = cb_stack || CALLBACK_STACK.create();
+
+        $tp.ajax_post_json('/asset/get-accounts', {host_id: dlg.host.id},
             function (ret) {
                 if (ret.code === TPE_OK) {
                     console.log('account:', ret.data);
-                    var cb_stack = CALLBACK_STACK.create();
                     $app.table_acc.set_data(cb_stack, {}, {total: ret.data.length, page_index: 1, data: ret.data});
-                    //$app.table_acc.set_data(cb_stack, {}, ret.data);
-                    dlg.accounts = ret.data;
                 } else {
-                    // $tp.notify_error('远程账号' + action + '失败：' + tp_error_msg(ret.code, ret.message));
+                    $app.table_acc.set_data(cb_stack, {}, {total: 0, page_index: 1, data: {}});
                     console.error('failed.', tp_error_msg(ret.code, ret.message));
-                    dlg.accounts = [];
                 }
-                dlg.show_account_list();
+                cb_stack.exec();
             },
             function () {
                 $tp.notify_error('网络故障，获取账号信息失败！');
+                cb_stack.exec();
             }
         );
-    };
-
-    dlg.show_account_list = function () {
-        var html = [];
-        if (dlg.accounts.length === 0) {
-            dlg.dom.acc_list.empty();
-            return;
-        }
-
-        for (var i = 0; i < dlg.accounts.length; ++i) {
-            var acc = dlg.accounts[i];
-            var pro_name = '未知';
-            if (acc.protocol_type === TP_PROTOCOL_TYPE_RDP) {
-                pro_name = 'RDP';
-            } else if (acc.protocol_type === TP_PROTOCOL_TYPE_SSH) {
-                pro_name = 'SSH';
-            } else if (acc.protocol_type === TP_PROTOCOL_TYPE_TELNET) {
-                pro_name = 'TELNET';
-            }
-            var auth_name = "未知";
-            if (acc.auth_type === TP_AUTH_TYPE_NONE) {
-                auth_name = '无';
-            } else if (acc.auth_type === TP_AUTH_TYPE_PASSWORD) {
-                auth_name = '密码';
-            } else if (acc.auth_type === TP_AUTH_TYPE_PRIVATE_KEY) {
-                auth_name = '私钥';
-            }
-
-            html.push('<div class="remote-action-group" id =' + "account-id-" + acc.id + '"><ul>');
-            html.push('<li class="remote-action-name">' + acc.username + '</li>');
-            html.push('<li class="remote-action-protocol">' + pro_name + '</li>');
-            html.push('<li class="remote-action-noauth">' + auth_name + '</li>');
-            html.push('<li class="remote-action-btn">');
-            html.push('<button type="button" class="btn btn-sm btn-primary" data-action="modify-account" data-id="' + acc.id + '"><i class="fa fa-edit fa-fw"></i> 修改</button>');
-            html.push('</li>');
-
-            if (acc.state === TP_STATE_NORMAL) {
-                html.push('<li class="remote-action-btn">');
-                html.push('<button type="button" class="btn btn-sm btn-info" data-action="lock-account" data-id="' + acc.id + '"><i class="fa fa-lock fa-fw"></i> 禁用</button>');
-                html.push('</li>');
-            } else {
-                html.push('<li class="remote-action-btn">');
-                html.push('<button type="button" class="btn btn-sm btn-success" data-action="unlock-account" data-id="' + acc.id + '"><i class="fa fa-unlock fa-fw"></i> 解禁</button>');
-                html.push('</li>');
-            }
-
-            html.push('<li class="remote-action-btn">');
-            html.push('<button type="button" class="btn btn-sm btn-danger" data-action="delete-account" data-id="' + acc.id + '"><i class="fa fa-trash-o fa-fw"></i> 删除</button>');
-            html.push('</li>');
-            html.push('</ul></div>');
-        }
-        dlg.dom.acc_list.empty().append($(html.join('')));
-
-        // 绑定账号操作按钮点击事件
-        $('#' + dlg.dom_id + ' [data-action="modify-account"]').click(function () {
-            var acc_id = parseInt($(this).attr('data-id'));
-            for (var i = 0; i < dlg.accounts.length; ++i) {
-                if (dlg.accounts[i].id === acc_id) {
-                    $app.dlg_edit_account.show_edit(dlg.host_row_id, dlg.accounts[i]);
-                    return;
-                }
-            }
-        });
-
-        // 删除账号
-        $('#' + dlg.dom_id + ' [data-action="delete-account"]').click(function () {
-            var acc_id = parseInt($(this).attr('data-id'));
-
-            var _fn_sure = function (cb_stack, cb_args) {
-                // $tp.ajax_post_json('/asset/remove-account', {host_id: dlg.host.id, acc_id: acc_id},
-                $tp.ajax_post_json('/asset/update-account', {action: 'remove', host_id: dlg.host.id, acc_id: acc_id},
-                    function (ret) {
-                        if (ret.code === TPE_OK) {
-                            // cb_stack.add($app.check_user_list_all_selected);
-                            // cb_stack.add($app.table_user_list.load_data);
-                            $tp.notify_success('删除账号操作成功！');
-
-                            var update_args = {
-                                acc_count: dlg.host.acc_count - 1
-                            };
-                            $app.table_host.update_row(dlg.host_row_id, update_args);
-
-                            dlg.load_accounts();
-                        } else {
-                            $tp.notify_error('删除账号操作失败：' + tp_error_msg(ret.code, ret.message));
-                        }
-
-                        cb_stack.exec();
-                    },
-                    function () {
-                        $tp.notify_error('网络故障，删除用户账号操作失败！');
-                        cb_stack.exec();
-                    }
-                );
-            };
-
-            var cb_stack = CALLBACK_STACK.create();
-            $tp.dlg_confirm(cb_stack, {
-                msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>如果您只是想临时禁止以此账号登录远程主机，可以<strong>禁用</strong>此账号。</p><p>您确定要删除此远程账号吗？</p>',
-                fn_yes: _fn_sure
-            });
-
-        });
-
-        // 禁用账号
-        $('#' + dlg.dom_id + ' [data-action="lock-account"]').click(function () {
-            var acc_id = parseInt($(this).attr('data-id'));
-
-            $tp.ajax_post_json('/asset/update-account', {action: 'lock', host_id: dlg.host.id, acc_id: acc_id},
-                function (ret) {
-                    if (ret.code === TPE_OK) {
-                        $tp.notify_success('远程账号已禁用！');
-                        dlg.load_accounts();
-                    } else {
-                        $tp.notify_error('禁用远程账号操作失败：' + tp_error_msg(ret.code, ret.message));
-                    }
-                },
-                function () {
-                    $tp.notify_error('网络故障，禁用远程账号操作失败！');
-                }
-            );
-        });
-
-        // 解禁账号
-        $('#' + dlg.dom_id + ' [data-action="unlock-account"]').click(function () {
-            var acc_id = parseInt($(this).attr('data-id'));
-
-            $tp.ajax_post_json('/asset/update-account', {action: 'unlock', host_id: dlg.host.id, acc_id: acc_id},
-                function (ret) {
-                    if (ret.code === TPE_OK) {
-                        $tp.notify_success('远程账号解禁成功！');
-                        dlg.load_accounts();
-                    } else {
-                        $tp.notify_error('远程账号解禁失败：' + tp_error_msg(ret.code, ret.message));
-                    }
-                },
-                function () {
-                    $tp.notify_error('网络故障，远程账号解禁失败！');
-                }
-            );
-        });
     };
 
     //-------------------------------
@@ -1579,9 +1426,9 @@ $app.create_dlg_accounts = function () {
         }
 
         if (_all_checked) {
-            $app.dlg_accounts.dom.chkbox_acc_select_all.prop('checked', true);
+            dlg.dom.chkbox_acc_select_all.prop('checked', true);
         } else {
-            $app.dlg_accounts.dom.chkbox_acc_select_all.prop('checked', false);
+            dlg.dom.chkbox_acc_select_all.prop('checked', false);
         }
 
         if (cb_stack)
@@ -1839,7 +1686,6 @@ $app.create_dlg_edit_account = function () {
 
         // 如果id为-1表示创建，否则表示更新
         $tp.ajax_post_json('/asset/update-account', {
-                action: 'update',
                 host_id: dlg.host.id,
                 acc_id: dlg.field_id,
                 param: {

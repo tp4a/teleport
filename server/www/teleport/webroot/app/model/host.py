@@ -229,7 +229,7 @@ def update_host(handler, args):
     sql_list.append(sql)
 
     # 更新所有此主机相关的账号
-    sql = 'UPDATE `{}acc` SET ip="{ip}", router_ip="{router_ip}", router_port={router_port} WHERE host_id={id};' \
+    sql = 'UPDATE `{}acc` SET host_ip="{ip}", router_ip="{router_ip}", router_port={router_port} WHERE host_id={id};' \
           ''.format(db.table_prefix,
                     ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'], id=args['id'])
     sql_list.append(sql)

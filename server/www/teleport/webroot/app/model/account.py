@@ -225,7 +225,7 @@ def update_account(handler, host_id, acc_id, args):
     db = get_db()
 
     # 1. 判断是否存在
-    sql = 'SELECT id FROM {}acc WHERE id={};'.format(db.table_prefix, acc_id)
+    sql = 'SELECT id FROM {}acc WHERE host_id={host_id} AND id={acc_id};'.format(db.table_prefix, host_id=host_id, acc_id=acc_id)
     db_ret = db.query(sql)
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
@@ -254,28 +254,29 @@ def update_account(handler, host_id, acc_id, args):
     return TPE_OK
 
 
-def update_account_state(handler, host_id, acc_id, state):
+def update_accounts_state(handler, host_id, acc_ids, state):
     db = get_db()
+    acc_ids = ','.join([str(uid) for uid in acc_ids])
 
     # 1. 判断是否存在
-    sql = 'SELECT id FROM {}acc WHERE host_id={host_id} AND id={acc_id};'.format(db.table_prefix, host_id=host_id, acc_id=acc_id)
+    sql = 'SELECT id FROM {}acc WHERE host_id={host_id} AND id IN ({ids});'.format(db.table_prefix, host_id=host_id, ids=acc_ids)
     db_ret = db.query(sql)
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
     sql_list = []
 
-    sql = 'UPDATE `{}acc` SET state={state} WHERE id={acc_id};' \
-          ''.format(db.table_prefix, state=state, acc_id=acc_id)
+    sql = 'UPDATE `{}acc` SET state={state} WHERE id IN ({ids});' \
+          ''.format(db.table_prefix, state=state, ids=acc_ids)
     sql_list.append(sql)
 
     # sync to update the ops-audit table.
-    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE rtype={rtype} AND rid={rid};' \
-          ''.format(db.table_prefix, state=state, rtype=TP_ACCOUNT, rid=acc_id)
+    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE rtype={rtype} AND rid IN ({rid});' \
+          ''.format(db.table_prefix, state=state, rtype=TP_ACCOUNT, rid=acc_ids)
     sql_list.append(sql)
 
-    sql = 'UPDATE `{}ops_map` SET a_state={state} WHERE a_id={acc_id};' \
-          ''.format(db.table_prefix, state=state, acc_id=acc_id)
+    sql = 'UPDATE `{}ops_map` SET a_state={state} WHERE a_id IN ({acc_id});' \
+          ''.format(db.table_prefix, state=state, acc_id=acc_ids)
     sql_list.append(sql)
 
     if db.transaction(sql_list):
@@ -284,48 +285,74 @@ def update_account_state(handler, host_id, acc_id, state):
         return TPE_DATABASE
 
 
-def remove_account(handler, host_id, acc_id):
+def remove_accounts(handler, host_id, acc_ids):
     """
-    删除一个远程账号
+    删除远程账号
     """
     db = get_db()
+    acc_count = len(acc_ids)
+    print(acc_count)
+    acc_ids = ','.join([str(uid) for uid in acc_ids])
 
-    # 1. 判断是否存在
     s = SQL(db)
-    s.select_from('acc', ['host_ip', 'router_ip', 'router_port', 'username'], alt_name='a')
-    s.where('a.id={} AND a.host_id={}'.format(acc_id, host_id))
+    # 1. 判断是否存在
+    s.select_from('host', ['acc_count'], alt_name='a')
+    s.where('a.id={h_id}'.format(h_id=host_id, ids=acc_ids))
+    err = s.query()
+    if err != TPE_OK:
+        return err
+    if len(s.recorder) == 0:
+        return TPE_NOT_EXISTS
+    print(s.recorder)
+
+
+
+    s.reset().select_from('acc', ['host_ip', 'router_ip', 'router_port', 'username'], alt_name='a')
+    s.where('a.host_id={h_id} AND a.id IN ({ids}) '.format(h_id=host_id, ids=acc_ids))
     err = s.query()
     if err != TPE_OK:
         return err
     if len(s.recorder) == 0:
         return TPE_NOT_EXISTS
 
-    acc_name = '{}@{}'.format(s.recorder[0]['username'], s.recorder[0]['host_ip'])
-    if len(s.recorder[0]['router_ip']) > 0:
-        acc_name += '（由{}:{}路由）'.format(s.recorder[0]['router_ip'], s.recorder[0]['router_port'])
+    acc_names = []
+    for a in s.recorder:
+        acc_name = '{}@{}'.format(a.username, a.host_ip)
+        if len(a.router_ip) > 0:
+            acc_name += '（由{}:{}路由）'.format(a.router_ip, a.router_port)
+        acc_names.append(acc_name)
 
     sql_list = []
 
-    sql = 'DELETE FROM `{}group_map` WHERE type={} AND mid={};'.format(db.table_prefix, TP_GROUP_ACCOUNT, acc_id)
+    sql = 'DELETE FROM `{}acc` WHERE host_id={} AND id IN ({});'.format(db.table_prefix, host_id, acc_ids)
     sql_list.append(sql)
 
-    sql = 'DELETE FROM `{}acc` WHERE id={} AND host_id={};'.format(db.table_prefix, acc_id, host_id)
+    sql = 'DELETE FROM `{}group_map` WHERE type={} AND mid IN ({});'.format(db.table_prefix, TP_GROUP_ACCOUNT, acc_ids)
     sql_list.append(sql)
 
     # 更新主机相关账号数量
-    sql = 'UPDATE `{}host` SET acc_count=acc_count-1 WHERE id={host_id};'.format(db.table_prefix, host_id=host_id)
+    sql = 'UPDATE `{}host` SET acc_count=acc_count-{acc_count} WHERE id={host_id};'.format(db.table_prefix, acc_count=acc_count, host_id=host_id)
     sql_list.append(sql)
 
-    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid={rid};'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=acc_id)
+    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=acc_ids)
     sql_list.append(sql)
 
-    sql = 'DELETE FROM `{}ops_map` WHERE a_id={acc_id};'.format(db.table_prefix, acc_id=acc_id)
+    sql = 'DELETE FROM `{}ops_map` WHERE a_id IN ({acc_id});'.format(db.table_prefix, acc_id=acc_ids)
     sql_list.append(sql)
 
     if not db.transaction(sql_list):
         return TPE_DATABASE
 
-    syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除账号：{}".format(acc_name))
+    s.reset().select_from('host', ['acc_count'], alt_name='a')
+    s.where('a.id={h_id}'.format(h_id=host_id, ids=acc_ids))
+    err = s.query()
+    if err != TPE_OK:
+        return err
+    if len(s.recorder) == 0:
+        return TPE_NOT_EXISTS
+    print(s.recorder)
+
+    syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除账号：{}".format('，'.join(acc_names)))
 
     return TPE_OK
 

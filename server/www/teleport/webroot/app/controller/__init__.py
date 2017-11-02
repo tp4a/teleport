@@ -22,8 +22,8 @@ from . import system
 __all__ = ['controllers', 'fix_controller']
 
 controllers = [
-    # (r'/', index.IndexHandler),
-    (r'/', user.UserListHandler),
+    (r'/', index.IndexHandler),
+    # (r'/', user.UserListHandler),
 
     # ====================================================
     # 控制台
@@ -121,10 +121,10 @@ controllers = [
     (r'/asset/account-group', account.AccGroupListHandler),
     #  - 某个账号组的管理页面
     (r'/asset/account-group/(.*)', account.AccGroupInfoHandler),
-    #  - [json] 添加/更新/删除/禁用/解禁 远程账号
+    #  - [json] 添加/更新 远程账号
     (r'/asset/update-account', account.DoUpdateAccountHandler),
-    #  - [json] 删除账号
-    # (r'/asset/remove-account', account.DoRemoveAccountHandler),
+    #  - [json] 禁用/解禁/删除 远程账号
+    (r'/asset/update-accounts', account.DoUpdateAccountsHandler),
     #  - [json] 获取账号列表
     (r'/asset/get-accounts', account.DoGetAccountsHandler),
     #  - [json] 获取账号组列表（包括不超过5个组内成员）

@@ -45,7 +45,7 @@ def get_free_space_bytes(folder):
 
 class RecordHandler(TPBaseHandler):
     def get(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY)
         if ret != TPE_OK:
             return
 
@@ -66,7 +66,9 @@ class RecordHandler(TPBaseHandler):
 
 class DoGetRecordsHandler(TPBaseJsonHandler):
     def post(self):
-        # return self.write_json(0, data=[])
+        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY)
+        if ret != TPE_OK:
+            return
 
         args = self.get_argument('args', None)
         if args is None:
