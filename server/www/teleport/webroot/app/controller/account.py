@@ -1,22 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import time
-import csv
-import os
 import json
 import threading
+
 import tornado.gen
 import tornado.httpclient
-
-from app.base.configs import get_cfg
+from app.base.controller import TPBaseHandler, TPBaseJsonHandler
+from app.base.core_server import core_service_async_enc
+from app.base.logger import *
 from app.const import *
-# from app.base.utils import *
 from app.model import account
 from app.model import group
-from app.base.logger import *
-from app.base.core_server import core_service_async_enc
-from app.base.session import session_manager
-from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 
 # cfg = get_cfg()
 

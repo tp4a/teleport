@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import json
 import datetime
+import json
 import shutil
-import copy
 
 import app.model.system as system_model
 import tornado.gen
 from app.base import mail
 from app.base.configs import get_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
+from app.base.logger import *
 from app.const import *
 from app.model import syslog
 
@@ -50,6 +50,67 @@ class RoleHandler(TPBaseHandler):
         if ret != TPE_OK:
             return
         self.render('system/role.mako')
+
+
+class DoRoleUpdateHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_ROLE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            role_id = int(args['role_id'])
+            role_name = args['role_name']
+            privilege = int(args['privilege'])
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        if role_id == 0:
+            err, role_id = system_model.add_role(self, role_id, role_name, privilege)
+        else:
+            if role_id == 1:
+                return self.write_json(TPE_FAILED, '禁止修改系统管理员角色！')
+            err = system_model.update_role(self, role_id, role_name, privilege)
+
+        return self.write_json(err, data=role_id)
+
+
+class DoRoleRemoveHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_ROLE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            role_id = int(args['role_id'])
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        if role_id == 1:
+            return self.write_json(TPE_FAILED, '禁止删除系统管理员角色！')
+        err = system_model.remove_role(self, role_id)
+
+        return self.write_json(err)
 
 
 class SysLogHandler(TPBaseHandler):

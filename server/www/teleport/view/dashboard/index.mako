@@ -27,7 +27,7 @@
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">用户</div>
-                    <div class="stats-value">21</div>
+                    <div class="stats-value">-</div>
                 </div>
             </div>
         </div>
@@ -38,7 +38,7 @@
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">主机</div>
-                    <div class="stats-value">128</div>
+                    <div class="stats-value">-</div>
                 </div>
             </div>
         </div>
@@ -49,7 +49,7 @@
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">主机账号</div>
-                    <div class="stats-value">63</div>
+                    <div class="stats-value">-</div>
                 </div>
             </div>
         </div>
@@ -60,7 +60,7 @@
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">当前连接</div>
-                    <div class="stats-value">18</div>
+                    <div class="stats-value">-</div>
                 </div>
             </div>
         </div>

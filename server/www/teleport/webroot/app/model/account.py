@@ -291,7 +291,6 @@ def remove_accounts(handler, host_id, acc_ids):
     """
     db = get_db()
     acc_count = len(acc_ids)
-    print(acc_count)
     acc_ids = ','.join([str(uid) for uid in acc_ids])
 
     s = SQL(db)
@@ -303,9 +302,6 @@ def remove_accounts(handler, host_id, acc_ids):
         return err
     if len(s.recorder) == 0:
         return TPE_NOT_EXISTS
-    print(s.recorder)
-
-
 
     s.reset().select_from('acc', ['host_ip', 'router_ip', 'router_port', 'username'], alt_name='a')
     s.where('a.host_id={h_id} AND a.id IN ({ids}) '.format(h_id=host_id, ids=acc_ids))
@@ -350,7 +346,6 @@ def remove_accounts(handler, host_id, acc_ids):
         return err
     if len(s.recorder) == 0:
         return TPE_NOT_EXISTS
-    print(s.recorder)
 
     syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除账号：{}".format('，'.join(acc_names)))
 

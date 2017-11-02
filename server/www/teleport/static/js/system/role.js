@@ -1,32 +1,16 @@
 "use strict";
 
 $app.on_init = function (cb_stack) {
-    $app.last_role_id = 0;
+    $app.last_role_id = 0; // todo: 使用数组的方式管理选择历史
     $app.selected_role_id = 0;
     $app.edit_mode = false;
 
     $app.dom = {
         role_list: $('#role-list'),
         btn_edit_role: $('#btn-edit-role'),
-        btn_del_role: $('#btn-delete-role'),
+        btn_remove_role: $('#btn-remove-role'),
         btn_save_role: $('#btn-save-role'),
         btn_cancel_edit_role: $('#btn-cancel-edit-role'),
-        // btn_verify_oath_code: $('#btn-verify-oath-code'),
-        // btn_verify_oath_code_and_save: $('#btn-verify-oath-and-save'),
-        // btn_modify_password: $('#btn-modify-password'),
-        // btn_toggle_oath_download: $('#toggle-oath-download'),
-        //
-        // oath_app_download_box: $('#oath-app-download-box'),
-        //
-        // input_role_name: $('#input-role-name'),
-        // input_new_password: $('#new-password-1'),
-        // input_new_password_confirm: $('#new-password-2'),
-        // input_oath_code: $('#oath-code'),
-        // input_oath_code_verify: $('#oath-code-verify'),
-        //
-        // dlg_reset_oath_code: $('#dialog-reset-oath-code'),
-        // oath_secret_image: $('#oath-secret-qrcode'),
-        // tmp_oath_secret: $('#tmp-oath-secret'),
 
         role_info: $('#role-info'),
         privilege_list: $('#privilege-list')
@@ -48,6 +32,7 @@ $app.on_init = function (cb_stack) {
 };
 
 $app.create_controls = function () {
+    console.log($app.role_list);
     var nodes = [];
     var selected_role_id = 0;
     for (var i = 0; i < $app.role_list.length; ++i) {
@@ -66,7 +51,6 @@ $app.create_controls = function () {
 
     $app.dom.role_list.append($(nodes.join('')));
     $app.dom.btn_create_role = $('#btn-create-role');
-
 
     var privileges = [
         {
@@ -130,6 +114,9 @@ $app.create_controls = function () {
         $app.show_role(role_id, false);
     });
     $app.dom.privilege_list.find('[data-privilege]').click(function () {
+        if (!$app.edit_mode)
+            return;
+
         var obj = $(this);
         if (obj.hasClass('enabled')) {
             obj.removeClass('enabled');
@@ -137,26 +124,40 @@ $app.create_controls = function () {
             obj.addClass('enabled');
         }
 
-        if (!$app.edit_mode) {
-            $app.edit_mode = true;
-            $app.dom.role.save_area.slideDown();
-        }
+        // if (!$app.edit_mode) {
+        //     $app.edit_mode = true;
+        //     $app.dom.role.save_area.slideDown();
+        // }
     });
 
     $app.dom.btn_edit_role.click(function () {
         $app.show_role($app.selected_role_id, true);
     });
+
     $app.dom.btn_cancel_edit_role.click(function () {
         if ($app.selected_role_id !== 0)
             $app.show_role($app.selected_role_id, false);
         else
             $app.show_role($app.last_role_id, false);
     });
+
+    $app.dom.btn_save_role.click(function () {
+        $app.save_role();
+    });
+
+    $app.dom.btn_remove_role.click(function () {
+        $app.remove_role();
+    });
 };
 
 $app.show_role = function (role_id, edit_mode) {
     var edit = edit_mode || false;
     var role = null;
+
+    if (role_id === 1 && edit_mode) {
+        $tp.notify_error('禁止修改管理员角色！');
+        return;
+    }
 
     if (role_id === 0) {
         role = {id: 0, name: '', privilege: 0};
@@ -204,4 +205,123 @@ $app.show_role = function (role_id, edit_mode) {
     $app.selected_role_id = role_id;
     if (role_id !== 0)
         $app.last_role_id = role_id;
+};
+
+$app.save_role = function () {
+    var role_name = $app.dom.role.input_role_name.val();
+    if (role_name.length === 0) {
+        $tp.notify_error('请为此角色设置一个名称！');
+        $app.role.dom.input_role_name.focus();
+        return;
+    }
+
+    var p = 0;
+    var privilege_objs = $('#role-info').find('[data-privilege]');
+    for (var i = 0; i < privilege_objs.length; ++i) {
+        var obj = $(privilege_objs[i]);
+        if (obj.hasClass('enabled')) {
+            p |= parseInt(obj.attr('data-privilege'));
+        }
+    }
+
+    if (0 === p) {
+        $tp.notify_error('此角色未设定任何权限！');
+        return;
+    }
+
+    var action = ($app.selected_role_id === 0) ? '添加' : '更新';
+
+    $tp.ajax_post_json('/system/role-update',
+        {
+            role_id: $app.selected_role_id,
+            role_name: role_name,
+            privilege: p
+        },
+        function (ret) {
+            if (ret.code === TPE_OK) {
+                var role_id = ret.data;
+                $tp.notify_success('角色' + action + '成功！');
+
+                if ($app.selected_role_id === 0) {
+                    $app.role_list.push({id: role_id, name: role_name, privilege: p});
+
+                    var html = [];
+                    html.push('<li data-role-id="' + role_id + '"');
+                    html.push('><i class="fa fa-user-circle fa-fw"></i> ');
+                    html.push(role_name);
+                    html.push('</li>');
+
+                    $app.dom.btn_create_role.before($(html.join('')));
+
+
+                    $app.dom.role_list.find('[data-role-id="'+role_id+'"]').click(function () {
+                        var obj = $(this);
+                        if (obj.hasClass('active')) {
+                            return;
+                        }
+                        var r_id = parseInt(obj.attr('data-role-id'));
+                        $app.show_role(r_id, false);
+                    });
+
+                } else {
+                    for (var i = 0; i < $app.role_list.length; ++i) {
+                        console.log($app.role_list[i].id, role_id);
+                        if ($app.role_list[i].id === role_id) {
+                            $app.role_list[i].name = role_name;
+                            $app.role_list[i].privilege = p;
+                            break;
+                        }
+                    }
+                }
+
+                $app.dom.role_list.find('[data-role-id="' + role_id + '"]').html('<i class="fa fa-user-circle fa-fw"></i> ' + role_name);
+
+                $app.show_role(role_id, false);
+
+            } else {
+                $tp.notify_error('角色' + action + '失败：' + tp_error_msg(ret.code, ret.message));
+            }
+        },
+        function () {
+            $tp.notify_error('网路故障，角色' + action + '失败！');
+        }
+    );
+
+};
+
+$app.remove_role = function () {
+    if ($app.selected_role_id === 1) {
+        $tp.notify_error('禁止删除管理员角色！');
+        return;
+    }
+
+    $tp.ajax_post_json('/system/role-remove',
+        {
+            role_id: $app.selected_role_id
+        },
+        function (ret) {
+            if (ret.code === TPE_OK) {
+                $tp.notify_success('角色删除成功！');
+                for (var i = 0; i < $app.role_list; ++i) {
+                    if ($app.role_list[i].id === $app.selected_role_id) {
+                        delete $app.role_list[i];
+                        break;
+                    }
+                }
+
+                $app.dom.role_list.find('[data-role-id="' + $app.selected_role_id + '"]').remove();
+
+                if ($app.last_role_id === $app.selected_role_id)
+                    $app.last_role_id = 1;
+                $app.show_role($app.last_role_id, false);
+
+            } else {
+                $tp.notify_error('角色删除失败：' + tp_error_msg(ret.code, ret.message));
+            }
+        },
+        function () {
+            $tp.notify_error('网路故障，角色删除失败！');
+        }
+    );
+
 };

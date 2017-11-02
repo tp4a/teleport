@@ -207,6 +207,10 @@ controllers = [
     # 系统管理设置相关
     #  - 角色管理页面
     (r'/system/role', system.RoleHandler),
+    #  - [json] 创建/更新 角色
+    (r'/system/role-update', system.DoRoleUpdateHandler),
+    #  - [json] 删除 角色
+    (r'/system/role-remove', system.DoRoleRemoveHandler),
     #  - 系统日志页面
     (r'/system/syslog', system.SysLogHandler),
     #  - [json] 获取系统日志列表

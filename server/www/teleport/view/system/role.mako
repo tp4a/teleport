@@ -20,8 +20,6 @@
             <i class="fa fa-info-circle fa-fw icon-bg"></i> 角色就是一组权限的集合。
         </div>
 
-        ##         <div style="padding:10px 0;">角色列表 <a href="javascript:;"><i class="fa fa-plus-circle fa-fw"></i> 创建新角色</a></div>
-
         <div>
             <table class="table table-role">
                 <tr>
@@ -30,7 +28,6 @@
                         <ul id="role-list"></ul>
                     </td>
                     <td id="role-info" class="role-privilege editable">
-                        ##                     <td id="role-info" class="role-privilege">
 
                         <div>
                             <div style="float:left;">
@@ -43,61 +40,12 @@
                             </div>
                             <div style="float:right;">
                                 <button id="btn-edit-role" class="btn btn-sm btn-primary"><i class="fa fa-edit fa-fw"></i> 编辑角色</button>
-                                <button id="btn-delete-role" class="btn btn-sm btn-danger"><i class="fa fa-trash-o fa-fw"></i> 删除角色</button>
+                                <button id="btn-remove-role" class="btn btn-sm btn-danger"><i class="fa fa-trash-o fa-fw"></i> 删除角色</button>
                             </div>
                             <div class="clear-float"></div>
                         </div>
 
                         <div id="privilege-list"></div>
-
-                        ##                         <hr/>
-                        ##                         <div class="title">资产</div>
-                        ##                         <ul>
-                        ##                             <li><span data-checkbox=TP_PRIVILEGE_ACCOUNT class="">主机信息创建/编辑</span></li>
-                        ##                             <li><span data-checkbox="ASSET_DELETE" class="">删除主机信息</span></li>
-                        ##                             <li><span data-checkbox="ASSET_LOCK" class="">主机禁用/解禁</span></li>
-                        ##                             <li><span data-checkbox="ASSET_GROUP" class="">主机分组管理</span></li>
-                        ##                             <li><span data-checkbox="ACCOUNT" class="">主机账号管理</span></li>
-                        ##                             <li><span data-checkbox="ACCOUNT_GROUP" class="">主机账号分组管理</span></li>
-                        ##                         </ul>
-                        ##
-                        ##                         <hr/>
-                        ##                         <div class="title">用户</div>
-                        ##                         <ul>
-                        ##                             <li><span href="#" class="enabled" data-checked="yes">登录WEB系统</span></li>
-                        ##                             <li><span href="#" class="enabled" data-checked="yes">用户创建/编辑</span></li>
-                        ##                             <li><span href="#" class="enabled" data-checked="yes">删除用户</span></li>
-                        ##                             <li><span href="#" class="">用户禁用/解禁</span></li>
-                        ##                             <li><span href="#" class="">用户分组管理</span></li>
-                        ##                         </ul>
-                        ##
-                        ##                         <hr/>
-                        ##                         <div class="title">运维</div>
-                        ##                         <ul>
-                        ##                             <li><span href="#" class="enabled" data-checked="yes">远程主机运维</span></li>
-                        ##                             <li><span href="#" class="">运维授权管理</span></li>
-                        ##                             <li><span href="#" class="enabled" data-checked="yes">查看在线会话</span></li>
-                        ##                             <li><span href="#" class="">阻断在线会话</span></li>
-                        ##                         </ul>
-                        ##
-                        ##                         <hr/>
-                        ##                         <div class="title">审计</div>
-                        ##                         <ul>
-                        ##                             <li><span href="#" class="enabled" data-checked="yes">审计（查看历史会话）</span></li>
-                        ##                             <li><span href="#" class="enabled" data-checked="yes">审计授权管理</span></li>
-                        ##                             ##                             <li><span href="#" class="">查看系统日志</span></li>
-                        ##                         </ul>
-                        ##
-                        ##                         <hr/>
-                        ##                         <div class="title">系统</div>
-                        ##                         <ul>
-                        ##                             ##                             <li><span href="#" class="enabled" data-checked="yes">部门管理</span></li>
-                        ##
-                        ##                             <li><span href="#" class="enabled">角色管理</span></li>
-                        ##                             <li><span href="#" class="enabled">系统配置与维护</span></li>
-                        ##                             <li><span href="#" class="enabled">历史会话管理</span></li>
-                        ##                             <li><span href="#" class="">系统日志管理</span></li>
-                        ##                         </ul>
 
                         <div id="save-area" style="display:none;">
                             <hr/>
@@ -137,6 +85,6 @@
             <li><em>历史会话管理</em></li>
             <li><em>系统日志管理</em></li>
         </ul>
-        <p>特别注意：teleport系统使用<strong>最小权限判定规则</strong>，也即，在检查权限时，会按用户所具有的最小权限进行判断。例如：如用户无远程主机运维权限，那么即使其所在用户组被授权访问某远程主机，此用户也无法连接到该远程主机。</p>
+##         <p>特别注意：teleport系统使用<strong>最小权限判定规则</strong>，也即，在检查权限时，会按用户所具有的最小权限进行判断。例如：如用户无远程主机运维权限，那么即使其所在用户组被授权访问某远程主机，此用户也无法连接到该远程主机。</p>
     </div>
 </div>
