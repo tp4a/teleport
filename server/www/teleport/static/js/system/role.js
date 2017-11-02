@@ -79,15 +79,15 @@ $app.create_controls = function () {
         },
         {
             t: '审计', i: [
-            {n: '审计（查看历史会话）', p: TP_PRIVILEGE_AUDIT_OPS_HISTORY},
+            {n: '审计（回放操作录像）', p: TP_PRIVILEGE_AUDIT_OPS_HISTORY},
             {n: '审计授权管理', p: TP_PRIVILEGE_AUDIT_AUZ}]
         },
         {
             t: '系统', i: [
             {n: '角色管理', p: TP_PRIVILEGE_SYS_ROLE},
             {n: '系统配置与维护', p: TP_PRIVILEGE_SYS_CONFIG},
-            {n: '历史会话管理', p: TP_PRIVILEGE_SYS_OPS_HISTORY},
-            {n: '系统日志管理', p: TP_PRIVILEGE_SYS_LOG}]
+            // {n: '历史会话管理', p: TP_PRIVILEGE_SYS_OPS_HISTORY},
+            {n: '查看系统日志', p: TP_PRIVILEGE_SYS_LOG}]
         }
     ];
     nodes = [];
@@ -160,7 +160,7 @@ $app.show_role = function (role_id, edit_mode) {
     }
 
     if (role_id === 0) {
-        role = {id: 0, name: '', privilege: 0};
+        role = {id: 0, name: '', privilege: TP_PRIVILEGE_LOGIN_WEB};
         edit = true;
     } else {
         for (var i = 0; i < $app.role_list.length; ++i) {

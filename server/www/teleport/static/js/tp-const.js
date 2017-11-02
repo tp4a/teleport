@@ -1,5 +1,12 @@
 "use strict";
 
+
+var TP_LOGIN_AUTH_SYS_DEFAULT = 0;   // 系统默认
+var TP_LOGIN_AUTH_USERNAME_PASSWORD = 0x0001;   // 用户名+密码
+var TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA = 0x0002;    // 用户名+密码+验证码
+var TP_LOGIN_AUTH_USERNAME_OATH = 0x0004;  // 用户名+OATH
+var TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH = 0x0008;   // 用户名+密码+OATH
+
 //=======================================================
 // 远程连接认证方式
 //=======================================================
@@ -135,8 +142,8 @@ var TP_PRIVILEGE_AUDIT_AUZ = 0x00010000;//  # 审计策略授权管理
 
 var TP_PRIVILEGE_SYS_ROLE = 0x00040000;//  # 角色管理
 var TP_PRIVILEGE_SYS_CONFIG = 0x00080000;//  # 系统配置维护
-var TP_PRIVILEGE_SYS_OPS_HISTORY = 0x00100000;//  # 历史会话管理（例如删除历史会话、设定多长时间之前的历史会话自动删除等）
-var TP_PRIVILEGE_SYS_LOG = 0x00200000;//  # 系统日志管理（例如日志备份、删除等）
+//var TP_PRIVILEGE_SYS_OPS_HISTORY = 0x00100000;//  # 历史会话管理（例如删除历史会话、设定多长时间之前的历史会话自动删除等）
+var TP_PRIVILEGE_SYS_LOG = 0x00200000;//  # 查看系统日志
 
 var TP_PRIVILEGES = [
     TP_PRIVILEGE_LOGIN_WEB,
@@ -159,7 +166,7 @@ var TP_PRIVILEGES = [
     //TP_PRIVILEGE_AUDIT_SYSLOG,
     TP_PRIVILEGE_SYS_ROLE,
     TP_PRIVILEGE_SYS_CONFIG,
-    TP_PRIVILEGE_SYS_OPS_HISTORY,
+    //TP_PRIVILEGE_SYS_OPS_HISTORY,
     TP_PRIVILEGE_SYS_LOG
 ];
 
@@ -221,11 +228,6 @@ var TPE_START_CLIENT = 100002;	// 无法启动客户端程序（无法创建进�
 //-------------------------------------------------------
 var TPE_NO_CORE_SERVER = 200000;	// 未能检测到核心服务
 
-
-// 使用用户名密码登录（额外需要验证码）
-var LOGIN_TYPE_PASSWORD_CAPTCHA = 1;
-// 使用用户名密码登录（额外需要身份验证器的动态验证码）
-var LOGIN_TYPE_PASSWORD_OATH = 2;
 
 // ==========================================================================
 // 数据库类型

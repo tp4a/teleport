@@ -78,7 +78,8 @@
             </div>
 
             <div class="tab-pane" style="padding:15px;" id="tab-search">
-                此功能尚未实现
+                <div class="alert alert-danger">快速查找功能尚未实现</div>
+
             </div>
         </div>
 
@@ -88,7 +89,6 @@
     <div class="box">
         <p>说明：</p>
         <ul class="help-list">
-##             <li>可以通过表格标题栏进行搜索或过滤，以便快速定位你需要的信息。标题栏左侧的 <i class="fa fa-rotate-left fa-fw"></i> 可以重置过滤器。</li>
             <li>上下拖动“顺序”栏中的 <i class="fa fa-reorder fa-fw"></i> 可以调节策略的检查顺序。</li>
             <li>可以在“快速查找”中快速定位用户或主机的授权关系。</li>
         </ul>

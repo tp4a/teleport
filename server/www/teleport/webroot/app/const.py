@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
-LOGIN_TYPE_PASSWORD_CAPTCHA = 1
-LOGIN_TYPE_PASSWORD_OATH = 2
+TP_LOGIN_AUTH_SYS_DEFAULT = 0    # 系统默认（根据系统配置进行）
+TP_LOGIN_AUTH_USERNAME_PASSWORD = 0x0001    # 用户名+密码
+TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA = 0x0002    # 用户名+密码+验证码
+TP_LOGIN_AUTH_USERNAME_OATH = 0x0004    # 用户名+OATH
+TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH = 0x0008    # 用户名+密码+OATH
 
 APP_MODE_NORMAL = 1
 APP_MODE_MAINTENANCE = 2
@@ -156,8 +159,8 @@ TP_PRIVILEGE_AUDIT_AUZ = 0x00010000  # 审计策略授权管理
 
 TP_PRIVILEGE_SYS_ROLE = 0x00040000  # 角色管理
 TP_PRIVILEGE_SYS_CONFIG = 0x00080000  # 系统配置维护
-TP_PRIVILEGE_SYS_OPS_HISTORY = 0x00100000  # 历史会话管理（例如删除历史会话、设定多长时间之前的历史会话自动删除等）
-TP_PRIVILEGE_SYS_LOG = 0x00200000  # 系统日志管理（例如日志备份、删除等）
+# TP_PRIVILEGE_SYS_OPS_HISTORY = 0x00100000  # 历史会话管理（例如删除历史会话、设定多长时间之前的历史会话自动删除等）
+TP_PRIVILEGE_SYS_LOG = 0x00200000  # 查看系统日志
 
 # ===================================================================
 # error code

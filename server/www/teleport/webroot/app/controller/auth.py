@@ -74,7 +74,7 @@ class DoLoginHandler(TPBaseJsonHandler):
 
         _tmp = {'username': username, 'surname': username}
 
-        if login_type == LOGIN_TYPE_PASSWORD_CAPTCHA:
+        if login_type == TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA:
             oath = None
             code = self.get_session('captcha')
             if code is None:
@@ -82,7 +82,7 @@ class DoLoginHandler(TPBaseJsonHandler):
             self.del_session('captcha')
             if code.lower() != captcha.lower():
                 return self.write_json(TPE_CAPTCHA_MISMATCH, '验证码错误')
-        elif login_type == LOGIN_TYPE_PASSWORD_OATH:
+        elif login_type == TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH:
             if len(oath) == 0:
                 return self.write_json(TPE_OATH_MISMATCH, '未提供身份验证器动态验证码')
         else:
@@ -108,11 +108,11 @@ class DoLoginHandler(TPBaseJsonHandler):
             syslog.sys_log(_tmp, self.request.remote_ip, TPE_FAILED, '登录失败，系统内部错误')
             return self.write_json(TPE_FAILED)
 
-        if login_type == LOGIN_TYPE_PASSWORD_CAPTCHA:
+        if login_type == TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA:
             if not tp_password_verify(password, user_info['password']):
                 syslog.sys_log(_tmp, self.request.remote_ip, TPE_USER_AUTH, '登录失败，密码错误！')
                 return self.write_json(TPE_USER_AUTH)
-        elif login_type == LOGIN_TYPE_PASSWORD_OATH:
+        elif login_type == TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH:
             if not tp_oath_verify_code(user_info['oath_secret'], oath):
                 syslog.sys_log(_tmp, self.request.remote_ip, TPE_OATH_MISMATCH, "登录失败，身份验证器动态验证码错误！")
                 return self.write_json(TPE_OATH_MISMATCH)

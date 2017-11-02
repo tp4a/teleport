@@ -2,23 +2,6 @@
 
 $app.on_init = function () {
     $app.dom = {
-        // btn_reset_oath_code: $('#btn-reset-oath-code'),
-        // btn_verify_oath_code: $('#btn-verify-oath-code'),
-        // btn_verify_oath_code_and_save: $('#btn-verify-oath-and-save'),
-        // btn_modify_password: $('#btn-modify-password'),
-        // btn_toggle_oath_download: $('#toggle-oath-download'),
-        //
-        // oath_app_download_box: $('#oath-app-download-box'),
-        //
-        // input_current_password: $('#current-password'),
-        // input_new_password: $('#new-password-1'),
-        // input_new_password_confirm: $('#new-password-2'),
-        // input_oath_code: $('#oath-code'),
-        // input_oath_code_verify: $('#oath-code-verify'),
-        //
-        // dlg_reset_oath_code: $('#dialog-reset-oath-code'),
-        // oath_secret_image: $('#oath-secret-qrcode'),
-        // tmp_oath_secret: $('#tmp-oath-secret'),
 
         // 邮件系统设置
         mail: {
@@ -183,7 +166,7 @@ $app._on_btn_save_mail_config = function () {
         return;
 
     $app.dom.mail.btn_save_mail_config.attr('disabled', 'disabled');
-    $tp.ajax_post_json('/system/save-mail-config',
+    $tp.ajax_post_json('/system/save-smtp-config',
         {
             smtp_server: _server,
             smtp_port: _port,

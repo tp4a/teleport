@@ -101,7 +101,7 @@ def remove_role(handler, role_id):
     if not db.transaction(sql_list):
         return TPE_DATABASE
 
-    syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除角色：{}".format('，'.join(role_name)))
+    syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除角色：{}".format(role_name))
 
     return TPE_OK
 

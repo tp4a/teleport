@@ -17,15 +17,15 @@
 <div class="page-content-inner">
     <div class="box box-nav-tabs">
         <ul class="nav nav-tabs">
-            <li><a href="#tab-security" data-toggle="tab">安全</a></li>
+            <li class="active"><a href="#tab-security" data-toggle="tab">安全</a></li>
             <li><a href="#tab-email" data-toggle="tab">邮件系统</a></li>
-            <li class="active"><a href="#tab-storage" data-toggle="tab">存储</a></li>
+            <li><a href="#tab-storage" data-toggle="tab">存储</a></li>
             <li><a href="#tab-backup" data-toggle="tab">备份</a></li>
         </ul>
 
         <div class="tab-content">
             <!-- panel for security config -->
-            <div class="tab-pane" id="tab-security">
+            <div class="tab-pane active" id="tab-security">
                 <table class="table table-config-list">
                     <tr>
                         <td colspan="2" class="title">密码策略</td>
@@ -130,7 +130,7 @@
             </div>
 
             <!-- panel for storage config -->
-            <div class="tab-pane active" id="tab-storage">
+            <div class="tab-pane" id="tab-storage">
                 <div class="alert alert-info">当前会话录像存储空间：总 123.35GB，可用空间 85.17GB。</div>
                 <table class="table table-config-list">
                     <tr>
@@ -163,6 +163,8 @@
 
             <!-- panel for backup config -->
             <div class="tab-pane" id="tab-backup">
+                <div class="alert alert-danger">备份功能尚未实现</div>
+
                 <table class="table table-config-list">
                     <tr>
                         <td colspan="2" class="title">数据库备份</td>

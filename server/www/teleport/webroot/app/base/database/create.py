@@ -741,8 +741,9 @@ class DatabaseInit:
         self._db_exec(
             '创建系统管理员账号',
             'INSERT INTO `{}user` (`type`, `auth_type`, `username`, `surname`, `password`, `role_id`, `state`, `email`, `creator_id`, `create_time`, `last_login`, `last_chpass`) VALUES '
-            '(1, 1, "{username}", "{surname}", "{password}", 1, {state}, "{email}", 0, {create_time}, {last_login}, {last_chpass});'
+            '(1, {auth_type}, "{username}", "{surname}", "{password}", 1, {state}, "{email}", 0, {create_time}, {last_login}, {last_chpass});'
             ''.format(self.db.table_prefix,
+                      auth_type=TP_LOGIN_AUTH_SYS_DEFAULT,
                       username=sysadmin, surname=sysadmin, password=tp_password_generate_secret(password), state=TP_STATE_NORMAL, email=email,
                       create_time=_time_now, last_login=_time_now, last_chpass=_time_now)
         )

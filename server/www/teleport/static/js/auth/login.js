@@ -23,7 +23,7 @@ var SLOGAN = [
 
 // $app.on_init = function (cb_stack, cb_args) {
 $app.on_init = function (cb_stack) {
-    $app.login_type = LOGIN_TYPE_PASSWORD_CAPTCHA;
+    $app.login_type = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA;
     $app.dom = {
         slogan: $('#msg-slogan'),
         btn_login_type_password: $('#login-type-password'),
@@ -58,14 +58,14 @@ $app.on_init = function (cb_stack) {
     $app.init_slogan();
 
     $app.dom.btn_login_type_password.click(function () {
-        $app.login_type = LOGIN_TYPE_PASSWORD_CAPTCHA;
+        $app.login_type = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA;
         $app.dom.btn_login_type_oath.removeClass('selected');
         $(this).addClass('selected');
         $app.dom.area_oath.slideUp(100);
         $app.dom.area_captcha.slideDown(100);
     });
     $app.dom.btn_login_type_oath.click(function () {
-        $app.login_type = LOGIN_TYPE_PASSWORD_OATH;
+        $app.login_type = TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH;
         $app.dom.btn_login_type_password.removeClass('selected');
         $(this).addClass('selected');
         $app.dom.area_oath.slideDown(100);
@@ -88,9 +88,9 @@ $app.on_init = function (cb_stack) {
     $app.dom.input_password.keydown(function (event) {
         $('[data-toggle="popover"]').popover('hide');
         if (event.which === 13) {
-            if ($app.login_type === LOGIN_TYPE_PASSWORD_CAPTCHA)
+            if ($app.login_type === TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA)
                 $app.dom.input_captcha.focus();
-            else if ($app.login_type === LOGIN_TYPE_PASSWORD_OATH)
+            else if ($app.login_type === TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH)
                 $app.dom.input_oath.focus();
         }
     });
@@ -141,7 +141,7 @@ $app.login_account = function () {
         return;
     }
 
-    if ($app.login_type === LOGIN_TYPE_PASSWORD_CAPTCHA) {
+    if ($app.login_type === TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA) {
         if (str_captcha.length !== 4) {
             $app.show_op_box('error', '验证码错误！');
             setTimeout(function () {
@@ -149,7 +149,7 @@ $app.login_account = function () {
             }, 150);
             return;
         }
-    } else if ($app.login_type === LOGIN_TYPE_PASSWORD_OATH) {
+    } else if ($app.login_type === TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH) {
         if (str_oath.length !== 6 || ('' + parseInt(str_oath)) !== str_oath) {
             $app.show_op_box('error', '身份验证器动态验证码错误！');
             setTimeout(function () {
@@ -163,7 +163,7 @@ $app.login_account = function () {
     $app.show_op_box('wait', '<i class="fa fa-circle-o-notch fa-spin"></i> 正在进行身份认证，请稍候...');
 
     // 先判断一下captcha是否正确，如果不正确，拒绝登录
-    if ($app.login_type === LOGIN_TYPE_PASSWORD_CAPTCHA) {
+    if ($app.login_type === TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA) {
         $tp.ajax_post_json('/auth/verify-captcha', {captcha: str_captcha},
             function (ret) {
                 if (ret.code === TPE_OK) {

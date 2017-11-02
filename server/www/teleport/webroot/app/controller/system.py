@@ -14,7 +14,6 @@ from app.const import *
 from app.model import syslog
 
 
-# time_now = int(time.time())
 class DoGetTimeHandler(TPBaseJsonHandler):
     def post(self):
         time_now = int(datetime.datetime.utcnow().timestamp())
@@ -223,7 +222,7 @@ class DoSendTestMailHandler(TPBaseJsonHandler):
         self.write_json(code, message=msg)
 
 
-class DoSaveMailConfigHandler(TPBaseJsonHandler):
+class DoSaveSmtpConfigHandler(TPBaseJsonHandler):
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
         if ret != TPE_OK:
