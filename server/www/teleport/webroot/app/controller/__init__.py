@@ -220,7 +220,7 @@ controllers = [
     #  - [json] 系统配置-发送测试邮件
     (r'/system/send-test-mail', system.DoSendTestMailHandler),
     #  - [json] 系统配置-保存邮件系统配置
-    (r'/system/save-smtp-config', system.DoSaveSmtpConfigHandler),
+    (r'/system/save-cfg-smtp', system.DoSaveCfgSmtpHandler),
 
     #  - [json] 获取服务器时间
     (r'/system/get-time', system.DoGetTimeHandler),

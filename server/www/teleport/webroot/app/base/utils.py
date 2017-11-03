@@ -25,6 +25,25 @@ class AttrDict(dict):
     def __setattr__(self, name, val):
         self[name] = val
 
+    def is_exists(self, name):
+        try:
+            self.__getattr__(name)
+            return True
+        except AttributeError:
+            return False
+
+
+def tp_convert_to_attr_dict(d):
+    if type(d) is not dict:
+        return None
+    ret = AttrDict()
+    for k in d:
+        if type(d[k]) is dict:
+            ret[k] = tp_convert_to_attr_dict(d[k])
+        else:
+            ret[k] = d[k]
+    return ret
+
 
 def tp_make_dir(path):
     """

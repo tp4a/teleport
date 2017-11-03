@@ -2,10 +2,11 @@
 
 import configparser
 import os
+import json
 
 from app.const import *
 from .logger import log
-from .utils import AttrDict, tp_make_dir
+from .utils import AttrDict, tp_convert_to_attr_dict, tp_make_dir
 
 __all__ = ['get_cfg']
 
@@ -451,79 +452,93 @@ class AppConfig(BaseAppConfig):
     def update_sys(self, conf_data):
         self.sys = AttrDict()
         self.sys.loaded = False
-        self.sys_smtp_password = ''
 
         if conf_data is None:
             log.w('system default config info is empty.\n')
             return True
 
+        # =====================================
+        # 密码策略相关
+        # =====================================
+        # conf_data['password'] = '{"find":false,"strong":true}'
         try:
-            # =====================================
-            # 密码策略相关
-            # =====================================
-            self.sys.password = AttrDict()
+            _password = json.loads(conf_data['password'])
+        except:
+            log.w('invalid password config, use default.\n')
+            _password = {}
+
+        self.sys.password = tp_convert_to_attr_dict(_password)
+        if not self.sys.password.is_exists('find'):
             self.sys.password.find = True
+        if not self.sys.password.is_exists('strong'):
             self.sys.password.strong = True
-            self.sys.password.timeout = 30  # 30 days
-            if 'password_find' in conf_data:
-                self.sys.password.find = conf_data['password_find']
-            if 'password_strong' in conf_data:
-                self.sys.password.strong = conf_data['password_strong']
-            if 'password_timeout' in conf_data:
-                self.sys.password.timeout = int(conf_data['password_timeout'])
+        if not self.sys.password.is_exists('timeout'):
+            self.sys.password.timeout = 30
 
-            # =====================================
-            # 登录相关
-            # =====================================
-            self.sys.login = AttrDict()
+        # =====================================
+        # 登录相关
+        # =====================================
+        try:
+            _login = json.loads(conf_data['login'])
+        except:
+            log.w('invalid login config, use default.\n')
+            _login = {}
+
+        self.sys.login = tp_convert_to_attr_dict(_login)
+        if not self.sys.login.is_exists('session_timeout'):
             self.sys.login.session_timeout = 30
+        if not self.sys.login.is_exists('retry'):
             self.sys.login.retry = 0
+        if not self.sys.login.is_exists('lock_timeout'):
             self.sys.login.lock_timeout = 30  # 30 min
+        if not self.sys.login.is_exists('auth'):
             self.sys.login.auth = TP_LOGIN_AUTH_USERNAME_PASSWORD | TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA | TP_LOGIN_AUTH_USERNAME_OATH
-            if 'login_session_timeout' in conf_data:
-                self.sys.login.session_timeout = int(conf_data['login_session_timeout'])
-            if 'login_retry' in conf_data:
-                self.sys.login.retry = int(conf_data['login_retry'])
-            if 'login_lock_timeout' in conf_data:
-                self.sys.login.lock_timeout = int(conf_data['login_lock_timeout'])
-            if 'login_auth' in conf_data:
-                self.sys.login.auth = int(conf_data['login_auth'])
+        # print('==login==', json.dumps(self.sys.login, separators=(',', ':')))
 
-            # =====================================
-            # SMTP相关
-            # =====================================
-            self.sys.smtp = AttrDict()
-            self.sys.smtp.server = ""
+        # =====================================
+        # SMTP相关
+        # =====================================
+        self.sys_smtp_password = ''
+        try:
+            _smtp = json.loads(conf_data['smtp'])
+        except:
+            log.w('invalid smtp config, use default.\n')
+            _smtp = {}
+
+        self.sys.smtp = tp_convert_to_attr_dict(_smtp)
+        if not self.sys.smtp.is_exists('server'):
+            self.sys.smtp.server = ''
+        if not self.sys.smtp.is_exists('port'):
             self.sys.smtp.port = 25
+        if not self.sys.smtp.is_exists('ssl'):
             self.sys.smtp.ssl = False
-            self.sys.smtp.sender = ""
-            if 'smtp_server' in conf_data:
-                self.sys.smtp.server = conf_data['smtp_server']
-            if 'smtp_port' in conf_data:
-                self.sys.smtp.port = int(conf_data['smtp_port'])
-            if 'smtp_ssl' in conf_data:
-                self.sys.smtp.ssl = int(conf_data['smtp_ssl'])
-            if 'smtp_sender' in conf_data:
-                self.sys.smtp.sender = conf_data['smtp_sender']
-            if 'smtp_password' in conf_data:
-                self.sys_smtp_password = conf_data['smtp_password']
+        if not self.sys.smtp.is_exists('sender'):
+            self.sys.smtp.sender = ''
+        if self.sys.smtp.is_exists('password'):
+            self.sys_smtp_password = self.sys.smtp.password
+            self.sys.smtp.password = '********'
+            # del self.sys.smtp.password
 
-            # =====================================
-            # 存储相关
-            # =====================================
-            self.sys.storage = AttrDict()
-            self.sys.storage.log = 0
-            self.sys.storage.record = 0
-            if 'storage_log' in conf_data:
-                self.sys.storage.log = int(conf_data['storage_log'])
-            if 'storage_record' in conf_data:
-                self.sys.storage.record = int(conf_data['storage_record'])
+        # =====================================
+        # 存储相关
+        # =====================================
+        try:
+            _storage = json.loads(conf_data['storage'])
+        except:
+            log.w('invalid storage config, use default.\n')
+            _storage = {}
 
-            self.sys.loaded = True
+        self.sys.storage = tp_convert_to_attr_dict(_storage)
+        if not self.sys.storage.is_exists('keep_log'):
+            self.sys.storage.keep_log = 0
+        if not self.sys.storage.is_exists('keep_record'):
+            self.sys.storage.keep_record = 0
 
-        except IndexError:
-            log.e('invalid system default config.\n')
-            return False
+        self.sys.loaded = True
+
+        # except IndexError:
+        #     log.e('invalid system default config.\n')
+        #     return False
 
         return True
 

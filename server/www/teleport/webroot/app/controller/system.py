@@ -198,12 +198,12 @@ class DoSendTestMailHandler(TPBaseJsonHandler):
             return self.write_json(TPE_JSON_FORMAT)
 
         try:
-            _server = args['smtp_server']
-            _port = int(args['smtp_port'])
-            _ssl = args['smtp_ssl']
-            _sender = args['smtp_sender']
-            _password = args['smtp_password']
-            _recipient = args['smtp_recipient']
+            _server = args['server']
+            _port = int(args['port'])
+            _ssl = args['ssl']
+            _sender = args['sender']
+            _password = args['password']
+            _recipient = args['recipient']
         except:
             return self.write_json(TPE_PARAM)
 
@@ -222,7 +222,7 @@ class DoSendTestMailHandler(TPBaseJsonHandler):
         self.write_json(code, message=msg)
 
 
-class DoSaveSmtpConfigHandler(TPBaseJsonHandler):
+class DoSaveCfgSmtpHandler(TPBaseJsonHandler):
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
         if ret != TPE_OK:
@@ -237,11 +237,11 @@ class DoSaveSmtpConfigHandler(TPBaseJsonHandler):
             return self.write_json(TPE_JSON_FORMAT)
 
         try:
-            _server = args['smtp_server']
-            _port = int(args['smtp_port'])
-            _ssl = args['smtp_ssl']
-            _sender = args['smtp_sender']
-            _password = args['smtp_password']
+            _server = args['server']
+            _port = int(args['port'])
+            _ssl = args['ssl']
+            _sender = args['sender']
+            _password = args['password']
         except:
             return self.write_json(TPE_PARAM)
 
