@@ -254,16 +254,24 @@ def delete_log(log_list):
 
 def session_fix():
     try:
-        ret = True
         db = get_db()
-        sql = 'UPDATE `{}record` SET state={} WHERE state={};'.format(db.table_prefix, TP_SESS_STAT_ERR_RESET, TP_SESS_STAT_RUNNING)
-        if not db.exec(sql):
-            ret = False
-        sql = 'UPDATE `{}record` SET state={} WHERE state={};'.format(db.table_prefix, TP_SESS_STAT_ERR_START_RESET, TP_SESS_STAT_STARTED)
-        if not db.exec(sql):
-            ret = False
-        return ret
+
+        sql_list = []
+
+        sql = 'UPDATE `{dbtp}record` SET state={new_state}, time_end={time_end} WHERE state={old_state};' \
+              ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_RESET, old_state=TP_SESS_STAT_RUNNING, time_end=tp_timestamp_utc_now())
+        sql_list.append(sql)
+        # if not db.exec(sql):
+        #     ret = False
+        sql = 'UPDATE `{dbtp}record` SET state={new_state},time_end={time_end} WHERE state={old_state};' \
+              ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_START_RESET, old_state=TP_SESS_STAT_STARTED, time_end=tp_timestamp_utc_now())
+        sql_list.append(sql)
+        return db.transaction(sql_list)
+        # if not db.exec(sql):
+        #     ret = False
+        # return ret
     except:
+        log.e('\n')
         return False
 
 

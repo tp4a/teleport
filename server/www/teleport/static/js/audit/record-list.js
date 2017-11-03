@@ -185,9 +185,9 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
 
             if (action === 'replay') {
                 //$app.dlg_edit_host.show_edit(row_id);
-                if(row_data.protocol_type === TP_PROTOCOL_TYPE_RDP) {
+                if (row_data.protocol_type === TP_PROTOCOL_TYPE_RDP) {
                     $tp.notify_error('sorry, not impl.');
-                } else if(row_data.protocol_type === TP_PROTOCOL_TYPE_SSH) {
+                } else if (row_data.protocol_type === TP_PROTOCOL_TYPE_SSH) {
                     window.open('/audit/replay/' + row_data.protocol_type + '/' + row_data.id);
                 }
             } else if (action === 'cmd') {
@@ -282,10 +282,16 @@ $app.on_table_host_render_created = function (render) {
                 _style = 'primary';
             return '<span class="label label-' + _style + '"><i class="fa fa-cog fa-spin"></i> ' + tp_second2str(tp_local2utc() - fields.time_begin) + '</span>';
         } else {
-            if (fields.time_end === 0)
-            return '<span class="label label-danger"><i class="fa fa-clock-o fa-fw"></i> 未知</span>';
-            else
-                return tp_second2str(fields.time_end - fields.time_begin);
+            if (fields.time_end === 0) {
+                return '<span class="label label-danger"><i class="fa fa-clock-o fa-fw"></i> 未知</span>';
+            }
+            else {
+                if (fields.state === TP_SESS_STAT_ERR_START_RESET) {
+                    return '<span class="label label-info"><i class="fa fa-exclamation-circle fa-fw"></i> ' + tp_second2str(fields.time_end - fields.time_begin) + '</span>';
+                } else {
+                    return tp_second2str(fields.time_end - fields.time_begin);
+                }
+            }
         }
 
         // if (fields.time_end === 0) {
