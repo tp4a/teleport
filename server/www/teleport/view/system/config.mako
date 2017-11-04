@@ -20,7 +20,7 @@
             <li class="active"><a href="#tab-security" data-toggle="tab">安全</a></li>
             <li><a href="#tab-smtp" data-toggle="tab">邮件系统</a></li>
             <li><a href="#tab-storage" data-toggle="tab">存储</a></li>
-            <li><a href="#tab-backup" data-toggle="tab">备份</a></li>
+##             <li><a href="#tab-backup" data-toggle="tab">备份</a></li>
         </ul>
 
         <div class="tab-content">
@@ -107,7 +107,7 @@
                     </tr>
                 </table>
                 <hr/>
-                <button id="btn-save-secure-config" class="btn btn-sm btn-primary"><i class="fa fa-edit fa-fw"></i> 保存安全设置</button>
+                <button id="btn-save-secure-config" class="btn btn-sm btn-primary"><i class="fa fa-check-circle fa-fw"></i> 保存安全设置</button>
 
             </div>
 
@@ -132,7 +132,7 @@
                     </tr>
                 </table>
                 <hr/>
-                <button id="btn-edit-mail-config" class="btn btn-sm btn-primary"><i class="fa fa-edit fa-fw"></i> 设置发件服务器</button>
+                <button id="btn-edit-mail-config" class="btn btn-sm btn-primary"><i class="fa fa-cog fa-fw"></i> 设置发件服务器</button>
             </div>
 
             <!-- panel for storage config -->
@@ -145,7 +145,7 @@
                     <tr>
                         <td class="key">保留时间</td>
                         <td class="value">
-                            <input type="text" value="0"/><span class="unit">天</span><span class="desc">30~180。仅保留指定天数的系统日志，为0则永久保留。默认为0。</span>
+                            <input id="storage-keep-log" type="text" value="0"/><span class="unit">天</span><span class="desc">30~180。仅保留指定天数的系统日志，为0则永久保留。默认为0。</span>
                         </td>
                     </tr>
 
@@ -158,55 +158,24 @@
                     <tr>
                         <td class="key">保留时间</td>
                         <td class="value">
-                            <input type="text" value="0"/><span class="unit">天</span><span class="desc">30~180。仅保留指定天数的会话录像，为0则永久保留。默认为0。</span>
+                            <input id="storage-keep-record" type="text" value="0"/><span class="unit">天</span><span class="desc">30~180。仅保留指定天数的会话录像（以会话开始时间为准），为0则永久保留。默认为0。</span>
                         </td>
                     </tr>
-                </table>
-                <hr/>
-                <button id="btn-save-storage-config" class="btn btn-sm btn-primary"><i class="fa fa-edit fa-fw"></i> 保存存储设置</button>
-                <button id="btn-save-storage-config" class="btn btn-sm btn-danger"><i class="fa fa-edit fa-fw"></i> 立即清理</button>
-            </div>
 
-            <!-- panel for backup config -->
-            <div class="tab-pane" id="tab-backup">
-                <div class="alert alert-danger">备份功能尚未实现</div>
-
-                <table class="table table-config-list">
                     <tr>
-                        <td colspan="2" class="title">数据库备份</td>
-                    </tr>
-                    <tr>
-                        <td class="key">备份范围</td>
-                        <td class="value">
-                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable">包括系统日志</div>
+                        <td colspan="2" class="title">
+                            <hr class="hr-sm"/>
+                            自动清理
                         </td>
                     </tr>
                     <tr>
-                        <td class="key"></td>
+                        <td class="key">时间点</td>
                         <td class="value">
-                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable">包括报警日志</div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="key"></td>
-                        <td class="value">
-                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable">包括运维记录</div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="key">自动备份</td>
-                        <td class="value">
-                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable tp-selected">在指定时间点自动备份数据库</div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="key">备份时间点</td>
-                        <td class="value">
-                            <select>
+                            <select id="select-backup-hour">
                                 <option>00</option>
                                 <option>01</option>
                                 <option>02</option>
-                                <option selected="selected">03</option>
+                                <option selected="selected">04</option>
                                 <option>04</option>
                                 <option>05</option>
                                 <option>06</option>
@@ -229,7 +198,7 @@
                                 <option>23</option>
                             </select>
                             时
-                            <select>
+                            <select id="select-backup-min">
                                 <option selected="selected">00</option>
                                 <option>05</option>
                                 <option>10</option>
@@ -244,28 +213,120 @@
                                 <option>55</option>
                             </select>
                             分
-                            <span class="desc">每天在指定时间点备份数据库。</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="key">备份保留时长</td>
-                        <td class="value">
-                            <input type="text" value="7"/><span class="unit">天</span><span class="desc">1~7。超过设定时间的备份将自动删除，默认为7天。</span>
+                            <span class="desc">每天在指定时间点清理存储。</span>
                         </td>
                     </tr>
                     <tr>
                         <td class="key"></td>
                         <td class="value">
-                            <a href="javascript:;"><i class="fa fa-download"></i> 下载自动备份文件</a>
+                <button id="btn-clear-storage" class="btn btn-sm btn-success"><i class="fa fa-leaf fa-fw"></i> 现在立即清理</button>
                         </td>
                     </tr>
-
                 </table>
                 <hr/>
-                <button id="btn-save-storage-config" class="btn btn-sm btn-primary"><i class="fa fa-edit fa-fw"></i> 保存存储设置</button>
-                <button id="btn-save-storage-config" class="btn btn-sm btn-success"><i class="fa fa-edit fa-fw"></i> 立即备份</button>
-                <button id="btn-save-storage-config" class="btn btn-sm btn-danger"><i class="fa fa-edit fa-fw"></i> 导入备份</button>
+                <button id="btn-save-storage-config" class="btn btn-sm btn-primary"><i class="fa fa-check-circle fa-fw"></i> 保存存储设置</button>
+##                 <button id="btn-clear-storage" class="btn btn-sm btn-danger"><i class="fa fa-edit fa-fw"></i> 立即清理</button>
             </div>
+
+            <!-- panel for backup config -->
+##             <div class="tab-pane" id="tab-backup">
+##                 <div class="alert alert-danger">备份功能尚未实现</div>
+##
+##                 <table class="table table-config-list">
+##                     <tr>
+##                         <td colspan="2" class="title">数据库备份</td>
+##                     </tr>
+##                     <tr>
+##                         <td class="key">备份范围</td>
+##                         <td class="value">
+##                             <div id="btn-bak-syslog" class="tp-checkbox tp-editable">包括系统日志</div>
+##                         </td>
+##                     </tr>
+##                     <tr>
+##                         <td class="key"></td>
+##                         <td class="value">
+##                             <div id="btn-backup-alert" class="tp-checkbox tp-editable">包括报警日志</div>
+##                         </td>
+##                     </tr>
+##                     <tr>
+##                         <td class="key"></td>
+##                         <td class="value">
+##                             <div id="btn-backup-ops" class="tp-checkbox tp-editable">包括运维记录</div>
+##                         </td>
+##                     </tr>
+##                     <tr>
+##                         <td class="key">自动备份</td>
+##                         <td class="value">
+##                             <div id="btn-auto-backup" class="tp-checkbox tp-editable tp-selected">在指定时间点自动备份数据库</div>
+##                         </td>
+##                     </tr>
+##                     <tr>
+##                         <td class="key">备份时间点</td>
+##                         <td class="value">
+##                             <select id="select-backup-hour">
+##                                 <option>00</option>
+##                                 <option>01</option>
+##                                 <option>02</option>
+##                                 <option selected="selected">03</option>
+##                                 <option>04</option>
+##                                 <option>05</option>
+##                                 <option>06</option>
+##                                 <option>07</option>
+##                                 <option>08</option>
+##                                 <option>09</option>
+##                                 <option>10</option>
+##                                 <option>11</option>
+##                                 <option>12</option>
+##                                 <option>13</option>
+##                                 <option>14</option>
+##                                 <option>15</option>
+##                                 <option>16</option>
+##                                 <option>17</option>
+##                                 <option>18</option>
+##                                 <option>19</option>
+##                                 <option>20</option>
+##                                 <option>21</option>
+##                                 <option>22</option>
+##                                 <option>23</option>
+##                             </select>
+##                             时
+##                             <select id="select-backup-min">
+##                                 <option selected="selected">00</option>
+##                                 <option>05</option>
+##                                 <option>10</option>
+##                                 <option>15</option>
+##                                 <option>20</option>
+##                                 <option>25</option>
+##                                 <option>30</option>
+##                                 <option>35</option>
+##                                 <option>40</option>
+##                                 <option>45</option>
+##                                 <option>50</option>
+##                                 <option>55</option>
+##                             </select>
+##                             分
+##                             <span class="desc">每天在指定时间点备份数据库。</span>
+##                         </td>
+##                     </tr>
+##                     <tr>
+##                         <td class="key">备份保留时长</td>
+##                         <td class="value">
+##                             <input id="backup-keep-timeout" type="text" value="7"/><span class="unit">天</span><span class="desc">1~7。超过设定时间的备份将自动删除，默认为7天。</span>
+##                         </td>
+##                     </tr>
+##                     <tr>
+##                         <td class="key"></td>
+##                         <td class="value">
+##                             <a href="javascript:;"><i class="fa fa-download"></i> 下载自动备份文件</a>
+##                         </td>
+##                     </tr>
+##
+##                 </table>
+##                 <hr/>
+##                 <button id="btn-save-storage-config" class="btn btn-sm btn-primary"><i class="fa fa-edit fa-fw"></i> 保存存储设置</button>
+##                 <button id="btn-do-backup" class="btn btn-sm btn-success"><i class="fa fa-edit fa-fw"></i> 立即备份</button>
+##                 <button id="btn-import-backup" class="btn btn-sm btn-danger"><i class="fa fa-edit fa-fw"></i> 导入备份</button>
+##             </div>
         </div>
     </div>
 </div>

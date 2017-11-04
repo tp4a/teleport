@@ -171,17 +171,21 @@ $app.create_config_smtp = function () {
             return;
 
         _smtp.dom.btn_save.attr('disabled', 'disabled');
-        $tp.ajax_post_json('/system/save-cfg-smtp',
+        $tp.ajax_post_json('/system/save-cfg',
             {
-                server: _server,
-                port: _port,
-                ssl: _ssl,
-                sender: _sender,
-                password: _password
+                smtp: {
+                    server: _server,
+                    port: _port,
+                    ssl: _ssl,
+                    sender: _sender,
+                    password: _password
+                }
             },
             function (ret) {
                 _smtp.dom.btn_save.removeAttr('disabled');
                 if (ret.code === TPE_OK) {
+                    $tp.notify_success('SMTP设置更新成功！');
+
                     _smtp.dom.input_password.val('');
                     // 更新一下界面上显示的配置信息
                     $app.options.sys_cfg.smtp.server = _server;
@@ -191,13 +195,14 @@ $app.create_config_smtp = function () {
                     _smtp.update_dom($app.options.sys_cfg.smtp);
 
                     _smtp.dom.dlg_edit.modal('hide');
+
                 } else {
-                    $tp.notify_error(tp_error_msg(ret.code, ret.message));
+                    $tp.notify_error('SMTP设置更新失败：' + tp_error_msg(ret.code, ret.message));
                 }
             },
             function () {
                 _smtp.dom.btn_save.removeAttr('disabled');
-                $tp.notify_error('网路故障，无法连接到服务器！');
+                $tp.notify_error('网路故障，SMTP设置更新失败！');
             }
         );
     };
@@ -270,8 +275,87 @@ $app.create_config_sec = function () {
             _sec.dom.btn_auth_username_password_oath.addClass('tp-selected');
     };
 
-    _sec.on_btn_save = function() {
+    _sec.on_btn_save = function () {
         var _password_allow_reset = _sec.dom.btn_password_allow_reset.hasClass('tp-selected');
+        var _password_force_strong = _sec.dom.btn_password_force_strong.hasClass('tp-selected');
+        var _password_timeout = parseInt(_sec.dom.input_password_timeout.val());
+
+        var _login_session_timeout = parseInt(_sec.dom.input_session_timeout.val());
+        var _login_retry = parseInt(_sec.dom.input_login_retry.val());
+        var _login_lock_timeout = parseInt(_sec.dom.input_lock_timeout.val());
+
+        var _login_auth = 0;
+        if (_sec.dom.btn_auth_username_password.hasClass('tp-selected'))
+            _login_auth |= TP_LOGIN_AUTH_USERNAME_PASSWORD;
+        if (_sec.dom.btn_auth_username_password_captcha.hasClass('tp-selected'))
+            _login_auth |= TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA;
+        if (_sec.dom.btn_auth_username_oath.hasClass('tp-selected'))
+            _login_auth |= TP_LOGIN_AUTH_USERNAME_OATH;
+        if (_sec.dom.btn_auth_username_password_oath.hasClass('tp-selected'))
+            _login_auth |= TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH;
+
+        if (_.isNaN(_password_timeout) || _password_timeout < 0 || _password_timeout > 180) {
+            $tp.notify_error('密码有效期超出范围！');
+            _sec.dom.input_password_timeout.focus();
+            return;
+        }
+        if (_.isNaN(_login_session_timeout) || _login_session_timeout < 5 || _login_session_timeout > 1440) {
+            $tp.notify_error('WEB会话超时超出范围！');
+            _sec.dom.input_session_timeout.focus();
+            return;
+        }
+        if (_.isNaN(_login_retry) || _login_retry < 0 || _login_retry > 10) {
+            $tp.notify_error('密码尝试次数超出范围！');
+            _sec.dom.input_login_retry.focus();
+            return;
+        }
+        if (_.isNaN(_login_lock_timeout) || _login_lock_timeout < 0 || _login_lock_timeout > 9999) {
+            $tp.notify_error('临时锁定时长超出范围！');
+            _sec.dom.input_lock_timeout.focus();
+            return;
+        }
+
+        _sec.dom.btn_save.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/system/save-cfg',
+            {
+                password: {
+                    allow_reset: _password_allow_reset,
+                    force_strong: _password_force_strong,
+                    timeout: _password_timeout
+                },
+                login: {
+                    session_timeout: _login_session_timeout,
+                    retry: _login_retry,
+                    lock_timeout: _login_lock_timeout,
+                    auth: _login_auth
+                }
+            },
+            function (ret) {
+                _sec.dom.btn_save.removeAttr('disabled');
+                if (ret.code === TPE_OK) {
+                    $tp.notify_success('安全设置更新成功！');
+
+                    // 更新一下界面上显示的配置信息
+                    $app.options.sys_cfg.password.allow_reset = _password_allow_reset;
+                    $app.options.sys_cfg.password.force_strong = _password_force_strong;
+                    $app.options.sys_cfg.password.timeout = _password_timeout;
+
+                    $app.options.sys_cfg.login.session_timeout = _login_session_timeout;
+                    $app.options.sys_cfg.login.retry = _login_retry;
+                    $app.options.sys_cfg.login.lock_timeout = _login_lock_timeout;
+                    $app.options.sys_cfg.login.auth = _login_auth;
+
+                    _sec.update_dom_password($app.options.sys_cfg.password);
+                    _sec.update_dom_login($app.options.sys_cfg.login);
+                } else {
+                    $tp.notify_error('安全设置更新失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                _sec.dom.btn_save.removeAttr('disabled');
+                $tp.notify_error('网路故障，安全设置更新失败！');
+            }
+        );
 
     };
 

@@ -222,7 +222,7 @@ class DoSendTestMailHandler(TPBaseJsonHandler):
         self.write_json(code, message=msg)
 
 
-class DoSaveCfgSmtpHandler(TPBaseJsonHandler):
+class DoSaveCfgHandler(TPBaseJsonHandler):
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
         if ret != TPE_OK:
@@ -237,22 +237,55 @@ class DoSaveCfgSmtpHandler(TPBaseJsonHandler):
             return self.write_json(TPE_JSON_FORMAT)
 
         try:
-            _server = args['server']
-            _port = int(args['port'])
-            _ssl = args['ssl']
-            _sender = args['sender']
-            _password = args['password']
+            if 'smtp' in args:
+                _cfg = args['smtp']
+                _server = _cfg['server']
+                _port = _cfg['port']
+                _ssl = _cfg['ssl']
+                _sender = _cfg['sender']
+                _password = _cfg['password']
+
+                err = system_model.save_config(self, '更新SMTP设置', 'smtp', _cfg)
+                if err == TPE_OK:
+                    # 同时更新内存缓存
+                    get_cfg().sys.smtp.server = _server
+                    get_cfg().sys.smtp.port = _port
+                    get_cfg().sys.smtp.ssl = _ssl
+                    get_cfg().sys.smtp.sender = _sender
+                    # 特殊处理，防止前端拿到密码
+                    get_cfg().sys_smtp_password = _password
+                else:
+                    return self.write_json(err)
+
+            if 'password' in args:
+                _cfg = args['password']
+                _allow_reset = _cfg['allow_reset']
+                _force_strong = _cfg['force_strong']
+                _timeout = _cfg['timeout']
+                err = system_model.save_config(self, '更新密码策略设置', 'password', _cfg)
+                if err == TPE_OK:
+                    get_cfg().sys.password.allow_reset = _allow_reset
+                    get_cfg().sys.password.force_strong = _force_strong
+                    get_cfg().sys.password.timeout = _timeout
+                else:
+                    return self.write_json(err)
+
+            if 'login' in args:
+                _cfg = args['login']
+                _session_timeout = _cfg['session_timeout']
+                _retry = _cfg['retry']
+                _lock_timeout = _cfg['lock_timeout']
+                _auth = _cfg['auth']
+                err = system_model.save_config(self, '更新登录策略设置', 'login', _cfg)
+                if err == TPE_OK:
+                    get_cfg().sys.login.session_timeout = _session_timeout
+                    get_cfg().sys.login.retry = _retry
+                    get_cfg().sys.login.lock_timeout = _lock_timeout
+                    get_cfg().sys.login.auth = _auth
+                else:
+                    return self.write_json(err)
+
+            return self.write_json(TPE_OK)
         except:
-            return self.write_json(TPE_PARAM)
-
-        # 调用Model模块来操作数据库
-        err = system_model.save_smtp_config(self, _server, _port, _ssl, _sender, _password)
-        if err == TPE_OK:
-            # 同时更新内存缓存
-            get_cfg().sys.smtp.server = _server
-            get_cfg().sys.smtp.port = _port
-            get_cfg().sys.smtp.ssl = _ssl
-            get_cfg().sys.smtp.sender = _sender
-            get_cfg().sys_smtp_password = _password
-
-        self.write_json(err)
+            log.e('\n')
+            self.write_json(TPE_FAILED)

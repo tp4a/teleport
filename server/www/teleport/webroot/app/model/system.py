@@ -8,33 +8,25 @@ from app.base.utils import tp_timestamp_utc_now
 from . import syslog
 
 
-def save_smtp_config(handler, _server, _port, _ssl, _sender, _password):
+def save_config(handler, msg, name, value):
     db = get_db()
 
-    _smtp = {
-        'server': _server,
-        'port': _port,
-        'ssl': _ssl,
-        'sender': _sender,
-        'password': _password
-    }
+    str_val = json.dumps(value, separators=(',', ':'))
 
-    str_smtp = json.dumps(_smtp, separators=(',', ':'))
-
-    sql = 'SELECT name FROM `{dbtp}config` WHERE name="smtp";'.format(dbtp=db.table_prefix)
+    sql = 'SELECT name FROM `{dbtp}config` WHERE name="{name}";'.format(dbtp=db.table_prefix, name=name)
     db_ret = db.query(sql)
     if db_ret is not None and len(db_ret) > 0:
-        sql = 'UPDATE `{dbtp}config` SET value={dbph} WHERE name="smtp";'.format(dbtp=db.table_prefix, dbph=db.place_holder)
-        db_ret = db.exec(sql, (str_smtp,))
+        sql = 'UPDATE `{dbtp}config` SET value={dbph} WHERE name="{name}";'.format(dbtp=db.table_prefix, dbph=db.place_holder, name=name)
+        db_ret = db.exec(sql, (str_val,))
     else:
-        sql = 'INSERT INTO `{dbtp}config` (name, value) VALUES ("smtp", {dbph});'.format(dbtp=db.table_prefix, dbph=db.place_holder)
-        db_ret = db.exec(sql, (str_smtp,))
+        sql = 'INSERT INTO `{dbtp}config` (name, value) VALUES ("{name}", {dbph});'.format(dbtp=db.table_prefix, dbph=db.place_holder, name=name)
+        db_ret = db.exec(sql, (str_val,))
 
     if not db_ret:
         return TPE_DATABASE
 
     operator = handler.get_current_user()
-    syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "更新SMTP设置")
+    syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, msg)
 
     return TPE_OK
 
