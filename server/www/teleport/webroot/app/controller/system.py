@@ -75,7 +75,7 @@ class DoRoleUpdateHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         if role_id == 0:
-            err, role_id = system_model.add_role(self, role_id, role_name, privilege)
+            err, role_id = system_model.add_role(self, role_name, privilege)
         else:
             if role_id == 1:
                 return self.write_json(TPE_FAILED, '禁止修改系统管理员角色！')
@@ -246,8 +246,8 @@ class DoSaveCfgSmtpHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         # 调用Model模块来操作数据库
-        code, msg = system_model.save_mail_config(_server, _port, _ssl, _sender, _password)
-        if code == TPE_OK:
+        err = system_model.save_smtp_config(self, _server, _port, _ssl, _sender, _password)
+        if err == TPE_OK:
             # 同时更新内存缓存
             get_cfg().sys.smtp.server = _server
             get_cfg().sys.smtp.port = _port
@@ -255,4 +255,4 @@ class DoSaveCfgSmtpHandler(TPBaseJsonHandler):
             get_cfg().sys.smtp.sender = _sender
             get_cfg().sys_smtp_password = _password
 
-        self.write_json(code, message=msg)
+        self.write_json(err)

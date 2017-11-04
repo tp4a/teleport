@@ -3,82 +3,14 @@
 $app.on_init = function (cb_stack) {
     console.log($app.options);
 
-    $app.dom = {
-
-        // 邮件系统设置
-        mail: {
-            smtp_server: $('#smtp-server-info'),
-            smtp_port: $('#smtp-port-info'),
-            smtp_ssl: $('#smtp-ssl-info'),
-            smtp_sender: $('#smtp-sender-info'),
-            btn_edit_mail_config: $('#btn-edit-mail-config'),
-
-            dlg_edit_mail_config: $('#dlg-edit-mail-config'),
-            edit_smtp_server: $('#edit-smtp-server'),
-            edit_smtp_port: $('#edit-smtp-port'),
-            edit_smtp_ssl: $('#edit-smtp-ssl'),
-            edit_smtp_sender: $('#edit-smtp-sender'),
-            edit_smtp_password: $('#edit-smtp-password'),
-            edit_smtp_test_recipient: $('#edit-smtp-test-recipient'),
-            btn_send_test_mail: $('#btn-send-test-mail'),
-            msg_send_test_mail: $('#msg-send-test-mail'),
-            btn_save_mail_config: $('#btn-save-mail-config')
-        }
-    };
-
-    $app.smtp = $app.create_config_smtp();
-    cb_stack.add($app.smtp.init);
-
     //=========================================
     // 邮件系统配置相关
     //=========================================
-    // $app.update_mail_info = function (smtp) {
-    //     if (0 === smtp.server.length) {
-    //         var not_set = '<span class="error">未设置</span>';
-    //         $app.dom.mail.smtp_server.html(not_set);
-    //         $app.dom.mail.smtp_port.html(not_set);
-    //         $app.dom.mail.smtp_ssl.html(not_set);
-    //         $app.dom.mail.smtp_sender.html(not_set);
-    //     } else {
-    //         $app.dom.mail.smtp_server.html(smtp.server);
-    //         $app.dom.mail.smtp_port.html(smtp.port);
-    //         $app.dom.mail.smtp_sender.html(smtp.sender);
-    //
-    //         if (smtp.ssl)
-    //             $app.dom.mail.smtp_ssl.html('是');
-    //         else
-    //             $app.dom.mail.smtp_ssl.html('否');
-    //     }
-    // };
-    //
-    // $app.update_mail_info($app.options.sys_cfg.smtp);
+    $app.smtp = $app.create_config_smtp();
+    cb_stack.add($app.smtp.init);
 
-    // $app.dom.mail.btn_edit_mail_config.click(function () {
-    //     var smtp = $app.options.sys_cfg.smtp;
-    //
-    //     $app.dom.mail.edit_smtp_server.val(smtp.server);
-    //
-    //     $app.dom.mail.edit_smtp_port.val(smtp.port);
-    //
-    //     if (!smtp.ssl)
-    //         $app.dom.mail.edit_smtp_ssl.removeClass('tp-selected');
-    //     else
-    //         $app.dom.mail.edit_smtp_ssl.removeClass('tp-selected').addClass('tp-selected');
-    //
-    //     $app.dom.mail.edit_smtp_sender.val(smtp.sender);
-    //     $app.dom.mail.edit_smtp_password.val('');
-    //
-    //     $app.dom.mail.dlg_edit_mail_config.modal();
-    // });
-    // $app.dom.mail.btn_edit_mail_config.trigger('click');
-    // $app.dom.mail.edit_smtp_ssl.click(function () {
-    //     if ($app.dom.mail.edit_smtp_ssl.hasClass('tp-selected'))
-    //         $app.dom.mail.edit_smtp_ssl.removeClass('tp-selected');
-    //     else
-    //         $app.dom.mail.edit_smtp_ssl.addClass('tp-selected');
-    // });
-    // $app.dom.mail.btn_send_test_mail.click($app._on_btn_send_test_mail);
-    // $app.dom.mail.btn_save_mail_config.click($app._on_btn_save_mail_config);
+    $app.sec = $app.create_config_sec();
+    cb_stack.add($app.sec.init);
 
     cb_stack.exec();
 };
@@ -139,11 +71,6 @@ $app.create_config_smtp = function () {
             _smtp.dom.port.html(smtp.port);
             _smtp.dom.sender.html(smtp.sender);
             _smtp.dom.ssl.html(smtp.ssl ? '是' : '否');
-            //
-            // if (smtp.ssl)
-            //     _smtp.dom.ssl.html('是');
-            // else
-            //     _smtp.dom.ssl.html('否');
         }
     };
 
@@ -278,4 +205,75 @@ $app.create_config_smtp = function () {
     return _smtp;
 };
 
+$app.create_config_sec = function () {
+    var _sec = {};
 
+    _sec.dom = {
+        btn_save: $('#btn-save-secure-config'),
+
+        btn_password_allow_reset: $('#sec-allow-reset-password'),
+        btn_password_force_strong: $('#sec-force-strong-password'),
+        input_password_timeout: $('#sec-password-timeout'),
+
+        input_session_timeout: $('#sec-session-timeout'),
+        input_login_retry: $('#sec-login-retry'),
+        input_lock_timeout: $('#sec-lock-timeout'),
+        btn_auth_username_password: $('#sec-auth-username-password'),
+        btn_auth_username_password_captcha: $('#sec-auth-username-password-captcha'),
+        btn_auth_username_oath: $('#sec-auth-username-oath'),
+        btn_auth_username_password_oath: $('#sec-auth-username-password-oath')
+    };
+
+    _sec.init = function (cb_stack) {
+        _sec.update_dom_password($app.options.sys_cfg.password);
+        _sec.update_dom_login($app.options.sys_cfg.login);
+
+        $('#tab-security').find('.tp-checkbox.tp-editable').click(function () {
+            if ($(this).hasClass('tp-selected'))
+                $(this).removeClass('tp-selected');
+            else
+                $(this).addClass('tp-selected');
+        });
+
+        _sec.dom.btn_save.click(function () {
+            _sec.on_btn_save();
+        });
+
+        cb_stack.exec();
+    };
+
+    _sec.update_dom_password = function (password) {
+        _sec.dom.btn_password_allow_reset.removeClass('tp-selected');
+        if (password.allow_reset)
+            _sec.dom.btn_password_allow_reset.addClass('tp-selected');
+
+        _sec.dom.btn_password_force_strong.removeClass('tp-selected');
+        if (password.force_strong)
+            _sec.dom.btn_password_force_strong.addClass('tp-selected');
+
+        _sec.dom.input_password_timeout.val(password.timeout);
+    };
+
+    _sec.update_dom_login = function (login) {
+        _sec.dom.input_session_timeout.val(login.session_timeout);
+        _sec.dom.input_login_retry.val(login.retry);
+        _sec.dom.input_lock_timeout.val(login.lock_timeout);
+
+        _sec.dom.btn_auth_username_password.removeClass('tp-selected');
+        if (login.auth & TP_LOGIN_AUTH_USERNAME_PASSWORD)
+            _sec.dom.btn_auth_username_password.addClass('tp-selected');
+        if (login.auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA)
+            _sec.dom.btn_auth_username_password_captcha.addClass('tp-selected');
+        if (login.auth & TP_LOGIN_AUTH_USERNAME_OATH)
+            _sec.dom.btn_auth_username_oath.addClass('tp-selected');
+        if (login.auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH)
+            _sec.dom.btn_auth_username_password_oath.addClass('tp-selected');
+    };
+
+    _sec.on_btn_save = function() {
+        var _password_allow_reset = _sec.dom.btn_password_allow_reset.hasClass('tp-selected');
+
+    };
+
+    return _sec;
+};

@@ -46,6 +46,7 @@ class TPDatabase:
         self.current_ver = 0
 
         self.auto_increment = ''
+        self.place_holder = ''
 
         self._table_prefix = ''
         self._conn_pool = None
@@ -109,6 +110,7 @@ class TPDatabase:
     def _init_sqlite(self, db_file):
         self.db_type = self.DB_TYPE_SQLITE
         self.auto_increment = 'AUTOINCREMENT'
+        self.place_holder = '?'
         self.sqlite_file = db_file
 
         self._table_prefix = 'tp_'
@@ -124,6 +126,7 @@ class TPDatabase:
     def _init_mysql(self, mysql_host, mysql_port, mysql_db, mysql_prefix, mysql_user, mysql_password):
         self.db_type = self.DB_TYPE_MYSQL
         self.auto_increment = 'AUTO_INCREMENT'
+        self.place_holder = '%s'
 
         self._table_prefix = mysql_prefix
         self.mysql_host = mysql_host
@@ -196,10 +199,11 @@ class TPDatabase:
         # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
         return ret
 
-    def exec(self, sql):
-        log.d('[db] {}\n'.format(sql))
+    def exec(self, sql, args=()):
+        # log.d('[db] {}\n'.format(sql, args))
+        print('[db]', sql, args)
         # _start = datetime.datetime.utcnow().timestamp()
-        ret = self._conn_pool.exec(sql)
+        ret = self._conn_pool.exec(sql, args)
         # _end = datetime.datetime.utcnow().timestamp()
         # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
         return ret
@@ -327,11 +331,11 @@ class TPDatabasePool:
             return None
         return self._do_query(_conn, sql)
 
-    def exec(self, sql):
+    def exec(self, sql, args):
         _conn = self._get_connect()
         if _conn is None:
             return False
-        return self._do_exec(_conn, sql)
+        return self._do_exec(_conn, sql, args)
 
     def transaction(self, sql_list):
         _conn = self._get_connect()
@@ -363,7 +367,7 @@ class TPDatabasePool:
     def _do_query(self, conn, sql):
         return None
 
-    def _do_exec(self, conn, sql):
+    def _do_exec(self, conn, sql, args):
         return None
 
     def _do_transaction(self, conn, sql_list):
@@ -401,10 +405,10 @@ class TPSqlitePool(TPDatabasePool):
         finally:
             cursor.close()
 
-    def _do_exec(self, conn, sql):
+    def _do_exec(self, conn, sql, args):
         try:
             with conn:
-                conn.execute(sql)
+                conn.execute(sql, args)
             return True
         except Exception as e:
             log.e('[sqlite] _do_exec() failed: {}\n'.format(e.__str__()))

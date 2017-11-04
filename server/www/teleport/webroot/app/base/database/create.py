@@ -704,16 +704,16 @@ class DatabaseInit:
             'INSERT INTO `{}config` (`name`, `value`) VALUES ("db_ver", "{}");'.format(self.db.table_prefix, self.db.DB_VERSION)
         )
 
-        self._db_exec(
-            '设置初始化配置',
-            [
-                'INSERT INTO `{}config` (`name`, `value`) VALUES ("smtp_server", "");'.format(self.db.table_prefix),
-                'INSERT INTO `{}config` (`name`, `value`) VALUES ("smtp_port", "-1");'.format(self.db.table_prefix),
-                'INSERT INTO `{}config` (`name`, `value`) VALUES ("smtp_ssl", "-1");'.format(self.db.table_prefix),
-                'INSERT INTO `{}config` (`name`, `value`) VALUES ("smtp_sender", "");'.format(self.db.table_prefix),
-                'INSERT INTO `{}config` (`name`, `value`) VALUES ("smtp_password", "");'.format(self.db.table_prefix),
-            ]
-        )
+        # self._db_exec(
+        #     '设置初始化配置',
+        #     [
+        #         'INSERT INTO `{}config` (`name`, `value`) VALUES ("smtp_server", "");'.format(self.db.table_prefix),
+        #         'INSERT INTO `{}config` (`name`, `value`) VALUES ("smtp_port", "-1");'.format(self.db.table_prefix),
+        #         'INSERT INTO `{}config` (`name`, `value`) VALUES ("smtp_ssl", "-1");'.format(self.db.table_prefix),
+        #         'INSERT INTO `{}config` (`name`, `value`) VALUES ("smtp_sender", "");'.format(self.db.table_prefix),
+        #         'INSERT INTO `{}config` (`name`, `value`) VALUES ("smtp_password", "");'.format(self.db.table_prefix),
+        #     ]
+        # )
 
         privilege_admin = TP_PRIVILEGE_ALL
         privilege_ops = TP_PRIVILEGE_LOGIN_WEB | TP_PRIVILEGE_OPS

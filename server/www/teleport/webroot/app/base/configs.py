@@ -468,12 +468,12 @@ class AppConfig(BaseAppConfig):
             _password = {}
 
         self.sys.password = tp_convert_to_attr_dict(_password)
-        if not self.sys.password.is_exists('find'):
-            self.sys.password.find = True
-        if not self.sys.password.is_exists('strong'):
-            self.sys.password.strong = True
+        if not self.sys.password.is_exists('allow_reset'):
+            self.sys.password.allow_reset = True
+        if not self.sys.password.is_exists('force_strong'):
+            self.sys.password.force_strong = True
         if not self.sys.password.is_exists('timeout'):
-            self.sys.password.timeout = 30
+            self.sys.password.timeout = 0
 
         # =====================================
         # 登录相关
@@ -492,7 +492,7 @@ class AppConfig(BaseAppConfig):
         if not self.sys.login.is_exists('lock_timeout'):
             self.sys.login.lock_timeout = 30  # 30 min
         if not self.sys.login.is_exists('auth'):
-            self.sys.login.auth = TP_LOGIN_AUTH_USERNAME_PASSWORD | TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA | TP_LOGIN_AUTH_USERNAME_OATH
+            self.sys.login.auth = TP_LOGIN_AUTH_USERNAME_PASSWORD | TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA | TP_LOGIN_AUTH_USERNAME_OATH | TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH
         # print('==login==', json.dumps(self.sys.login, separators=(',', ':')))
 
         # =====================================

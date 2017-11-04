@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 from app.const import *
 from app.base.db import get_db, SQL
 from app.base.logger import log
@@ -7,26 +8,38 @@ from app.base.utils import tp_timestamp_utc_now
 from . import syslog
 
 
-def save_mail_config(_server, _port, _ssl, _sender, _password):
-    log.v('save mail config.\n')
-
+def save_smtp_config(handler, _server, _port, _ssl, _sender, _password):
     db = get_db()
 
-    sql_list = list()
-    sql_list.append('UPDATE `{}config` SET `value`="{}" WHERE `name`="smtp_server";'.format(db.table_prefix, _server))
-    sql_list.append('UPDATE `{}config` SET `value`="{}" WHERE `name`="smtp_port";'.format(db.table_prefix, _port))
-    sql_list.append('UPDATE `{}config` SET `value`="{}" WHERE `name`="smtp_ssl";'.format(db.table_prefix, _ssl))
-    sql_list.append('UPDATE `{}config` SET `value`="{}" WHERE `name`="smtp_sender";'.format(db.table_prefix, _sender))
-    sql_list.append('UPDATE `{}config` SET `value`="{}" WHERE `name`="smtp_password";'.format(db.table_prefix, _password))
+    _smtp = {
+        'server': _server,
+        'port': _port,
+        'ssl': _ssl,
+        'sender': _sender,
+        'password': _password
+    }
 
-    ret = db.transaction(sql_list)
-    if ret:
-        return TPE_OK, ''
+    str_smtp = json.dumps(_smtp, separators=(',', ':'))
 
-    return TPE_FAILED, '数据库操作失败'
+    sql = 'SELECT name FROM `{dbtp}config` WHERE name="smtp";'.format(dbtp=db.table_prefix)
+    db_ret = db.query(sql)
+    if db_ret is not None and len(db_ret) > 0:
+        sql = 'UPDATE `{dbtp}config` SET value={dbph} WHERE name="smtp";'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+        db_ret = db.exec(sql, (str_smtp,))
+    else:
+        sql = 'INSERT INTO `{dbtp}config` (name, value) VALUES ("smtp", {dbph});'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+        db_ret = db.exec(sql, (str_smtp,))
+
+    if not db_ret:
+        return TPE_DATABASE
+
+    operator = handler.get_current_user()
+    syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "更新SMTP设置")
+
+    return TPE_OK
 
 
-def add_role(handler, role_id, role_name, privilege):
+def add_role(handler, role_name, privilege):
     db = get_db()
     _time_now = tp_timestamp_utc_now()
     operator = handler.get_current_user()
@@ -39,8 +52,7 @@ def add_role(handler, role_id, role_name, privilege):
 
     sql = 'INSERT INTO `{}role` (name, privilege, creator_id, create_time) VALUES ' \
           '("{name}", {privilege}, {creator_id}, {create_time});' \
-          ''.format(db.table_prefix,
-                    name=role_name, privilege=privilege, creator_id=operator['id'], create_time=_time_now)
+          ''.format(db.table_prefix, name=role_name, privilege=privilege, creator_id=operator['id'], create_time=_time_now)
     db_ret = db.exec(sql)
     if not db_ret:
         return TPE_DATABASE, 0
@@ -104,40 +116,3 @@ def remove_role(handler, role_id):
     syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除角色：{}".format(role_name))
 
     return TPE_OK
-
-
-# def get_config_list():
-#     try:
-#         from eom_app.module.common import get_db_con
-#         from eom_app.module.common import DbItem
-#         sql_exec = get_db_con()
-#         field_a = ['name', 'value']
-#         string_sql = 'SELECT {} FROM ts_config as a ;'.format(','.join(['a.{}'.format(i) for i in field_a]))
-#         db_ret = sql_exec.ExecProcQuery(string_sql)
-#         h = dict()
-#         for item in db_ret:
-#             x = DbItem()
-#             x.load(item, ['a_{}'.format(i) for i in field_a])
-#             h[x.a_name] = x.a_value
-#
-#         return h
-#     except Exception as e:
-#         return None
-#
-#
-# def set_config(change_list):
-#     from eom_app.module.common import get_db_con
-#     sql_exec = get_db_con()
-#     #
-#     for item in change_list:
-#         name = item['name']
-#         value = item['value']
-#         str_sql = 'UPDATE ts_config SET value = \'{}\' ' \
-#                   '  WHERE name = \'{}\''.format(value, name)
-#         ret = sql_exec.ExecProcNonQuery(str_sql)
-#
-#     return ret
-#
-# def get_config_list():
-#     print(cfg.base)
-#     return cfg.base

@@ -18,7 +18,7 @@
     <div class="box box-nav-tabs">
         <ul class="nav nav-tabs">
             <li class="active"><a href="#tab-security" data-toggle="tab">安全</a></li>
-            <li><a href="#tab-email" data-toggle="tab">邮件系统</a></li>
+            <li><a href="#tab-smtp" data-toggle="tab">邮件系统</a></li>
             <li><a href="#tab-storage" data-toggle="tab">存储</a></li>
             <li><a href="#tab-backup" data-toggle="tab">备份</a></li>
         </ul>
@@ -33,21 +33,21 @@
                     <tr>
                         <td class="key">找回密码</td>
                         <td class="value">
-                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable tp-selected">允许用户找回密码</div>
+                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable">允许用户找回密码</div>
                             <span class="desc">关闭此功能，只能由管理员为用户重置密码。默认开启。</span>
                         </td>
                     </tr>
                     <tr>
                         <td class="key">密码强度</td>
                         <td class="value">
-                            <div id="sec-force-strong-password" class="tp-checkbox tp-editable tp-selected">强制使用强密码</div>
+                            <div id="sec-force-strong-password" class="tp-checkbox tp-editable">强制使用强密码</div>
                             <span class="desc">至少8个英文字符，必须包含大写字母、小写字母、数字和标点符号。默认开启。</span>
                         </td>
                     </tr>
                     <tr>
                         <td class="key">密码有效期</td>
                         <td class="value">
-                            <input type="text" value="0"/><span class="unit">天</span><span class="desc">0~180。密码过期后用户将无法登录，为0则密码永不过期。默认为0。</span>
+                            <input id="sec-password-timeout" type="text" value="0"/><span class="unit">天</span><span class="desc">0~180。密码过期后用户将无法登录，为0则密码永不过期。默认为0。</span>
                         </td>
                     </tr>
 
@@ -60,19 +60,19 @@
                     <tr>
                         <td class="key">WEB会话超时</td>
                         <td class="value">
-                            <input type="text" value="30"/><span class="unit">分钟</span><span class="desc">5~1440。超过设定时长无操作，用户将被强制登出。默认为30分钟。</span>
+                            <input id="sec-session-timeout" type="text" value="30"/><span class="unit">分钟</span><span class="desc">5~1440。超过设定时长无操作，用户将被强制登出。默认为30分钟。</span>
                         </td>
                     </tr>
                     <tr>
                         <td class="key">密码尝试次数</td>
                         <td class="value">
-                            <input type="text" value="0"/><span class="unit">次</span><span class="desc">0~10。密码连续错误超过设定次数，用户将被临时锁定，为0则不限制。默认为0。</span>
+                            <input id="sec-login-retry" type="text" value="0"/><span class="unit">次</span><span class="desc">0~10。密码连续错误超过设定次数，用户将被临时锁定，为0则不限制。默认为0。</span>
                         </td>
                     </tr>
                     <tr>
                         <td class="key">临时锁定时长</td>
                         <td class="value">
-                            <input type="text" value="30"/><span class="unit">分钟</span><span class="desc">0~9999。用户被临时锁定的持续时间，为0则持续到由管理员解锁。默认为30分钟。</span>
+                            <input id="sec-lock-timeout" type="text" value="30"/><span class="unit">分钟</span><span class="desc">0~9999。用户被临时锁定的持续时间，为0则持续到由管理员解锁。默认为30分钟。</span>
                         </td>
                     </tr>
                     <tr>
@@ -84,19 +84,25 @@
                     <tr>
                         <td class="key"></td>
                         <td class="value">
-                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable tp-selected">用户名 + 密码</div>
+                            <div id="sec-auth-username-password" class="tp-checkbox tp-editable">用户名 + 密码</div>
                         </td>
                     </tr>
                     <tr>
                         <td class="key"></td>
                         <td class="value">
-                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable tp-selected">用户名 + 密码 + 验证码</div>
+                            <div id="sec-auth-username-password-captcha" class="tp-checkbox tp-editable">用户名 + 密码 + 验证码</div>
                         </td>
                     </tr>
                     <tr>
                         <td class="key"></td>
                         <td class="value">
-                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable tp-selected">用户名 + 密码 + 身份认证器动态密码</div>
+                            <div id="sec-auth-username-oath" class="tp-checkbox tp-editable">用户名 + 身份认证器动态密码</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key"></td>
+                        <td class="value">
+                            <div id="sec-auth-username-password-oath" class="tp-checkbox tp-editable">用户名 + 密码 + 身份认证器动态密码</div>
                         </td>
                     </tr>
                 </table>
@@ -106,7 +112,7 @@
             </div>
 
             <!-- panel for mail config -->
-            <div class="tab-pane" id="tab-email">
+            <div class="tab-pane" id="tab-smtp">
                 <table class="table table-info-list">
                     <tr>
                         <td class="key">SMTP服务器</td>
