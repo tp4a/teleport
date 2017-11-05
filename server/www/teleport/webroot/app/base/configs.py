@@ -540,10 +540,6 @@ class AppConfig(BaseAppConfig):
 
         self.sys.loaded = True
 
-        # except IndexError:
-        #     log.e('invalid system default config.\n')
-        #     return False
-
         return True
 
 

@@ -309,8 +309,9 @@ def cleanup_storage(handler):
     msg = []
     have_error = False
 
-    sto.keep_log = 5
-    sto.keep_record = 5
+    # for test.
+    # sto.keep_log = 5
+    # sto.keep_record = 5
 
     s = SQL(db)
     chk_time = _now - sto.keep_log * 24 * 60 * 60
