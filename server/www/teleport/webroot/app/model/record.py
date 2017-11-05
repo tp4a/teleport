@@ -11,6 +11,7 @@ from app.base.configs import get_cfg
 from app.base.db import get_db, SQL
 from app.base.logger import log
 from app.base.utils import tp_timestamp_utc_now
+import tornado.gen
 
 
 def get_records(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
@@ -253,66 +254,140 @@ def delete_log(log_list):
 
 
 def session_fix():
-    try:
-        db = get_db()
+    db = get_db()
+    sql_list = []
 
-        sql_list = []
+    sql = 'UPDATE `{dbtp}record` SET state={new_state}, time_end={time_end} WHERE state={old_state};' \
+          ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_RESET, old_state=TP_SESS_STAT_RUNNING, time_end=tp_timestamp_utc_now())
+    sql_list.append(sql)
 
-        sql = 'UPDATE `{dbtp}record` SET state={new_state}, time_end={time_end} WHERE state={old_state};' \
-              ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_RESET, old_state=TP_SESS_STAT_RUNNING, time_end=tp_timestamp_utc_now())
-        sql_list.append(sql)
-        # if not db.exec(sql):
-        #     ret = False
-        sql = 'UPDATE `{dbtp}record` SET state={new_state},time_end={time_end} WHERE state={old_state};' \
-              ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_START_RESET, old_state=TP_SESS_STAT_STARTED, time_end=tp_timestamp_utc_now())
-        sql_list.append(sql)
-        return db.transaction(sql_list)
-        # if not db.exec(sql):
-        #     ret = False
-        # return ret
-    except:
-        log.e('\n')
-        return False
+    sql = 'UPDATE `{dbtp}record` SET state={new_state},time_end={time_end} WHERE state={old_state};' \
+          ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_START_RESET, old_state=TP_SESS_STAT_STARTED, time_end=tp_timestamp_utc_now())
+    sql_list.append(sql)
+    return db.transaction(sql_list)
 
 
 def session_begin(sid, user_id, host_id, acc_id, user_username, acc_username, host_ip, conn_ip, conn_port, client_ip, auth_type, protocol_type, protocol_sub_type):
-    try:
-        db = get_db()
-        sql = 'INSERT INTO `{}record` (sid,user_id,host_id,acc_id,state,user_username,host_ip,conn_ip,conn_port,client_ip,acc_username,auth_type,protocol_type,protocol_sub_type,time_begin,time_end) ' \
-              'VALUES ("{sid}",{user_id},{host_id},{acc_id},0,"{user_username}","{host_ip}","{conn_ip}",{conn_port},"{client_ip}","{acc_username}",{auth_type},{protocol_type},{protocol_sub_type},{time_begin},0)' \
-              ';'.format(db.table_prefix,
-                         sid=sid, user_id=user_id, host_id=host_id, acc_id=acc_id, user_username=user_username, host_ip=host_ip, conn_ip=conn_ip, conn_port=conn_port,
-                         client_ip=client_ip, acc_username=acc_username, auth_type=auth_type, protocol_type=protocol_type, protocol_sub_type=protocol_sub_type,
-                         time_begin=tp_timestamp_utc_now())
+    db = get_db()
+    sql = 'INSERT INTO `{}record` (sid,user_id,host_id,acc_id,state,user_username,host_ip,conn_ip,conn_port,client_ip,acc_username,auth_type,protocol_type,protocol_sub_type,time_begin,time_end) ' \
+          'VALUES ("{sid}",{user_id},{host_id},{acc_id},0,"{user_username}","{host_ip}","{conn_ip}",{conn_port},"{client_ip}","{acc_username}",{auth_type},{protocol_type},{protocol_sub_type},{time_begin},0)' \
+          ';'.format(db.table_prefix,
+                     sid=sid, user_id=user_id, host_id=host_id, acc_id=acc_id, user_username=user_username, host_ip=host_ip, conn_ip=conn_ip, conn_port=conn_port,
+                     client_ip=client_ip, acc_username=acc_username, auth_type=auth_type, protocol_type=protocol_type, protocol_sub_type=protocol_sub_type,
+                     time_begin=tp_timestamp_utc_now())
 
-        ret = db.exec(sql)
-        if not ret:
-            return TPE_DATABASE, 0
-
-        record_id = db.last_insert_id()
-        if record_id == -1:
-            return TPE_DATABASE, 0
-        else:
-            return TPE_OK, record_id
-
-    except:
-        log.e('\n')
+    ret = db.exec(sql)
+    if not ret:
         return TPE_DATABASE, 0
+
+    record_id = db.last_insert_id()
+    if record_id == -1:
+        return TPE_DATABASE, 0
+    else:
+        return TPE_OK, record_id
 
 
 def session_update(record_id, state):
-    try:
-        db = get_db()
-        sql = 'UPDATE `{}record` SET state={} WHERE id={};'.format(db.table_prefix, int(state), int(record_id))
-        return db.exec(sql)
-    except:
-        return False
+    db = get_db()
+    sql = 'UPDATE `{}record` SET state={} WHERE id={};'.format(db.table_prefix, int(state), int(record_id))
+    return db.exec(sql)
 
 
 def session_end(record_id, ret_code):
-    try:
-        db = get_db()
-        sql = 'UPDATE `{}record` SET state={}, time_end={} WHERE id={};'.format(db.table_prefix, int(ret_code), tp_timestamp_utc_now(), int(record_id))
-        return db.exec(sql)
-    except:
-        return False
+    db = get_db()
+    sql = 'UPDATE `{}record` SET state={}, time_end={} WHERE id={};'.format(db.table_prefix, int(ret_code), tp_timestamp_utc_now(), int(record_id))
+    return db.exec(sql)
+
+
+@tornado.gen.coroutine
+def cleanup_storage(handler):
+    # storage config
+    sto = get_cfg().sys.storage
+
+    db = get_db()
+    _now = tp_timestamp_utc_now()
+    msg = []
+    have_error = False
+
+    sto.keep_log = 5
+    sto.keep_record = 5
+
+    s = SQL(db)
+    chk_time = _now - sto.keep_log * 24 * 60 * 60
+
+    if sto.keep_log > 0:
+        # find out all sys-log to be remove
+        s.select_from('syslog', ['id'], alt_name='s')
+        s.where('s.log_time<{chk_time}'.format(chk_time=chk_time))
+        err = s.query()
+        if err != TPE_OK:
+            have_error = True
+            msg.append('清理系统日志时发生错误：无法获取系统日志信息！')
+            # return err, msg
+        else:
+            removed_log = len(s.recorder)
+            if 0 == removed_log:
+                msg.append('没有满足条件的系统日志需要清除！')
+            else:
+                s.reset().delete_from('syslog').where('log_time<{chk_time}'.format(chk_time=chk_time))
+                err = s.query()
+                if err != TPE_OK:
+                    have_error = True
+                    msg.append('清理系统日志时发生错误：无法清除指定的系统日志！')
+                else:
+                    msg.append('{} 条系统日志已清除！'.format(removed_log))
+
+    if sto.keep_record > 0:
+        core_cfg = get_cfg().core
+        if not core_cfg.detected:
+            have_error = True
+            msg.append('清除指定会话录像失败：未能检测到核心服务！')
+        else:
+            replay_path = core_cfg.replay_path
+            if not os.path.exists(replay_path):
+                have_error = True
+                msg.append('清除指定会话录像失败：会话录像路径不存在（{}）！'.format(replay_path))
+            else:
+                # find out all record to be remove
+                s.reset().select_from('record', ['id', 'protocol_type'], alt_name='r')
+                s.where('r.time_begin<{chk_time}'.format(chk_time=chk_time))
+                err = s.query()
+                if err != TPE_OK:
+                    have_error = True
+                    msg.append('清除指定会话录像失败：无法获取会话录像信息！')
+                elif len(s.recorder) == 0:
+                    msg.append('没有满足条件的会话录像需要清除！')
+                else:
+                    record_removed = 0
+                    for r in s.recorder:
+                        if r.protocol_type == TP_PROTOCOL_TYPE_RDP:
+                            path_remove = os.path.join(replay_path, 'rdp', '{:09d}'.format(r.id))
+                        elif r.protocol_type == TP_PROTOCOL_TYPE_SSH:
+                            path_remove = os.path.join(replay_path, 'ssh', '{:09d}'.format(r.id))
+                        elif r.protocol_type == TP_PROTOCOL_TYPE_TELNET:
+                            path_remove = os.path.join(replay_path, 'telnet', '{:09d}'.format(r.id))
+                        else:
+                            have_error = True
+                            msg.append('会话录像记录编号 {}，未知远程访问协议！'.format(r.id))
+                            continue
+
+                        if os.path.exists(path_remove):
+                            print('remove path', path_remove)
+                            try:
+                                shutil.rmtree(path_remove)
+                            except:
+                                have_error = True
+                                msg.append('会话录像记录 {} 清除失败，无法删除目录 {}！'.format(r.id, path_remove))
+
+                        ss = SQL(db)
+                        ss.delete_from('record').where('id={rid}'.format(rid=r.id))
+                        ss.exec()
+
+                        record_removed += 1
+
+                    msg.append('{} 条会话录像数据已清除！'.format(record_removed))
+
+    if have_error:
+        return TPE_FAILED, msg
+    else:
+        return TPE_OK, msg

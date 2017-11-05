@@ -20,7 +20,7 @@
             <li class="active"><a href="#tab-security" data-toggle="tab">安全</a></li>
             <li><a href="#tab-smtp" data-toggle="tab">邮件系统</a></li>
             <li><a href="#tab-storage" data-toggle="tab">存储</a></li>
-##             <li><a href="#tab-backup" data-toggle="tab">备份</a></li>
+            ##             <li><a href="#tab-backup" data-toggle="tab">备份</a></li>
         </ul>
 
         <div class="tab-content">
@@ -137,7 +137,7 @@
 
             <!-- panel for storage config -->
             <div class="tab-pane" id="tab-storage">
-                <div class="alert alert-info">当前会话录像存储空间：总 123.35GB，可用空间 85.17GB。</div>
+                <div id="storage-size" class="alert alert-info">-</div>
                 <table class="table table-config-list">
                     <tr>
                         <td colspan="2" class="title">系统日志</td>
@@ -171,46 +171,46 @@
                     <tr>
                         <td class="key">时间点</td>
                         <td class="value">
-                            <select id="select-backup-hour">
-                                <option>00</option>
-                                <option>01</option>
-                                <option>02</option>
-                                <option selected="selected">04</option>
-                                <option>04</option>
-                                <option>05</option>
-                                <option>06</option>
-                                <option>07</option>
-                                <option>08</option>
-                                <option>09</option>
-                                <option>10</option>
-                                <option>11</option>
-                                <option>12</option>
-                                <option>13</option>
-                                <option>14</option>
-                                <option>15</option>
-                                <option>16</option>
-                                <option>17</option>
-                                <option>18</option>
-                                <option>19</option>
-                                <option>20</option>
-                                <option>21</option>
-                                <option>22</option>
-                                <option>23</option>
+                            <select id="select-cleanup-storage-hour">
+                                <option value="0">00</option>
+                                <option value="1">01</option>
+                                <option value="2">02</option>
+                                <option value="3">03</option>
+                                <option value="4">04</option>
+                                <option value="5">05</option>
+                                <option value="6">06</option>
+                                <option value="7">07</option>
+                                <option value="8">08</option>
+                                <option value="9">09</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                                <option value="21">21</option>
+                                <option value="22">22</option>
+                                <option value="23">23</option>
                             </select>
                             时
-                            <select id="select-backup-min">
-                                <option selected="selected">00</option>
-                                <option>05</option>
-                                <option>10</option>
-                                <option>15</option>
-                                <option>20</option>
-                                <option>25</option>
-                                <option>30</option>
-                                <option>35</option>
-                                <option>40</option>
-                                <option>45</option>
-                                <option>50</option>
-                                <option>55</option>
+                            <select id="select-cleanup-storage-minute">
+                                <option value="0">00</option>
+                                <option value="5">05</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                                <option value="20">20</option>
+                                <option value="25">25</option>
+                                <option value="30">30</option>
+                                <option value="35">35</option>
+                                <option value="40">40</option>
+                                <option value="45">45</option>
+                                <option value="50">50</option>
+                                <option value="55">55</option>
                             </select>
                             分
                             <span class="desc">每天在指定时间点清理存储。</span>
@@ -219,122 +219,122 @@
                     <tr>
                         <td class="key"></td>
                         <td class="value">
-                <button id="btn-clear-storage" class="btn btn-sm btn-success"><i class="fa fa-leaf fa-fw"></i> 现在立即清理</button>
+                            <button id="btn-clear-storage" class="btn btn-sm btn-success"><i class="fa fa-leaf fa-fw"></i> 现在立即清理</button>
                         </td>
                     </tr>
                 </table>
                 <hr/>
                 <button id="btn-save-storage-config" class="btn btn-sm btn-primary"><i class="fa fa-check-circle fa-fw"></i> 保存存储设置</button>
-##                 <button id="btn-clear-storage" class="btn btn-sm btn-danger"><i class="fa fa-edit fa-fw"></i> 立即清理</button>
+                ##                 <button id="btn-clear-storage" class="btn btn-sm btn-danger"><i class="fa fa-edit fa-fw"></i> 立即清理</button>
             </div>
 
             <!-- panel for backup config -->
-##             <div class="tab-pane" id="tab-backup">
-##                 <div class="alert alert-danger">备份功能尚未实现</div>
-##
-##                 <table class="table table-config-list">
-##                     <tr>
-##                         <td colspan="2" class="title">数据库备份</td>
-##                     </tr>
-##                     <tr>
-##                         <td class="key">备份范围</td>
-##                         <td class="value">
-##                             <div id="btn-bak-syslog" class="tp-checkbox tp-editable">包括系统日志</div>
-##                         </td>
-##                     </tr>
-##                     <tr>
-##                         <td class="key"></td>
-##                         <td class="value">
-##                             <div id="btn-backup-alert" class="tp-checkbox tp-editable">包括报警日志</div>
-##                         </td>
-##                     </tr>
-##                     <tr>
-##                         <td class="key"></td>
-##                         <td class="value">
-##                             <div id="btn-backup-ops" class="tp-checkbox tp-editable">包括运维记录</div>
-##                         </td>
-##                     </tr>
-##                     <tr>
-##                         <td class="key">自动备份</td>
-##                         <td class="value">
-##                             <div id="btn-auto-backup" class="tp-checkbox tp-editable tp-selected">在指定时间点自动备份数据库</div>
-##                         </td>
-##                     </tr>
-##                     <tr>
-##                         <td class="key">备份时间点</td>
-##                         <td class="value">
-##                             <select id="select-backup-hour">
-##                                 <option>00</option>
-##                                 <option>01</option>
-##                                 <option>02</option>
-##                                 <option selected="selected">03</option>
-##                                 <option>04</option>
-##                                 <option>05</option>
-##                                 <option>06</option>
-##                                 <option>07</option>
-##                                 <option>08</option>
-##                                 <option>09</option>
-##                                 <option>10</option>
-##                                 <option>11</option>
-##                                 <option>12</option>
-##                                 <option>13</option>
-##                                 <option>14</option>
-##                                 <option>15</option>
-##                                 <option>16</option>
-##                                 <option>17</option>
-##                                 <option>18</option>
-##                                 <option>19</option>
-##                                 <option>20</option>
-##                                 <option>21</option>
-##                                 <option>22</option>
-##                                 <option>23</option>
-##                             </select>
-##                             时
-##                             <select id="select-backup-min">
-##                                 <option selected="selected">00</option>
-##                                 <option>05</option>
-##                                 <option>10</option>
-##                                 <option>15</option>
-##                                 <option>20</option>
-##                                 <option>25</option>
-##                                 <option>30</option>
-##                                 <option>35</option>
-##                                 <option>40</option>
-##                                 <option>45</option>
-##                                 <option>50</option>
-##                                 <option>55</option>
-##                             </select>
-##                             分
-##                             <span class="desc">每天在指定时间点备份数据库。</span>
-##                         </td>
-##                     </tr>
-##                     <tr>
-##                         <td class="key">备份保留时长</td>
-##                         <td class="value">
-##                             <input id="backup-keep-timeout" type="text" value="7"/><span class="unit">天</span><span class="desc">1~7。超过设定时间的备份将自动删除，默认为7天。</span>
-##                         </td>
-##                     </tr>
-##                     <tr>
-##                         <td class="key"></td>
-##                         <td class="value">
-##                             <a href="javascript:;"><i class="fa fa-download"></i> 下载自动备份文件</a>
-##                         </td>
-##                     </tr>
-##
-##                 </table>
-##                 <hr/>
-##                 <button id="btn-save-storage-config" class="btn btn-sm btn-primary"><i class="fa fa-edit fa-fw"></i> 保存存储设置</button>
-##                 <button id="btn-do-backup" class="btn btn-sm btn-success"><i class="fa fa-edit fa-fw"></i> 立即备份</button>
-##                 <button id="btn-import-backup" class="btn btn-sm btn-danger"><i class="fa fa-edit fa-fw"></i> 导入备份</button>
-##             </div>
+            ##             <div class="tab-pane" id="tab-backup">
+            ##                 <div class="alert alert-danger">备份功能尚未实现</div>
+            ##
+            ##                 <table class="table table-config-list">
+            ##                     <tr>
+            ##                         <td colspan="2" class="title">数据库备份</td>
+            ##                     </tr>
+            ##                     <tr>
+            ##                         <td class="key">备份范围</td>
+            ##                         <td class="value">
+            ##                             <div id="btn-bak-syslog" class="tp-checkbox tp-editable">包括系统日志</div>
+            ##                         </td>
+            ##                     </tr>
+            ##                     <tr>
+            ##                         <td class="key"></td>
+            ##                         <td class="value">
+            ##                             <div id="btn-backup-alert" class="tp-checkbox tp-editable">包括报警日志</div>
+            ##                         </td>
+            ##                     </tr>
+            ##                     <tr>
+            ##                         <td class="key"></td>
+            ##                         <td class="value">
+            ##                             <div id="btn-backup-ops" class="tp-checkbox tp-editable">包括运维记录</div>
+            ##                         </td>
+            ##                     </tr>
+            ##                     <tr>
+            ##                         <td class="key">自动备份</td>
+            ##                         <td class="value">
+            ##                             <div id="btn-auto-backup" class="tp-checkbox tp-editable tp-selected">在指定时间点自动备份数据库</div>
+            ##                         </td>
+            ##                     </tr>
+            ##                     <tr>
+            ##                         <td class="key">备份时间点</td>
+            ##                         <td class="value">
+            ##                             <select id="select-backup-hour">
+            ##                                 <option>00</option>
+            ##                                 <option>01</option>
+            ##                                 <option>02</option>
+            ##                                 <option selected="selected">03</option>
+            ##                                 <option>04</option>
+            ##                                 <option>05</option>
+            ##                                 <option>06</option>
+            ##                                 <option>07</option>
+            ##                                 <option>08</option>
+            ##                                 <option>09</option>
+            ##                                 <option>10</option>
+            ##                                 <option>11</option>
+            ##                                 <option>12</option>
+            ##                                 <option>13</option>
+            ##                                 <option>14</option>
+            ##                                 <option>15</option>
+            ##                                 <option>16</option>
+            ##                                 <option>17</option>
+            ##                                 <option>18</option>
+            ##                                 <option>19</option>
+            ##                                 <option>20</option>
+            ##                                 <option>21</option>
+            ##                                 <option>22</option>
+            ##                                 <option>23</option>
+            ##                             </select>
+            ##                             时
+            ##                             <select id="select-backup-min">
+            ##                                 <option selected="selected">00</option>
+            ##                                 <option>05</option>
+            ##                                 <option>10</option>
+            ##                                 <option>15</option>
+            ##                                 <option>20</option>
+            ##                                 <option>25</option>
+            ##                                 <option>30</option>
+            ##                                 <option>35</option>
+            ##                                 <option>40</option>
+            ##                                 <option>45</option>
+            ##                                 <option>50</option>
+            ##                                 <option>55</option>
+            ##                             </select>
+            ##                             分
+            ##                             <span class="desc">每天在指定时间点备份数据库。</span>
+            ##                         </td>
+            ##                     </tr>
+            ##                     <tr>
+            ##                         <td class="key">备份保留时长</td>
+            ##                         <td class="value">
+            ##                             <input id="backup-keep-timeout" type="text" value="7"/><span class="unit">天</span><span class="desc">1~7。超过设定时间的备份将自动删除，默认为7天。</span>
+            ##                         </td>
+            ##                     </tr>
+            ##                     <tr>
+            ##                         <td class="key"></td>
+            ##                         <td class="value">
+            ##                             <a href="javascript:;"><i class="fa fa-download"></i> 下载自动备份文件</a>
+            ##                         </td>
+            ##                     </tr>
+            ##
+            ##                 </table>
+            ##                 <hr/>
+            ##                 <button id="btn-save-storage-config" class="btn btn-sm btn-primary"><i class="fa fa-edit fa-fw"></i> 保存存储设置</button>
+            ##                 <button id="btn-do-backup" class="btn btn-sm btn-success"><i class="fa fa-edit fa-fw"></i> 立即备份</button>
+            ##                 <button id="btn-import-backup" class="btn btn-sm btn-danger"><i class="fa fa-edit fa-fw"></i> 导入备份</button>
+            ##             </div>
         </div>
     </div>
 </div>
 
 
 <%block name="extend_content">
-    <!-- dialog for edit mail config -->
-    <div class="modal fade" id="dlg-edit-mail-config" tabindex="-1" role="dialog">
+    <!-- dialog for edit smtp config -->
+    <div class="modal fade" id="dlg-edit-smtp-config">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -411,4 +411,22 @@
         </div>
     </div>
 
+    <!-- dialog for show storage cleanup result -->
+    <div class="modal fade" id="dlg-result">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
+                    <h3 id="dlg-result-title" class="modal-title">-</h3>
+                </div>
+                <div class="modal-body">
+                    <div id="dlg-result-msg"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </%block>

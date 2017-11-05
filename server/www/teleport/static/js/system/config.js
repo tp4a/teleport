@@ -3,16 +3,37 @@
 $app.on_init = function (cb_stack) {
     console.log($app.options);
 
-    //=========================================
-    // 邮件系统配置相关
-    //=========================================
+    $app.dlg_result = $app.create_dlg_result();
+    // cb_stack.add($app.dlg_result.init);
+
     $app.smtp = $app.create_config_smtp();
     cb_stack.add($app.smtp.init);
 
     $app.sec = $app.create_config_sec();
     cb_stack.add($app.sec.init);
 
+    $app.storage = $app.create_config_storage();
+    cb_stack.add($app.storage.init);
+
     cb_stack.exec();
+};
+
+$app.create_dlg_result = function () {
+    var _dlg = {};
+
+    _dlg.dom = {
+        dlg: $('#dlg-result'),
+        title: $('#dlg-result-title'),
+        msg: $('#dlg-result-msg')
+    };
+
+    _dlg.show = function(title, msg) {
+        _dlg.dom.title.text(title);
+        _dlg.dom.msg.html(msg);
+        _dlg.dom.dlg.modal();
+    };
+
+    return _dlg;
 };
 
 $app.create_config_smtp = function () {
@@ -25,7 +46,7 @@ $app.create_config_smtp = function () {
         sender: $('#smtp-sender-info'),
         btn_edit: $('#btn-edit-mail-config'),
 
-        dlg_edit: $('#dlg-edit-mail-config'),
+        dlg_edit: $('#dlg-edit-smtp-config'),
         input_server: $('#edit-smtp-server'),
         input_port: $('#edit-smtp-port'),
         input_ssl: $('#edit-smtp-ssl'),
@@ -360,4 +381,143 @@ $app.create_config_sec = function () {
     };
 
     return _sec;
+};
+
+$app.create_config_storage = function () {
+    var _sto = {};
+
+    _sto.dom = {
+        storage_size: $('#storage-size'),
+        btn_save: $('#btn-save-storage-config'),
+        btn_cleanup: $('#btn-clear-storage'),
+
+        input_keep_log: $('#storage-keep-log'),
+        input_keep_record: $('#storage-keep-record'),
+        select_cleanup_hour: $('#select-cleanup-storage-hour'),
+        select_cleanup_minute: $('#select-cleanup-storage-minute')
+    };
+
+    _sto.init = function (cb_stack) {
+        // 当前会话录像存储空间：总 123.35GB，可用空间 85.17GB。
+        var _info = [];
+        if (!$app.options.core_cfg.detected) {
+            _sto.dom.storage_size.removeClass().addClass('alert alert-danger');
+            _info.push('未能连接到核心服务，无法获取存储空间信息！');
+        } else {
+            _sto.dom.storage_size.removeClass().addClass('alert alert-info');
+            _info.push('<p>会话录像存储路径：<code>' + $app.options.core_cfg.replay_path + '</code></p>');
+            _info.push('<p>会话录像存储空间：总 ' + tp_size2str($app.options.total_size, 2) + '，' + '可用 ' + tp_size2str($app.options.free_size, 2) + '。</p>');
+        }
+        _sto.dom.storage_size.html(_info.join(''));
+
+        _sto.update_dom($app.options.sys_cfg.storage);
+
+        _sto.dom.btn_save.click(function () {
+            _sto.on_btn_save();
+        });
+        _sto.dom.btn_cleanup.click(function () {
+            _sto.on_btn_cleanup();
+        });
+
+        cb_stack.exec();
+    };
+
+    _sto.update_dom = function (storage) {
+        _sto.dom.input_keep_log.val(storage.keep_log);
+        _sto.dom.input_keep_record.val(storage.keep_record);
+        _sto.dom.select_cleanup_hour.val(storage.cleanup_hour);
+        _sto.dom.select_cleanup_minute.val(storage.cleanup_minute);
+    };
+
+    _sto.on_btn_save = function () {
+        var _keep_log = parseInt(_sto.dom.input_keep_log.val());
+        var _keep_record = parseInt(_sto.dom.input_keep_record.val());
+
+        var _cleanup_hour = parseInt(_sto.dom.select_cleanup_hour.val());
+        var _cleanup_minute = parseInt(_sto.dom.select_cleanup_minute.val());
+
+        if (!(_keep_log === 0 || (_keep_log >= 30 && _keep_log <= 180))) {
+            $tp.notify_error('日志保留时间超出范围！');
+            _sto.dom.input_keep_log.focus();
+            return;
+        }
+        if (!(_keep_record === 0 || (_keep_record >= 30 && _keep_record <= 180))) {
+            $tp.notify_error('会话录像保留时间超出范围！');
+            _sto.dom.input_keep_record.focus();
+            return;
+        }
+
+        _sto.dom.btn_save.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/system/save-cfg',
+            {
+                storage: {
+                    keep_log: _keep_log,
+                    keep_record: _keep_record,
+                    cleanup_hour: _cleanup_hour,
+                    cleanup_minute: _cleanup_minute
+                }
+            },
+            function (ret) {
+                _sto.dom.btn_save.removeAttr('disabled');
+                if (ret.code === TPE_OK) {
+                    $tp.notify_success('存储设置更新成功！');
+
+                    // 更新一下界面上显示的配置信息
+                    $app.options.sys_cfg.storage.keep_log = _keep_log;
+                    $app.options.sys_cfg.storage.keep_record = _keep_record;
+                    $app.options.sys_cfg.storage.cleanup_hour = _cleanup_hour;
+                    $app.options.sys_cfg.storage.cleanup_minute = _cleanup_minute;
+
+                    _sto.update_dom($app.options.sys_cfg.storage);
+                } else {
+                    $tp.notify_error('存储设置更新失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                _sto.dom.btn_save.removeAttr('disabled');
+                $tp.notify_error('网路故障，存储设置更新失败！');
+            }
+        );
+    };
+
+    _sto.on_btn_cleanup = function () {
+        var _keep_log = parseInt(_sto.dom.input_keep_log.val());
+        var _keep_record = parseInt(_sto.dom.input_keep_record.val());
+
+        if($app.options.sys_cfg.storage.keep_log !== _keep_log || $app.options.sys_cfg.storage.keep_record !== _keep_record) {
+            $tp.notify_error('您已经修改了设置，请先保存设置，再进行清理！');
+            return;
+        }
+        if($app.options.sys_cfg.storage.keep_log === 0 && $app.options.sys_cfg.storage.keep_record === 0) {
+            $tp.notify_error('根据设置，没有需要清理的内容！');
+            return;
+        }
+
+        _sto.dom.btn_cleanup.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/system/cleanup-storage', {},
+            function (ret) {
+                _sto.dom.btn_cleanup.removeAttr('disabled');
+                if (ret.code === TPE_OK) {
+                    console.log(ret);
+                    $tp.notify_success('清理存储空间成功！');
+
+                    var msg = [];
+                    for(var i = 0; i < ret.data.length; ++i) {
+                        msg.push('<p>'+ret.data[i]+'</p>');
+                    }
+
+                    $app.dlg_result.show('清理存储空间', msg.join(''));
+                } else {
+                    $tp.notify_error('清理存储空间失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                _sto.dom.btn_cleanup.removeAttr('disabled');
+                $tp.notify_error('网路故障，清理存储空间失败！');
+            },
+            120000
+        );
+    };
+
+    return _sto;
 };

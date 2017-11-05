@@ -12,6 +12,8 @@ from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.logger import *
 from app.const import *
 from app.model import syslog
+from app.model import record
+from app.base.core_server import core_service_async_post_http
 
 
 class DoGetTimeHandler(TPBaseJsonHandler):
@@ -21,16 +23,27 @@ class DoGetTimeHandler(TPBaseJsonHandler):
 
 
 class ConfigHandler(TPBaseHandler):
+    @tornado.gen.coroutine
     def get(self):
         ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
         if ret != TPE_OK:
             return
 
+        cfg = get_cfg()
+
+        # core_detected = False
+        req = {'method': 'get_config', 'param': []}
+        _yr = core_service_async_post_http(req)
+        code, ret_data = yield _yr
+        if code != TPE_OK:
+            cfg.update_core(None)
+        else:
+            cfg.update_core(ret_data)
+
         if not get_cfg().core.detected:
             total_size = 0
             free_size = 0
         else:
-            # total_size, free_size = get_free_space_bytes(get_cfg().core.replay_path)
             total_size, _, free_size = shutil.disk_usage(get_cfg().core.replay_path)
 
         param = {
@@ -182,46 +195,6 @@ class DoGetLogsHandler(TPBaseJsonHandler):
         return self.write_json(0, data=ret)
 
 
-class DoSendTestMailHandler(TPBaseJsonHandler):
-    @tornado.gen.coroutine
-    def post(self):
-        ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
-        if ret != TPE_OK:
-            return
-
-        args = self.get_argument('args', None)
-        if args is None:
-            return self.write_json(TPE_PARAM)
-        try:
-            args = json.loads(args)
-        except:
-            return self.write_json(TPE_JSON_FORMAT)
-
-        try:
-            _server = args['server']
-            _port = int(args['port'])
-            _ssl = args['ssl']
-            _sender = args['sender']
-            _password = args['password']
-            _recipient = args['recipient']
-        except:
-            return self.write_json(TPE_PARAM)
-
-        code, msg = yield mail.tp_send_mail(
-            _recipient,
-            '您好！\n\n这是一封测试邮件，仅用于验证系统的邮件发送模块工作是否正常。\n\n请忽略本邮件。',
-            subject='测试邮件',
-            sender='Teleport Server <{}>'.format(_sender),
-            server=_server,
-            port=_port,
-            use_ssl=_ssl,
-            username=_sender,
-            password=_password
-        )
-
-        self.write_json(code, message=msg)
-
-
 class DoSaveCfgHandler(TPBaseJsonHandler):
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
@@ -285,7 +258,74 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)
 
+            if 'storage' in args:
+                _cfg = args['storage']
+                _keep_log = _cfg['keep_log']
+                _keep_record = _cfg['keep_record']
+                _cleanup_hour = _cfg['cleanup_hour']
+                _cleanup_minute = _cfg['cleanup_minute']
+                err = system_model.save_config(self, '更新存储策略设置', 'storage', _cfg)
+                if err == TPE_OK:
+                    get_cfg().sys.storage.keep_log = _keep_log
+                    get_cfg().sys.storage.keep_record = _keep_record
+                    get_cfg().sys.storage.cleanup_hour = _cleanup_hour
+                    get_cfg().sys.storage.cleanup_minute = _cleanup_minute
+                else:
+                    return self.write_json(err)
+
             return self.write_json(TPE_OK)
         except:
             log.e('\n')
             self.write_json(TPE_FAILED)
+
+
+class DoSendTestMailHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            _server = args['server']
+            _port = int(args['port'])
+            _ssl = args['ssl']
+            _sender = args['sender']
+            _password = args['password']
+            _recipient = args['recipient']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        code, msg = yield mail.tp_send_mail(
+            _recipient,
+            '您好！\n\n这是一封测试邮件，仅用于验证系统的邮件发送模块工作是否正常。\n\n请忽略本邮件。',
+            subject='测试邮件',
+            sender='Teleport Server <{}>'.format(_sender),
+            server=_server,
+            port=_port,
+            use_ssl=_ssl,
+            username=_sender,
+            password=_password
+        )
+
+        self.write_json(code, message=msg)
+
+
+class DoCleanupStorageHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
+        if ret != TPE_OK:
+            return
+
+        code, msg = yield record.cleanup_storage(self)
+
+        self.write_json(code, data=msg)

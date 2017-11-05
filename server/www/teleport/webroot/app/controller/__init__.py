@@ -217,10 +217,12 @@ controllers = [
     (r'/system/get-logs', system.DoGetLogsHandler),
     #  - 系统配置页面
     (r'/system/config', system.ConfigHandler),
-    #  - [json] 系统配置-发送测试邮件
-    (r'/system/send-test-mail', system.DoSendTestMailHandler),
     #  - [json] 系统配置-保存配置
     (r'/system/save-cfg', system.DoSaveCfgHandler),
+    #  - [json] 系统配置-发送测试邮件
+    (r'/system/send-test-mail', system.DoSendTestMailHandler),
+    #  - [json] 系统配置-清理存储空间
+    (r'/system/cleanup-storage', system.DoCleanupStorageHandler),
 
     #  - [json] 获取服务器时间
     (r'/system/get-time', system.DoGetTimeHandler),

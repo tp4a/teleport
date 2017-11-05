@@ -533,6 +533,10 @@ class AppConfig(BaseAppConfig):
             self.sys.storage.keep_log = 0
         if not self.sys.storage.is_exists('keep_record'):
             self.sys.storage.keep_record = 0
+        if not self.sys.storage.is_exists('cleanup_hour'):
+            self.sys.storage.cleanup_hour = 4
+        if not self.sys.storage.is_exists('cleanup_minute'):
+            self.sys.storage.cleanup_minute = 30
 
         self.sys.loaded = True
 
