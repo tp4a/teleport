@@ -200,11 +200,11 @@ $app.on_table_users_cell_created = function (tbl, row_id, col_key, cell_obj) {
                 $app.dlg_edit_user.show_edit(row_id);
             } else if (action === 'reset-password') {
                 $app.dlg_reset_password.show_edit(row_id);
-            } else if(action === 'lock') {
+            } else if (action === 'lock') {
                 $app._lock_users([user.id]);
-            } else if(action === 'unlock') {
+            } else if (action === 'unlock') {
                 $app._unlock_users([user.id]);
-            } else if(action === 'remove') {
+            } else if (action === 'remove') {
                 $app._remove_users([user.id]);
             }
         });
@@ -547,7 +547,7 @@ $app.set_selected_to_role = function (role_id, role_name) {
 
 };
 
-$app._lock_users = function(users) {
+$app._lock_users = function (users) {
     $tp.ajax_post_json('/user/update-users', {action: 'lock', users: users},
         function (ret) {
             if (ret.code === TPE_OK) {
@@ -576,7 +576,7 @@ $app.on_btn_lock_user_click = function () {
     $app._lock_hosts(users);
 };
 
-$app._unlock_users = function(users) {
+$app._unlock_users = function (users) {
     $tp.ajax_post_json('/user/update-users', {action: 'unlock', users: users},
         function (ret) {
             if (ret.code === TPE_OK) {
@@ -605,7 +605,7 @@ $app.on_btn_unlock_user_click = function () {
     $app._unlock_users(users);
 };
 
-$app._remove_users = function(users) {
+$app._remove_users = function (users) {
     var _fn_sure = function (cb_stack, cb_args) {
         $tp.ajax_post_json('/user/update-users', {action: 'remove', users: users},
             function (ret) {
@@ -987,6 +987,7 @@ $app.create_dlg_reset_password = function () {
     };
 
     dlg.do_send_reset_email = function () {
+        dlg.dom.btn_send_reset_email.attr('disabled', 'disabled');
         $tp.ajax_post_json('/user/reset-password', {
                 id: dlg.field_id,
                 mode: 1,
@@ -994,15 +995,16 @@ $app.create_dlg_reset_password = function () {
                 password: ''
             },
             function (ret) {
+                dlg.dom.btn_send_reset_email.removeAttr('disabled');
                 if (ret.code === TPE_OK) {
                     $tp.notify_success('用户密码重置成功！');
-                    // $app.table_users.load_data();
                     dlg.dom.dialog.modal('hide');
                 } else {
                     $tp.notify_error('用户密码重置失败：' + tp_error_msg(ret.code, ret.message));
                 }
             },
             function () {
+                dlg.dom.btn_send_reset_email.removeAttr('disabled');
                 $tp.notify_error('网络故障，用户密码重置失败！');
             }
         );
