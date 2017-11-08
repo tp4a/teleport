@@ -2,14 +2,12 @@
 
 # import hashlib
 
-from app.const import *
-from app.base.logger import log
-# from app.base.configs import get_cfg
+from app.base.configs import get_cfg
 from app.base.db import get_db, SQL
-from app.model import syslog
-# from app.logic.auth.oath import tp_oath_verify_code
-# from app.logic.auth.password import tp_password_generate_secret, tp_password_verify
+from app.base.logger import log
 from app.base.utils import tp_timestamp_utc_now
+from app.const import *
+from app.model import syslog
 
 
 def get_user_info(user_id):
@@ -32,7 +30,7 @@ def get_user_info(user_id):
 
 def get_by_username(username):
     s = SQL(get_db())
-    s.select_from('user', ['id', 'type', 'auth_type', 'username', 'surname', 'password', 'oath_secret', 'role_id', 'state', 'email', 'create_time', 'last_login', 'last_ip', 'last_chpass', 'mobile', 'qq', 'wechat', 'desc'], alt_name='u')
+    s.select_from('user', ['id', 'type', 'auth_type', 'username', 'surname', 'password', 'oath_secret', 'role_id', 'state', 'fail_count', 'lock_time', 'email', 'create_time', 'last_login', 'last_ip', 'last_chpass', 'mobile', 'qq', 'wechat', 'desc'], alt_name='u')
     s.left_join('role', ['name', 'privilege'], join_on='r.id=u.role_id', alt_name='r', out_map={'name': 'role'})
     s.where('u.username="{}"'.format(username))
     err = s.query()
@@ -249,11 +247,10 @@ def set_password(handler, user_id, password):
 
 
 def update_login_info(handler, user_id):
-
     db = get_db()
     _time_now = tp_timestamp_utc_now()
 
-    sql = 'UPDATE `{}user` SET last_login=login_time, last_ip=login_ip, login_time={login_time}, login_ip="{ip}" WHERE id={user_id};' \
+    sql = 'UPDATE `{}user` SET fail_count=0, last_login=login_time, last_ip=login_ip, login_time={login_time}, login_ip="{ip}" WHERE id={user_id};' \
           ''.format(db.table_prefix,
                     login_time=_time_now, ip=handler.request.remote_ip, user_id=user_id
                     )
@@ -283,6 +280,29 @@ def update_users_state(handler, user_ids, state):
         return TPE_OK
     else:
         return TPE_DATABASE
+
+
+def update_fail_count(handler, user_info):
+    db = get_db()
+    sys_cfg = get_cfg().sys
+    sql_list = []
+    is_locked = False
+    fail_count = user_info.fail_count + 1
+
+    sql = 'UPDATE `{}user` SET fail_count={count} WHERE id={uid};' \
+          ''.format(db.table_prefix, count=fail_count, uid=user_info.id)
+    sql_list.append(sql)
+
+    if sys_cfg.login.retry != 0 and fail_count >= sys_cfg.login.retry:
+        is_locked = True
+        sql = 'UPDATE `{}user` SET state={state}, lock_time={lock_time} WHERE id={uid};' \
+              ''.format(db.table_prefix, state=TP_STATE_LOCKED, lock_time=tp_timestamp_utc_now(), uid=user_info.id)
+        sql_list.append(sql)
+
+    if db.transaction(sql_list):
+        return TPE_OK, is_locked
+    else:
+        return TPE_DATABASE, is_locked
 
 
 def remove_users(handler, users):
@@ -587,7 +607,7 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
     for g in sg.recorder:
         g['member_count'] = 0
         g['members'] = []
-        g['_mid'] = []    # 临时使用，构建此组的前5个成员的id
+        g['_mid'] = []  # 临时使用，构建此组的前5个成员的id
 
     # 对于本次要返回的用户组，取其中每一个组内成员的基本信息（id/用户名/真实名称等）
     groups = [g['id'] for g in sg.recorder]

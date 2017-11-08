@@ -4,6 +4,7 @@ import datetime
 import threading
 
 from app.base.logger import log
+from app.base.configs import get_cfg
 
 
 class SessionManager(threading.Thread):
@@ -62,7 +63,8 @@ class SessionManager(threading.Thread):
         """
 
         if expire is None:
-            expire = self.SESSION_EXPIRE
+            # expire = self.SESSION_EXPIRE
+            expire = get_cfg().sys.login.session_timeout * 60
 
         if expire < 0:
             with self._lock:

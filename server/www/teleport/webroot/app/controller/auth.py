@@ -11,6 +11,7 @@ from app.logic.auth.captcha import tp_captcha_generate_image
 from app.model import user
 from app.model import syslog
 from app.logic.auth.password import tp_password_verify
+from app.base.utils import tp_timestamp_utc_now
 
 
 class LoginHandler(TPBaseHandler):
@@ -53,68 +54,86 @@ class LoginHandler(TPBaseHandler):
 
 class DoLoginHandler(TPBaseJsonHandler):
     def post(self):
+        sys_cfg = get_cfg().sys
+
         args = self.get_argument('args', None)
-        if args is not None:
-            try:
-                args = json.loads(args)
-            except:
-                return self.write_json(TPE_JSON_FORMAT, '参数错误')
+        if args is None:
+            return self.write_json(TPE_PARAM)
 
-            try:
-                login_type = args['type']
-                captcha = args['captcha'].strip()
-                username = args['username'].strip()
-                password = args['password']
-                oath = args['oath'].strip()
-                remember = args['remember']
-            except:
-                return self.write_json(TPE_PARAM, '参数错误')
-        else:
-            return self.write_json(TPE_PARAM, '参数错误')
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT, '参数错误')
 
-        _tmp = {'username': username, 'surname': username}
+        try:
+            login_type = args['type']
+            captcha = args['captcha'].strip()
+            username = args['username'].strip().lower()
+            password = args['password']
+            oath = args['oath'].strip()
+            remember = args['remember']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        if login_type not in [TP_LOGIN_AUTH_USERNAME_PASSWORD,
+                              TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA,
+                              TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH,
+                              TP_LOGIN_AUTH_USERNAME_OATH
+                              ]:
+            return self.write_json(TPE_PARAM, '未知的认证方式')
 
         if login_type == TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA:
             oath = None
             code = self.get_session('captcha')
             if code is None:
                 return self.write_json(TPE_CAPTCHA_EXPIRED, '验证码已失效')
-            self.del_session('captcha')
             if code.lower() != captcha.lower():
                 return self.write_json(TPE_CAPTCHA_MISMATCH, '验证码错误')
-        elif login_type == TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH:
+        elif login_type in [TP_LOGIN_AUTH_USERNAME_OATH, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
             if len(oath) == 0:
                 return self.write_json(TPE_OATH_MISMATCH, '未提供身份验证器动态验证码')
-        else:
-            return self.write_json(TPE_PARAM, '参数错误')
 
         self.del_session('captcha')
 
+        if len(username) == 0:
+            return self.write_json(TPE_PARAM, '未提供登录用户名')
+
         err, user_info = user.get_by_username(username)
-        # if user_info is None:
-        #     return self.write_json(TPE_USER_AUTH)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
-                syslog.sys_log(_tmp, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
+                syslog.sys_log({'username': username, 'surname': username}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
             return self.write_json(err)
 
-        if user_info['state'] == USER_STATE_LOCKED:
-            syslog.sys_log(_tmp, self.request.remote_ip, TPE_USER_LOCKED, '登录失败，用户已被锁定')
-            return self.write_json(TPE_USER_LOCKED)
-        elif user_info['state'] == USER_STATE_DISABLED:
-            syslog.sys_log(_tmp, self.request.remote_ip, TPE_USER_DISABLED, '登录失败，用户已被禁用')
+        if user_info['state'] == TP_STATE_LOCKED:
+            # 用户已经被锁定，如果系统配置为一定时间后自动解锁，则更新一下用户信息
+            if sys_cfg.login.lock_timeout != 0:
+                if tp_timestamp_utc_now() - user_info.lock_time > sys_cfg.login.lock_timeout * 60:
+                    user_info.fail_count = 0
+                    user_info.state = TP_STATE_NORMAL
+            if user_info['state'] == TP_STATE_LOCKED:
+                syslog.sys_log(user_info, self.request.remote_ip, TPE_USER_LOCKED, '登录失败，用户已被锁定')
+                return self.write_json(TPE_USER_LOCKED)
+        elif user_info['state'] == TP_STATE_DISABLED:
+            syslog.sys_log(user_info, self.request.remote_ip, TPE_USER_DISABLED, '登录失败，用户已被禁用')
             return self.write_json(TPE_USER_DISABLED)
-        elif user_info['state'] != USER_STATE_NORMAL:
-            syslog.sys_log(_tmp, self.request.remote_ip, TPE_FAILED, '登录失败，系统内部错误')
+        elif user_info['state'] != TP_STATE_NORMAL:
+            syslog.sys_log(user_info, self.request.remote_ip, TPE_FAILED, '登录失败，系统内部错误')
             return self.write_json(TPE_FAILED)
 
-        if login_type == TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA:
+        err_msg = ''
+        if login_type in [TP_LOGIN_AUTH_USERNAME_PASSWORD, TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
             if not tp_password_verify(password, user_info['password']):
-                syslog.sys_log(_tmp, self.request.remote_ip, TPE_USER_AUTH, '登录失败，密码错误！')
+                err, is_locked = user.update_fail_count(self, user_info)
+                if is_locked:
+                    err_msg = '用户被临时锁定！'
+                syslog.sys_log(user_info, self.request.remote_ip, TPE_USER_AUTH, '登录失败，密码错误！{}'.format(err_msg))
                 return self.write_json(TPE_USER_AUTH)
-        elif login_type == TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH:
+        elif login_type in [TP_LOGIN_AUTH_USERNAME_OATH, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
             if not tp_oath_verify_code(user_info['oath_secret'], oath):
-                syslog.sys_log(_tmp, self.request.remote_ip, TPE_OATH_MISMATCH, "登录失败，身份验证器动态验证码错误！")
+                err, is_locked = user.update_fail_count(self, user_info)
+                if is_locked:
+                    err_msg = '用户被临时锁定！'
+                syslog.sys_log(user_info, self.request.remote_ip, TPE_OATH_MISMATCH, "登录失败，身份验证器动态验证码错误！{}".format(err_msg))
                 return self.write_json(TPE_OATH_MISMATCH)
 
         self._user = user_info
@@ -122,12 +141,9 @@ class DoLoginHandler(TPBaseJsonHandler):
         del self._user['password']
         del self._user['oath_secret']
 
-        print('00000', self._user)
-
         if remember:
             self.set_session('user', self._user, 12 * 60 * 60)
         else:
-            # TODO: 使用系统配置项中的默认会话超时
             self.set_session('user', self._user)
 
         user.update_login_info(self, user_info['id'])

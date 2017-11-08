@@ -829,6 +829,7 @@ $app.create_dlg_edit_host = function () {
                 dlg.dom.edit_router_port.val('' + dlg.field_router_port);
             }
         } else {
+            dlg.field_router_ip = '';
             dlg.field_router_port = 0;
         }
 
@@ -873,88 +874,6 @@ $app.create_dlg_edit_host = function () {
                 $tp.notify_error('网络故障，远程主机' + action + '失败！');
             }
         );
-    };
-
-    return dlg;
-};
-
-$app.create_dlg_host_info = function () {
-    var dlg = {};
-    dlg.dom_id = 'dlg-user-info';
-    dlg.row_id = -1;
-    dlg.need_edit = false;
-
-    dlg.dom = {
-        dialog: $('#' + dlg.dom_id),
-        dlg_title: $('#' + dlg.dom_id + ' [data-field="dlg-title"]'),
-        info: $('#' + dlg.dom_id + ' [data-field="user-info"]'),
-        btn_edit: $('#' + dlg.dom_id + ' [data-field="btn-edit"]')
-    };
-
-    dlg.init = function (cb_stack) {
-        dlg.dom.dialog.on('hidden.bs.modal', function () {
-            if (!dlg.need_edit)
-                return;
-            $app.dlg_edit_user.show_edit(dlg.row_id);
-        });
-
-        dlg.dom.btn_edit.click(function () {
-            dlg.need_edit = true;
-            dlg.dom.dialog.modal('hide');
-        });
-
-        cb_stack.exec();
-    };
-
-    dlg.show = function (row_id) {
-        dlg.row_id = row_id;
-        dlg.need_edit = false;
-
-        var _row_data = $app.table_host.get_row(dlg.row_id);
-
-        // 表格加载时，是不会读取用户的 desc 字段的，因此可以判断此用户是否已经读取过详细信息了
-        if (_.isUndefined(_row_data.desc)) {
-            // 尚未读取，则向服务器要求获取此用户账号的完整信息
-            $tp.ajax_post_json('/user/get-user/' + _row_data.id, {},
-                function (ret) {
-                    if (ret.code === TPE_OK) {
-                        $app.table_host.update_row(dlg.row_id, ret.data);
-                        dlg.show_info(ret.data);
-                    } else {
-                        $tp.notify_error('无法获取用户详细信息：' + tp_error_msg(ret.code, ret.message));
-                    }
-                },
-                function () {
-                    $tp.notify_error('网络故障，无法获取用户详细信息！');
-                }
-            );
-        } else {
-            dlg.show_info(_row_data);
-        }
-    };
-
-    dlg.show_info = function (user) {
-        // 更新对话框中显示的信息
-        dlg.dom.dlg_title.html('<i class="fa fa-vcard-o fa-fw"></i> ' + user.surname);
-
-        var info = [];
-
-        var not_set = '<span class="label label-sm label-ignore">未设置</span>';
-        var mobile = (user.mobile.length === 0) ? not_set : user.mobile;
-        var qq = (user.qq.length === 0) ? not_set : user.qq;
-        var wechat = (user.wechat.length === 0) ? not_set : user.wechat;
-        var desc = (user.desc.length === 0) ? not_set : user.desc;
-        info.push('<tr><td class="key">账号：</td><td class="value">' + user.username + '</td></tr>');
-        info.push('<tr><td class="key">姓名：</td><td class="value">' + user.surname + '</td></tr>');
-        info.push('<tr><td class="key">邮箱：</td><td class="value">' + user.email + '</td></tr>');
-        info.push('<tr><td class="key">电话：</td><td class="value">' + mobile + '</td></tr>');
-        info.push('<tr><td class="key">QQ：</td><td class="value">' + qq + '</td></tr>');
-        info.push('<tr><td class="key">微信：</td><td class="value">' + wechat + '</td></tr>');
-        info.push('<tr><td class="key">描述：</td><td class="value"><div style="max-height:80px;overflow:auto;">' + desc + '</div></td></tr>');
-
-        dlg.dom.info.html($(info.join('')));
-
-        dlg.dom.dialog.modal();
     };
 
     return dlg;

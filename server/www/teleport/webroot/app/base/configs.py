@@ -486,7 +486,7 @@ class AppConfig(BaseAppConfig):
 
         self.sys.login = tp_convert_to_attr_dict(_login)
         if not self.sys.login.is_exists('session_timeout'):
-            self.sys.login.session_timeout = 30
+            self.sys.login.session_timeout = 60  # 1 hour
         if not self.sys.login.is_exists('retry'):
             self.sys.login.retry = 0
         if not self.sys.login.is_exists('lock_timeout'):
