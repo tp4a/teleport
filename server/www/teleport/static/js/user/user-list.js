@@ -991,7 +991,7 @@ $app.create_dlg_reset_password = function () {
         $tp.ajax_post_json('/user/reset-password', {
                 id: dlg.field_id,
                 mode: 1,
-                email: dlg.field_email,
+                // email: dlg.field_email,
                 password: ''
             },
             function (ret) {
@@ -1022,7 +1022,7 @@ $app.create_dlg_reset_password = function () {
         $tp.ajax_post_json('/user/reset-password', {
                 id: dlg.field_id,
                 mode: 2,
-                email: '',
+                // email: '',
                 password: dlg.field_password
             },
             function (ret) {

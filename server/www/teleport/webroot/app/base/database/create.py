@@ -17,6 +17,7 @@ class DatabaseInit:
             self._create_config()
             self._create_role()
             self._create_user()
+            self._create_user_rpt()
             self._create_host()
             self._create_acc()
             self._create_acc_auth()
@@ -158,6 +159,25 @@ class DatabaseInit:
         self._db_exec(
             '创建用户表 user',
             'CREATE TABLE {}user ({});'.format(self.db.table_prefix, ','.join(f))
+        )
+
+    def _create_user_rpt(self):
+        """ 用户忘记密码时重置需要进行验证的token，24小时有效
+        """
+        f = list()
+
+        # id: 自增主键
+        f.append('id integer PRIMARY KEY {}'.format(self.db.auto_increment))
+        # user_id:  user's id
+        f.append('user_id int(11) DEFAULT 0')
+        # token: token
+        f.append('token varchar(48) DEFAULT ""')
+        # create_time: 创建时间
+        f.append('create_time int(11) DEFAULT 0')
+
+        self._db_exec(
+            '创建用户找回密码表 user_rpt',
+            'CREATE TABLE {}user_rpt ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
     def _create_group(self):

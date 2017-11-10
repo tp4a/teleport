@@ -74,6 +74,7 @@ class WebApp:
 
         if _db.need_create or _db.need_upgrade:
             cfg.app_mode = APP_MODE_MAINTENANCE
+            get_cfg().update_sys(None)
         else:
             cfg.app_mode = APP_MODE_NORMAL
             _db.load_system_config()

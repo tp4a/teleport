@@ -455,7 +455,7 @@ class AppConfig(BaseAppConfig):
 
         if conf_data is None:
             log.w('system default config info is empty.\n')
-            return True
+            # return True
 
         # =====================================
         # 密码策略相关

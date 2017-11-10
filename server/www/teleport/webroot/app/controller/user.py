@@ -19,6 +19,7 @@ from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 
 class UserListHandler(TPBaseHandler):
     def get(self):
+
         ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
         if ret != TPE_OK:
             return
@@ -446,7 +447,7 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
         try:
             user_id = int(args['id'])
             mode = int(args['mode'])
-            email = args['email'].strip()
+            # email = args['email'].strip()
             password = args['password']
         except:
             return self.write_json(TPE_PARAM)
@@ -455,11 +456,17 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         if mode == 1:
-            if len(email) == 0:
-                return self.write_json(TPE_PARAM)
+            # if len(email) == 0:
+            #     return self.write_json(TPE_PARAM)
+
+            err, email, token = user.generate_reset_password_token(self, user_id)
+
+            print(err, email, token)
 
             # 生成一个密码重置链接，24小时有效
-            reset_url = 'http://127.0.0.1/user/validate-password-reset-token?token=G66LXH0EOJ47OXTH7O5KBQ0PHXRSBXBVVFALI6JBJ8HNWUALWI35QECPJ8UV8DEQ'
+            # token = tp_generate_random(16)
+            reset_url = '{}://{}/user/validate-password-reset-token?token={}'.format(self.request.protocol, self.request.host, token)
+            # reset_url = 'http://127.0.0.1/user/validate-password-reset-token?token=G66LXH0EOJ47OXTH7O5KBQ0PHXRSBXBVVFALI6JBJ8HNWUALWI35QECPJ8UV8DEQ'
 
             err, msg = yield mail.tp_send_mail(
                 email,

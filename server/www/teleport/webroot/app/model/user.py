@@ -5,7 +5,7 @@
 from app.base.configs import get_cfg
 from app.base.db import get_db, SQL
 from app.base.logger import log
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_utc_now, tp_generate_random
 from app.const import *
 from app.model import syslog
 
@@ -244,6 +244,50 @@ def set_password(handler, user_id, password):
     syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "为用户 {} 手动重置了密码".format(name))
 
     return TPE_OK
+
+
+def generate_reset_password_token(handler, user_id):
+    db = get_db()
+    operator = handler.get_current_user()
+    s = SQL(db)
+    _time_now = tp_timestamp_utc_now()
+
+    # 0. query user's email by user_id
+    err = s.select_from('user', ['email'], alt_name='u').where('u.id={user_id}'.format(user_id=user_id)).query()
+    if err != TPE_OK:
+        return err, None, None
+    if len(s.recorder) == 0:
+        return TPE_DATABASE, None, None
+
+    email = s.recorder[0].email
+
+    # 1. clean all timed out tokens.
+    s.reset().delete_from('user_rpt').where('create_time<{}'.format(_time_now - 24 * 60 * 60)).exec()
+
+    # 2. find out if this user already have a token.
+    err = s.reset().select_from('user_rpt', ['id'], alt_name='u').where('u.user_id={}'.format(user_id)).query()
+    if err != TPE_OK:
+        return err, None, None
+
+    token = tp_generate_random(16)
+
+    if len(s.recorder) == 0:
+        sql = 'INSERT INTO `{dbtp}user_rpt` (user_id, token, create_time) VALUES ' \
+              '({user_id}, "{token}", {create_time});' \
+              ''.format(dbtp=db.table_prefix, user_id=user_id, token=token, create_time=_time_now)
+        db_ret = db.exec(sql)
+        if not db_ret:
+            return TPE_DATABASE, None, None
+    else:
+        sql = 'UPDATE `{dbtp}user_rpt` SET token="{token}", create_time={create_time} WHERE user_id={user_id};' \
+              ''.format(dbtp=db.table_prefix, token=token, create_time=_time_now, user_id=user_id)
+        db_ret = db.exec(sql)
+        if not db_ret:
+            return TPE_DATABASE, None, None
+
+    # syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "为用户 {} 手动重置了密码".format(name))
+
+    return TPE_OK, email, token
 
 
 def update_login_info(handler, user_id):

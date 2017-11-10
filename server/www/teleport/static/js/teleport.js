@@ -49,20 +49,19 @@ var CALLBACK_STACK = {
             }
         };
 
-        // self.check_error = function() {
-        //     if (self.cb_stack.length > 0) {
-        //         console.error('callback stack have '+ self.cb_stack.length + ' function not called.');
-        //     }
-        // };
-
         return self;
     }
 };
 
+
+// console.log(window.location, window.location.protocol+'://'+window.location.host);
+
+
 // Teleport核心JS
 var $tp = {
-    server_host: window.location.hostname || '',
-    server_port: (window.location.port === "") ? 80 : parseInt(window.location.port),
+    // server_host: window.location.hostname || '',
+    // server_port: (window.location.port === "") ? 80 : parseInt(window.location.port),
+    web_server: window.location.protocol+'://'+window.location.host,
 
     // Teleport页面应用对象，放置页面自身特有的属性和函数
     app: {
