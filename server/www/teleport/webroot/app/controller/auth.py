@@ -203,6 +203,11 @@ class VerifyCaptchaHandler(TPBaseJsonHandler):
 
         return self.write_json(TPE_OK)
 
+
+class ResetPasswordByTokenHandler(TPBaseHandler):
+    def get(self):
+        pass
+
 # class ModifyPwd(TPBaseUserAuthJsonHandler):
 #     def post(self):
 #         args = self.get_argument('args', None)

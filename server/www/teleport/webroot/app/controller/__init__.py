@@ -55,6 +55,8 @@ controllers = [
     # (r'/auth/oath-secret-qrcode', auth.OathSecretQrCodeHandler),
     # (r'/auth/oath-secret-reset', auth.OathSecretResetHandler),
     # (r'/auth/oath-update-secret', auth.OathUpdateSecretHandler),
+    #  - 用户重设密码页面 /auth/reset-password?token=D3672DFF256B6B6F37AF8A922D7D83B4
+    (r'/auth/reset-password?token=D3672DFF256B6B6F37AF8A922D7D83B4', auth.ResetPasswordByTokenHandler),
     #
     # # (r"/log/replay/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
     # (r"/log/replay/(.*)", record.ReplayStaticFileHandler, {"path": os.path.join(get_cfg().data_path, 'replay')}),
