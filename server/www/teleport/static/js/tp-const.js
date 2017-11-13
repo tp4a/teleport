@@ -191,6 +191,7 @@ var TPE_NOT_EXISTS = 9;
 var TPE_FAILED = 100;	// 内部错误
 var TPE_NETWORK = 101;	// 网络错误
 var TPE_DATABASE = 102; // 数据库操作失败
+var TPE_EXPIRED = 103;  // 数据/操作等已过期
 
 // HTTP请求相关错误
 var TPE_HTTP_METHOD = 120;	// 无效的请求方法（不是GET/POST等），或者错误的请求方法（例如需要POST，却使用GET方式请求）

@@ -191,10 +191,10 @@ class TPDatabase:
             log.e('Unknown database type.\n')
             return None
 
-    def query(self, sql):
-        log.d('[db] {}\n'.format(sql))
+    def query(self, sql, args=()):
+        log.d('[db] {}, {}\n'.format(sql, args))
         # _start = datetime.datetime.utcnow().timestamp()
-        ret = self._conn_pool.query(sql)
+        ret = self._conn_pool.query(sql, args)
         # _end = datetime.datetime.utcnow().timestamp()
         # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
         return ret
@@ -325,11 +325,11 @@ class TPDatabasePool:
         self._locker = threading.RLock()
         self._connections = dict()
 
-    def query(self, sql):
+    def query(self, sql, args):
         _conn = self._get_connect()
         if _conn is None:
             return None
-        return self._do_query(_conn, sql)
+        return self._do_query(_conn, sql, args)
 
     def exec(self, sql, args):
         _conn = self._get_connect()
@@ -364,7 +364,7 @@ class TPDatabasePool:
     def _do_connect(self):
         return None
 
-    def _do_query(self, conn, sql):
+    def _do_query(self, conn, sql, args):
         return None
 
     def _do_exec(self, conn, sql, args):
@@ -393,10 +393,10 @@ class TPSqlitePool(TPDatabasePool):
             log.e('[sqlite] can not connect, does the database file correct?\n')
             return None
 
-    def _do_query(self, conn, sql):
+    def _do_query(self, conn, sql, args):
         cursor = conn.cursor()
         try:
-            cursor.execute(sql)
+            cursor.execute(sql, args)
             db_ret = cursor.fetchall()
             return db_ret
         except Exception as e:
@@ -467,11 +467,11 @@ class TPMysqlPool(TPDatabasePool):
             log.e('[mysql] connect [{}:{}] failed: {}\n'.format(self._host, self._port, e.__str__()))
             return None
 
-    def _do_query(self, conn, sql):
+    def _do_query(self, conn, sql, args):
         for retry in range(2):
             cursor = conn.cursor()
             try:
-                cursor.execute(sql)
+                cursor.execute(sql, args)
                 db_ret = cursor.fetchall()
                 conn.commit()
                 return db_ret
@@ -501,11 +501,11 @@ class TPMysqlPool(TPDatabasePool):
             finally:
                 cursor.close()
 
-    def _do_exec(self, conn, sql):
+    def _do_exec(self, conn, sql, args):
         for retry in range(2):
             cursor = conn.cursor()
             try:
-                cursor.execute(sql)
+                cursor.execute(sql, args)
                 conn.commit()
                 return True
             except pymysql.err.OperationalError as e:

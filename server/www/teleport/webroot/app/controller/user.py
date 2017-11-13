@@ -75,6 +75,28 @@ class MeHandler(TPBaseHandler):
         self.render('user/me.mako')
 
 
+class ResetPasswordHandler(TPBaseHandler):
+    def get(self):
+        param = {
+            'mode': 0,  # mode=1, unknown mode.
+            'token': '',
+            'code': TPE_PARAM
+        }
+
+        _mode = self.get_argument('mode', 1)
+        _token = self.get_argument('token', None)
+        if _token is None:
+            param['mode'] = 1  # mode=1, show 'find-my-password' page.
+        else:
+            err, email = user.check_reset_token(_token)
+            param['mode'] = 3  # mode=3, show 'set-new-password' page
+            param['token'] = _token
+            param['email'] = email
+            param['code'] = err
+
+        self.render('user/reset-password.mako', page_param=json.dumps(param))
+
+
 class DoGetUserInfoHandler(TPBaseJsonHandler):
     def post(self, user_id):
         ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE | TP_PRIVILEGE_USER_DELETE | TP_PRIVILEGE_USER_LOCK | TP_PRIVILEGE_USER_GROUP)
@@ -465,7 +487,7 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
 
             # 生成一个密码重置链接，24小时有效
             # token = tp_generate_random(16)
-            reset_url = '{}://{}/user/validate-password-reset-token?token={}'.format(self.request.protocol, self.request.host, token)
+            reset_url = '{}://{}/user/reset-password?token={}'.format(self.request.protocol, self.request.host, token)
             # reset_url = 'http://127.0.0.1/user/validate-password-reset-token?token=G66LXH0EOJ47OXTH7O5KBQ0PHXRSBXBVVFALI6JBJ8HNWUALWI35QECPJ8UV8DEQ'
 
             err, msg = yield mail.tp_send_mail(
