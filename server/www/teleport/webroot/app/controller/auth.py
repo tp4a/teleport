@@ -179,7 +179,8 @@ class DoLogoutHandler(TPBaseJsonHandler):
 
 class CaptchaHandler(TPBaseHandler):
     def get(self):
-        code, img_data = tp_captcha_generate_image()
+        h = int(self.get_argument('h', 36))
+        code, img_data = tp_captcha_generate_image(h)
         self.set_session('captcha', code)
         self.set_header('Content-Type', 'image/jpeg')
         self.write(img_data)

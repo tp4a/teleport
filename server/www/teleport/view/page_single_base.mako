@@ -19,6 +19,7 @@
     <link href="${ static_url('plugins/bootstrap/css/bootstrap.min.css') }" rel="stylesheet" type="text/css"/>
     <link href="${ static_url('plugins/font-awesome/css/font-awesome.min.css') }" rel="stylesheet">
 
+    <link href="${ static_url('css/error.css') }" rel="stylesheet" type="text/css"/>
 
     <%block name="extend_css_file"/>
     <%block name="embed_css"/>
