@@ -6,11 +6,13 @@ import shutil
 
 import app.model.system as system_model
 import tornado.gen
+from app.app_ver import TP_SERVER_VER
 from app.base import mail
 from app.base.configs import get_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.logger import *
 from app.const import *
+from app.base.db import get_db
 from app.model import syslog
 from app.model import record
 from app.base.core_server import core_service_async_post_http
@@ -46,11 +48,26 @@ class ConfigHandler(TPBaseHandler):
         else:
             total_size, _, free_size = shutil.disk_usage(get_cfg().core.replay_path)
 
+        _db = get_db()
+        db = {'type': _db.db_type}
+        if _db.db_type == _db.DB_TYPE_SQLITE:
+            db['sqlite_file'] = _db.sqlite_file
+        elif _db.db_type == _db.DB_TYPE_MYSQL:
+            db['mysql_host'] = _db.mysql_host
+            db['mysql_port'] = _db.mysql_port
+            db['mysql_db'] = _db.mysql_db
+            db['mysql_user'] = _db.mysql_user
+
         param = {
             'total_size': total_size,
             'free_size': free_size,
             'core_cfg': get_cfg().core,
-            'sys_cfg': get_cfg().sys
+            'sys_cfg': get_cfg().sys,
+            'web_cfg': {
+                'version': TP_SERVER_VER,
+                'core_server_rpc': get_cfg().common.core_server_rpc,
+                'db': db
+            }
         }
 
         self.render('system/config.mako', page_param=json.dumps(param))

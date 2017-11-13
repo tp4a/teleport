@@ -17,15 +17,25 @@
 <div class="page-content-inner">
     <div class="box box-nav-tabs">
         <ul class="nav nav-tabs">
-            <li class="active"><a href="#tab-security" data-toggle="tab">安全</a></li>
+            <li class="active"><a href="#tab-info" data-toggle="tab">基本信息</a></li>
+            <li><a href="#tab-security" data-toggle="tab">安全</a></li>
             <li><a href="#tab-smtp" data-toggle="tab">邮件系统</a></li>
             <li><a href="#tab-storage" data-toggle="tab">存储</a></li>
             ##             <li><a href="#tab-backup" data-toggle="tab">备份</a></li>
         </ul>
 
         <div class="tab-content">
+            <!-- panel for global information -->
+            <div class="tab-pane active" id="tab-info">
+                <h4>WEB服务配置</h4>
+                <table id="web-info-kv" class="table table-info-list"></table>
+                <hr/>
+                <h4>核心服务配置</h4>
+                <table id="core-info-kv" class="table table-info-list"></table>
+            </div>
+
             <!-- panel for security config -->
-            <div class="tab-pane active" id="tab-security">
+            <div class="tab-pane" id="tab-security">
                 <table class="table table-config-list">
                     <tr>
                         <td colspan="2" class="title">密码策略</td>
@@ -115,19 +125,19 @@
             <div class="tab-pane" id="tab-smtp">
                 <table class="table table-info-list">
                     <tr>
-                        <td class="key">SMTP服务器</td>
+                        <td class="key">SMTP服务器：</td>
                         <td class="value"><span id="smtp-server-info"></span></td>
                     </tr>
                     <tr>
-                        <td class="key">SMTP 端口</td>
+                        <td class="key">SMTP 端口：</td>
                         <td class="value"><span id="smtp-port-info"></span></td>
                     </tr>
                     <tr>
-                        <td class="key">SSL模式</td>
+                        <td class="key">SSL模式：</td>
                         <td class="value"><span id="smtp-ssl-info"></span></td>
                     </tr>
                     <tr>
-                        <td class="key">发件人邮箱</td>
+                        <td class="key">发件人邮箱：</td>
                         <td class="value"><span id="smtp-sender-info"></span></td>
                     </tr>
                 </table>

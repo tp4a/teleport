@@ -6,6 +6,9 @@ $app.on_init = function (cb_stack) {
     $app.dlg_result = $app.create_dlg_result();
     // cb_stack.add($app.dlg_result.init);
 
+    $app.info = $app.create_info_table();
+    cb_stack.add($app.info.init);
+
     $app.smtp = $app.create_config_smtp();
     cb_stack.add($app.smtp.init);
 
@@ -18,6 +21,71 @@ $app.on_init = function (cb_stack) {
     cb_stack.exec();
 };
 
+$app.create_info_table = function () {
+    var _info = {};
+
+    _info.dom = {
+        web_info: $('#web-info-kv'),
+        core_info: $('#core-info-kv')
+    };
+
+    _info.init = function () {
+        var h = [];
+
+        h.push(_info._make_info('WEB服务版本', $app.options.web_cfg.version));
+
+        if ($app.options.web_cfg.db.type === DB_TYPE_SQLITE) {
+            h.push(_info._make_info('数据库类型', 'SQLite'));
+            h.push(_info._make_info('数据库文件', $app.options.web_cfg.db.sqlite_file));
+        } else if ($app.options.web_cfg.db.type === DB_TYPE_MYSQL) {
+            h.push(_info._make_info('数据库类型', 'MySQL'));
+            h.push(_info._make_info('mysql-host', $app.options.web_cfg.db.mysql_host));
+            h.push(_info._make_info('mysql-port', $app.options.web_cfg.db.mysql_port));
+            h.push(_info._make_info('mysql-db', $app.options.web_cfg.db.mysql_db));
+            h.push(_info._make_info('mysql-user', $app.options.web_cfg.db.mysql_user));
+        } else {
+            h.push(_info._make_info('数据库类型', '未知'));
+        }
+
+        h.push(_info._make_info('与核心服务通讯地址', $app.options.web_cfg.core_server_rpc));
+
+        _info.dom.web_info.append(h.join(''));
+
+        h = [];
+        if (!$app.options.core_cfg.detected) {
+            h.push(_info._make_info('核心服务信息', '<span class="error">无法获取，未能连接到核心服务</span>'));
+        } else {
+            h.push(_info._make_info('核心服务版本', $app.options.core_cfg.version));
+            h.push(_info._make_info('与WEB服务通讯地址', $app.options.core_cfg.web_server_rpc));
+            h.push(_info._make_protocol_info('RDP 端口', $app.options.core_cfg.rdp));
+            h.push(_info._make_protocol_info('SSH 端口', $app.options.core_cfg.ssh));
+            // h.push(_info._make_protocol_info('TELNET 端口', $app.options.core_cfg.telnet));
+            h.push(_info._make_info('录像文件路径', $app.options.core_cfg.replay_path));
+        }
+
+        _info.dom.core_info.append(h.join(''));
+
+    };
+
+    _info._make_info = function (k, v) {
+        if (_.isUndefined(v))
+            v = '<span class="error">未能检测到</span>';
+        return '<tr><td class="key">' + k + '：</td><td class="value">' + v + '</td></tr>';
+    };
+    _info._make_protocol_info = function (name, p) {
+        if (_.isUndefined(p))
+            return _info._make_info(name, '未能检测到');
+        var val = p.port;
+        if (!p.enable) {
+            val = '<span class="disabled">' + val + '（未启用）</span>';
+        }
+
+        return _info._make_info(name, val);
+    };
+
+    return _info;
+};
+
 $app.create_dlg_result = function () {
     var _dlg = {};
 
@@ -27,7 +95,7 @@ $app.create_dlg_result = function () {
         msg: $('#dlg-result-msg')
     };
 
-    _dlg.show = function(title, msg) {
+    _dlg.show = function (title, msg) {
         _dlg.dom.title.text(title);
         _dlg.dom.msg.html(msg);
         _dlg.dom.dlg.modal();
@@ -484,11 +552,11 @@ $app.create_config_storage = function () {
         var _keep_log = parseInt(_sto.dom.input_keep_log.val());
         var _keep_record = parseInt(_sto.dom.input_keep_record.val());
 
-        if($app.options.sys_cfg.storage.keep_log !== _keep_log || $app.options.sys_cfg.storage.keep_record !== _keep_record) {
+        if ($app.options.sys_cfg.storage.keep_log !== _keep_log || $app.options.sys_cfg.storage.keep_record !== _keep_record) {
             $tp.notify_error('您已经修改了设置，请先保存设置，再进行清理！');
             return;
         }
-        if($app.options.sys_cfg.storage.keep_log === 0 && $app.options.sys_cfg.storage.keep_record === 0) {
+        if ($app.options.sys_cfg.storage.keep_log === 0 && $app.options.sys_cfg.storage.keep_record === 0) {
             $tp.notify_error('根据设置，没有需要清理的内容！');
             return;
         }
@@ -502,8 +570,8 @@ $app.create_config_storage = function () {
                     $tp.notify_success('清理存储空间成功！');
 
                     var msg = [];
-                    for(var i = 0; i < ret.data.length; ++i) {
-                        msg.push('<p>'+ret.data[i]+'</p>');
+                    for (var i = 0; i < ret.data.length; ++i) {
+                        msg.push('<p>' + ret.data[i] + '</p>');
                     }
 
                     $app.dlg_result.show('清理存储空间', msg.join(''));

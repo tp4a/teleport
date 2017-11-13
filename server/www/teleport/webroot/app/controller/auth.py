@@ -122,13 +122,19 @@ class DoLoginHandler(TPBaseJsonHandler):
 
         err_msg = ''
         if login_type in [TP_LOGIN_AUTH_USERNAME_PASSWORD, TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
+            # 如果系统配置了密码有效期，则检查用户的密码是否失效
+            if sys_cfg.password.timeout != 0:
+                pass
+
             if not tp_password_verify(password, user_info['password']):
                 err, is_locked = user.update_fail_count(self, user_info)
                 if is_locked:
                     err_msg = '用户被临时锁定！'
                 syslog.sys_log(user_info, self.request.remote_ip, TPE_USER_AUTH, '登录失败，密码错误！{}'.format(err_msg))
                 return self.write_json(TPE_USER_AUTH)
-        elif login_type in [TP_LOGIN_AUTH_USERNAME_OATH, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
+
+        if login_type in [TP_LOGIN_AUTH_USERNAME_OATH, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
+            # use oath
             if not tp_oath_verify_code(user_info['oath_secret'], oath):
                 err, is_locked = user.update_fail_count(self, user_info)
                 if is_locked:

@@ -312,7 +312,7 @@ class AppConfig(BaseAppConfig):
 
     def _on_get_save_info(self):
         return [
-            {'common': ['ip', 'port', 'log-file', 'log-level', 'debug-mode', 'base-server-rpc']},
+            {'common': ['ip', 'port', 'log-file', 'log-level', 'debug-mode', 'core-server-rpc']},
             {'database': ['type', 'sqlite-file', 'mysql-host', 'mysql-port', 'mysql-db', 'mysql-prefix', 'mysql-user', 'mysql-password']}
         ]
 
@@ -348,9 +348,9 @@ class AppConfig(BaseAppConfig):
         if _tmp_str is not None:
             self.set_kv('common::log-file', _tmp_str)
 
-        _tmp_str = _sec.get('base-server-rpc', None)
+        _tmp_str = _sec.get('core-server-rpc', None)
         if _tmp_str is not None:
-            self.set_kv('common::base-server-rpc', _tmp_str)
+            self.set_kv('common::core-server-rpc', _tmp_str)
 
         _sec = cfg_parser['database']
 
