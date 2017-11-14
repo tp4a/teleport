@@ -19,7 +19,9 @@
     <link href="${ static_url('plugins/bootstrap/css/bootstrap.min.css') }" rel="stylesheet" type="text/css"/>
     <link href="${ static_url('plugins/font-awesome/css/font-awesome.min.css') }" rel="stylesheet">
 
-    <link href="${ static_url('css/error.css') }" rel="stylesheet" type="text/css"/>
+    ##     <link href="${ static_url('css/error.css') }" rel="stylesheet" type="text/css"/>
+
+    <link href="${ static_url('css/single.css') }" rel="stylesheet" type="text/css"/>
 
     <%block name="extend_css_file"/>
     <%block name="embed_css"/>
@@ -27,21 +29,36 @@
 
 <body>
 
-<div id="page-header">
+<div>
+    <%block name="page_header"/>
+
+    <div id="page-content">
         <div class="container">
-            <div class="title"><%block name="header_title"/></div>
+            ${self.body()}
         </div>
-</div>
-
-<div id="page-content">
-    <div class="container">
-
-        ${self.body()}
-
     </div>
-</div>
 
     <%include file="_footer.mako"/>
+</div>
+
+
+    ## <div id="page-header">
+    ##         <nav class="navbar navbar-fixed-top">
+    ##             <div class="container">
+    ##                 <%block name="page_header"/>
+    ##             </div>
+    ##         </nav>
+    ## </div>
+
+    ## <div id="page-content">
+    ##     <div class="container">
+    ##
+    ##         ${self.body()}
+    ##
+    ##     </div>
+    ## </div>
+
+    ##     <%include file="_footer.mako"/>
 
     <%block name="extend_content" />
 
@@ -59,11 +76,8 @@
 <script type="text/javascript" src="${ static_url('js/tp-const.js') }"></script>
 <script type="text/javascript" src="${ static_url('js/teleport.js') }"></script>
 
-
     <%block name="extend_js_file"/>
-
     <%block name="embed_js" />
-
 
 </body>
 </html>

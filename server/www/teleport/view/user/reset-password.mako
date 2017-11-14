@@ -1,9 +1,9 @@
 <%!
-    page_title_ = '设置密码'
+    page_title_ = '密码管理'
 %>
 <%inherit file="../page_single_base.mako"/>
 
-<%block name="header_title">
+<%block name="page_header">
     <a href="http://teleport.eomsoft.net" target="_blank"><span class="logo"></span></a>
 </%block>
 
@@ -24,7 +24,7 @@
 <div class="page-content">
     <div class="error-box">
         <div class="error-icon-box">
-            <i class="fa fa-warning"></i>
+            <i id="icon-bg" class="fa fa-warning"></i>
         </div>
         <div class="error-message-box">
             <div id="title" class="title">设置密码</div>
@@ -73,7 +73,7 @@
 
                     <div class="row" style="padding:0 20px;margin-top:10px;">
                         <div class="col-sm-4">
-                            <button type="button" class="btn btn-primary" id="btn-send-email" style="width:100%;"><i class="fa fa-check fa-fw"></i> 重置密码</button>
+                            <button type="button" class="btn btn-primary" id="btn-send-email" style="width:100%;"><i class="fa fa-search-plus fa-fw"></i> 找回密码</button>
                         </div>
                         <div class="col-sm-8">
                             <div id="send-result" class="alert alert-danger" style="display: none;"></div>
@@ -109,18 +109,18 @@
 
 
 
-##                     <div class="form-group form-group-sm">
-##                         <div class="col-sm-4">
-##                             <div class="input-group">
-##                                 <input data-field="password" type="password" class="form-control mono" placeholder="设置新密码">
-##                                 <span class="input-group-btn"><button class="btn btn-sm btn-default" type="button" id="btn-switch-password"><i class="fa fa-eye fa-fw"></i></button></span>
-##                             </div>
-##                         </div>
-##                         <div class="col-sm-8">
-##                             <button type="button" class="btn btn-sm btn-primary" id="btn-reset-password"><i class="fa fa-check fa-fw"></i> 重置密码</button>
-##                         </div>
-##                     </div>
-##                     <div class="clear-float"></div>
+                    ##                     <div class="form-group form-group-sm">
+                    ##                         <div class="col-sm-4">
+                    ##                             <div class="input-group">
+                    ##                                 <input data-field="password" type="password" class="form-control mono" placeholder="设置新密码">
+                    ##                                 <span class="input-group-btn"><button class="btn btn-sm btn-default" type="button" id="btn-switch-password"><i class="fa fa-eye fa-fw"></i></button></span>
+                    ##                             </div>
+                    ##                         </div>
+                    ##                         <div class="col-sm-8">
+                    ##                             <button type="button" class="btn btn-sm btn-primary" id="btn-reset-password"><i class="fa fa-check fa-fw"></i> 重置密码</button>
+                    ##                         </div>
+                    ##                     </div>
+                    ##                     <div class="clear-float"></div>
                 </div>
             </div>
         </div>
@@ -135,6 +135,7 @@
 
         $app.dom = {
             title: $('#title'),
+            icon_bg: $('#icon-bg'),
 
             err_area: $('#error-area'),
             message: $('#message'),
@@ -146,10 +147,15 @@
             password_area: $('#password-area')
         };
 
+        $app.dom.captcha_image.click(function () {
+            $(this).attr('src', '/auth/captcha?h=28&rnd=' + Math.random());
+            $app.dom.input_captcha.focus().val('');
+        });
 
         if ($app.options.mode === 1) {
             // show 'find-my-password' page
             $app.dom.title.text('找回密码');
+            $app.dom.icon_bg.removeClass().addClass('fa fa-search-plus');
             $app.dom.captcha_image.attr('src', '/auth/captcha?h=28&rnd=' + Math.random());
             $app.dom.find_password_area.show();
         } else if ($app.options.mode === 2) {

@@ -2,7 +2,8 @@
     import app.app_ver as app_ver
     page_title_ = '安装配置TELEPORT服务'
 %>
-<%inherit file="../page_maintenance_base.mako"/>
+## <%inherit file="../page_maintenance_base.mako"/>
+<%inherit file="../page_single_base.mako"/>
 
 ## <%block name="breadcrumb">
 ##     <ol class="breadcrumb">
@@ -10,11 +11,11 @@
 ##     </ol>
 ## </%block>
 
-<%block name="page_header">
-    <h1><i class="fa fa-cog fa-fw"></i> ${self.attr.page_title_}</h1>
+<%block name="extend_css_file">
+##     <link href="${ static_url('css/maintenance.css') }" rel="stylesheet" type="text/css"/>
 </%block>
 
-<%block name="extend_js">
+<%block name="extend_js_file">
     <script type="text/javascript" src="${ static_url('js/maintenance/install.js') }"></script>
 </%block>
 
@@ -22,6 +23,16 @@
     <script type="text/javascript">
         $app.add_options(${ page_param });
     </script>
+</%block>
+
+<%block name="page_header">
+    <div id="page-header" class="header header-fixed-top">
+        <nav class="navbar navbar-fixed-top">
+            <div class="container">
+                <h1><i class="fa fa-cog fa-fw"></i> ${self.attr.page_title_}</h1>
+            </div>
+        </nav>
+    </div>
 </%block>
 
 ## Begin Main Body.

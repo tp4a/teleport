@@ -51,7 +51,7 @@ $app.on_init = function (cb_stack) {
         $app.dom.input_username.val($app.options.username);
     }
 
-    $app.dom.captcha_image.attr('src', '/auth/captcha?' + Math.random());
+    $app.dom.captcha_image.attr('src', '/auth/captcha?h=36&rnd=' + Math.random());
 
     window.onresize = $app.on_screen_resize;
     $app.init_blur_bg();
@@ -76,7 +76,7 @@ $app.on_init = function (cb_stack) {
     $app.dom.btn_login.click($app.login_account);
 
     $app.dom.captcha_image.click(function () {
-        $(this).attr('src', '/auth/captcha?' + Math.random());
+        $(this).attr('src', '/auth/captcha?h=36&rnd=' + Math.random());
         $app.dom.input_captcha.focus().val('');
     });
     $app.dom.input_username.keydown(function (event) {
@@ -175,7 +175,7 @@ $app.login_account = function () {
                 else {
                     $app.hide_op_box();
                     $app.show_op_box('error', tp_error_msg(ret.code, ret.message));
-                    $app.dom.captcha_image.attr('src', '/auth/captcha?' + Math.random());
+                    $app.dom.captcha_image.attr('src', '/auth/captcha?h=36&rnd=' + Math.random());
                     $app.dom.input_captcha.focus().select().val('');
                 }
 

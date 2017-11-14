@@ -78,21 +78,24 @@ class MeHandler(TPBaseHandler):
 class ResetPasswordHandler(TPBaseHandler):
     def get(self):
         param = {
-            'mode': 0,  # mode=1, unknown mode.
+            'mode': 0,  # mode=0, unknown mode.
             'token': '',
-            'code': TPE_PARAM
+            'code': TPE_OK
         }
 
-        _mode = self.get_argument('mode', 1)
         _token = self.get_argument('token', None)
         if _token is None:
             param['mode'] = 1  # mode=1, show 'find-my-password' page.
         else:
-            err, email = user.check_reset_token(_token)
-            param['mode'] = 3  # mode=3, show 'set-new-password' page
-            param['token'] = _token
-            param['email'] = email
+            err = user.check_reset_token(_token)
+
             param['code'] = err
+            param['token'] = _token
+
+            if err != TPE_OK:
+                param['mode'] = 2  # mode=2, show 'error' page
+            else:
+                param['mode'] = 3  # mode=3, show 'set-new-password' page
 
         self.render('user/reset-password.mako', page_param=json.dumps(param))
 
@@ -469,7 +472,6 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
         try:
             user_id = int(args['id'])
             mode = int(args['mode'])
-            # email = args['email'].strip()
             password = args['password']
         except:
             return self.write_json(TPE_PARAM)

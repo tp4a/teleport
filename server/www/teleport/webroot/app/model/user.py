@@ -292,29 +292,29 @@ def generate_reset_password_token(handler, user_id):
 
 def check_reset_token(token):
     db = get_db()
-    s = SQL(db)
+    # s = SQL(db)
     _time_now = tp_timestamp_utc_now()
 
     # 0. query user's id
-    sql = 'SELECT user_id, create_time FROM `{dbtp}user_rpt` WHERE token={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+    sql = 'SELECT create_time FROM `{dbtp}user_rpt` WHERE token={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
     db_ret = db.query(sql, (token,))
     if db_ret is None or len(db_ret) == 0:
-        return TPE_NOT_EXISTS, ''
+        return TPE_NOT_EXISTS
 
-    user_id = db_ret[0][0]
-    create_time = db_ret[0][1]
+    # user_id = db_ret[0][0]
+    create_time = db_ret[0][0]
 
-    err = s.select_from('user', ['email'], alt_name='u').where('u.id="{user_id}"'.format(user_id=user_id)).query()
-    if err != TPE_OK:
-        return err, ''
-    if len(s.recorder) == 0:
-        return TPE_DATABASE, ''
-    email = s.recorder[0].email
+    # err = s.select_from('user', ['email'], alt_name='u').where('u.id="{user_id}"'.format(user_id=user_id)).query()
+    # if err != TPE_OK:
+    #     return err
+    # if len(s.recorder) == 0:
+    #     return TPE_DATABASE
+    # email = s.recorder[0].email
 
     if _time_now - create_time > 24 * 60 * 60:
-        return TPE_EXPIRED, email
+        return TPE_EXPIRED
     else:
-        return TPE_OK, email
+        return TPE_OK
 
 
 def update_login_info(handler, user_id):

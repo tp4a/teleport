@@ -58,24 +58,11 @@
 <script type="text/javascript" src="${ static_url('plugins/json2/json2.js') }"></script>
 <![endif]-->
 
-## <script type="text/javascript" src="${ static_url('js/tpapp_const.js') }"></script>
-## <script type="text/javascript" src="${ static_url('js/tpapp_common.js') }"></script>
-## <script type="text/javascript" src="${ static_url('js/tpapp.js') }"></script>
 <script type="text/javascript" src="${ static_url('js/tp-utils.js') }"></script>
 <script type="text/javascript" src="${ static_url('js/tp-const.js') }"></script>
-## <script type="text/javascript" src="${ static_url('js/tp-assist.js') }"></script>
 <script type="text/javascript" src="${ static_url('js/teleport.js') }"></script>
 
     <%block name="extend_js"/>
-
-<script type="text/javascript">
-
-##     $(document).ready(function () {
-##         tpapp.init();
-##     });
-
-</script>
-
     <%block name="embed_js" />
 
 </body>
