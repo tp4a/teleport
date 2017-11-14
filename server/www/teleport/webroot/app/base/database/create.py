@@ -74,7 +74,7 @@ class DatabaseInit:
         f.append('PRIMARY KEY (`name` ASC)')
 
         self._db_exec(
-            '创建配置项表 config',
+            '创建配置项表...',
             'CREATE TABLE {}config ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -100,7 +100,7 @@ class DatabaseInit:
         f.append('create_time int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建角色表 role',
+            '创建角色表...',
             'CREATE TABLE {}role ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -157,7 +157,7 @@ class DatabaseInit:
         f.append('create_time int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建用户表 user',
+            '创建用户表...',
             'CREATE TABLE {}user ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -176,7 +176,7 @@ class DatabaseInit:
         f.append('create_time int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建用户找回密码表 user_rpt',
+            '创建用户找回密码表...',
             'CREATE TABLE {}user_rpt ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -203,7 +203,7 @@ class DatabaseInit:
         f.append('create_time int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建组信息表 group',
+            '创建组信息表...',
             'CREATE TABLE {}group ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -223,7 +223,7 @@ class DatabaseInit:
         f.append('mid int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建组成员映射表 group_map',
+            '创建组成员映射表...',
             'CREATE TABLE {}group_map ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -270,7 +270,7 @@ class DatabaseInit:
         # 将来使用host_attr表来动态扩展主机信息
 
         self._db_exec(
-            '创建主机表 host',
+            '创建主机表...',
             'CREATE TABLE {}host ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -326,7 +326,7 @@ class DatabaseInit:
         f.append('last_secret int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建账号表 acc',
+            '创建账号表...',
             'CREATE TABLE {}acc ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -358,7 +358,7 @@ class DatabaseInit:
         f.append('create_time int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建账号认证信息表 acc_auth',
+            '创建账号认证信息表...',
             'CREATE TABLE {}acc_auth ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -424,7 +424,7 @@ class DatabaseInit:
         f.append('create_time int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建运维授权策略表 ops_policy',
+            '创建运维授权策略表...',
             'CREATE TABLE {}ops_policy ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -462,7 +462,7 @@ class DatabaseInit:
         f.append('create_time int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建运维授权策略明细表 ops_auz',
+            '创建运维授权策略明细表...',
             'CREATE TABLE {}ops_auz ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -539,7 +539,7 @@ class DatabaseInit:
         f.append('protocol_port int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建运维授权映射表 ops_map',
+            '创建运维授权映射表...',
             'CREATE TABLE {}ops_map ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -568,7 +568,7 @@ class DatabaseInit:
         f.append('create_time int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建审计授权策略表 audit_policy',
+            '创建审计授权策略表...',
             'CREATE TABLE {}audit_policy ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -602,7 +602,7 @@ class DatabaseInit:
         f.append('create_time int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建审计授权策略明细表 audit_auz',
+            '创建审计授权策略明细表...',
             'CREATE TABLE {}audit_auz ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -630,7 +630,7 @@ class DatabaseInit:
         f.append('router_port int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建审计授权映射表 audit_map',
+            '创建审计授权映射表...',
             'CREATE TABLE {}audit_map ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -658,7 +658,7 @@ class DatabaseInit:
         f.append('detail TEXT DEFAULT ""')
 
         self._db_exec(
-            '创建系统日志表 syslog',
+            '创建系统日志表...',
             'CREATE TABLE {}syslog ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -712,7 +712,7 @@ class DatabaseInit:
         f.append('time_end int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建运维录像日志表 record',
+            '创建运维录像日志表...',
             'CREATE TABLE {}record ({});'.format(self.db.table_prefix, ','.join(f))
         )
 

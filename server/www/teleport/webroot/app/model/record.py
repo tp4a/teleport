@@ -71,6 +71,9 @@ def get_records(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
 
 
 def read_record_head(record_id):
+    if not get_cfg().core.detected:
+        return None, TPE_NO_CORE_SERVER
+
     record_path = os.path.join(get_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
     header_file_path = os.path.join(record_path, 'tp-ssh.tpr')
 
@@ -151,6 +154,9 @@ def read_record_head(record_id):
 
 
 def read_record_data(record_id, offset):
+    if not get_cfg().core.detected:
+        return None, TPE_NO_CORE_SERVER
+
     # read 1000 packages one time from offset.
     record_path = os.path.join(get_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
     file_data = os.path.join(record_path, 'tp-ssh.dat')

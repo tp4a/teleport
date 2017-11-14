@@ -82,7 +82,7 @@
 ## <script type="text/javascript" src="${ static_url('js/teleport/controls.js') }"></script>
 
 
-    <%block name="extend_js"/>
+    <%block name="extend_js_file"/>
 
 ## <script type="text/javascript">
 ##     $(document).ready(function () {

@@ -25,15 +25,27 @@
     </script>
 </%block>
 
+## <%block name="page_header">
+##     <div id="page-header" class="header header-fixed-top">
+##         <nav class="navbar navbar-fixed-top">
+##             <div class="container">
+##                 <h1><i class="fa fa-cog fa-fw"></i> ${self.attr.page_title_}</h1>
+##             </div>
+##         </nav>
+##     </div>
+## </%block>
+
 <%block name="page_header">
-    <div id="page-header" class="header header-fixed-top">
-        <nav class="navbar navbar-fixed-top">
-            <div class="container">
-                <h1><i class="fa fa-cog fa-fw"></i> ${self.attr.page_title_}</h1>
-            </div>
-        </nav>
+    <div class="container-fluid top-navbar">
+        <div class="brand"><a href="/" target="_blank"><span class="site-logo"></span></a></div>
+        <div class="breadcrumb-container">
+            <ol class="breadcrumb">
+                <li><i class="fa fa-cog fa-fw"></i> ${self.attr.page_title_}</li>
+            </ol>
+        </div>
     </div>
 </%block>
+
 
 ## Begin Main Body.
 

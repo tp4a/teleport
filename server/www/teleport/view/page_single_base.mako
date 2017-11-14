@@ -29,17 +29,25 @@
 
 <body>
 
-<div>
-    <%block name="page_header"/>
 
-    <div id="page-content">
-        <div class="container">
-            ${self.body()}
-        </div>
+<div id="page-header" class="page-header">
+                <%block name="page_header" />
+
+##     <div class="container-fluid top-navbar">
+##         <div class="brand"><a href="/" target="_blank"><span class="site-logo"></span></a></div>
+##         <div class="breadcrumb-container">
+##                 <%block name="breadcrumb" />
+##         </div>
+##     </div>
+</div>
+
+<div id="page-content">
+    <div class="container">
+        ${self.body()}
     </div>
+</div>
 
     <%include file="_footer.mako"/>
-</div>
 
 
     ## <div id="page-header">
@@ -72,9 +80,12 @@
 <script type="text/javascript" src="${ static_url('plugins/json2/json2.js') }"></script>
 <![endif]-->
 
+<script type="text/javascript" src="${ static_url('plugins/gritter/js/jquery.gritter.js') }"></script>
+
 <script type="text/javascript" src="${ static_url('js/tp-utils.js') }"></script>
 <script type="text/javascript" src="${ static_url('js/tp-const.js') }"></script>
 <script type="text/javascript" src="${ static_url('js/teleport.js') }"></script>
+<script type="text/javascript" src="${ static_url('js/teleport/common.js') }"></script>
 
     <%block name="extend_js_file"/>
     <%block name="embed_js" />

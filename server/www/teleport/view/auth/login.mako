@@ -3,7 +3,7 @@
 %>
 <%inherit file="../page_login_base.mako"/>
 
-<%block name="extend_js">
+<%block name="extend_js_file">
     <script type="text/javascript" src="${ static_url('js/auth/login.js') }"></script>
 </%block>
 

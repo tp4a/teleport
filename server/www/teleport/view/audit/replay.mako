@@ -2,49 +2,65 @@
     page_title_ = '录像回放'
 %>
 
-<%inherit file="../page_no_sidebar_base.mako"/>
+<%inherit file="../page_single_base.mako"/>
 
-<%block name="extend_js">
+<%block name="extend_js_file">
     <script type="text/javascript" src="${ static_url('plugins/xterm/xterm.js') }"></script>
     <script type="text/javascript" src="${ static_url('js/audit/replay.js') }"></script>
 </%block>
 
-<%block name="extend_css">
+<%block name="extend_css_file">
     <link href="${ static_url('plugins/xterm/xterm.css') }" rel="stylesheet" type="text/css"/>
+</%block>
 
+<%block name="embed_css">
     <style type="text/css">
-        #xterm-box {
-            margin: 10px 0 48px 0;
-##             margin-top: 10px;
-##             margin-bottom: 48px;
-##             width: 300px;
-            border: 1px solid #9c9c9c;
+        .container {
+            width:100%;
+            padding-right: 20px;
         }
+        #xterm-box {
+            margin: 10px 0;
+            padding: 5px;
+            background-color: #1e1e1e;
+            ##             margin-top: 10px;
+            ##             margin-bottom: 48px;
+            ##             width: 300px;
+##             border: 1px solid #9c9c9c;
+        }
+
         .terminal {
             font-family: Consolas, Monaco, courier-new, courier, monospace;
             color: #b7b7b7;
             font-size: 12px;
         }
+
         .terminal {
-##             background-color: transparent;
+            ##             background-color: transparent;
         }
+
         .terminal .xterm-viewport {
-##             background-color: transparent;
-##             display:none;
-##             overflow: auto;
+            ##             background-color: transparent;
+            ##             display:none;
+            ##             overflow: auto;
         }
+
         .terminal .xterm-rows {
-            border-right:1px dashed #363636;
+            border-right: 1px dashed #363636;
             background-color: #1e1e1e;
         }
     </style>
 </%block>
 
-<%block name="breadcrumb">
-    <ol class="breadcrumb">
-        <li><i class="fa fa-server"></i> ${self.attr.page_title_}</li>
-        <li><span id="recorder-info"></span></li>
-    </ol>
+<%block name="page_header">
+    <div class="container-fluid top-navbar">
+        <div class="breadcrumb-container">
+            <ol class="breadcrumb">
+                <li><i class="fa fa-server"></i> ${self.attr.page_title_}</li>
+                <li class="sub-title"><span id="recorder-info"></span></li>
+            </ol>
+        </div>
+    </div>
 </%block>
 
 
@@ -59,15 +75,14 @@
         <button id="btn-small-font" type="button" class="btn btn-default btn-sm"><i class="fa fa-font fa-fw"></i>-</button>
 
         <div style="display:inline-block;position:relative;top:4px;margin-left:10px;margin-right:15px;">
-##             <label><input id="btn-skip" type="checkbox"> 跳过无操作时间</label>
             <span id="btn-skip" style="cursor:pointer;"><i class="fa fa-check-square-o fa-fw"></i> 跳过无操作时间</span>
         </div>
 
         <span id="play-status" class="badge badge-normal" style="margin-left:5px;">正在获取数据</span>
         <span id="play-time" class="badge badge-success" style="margin-left:5px;">总时长:未知</span>
     </div>
-        <input id="progress" type="range" value="0" min=0 max=100 style="margin-top: 10px;"/>
-        <div id="xterm-box"></div>
+    <input id="progress" type="range" value="0" min=0 max=100 style="margin-top: 10px;"/>
+    <div id="xterm-box"></div>
 
 </div>
 

@@ -3,8 +3,8 @@
 %>
 <%inherit file="../page_single_base.mako"/>
 
-<%block name="page_header">
-    <a href="http://teleport.eomsoft.net" target="_blank"><span class="logo"></span></a>
+<%block name="extend_js_file">
+    <script type="text/javascript" src="${ static_url('js/user/reset-password.js') }"></script>
 </%block>
 
 <%block name="embed_css">
@@ -21,36 +21,49 @@
     </style>
 </%block>
 
-<div class="page-content">
-    <div class="error-box">
-        <div class="error-icon-box">
-            <i id="icon-bg" class="fa fa-warning"></i>
+<%block name="page_header">
+    <div class="container-fluid top-navbar">
+        <div class="brand"><a href="/" target="_blank"><span class="site-logo"></span></a></div>
+        <div class="breadcrumb-container">
+            <ol class="breadcrumb">
+                <li><i class="fa fa-key"></i> 密码管理</li>
+            </ol>
         </div>
-        <div class="error-message-box">
+    </div>
+##     <a href="http://teleport.eomsoft.net" target="_blank"><span class="logo"></span></a>
+</%block>
+
+<div class="page-content">
+    <div class="info-box">
+        <div class="info-icon-box">
+            <i id="icon-bg"></i>
+        </div>
+        <div class="info-message-box">
             <div id="title" class="title">设置密码</div>
             <hr/>
             <div id="content" class="content">
+
                 <div id="error-area" style="display:none;">
-                    <div id="message" class="alert alert-danger"></div>
-                    <div id="actions" style="display: none;">
-                        您可以：
+                    <div id="err-message" class="alert alert-danger"></div>
+                    <div id="err-actions">
+                        现在您可以：
                         <ul>
-                            <li>重新找回密码</li>
-                            <li>联系管理员重置密码</li>
+                            <li><a href="/user/reset-password">尝试重新找回密码</a></li>
+                            <li>联系管理员手工重置密码</li>
                         </ul>
                     </div>
                 </div>
 
                 <div id="find-my-password" style="display: none;">
                     <div class="row" style="padding:0 20px;">
-                        <div class="col-sm-4">
+                        <div class="col-md-4">
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-user-circle-o fa-fw"></i></span>
-                                <input data-field="username" type="text" class="form-control mono" placeholder="登录teleport系统的用户名">
+                                <input id="username" type="text" class="form-control mono" placeholder="teleport系统用户名">
                             </div>
                             <div class="input-group" style="margin-top:10px;">
                                 <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
-                                <input data-field="email" type="text" class="form-control mono" placeholder="用户绑定的电子邮箱">
+                                <input id="email" type="text" class="form-control mono" placeholder="用户绑定的电子邮箱">
                             </div>
 
                             <div class="input-group" style="margin-top:10px;">
@@ -61,7 +74,7 @@
                             </div>
                             <p class="input-addon-desc">验证码，点击图片可更换</p>
                         </div>
-                        <div class="col-sm-8">
+                        <div class="col-md-8">
                             <div class="alert alert-info">
                                 <p>请填写用户信息，随后一封密码重置确认函将发送到您的邮箱。</p>
                                 <p>请注意，密码重置确认函在24小时内有效！</p>
@@ -72,10 +85,10 @@
                     </div>
 
                     <div class="row" style="padding:0 20px;margin-top:10px;">
-                        <div class="col-sm-4">
-                            <button type="button" class="btn btn-primary" id="btn-send-email" style="width:100%;"><i class="fa fa-search-plus fa-fw"></i> 找回密码</button>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-primary" id="btn-send-email" style="width:100%;"><i class="fa fa-send fa-fw"></i> 发送密码重置确认函</button>
                         </div>
-                        <div class="col-sm-8">
+                        <div class="col-md-8">
                             <div id="send-result" class="alert alert-danger" style="display: none;"></div>
                         </div>
                     </div>
@@ -83,15 +96,15 @@
 
                 <div id="password-area" style="display:none;">
                     <div class="row" style="padding:0 20px;">
-                        <div class="col-sm-4">
+                        <div class="col-md-4">
                             <div class="input-group">
-                                <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                                <span class="input-group-addon"><i class="fa fa-edit"></i></span>
                                 <input data-field="password" type="password" class="form-control mono" placeholder="设置新密码">
                                 <span class="input-group-btn"><button class="btn btn-default" type="button" id="btn-switch-password"><i class="fa fa-eye fa-fw"></i></button></span>
                             </div>
 
                         </div>
-                        <div class="col-sm-8">
+                        <div class="col-md-8">
                             <div class="alert alert-warning">
                                 <p>注意，系统启用强密码策略，要求密码至少8位，必须包含大写字母、小写字母以及数字。</p>
                             </div>
@@ -99,28 +112,14 @@
                     </div>
 
                     <div class="row" style="padding:0 20px;margin-top:10px;">
-                        <div class="col-sm-4">
+                        <div class="col-md-4">
                             <button type="button" class="btn btn-primary" id="btn-reset-password" style="width:100%;"><i class="fa fa-check fa-fw"></i> 重置密码</button>
                         </div>
-                        <div class="col-sm-8">
+                        <div class="col-md-8">
                             <div id="reset-result" class="alert alert-danger" style="display: none;"></div>
                         </div>
                     </div>
 
-
-
-                    ##                     <div class="form-group form-group-sm">
-                    ##                         <div class="col-sm-4">
-                    ##                             <div class="input-group">
-                    ##                                 <input data-field="password" type="password" class="form-control mono" placeholder="设置新密码">
-                    ##                                 <span class="input-group-btn"><button class="btn btn-sm btn-default" type="button" id="btn-switch-password"><i class="fa fa-eye fa-fw"></i></button></span>
-                    ##                             </div>
-                    ##                         </div>
-                    ##                         <div class="col-sm-8">
-                    ##                             <button type="button" class="btn btn-sm btn-primary" id="btn-reset-password"><i class="fa fa-check fa-fw"></i> 重置密码</button>
-                    ##                         </div>
-                    ##                     </div>
-                    ##                     <div class="clear-float"></div>
                 </div>
             </div>
         </div>
@@ -132,39 +131,5 @@
         "use strict";
         $app.add_options(${page_param});
         console.log($app.options);
-
-        $app.dom = {
-            title: $('#title'),
-            icon_bg: $('#icon-bg'),
-
-            err_area: $('#error-area'),
-            message: $('#message'),
-            actions: $('#actions'),
-
-            find_password_area: $('#find-my-password'),
-            captcha_image: $('#captcha-image'),
-
-            password_area: $('#password-area')
-        };
-
-        $app.dom.captcha_image.click(function () {
-            $(this).attr('src', '/auth/captcha?h=28&rnd=' + Math.random());
-            $app.dom.input_captcha.focus().val('');
-        });
-
-        if ($app.options.mode === 1) {
-            // show 'find-my-password' page
-            $app.dom.title.text('找回密码');
-            $app.dom.icon_bg.removeClass().addClass('fa fa-search-plus');
-            $app.dom.captcha_image.attr('src', '/auth/captcha?h=28&rnd=' + Math.random());
-            $app.dom.find_password_area.show();
-        } else if ($app.options.mode === 2) {
-            // show 'password-expired' page
-            $app.dom.title.text('更新密码');
-        } else if ($app.options.mode === 3) {
-            // show 'set-new-password' page
-            $app.dom.title.text('重置密码');
-            $app.dom.password_area.show();
-        }
     </script>
 </%block>

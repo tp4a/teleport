@@ -2,16 +2,9 @@
     page_title_ = 'SSH操作记录'
 %>
 
-<%inherit file="../page_no_sidebar_base.mako"/>
+<%inherit file="../page_single_base.mako"/>
 
-<%block name="extend_js">
-</%block>
-
-<%block name="breadcrumb">
-    <ol class="breadcrumb">
-        <li><i class="fa fa-file-text-o"></i> ${self.attr.page_title_}</li>
-        <li><span id="recorder-info"></span></li>
-    </ol>
+<%block name="extend_js_file">
 </%block>
 
 <%block name="extend_css">
@@ -59,6 +52,17 @@
             background-color: #b4fdb1;
         }
     </style>
+</%block>
+
+<%block name="page_header">
+    <div class="container-fluid top-navbar">
+        <div class="breadcrumb-container">
+            <ol class="breadcrumb">
+                <li><i class="fa fa-server"></i> ${self.attr.page_title_}</li>
+                <li class="sub-title"><span id="recorder-info"></span></li>
+            </ol>
+        </div>
+    </div>
 </%block>
 
 <div class="page-content">

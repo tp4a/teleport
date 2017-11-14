@@ -295,7 +295,11 @@ def check_reset_token(token):
     # s = SQL(db)
     _time_now = tp_timestamp_utc_now()
 
-    # 0. query user's id
+    # 0. remove expired token (after 3 days)
+    sql = 'DELETE FROM  `{dbtp}user_rpt` WHERE create_time<{dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+    db.query(sql, (_time_now - 3 * 24 * 60 * 60,))
+
+    # 1. query user's id
     sql = 'SELECT create_time FROM `{dbtp}user_rpt` WHERE token={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
     db_ret = db.query(sql, (token,))
     if db_ret is None or len(db_ret) == 0:
