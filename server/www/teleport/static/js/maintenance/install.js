@@ -161,6 +161,7 @@ $app.on_init = function (cb_stack, cb_args) {
                         html.push('</p>')
                     }
                     $app.dom.steps_detail.html(html.join(''));
+                    $('html').animate({scrollTop: $(document).height()}, 300);
 
                     if (!ret.data.running) {
                         if (all_ok) {
@@ -174,7 +175,7 @@ $app.on_init = function (cb_stack, cb_args) {
 
                             $app.dom.step2.show('fast', function () {
                                 // 确保页面滚动到最低端，使得下一步提示能够被看到。
-                                document.body.scrollTop = document.body.scrollHeight;
+                                $('html').animate({scrollTop: $(document).height()}, 300);
                             });
                         }
                         return;
