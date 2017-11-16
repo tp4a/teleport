@@ -72,7 +72,6 @@ $app.on_init = function (cb_stack) {
         $app.dom.area_captcha.slideUp(100);
     });
 
-
     $app.dom.btn_login.click($app.login_account);
 
     $app.dom.captcha_image.click(function () {
@@ -173,13 +172,12 @@ $app.login_account = function () {
                     $app.do_account_login(str_username, str_password, str_captcha, str_oath, is_remember);
                 }
                 else {
+                    $app.dom.btn_login.removeAttr('disabled');
                     $app.hide_op_box();
                     $app.show_op_box('error', tp_error_msg(ret.code, ret.message));
                     $app.dom.captcha_image.attr('src', '/auth/captcha?h=36&rnd=' + Math.random());
                     $app.dom.input_captcha.focus().select().val('');
                 }
-
-                $app.dom.btn_login.removeAttr('disabled');
             },
             function () {
                 $app.hide_op_box();
@@ -232,9 +230,9 @@ $app.init_blur_bg = function () {
 };
 
 $app._update_blur_bg = function () {
-    for(;;) {
+    for (; ;) {
         var img_id = Math.floor(Math.random() * (BLUR_BG_IMG.length));
-        if(img_id !== $app.last_img_idx) {
+        if (img_id !== $app.last_img_idx) {
             $app.last_img_idx = img_id;
             break;
         }
@@ -251,9 +249,9 @@ $app.init_slogan = function () {
 };
 
 $app._update_slogan = function () {
-    for(;;) {
+    for (; ;) {
         var msg_id = Math.floor(Math.random() * (SLOGAN.length));
-        if(msg_id !== $app.last_slogan_idx) {
+        if (msg_id !== $app.last_slogan_idx) {
             $app.last_slogan_idx = msg_id;
             break;
         }

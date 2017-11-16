@@ -4,12 +4,13 @@
 
 "use strict";
 
-$tp.notify_error = function (message_, title_) {
+$tp.notify_error = function (message_, title_, timeout_) {
     var _title = title_ || '';
+    var _t = timeout_ || 15000;
     $.gritter.add({
         //sticky:true,
         class_name: 'gritter-error',
-        time: 10000,
+        time: _t,
         title: '<i class="fa fa-warning fa-fw"></i> 错误：' + _title,
         text: message_
     });

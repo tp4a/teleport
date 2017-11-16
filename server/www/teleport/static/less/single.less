@@ -40,13 +40,6 @@ body {
   }
 }
 
-//@header-height: @top-navbar-height; // + @top-toolbar-height;
-
-// 顶部状态栏
-//.page-header-fixed {
-//padding-top: @header-height;
-//}
-
 .page-header {
   //border: none;
   box-shadow: 0 0 3px rgba(0, 0, 0, .5);
@@ -166,6 +159,37 @@ body {
   }
 }
 
+.op_box {
+  display: block;
+  padding: 5px;
+  //border-radius: 3px;
+  //text-align: center;
+  //margin: 5px 20px 10px 20px;
+  //margin: 5px 0;
+  margin: 0;
+
+  &.op_error {
+    //background: rgba(255, 5, 0, 0.5);
+    background-color: #ffb8b5;
+    border: 1px solid #d47e7b;
+    color: #333;
+  }
+
+  &.op_wait {
+    //background: rgba(255, 255, 255, 0.3);
+    background: #e5e5e5;
+    border: 1px solid #a8a8a8;
+    color: #333;
+  }
+
+  &.op_success {
+    //background: rgba(255, 255, 255, 0.3);
+    background: #acf1b2;
+    border: 1px solid #82df82;
+    color: #333;
+  }
+}
+
 // for error/reset-password page
 .info-box {
   @error-icon-size: 164px;
@@ -203,10 +227,15 @@ body {
     hr {
       //border-top: 1px solid #d3d3d3;
       //border-bottom: 1px solid #fff;
-      margin:10px 0 20px;
+      margin: 10px 0 20px;
       border-top: none;
       border-bottom: 1px dashed #d3d3d3;
     }
+  }
+
+  .op_box {
+    margin: 5px 0;
+    text-align: center;
   }
 }
 
@@ -293,23 +322,7 @@ body {
   }
 
   .op_box {
-    display: block;
-    padding: 5px;
-    border-radius: 3px;
-    //text-align: center;
-    //margin: 5px 20px 10px 20px;
     margin: 5px 0;
-  }
-
-  .op_error {
-    //background: rgba(255, 5, 0, 0.5);
-    background-color: #cc3632;
-    border: 1px solid #9c2a26;
-    color: #fff;
-  }
-
-  .op_wait {
-    background: rgba(255, 255, 255, 0.3);
   }
 
   .steps-detail {

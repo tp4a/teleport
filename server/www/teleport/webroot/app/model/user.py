@@ -40,6 +40,9 @@ def get_by_username(username):
     if len(s.recorder) == 0:
         return TPE_NOT_EXISTS, {}
 
+    if s.recorder[0]['privilege'] is None:
+        s.recorder[0]['privilege'] = 0
+
     return TPE_OK, s.recorder[0]
 
 
@@ -300,13 +303,13 @@ def check_reset_token(token):
     db.query(sql, (_time_now - 3 * 24 * 60 * 60,))
 
     # 1. query user's id
-    sql = 'SELECT create_time FROM `{dbtp}user_rpt` WHERE token={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+    sql = 'SELECT user_id, create_time FROM `{dbtp}user_rpt` WHERE token={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
     db_ret = db.query(sql, (token,))
     if db_ret is None or len(db_ret) == 0:
-        return TPE_NOT_EXISTS
+        return TPE_NOT_EXISTS, 0
 
-    # user_id = db_ret[0][0]
-    create_time = db_ret[0][0]
+    user_id = db_ret[0][0]
+    create_time = db_ret[0][1]
 
     # err = s.select_from('user', ['email'], alt_name='u').where('u.id="{user_id}"'.format(user_id=user_id)).query()
     # if err != TPE_OK:
@@ -316,9 +319,9 @@ def check_reset_token(token):
     # email = s.recorder[0].email
 
     if _time_now - create_time > 24 * 60 * 60:
-        return TPE_EXPIRED
+        return TPE_EXPIRED, user_id
     else:
-        return TPE_OK
+        return TPE_OK, user_id
 
 
 def update_login_info(handler, user_id):

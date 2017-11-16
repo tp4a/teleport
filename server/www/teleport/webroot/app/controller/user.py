@@ -85,9 +85,17 @@ class ResetPasswordHandler(TPBaseHandler):
 
         _token = self.get_argument('token', None)
         if _token is None:
-            param['mode'] = 1  # mode=1, show 'find-my-password' page.
+            # 如果尚未设置SMTP或者系统限制，不允许发送密码重置邮件
+            if len(get_cfg().sys.smtp.server) == 0:
+                param['mode'] = 2  # mode=2, show 'error' page
+                param['code'] = TPE_NETWORK
+            elif not get_cfg().sys.password.allow_reset:
+                param['mode'] = 2  # mode=2, show 'error' page
+                param['code'] = TPE_PRIVILEGE
+            else:
+                param['mode'] = 1  # mode=1, show 'find-my-password' page.
         else:
-            err = user.check_reset_token(_token)
+            err, _ = user.check_reset_token(_token)
 
             param['code'] = err
             param['token'] = _token
@@ -96,6 +104,7 @@ class ResetPasswordHandler(TPBaseHandler):
                 param['mode'] = 2  # mode=2, show 'error' page
             else:
                 param['mode'] = 3  # mode=3, show 'set-new-password' page
+                param['force_strong'] = get_cfg().sys.password.force_strong
 
         self.render('user/reset-password.mako', page_param=json.dumps(param))
 
@@ -457,9 +466,6 @@ class DoSetRoleForUsersHandler(TPBaseJsonHandler):
 class DoResetPasswordHandler(TPBaseJsonHandler):
     @tornado.gen.coroutine
     def post(self):
-        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
-        if ret != TPE_OK:
-            return
 
         args = self.get_argument('args', None)
         if args is None:
@@ -470,22 +476,79 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
             return self.write_json(TPE_JSON_FORMAT)
 
         try:
-            user_id = int(args['id'])
             mode = int(args['mode'])
-            password = args['password']
         except:
+            return self.write_json(TPE_PARAM)
+
+        password = ''
+
+        if mode == 1:
+            # 管理员直接在后台给用户发送密码重置邮件
+            err = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+            if err != TPE_OK:
+                return self.write_json(err)
+
+            try:
+                user_id = int(args['id'])
+            except:
+                return self.write_json(TPE_PARAM)
+
+        elif mode == 2:
+            # 管理员直接在后台为用户重置密码
+            err = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+            if err != TPE_OK:
+                return self.write_json(err)
+
+            try:
+                user_id = int(args['id'])
+                password = args['password']
+            except:
+                return self.write_json(TPE_PARAM)
+
+        elif mode == 3:
+            # 用户自行找回密码，需要填写用户名、邮箱、验证码
+            try:
+                username = args['username']
+                email = args['email']
+                captcha = args['captcha']
+            except:
+                return self.write_json(TPE_PARAM)
+
+            code = self.get_session('captcha')
+            if code is None:
+                return self.write_json(TPE_CAPTCHA_EXPIRED, '验证码已失效')
+            if code.lower() != captcha.lower():
+                return self.write_json(TPE_CAPTCHA_MISMATCH, '验证码错误')
+
+            self.del_session('captcha')
+            err, user_info = user.get_by_username(username)
+            if err != TPE_OK:
+                return self.write_json(err)
+            if user_info.email != email:
+                return self.write_json(TPE_NOT_EXISTS)
+
+            user_id = user_info.id
+
+        elif mode == 4:
+            # 用户通过密码重置邮件中的链接（有token验证），在页面上设置新密码，需要提供token、新密码
+            try:
+                token = args['token']
+                password = args['password']
+            except:
+                return self.write_json(TPE_PARAM)
+
+            err, user_id = user.check_reset_token(token)
+            if err != TPE_OK:
+                return self.write_json(err)
+
+        else:
             return self.write_json(TPE_PARAM)
 
         if user_id == 0:
             return self.write_json(TPE_PARAM)
 
-        if mode == 1:
-            # if len(email) == 0:
-            #     return self.write_json(TPE_PARAM)
-
+        if mode == 1 or mode == 3:
             err, email, token = user.generate_reset_password_token(self, user_id)
-
-            print(err, email, token)
 
             # 生成一个密码重置链接，24小时有效
             # token = tp_generate_random(16)
@@ -494,17 +557,19 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
 
             err, msg = yield mail.tp_send_mail(
                 email,
-                '您好！\n\n请访问以下链接以重设您的TELEPORT登录密码。此链接将于本邮件寄出24小时之后失效。访问此链接，将会为您打开密码重置页面，然后您可以设定新密码。\n\n'
-                '如果您并没有做重设密码的操作，请及时联系系统管理员！\n\n'
-                '{reset_url}\n\n'
+                'Teleport用户，您好！\n\n请访问以下链接以重设您的teleport登录密码。此链接将于本邮件寄出24小时之后失效。\n'
+                '访问此链接，将会为您打开密码重置页面，然后您可以设定新密码。\n\n'
+                '如果您并没有做重设密码的操作，请忽略本邮件，请及时联系您的系统管理员！\n\n'
+                '{reset_url}\n\n\n\n'
+                '[本邮件由teleport系统自动发出，请勿回复]'
                 '\n\n'
                 ''.format(reset_url=reset_url),
-                subject='密码重置邮件'
+                subject='密码重置确认函'
             )
 
             return self.write_json(err, msg)
 
-        elif mode == 2:
+        elif mode == 2 or mode == 4:
             if len(password) == 0:
                 return self.write_json(TPE_PARAM)
 

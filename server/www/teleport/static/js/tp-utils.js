@@ -169,6 +169,7 @@ function tp_format_datetime(timestamp, format) {
 }
 
 var base64KeyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
 function tp_base64_encode(input) {
     var output = "";
     var chr1, chr2, chr3 = "";
@@ -236,6 +237,7 @@ function tp_get_file_name(path) {
 }
 
 var g_unique_id = (new Date()).valueOf();
+
 function tp_generate_id() {
     return g_unique_id++;
 }
@@ -251,6 +253,7 @@ function htmlEncode(_s) {
     s = s.replace(/\"/g, "&quot;");
     return s;
 }
+
 //
 ///*2.用正则表达式实现html解码*/
 //function htmlDecode(_s) {
@@ -274,11 +277,35 @@ function tp_sleep4debug(duration) {
 // 获取长度为len的随机字符串
 function tp_gen_random_string(len) {
     len = len || 32;
-    var _chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678'; // 默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1
+    var _chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678'; // 默认去掉了容易混淆的字符oO,Ll,9gq,Vv,Uu,I1
     var max_pos = _chars.length;
     var ret = '';
     for (var i = 0; i < len; i++) {
         ret += _chars.charAt(Math.floor(Math.random() * max_pos));
     }
     return ret;
+}
+
+// 弱密码检测
+function tp_check_strong_password(p) {
+    var s = 0;
+    if (p.length < 8)
+        return false;
+
+    for (var i = 0; i < p.length; ++i) {
+        var c = p.charCodeAt(i);
+        if (c >= 48 && c <= 57) // 数字
+            s |= 1;
+        else if (c >= 65 && c <= 90) // 大写字母
+            s |= 2;
+        else if (c >= 97 && c <= 122) // 小写字母
+            s |= 4;
+        else
+            s |= 8;
+    }
+
+    if((s&1) && (s&2) && (s&4))
+        return true;
+    else
+        return false;
 }

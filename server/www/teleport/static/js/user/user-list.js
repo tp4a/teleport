@@ -989,10 +989,8 @@ $app.create_dlg_reset_password = function () {
     dlg.do_send_reset_email = function () {
         dlg.dom.btn_send_reset_email.attr('disabled', 'disabled');
         $tp.ajax_post_json('/user/do-reset-password', {
-                id: dlg.field_id,
                 mode: 1,
-                // email: dlg.field_email,
-                password: ''
+                id: dlg.field_id
             },
             function (ret) {
                 dlg.dom.btn_send_reset_email.removeAttr('disabled');
@@ -1020,9 +1018,8 @@ $app.create_dlg_reset_password = function () {
         }
 
         $tp.ajax_post_json('/user/do-reset-password', {
-                id: dlg.field_id,
                 mode: 2,
-                // email: '',
+                id: dlg.field_id,
                 password: dlg.field_password
             },
             function (ret) {

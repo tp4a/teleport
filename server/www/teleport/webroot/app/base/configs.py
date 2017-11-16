@@ -460,11 +460,10 @@ class AppConfig(BaseAppConfig):
         # =====================================
         # 密码策略相关
         # =====================================
-        # conf_data['password'] = '{"find":false,"strong":true}'
         try:
             _password = json.loads(conf_data['password'])
         except:
-            log.w('invalid password config, use default.\n')
+            log.w('password config not set or invalid, use default.\n')
             _password = {}
 
         self.sys.password = tp_convert_to_attr_dict(_password)
@@ -481,7 +480,7 @@ class AppConfig(BaseAppConfig):
         try:
             _login = json.loads(conf_data['login'])
         except:
-            log.w('invalid login config, use default.\n')
+            log.w('login config not set or invalid, use default.\n')
             _login = {}
 
         self.sys.login = tp_convert_to_attr_dict(_login)
@@ -493,7 +492,6 @@ class AppConfig(BaseAppConfig):
             self.sys.login.lock_timeout = 30  # 30 min
         if not self.sys.login.is_exists('auth'):
             self.sys.login.auth = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA | TP_LOGIN_AUTH_USERNAME_OATH | TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH
-        # print('==login==', json.dumps(self.sys.login, separators=(',', ':')))
 
         # =====================================
         # SMTP相关
@@ -502,7 +500,7 @@ class AppConfig(BaseAppConfig):
         try:
             _smtp = json.loads(conf_data['smtp'])
         except:
-            log.w('invalid smtp config, use default.\n')
+            log.w('smtp config not set or invalid, use default.\n')
             _smtp = {}
 
         self.sys.smtp = tp_convert_to_attr_dict(_smtp)
@@ -517,7 +515,6 @@ class AppConfig(BaseAppConfig):
         if self.sys.smtp.is_exists('password'):
             self.sys_smtp_password = self.sys.smtp.password
             self.sys.smtp.password = '********'
-            # del self.sys.smtp.password
 
         # =====================================
         # 存储相关
@@ -525,7 +522,7 @@ class AppConfig(BaseAppConfig):
         try:
             _storage = json.loads(conf_data['storage'])
         except:
-            log.w('invalid storage config, use default.\n')
+            log.w('storage config not set or invalid, use default.\n')
             _storage = {}
 
         self.sys.storage = tp_convert_to_attr_dict(_storage)

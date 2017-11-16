@@ -18,11 +18,14 @@
     <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
     <title>${self.attr.page_title_[-1]}::TELEPORT</title>
     <link rel="shortcut icon" href="${ static_url('favicon.png') }">
+
     <link href="${ static_url('plugins/bootstrap/css/bootstrap.min.css') }" rel="stylesheet" type="text/css"/>
     <link href="${ static_url('plugins/font-awesome/css/font-awesome.min.css') }" rel="stylesheet">
     <link href="${ static_url('plugins/gritter/css/jquery.gritter.css') }" rel="stylesheet">
     <link href="${ static_url('plugins/jquery/jquery.mCustomScrollbar.min.css') }" rel="stylesheet">
+
     <link href="${ static_url('css/style.css') }" rel="stylesheet" type="text/css"/>
+
     <%block name="extend_css_file"/>
     <%block name="embed_css"/>
 </head>

@@ -104,6 +104,10 @@ class DoLoginHandler(TPBaseJsonHandler):
                 syslog.sys_log({'username': username, 'surname': username}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
             return self.write_json(err)
 
+        if user_info.privilege == 0:
+            # 尚未为此用户设置角色
+            return self.write_json(TPE_PRIVILEGE, '用户尚未分配角色')
+
         if user_info['state'] == TP_STATE_LOCKED:
             # 用户已经被锁定，如果系统配置为一定时间后自动解锁，则更新一下用户信息
             if sys_cfg.login.lock_timeout != 0:
