@@ -196,10 +196,11 @@ $app.do_send_reset_email = function (str_username, str_email, str_captcha) {
             captcha: str_captcha
         },
         function (ret) {
-            $app.dom.find.btn_submit.removeAttr('disabled');
             if (ret.code === TPE_OK) {
-                $app.show_op_box('success', '密码重置确认函已发送！');
+                $app.dom.find.btn_submit.slideUp('fast');
+                $app.show_op_box('success', '密码重置确认函已发送，请注意查收！');
             } else {
+                $app.dom.find.btn_submit.removeAttr('disabled');
                 $app.hide_op_box();
                 var msg = '';
                 if (ret.code === TPE_NOT_EXISTS)

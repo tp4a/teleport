@@ -1,8 +1,3 @@
-/**
- * Created by mi on 2016/7/27.
- * Upgrade for new record-format by Apex on 2017-01-08
- */
-
 "use strict";
 
 var g_header = null;
@@ -37,16 +32,13 @@ $app.req_record_data = function (record_id, offset) {
     $tp.ajax_post_json('/audit/get-record-data', {id: record_id, offset: offset},
         function (ret) {
             if (ret.code === TPE_OK) {
-                console.log('data', ret.data);
+                // console.log('data', ret.data);
                 g_data = g_data.concat(ret.data.data_list);
                 g_data_offset += ret.data.data_size;
 
                 if (g_data.length < g_header.pkg_count) {
                     $app.req_record_data(record_id, g_data_offset);
                 }
-                // else if(g_header.pkg_count < g_data.length) {
-                //     g_header.pkg_count = g_data.length;
-                // }
             } else {
                 console.log('req_record_info error ', ret.code);
             }
@@ -82,7 +74,7 @@ $app.on_init = function (cb_stack, cb_args) {
         function (ret) {
             if (ret.code === TPE_OK) {
                 g_header = ret.data;
-                console.log('header', g_header);
+                // console.log('header', g_header);
 
                 $('#recorder-info').html(tp_format_datetime(g_header.start) + ': ' + g_header.user_name + '@' + g_header.client_ip + ' 访问 ' + g_header.account + '@' + g_header.conn_ip + ':' + g_header.conn_port);
 
@@ -90,8 +82,8 @@ $app.on_init = function (cb_stack, cb_args) {
 
                 setTimeout(init, 1000);
             } else {
-                $tp.notify_error('请求录像数据失败');
-                console.log('load init info error ', ret.code);
+                $tp.notify_error('请求录像数据失败'+tp_error_msg(ret.code, ret.message));
+                console.error('load init info error ', ret.code);
             }
         },
         function () {
@@ -125,7 +117,7 @@ $app.on_init = function (cb_stack, cb_args) {
             obj.removeClass('fa-square-o').addClass('fa-check-square-o');
         }
 
-        console.log('skip:', g_skip);
+        // console.log('skip:', g_skip);
     });
 
     $app.dom.btn_restart.click(function () {
@@ -212,7 +204,7 @@ $app.on_init = function (cb_stack, cb_args) {
                 continue;
             }
 
-            console.log(play_data.t, g_current_time);
+            // console.log(play_data.t, g_current_time);
             if (play_data.t < g_current_time) {
                 if(play_data.a === 1) {
                     g_console_term.resize(play_data.w, play_data.h);

@@ -6,7 +6,7 @@
 
 <%block name="extend_js_file">
     <script type="text/javascript" src="${ static_url('plugins/xterm/xterm.js') }"></script>
-    <script type="text/javascript" src="${ static_url('js/audit/replay.js') }"></script>
+    <script type="text/javascript" src="${ static_url('js/audit/replay-ssh.js') }"></script>
 </%block>
 
 <%block name="extend_css_file">
@@ -21,7 +21,6 @@
         }
         #xterm-box {
             margin: 10px 0;
-            padding: 5px;
             background-color: #1e1e1e;
             ##             margin-top: 10px;
             ##             margin-bottom: 48px;
@@ -46,6 +45,8 @@
         }
 
         .terminal .xterm-rows {
+##             margin:5px;
+##             padding:5px;
             border-right: 1px dashed #363636;
             background-color: #1e1e1e;
         }

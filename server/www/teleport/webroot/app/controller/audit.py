@@ -146,7 +146,7 @@ class ReplayHandler(TPBaseHandler):
             return
         elif protocol == TP_PROTOCOL_TYPE_SSH:
             param = {'record_id': record_id}
-            self.render('audit/replay.mako', page_param=json.dumps(param))
+            self.render('audit/replay-ssh.mako', page_param=json.dumps(param))
 
 
 # # class PlayRdpHandler(TPBaseAdminAuthHandler):

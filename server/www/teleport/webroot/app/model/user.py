@@ -227,16 +227,20 @@ def set_password(handler, user_id, password):
     db = get_db()
 
     operator = handler.get_current_user()
+    print('----------', operator)
 
     # 1. get user info (user name)
     s = SQL(db)
-    err = s.reset().select_from('user', ['username']).where('user.id={}'.format(user_id)).query()
+    err = s.reset().select_from('user', ['username', 'surname']).where('user.id={}'.format(user_id)).query()
     if err != TPE_OK:
         return err
     if len(s.recorder) == 0:
         return TPE_NOT_EXISTS
 
     name = s.recorder[0]['username']
+    surname = s.recorder[0]['surname']
+    if len(surname) == 0:
+        surname = name
 
     sql = 'UPDATE `{}user` SET password="{password}" WHERE id={user_id};' \
           ''.format(db.table_prefix, password=password, user_id=user_id)
@@ -244,7 +248,10 @@ def set_password(handler, user_id, password):
     if not db_ret:
         return TPE_DATABASE
 
-    syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "为用户 {} 手动重置了密码".format(name))
+    if operator['id'] == 0:
+        syslog.sys_log({'username': name, 'surname': surname}, handler.request.remote_ip, TPE_OK, "用户 {} 通过找回密码功能重置了密码".format(name))
+    else:
+        syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "为用户 {} 手动重置了密码".format(name))
 
     return TPE_OK
 

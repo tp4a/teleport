@@ -59,7 +59,7 @@ $app.create_info_table = function () {
             h.push(_info._make_info('与WEB服务通讯地址', $app.options.core_cfg.web_server_rpc));
             h.push(_info._make_protocol_info('RDP 端口', $app.options.core_cfg.rdp));
             h.push(_info._make_protocol_info('SSH 端口', $app.options.core_cfg.ssh));
-            // h.push(_info._make_protocol_info('TELNET 端口', $app.options.core_cfg.telnet));
+            h.push(_info._make_protocol_info('TELNET 端口', $app.options.core_cfg.telnet));
             h.push(_info._make_info('录像文件路径', $app.options.core_cfg.replay_path));
         }
 
@@ -473,7 +473,7 @@ $app.create_config_storage = function () {
             _info.push('未能连接到核心服务，无法获取存储空间信息！');
         } else {
             _sto.dom.storage_size.removeClass().addClass('alert alert-info');
-            _info.push('<p>会话录像存储路径：<code>' + $app.options.core_cfg.replay_path + '</code></p>');
+            _info.push('<p>会话录像存储路径：<span class="mono">' + $app.options.core_cfg.replay_path + '</span></p>');
             _info.push('<p>会话录像存储空间：总 ' + tp_size2str($app.options.total_size, 2) + '，' + '可用 ' + tp_size2str($app.options.free_size, 2) + '。</p>');
         }
         _sto.dom.storage_size.html(_info.join(''));

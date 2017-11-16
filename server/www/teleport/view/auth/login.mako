@@ -41,6 +41,7 @@
                                     <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
                                     <input data-field="password" type="password" class="form-control" placeholder="密码" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 </div>
+                                <p class="input-addon-desc"><a href="/user/reset-password">忘记密码？</a></p>
                             </div>
 
                         </div>
@@ -48,8 +49,7 @@
                         <div id="login-area-captcha" class="inputbox">
                             <div class="input-group input-group-lg">
                                 <span class="input-group-addon"><i class="fa fa-check-square-o fa-fw"></i></span>
-                                <input id="captcha" type="text" class="form-control" placeholder="验证码"
-                                       data-toggle="popover" data-trigger="manual" data-placement="top">
+                                <input id="captcha" type="text" class="form-control" placeholder="验证码" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 <span class="input-group-addon"><a href="javascript:;"><img id="captcha-image" src=""></a></span>
                             </div>
                             <p class="input-addon-desc">验证码，点击图片可更换</p>
@@ -59,8 +59,7 @@
                             <div class="inputbox">
                                 <div class="input-group input-group-lg">
                                     <span class="input-group-addon"><i class="fa fa-clock-o fa-fw"></i></span>
-                                    <input id="oath-code" type="text" class="form-control" placeholder="6位数字身份验证器动态验证码"
-                                           data-toggle="popover" data-trigger="manual" data-placement="top">
+                                    <input id="oath-code" type="text" class="form-control" placeholder="6位数字身份验证器动态验证码" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 </div>
                             </div>
                         </div>
