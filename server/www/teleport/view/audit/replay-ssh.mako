@@ -21,7 +21,7 @@
         }
         #xterm-box {
             margin: 10px 0;
-            background-color: #1e1e1e;
+##             background-color: #1e1e1e;
             ##             margin-top: 10px;
             ##             margin-bottom: 48px;
             ##             width: 300px;
@@ -31,7 +31,8 @@
         .terminal {
             font-family: Consolas, Monaco, courier-new, courier, monospace;
             color: #b7b7b7;
-            font-size: 12px;
+            font-size: 13px;
+            display: inline-block;
         }
 
         .terminal {
@@ -42,11 +43,12 @@
             ##             background-color: transparent;
             ##             display:none;
             ##             overflow: auto;
+            padding-right:17px;
         }
 
         .terminal .xterm-rows {
 ##             margin:5px;
-##             padding:5px;
+            padding:5px;
             border-right: 1px dashed #363636;
             background-color: #1e1e1e;
         }

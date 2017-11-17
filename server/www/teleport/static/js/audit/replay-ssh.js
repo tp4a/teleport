@@ -50,7 +50,7 @@ $app.req_record_data = function (record_id, offset) {
     );
 };
 
-$app.on_init = function (cb_stack, cb_args) {
+$app.on_init = function (cb_stack) {
     var record_id = $app.options.record_id;
 
     $app.dom = {
@@ -63,7 +63,9 @@ $app.on_init = function (cb_stack, cb_args) {
         btn_small_font: $('#btn-small-font'),
         progress: $('#progress'),
         status: $('#play-status'),
-        xterm_box: $('#xterm-box')
+        xterm_box: $('#xterm-box'),
+        xterm_terminal: null,
+        xterm_viewport: null
     };
 
     $app.dom.progress.width($('#toolbar').width()).val(0);
@@ -74,15 +76,16 @@ $app.on_init = function (cb_stack, cb_args) {
         function (ret) {
             if (ret.code === TPE_OK) {
                 g_header = ret.data;
-                // console.log('header', g_header);
+                console.log('header', g_header);
 
                 $('#recorder-info').html(tp_format_datetime(g_header.start) + ': ' + g_header.user_name + '@' + g_header.client_ip + ' 访问 ' + g_header.account + '@' + g_header.conn_ip + ':' + g_header.conn_port);
 
                 $app.req_record_data(record_id, 0);
 
+                g_current_time = 0;
                 setTimeout(init, 1000);
             } else {
-                $tp.notify_error('请求录像数据失败'+tp_error_msg(ret.code, ret.message));
+                $tp.notify_error('请求录像数据失败：' + tp_error_msg(ret.code, ret.message));
                 console.error('load init info error ', ret.code);
             }
         },
@@ -92,12 +95,30 @@ $app.on_init = function (cb_stack, cb_args) {
     );
 
     $app.dom.btn_big_font.click(function () {
-        var obj = $('.terminal');
-        obj.css('font-size', parseInt(obj.css('font-size')) + 2);
+        if (_.isNull($app.dom.xterm_terminal))
+            return;
+        var _size = parseInt($app.dom.xterm_terminal.css('font-size'));
+        if (_size >= 24)
+            return;
+
+        $app.dom.xterm_terminal.css('font-size', _size + 1);
+
+        g_console_term.charMeasure.measure();
+        $app.adjust_viewport();
     });
+
     $app.dom.btn_small_font.click(function () {
-        var obj = $('.terminal');
-        obj.css('font-size', parseInt(obj.css('font-size')) - 2);
+        if (_.isNull($app.dom.xterm_terminal))
+            return;
+
+        var _size = parseInt($app.dom.xterm_terminal.css('font-size'));
+        if (_size <= 12)
+            return;
+
+        $app.dom.xterm_terminal.css('font-size', _size - 1);
+
+        g_console_term.charMeasure.measure();
+        $app.adjust_viewport();
     });
 
     $app.dom.btn_play.click(function () {
@@ -136,13 +157,26 @@ $app.on_init = function (cb_stack, cb_args) {
         $app.dom.btn_speed.text(speed_table[speed_offset].name);
     });
 
-//    $app.dom.progress.change(function () {
-//        var process = g_dom_progress.val();
-//        console.log('change.' + process);
-//        //var beginTime = parseInt(g_header.time_used * process / 100);
-//        speed_offset = 0;
-//        g_dom_btn_speed.text(speed_table[speed_offset].name);
-//    });
+    $app.dom.progress.mousedown(function () {
+        pause();
+    });
+    $app.dom.progress.mouseup(function () {
+        console.log(g_current_time);
+        setTimeout(function () {
+            init();
+        }, 100);
+    });
+    $app.dom.progress.mousemove(function () {
+        g_current_time = parseInt(g_header.time_used * $app.dom.progress.val() / 100);
+        $app.dom.time.text(parseInt((g_current_time) / 1000) + '/' + parseInt(g_header.time_used / 1000) + '秒');
+    });
+
+    $app.adjust_viewport = function () {
+        if (!_.isNull($app.dom.xterm_viewport)) {
+            $app.dom.xterm_viewport.width(parseInt(window.getComputedStyle($app.dom.xterm_rows[0]).width));
+            $app.dom.xterm_viewport.height(parseInt(window.getComputedStyle($app.dom.xterm_rows[0]).height) - 1);
+        }
+    };
 
     function init() {
         if (_.isNull(g_console_term)) {
@@ -150,21 +184,18 @@ $app.on_init = function (cb_stack, cb_args) {
                 cols: g_header.width,
                 rows: g_header.height
             });
-            g_console_term.open(document.getElementById('xterm-box'), false);
 
-            // g_console_term.on('resize', function (obj, x, y) {
-            //     var y = window.getComputedStyle($('#xterm-box .terminal .xterm-rows')[0]);
-            //     var w = parseInt(y.width);
-            //
-            //     // $('#xterm-box .terminal .xterm-viewport').width(w+17);
-            //
-            //     $app.dom.xterm_box.width(w + 17);
-            //     // $app.dom.progress.width(w).val(g_process);
-            // });
+            g_console_term.on('refresh', function () {
+                $app.adjust_viewport();
+            });
 
+            g_console_term.open(document.getElementById('xterm-box'), true);
+
+            $app.dom.xterm_terminal = $('#xterm-box .terminal');
+            $app.dom.xterm_rows = $('#xterm-box .terminal .xterm-rows');
+            $app.dom.xterm_viewport = $('#xterm-box .terminal .xterm-viewport');
         } else {
             g_console_term.reset(g_header.width, g_header.height);
-            // g_console_term.setOption('scrollback', g_header.height);
         }
 
         $app.dom.progress.val(0);
@@ -174,7 +205,6 @@ $app.on_init = function (cb_stack, cb_args) {
         g_need_stop = false;
         g_playing = true;
         g_finish = false;
-        g_current_time = 0;
         g_played_pkg_count = 0;
         setTimeout(done, g_record_tick);
     }
@@ -193,22 +223,18 @@ $app.on_init = function (cb_stack, cb_args) {
 
         $app.dom.status.text("正在播放");
         g_current_time += g_record_tick * speed_table[speed_offset].speed;
+
+        var _record_tick = g_record_tick;
+
         for (var i = g_played_pkg_count; i < g_data.length; i++) {
+            if (g_need_stop)
+                break;
+
             var play_data = g_data[i];
 
-            if (g_skip && play_data.a === 1) {
-                g_console_term.resize(play_data.w, play_data.h);
-                // g_console_term.setOption('scrollback', play_data.h);
-
-                g_played_pkg_count++;
-                continue;
-            }
-
-            // console.log(play_data.t, g_current_time);
             if (play_data.t < g_current_time) {
-                if(play_data.a === 1) {
+                if (play_data.a === 1) {
                     g_console_term.resize(play_data.w, play_data.h);
-                    // g_console_term.setOption('scrollback', play_data.h);
                 } else if (play_data.a === 2) {
                     g_console_term.write(play_data.d);
                 }
@@ -233,16 +259,21 @@ $app.on_init = function (cb_stack, cb_args) {
                 break;
             }
         }
+
+        if (g_need_stop)
+            return;
+
         if (g_skip) {
-            if (play_data.t - g_current_time > 500) {
+            if (play_data.t - g_current_time > 800) {
                 g_current_time = play_data.t; // - g_record_tick * speed_table[speed_offset].speed;
+                _record_tick = 800;
             }
         }
 
         // sync progress bar.
-        var _progress = parseInt((g_current_time) * 100 / g_header.time_used);
+        var _progress = parseInt(g_current_time * 100 / g_header.time_used);
         $app.dom.progress.val(_progress);
-        var temp = parseInt((g_current_time) / 1000);
+        var temp = parseInt(g_current_time / 1000);
         $app.dom.time.text(temp + '/' + parseInt(g_header.time_used / 1000) + '秒');
 
         // if all packages played
@@ -254,7 +285,8 @@ $app.on_init = function (cb_stack, cb_args) {
             g_playing = false;
             $app.dom.btn_play.children().removeClass().addClass('fa fa-play').text(' 播放');
         } else {
-            g_timer = setTimeout(done, g_record_tick);
+            if (!g_need_stop)
+                g_timer = setTimeout(done, _record_tick);
         }
     }
 
@@ -276,6 +308,8 @@ $app.on_init = function (cb_stack, cb_args) {
     }
 
     function pause() {
+        if (!_.isNull(g_timer))
+            clearTimeout(g_timer);
         $app.dom.btn_play.children().removeClass().addClass('fa fa-play').text(' 播放');
         g_need_stop = true;
         g_playing = false;
@@ -283,8 +317,9 @@ $app.on_init = function (cb_stack, cb_args) {
     }
 
     function restart() {
-        if(!_.isNull(g_timer))
+        if (!_.isNull(g_timer))
             clearTimeout(g_timer);
+        g_current_time = 0;
         init();
     }
 

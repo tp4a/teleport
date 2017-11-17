@@ -220,6 +220,10 @@ class ComandLogHandler(TPBaseHandler):
 class DoGetRecordHeaderHandler(TPBaseJsonHandler):
     @tornado.gen.coroutine
     def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY)
+        if ret != TPE_OK:
+            return
+
         args = self.get_argument('args', None)
         if args is None:
             return self.write_json(TPE_PARAM)
@@ -236,7 +240,7 @@ class DoGetRecordHeaderHandler(TPBaseJsonHandler):
 
         header, err = record.read_record_head(record_id)
         if header is None:
-            return self.write_json(err, '操作失败')
+            return self.write_json(err)
 
         return self.write_json(0, data=header)
 
