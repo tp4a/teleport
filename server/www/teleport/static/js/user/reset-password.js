@@ -72,6 +72,7 @@ $app.on_init = function (cb_stack) {
         if (event.which === 13) {
             $app.on_set_new_password();
         } else {
+            $app.hide_op_box();
             $('[data-toggle="popover"]').popover('hide');
         }
     });
@@ -231,7 +232,7 @@ $app.on_set_new_password = function () {
 
     if ($app.options.force_strong) {
         if (!tp_check_strong_password(str_password)) {
-            $app.show_op_box('error', '抱歉，不能使用弱密码！');
+            $app.show_op_box('error', tp_error_msg(TPE_FAILED, '抱歉，不能使用弱密码！'));
             $app.dom.set_password.input_password.attr('data-content', "请设置强密码：至少8位，必须包含大写字母、小写字母以及数字！").focus().popover('show');
             return;
         }

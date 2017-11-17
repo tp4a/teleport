@@ -12,6 +12,7 @@ from app.base import mail
 from app.model import user
 from app.model import group
 from app.logic.auth.password import tp_password_generate_secret
+from app.base.utils import tp_check_strong_password
 import tornado.gen
 from app.base.logger import *
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
@@ -536,6 +537,11 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
                 password = args['password']
             except:
                 return self.write_json(TPE_PARAM)
+
+            # 根据需要进行弱密码检测
+            if get_cfg().sys.password.force_strong:
+                if not tp_check_strong_password(password):
+                    return self.write_json(TPE_FAILED, '抱歉，不能使用弱密码！')
 
             err, user_id = user.check_reset_token(token)
             if err != TPE_OK:

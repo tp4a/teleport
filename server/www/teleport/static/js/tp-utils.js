@@ -304,8 +304,5 @@ function tp_check_strong_password(p) {
             s |= 8;
     }
 
-    if((s&1) && (s&2) && (s&4))
-        return true;
-    else
-        return false;
+    return !!((s & 1) && (s & 2) && (s & 4));
 }

@@ -195,6 +195,28 @@ def tp_md5file(file_name):
     return m.hexdigest()
 
 
+def tp_check_strong_password(p):
+    s = 0
+    if len(p) < 8:
+        return False
+
+    for i in range(len(p)):
+        c = ord(p[i])
+        if 48 <= c <= 57:  # 数字
+            s |= 1
+        elif 65 <= c <= 90:  # 大写字母
+            s |= 2
+        elif 97 <= c <= 122:  # 小写字母
+            s |= 4
+        else:
+            s |= 8
+
+    if (s & 1) and (s & 2) and (s & 4):
+        return True
+    else:
+        return False
+
+
 class UniqueId:
     def __init__(self):
         import builtins
@@ -215,4 +237,3 @@ def tp_unique_id():
     if '__tp_unique_id__' not in builtins.__dict__:
         builtins.__dict__['__tp_unique_id__'] = UniqueId()
     return builtins.__dict__['__tp_unique_id__'].generate()
-
