@@ -46,6 +46,7 @@ $app.on_init = function (cb_stack) {
         if (event.which === 13) {
             $app.dom.find.input_email.focus();
         } else {
+            $app.hide_op_box();
             $('[data-toggle="popover"]').popover('hide');
         }
     });
@@ -53,6 +54,7 @@ $app.on_init = function (cb_stack) {
         if (event.which === 13) {
             $app.dom.find.input_captcha.focus();
         } else {
+            $app.hide_op_box();
             $('[data-toggle="popover"]').popover('hide');
         }
     });
@@ -60,6 +62,7 @@ $app.on_init = function (cb_stack) {
         if (event.which === 13) {
             $app.on_send_find_password_email();
         } else {
+            $app.hide_op_box();
             $('[data-toggle="popover"]').popover('hide');
         }
     });
@@ -145,16 +148,20 @@ $app.on_send_find_password_email = function () {
     var str_captcha = $app.dom.find.input_captcha.val();
 
     if (str_username.length === 0) {
-        $app.show_op_box('error', '账号未填写！');
-        $app.dom.find.input_username.attr('data-content', "请填写您的账号！").focus().popover('show');
-        // $app.dom.find.input_username.focus();
+        $app.show_op_box('error', '用户名未填写！');
+        $app.dom.find.input_username.attr('data-content', "请填写您的用户名！").focus().popover('show');
         return;
     }
 
     if (str_email.length === 0) {
-        $app.show_op_box('error', '邮箱未填写！');
-        $app.dom.find.input_email.attr('data-content', "请填写您的邮箱！").focus().popover('show');
-        // $app.dom.find.input_email.focus();
+        $app.show_op_box('error', '电子邮件地址未填写！');
+        $app.dom.find.input_email.attr('data-content', "请填写您的电子邮件地址！").focus().popover('show');
+        return;
+    }
+
+    if (!tp_check_email(str_email)) {
+        $app.show_op_box('error', '无效的电子邮件地址！');
+        $app.dom.find.input_email.attr('data-content', "请检查输入的电子邮件地址！").focus().popover('show');
         return;
     }
 
@@ -205,7 +212,7 @@ $app.do_send_reset_email = function (str_username, str_email, str_captcha) {
                 $app.hide_op_box();
                 var msg = '';
                 if (ret.code === TPE_NOT_EXISTS)
-                    msg = tp_error_msg(ret.code, '没有此用户');
+                    msg = tp_error_msg(ret.code, '用户不存在，请检查输入的用户和电子邮件地址是否匹配！');
                 else
                     msg = tp_error_msg(ret.code, ret.message);
                 $app.show_op_box('error', msg);

@@ -83,10 +83,20 @@ controllers = [
     (r'/user/update-users', user.DoUpdateUsersHandler),
     #  - [json] 获取用户列表
     (r'/user/get-users', user.DoGetUsersHandler),
+    #  - 用户重设密码页面 /auth/reset-password
+    (r'/user/reset-password', user.ResetPasswordHandler),
     #  - [json] 重置密码
     (r'/user/do-reset-password', user.DoResetPasswordHandler),
-    #  - 用户重设密码页面 /auth/reset-password?token=D3672DFF256B6B6F37AF8A922D7D83B4
-    (r'/user/reset-password', user.ResetPasswordHandler),
+    #  - 用户绑定OATH
+    (r'/user/bind-oath', user.BindOathHandler),
+    #  - [json] 用户绑定OATH
+    (r'/user/gen-oath-secret', user.DoGenerateOathSecretHandler),
+    #  - 显示OATH密钥二维码
+    (r'/user/oath-secret-qrcode', user.OathSecretQrCodeHandler),
+    #  - [json] 获取用户信息
+    (r'/user/verify-user', user.DoVerifyUserHandler),
+    #  - [json] 绑定身份认证器
+    (r'/user/do-bind-oath', user.DoBindOathHandler),
 
     #  - 用户组管理页面
     (r'/user/group', user.GroupListHandler),

@@ -23,7 +23,7 @@
 
 <%block name="page_header">
     <div class="container-fluid top-navbar">
-        <div class="brand"><a href="/" target="_blank"><span class="site-logo"></span></a></div>
+        <div class="brand"><a href="/"><span class="site-logo"></span></a></div>
         <div class="breadcrumb-container">
             <ol class="breadcrumb">
                 <li><i class="fa fa-key"></i> 密码管理</li>

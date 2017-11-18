@@ -114,14 +114,14 @@ $app.on_init = function (cb_stack, cb_args) {
     });
 
     $app.dom.btn_reset_oath_code.click(function () {
-        $tp.ajax_post_json('/auth/oath-secret-reset', {},
+        $tp.ajax_post_json('/user/gen-oath-secret', {},
             function (ret) {
                 if (ret.code === TPE_OK) {
-                    $app.dom.oath_secret_image.attr('src', '/auth/oath-secret-qrcode?' + Math.random());
+                    $app.dom.oath_secret_image.attr('src', '/user/oath-secret-qrcode?' + Math.random());
                     $app.dom.tmp_oath_secret.text(ret.data.tmp_oath_secret);
                     $app.dom.dlg_reset_oath_code.modal({backdrop: 'static'});
                 } else {
-                    $tp.notify_error('发生内部错误！' + tp_error_msg(ret.code, ret.message));
+                    $tp.notify_error('无法绑定身份验证器：' + tp_error_msg(ret.code, ret.message));
                 }
             },
             function () {

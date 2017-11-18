@@ -914,8 +914,6 @@ $app.create_dlg_reset_password = function () {
     var dlg = {};
     dlg.dom_id = 'dlg-reset-password';
     dlg.field_id = -1;
-    // dlg.field_username = '';
-    // dlg.field_surname = '';
     dlg.field_email = '';
     dlg.field_password = '';
 
@@ -1025,7 +1023,6 @@ $app.create_dlg_reset_password = function () {
             function (ret) {
                 if (ret.code === TPE_OK) {
                     $tp.notify_success('用户密码重置成功！');
-                    // $app.table_users.load_data();
                     dlg.dom.dialog.modal('hide');
                 } else {
                     $tp.notify_error('用户密码重置失败：' + tp_error_msg(ret.code, ret.message));

@@ -31,7 +31,7 @@
         <ul class="nav nav-tabs">
             <li class="active"><a href="#info" data-toggle="tab">个人信息</a></li>
             <li><a href="#password" data-toggle="tab">修改密码</a></li>
-            <li><a href="#oath" data-toggle="tab">身份认证器</a></li>
+            <li><a href="#oath" data-toggle="tab">身份验证器</a></li>
         </ul>
 
         <!-- Tab panes -->

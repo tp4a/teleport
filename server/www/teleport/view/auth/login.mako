@@ -61,6 +61,7 @@
                                     <span class="input-group-addon"><i class="fa fa-clock-o fa-fw"></i></span>
                                     <input id="oath-code" type="text" class="form-control" placeholder="6位数字身份验证器动态验证码" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 </div>
+                                <p class="input-addon-desc"><a href="/user/bind-oath">尚未绑定身份验证器？</a></p>
                             </div>
                         </div>
 

@@ -77,14 +77,29 @@ label {
   font-family: @font-family-mono;
 }
 
+.important {
+  //font-weight:bold;
+  color: #d45f1c;
+  //font-style: italic;
+}
+
 hr.hr-sm {
   margin-top: 5px;
   margin-bottom: 5px;
 }
 
-//==============================================
-// 重载bootstrap的样式
-//==============================================
+ul {
+  list-style: none;
+}
+
+ul.list {
+  //list-style: none;
+  margin: 0;
+  padding: 3px 0 5px 0;
+  li {
+    margin: 3px 3px 5px 10px;
+  }
+}
 
 .btn-single-line {
   white-space: nowrap;

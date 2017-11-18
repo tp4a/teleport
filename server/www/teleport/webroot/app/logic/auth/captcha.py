@@ -19,43 +19,6 @@ from wheezy.captcha.image import warp
 _captcha_chars = 'AaCDdEeFfHJjKkLMmNnPpQRTtVvWwXxYy34679'
 
 
-def __tp_captcha_generate_image():
-    captcha_image_t = captcha(
-        width=136,
-        height=36,
-        drawings=[
-            background(color='#eeeeee'),
-            # curve(color='#4388d5', width=1, number=10),
-            curve(color='#4388d5', width=1, number=10),
-            curve(color='#af6fff', width=3, number=16),
-            noise(number=80, color='#eeeeee', level=3),
-            text(fonts=[
-                os.path.join(get_cfg().res_path, 'fonts', '001.ttf')
-            ],
-                # font_sizes=(28, 34, 36, 32),
-                font_sizes=(34, 40, 32, 36),
-                color='#63a8f5',
-                # squeeze_factor=1.2,
-                squeeze_factor=0.9,
-                drawings=[
-                    # warp(dx_factor=0.05, dy_factor=0.05),
-                    warp(dx_factor=0.03, dy_factor=0.03),
-                    rotate(angle=20),
-                    offset()
-                ]),
-            # curve(color='#af6fff', width=3, number=16),
-            noise(number=30, color='#eeeeee', level=2),
-            smooth(),
-        ])
-
-    chars_t = random.sample(_captcha_chars, 4)
-    image = captcha_image_t(chars_t)
-
-    out = io.BytesIO()
-    image.save(out, "jpeg", quality=100)
-    return ''.join(chars_t), out.getvalue()
-
-
 def tp_captcha_generate_image(h):
     if h >= 32:
         captcha_image_t = captcha(
@@ -67,20 +30,6 @@ def tp_captcha_generate_image(h):
                 curve(color='#4388d5', width=1, number=10),
                 curve(color='#af6fff', width=3, number=16),
                 noise(number=80, color='#eeeeee', level=3),
-                # text(fonts=[
-                #     os.path.join(get_cfg().res_path, 'fonts', '001.ttf')
-                # ],
-                #     # font_sizes=(28, 34, 36, 32),
-                #     font_sizes=(24, 20, 22, 26),
-                #     color='#cecece',
-                #     # squeeze_factor=1.2,
-                #     squeeze_factor=0.9,
-                #     drawings=[
-                #         # warp(dx_factor=0.05, dy_factor=0.05),
-                #         warp(dx_factor=0.03, dy_factor=0.03),
-                #         rotate(angle=20),
-                #         offset()
-                #     ]),
                 smooth(),
                 text(fonts=[
                     os.path.join(get_cfg().res_path, 'fonts', '001.ttf')

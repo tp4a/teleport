@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-
 
-import os
-import json
-import time
 import csv
+import json
+import os
+import time
 
-from app.const import *
-from app.base.configs import get_cfg
-from app.base.session import session_manager
-from app.base import mail
-from app.model import user
-from app.model import group
-from app.logic.auth.password import tp_password_generate_secret
-from app.base.utils import tp_check_strong_password
 import tornado.gen
-from app.base.logger import *
+from app.base import mail
+from app.base.configs import get_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
+from app.base.logger import *
+from app.base.session import session_manager
+from app.base.utils import tp_check_strong_password
+from app.base.utils import tp_timestamp_utc_now
+from app.logic.auth.oath import tp_oath_verify_code
+from app.const import *
+from app.logic.auth.oath import tp_oath_generate_secret, tp_oath_generate_qrcode
+from app.logic.auth.password import tp_password_generate_secret, tp_password_verify
+from app.model import group
+from app.model import syslog
+from app.model import user
 
 
 class UserListHandler(TPBaseHandler):
@@ -108,6 +112,98 @@ class ResetPasswordHandler(TPBaseHandler):
                 param['force_strong'] = get_cfg().sys.password.force_strong
 
         self.render('user/reset-password.mako', page_param=json.dumps(param))
+
+
+class BindOathHandler(TPBaseHandler):
+    def get(self):
+        self.render('user/bind-oath.mako')
+
+
+class DoGenerateOathSecretHandler(TPBaseJsonHandler):
+    def post(self):
+        oath_secret = tp_oath_generate_secret()
+        self.set_session('tmp_oath_secret', oath_secret)
+        return self.write_json(TPE_OK, data={"tmp_oath_secret": oath_secret})
+
+
+class DoVerifyUserHandler(TPBaseJsonHandler):
+    def post(self):
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            username = args['username']
+            password = args['password']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        err, user_info = user.login(self, username, password=password)
+        if err != TPE_OK:
+            if err == TPE_NOT_EXISTS:
+                err = TPE_USER_AUTH
+            return self.write_json(err)
+
+        return self.write_json(TPE_OK)
+
+
+class DoBindOathHandler(TPBaseJsonHandler):
+    def post(self):
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            username = args['username']
+            password = args['password']
+            oath_code = args['oath_code']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        err, user_info = user.login(self, username, password=password)
+        if err != TPE_OK:
+            if err == TPE_NOT_EXISTS:
+                err = TPE_USER_AUTH
+            return self.write_json(err)
+
+        secret = self.get_session('tmp_oath_secret', None)
+        if secret is None:
+            return self.write_json(TPE_FAILED, '内部错误！')
+        self.del_session('tmp_oath_secret')
+
+        if not tp_oath_verify_code(secret, oath_code):
+            return self.write_json(TPE_OATH_MISMATCH)
+
+        err = user.update_oath_secret(user_info['id'], secret)
+        if err != TPE_OK:
+            return self.write_json(err)
+
+        return self.write_json(TPE_OK)
+
+
+class OathSecretQrCodeHandler(TPBaseHandler):
+    def get(self):
+        username = self.get_argument('u', None)
+        if username is None:
+            user_info = self.get_current_user()
+            username = user_info['username']
+
+        username = username + '@teleport'
+
+        secret = self.get_session('tmp_oath_secret', None)
+
+        img_data = tp_oath_generate_qrcode(username, secret)
+
+        self.set_header('Content-Type', 'image/jpeg')
+        self.write(img_data)
 
 
 class DoGetUserInfoHandler(TPBaseJsonHandler):

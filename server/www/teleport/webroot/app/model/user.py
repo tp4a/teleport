@@ -8,6 +8,8 @@ from app.base.logger import log
 from app.base.utils import tp_timestamp_utc_now, tp_generate_random
 from app.const import *
 from app.model import syslog
+from app.logic.auth.password import tp_password_verify
+from app.logic.auth.oath import tp_oath_verify_code
 
 
 def get_user_info(user_id):
@@ -44,6 +46,67 @@ def get_by_username(username):
         s.recorder[0]['privilege'] = 0
 
     return TPE_OK, s.recorder[0]
+
+
+def login(handler, username, password=None, oath_code=None):
+    sys_cfg = get_cfg().sys
+
+    err, user_info = get_by_username(username)
+    if err != TPE_OK:
+        # if err == TPE_NOT_EXISTS:
+        #     syslog.sys_log({'username': username, 'surname': username}, handler.request.remote_ip, TPE_NOT_EXISTS, '用户身份验证失败，用户`{}`不存在'.format(username))
+        return err, None
+
+    print(user_info)
+
+    if user_info.privilege == 0:
+        # 尚未为此用户设置角色
+        return TPE_PRIVILEGE, None
+
+    if user_info['state'] == TP_STATE_LOCKED:
+        # 用户已经被锁定，如果系统配置为一定时间后自动解锁，则更新一下用户信息
+        if sys_cfg.login.lock_timeout != 0:
+            if tp_timestamp_utc_now() - user_info.lock_time > sys_cfg.login.lock_timeout * 60:
+                user_info.fail_count = 0
+                user_info.state = TP_STATE_NORMAL
+        if user_info['state'] == TP_STATE_LOCKED:
+            syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_LOCKED, '用户已被临时锁定')
+            return TPE_USER_LOCKED, None
+    elif user_info['state'] == TP_STATE_DISABLED:
+        syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_DISABLED, '用户已被禁用')
+        return TPE_USER_DISABLED, None
+    elif user_info['state'] != TP_STATE_NORMAL:
+        syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, '用户身份验证失败，系统内部错误')
+        return TPE_FAILED, None
+
+    err_msg = ''
+    if password is not None:
+        # 如果系统配置了密码有效期，则检查用户的密码是否失效
+        if sys_cfg.password.timeout != 0:
+            pass
+
+        if not tp_password_verify(password, user_info['password']):
+            err, is_locked = update_fail_count(handler, user_info)
+            if is_locked:
+                err_msg = '用户被临时锁定！'
+            syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, '登录失败，密码错误！{}'.format(err_msg))
+            return TPE_USER_AUTH, None
+
+    if oath_code is not None:
+        # use oath
+        if len(user_info['oath_secret']) == 0:
+            return TPE_OATH_MISMATCH, None
+
+        if not tp_oath_verify_code(user_info['oath_secret'], oath_code):
+            err, is_locked = update_fail_count(handler, user_info)
+            if is_locked:
+                err_msg = '用户被临时锁定！'
+            syslog.sys_log(user_info, handler.request.remote_ip, TPE_OATH_MISMATCH, "登录失败，身份验证器动态验证码错误！{}".format(err_msg))
+            return TPE_OATH_MISMATCH, None
+
+    del user_info['password']
+    del user_info['oath_secret']
+    return TPE_OK, user_info
 
 
 def get_users(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
@@ -339,7 +402,19 @@ def update_login_info(handler, user_id):
           ''.format(db.table_prefix,
                     login_time=_time_now, ip=handler.request.remote_ip, user_id=user_id
                     )
-    db_ret = db.exec(sql)
+    if db.exec(sql):
+        return TPE_OK
+    else:
+        return TPE_DATABASE
+
+
+def update_oath_secret(user_id, oath_secret):
+    db = get_db()
+    sql = 'UPDATE `{dbtp}user` SET oath_secret="{secret}" WHERE id={user_id}'.format(dbtp=db.table_prefix, secret=oath_secret, user_id=user_id)
+    if db.exec(sql):
+        return TPE_OK
+    else:
+        return TPE_DATABASE
 
 
 def update_users_state(handler, user_ids, state):
@@ -467,16 +542,6 @@ def remove_users(handler, users):
 #         return -102
 #
 #
-# def update_oath_secret(user_id, oath_secret):
-#     db = get_db()
-#     sql = 'UPDATE `{}account` SET `oath_secret`="{}" WHERE `account_id`={}'.format(db.table_prefix, oath_secret, int(user_id))
-#     db_ret = db.exec(sql)
-#     if db_ret:
-#         return 0
-#     else:
-#         return -102
-
-
 # def get_user_list(with_admin=False):
 #     db = get_db()
 #     ret = list()
