@@ -491,7 +491,8 @@ class AppConfig(BaseAppConfig):
         if not self.sys.login.is_exists('lock_timeout'):
             self.sys.login.lock_timeout = 30  # 30 min
         if not self.sys.login.is_exists('auth'):
-            self.sys.login.auth = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA | TP_LOGIN_AUTH_USERNAME_OATH | TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH
+            # self.sys.login.auth = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA | TP_LOGIN_AUTH_USERNAME_OATH | TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH
+            self.sys.login.auth = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA | TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH
 
         # =====================================
         # SMTP相关

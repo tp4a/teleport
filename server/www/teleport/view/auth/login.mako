@@ -32,7 +32,7 @@
                             <div class="inputbox">
                                 <div class="input-group input-group-lg">
                                     <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-                                    <input data-field="username" type="text" class="form-control" placeholder="账号：邮箱地址或手机号" data-toggle="popover" data-trigger="manual" data-placement="top">
+                                    <input data-field="username" type="text" class="form-control" placeholder="用户名" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 </div>
                             </div>
 
@@ -58,7 +58,7 @@
                         <div id="login-area-oath" style="display:none;">
                             <div class="inputbox">
                                 <div class="input-group input-group-lg">
-                                    <span class="input-group-addon"><i class="fa fa-clock-o fa-fw"></i></span>
+                                    <span class="input-group-addon"><i class="fa fa-shield fa-fw"></i></span>
                                     <input id="oath-code" type="text" class="form-control" placeholder="6位数字身份验证器动态验证码" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 </div>
                                 <p class="input-addon-desc"><a href="/user/bind-oath">尚未绑定身份验证器？</a></p>

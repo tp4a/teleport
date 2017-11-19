@@ -198,7 +198,7 @@ $app.do_account_login = function (username, password, captcha, oath, is_remember
                 window.location.href = $app.options.ref;
             } else {
                 $app.hide_op_box();
-                $app.show_op_box('error', '无法登录TELEPORT：' + tp_error_msg(ret.code, ret.message));
+                $app.show_op_box('error', '登录失败：' + tp_error_msg(ret.code, ret.message));
                 console.log(ret);
             }
 

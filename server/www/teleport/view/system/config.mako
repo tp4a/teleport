@@ -41,17 +41,17 @@
                         <td colspan="2" class="title">密码策略</td>
                     </tr>
                     <tr>
-                        <td class="key">找回密码</td>
+                        <td class="key">重置密码</td>
                         <td class="value">
-                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable">允许用户找回密码</div>
-                            <span class="desc">关闭此功能，只能由管理员为用户重置密码。默认开启。</span>
+                            <div id="sec-allow-reset-password" class="tp-checkbox tp-editable">允许用户通过邮件重置密码</div>
+                            <span class="desc">关闭此功能，只能由管理员为用户手工重置密码。默认开启。</span>
                         </td>
                     </tr>
                     <tr>
                         <td class="key">密码强度</td>
                         <td class="value">
                             <div id="sec-force-strong-password" class="tp-checkbox tp-editable">强制使用强密码</div>
-                            <span class="desc">至少8个英文字符，必须包含大写字母、小写字母、数字和标点符号。默认开启。</span>
+                            <span class="desc">至少8个英文字符，必须包含大写字母、小写字母和数字。默认开启。</span>
                         </td>
                     </tr>
                     <tr>
@@ -91,24 +91,24 @@
                             注意：可以为每个用户指定特定的认证方式。
                         </td>
                     </tr>
-                    <tr>
-                        <td class="key"></td>
-                        <td class="value">
-                            <div id="sec-auth-username-password" class="tp-checkbox tp-editable">用户名 + 密码</div>
-                        </td>
-                    </tr>
+##                     <tr>
+##                         <td class="key"></td>
+##                         <td class="value">
+##                             <div id="sec-auth-username-password" class="tp-checkbox tp-editable">用户名 + 密码</div>
+##                         </td>
+##                     </tr>
                     <tr>
                         <td class="key"></td>
                         <td class="value">
                             <div id="sec-auth-username-password-captcha" class="tp-checkbox tp-editable">用户名 + 密码 + 验证码</div>
                         </td>
                     </tr>
-                    <tr>
-                        <td class="key"></td>
-                        <td class="value">
-                            <div id="sec-auth-username-oath" class="tp-checkbox tp-editable">用户名 + 身份认证器动态密码</div>
-                        </td>
-                    </tr>
+##                     <tr>
+##                         <td class="key"></td>
+##                         <td class="value">
+##                             <div id="sec-auth-username-oath" class="tp-checkbox tp-editable">用户名 + 身份认证器动态密码</div>
+##                         </td>
+##                     </tr>
                     <tr>
                         <td class="key"></td>
                         <td class="value">

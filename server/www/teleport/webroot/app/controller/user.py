@@ -32,11 +32,12 @@ class UserListHandler(TPBaseHandler):
         is_sys_smtp = False
         if get_cfg().sys.loaded:
             smtp = get_cfg().sys.smtp
-            if len(smtp.server) > 0 and smtp.port != -1:
+            if len(smtp.server) > 0:
                 is_sys_smtp = True
 
         param = {
-            'sys_smtp': is_sys_smtp
+            'sys_smtp': is_sys_smtp,
+            'sys_cfg': get_cfg().sys
         }
 
         self.render('user/user-list.mako', page_param=json.dumps(param))
@@ -182,7 +183,7 @@ class DoBindOathHandler(TPBaseJsonHandler):
         if not tp_oath_verify_code(secret, oath_code):
             return self.write_json(TPE_OATH_MISMATCH)
 
-        err = user.update_oath_secret(user_info['id'], secret)
+        err = user.update_oath_secret(self, user_info['id'], secret)
         if err != TPE_OK:
             return self.write_json(err)
 
@@ -384,15 +385,15 @@ class DoImportHandler(TPBaseHandler):
                         failed.append({'line': line, 'error': '格式错误，用户账号必须填写。'})
                         continue
 
-                    _auth = csv_recorder[self.IDX_AUTH_TYPE].strip()
-                    if len(_auth) == 0:
-                        failed.append({'line': line, 'error': '格式错误，用户认证类型必须填写。'})
-                        continue
-                    try:
-                        _auth = int(_auth)
-                    except:
-                        failed.append({'line': line, 'error': '格式错误，用户认证类型必须是数字。'})
-                        continue
+                    # _auth = csv_recorder[self.IDX_AUTH_TYPE].strip()
+                    # if len(_auth) == 0:
+                    #     failed.append({'line': line, 'error': '格式错误，用户认证类型必须填写。'})
+                    #     continue
+                    # try:
+                    #     _auth = int(_auth)
+                    # except:
+                    #     failed.append({'line': line, 'error': '格式错误，用户认证类型必须是数字。'})
+                    #     continue
 
                     _email = csv_recorder[self.IDX_EMAIL].strip()
                     # if len(_email) == 0:
@@ -406,7 +407,7 @@ class DoImportHandler(TPBaseHandler):
                     u['_id'] = 0
                     u['username'] = _username
                     u['surname'] = csv_recorder[self.IDX_SURNAME].strip()
-                    u['auth'] = _auth
+                    # u['auth'] = _auth
                     u['email'] = _email
                     u['mobile'] = csv_recorder[self.IDX_MOBILE].strip()
                     u['qq'] = csv_recorder[self.IDX_QQ].strip()
@@ -512,6 +513,7 @@ class DoUpdateUserHandler(TPBaseJsonHandler):
         try:
             args['id'] = int(args['id'])
             args['role'] = int(args['role'])
+            args['auth_type'] = int(args['auth_type'])
             args['username'] = args['username'].strip()
             args['surname'] = args['surname'].strip()
             args['email'] = args['email'].strip()

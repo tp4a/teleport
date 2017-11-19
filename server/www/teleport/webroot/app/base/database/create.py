@@ -121,7 +121,7 @@ class DatabaseInit:
         f.append('surname varchar(64) DEFAULT ""')
         # type 1=本地账号，2=LDAP（待扩展）
         f.append('type int(11) DEFAULT 1')
-        # auth_type: 0=使用全局设置，1=密码+校验码，2=密码+OATH
+        # auth_type: 0=使用全局设置，其他参考 TP_LOGIN_AUTH_XXX 系列值
         f.append('auth_type int(11) DEFAULT 0')
         # password: 登录密码（如果是LDAP账号则忽略此字段）
         f.append('password varchar(128) DEFAULT ""')

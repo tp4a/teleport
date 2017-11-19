@@ -114,6 +114,14 @@ class DoLoginHandler(TPBaseJsonHandler):
                 syslog.sys_log({'username': username, 'surname': username}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
             return self.write_json(err)
 
+        # 判断此用户是否被允许使用当前登录认证方式
+        auth_type = user_info.auth_type
+        if auth_type == 0:
+            auth_type = sys_cfg.login.auth
+
+        if (auth_type & login_type) != login_type:
+            return self.write_json(TPE_USER_AUTH, '不允许使用此身份认证方式')
+
         # err, user_info = user.get_by_username(username)
         # if err != TPE_OK:
         #     if err == TPE_NOT_EXISTS:
@@ -255,101 +263,3 @@ class VerifyCaptchaHandler(TPBaseJsonHandler):
 #             return self.write_json(-4, '发生异常')
 #
 #
-# class OathVerifyHandler(TPBaseUserAuthJsonHandler):
-#     def post(self):
-#         args = self.get_argument('args', None)
-#         if args is not None:
-#             try:
-#                 args = json.loads(args)
-#                 code = args['code']
-#             except:
-#                 return self.write_json(-2, '参数错误')
-#         else:
-#             return self.write_json(-1, '参数错误')
-#
-#         # secret = self.get_session('tmp_oath_secret', None)
-#         # if secret is None:
-#         #     return self.write_json(-1, '内部错误！')
-#         # self.del_session('tmp_oath_secret')
-#
-#         user_info = self.get_current_user()
-#         if not user.verify_oath(user_info['id'], code):
-#             return self.write_json(-3, '验证失败！')
-#         else:
-#             return self.write_json(0)
-#
-#
-# class OathSecretQrCodeHandler(TPBaseUserAuthJsonHandler):
-#     def get(self):
-#         secret = self.get_session('tmp_oath_secret', None)
-#
-#         user_info = self.get_current_user()
-#         img_data = tp_oath_generate_qrcode(user_info['name'], secret)
-#
-#         # secret = '6OHEKKJPLMUBJ4EHCT5ZT5YLUQ'
-#         #
-#         # print('TOPT should be:', get_totp_token(secret))
-#         # # cur_input = int(time.time()) // 30
-#         # # print('cur-input', cur_input, int(time.time()))
-#         # # window = 10
-#         # # for i in range(cur_input - (window - 1) // 2, cur_input + window // 2 + 1):  # [cur_input-(window-1)//2, cur_input + window//2]
-#         # #     print(get_totp_token(secret, i))
-#         #
-#         # msg = 'otpauth://totp/Admin?secret={}&issuer=teleport'.format(secret)
-#         # qr = qrcode.QRCode(
-#         #     version=1,
-#         #     error_correction=qrcode.constants.ERROR_CORRECT_L,
-#         #     box_size=4,
-#         #     border=4,
-#         # )
-#         # qr.add_data(msg)
-#         # qr.make(fit=True)
-#         # img = qr.make_image()
-#         #
-#         # # img = qrcode.make(msg)
-#         # out = io.BytesIO()
-#         # img.save(out, "jpeg", quality=100)
-#         # # web.header('Content-Type','image/jpeg')
-#         # # img.save('test.png')
-#         self.set_header('Content-Type', 'image/jpeg')
-#         self.write(img_data)
-#
-#
-# class OathSecretResetHandler(TPBaseUserAuthJsonHandler):
-#     def post(self):
-#         oath_secret = tp_oath_generate_secret()
-#         self.set_session('tmp_oath_secret', oath_secret)
-#         return self.write_json(0, data={"tmp_oath_secret": oath_secret})
-#
-#
-# class OathUpdateSecretHandler(TPBaseUserAuthJsonHandler):
-#     def post(self):
-#         args = self.get_argument('args', None)
-#         if args is not None:
-#             try:
-#                 args = json.loads(args)
-#                 code = args['code']
-#             except:
-#                 return self.write_json(-2, '参数错误')
-#         else:
-#             return self.write_json(-1, '参数错误')
-#
-#         secret = self.get_session('tmp_oath_secret', None)
-#         if secret is None:
-#             return self.write_json(-1, '内部错误！')
-#         self.del_session('tmp_oath_secret')
-#
-#         if tp_oath_verify_code(secret, code):
-#             user_info = self.get_current_user()
-#             try:
-#                 ret = user.update_oath_secret(user_info['id'], secret)
-#                 if 0 != ret:
-#                     return self.write_json(ret)
-#             except:
-#                 log.e('update user oath-secret failed.')
-#                 return self.write_json(-2, '发生异常')
-#
-#             # self.set_session('oath_secret', secret)
-#             return self.write_json(0)
-#         else:
-#             return self.write_json(-3, '验证失败！')

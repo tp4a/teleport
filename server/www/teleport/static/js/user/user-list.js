@@ -1,6 +1,9 @@
 "use strict";
 
 $app.on_init = function (cb_stack) {
+
+    console.log($app.options);
+
     $app.dom = {
         btn_refresh_user_list: $('#btn-refresh-user-list'),
         btn_create_user: $('#btn-create-user'),
@@ -648,6 +651,7 @@ $app.create_dlg_edit_user = function () {
     dlg.dom_id = 'dlg-edit-user';
     dlg.field_id = -1;  // 用户id（仅编辑模式）
     dlg.field_role = -1;
+    dlg.field_auth_type = 0;
     dlg.field_username = '';
     dlg.field_surname = '';
     dlg.field_email = '';
@@ -657,18 +661,25 @@ $app.create_dlg_edit_user = function () {
     dlg.field_desc = '';
 
     dlg.dom = {
-        dialog: $('#' + dlg.dom_id),
-        dlg_title: $('#' + dlg.dom_id + ' [data-field="dlg-title"]'),
-        select_role: $('#edit-user-role'),
-        edit_username: $('#edit-user-username'),
-        edit_surname: $('#edit-user-surname'),
-        edit_email: $('#edit-user-email'),
-        edit_mobile: $('#edit-user-mobile'),
-        edit_qq: $('#edit-user-qq'),
-        edit_wechat: $('#edit-user-wechat'),
-        edit_desc: $('#edit-user-desc'),
-        msg: $('#edit-user-message'),
-        btn_save: $('#btn-edit-user-save'),
+        dialog: $('#' + dlg.dom_id)
+        , dlg_title: $('#' + dlg.dom_id + ' [data-field="dlg-title"]')
+        , select_role: $('#edit-user-role')
+        , edit_username: $('#edit-user-username')
+        , edit_surname: $('#edit-user-surname')
+        , edit_email: $('#edit-user-email')
+        , edit_mobile: $('#edit-user-mobile')
+        , edit_qq: $('#edit-user-qq')
+        , edit_wechat: $('#edit-user-wechat')
+        , edit_desc: $('#edit-user-desc')
+        , msg: $('#edit-user-message')
+        , btn_save: $('#btn-edit-user-save')
+
+        , btn_auth_use_sys_config: $('#sec-auth-use-sys-config')
+        // , btn_auth_username_password: $('#sec-auth-username-password')
+        , btn_auth_username_password_captcha: $('#sec-auth-username-password-captcha')
+        // , btn_auth_username_oath: $('#sec-auth-username-oath')
+        , btn_auth_username_password_oath: $('#sec-auth-username-password-oath')
+
     };
 
     dlg.init = function (cb_stack) {
@@ -703,14 +714,81 @@ $app.create_dlg_edit_user = function () {
             dlg.dom.selected_role.text(name);
         });
 
+        dlg.dom.btn_auth_use_sys_config.click(function () {
+            if ($(this).hasClass('tp-selected')) {
+                // $(this).removeClass('tp-selected');
+                // dlg.dom.btn_auth_username_password.addClass('tp-editable');
+                // dlg.dom.btn_auth_username_password_captcha.addClass('tp-editable');
+                // dlg.dom.btn_auth_username_oath.addClass('tp-editable');
+                // dlg.dom.btn_auth_username_password_oath.addClass('tp-editable');
+                dlg._use_sys_auth_config(false);
+            } else {
+                dlg._use_sys_auth_config(true);
+            }
+        });
+        // dlg.dom.btn_auth_username_password.click(function () {
+        //     dlg._switch_auth($(this));
+        // });
+        dlg.dom.btn_auth_username_password_captcha.click(function () {
+            dlg._switch_auth($(this));
+        });
+        // dlg.dom.btn_auth_username_oath.click(function () {
+        //     dlg._switch_auth($(this));
+        // });
+        dlg.dom.btn_auth_username_password_oath.click(function () {
+            dlg._switch_auth($(this));
+        });
+
         dlg.dom.btn_save.click(dlg.on_save);
 
         cb_stack.exec();
     };
 
+    dlg._use_sys_auth_config = function (use_sys) {
+        if (use_sys) {
+            dlg.dom.btn_auth_use_sys_config.addClass('tp-selected');
+            // dlg.dom.btn_auth_username_password.removeClass('tp-editable tp-selected');
+            dlg.dom.btn_auth_username_password_captcha.removeClass('tp-editable tp-selected');
+            // dlg.dom.btn_auth_username_oath.removeClass('tp-editable tp-selected');
+            dlg.dom.btn_auth_username_password_oath.removeClass('tp-editable tp-selected');
+
+            var auth_type = $app.options.sys_cfg.login.auth;
+            // if (auth_type & TP_LOGIN_AUTH_USERNAME_PASSWORD)
+            //     dlg.dom.btn_auth_username_password.addClass('tp-selected');
+            if (auth_type & TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA)
+                dlg.dom.btn_auth_username_password_captcha.addClass('tp-selected');
+            // if (auth_type & TP_LOGIN_AUTH_USERNAME_OATH)
+            //     dlg.dom.btn_auth_username_oath.addClass('tp-selected');
+            if (auth_type & TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH)
+                dlg.dom.btn_auth_username_password_oath.addClass('tp-selected');
+        } else {
+            dlg.dom.btn_auth_use_sys_config.removeClass('tp-selected');
+            // dlg.dom.btn_auth_username_password.addClass('tp-editable');
+            dlg.dom.btn_auth_username_password_captcha.addClass('tp-editable');
+            // dlg.dom.btn_auth_username_oath.addClass('tp-editable');
+            dlg.dom.btn_auth_username_password_oath.addClass('tp-editable');
+        }
+    };
+    dlg._switch_auth = function (obj) {
+        if (!obj.hasClass('tp-editable'))
+            return;
+        if (obj.hasClass('tp-selected')) {
+            obj.removeClass('tp-selected');
+        } else {
+            obj.addClass('tp-selected');
+        }
+    };
+
     dlg.init_fields = function (user) {
         var role_name = '选择角色';
         dlg.field_role = -1;
+        dlg.field_auth_type = 0;
+
+        // dlg.dom.btn_auth_use_sys_config.removeClass('tp-selected');
+        // dlg.dom.btn_auth_username_password.removeClass('tp-selected');
+        // dlg.dom.btn_auth_username_password_captcha.removeClass('tp-selected');
+        // dlg.dom.btn_auth_username_oath.removeClass('tp-selected');
+        // dlg.dom.btn_auth_username_password_oath.removeClass('tp-selected');
 
         if (_.isUndefined(user)) {
             dlg.dom.dlg_title.html('创建用户账号');
@@ -724,6 +802,7 @@ $app.create_dlg_edit_user = function () {
             dlg.dom.edit_desc.val('');
         } else {
             dlg.field_id = user.id;
+            dlg.field_auth_type = user.auth_type;
             dlg.dom.dlg_title.html('编辑：' + user.surname);
 
             var _name = $app.role_id2name(user.role_id);
@@ -741,6 +820,21 @@ $app.create_dlg_edit_user = function () {
             dlg.dom.edit_desc.val(user.desc);
         }
         dlg.dom.selected_role.text(role_name);
+
+        if (dlg.field_auth_type === 0) {
+            dlg._use_sys_auth_config(true);
+        } else {
+            dlg._use_sys_auth_config(false);
+            var auth_type = dlg.field_auth_type;
+            // if (auth_type & TP_LOGIN_AUTH_USERNAME_PASSWORD)
+            //     dlg.dom.btn_auth_username_password.addClass('tp-selected');
+            if (auth_type & TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA)
+                dlg.dom.btn_auth_username_password_captcha.addClass('tp-selected');
+            // if (auth_type & TP_LOGIN_AUTH_USERNAME_OATH)
+            //     dlg.dom.btn_auth_username_oath.addClass('tp-selected');
+            if (auth_type & TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH)
+                dlg.dom.btn_auth_username_password_oath.addClass('tp-selected');
+        }
     };
 
     dlg.show_create = function () {
@@ -774,16 +868,28 @@ $app.create_dlg_edit_user = function () {
             $tp.notify_error('请指定 4~32 个英文字母和数字组成的用户账号，注意，账号不区分大小写！');
             return false;
         }
-        // if (dlg.field_email.length === 0) {
-        //     dlg.dom.edit_email.focus();
-        //     $tp.notify_error('请指定用户的邮箱地址！');
-        //     return false;
-        // }
 
         if (dlg.field_email.length > 0) {
             if (!tp_check_email(dlg.field_email)) {
                 dlg.dom.edit_email.focus();
                 $tp.notify_error('邮箱地址格式有误哦！');
+                return false;
+            }
+        }
+
+        dlg.field_auth_type = 0;
+        if (!dlg.dom.btn_auth_use_sys_config.hasClass('tp-selected')) {
+            // if (dlg.dom.btn_auth_username_password.hasClass('tp-selected'))
+            //     dlg.field_auth_type |= TP_LOGIN_AUTH_USERNAME_PASSWORD;
+            if (dlg.dom.btn_auth_username_password_captcha.hasClass('tp-selected'))
+                dlg.field_auth_type |= TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA;
+            // if (dlg.dom.btn_auth_username_oath.hasClass('tp-selected'))
+            //     dlg.field_auth_type |= TP_LOGIN_AUTH_USERNAME_OATH;
+            if (dlg.dom.btn_auth_username_password_oath.hasClass('tp-selected'))
+                dlg.field_auth_type |= TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH;
+
+            if(dlg.field_auth_type === 0) {
+                $tp.notify_error('请设置用户登录时身份验证方式！');
                 return false;
             }
         }
@@ -799,15 +905,16 @@ $app.create_dlg_edit_user = function () {
 
         // 如果id为-1表示创建，否则表示更新
         $tp.ajax_post_json('/user/update-user', {
-                id: dlg.field_id,
-                role: dlg.field_role,
-                username: dlg.field_username,
-                surname: dlg.field_surname,
-                email: dlg.field_email,
-                mobile: dlg.field_mobile,
-                qq: dlg.field_qq,
-                wechat: dlg.field_wechat,
-                desc: dlg.field_desc
+                id: dlg.field_id
+                , role: dlg.field_role
+                , auth_type: dlg.field_auth_type
+                , username: dlg.field_username
+                , surname: dlg.field_surname
+                , email: dlg.field_email
+                , mobile: dlg.field_mobile
+                , qq: dlg.field_qq
+                , wechat: dlg.field_wechat
+                , desc: dlg.field_desc
             },
             function (ret) {
                 if (ret.code === TPE_OK) {

@@ -189,9 +189,9 @@ def create_users(handler, user_list, success, failed):
             continue
 
         sql = 'INSERT INTO `{}user` (`type`, `auth_type`, `username`, `surname`, `role_id`, `state`, `email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `desc`) VALUES ' \
-              '(1, {auth}, "{username}", "{surname}", 0, {state}, "{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
+              '(1, 0, "{username}", "{surname}", 0, {state}, "{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
               ''.format(db.table_prefix,
-                        auth=user['auth'], username=user['username'], surname=user['surname'], state=TP_STATE_NORMAL, email=user['email'],
+                        username=user['username'], surname=user['surname'], state=TP_STATE_NORMAL, email=user['email'],
                         creator_id=operator['id'], create_time=_time_now, last_login=0, last_chpass=0, desc=user['desc'])
         db_ret = db.exec(sql)
         if not db_ret:
@@ -228,8 +228,8 @@ def create_user(handler, args):
     #     return TPE_EXISTS, 0
 
     sql = 'INSERT INTO `{}user` (`type`, `auth_type`, `username`, `surname`, `role_id`, `state`, `email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `desc`) VALUES ' \
-          '(1, 1, "{username}", "{surname}", {role}, {state}, "{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
-          ''.format(db.table_prefix,
+          '(1, {auth_type}, "{username}", "{surname}", {role}, {state}, "{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
+          ''.format(db.table_prefix, auth_type=args['auth_type'],
                     username=args['username'], surname=args['surname'], role=args['role'], state=TP_STATE_NORMAL, email=args['email'],
                     creator_id=operator['id'],
                     create_time=_time_now, last_login=0, last_chpass=0, desc=args['desc'])
@@ -256,9 +256,9 @@ def update_user(handler, args):
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
-    sql = 'UPDATE `{}user` SET `surname`="{surname}", `role_id`={role}, `email`="{email}", mobile="{mobile}", qq="{qq}", wechat="{wechat}", `desc`="{desc}" WHERE id={user_id};' \
+    sql = 'UPDATE `{}user` SET surname="{surname}", auth_type={auth_type}, role_id={role}, email="{email}", mobile="{mobile}", qq="{qq}", wechat="{wechat}", `desc`="{desc}" WHERE id={user_id};' \
           ''.format(db.table_prefix,
-                    surname=args['surname'], role=args['role'], email=args['email'],
+                    surname=args['surname'], auth_type=args['auth_type'], role=args['role'], email=args['email'],
                     mobile=args['mobile'], qq=args['qq'], wechat=args['wechat'], desc=args['desc'],
                     user_id=args['id']
                     )
@@ -312,7 +312,7 @@ def set_password(handler, user_id, password):
         return TPE_DATABASE
 
     if operator['id'] == 0:
-        syslog.sys_log({'username': name, 'surname': surname}, handler.request.remote_ip, TPE_OK, "用户 {} 通过找回密码功能重置了密码".format(name))
+        syslog.sys_log({'username': name, 'surname': surname}, handler.request.remote_ip, TPE_OK, "用户 {} 通过邮件方式重置了密码".format(name))
     else:
         syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "为用户 {} 手动重置了密码".format(name))
 
@@ -408,10 +408,22 @@ def update_login_info(handler, user_id):
         return TPE_DATABASE
 
 
-def update_oath_secret(user_id, oath_secret):
+def update_oath_secret(handler, user_id, oath_secret):
     db = get_db()
+
+    s = SQL(db)
+    err = s.select_from('user', ['username', 'surname'], alt_name='u').where('u.id={user_id}'.format(user_id=user_id)).query()
+    if err != TPE_OK:
+        return err
+    if len(s.recorder) == 0:
+        return TPE_NOT_EXISTS
+
+    username = s.recorder[0].username
+    surname = s.recorder[0].surname
+
     sql = 'UPDATE `{dbtp}user` SET oath_secret="{secret}" WHERE id={user_id}'.format(dbtp=db.table_prefix, secret=oath_secret, user_id=user_id)
     if db.exec(sql):
+        syslog.sys_log({'username': username, 'surname': surname}, handler.request.remote_ip, TPE_OK, "用户 {} 绑定了身份认证器".format(username))
         return TPE_OK
     else:
         return TPE_DATABASE

@@ -312,9 +312,9 @@ $app.create_config_sec = function () {
         input_session_timeout: $('#sec-session-timeout'),
         input_login_retry: $('#sec-login-retry'),
         input_lock_timeout: $('#sec-lock-timeout'),
-        btn_auth_username_password: $('#sec-auth-username-password'),
+        // btn_auth_username_password: $('#sec-auth-username-password'),
         btn_auth_username_password_captcha: $('#sec-auth-username-password-captcha'),
-        btn_auth_username_oath: $('#sec-auth-username-oath'),
+        // btn_auth_username_oath: $('#sec-auth-username-oath'),
         btn_auth_username_password_oath: $('#sec-auth-username-password-oath')
     };
 
@@ -353,13 +353,16 @@ $app.create_config_sec = function () {
         _sec.dom.input_login_retry.val(login.retry);
         _sec.dom.input_lock_timeout.val(login.lock_timeout);
 
-        _sec.dom.btn_auth_username_password.removeClass('tp-selected');
-        if (login.auth & TP_LOGIN_AUTH_USERNAME_PASSWORD)
-            _sec.dom.btn_auth_username_password.addClass('tp-selected');
+        // _sec.dom.btn_auth_username_password.removeClass('tp-selected');
+        // if (login.auth & TP_LOGIN_AUTH_USERNAME_PASSWORD)
+        //     _sec.dom.btn_auth_username_password.addClass('tp-selected');
+        _sec.dom.btn_auth_username_password_captcha.removeClass('tp-selected');
         if (login.auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA)
             _sec.dom.btn_auth_username_password_captcha.addClass('tp-selected');
-        if (login.auth & TP_LOGIN_AUTH_USERNAME_OATH)
-            _sec.dom.btn_auth_username_oath.addClass('tp-selected');
+        // _sec.dom.btn_auth_username_oath.removeClass('tp-selected');
+        // if (login.auth & TP_LOGIN_AUTH_USERNAME_OATH)
+        //     _sec.dom.btn_auth_username_oath.addClass('tp-selected');
+        _sec.dom.btn_auth_username_password_oath.removeClass('tp-selected');
         if (login.auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH)
             _sec.dom.btn_auth_username_password_oath.addClass('tp-selected');
     };
@@ -374,12 +377,12 @@ $app.create_config_sec = function () {
         var _login_lock_timeout = parseInt(_sec.dom.input_lock_timeout.val());
 
         var _login_auth = 0;
-        if (_sec.dom.btn_auth_username_password.hasClass('tp-selected'))
-            _login_auth |= TP_LOGIN_AUTH_USERNAME_PASSWORD;
+        // if (_sec.dom.btn_auth_username_password.hasClass('tp-selected'))
+        //     _login_auth |= TP_LOGIN_AUTH_USERNAME_PASSWORD;
         if (_sec.dom.btn_auth_username_password_captcha.hasClass('tp-selected'))
             _login_auth |= TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA;
-        if (_sec.dom.btn_auth_username_oath.hasClass('tp-selected'))
-            _login_auth |= TP_LOGIN_AUTH_USERNAME_OATH;
+        // if (_sec.dom.btn_auth_username_oath.hasClass('tp-selected'))
+        //     _login_auth |= TP_LOGIN_AUTH_USERNAME_OATH;
         if (_sec.dom.btn_auth_username_password_oath.hasClass('tp-selected'))
             _login_auth |= TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH;
 

@@ -205,6 +205,24 @@
                                 <textarea id="edit-user-desc" class="form-control" style="resize: vertical;"></textarea>
                             </div>
                         </div>
+
+
+                        <div class="form-group form-group-sm">
+                            <label for="edit-user-desc" class="col-sm-2 control-label">认证方式：</label>
+                            <div class="col-sm-10">
+                                <div class="control-desc">当前使用系统默认设置</div>
+                                <ul class="list">
+                                    <li><div id="sec-auth-use-sys-config" class="tp-checkbox tp-editable">使用系统默认设置</div></li>
+                                    <li><hr class="hr-sm"/></li>
+##                                     <li><div id="sec-auth-username-password" class="tp-checkbox">用户名 + 密码</div></li>
+                                    <li><div id="sec-auth-username-password-captcha" class="tp-checkbox">用户名 + 密码 + 验证码</div></li>
+##                                     <li><div id="sec-auth-username-oath" class="tp-checkbox">用户名 + 身份认证器动态密码</div></li>
+                                    <li><div id="sec-auth-username-password-oath" class="tp-checkbox">用户名 + 密码 + 身份认证器动态密码</div></li>
+                                </ul>
+                            </div>
+                        </div>
+
+
                     </div>
                 </div>
 
@@ -266,7 +284,7 @@
                         </div>
                         <div class="form-group form-group-sm">
                             <div class="col-sm-10 col-sm-offset-1">
-                                为用户设置新密码，并立即生效，需要通过其它方式通知用户新密码的内容。
+                                为用户设置新密码，并立即生效，需要通过其它方式告知用户新密码。
                             </div>
                         </div>
 

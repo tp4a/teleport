@@ -1047,7 +1047,7 @@ textarea.cert_pub {
 //.form-control-static
 .tp-checkbox {
   display: inline-block;
-    color: #6487ad;
+  color: #747474;
 
   &.tp-disabled {
     cursor: not-allowed;
@@ -1063,18 +1063,22 @@ textarea.cert_pub {
     font-family: 'FontAwesome';
   }
 
-  &.tp-editable {
-    cursor: pointer;
-    &:hover {
-      color: #459dee;
-    }
-  }
-
   &.tp-selected, &.tp-checked {
-    color: #3374b0;
+    //color: #3374b0;
     &:before {
       content: "\f046";
       font-family: 'FontAwesome';
+    }
+  }
+
+  &.tp-editable {
+    cursor: pointer;
+      color: #459dee;
+    &:hover {
+      color: #53af43;
+    }
+    &.tp-selected, &.tp-checked {
+      color: #3374b0;
     }
   }
 }
