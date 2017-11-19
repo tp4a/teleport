@@ -259,7 +259,7 @@ $tp.create_table = function (options) {
         if (_tbl.options.data_source && _tbl.options.data_source.exclude)
             args.exclude = _tbl.options.data_source.exclude;
 
-        console.log('when load, args:', args);
+        // console.log('when load, args:', args);
         // console.log('when load, order:', _order);
         // console.log('when load, limit:', _limit);
 

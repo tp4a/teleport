@@ -31,7 +31,7 @@
                         <div id="login-area-username" class="login-account">
                             <div class="inputbox">
                                 <div class="input-group input-group-lg">
-                                    <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
+                                    <span class="input-group-addon"><i class="fa fa-user-circle-o fa-fw"></i></span>
                                     <input data-field="username" type="text" class="form-control" placeholder="用户名" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 </div>
                             </div>

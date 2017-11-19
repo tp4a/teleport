@@ -28,7 +28,7 @@ void TsSessionManager::_thread_loop(void)
 		ex_sleep_ms(1000);
 		if (m_stop_flag)
 			return;
-		_check_connect_info();
+		_remove_expired_connect_info();
 	}
 }
 
@@ -38,7 +38,7 @@ void TsSessionManager::_set_stop_flag(void)
 }
 
 
-void TsSessionManager::_check_connect_info(void)
+void TsSessionManager::_remove_expired_connect_info(void)
 {
 	// 超过30秒未进行连接的connect-info会被移除
 

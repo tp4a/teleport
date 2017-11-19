@@ -49,7 +49,7 @@ $app.create_controls = function (cb_stack) {
                 //sort: true,
                 //header_render: 'filter_search_host',
                 render: 'user',
-                fields: {user_name: 'user_name', user_surname: 'user_surname'}
+                fields: {user_username: 'user_username', user_surname: 'user_surname'}
             },
             {
                 title: '来源',
@@ -65,7 +65,7 @@ $app.create_controls = function (cb_stack) {
                 //sort: true,
                 //header_render: 'filter_search_host',
                 render: 'remote',
-                fields: {account_name: 'account_name', real_host_ip: 'real_host_ip', host_ip: 'host_ip', host_port: 'host_port'}
+                fields: {acc_username: 'acc_username', host_ip: 'host_ip', conn_ip: 'conn_ip', conn_port: 'conn_port'}
             },
             {
                 title: '远程协议',
@@ -128,20 +128,19 @@ $app.create_controls = function (cb_stack) {
     //-------------------------------
     // 用户列表相关过滤器
     //-------------------------------
-    $app.table_session_filter_search_host = $tp.create_table_header_filter_search($app.table_session, {
+    $tp.create_table_header_filter_search($app.table_session, {
         name: 'search_host',
         place_holder: '搜索：主机IP/名称/描述/资产编号/等等...'
     });
     // 从cookie中读取用户分页限制的选择
-    var _per_page = Cookies.get($app.page_id('ops_session') + '_per_page');
-    $app.table_session_paging = $tp.create_table_paging($app.table_session, 'table-session-paging',
+    $tp.create_table_paging($app.table_session, 'table-session-paging',
         {
-            per_page: _per_page,
+            per_page: Cookies.get($app.page_id('ops_session') + '_per_page'),
             on_per_page_changed: function (per_page) {
                 Cookies.set($app.page_id('ops_session') + '_per_page', per_page, {expires: 365});
             }
         });
-    $app.table_session_pagination = $tp.create_table_pagination($app.table_session, 'table-session-pagination');
+    $tp.create_table_pagination($app.table_session, 'table-session-pagination');
 
     //-------------------------------
     // 页面控件事件绑定
@@ -253,22 +252,20 @@ $app.on_table_session_render_created = function (render) {
     };
 
     render.user = function (row_id, fields) {
-        if (_.isNull(fields.user_surname) || fields.user_surname.length === 0 || fields.user_name === fields.user_surname) {
-            return fields.user_name;
+        if (_.isNull(fields.user_surname) || fields.user_surname.length === 0 || fields.user_username === fields.user_surname) {
+            return fields.user_username;
         } else {
-            return fields.user_name + ' (' + fields.user_surname + ')';
+            return fields.user_username + ' (' + fields.user_surname + ')';
         }
     };
 
     render.remote = function (row_id, fields) {
-        if (fields.real_host_ip === fields.host_ip) {
-            return fields.account_name + '@' + fields.real_host_ip;// + ':' + fields.host_port;
-        } else {
-            return fields.account_name + '@' + fields.real_host_ip;// + '(' + fields.host_ip + ':' + fields.host_port + ')';
-        }
+        if (fields.host_ip === fields.conn_ip)
+            return fields.acc_username + '@' + fields.host_ip + ':' + fields.conn_port;
+        else
+            return '<div title="由' + fields.conn_ip + ':' + fields.conn_port + '路由">' + fields.acc_username + '@' + fields.host_ip + '</div>';
     };
 
-    // fields: {protocol_type: 'protocol_type', protocol_sub_type: 'protocol_sub_type'}
     render.protocol = function (row_id, fields) {
         switch (fields.protocol_sub_type) {
             case 100:

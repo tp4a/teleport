@@ -226,7 +226,7 @@ void SshSession::save_record() {
 
 
 int SshSession::_on_auth_password_request(ssh_session session, const char *user, const char *password, void *userdata) {
-	// 这里拿到的user就是我们要的session-id，password可以用ticket来填充，作为额外判断用户是否被允许访问的依据。
+	// 这里拿到的user就是我们要的session-id。
 	SshSession *_this = (SshSession *)userdata;
 	_this->m_sid = user;
 	EXLOGV("[ssh] authenticating, session-id: %s\n", _this->m_sid.c_str());
@@ -435,6 +435,10 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 ssh_channel SshSession::_on_new_channel_request(ssh_session session, void *userdata) {
 	// 客户端尝试打开一个通道（然后才能通过这个通道发控制命令或者收发数据）
 	EXLOGV("[ssh] client open channel\n");
+
+	// TODO: 记录会话开始，应该在这里进行，这样可以为每一个通道记录不同的日志，避免类似SecureCRT多标签页使用“复制会话”这样的功能将多个标签页中的记录混杂在一起。
+	// TODO: 每个通道应该记录单独的录像文件
+
 
 	SshSession *_this = (SshSession *)userdata;
 

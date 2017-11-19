@@ -42,9 +42,18 @@ $app.create_controls = function (cb_stack) {
             {
                 title: 'ID',
                 key: 'id',
-                sort: true,
-                sort_asc: false,
+                // sort: true,
+                // sort_asc: false,
                 fields: {id: 'id'}
+            },
+            {
+                title: '会话ID',
+                key: 'sid',
+                // sort: true,
+                // sort_asc: false,
+                render: 'sid',
+                width: 60,
+                fields: {sid: 'sid'}
             },
             {
                 title: '用户',
@@ -237,6 +246,10 @@ $app.on_table_host_render_created = function (render) {
         return _ret.join('');
     };
 
+    render.sid = function(row_id, fields) {
+        return '<span class="mono">'+fields.sid+'</span>';
+    };
+
     render.user = function (row_id, fields) {
         if (_.isNull(fields.user_surname) || fields.user_surname.length === 0 || fields.user_username === fields.user_surname) {
             return fields.user_username;
@@ -357,14 +370,14 @@ $app.on_table_host_render_created = function (render) {
         var ret = [];
 
         if (fields.state >= TP_SESS_STAT_STARTED || fields.state === TP_SESS_STAT_ERR_RESET) {
-            //if (fields.time_end === 0) {
             if (fields.state === TP_SESS_STAT_STARTED) {
                 ret.push('<a href="javascript:;" class="btn btn-sm btn-warning" data-action="sync" data-record-id="' + fields.id + '"><i class="fa fa-clone fa-fw"></i> 同步</a>&nbsp');
             } else {
-                ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" data-action="replay" data-record-id="' + fields.id + '"><i class="fa fa-caret-square-o-right fa-fw"></i> 播放</a>&nbsp');
+                // if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_SSH_SFTP)
+                    ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" data-action="replay" data-record-id="' + fields.id + '"><i class="fa fa-caret-square-o-right fa-fw"></i> 回放</a>&nbsp');
             }
             if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_RDP_DESKTOP) {
-                ret.push('<a href="javascript:;" class="btn btn-sm btn-info" data-action="cmd" data-record-id="' + fields.id + '"><i class="fa fa-file-text-o fa-fw"></i> 日志</a>&nbsp');
+                ret.push('<a href="javascript:;" class="btn btn-sm btn-info" data-action="cmd" data-record-id="' + fields.id + '"><i class="fa fa-list-alt fa-fw"></i> 日志</a>&nbsp');
             }
         }
 

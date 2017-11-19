@@ -16,7 +16,7 @@ import tornado.gen
 
 def get_records(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
     s = SQL(get_db())
-    s.select_from('record', ['id', 'user_id', 'host_id', 'acc_id', 'state', 'user_username', 'user_surname', 'host_ip', 'conn_ip', 'conn_port', 'client_ip', 'acc_username', 'protocol_type', 'protocol_sub_type', 'time_begin', 'time_end'], alt_name='r')
+    s.select_from('record', ['id', 'sid', 'user_id', 'host_id', 'acc_id', 'state', 'user_username', 'user_surname', 'host_ip', 'conn_ip', 'conn_port', 'client_ip', 'acc_username', 'protocol_type', 'protocol_sub_type', 'time_begin', 'time_end'], alt_name='r')
 
     str_where = ''
     _where = list()

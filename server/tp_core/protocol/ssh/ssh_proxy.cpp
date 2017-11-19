@@ -176,7 +176,7 @@ void SshProxy::_dump_sftp_sessions()
 	ts_sftp_sessions::iterator it = m_sftp_sessions.begin();
 	for (; it != m_sftp_sessions.end(); ++it)
 	{
-		EXLOGD("ssh-proxy session: sid: %s\n", it->first.c_str());
+		EXLOGD("[ssh] ssh-proxy session: sid: %s\n", it->first.c_str());
 	}
 }
 

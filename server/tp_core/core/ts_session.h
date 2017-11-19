@@ -73,7 +73,9 @@ protected:
 
 private:
 	void _gen_session_id(ex_astr& sid, const TS_CONNECT_INFO* info, int len);
-	void _check_connect_info(void);
+
+	// 定时检查，超过30秒未进行连接的connect-info会被移除
+	void _remove_expired_connect_info(void);
 
 private:
 	ExThreadLock m_lock;
