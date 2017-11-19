@@ -23,8 +23,8 @@ $app.create_controls = function (cb_stack) {
     var table_record_options = {
         dom_id: 'table-record',
         data_source: {
-            type: 'ajax-post',
-            url: '/audit/get-records',
+            type: 'ajax-post'
+            ,url: '/audit/get-records'
             //exclude: {'state': [TP_SESS_STAT_RUNNING, TP_SESS_STAT_STARTED]}
         },
         column_default: {sort: false, align: 'left'},
@@ -42,15 +42,13 @@ $app.create_controls = function (cb_stack) {
             {
                 title: 'ID',
                 key: 'id',
-                // sort: true,
-                // sort_asc: false,
+                sort: true,
+                sort_asc: false,
                 fields: {id: 'id'}
             },
             {
                 title: '会话ID',
                 key: 'sid',
-                // sort: true,
-                // sort_asc: false,
                 render: 'sid',
                 width: 60,
                 fields: {sid: 'sid'}
@@ -94,8 +92,8 @@ $app.create_controls = function (cb_stack) {
             {
                 title: '开始时间',
                 key: 'time_begin',
-                sort: true,
-                sort_asc: false,
+                // sort: true,
+                // sort_asc: false,
                 render: 'time_begin',
                 fields: {time_begin: 'time_begin'}
             },
@@ -162,19 +160,6 @@ $app.create_controls = function (cb_stack) {
     $app.dom.btn_refresh_record.click(function () {
         $app.table_record.load_data();
     });
-    // $app.dom.chkbox_host_select_all.click(function () {
-    //     var _objects = $('#' + $app.table_record.dom_id + ' tbody').find('[data-check-box]');
-    //     if ($(this).is(':checked')) {
-    //         $.each(_objects, function (i, _obj) {
-    //             $(_obj).prop('checked', true);
-    //         });
-    //     } else {
-    //         $.each(_objects, function (i, _obj) {
-    //             $(_obj).prop('checked', false);
-    //         });
-    //     }
-    // });
-    //$app.dom.btn_remove_record.click($app.on_btn_remove_record_click);
 
     cb_stack.exec();
 };
@@ -273,9 +258,9 @@ $app.on_table_host_render_created = function (render) {
             case 200:
                 return '<span class="label label-success">SSH</span>';
             case 201:
-                return '<span class="label label-success">SFTP</span>';
+                return '<span class="label label-info">SFTP</span>';
             case 300:
-                return '<span class="label label-success">TELNET</span>';
+                return '<span class="label label-warning">TELNET</span>';
             default:
                 return '<span class="label label-danger">未知</span>';
         }
@@ -371,9 +356,9 @@ $app.on_table_host_render_created = function (render) {
 
         if (fields.state >= TP_SESS_STAT_STARTED || fields.state === TP_SESS_STAT_ERR_RESET) {
             if (fields.state === TP_SESS_STAT_STARTED) {
-                ret.push('<a href="javascript:;" class="btn btn-sm btn-warning" data-action="sync" data-record-id="' + fields.id + '"><i class="fa fa-clone fa-fw"></i> 同步</a>&nbsp');
+                //ret.push('<a href="javascript:;" class="btn btn-sm btn-warning" data-action="sync" data-record-id="' + fields.id + '"><i class="fa fa-clone fa-fw"></i> 同步</a>&nbsp');
             } else {
-                // if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_SSH_SFTP)
+                if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_SSH_SFTP)
                     ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" data-action="replay" data-record-id="' + fields.id + '"><i class="fa fa-caret-square-o-right fa-fw"></i> 回放</a>&nbsp');
             }
             if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_RDP_DESKTOP) {
@@ -395,8 +380,6 @@ $app.on_table_host_header_created = function (header) {
 
     // 表格内嵌过滤器的事件绑定在这时进行（也可以延期到整个表格创建完成时进行）
     header._table_ctrl.get_filter_ctrl('search').on_created();
-    // header._table_ctrl.get_filter_ctrl('role').on_created();
-    // header._table_ctrl.get_filter_ctrl('state').on_created();
 };
 
 $app.get_selected_record = function (tbl) {

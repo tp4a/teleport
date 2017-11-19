@@ -17,24 +17,33 @@
 #define TS_SSH_CHANNEL_TYPE_SHELL		1
 #define TS_SSH_CHANNEL_TYPE_SFTP		2
 
-#define TS_SSH_DATA_FROM_CLIENT		1
-#define TS_SSH_DATA_FROM_SERVER		2
-
-typedef struct TS_SSH_CHANNEL_INFO
-{
-	int type;	// TS_SSH_CHANNEL_TYPE_SHELL or TS_SSH_CHANNEL_TYPE_SFTP
-	ssh_channel channel;
-
-	TS_SSH_CHANNEL_INFO()
-	{
-		type = TS_SSH_CHANNEL_TYPE_UNKNOWN;
-		channel = NULL;
-	}
-}TS_SSH_CHANNEL_INFO;
-
-typedef std::map<ssh_channel, TS_SSH_CHANNEL_INFO*> ts_ssh_channel_map;
+#define TP_SSH_CLIENT_SIDE		1
+#define TP_SSH_SERVER_SIDE		2
 
 class SshProxy;
+class SshSession;
+
+class TP_SSH_CHANNEL_PAIR {
+
+	friend class SshSession;
+
+public:
+	TP_SSH_CHANNEL_PAIR();
+
+private:
+	int type;	// TS_SSH_CHANNEL_TYPE_SHELL or TS_SSH_CHANNEL_TYPE_SFTP
+	ssh_channel cli_channel;
+	ssh_channel srv_channel;
+
+	TppSshRec rec;
+
+	int retcode;
+	int db_id;
+};
+
+typedef std::list<TP_SSH_CHANNEL_PAIR*> tp_channels;
+
+
 
 class SshSession : public ExThreadBase
 {
@@ -44,9 +53,7 @@ public:
 
 	SshProxy* get_proxy(void) { return m_proxy; }
 
-
-	TS_SSH_CHANNEL_INFO* _get_cli_channel(ssh_channel srv_channel);
-	TS_SSH_CHANNEL_INFO* _get_srv_channel(ssh_channel cli_channel);
+	TP_SSH_CHANNEL_PAIR* _get_channel_pair(int channel_side, ssh_channel channel);
 
 	void client_ip(const char* ip) { m_client_ip = ip; }
 	const char* client_ip(void) const { return m_client_ip.c_str(); }
@@ -56,23 +63,21 @@ public:
 	void save_record();
 
 protected:
-	// 继承自 TppSessionBase
-	bool _on_session_begin(const TPP_CONNECT_INFO* info);
-	bool _on_session_end(void);
-
-
 	void _thread_loop(void);
 	void _set_stop_flag(void);
 
-	void _process_ssh_command(int from, const ex_u8* data, int len);
-	void _process_sftp_command(const ex_u8* data, int len);
+	void _session_error(int err_code);
+	bool _on_session_begin(TP_SSH_CHANNEL_PAIR* cp);
+	void _on_session_end(TP_SSH_CHANNEL_PAIR* cp);
+
+
+	void _process_ssh_command(TppSshRec* rec, int from, const ex_u8* data, int len);
+	void _process_sftp_command(TppSshRec* rec, const ex_u8* data, int len);
 
 private:
 	void _run(void);
 
 	void _close_channels(void);
-
-	void _enter_sftp_mode(void);
 
 	static int _on_auth_password_request(ssh_session session, const char *user, const char *password, void *userdata);
 	static ssh_channel _on_new_channel_request(ssh_session session, void *userdata);
@@ -89,10 +94,6 @@ private:
 	static void _on_server_channel_close(ssh_session session, ssh_channel channel, void* userdata);
 
 private:
-	int m_retcode;
-	int m_db_id;
-
-	TppSshRec m_rec;
 
 	SshProxy* m_proxy;
 	ssh_session m_cli_session;
@@ -103,6 +104,8 @@ private:
 	ex_astr m_client_ip;
 	ex_u16 m_client_port;
 
+	TPP_CONNECT_INFO* m_conn_info;
+
 	ex_astr m_sid;
 	ex_astr m_conn_ip;
 	ex_u16 m_conn_port;
@@ -111,12 +114,10 @@ private:
 	int m_auth_type;
 
 	bool m_is_first_server_data;
-	bool m_is_sftp;
 
 	bool m_is_logon;
 	// 一个ssh_session中可以打开多个ssh_channel
-	ts_ssh_channel_map m_channel_cli_srv;	// 通过客户端通道查找服务端通道
-	ts_ssh_channel_map m_channel_srv_cli;	// 通过服务端通道查找客户端通道
+	tp_channels m_channels;
 
 	bool m_have_error;
 

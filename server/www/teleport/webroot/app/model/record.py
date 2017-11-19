@@ -293,9 +293,9 @@ def session_begin(sid, user_id, host_id, acc_id, user_username, acc_username, ho
         return TPE_OK, record_id
 
 
-def session_update(record_id, state):
+def session_update(record_id, protocol_sub_type, state):
     db = get_db()
-    sql = 'UPDATE `{}record` SET state={} WHERE id={};'.format(db.table_prefix, int(state), int(record_id))
+    sql = 'UPDATE `{}record` SET protocol_sub_type={}, state={} WHERE id={};'.format(db.table_prefix, protocol_sub_type, int(state), int(record_id))
     return db.exec(sql)
 
 

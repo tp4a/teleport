@@ -359,9 +359,9 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 		return;
 	}
 
-	info->ref_count = 0;
-	info->ticket_start = ex_get_tick_count();
-
+// 	info->ref_count = 0;
+// 	info->ticket_start = ex_get_tick_count();
+// 
 	// 生成一个session-id（内部会避免重复）
 	ex_astr sid;
 	if (!g_session_mgr.request_session(sid, info)) {

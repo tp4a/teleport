@@ -54,6 +54,8 @@ void tpp_free_connect_info(TPP_CONNECT_INFO* info)
 	if (NULL == info)
 		return;
 
+	g_session_mgr.free_connect_info(info->sid);
+
 	free(info->sid);
 	free(info->user_username);
 	free(info->host_ip);
@@ -90,8 +92,8 @@ bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id)
 	return ts_web_rpc_session_begin(sinfo, *db_id);
 }
 
-bool tpp_session_update(int db_id, int state) {
-	return ts_web_rpc_session_update(db_id, state);
+bool tpp_session_update(int db_id, int protocol_sub_type, int state) {
+	return ts_web_rpc_session_update(db_id, protocol_sub_type, state);
 }
 
 bool tpp_session_end(const char* sid, int db_id, int ret)

@@ -32,7 +32,7 @@ $app.create_controls = function (cb_stack) {
                 // title: '<input type="checkbox" id="user-list-select-all" value="">',
                 title: '',
                 key: 'chkbox',
-                sort: false,
+                //sort: false,
                 width: 36,
                 align: 'center',
                 render: 'make_check_box',
@@ -41,6 +41,8 @@ $app.create_controls = function (cb_stack) {
             {
                 title: 'ID',
                 key: 'id',
+                sort: true,
+                sort_asc: false,
                 fields: {id: 'id'}
             },
             {

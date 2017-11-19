@@ -44,7 +44,7 @@ typedef struct TPP_CONNECT_INFO
 typedef TPP_CONNECT_INFO* (*TPP_GET_CONNNECT_INFO_FUNC)(const char* sid);
 typedef void(*TPP_FREE_CONNECT_INFO_FUNC)(TPP_CONNECT_INFO* info);
 typedef bool(*TPP_SESSION_BEGIN_FUNC)(const TPP_CONNECT_INFO* info, int* db_id);
-typedef bool(*TPP_SESSION_UPDATE_FUNC)(int db_id, int state);
+typedef bool(*TPP_SESSION_UPDATE_FUNC)(int db_id, int protocol_sub_type, int state);
 typedef bool(*TPP_SESSION_END_FUNC)(const char* sid, int db_id, int ret);
 
 

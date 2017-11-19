@@ -263,11 +263,12 @@ bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id)
 	return true;
 }
 
-bool ts_web_rpc_session_update(int record_id, int state) {
+bool ts_web_rpc_session_update(int record_id, int protocol_sub_type, int state) {
 	Json::FastWriter json_writer;
 	Json::Value jreq;
 	jreq["method"] = "session_update";
 	jreq["param"]["rid"] = record_id;
+	jreq["param"]["protocol_sub_type"] = protocol_sub_type;
 	jreq["param"]["code"] = state;
 
 	ex_astr json_param;

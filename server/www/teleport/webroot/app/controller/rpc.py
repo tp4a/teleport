@@ -90,10 +90,16 @@ class RpcHandler(TPBaseJsonHandler):
             return self.write_json(TPE_OK, data={'rid': record_id})
 
     def _session_update(self, param):
-        if 'rid' not in param or 'code' not in param:
+        try:
+            rid = param['rid']
+            protocol_sub_type = param['protocol_sub_type']
+            code = param['code']
+        except:
+            return self.write_json(TPE_PARAM)
+        if 'rid' not in param or 'code' not in param :
             return self.write_json(TPE_PARAM)
 
-        if not record.session_update(param['rid'], param['code']):
+        if not record.session_update(rid, protocol_sub_type, code):
             return self.write_json(TPE_DATABASE, 'can not write database.')
         else:
             return self.write_json(TPE_OK)

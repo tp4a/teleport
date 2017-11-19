@@ -40,6 +40,8 @@ $app.req_record_data = function (record_id, offset) {
                     $app.req_record_data(record_id, g_data_offset);
                 }
             } else {
+                $app.dom.status.text("读取录像数据失败：" + tp_error_msg(ret.code));
+                $tp.notify_error('读取录像数据失败：' + tp_error_msg(ret.code, ret.message));
                 console.log('req_record_info error ', ret.code);
             }
         },
@@ -76,16 +78,17 @@ $app.on_init = function (cb_stack) {
         function (ret) {
             if (ret.code === TPE_OK) {
                 g_header = ret.data;
-                // console.log('header', g_header);
+                console.log('header', g_header);
 
                 $('#recorder-info').html(tp_format_datetime(g_header.start) + ': ' + g_header.user_name + '@' + g_header.client_ip + ' 访问 ' + g_header.account + '@' + g_header.conn_ip + ':' + g_header.conn_port);
 
                 $app.req_record_data(record_id, 0);
 
                 g_current_time = 0;
-                setTimeout(init, 1000);
+                //setTimeout(init, 500);
+                init_and_play();
             } else {
-                $tp.notify_error('请求录像数据失败：' + tp_error_msg(ret.code, ret.message));
+                $tp.notify_error('读取录像信息失败：' + tp_error_msg(ret.code, ret.message));
                 console.error('load init info error ', ret.code);
             }
         },
@@ -161,9 +164,9 @@ $app.on_init = function (cb_stack) {
         pause();
     });
     $app.dom.progress.mouseup(function () {
-        // console.log(g_current_time);
+        g_current_time = parseInt(g_header.time_used * $app.dom.progress.val() / 100);
         setTimeout(function () {
-            init();
+            init_and_play();
         }, 100);
     });
     $app.dom.progress.mousemove(function () {
@@ -178,7 +181,7 @@ $app.on_init = function (cb_stack) {
         }
     };
 
-    function init() {
+    function init_and_play() {
         if (_.isNull(g_console_term)) {
             g_console_term = new Terminal({
                 cols: g_header.width,
@@ -198,18 +201,22 @@ $app.on_init = function (cb_stack) {
             g_console_term.reset(g_header.width, g_header.height);
         }
 
+        if(g_header.pkg_count === 0)
+            return;
+
         $app.dom.progress.val(0);
-        $app.dom.status.text("正在播放");
+        // $app.dom.status.text("正在播放");
         $app.dom.btn_play.children().removeClass().addClass('fa fa-pause').text(' 暂停');
 
         g_need_stop = false;
         g_playing = true;
         g_finish = false;
         g_played_pkg_count = 0;
-        setTimeout(done, g_record_tick);
+        //setTimeout(do_play, g_record_tick);
+        do_play();
     }
 
-    function done() {
+    function do_play() {
         if (g_need_stop) {
             g_playing = false;
             return;
@@ -217,7 +224,7 @@ $app.on_init = function (cb_stack) {
 
         if (g_data.length <= g_played_pkg_count) {
             $app.dom.status.text("正在缓存数据...");
-            g_timer = setTimeout(done, g_record_tick);
+            g_timer = setTimeout(do_play, g_record_tick);
             return;
         }
 
@@ -286,7 +293,7 @@ $app.on_init = function (cb_stack) {
             $app.dom.btn_play.children().removeClass().addClass('fa fa-play').text(' 播放');
         } else {
             if (!g_need_stop)
-                g_timer = setTimeout(done, _record_tick);
+                g_timer = setTimeout(do_play, _record_tick);
         }
     }
 
@@ -304,7 +311,7 @@ $app.on_init = function (cb_stack) {
 
         g_need_stop = false;
         g_playing = true;
-        g_timer = setTimeout(done, g_record_tick);
+        g_timer = setTimeout(do_play, g_record_tick);
     }
 
     function pause() {
@@ -320,7 +327,7 @@ $app.on_init = function (cb_stack) {
         if (!_.isNull(g_timer))
             clearTimeout(g_timer);
         g_current_time = 0;
-        init();
+        init_and_play();
     }
 
     cb_stack.exec();

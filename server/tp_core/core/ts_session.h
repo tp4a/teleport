@@ -50,20 +50,10 @@ public:
 	// generate a sid for connection info.
 	bool request_session(ex_astr& sid, TS_CONNECT_INFO* info);
 
-	// +ref for connection-info.
-	bool session_connect(const ex_astr& sid, TPP_CONNECT_INFO** info);
-
-	// free connection-info created by session_connect().
-	bool free_connect_info(TPP_CONNECT_INFO* info);
-
-	// -ref for connecton-info, and release it when ref is 0.
-	bool session_end(const ex_astr& sid);
-
-	// TODO:
-	void timer();
-
-	// 根据sid得到session信息
+	// 根据sid得到连接信息（并增加引用计数）
 	bool get_connect_info(const ex_astr& sid, TS_CONNECT_INFO& info);
+	// 减少引用计数，当引用计数为0时，删除之
+	bool free_connect_info(const ex_astr& sid);
 
 protected:
 	// 线程循环

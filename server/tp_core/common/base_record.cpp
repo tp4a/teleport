@@ -1,8 +1,5 @@
 #include <memory> 
 
-//#include <sys/types.h>
-//#include <sys/stat.h>
-
 #include "base_record.h"
 
 TppRecBase::TppRecBase()

@@ -40,7 +40,7 @@ void TsSessionManager::_set_stop_flag(void)
 
 void TsSessionManager::_remove_expired_connect_info(void)
 {
-	// 超过30秒未进行连接的connect-info会被移除
+	// 超过15秒未进行连接的connect-info会被移除
 
 	ExThreadSmartLock locker(m_lock);
 
@@ -48,15 +48,13 @@ void TsSessionManager::_remove_expired_connect_info(void)
 	ts_connections::iterator it = m_connections.begin();
 	for (; it != m_connections.end(); )
 	{
-#ifdef EX_DEBUG
-		if (it->second->ref_count == 0 && _now - it->second->ticket_start >= 60*1000*60)
-#else
-		if (it->second->ref_count == 0 && _now - it->second->ticket_start >= 30000)
-#endif
+		//EXLOGD("[core] check expired connect info: [%s] %d, %d %d %d\n", it->first.c_str(), it->second->ref_count, int(_now), int(it->second->ticket_start), int(_now - it->second->ticket_start));
+		if (it->second->ref_count == 0 && _now - it->second->ticket_start > 15000)
 		{
-			EXLOGV("[core] remove connection info: %s\n", it->first.c_str());
+			EXLOGD("[core] remove connection info, because timeout: %s\n", it->first.c_str());
 			delete it->second;
 			m_connections.erase(it++);
+			EXLOGD("[core] there are %d connection info exists.\n", m_connections.size());
 		}
 		else
 		{
@@ -96,6 +94,24 @@ bool TsSessionManager::get_connect_info(const ex_astr& sid, TS_CONNECT_INFO& inf
 	return true;
 }
 
+bool TsSessionManager::free_connect_info(const ex_astr& sid) {
+	ExThreadSmartLock locker(m_lock);
+
+	ts_connections::iterator it = m_connections.find(sid);
+	if (it == m_connections.end())
+		return false;
+
+	it->second->ref_count--;
+	if (it->second->ref_count <= 0) {
+		EXLOGD("[core] remove connection info, because all connections closed: %s\n", it->first.c_str());
+		delete it->second;
+		m_connections.erase(it);
+		EXLOGD("[core] there are %d connection info exists.\n", m_connections.size());
+	}
+
+	return true;
+}
+
 bool TsSessionManager::request_session(ex_astr& sid, TS_CONNECT_INFO* info)
 {
 	ExThreadSmartLock locker(m_lock);
@@ -118,6 +134,8 @@ bool TsSessionManager::request_session(ex_astr& sid, TS_CONNECT_INFO* info)
 	}
 
 	info->sid = _sid;
+	info->ref_count = 0;
+	info->ticket_start = ex_get_tick_count();
 	m_connections.insert(std::make_pair(_sid, info));
 
 	sid = _sid;

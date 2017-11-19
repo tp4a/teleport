@@ -40,7 +40,7 @@
 //=======================================================
 // 远程连接会话状态
 //=======================================================
-#define TP_SESS_STAT_RUNNING				0		// 会话开始了，尚未结束
+#define TP_SESS_STAT_RUNNING				0		// 会话开始了，正在连接
 #define TP_SESS_STAT_END					9999	// 会话成功结束
 #define TP_SESS_STAT_ERR_AUTH_DENIED		1		// 会话结束，因为认证失败
 #define TP_SESS_STAT_ERR_CONNECT			2		// 会话结束，因为无法连接到远程主机

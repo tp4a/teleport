@@ -85,8 +85,6 @@ public:
 	bool begin(const wchar_t* base_path, const wchar_t* base_fname, int record_id, const TPP_CONNECT_INFO* info);
 	bool end();
 
-	//virtual void record(ex_u8 type, const ex_u8* data, size_t size) = 0;
-
 protected:
 	virtual bool _on_begin(const TPP_CONNECT_INFO* info) = 0;
 	virtual bool _on_end() = 0;
