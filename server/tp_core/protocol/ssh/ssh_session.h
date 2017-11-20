@@ -78,6 +78,10 @@ private:
 	void _run(void);
 
 	void _close_channels(void);
+	void _check_channels(void);
+
+// 	void _client_channel_closed(TP_SSH_CHANNEL_PAIR* cp, bool& need_removed);
+// 	void _server_channel_closed(TP_SSH_CHANNEL_PAIR* cp, bool& need_removed);
 
 	static int _on_auth_password_request(ssh_session session, const char *user, const char *password, void *userdata);
 	static ssh_channel _on_new_channel_request(ssh_session session, void *userdata);
