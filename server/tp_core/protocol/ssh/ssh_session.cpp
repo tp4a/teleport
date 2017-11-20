@@ -92,7 +92,7 @@ void SshSession::_session_error(int err_code) {
 }
 
 
-bool SshSession::_on_session_begin(TP_SSH_CHANNEL_PAIR* cp)
+bool SshSession::_record_begin(TP_SSH_CHANNEL_PAIR* cp)
 {
 	if (!g_ssh_env.session_begin(m_conn_info, &(cp->db_id))) {
 		EXLOGE("[ssh] can not save to database, channel begin failed.\n");
@@ -115,7 +115,7 @@ bool SshSession::_on_session_begin(TP_SSH_CHANNEL_PAIR* cp)
 	return true;
 }
 
-void SshSession::_on_session_end(TP_SSH_CHANNEL_PAIR* cp)
+void SshSession::_record_end(TP_SSH_CHANNEL_PAIR* cp)
 {
 	if (cp->db_id > 0)
 	{
@@ -156,7 +156,7 @@ void SshSession::_close_channels(void) {
 		}
 
 		//EXLOGD("[ssh] [channel:%d]  --- end by close all channel\n", (*it)->channel_id);
-		_on_session_end(*it);
+		_record_end(*it);
 
 		delete (*it);
 	}
@@ -189,7 +189,7 @@ void SshSession::_check_channels() {
 
 		if (closed) {
 			//EXLOGD("[ssh] [channel:%d]   --- end by check channel\n", (*it)->channel_id);
-			_on_session_end((*it));
+			_record_end((*it));
 
 			if (!ssh_channel_is_closed(cli)) {
 				ssh_channel_close(cli);
@@ -518,7 +518,7 @@ ssh_channel SshSession::_on_new_channel_request(ssh_session session, void *userd
 	cp->cli_channel = cli_channel;
 	cp->srv_channel = srv_channel;
 
-	if (!_this->_on_session_begin(cp)) {
+	if (!_this->_record_begin(cp)) {
 		ssh_channel_close(cli_channel);
 		ssh_channel_free(cli_channel);
 		ssh_channel_close(srv_channel);
@@ -595,7 +595,7 @@ void SshSession::_process_ssh_command(TppSshRec* rec, int from, const ex_u8* dat
 		}
 		else if (len == 1)
 		{
-			if (data[0] == 0x09)
+			if (data[0] == 0x08 || data[0] == 0x09)  // 08=光标左移
 			{
 				m_command_flag = 1;
 				return;
@@ -622,9 +622,11 @@ void SshSession::_process_ssh_command(TppSshRec* rec, int from, const ex_u8* dat
 		{
 			if (data[0] == 0x1b && data[1] == 0x5b)
 			{
-				// 不是命令行上的上下左右，也不是编辑模式下的上下左右，那么就忽略（应该是编辑模式下的其他输入）
-				m_cmd_char_list.clear();
-				m_cmd_char_pos = m_cmd_char_list.begin();
+				m_command_flag = 1;
+// 
+// 				// 不是命令行上的上下左右，也不是编辑模式下的上下左右，那么就忽略（应该是编辑模式下的其他输入）
+// 				m_cmd_char_list.clear();
+// 				m_cmd_char_pos = m_cmd_char_list.begin();
 				return;
 			}
 		}
@@ -647,7 +649,7 @@ void SshSession::_process_ssh_command(TppSshRec* rec, int from, const ex_u8* dat
 					ex_astr str(m_cmd_char_list.begin(), m_cmd_char_list.end());
 					ex_replace_all(str, "\r", "");
 					ex_replace_all(str, "\n", "");
-					//EXLOGD("[ssh] save cmd: [%s]", str.c_str());
+					EXLOGD("[ssh] save cmd: [%s]\n", str.c_str());
 					str += "\r\n";
 					rec->record_command(str);
 				}
@@ -726,7 +728,7 @@ void SshSession::_process_ssh_command(TppSshRec* rec, int from, const ex_u8* dat
 					esc_mode = false;
 					break;
 				}
-				case 0x43:	// 'C'
+				case 0x43:	// ^[C
 				{
 					// 光标右移
 					if (esc_arg == 0)
@@ -735,6 +737,19 @@ void SshSession::_process_ssh_command(TppSshRec* rec, int from, const ex_u8* dat
 					{
 						if (m_cmd_char_pos != m_cmd_char_list.end())
 							m_cmd_char_pos++;
+					}
+					esc_mode = false;
+					break;
+				}
+				case 0x44:  // ^[D
+				{
+					// 光标左移
+					if (esc_arg == 0)
+						esc_arg = 1;
+					for (int j = 0; j < esc_arg; ++j)
+					{
+						if (m_cmd_char_pos != m_cmd_char_list.begin())
+							m_cmd_char_pos--;
 					}
 					esc_mode = false;
 					break;
@@ -976,7 +991,7 @@ void SshSession::_on_client_channel_close(ssh_session session, ssh_channel chann
 	}
 
 	//EXLOGD("[ssh] [channel:%d]   -- end by client channel close\n", cp->channel_id);
-	_this->_on_session_end(cp);
+	_this->_record_end(cp);
 
 	if (cp->srv_channel == NULL) {
 		EXLOGW("[ssh] when client channel close, server-channel not exists.\n");
@@ -990,7 +1005,7 @@ void SshSession::_on_client_channel_close(ssh_session session, ssh_channel chann
 
 int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata)
 {
-	//EXLOG_BIN((ex_u8*)data, len, "on_client_channel_data [is_stderr=%d]:", is_stderr);
+	EXLOG_BIN((ex_u8*)data, len, "on_client_channel_data [is_stderr=%d]:", is_stderr);
 
 	SshSession *_this = (SshSession *)userdata;
 
@@ -1013,6 +1028,11 @@ int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel
 		try
 		{
 			_this->_process_ssh_command(&cp->rec, TP_SSH_CLIENT_SIDE, (ex_u8*)data, len);
+
+			ex_astr str(_this->m_cmd_char_list.begin(), _this->m_cmd_char_list.end());
+			ex_replace_all(str, "\r", "");
+			ex_replace_all(str, "\n", "");
+			EXLOGD("[ssh]   -- [%s]\n", str.c_str());
 		}
 		catch (...)
 		{
@@ -1088,9 +1108,9 @@ int SshSession::_on_client_channel_exec_request(ssh_session session, ssh_channel
 	return SSH_ERROR;
 }
 
-int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata)
-{
-	//EXLOG_BIN((ex_u8*)data, len, "on_server_channel_data [is_stderr=%d]:", is_stderr);
+int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata) {
+	EXLOG_BIN((ex_u8*)data, len, "on_server_channel_data [is_stderr=%d]:", is_stderr);
+
 	SshSession *_this = (SshSession *)userdata;
 
 	// return 0 means data not processed, so this function will be called with this data again.
@@ -1130,7 +1150,11 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 		try
 		{
 			_this->_process_ssh_command(&cp->rec, TP_SSH_SERVER_SIDE, (ex_u8*)data, len);
-			//_this->m_rec.record(TS_RECORD_TYPE_SSH_DATA, (unsigned char *)data, len);
+			ex_astr str(_this->m_cmd_char_list.begin(), _this->m_cmd_char_list.end());
+			ex_replace_all(str, "\r", "");
+			ex_replace_all(str, "\n", "");
+			EXLOGD("[ssh]   -- [%s]\n", str.c_str());
+
 			cp->rec.record(TS_RECORD_TYPE_SSH_DATA, (unsigned char *)data, len);
 		}
 		catch (...)
@@ -1208,7 +1232,7 @@ void SshSession::_on_server_channel_close(ssh_session session, ssh_channel chann
 	}
 
 	//EXLOGD("[ssh] [channel:%d]  --- end by server channel close\n", cp->channel_id);
-	_this->_on_session_end(cp);
+	_this->_record_end(cp);
 
 	// will the server-channel exist, the client-channel must exist too.
 	if (cp->cli_channel == NULL) {

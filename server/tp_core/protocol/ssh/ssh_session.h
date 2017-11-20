@@ -61,16 +61,19 @@ public:
 	void client_port(ex_u16 port) { m_client_port = port; }
 	ex_u16 client_port(void) const { return m_client_port; }
 
+	// save record cache into file. be called per 5 seconds.
 	void save_record();
 
 protected:
 	void _thread_loop(void);
 	void _set_stop_flag(void);
 
+	// record an error when session connecting or auth-ing.
 	void _session_error(int err_code);
-	bool _on_session_begin(TP_SSH_CHANNEL_PAIR* cp);
-	void _on_session_end(TP_SSH_CHANNEL_PAIR* cp);
-
+	// when client<->server channel created, start to record.
+	bool _record_begin(TP_SSH_CHANNEL_PAIR* cp);
+	// stop record because channel closed.
+	void _record_end(TP_SSH_CHANNEL_PAIR* cp);
 
 	void _process_ssh_command(TppSshRec* rec, int from, const ex_u8* data, int len);
 	void _process_sftp_command(TppSshRec* rec, const ex_u8* data, int len);
