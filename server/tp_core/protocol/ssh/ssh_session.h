@@ -39,6 +39,7 @@ private:
 
 	int retcode;
 	int db_id;
+	int channel_id;	// for debug only.
 };
 
 typedef std::list<TP_SSH_CHANNEL_PAIR*> tp_channels;

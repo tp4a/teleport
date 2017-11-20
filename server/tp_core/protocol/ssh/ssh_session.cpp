@@ -13,6 +13,7 @@ TP_SSH_CHANNEL_PAIR::TP_SSH_CHANNEL_PAIR() {
 
 	retcode = TP_SESS_STAT_RUNNING;
 	db_id = 0;
+	channel_id = 0;
 }
 
 
@@ -56,7 +57,7 @@ SshSession::~SshSession() {
 		g_ssh_env.free_connect_info(m_conn_info);
 	}
 
-	EXLOGD("[ssh] session destroy.\n");
+	EXLOGD("[ssh] session destroy: %s.\n", m_sid.c_str());
 }
 
 void SshSession::_thread_loop(void) {
@@ -81,7 +82,7 @@ void SshSession::_set_stop_flag(void) {
 
 void SshSession::_session_error(int err_code) {
 	int db_id = 0;
-	if (!g_ssh_env.session_begin(m_conn_info, &db_id))
+	if (!g_ssh_env.session_begin(m_conn_info, &db_id) || db_id == 0)
 	{
 		EXLOGE("[ssh] can not write session error to database.\n");
 		return;
@@ -93,19 +94,18 @@ void SshSession::_session_error(int err_code) {
 
 bool SshSession::_on_session_begin(TP_SSH_CHANNEL_PAIR* cp)
 {
-	if (!g_ssh_env.session_begin(m_conn_info, &(cp->db_id)))
-	{
-		EXLOGD("[ssh] session_begin error. %d\n", cp->db_id);
+	if (!g_ssh_env.session_begin(m_conn_info, &(cp->db_id))) {
+		EXLOGE("[ssh] can not save to database, channel begin failed.\n");
 		return false;
 	}
 	else {
-		EXLOGD("[ssh] session_begin db-id: %d\n", cp->db_id);
+		cp->channel_id = cp->db_id;
+		//EXLOGD("[ssh] [channel:%d] channel begin\n", cp->channel_id);
 	}
 
 
-	if (!g_ssh_env.session_update(cp->db_id, m_conn_info->protocol_sub_type, TP_SESS_STAT_STARTED))
-	{
-		EXLOGD("[ssh] session_update error. %d\n", cp->db_id);
+	if (!g_ssh_env.session_update(cp->db_id, m_conn_info->protocol_sub_type, TP_SESS_STAT_STARTED)) {
+		EXLOGE("[ssh] [channel:%d] can not update state, cannel begin failed.\n", cp->channel_id);
 		return false;
 	}
 
@@ -119,7 +119,7 @@ void SshSession::_on_session_end(TP_SSH_CHANNEL_PAIR* cp)
 {
 	if (cp->db_id > 0)
 	{
-		EXLOGD("[ssh] session db-id: %d, ret-code: %d\n", cp->db_id, cp->retcode);
+		//EXLOGD("[ssh] [channel:%d] channel end with code: %d\n", cp->channel_id, cp->retcode);
 
 		// 如果会话过程中没有发生错误，则将其状态改为结束，否则记录下错误值
 		if (cp->retcode == TP_SESS_STAT_RUNNING || cp->retcode == TP_SESS_STAT_STARTED)
@@ -130,7 +130,7 @@ void SshSession::_on_session_end(TP_SSH_CHANNEL_PAIR* cp)
 		cp->db_id = 0;
 	}
 	else {
-		EXLOGD("[ssh] no db-id.\n");
+		//EXLOGD("[ssh] [channel:%d] when channel end, no db-id.\n", cp->channel_id);
 	}
 }
 
@@ -142,8 +142,6 @@ void SshSession::_close_channels(void) {
 		ssh_channel ch = (*it)->srv_channel;
 		if (ch != NULL) {
 			if (!ssh_channel_is_closed(ch)) {
-// 				if (!ssh_channel_is_eof(ch))
-// 					ssh_channel_send_eof(ch);
 				ssh_channel_close(ch);
 			}
 			ssh_channel_free(ch);
@@ -152,14 +150,12 @@ void SshSession::_close_channels(void) {
 		ch = (*it)->cli_channel;
 		if (ch != NULL) {
 			if (!ssh_channel_is_closed(ch)) {
-// 				if (!ssh_channel_is_eof(ch))
-// 					ssh_channel_send_eof(ch);
 				ssh_channel_close(ch);
 			}
 			ssh_channel_free(ch);
 		}
 
-		EXLOGD("  --- end by close all channel: %d\n", (*it)->db_id);
+		//EXLOGD("[ssh] [channel:%d]  --- end by close all channel\n", (*it)->channel_id);
 		_on_session_end(*it);
 
 		delete (*it);
@@ -171,28 +167,28 @@ void SshSession::_close_channels(void) {
 void SshSession::_check_channels() {
 	ExThreadSmartLock locker(m_lock);
 
-	EXLOGD("-- check channels, have %d\n", m_channels.size());
+	//EXLOGD("[ssh] -- check channels, have %d\n", m_channels.size());
 	tp_channels::iterator it = m_channels.begin();
 	for (; it != m_channels.end(); ) {
-		EXLOGD("-- channel db-id: %d\n", (*it)->db_id);
+		//EXLOGD("[ssh]  -- channel id: %d\n", (*it)->channel_id);
 		bool closed = false;
 		ssh_channel cli = (*it)->cli_channel;
 		ssh_channel srv = (*it)->srv_channel;
 		if (cli != NULL) {
 			if (ssh_channel_is_closed(cli)) {
-				EXLOGD("  -- check server channel, already closed: %d\n", (*it)->db_id);
+				//EXLOGD("[ssh] [channel:%d]   -- server channel already closed\n", (*it)->channel_id);
 				closed = true;
 			}
 		}
 		if (srv != NULL) {
 			if (ssh_channel_is_closed(srv)) {
-				EXLOGD("  -- check client channel, already closed: %d\n", (*it)->db_id);
+				//EXLOGD("[ssh] [channel:%d]   -- client channel already closed\n", (*it)->channel_id);
 				closed = true;
 			}
 		}
 
 		if (closed) {
-			EXLOGD("  --- end by check channel: %d\n", (*it)->db_id);
+			//EXLOGD("[ssh] [channel:%d]   --- end by check channel\n", (*it)->channel_id);
 			_on_session_end((*it));
 
 			if (!ssh_channel_is_closed(cli)) {
@@ -274,7 +270,7 @@ void SshSession::_run(void) {
 	// 现在双方的连接已经建立好了，开始转发
 	ssh_event_add_session(event_loop, m_srv_session);
 	do {
-		r = ssh_event_dopoll(event_loop, 5000);
+		r = ssh_event_dopoll(event_loop, 10000);
 		//EXLOGD("ssh_event_dopoll() return %d.\n", r);
 		if (r == SSH_ERROR) {
 			if (0 != ssh_get_error_code(m_cli_session))
@@ -435,7 +431,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 			return SSH_AUTH_SUCCESS;
 		}
 		else {
-			EXLOGD("[ssh] failed to login with keyboard interactive mode, got %d, try password mode.\n", rc);
+			EXLOGW("[ssh] failed to login with keyboard interactive mode, got %d, try password mode.\n", rc);
 		}
 
 		// 不支持交互式登录，则尝试密码方式
@@ -446,7 +442,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 			return SSH_AUTH_SUCCESS;
 		}
 		else {
-			EXLOGD("[ssh] failed to login with password mode, got %d.\n", rc);
+			EXLOGW("[ssh] failed to login with password mode, got %d.\n", rc);
 		}
 
 		EXLOGE("[ssh] can not use password mode or interactive mode to login to real SSH server %s:%d.\n", _this->m_conn_ip.c_str(), _this->m_conn_port);
@@ -942,7 +938,7 @@ int SshSession::_on_client_pty_request(ssh_session session, ssh_channel channel,
 
 	int err = ssh_channel_request_pty_size(cp->srv_channel, term, x, y);
 	if(err != SSH_OK)
-		EXLOGD("[ssh] pty request from server got %d\n", err);
+		EXLOGE("[ssh] pty request from server got %d\n", err);
 	return err;
 }
 
@@ -965,7 +961,7 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
 	// I have no idea how to fix it...  :(
 	int err = ssh_channel_request_shell(cp->srv_channel);
 	if (err != SSH_OK)
-		EXLOGD("[ssh] shell request from server got %d\n", err);
+		EXLOGE("[ssh] shell request from server got %d\n", err);
 	return err;
 }
 
@@ -979,10 +975,7 @@ void SshSession::_on_client_channel_close(ssh_session session, ssh_channel chann
 		return;
 	}
 
-	EXLOGD("[ssh] on_client_channel_close(). db-id: %d\n", cp->db_id);
-	int db_id = cp->db_id;
-
-	EXLOGD("  --- end by client channel close: %d\n", db_id);
+	//EXLOGD("[ssh] [channel:%d]   -- end by client channel close\n", cp->channel_id);
 	_this->_on_session_end(cp);
 
 	if (cp->srv_channel == NULL) {
@@ -992,31 +985,6 @@ void SshSession::_on_client_channel_close(ssh_session session, ssh_channel chann
 		if (!ssh_channel_is_closed(cp->srv_channel)) {
 			ssh_channel_close(cp->srv_channel);
 		}
-	}
-
-// 	if (!ssh_channel_is_closed(cp->cli_channel)) {
-// 		ssh_channel_close(cp->cli_channel);
-// 	}
-
-	if (ssh_channel_is_closed(cp->cli_channel) && ssh_channel_is_closed(cp->srv_channel))
-	{
-		ssh_channel_free(cp->cli_channel);
-		cp->cli_channel = NULL;
-		ssh_channel_free(cp->srv_channel);
-		cp->srv_channel = NULL;
-
-		ExThreadSmartLock locker(_this->m_lock);
-
-		tp_channels::iterator it = _this->m_channels.begin();
-		for (; it != _this->m_channels.end(); ++it) {
-			if ((*it) == cp) {
-				EXLOGD("--- client_channel_close(), erase: %d\n", db_id);
-				delete (*it);
-				_this->m_channels.erase(it);
-				break;
-			}
-		}
-		//_this->_check_channels();
 	}
 }
 
@@ -1111,13 +1079,13 @@ int SshSession::_on_client_channel_subsystem_request(ssh_session session, ssh_ch
 	int err = ssh_channel_request_subsystem(cp->srv_channel, subsystem);
 	//EXLOGD("[ssh]   <--- request channel subsystem from server\n");
 	if (err != SSH_OK)
-		EXLOGD("[ssh] request channel subsystem from server got %d\n", err);
+		EXLOGE("[ssh] request channel subsystem from server got %d\n", err);
 	return err;
 }
 
 int SshSession::_on_client_channel_exec_request(ssh_session session, ssh_channel channel, const char *command, void *userdata) {
-	EXLOGD("[ssh] on_client_channel_exec_request(): %s\n", command);
-	return 0;
+	EXLOGW("[ssh] not-impl: client_channel_exec_request(): %s\n", command);
+	return SSH_ERROR;
 }
 
 int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata)
@@ -1239,8 +1207,7 @@ void SshSession::_on_server_channel_close(ssh_session session, ssh_channel chann
 		return;
 	}
 
-	int db_id = cp->db_id;
-	EXLOGD("  --- end by server channel close: %d\n", db_id);
+	//EXLOGD("[ssh] [channel:%d]  --- end by server channel close\n", cp->channel_id);
 	_this->_on_session_end(cp);
 
 	// will the server-channel exist, the client-channel must exist too.
@@ -1250,30 +1217,6 @@ void SshSession::_on_server_channel_close(ssh_session session, ssh_channel chann
 	else {
 		if (!ssh_channel_is_closed(cp->cli_channel)) {
 			ssh_channel_close(cp->cli_channel);
-		}
-	}
-
-// 	if (!ssh_channel_is_closed(cp->srv_channel)) {
-// 		ssh_channel_close(cp->srv_channel);
-// 	}
-
-	if (ssh_channel_is_closed(cp->cli_channel) && ssh_channel_is_closed(cp->srv_channel))
-	{
-		ssh_channel_free(cp->cli_channel);
-		cp->cli_channel = NULL;
-		ssh_channel_free(cp->srv_channel);
-		cp->srv_channel = NULL;
-
-		ExThreadSmartLock locker(_this->m_lock);
-
-		tp_channels::iterator it = _this->m_channels.begin();
-		for (; it != _this->m_channels.end(); ++it) {
-			if ((*it) == cp) {
-				EXLOGD("--- server_channel_close(), erase: %d\n", db_id);
-				delete (*it);
-				_this->m_channels.erase(it);
-				break;
-			}
 		}
 	}
 }
