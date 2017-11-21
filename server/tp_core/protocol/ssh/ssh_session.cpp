@@ -14,8 +14,9 @@ TP_SSH_CHANNEL_PAIR::TP_SSH_CHANNEL_PAIR() {
 	retcode = TP_SESS_STAT_RUNNING;
 	db_id = 0;
 	channel_id = 0;
-}
 
+	is_first_server_data = true;
+}
 
 SshSession::SshSession(SshProxy *proxy, ssh_session sess_client) :
 	ExThreadBase("ssh-session-thread"),
@@ -26,7 +27,7 @@ SshSession::SshSession(SshProxy *proxy, ssh_session sess_client) :
 {
 	m_auth_type = TP_AUTH_TYPE_PASSWORD;
 
-	m_is_first_server_data = true;
+// 	m_is_first_server_data = true;
 
 	m_is_logon = false;
 	m_have_error = false;
@@ -45,8 +46,8 @@ SshSession::SshSession(SshProxy *proxy, ssh_session sess_client) :
 	ssh_callbacks_init(&m_srv_channel_cb);
 	m_srv_channel_cb.userdata = this;
 
-	m_command_flag = 0;
-	m_cmd_char_pos = m_cmd_char_list.begin();
+// 	m_command_flag = 0;
+// 	m_cmd_char_pos = m_cmd_char_list.begin();
 }
 
 SshSession::~SshSession() {
@@ -90,7 +91,6 @@ void SshSession::_session_error(int err_code) {
 
 	g_ssh_env.session_end(m_sid.c_str(), db_id, err_code);
 }
-
 
 bool SshSession::_record_begin(TP_SSH_CHANNEL_PAIR* cp)
 {
@@ -555,389 +555,6 @@ TP_SSH_CHANNEL_PAIR* SshSession::_get_channel_pair(int channel_side, ssh_channel
 	return NULL;
 }
 
-void SshSession::_process_ssh_command(TppSshRec* rec, int from, const ex_u8* data, int len)
-{
-	if (TP_SSH_CLIENT_SIDE == from)
-	{
-		m_command_flag = 0;
-
-		if (len == 3)
-		{
-			if ((data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x41)			// key-up
-				|| (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x42)		// key-down
-				)
-			{
-				m_command_flag = 1;
-				return;
-			}
-			else if (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x43)		// key-right
-			{
-				if (m_cmd_char_pos != m_cmd_char_list.end())
-					m_cmd_char_pos++;
-				return;
-			}
-			else if (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x44)		// key-left
-			{
-				if (m_cmd_char_pos != m_cmd_char_list.begin())
-					m_cmd_char_pos--;
-				return;
-			}
-			else if (
-				(data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x41)
-				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x42)
-				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x43)
-				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x44)
-				)
-			{
-				// 编辑模式下的上下左右键
-				return;
-			}
-		}
-		else if (len == 1)
-		{
-			if (data[0] == 0x08 || data[0] == 0x09)  // 08=光标左移
-			{
-				m_command_flag = 1;
-				return;
-			}
-			else if (data[0] == 0x7f)	// Backspace (回删一个字符)
-			{
-				if (m_cmd_char_pos != m_cmd_char_list.begin())
-				{
-					m_cmd_char_pos--;
-					m_cmd_char_pos = m_cmd_char_list.erase(m_cmd_char_pos);
-				}
-				return;
-			}
-			else if (data[0] == 0x1b)
-			{
-				// 按下 Esc 键
-				return;
-			}
-
-			if (data[0] != 0x0d && !isprint(data[0]))
-				return;
-		}
-		else if (len > 3)
-		{
-			if (data[0] == 0x1b && data[1] == 0x5b)
-			{
-				m_command_flag = 1;
-// 
-// 				// 不是命令行上的上下左右，也不是编辑模式下的上下左右，那么就忽略（应该是编辑模式下的其他输入）
-// 				m_cmd_char_list.clear();
-// 				m_cmd_char_pos = m_cmd_char_list.begin();
-				return;
-			}
-		}
-
-		int processed = 0;
-		for (int i = 0; i < len; i++)
-		{
-			if (data[i] == 0x0d)
-			{
-				m_command_flag = 0;
-
-				for (int j = processed; j < i; ++j)
-				{
-					m_cmd_char_pos = m_cmd_char_list.insert(m_cmd_char_pos, data[j]);
-					m_cmd_char_pos++;
-				}
-
-				if (m_cmd_char_list.size() > 0)
-				{
-					ex_astr str(m_cmd_char_list.begin(), m_cmd_char_list.end());
-					ex_replace_all(str, "\r", "");
-					ex_replace_all(str, "\n", "");
-					EXLOGD("[ssh] save cmd: [%s]\n", str.c_str());
-					str += "\r\n";
-					rec->record_command(str);
-				}
-				m_cmd_char_list.clear();
-				m_cmd_char_pos = m_cmd_char_list.begin();
-
-				processed = i + 1;
-			}
-		}
-
-		if (processed < len)
-		{
-			for (int j = processed; j < len; ++j)
-			{
-				m_cmd_char_pos = m_cmd_char_list.insert(m_cmd_char_pos, data[j]);
-				m_cmd_char_pos++;
-			}
-		}
-	}
-	else if (TP_SSH_SERVER_SIDE == from)
-	{
-		if (m_command_flag == 0)
-			return;
-
-		bool esc_mode = false;
-		int esc_arg = 0;
-
-		for (int i = 0; i < len; i++)
-		{
-			if (esc_mode)
-			{
-				switch (data[i])
-				{
-				case '0':
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-				case '5':
-				case '6':
-				case '7':
-				case '8':
-				case '9':
-					esc_arg = esc_arg * 10 + (data[i] - '0');
-					break;
-
-				case 0x3f:
-				case ';':
-				case '>':
-					m_cmd_char_list.clear();
-					m_cmd_char_pos = m_cmd_char_list.begin();
-					return;
-					break;
-
-				case 0x4b:	// 'K'
-				{
-					if (0 == esc_arg)
-					{
-						// 删除光标到行尾的字符串
-						m_cmd_char_list.erase(m_cmd_char_pos, m_cmd_char_list.end());
-						m_cmd_char_pos = m_cmd_char_list.end();
-					}
-					else if (1 == esc_arg)
-					{
-						// 删除从开始到光标处的字符串
-						m_cmd_char_list.erase(m_cmd_char_list.begin(), m_cmd_char_pos);
-						m_cmd_char_pos = m_cmd_char_list.end();
-					}
-					else if (2 == esc_arg)
-					{
-						// 删除整行
-						m_cmd_char_list.clear();
-						m_cmd_char_pos = m_cmd_char_list.begin();
-					}
-
-					esc_mode = false;
-					break;
-				}
-				case 0x43:	// ^[C
-				{
-					// 光标右移
-					if (esc_arg == 0)
-						esc_arg = 1;
-					for (int j = 0; j < esc_arg; ++j)
-					{
-						if (m_cmd_char_pos != m_cmd_char_list.end())
-							m_cmd_char_pos++;
-					}
-					esc_mode = false;
-					break;
-				}
-				case 0x44:  // ^[D
-				{
-					// 光标左移
-					if (esc_arg == 0)
-						esc_arg = 1;
-					for (int j = 0; j < esc_arg; ++j)
-					{
-						if (m_cmd_char_pos != m_cmd_char_list.begin())
-							m_cmd_char_pos--;
-					}
-					esc_mode = false;
-					break;
-				}
-
-				case 0x50:	// 'P' 删除指定数量的字符
-				{
-					if (esc_arg == 0)
-						esc_arg = 1;
-					for (int j = 0; j < esc_arg; ++j)
-					{
-						if (m_cmd_char_pos != m_cmd_char_list.end())
-							m_cmd_char_pos = m_cmd_char_list.erase(m_cmd_char_pos);
-					}
-					esc_mode = false;
-					break;
-				}
-
-				case 0x40:	// '@' 插入指定数量的空白字符
-				{
-					if (esc_arg == 0)
-						esc_arg = 1;
-					for (int j = 0; j < esc_arg; ++j)
-					{
-						m_cmd_char_pos = m_cmd_char_list.insert(m_cmd_char_pos, ' ');
-					}
-					esc_mode = false;
-					break;
-				}
-
-				default:
-					esc_mode = false;
-					break;
-				}
-
-				continue;
-			}
-
-			switch (data[i])
-			{
-			case 0x07:
-			{
-				// 响铃
-				break;
-			}
-			case 0x08:
-			{
-				// 光标左移
-				if (m_cmd_char_pos != m_cmd_char_list.begin())
-					m_cmd_char_pos--;
-
-				break;
-			}
-			case 0x1b:
-			{
-				if (i + 1 < len)
-				{
-					if (data[i + 1] == 0x5b)
-					{
-						esc_mode = true;
-						esc_arg = 0;
-
-						i += 1;
-						break;
-					}
-				}
-
-				break;
-			}
-			case 0x0d:
-			{
-				m_cmd_char_list.clear();
-				m_cmd_char_pos = m_cmd_char_list.begin();
-
-				break;
-			}
-			default:
-				if (m_cmd_char_pos != m_cmd_char_list.end())
-				{
-					m_cmd_char_pos = m_cmd_char_list.erase(m_cmd_char_pos);
-					m_cmd_char_pos = m_cmd_char_list.insert(m_cmd_char_pos, data[i]);
-					m_cmd_char_pos++;
-				}
-				else
-				{
-					m_cmd_char_list.push_back(data[i]);
-					m_cmd_char_pos = m_cmd_char_list.end();
-				}
-			}
-		}
-	}
-
-	return;
-}
-
-void SshSession::_process_sftp_command(TppSshRec* rec, const ex_u8* data, int len) {
-	// SFTP protocol: https://tools.ietf.org/html/draft-ietf-secsh-filexfer-13
-	//EXLOG_BIN(data, len, "[sftp] client channel data");
-
-	if (len < 9)
-		return;
-
-	int pkg_len = (int)((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]);
-	if (pkg_len + 4 != len)
-		return;
-
-	ex_u8 sftp_cmd = data[4];
-
-	if (sftp_cmd == 0x01) {
-		// 0x01 = 1 = SSH_FXP_INIT
-		rec->record_command("SFTP INITIALIZE\r\n");
-		return;
-	}
-
-	// 需要的数据至少14字节
-	// uint32 + byte + uint32 + (uint32 + char + ...)
-	// pkg_len + cmd + req_id + string( length + content...)
-	if (len < 14)
-		return;
-
-	ex_u8* str1_ptr = (ex_u8*)data + 9;
-	int str1_len = (int)((str1_ptr[0] << 24) | (str1_ptr[1] << 16) | (str1_ptr[2] << 8) | str1_ptr[3]);
-	// 	if (str1_len + 9 != pkg_len)
-	// 		return;
-	ex_u8* str2_ptr = NULL;// (ex_u8*)data + 13;
-	int str2_len = 0;// (int)((data[9] << 24) | (data[10] << 16) | (data[11] << 8) | data[12]);
-
-
-	const char* act = NULL;
-	switch (sftp_cmd) {
-	case 0x03:
-		// 0x03 = 3 = SSH_FXP_OPEN
-		act = "open file";
-		break;
-		// 	case 0x0b:
-		// 		// 0x0b = 11 = SSH_FXP_OPENDIR
-		// 		act = "open dir";
-		// 		break;
-	case 0x0d:
-		// 0x0d = 13 = SSH_FXP_REMOVE
-		act = "remove file";
-		break;
-	case 0x0e:
-		// 0x0e = 14 = SSH_FXP_MKDIR
-		act = "create dir";
-		break;
-	case 0x0f:
-		// 0x0f = 15 = SSH_FXP_RMDIR
-		act = "remove dir";
-		break;
-	case 0x12:
-		// 0x12 = 18 = SSH_FXP_RENAME
-		// rename操作数据中包含两个字符串
-		act = "rename";
-		str2_ptr = str1_ptr + str1_len + 4;
-		str2_len = (int)((str2_ptr[0] << 24) | (str2_ptr[1] << 16) | (str2_ptr[2] << 8) | str2_ptr[3]);
-		break;
-	case 0x15:
-		// 0x15 = 21 = SSH_FXP_LINK
-		// link操作数据中包含两个字符串，前者是新的链接文件名，后者是现有被链接的文件名
-		act = "create link";
-		str2_ptr = str1_ptr + str1_len + 4;
-		str2_len = (int)((str2_ptr[0] << 24) | (str2_ptr[1] << 16) | (str2_ptr[2] << 8) | str2_ptr[3]);
-		break;
-	default:
-		return;
-	}
-
-	int total_len = 5 + str1_len + 4;
-	if (str2_len > 0)
-		total_len += str2_len + 4;
-	if (total_len > pkg_len)
-		return;
-
-	char msg[2048] = { 0 };
-	if (str2_len == 0) {
-		ex_astr str1((char*)((ex_u8*)data + 13), str1_len);
-		ex_strformat(msg, 2048, "%d:%s:%s:\r\n", sftp_cmd, act, str1.c_str());
-	}
-	else {
-		ex_astr str1((char*)(str1_ptr + 4), str1_len);
-		ex_astr str2((char*)(str2_ptr + 4), str2_len);
-		ex_strformat(msg, 2048, "%d:%s:%s:%s\r\n", sftp_cmd, act, str1.c_str(), str2.c_str());
-	}
-
-	rec->record_command(msg);
-}
-
 int SshSession::_on_client_pty_request(ssh_session session, ssh_channel channel, const char *term, int x, int y, int px, int py, void *userdata) {
 	SshSession *_this = (SshSession *)userdata;
 
@@ -1027,9 +644,9 @@ int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel
 	{
 		try
 		{
-			_this->_process_ssh_command(&cp->rec, TP_SSH_CLIENT_SIDE, (ex_u8*)data, len);
+			_this->_process_ssh_command(cp, TP_SSH_CLIENT_SIDE, (ex_u8*)data, len);
 
-			ex_astr str(_this->m_cmd_char_list.begin(), _this->m_cmd_char_list.end());
+			ex_astr str(cp->cmd_char_list.begin(), cp->cmd_char_list.end());
 			ex_replace_all(str, "\r", "");
 			ex_replace_all(str, "\n", "");
 			EXLOGD("[ssh]   -- [%s]\n", str.c_str());
@@ -1040,7 +657,7 @@ int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel
 	}
 	else
 	{
-		_this->_process_sftp_command(&cp->rec, (ex_u8*)data, len);
+		_this->_process_sftp_command(cp, (ex_u8*)data, len);
 	}
 
 	int ret = 0;
@@ -1149,8 +766,8 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 	{
 		try
 		{
-			_this->_process_ssh_command(&cp->rec, TP_SSH_SERVER_SIDE, (ex_u8*)data, len);
-			ex_astr str(_this->m_cmd_char_list.begin(), _this->m_cmd_char_list.end());
+			_this->_process_ssh_command(cp, TP_SSH_SERVER_SIDE, (ex_u8*)data, len);
+			ex_astr str(cp->cmd_char_list.begin(), cp->cmd_char_list.end());
 			ex_replace_all(str, "\r", "");
 			ex_replace_all(str, "\n", "");
 			EXLOGD("[ssh]   -- [%s]\n", str.c_str());
@@ -1167,9 +784,9 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 
 	// 收到第一包服务端返回的数据时，在输出数据之前显示一些自定义的信息
 #if 1
-	if (!is_stderr && _this->m_is_first_server_data)
+	if (!is_stderr && cp->is_first_server_data)
 	{
-		_this->m_is_first_server_data = false;
+		cp->is_first_server_data = false;
 
 		if (cp->type != TS_SSH_CHANNEL_TYPE_SFTP)
 		{
@@ -1243,4 +860,392 @@ void SshSession::_on_server_channel_close(ssh_session session, ssh_channel chann
 			ssh_channel_close(cp->cli_channel);
 		}
 	}
+}
+
+void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR* cp, int from, const ex_u8* data, int len)
+{
+	if (TP_SSH_CLIENT_SIDE == from)
+	{
+		// 客户端输入回车时，可能时执行了一条命令，需要根据服务端返回的数据进行进一步判断
+		if (data[len - 1] == 0x0d)
+			cp->cmd_flag = 1;
+
+// 		cp->cmd_flag = 0;
+// 
+// 		if (len == 3)
+// 		{
+// 			if ((data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x41)			// key-up
+// 				|| (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x42)		// key-down
+// 				)
+// 			{
+// 				cp->cmd_flag = 1;
+// 				return;
+// 			}
+// 			else if (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x43)		// key-right
+// 			{
+// 				if (cp->cmd_char_pos != cp->cmd_char_list.end())
+// 					cp->cmd_char_pos++;
+// 				return;
+// 			}
+// 			else if (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x44)		// key-left
+// 			{
+// 				if (cp->cmd_char_pos != cp->cmd_char_list.begin())
+// 					cp->cmd_char_pos--;
+// 				return;
+// 			}
+// 			else if (
+// 				(data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x41)
+// 				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x42)
+// 				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x43)
+// 				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x44)
+// 				)
+// 			{
+// 				// 编辑模式下的上下左右键
+// 				return;
+// 			}
+// 		}
+// 		else if (len == 1)
+// 		{
+// 			if (data[0] == 0x08 || data[0] == 0x09)  // 08=光标左移
+// 			{
+// 				cp->cmd_flag = 1;
+// 				return;
+// 			}
+// 			else if (data[0] == 0x7f)	// Backspace (回删一个字符)
+// 			{
+// 				if (cp->cmd_char_pos != cp->cmd_char_list.begin())
+// 				{
+// 					cp->cmd_char_pos--;
+// 					cp->cmd_char_pos = cp->cmd_char_list.erase(cp->cmd_char_pos);
+// 				}
+// 				return;
+// 			}
+// 			else if (data[0] == 0x1b)
+// 			{
+// 				// 按下 Esc 键
+// 				return;
+// 			}
+// 
+// 			if (data[0] != 0x0d && !isprint(data[0]))
+// 				return;
+// 		}
+// 		else if (len > 3)
+// 		{
+// 			if (data[0] == 0x1b && data[1] == 0x5b)
+// 			{
+// 				cp->cmd_flag = 1;
+// 				// 
+// 				// 				// 不是命令行上的上下左右，也不是编辑模式下的上下左右，那么就忽略（应该是编辑模式下的其他输入）
+// 				// 				m_cmd_char_list.clear();
+// 				// 				m_cmd_char_pos = m_cmd_char_list.begin();
+// 				return;
+// 			}
+// 		}
+// 
+// 		int processed = 0;
+// 		for (int i = 0; i < len; i++)
+// 		{
+// 			if (data[i] == 0x0d)
+// 			{
+// 				cp->cmd_flag = 0;
+// 
+// 				for (int j = processed; j < i; ++j)
+// 				{
+// 					cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, data[j]);
+// 					cp->cmd_char_pos++;
+// 				}
+// 
+// 				if (cp->cmd_char_list.size() > 0)
+// 				{
+// 					ex_astr str(cp->cmd_char_list.begin(), cp->cmd_char_list.end());
+// 					ex_replace_all(str, "\r", "");
+// 					ex_replace_all(str, "\n", "");
+// 					EXLOGD("[ssh] save cmd: [%s]\n", str.c_str());
+// 					str += "\r\n";
+// 					cp->rec.record_command(str);
+// 				}
+// 				cp->cmd_char_list.clear();
+// 				cp->cmd_char_pos = cp->cmd_char_list.begin();
+// 
+// 				processed = i + 1;
+// 			}
+// 		}
+// 
+// 		if (processed < len)
+// 		{
+// 			for (int j = processed; j < len; ++j)
+// 			{
+// 				cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, data[j]);
+// 				cp->cmd_char_pos++;
+// 			}
+// 		}
+	}
+	else if (TP_SSH_SERVER_SIDE == from)
+	{
+		if (cp->cmd_flag == 0)
+			return;
+		if (len != 2 || !(data[0] == 0x0d && data[1] == 0x0a))
+			return;
+
+		bool esc_mode = false;
+		int esc_arg = 0;
+
+		for (int i = 0; i < len; i++)
+		{
+			if (esc_mode)
+			{
+				switch (data[i])
+				{
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+					esc_arg = esc_arg * 10 + (data[i] - '0');
+					break;
+
+				case 0x3f:
+				case ';':
+				case '>':
+					cp->cmd_char_list.clear();
+					cp->cmd_char_pos = cp->cmd_char_list.begin();
+					return;
+					break;
+
+				case 0x4b:	// 'K'
+				{
+					if (0 == esc_arg)
+					{
+						// 删除光标到行尾的字符串
+						cp->cmd_char_list.erase(cp->cmd_char_pos, cp->cmd_char_list.end());
+						cp->cmd_char_pos = cp->cmd_char_list.end();
+					}
+					else if (1 == esc_arg)
+					{
+						// 删除从开始到光标处的字符串
+						cp->cmd_char_list.erase(cp->cmd_char_list.begin(), cp->cmd_char_pos);
+						cp->cmd_char_pos = cp->cmd_char_list.end();
+					}
+					else if (2 == esc_arg)
+					{
+						// 删除整行
+						cp->cmd_char_list.clear();
+						cp->cmd_char_pos = cp->cmd_char_list.begin();
+					}
+
+					esc_mode = false;
+					break;
+				}
+				case 0x43:	// ^[C
+				{
+					// 光标右移
+					if (esc_arg == 0)
+						esc_arg = 1;
+					for (int j = 0; j < esc_arg; ++j)
+					{
+						if (cp->cmd_char_pos != cp->cmd_char_list.end())
+							cp->cmd_char_pos++;
+					}
+					esc_mode = false;
+					break;
+				}
+				case 0x44:  // ^[D
+				{
+					// 光标左移
+					if (esc_arg == 0)
+						esc_arg = 1;
+					for (int j = 0; j < esc_arg; ++j)
+					{
+						if (cp->cmd_char_pos != cp->cmd_char_list.begin())
+							cp->cmd_char_pos--;
+					}
+					esc_mode = false;
+					break;
+				}
+
+				case 0x50:	// 'P' 删除指定数量的字符
+				{
+					if (esc_arg == 0)
+						esc_arg = 1;
+					for (int j = 0; j < esc_arg; ++j)
+					{
+						if (cp->cmd_char_pos != cp->cmd_char_list.end())
+							cp->cmd_char_pos = cp->cmd_char_list.erase(cp->cmd_char_pos);
+					}
+					esc_mode = false;
+					break;
+				}
+
+				case 0x40:	// '@' 插入指定数量的空白字符
+				{
+					if (esc_arg == 0)
+						esc_arg = 1;
+					for (int j = 0; j < esc_arg; ++j)
+					{
+						cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, ' ');
+					}
+					esc_mode = false;
+					break;
+				}
+
+				default:
+					esc_mode = false;
+					break;
+				}
+
+				continue;
+			}
+
+			switch (data[i])
+			{
+			case 0x07:
+			{
+				// 响铃
+				break;
+			}
+			case 0x08:
+			{
+				// 光标左移
+				if (cp->cmd_char_pos != cp->cmd_char_list.begin())
+					cp->cmd_char_pos--;
+				break;
+			}
+			case 0x1b:
+			{
+				if (i + 1 < len)
+				{
+					if (data[i + 1] == 0x5b)
+					{
+						esc_mode = true;
+						esc_arg = 0;
+
+						i += 1;
+						break;
+					}
+				}
+
+				break;
+			}
+			case 0x0d:
+			{
+				cp->cmd_char_list.clear();
+				cp->cmd_char_pos = cp->cmd_char_list.begin();
+
+				break;
+			}
+			default:
+				if (cp->cmd_char_pos != cp->cmd_char_list.end())
+				{
+					cp->cmd_char_pos = cp->cmd_char_list.erase(cp->cmd_char_pos);
+					cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, data[i]);
+					cp->cmd_char_pos++;
+				}
+				else
+				{
+					cp->cmd_char_list.push_back(data[i]);
+					cp->cmd_char_pos = cp->cmd_char_list.end();
+				}
+			}
+		}
+	}
+
+	return;
+}
+
+void SshSession::_process_sftp_command(TP_SSH_CHANNEL_PAIR* cp, const ex_u8* data, int len) {
+	// SFTP protocol: https://tools.ietf.org/html/draft-ietf-secsh-filexfer-13
+	//EXLOG_BIN(data, len, "[sftp] client channel data");
+
+	if (len < 9)
+		return;
+
+	int pkg_len = (int)((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]);
+	if (pkg_len + 4 != len)
+		return;
+
+	ex_u8 sftp_cmd = data[4];
+
+	if (sftp_cmd == 0x01) {
+		// 0x01 = 1 = SSH_FXP_INIT
+		cp->rec.record_command("SFTP INITIALIZE\r\n");
+		return;
+	}
+
+	// 需要的数据至少14字节
+	// uint32 + byte + uint32 + (uint32 + char + ...)
+	// pkg_len + cmd + req_id + string( length + content...)
+	if (len < 14)
+		return;
+
+	ex_u8* str1_ptr = (ex_u8*)data + 9;
+	int str1_len = (int)((str1_ptr[0] << 24) | (str1_ptr[1] << 16) | (str1_ptr[2] << 8) | str1_ptr[3]);
+	// 	if (str1_len + 9 != pkg_len)
+	// 		return;
+	ex_u8* str2_ptr = NULL;// (ex_u8*)data + 13;
+	int str2_len = 0;// (int)((data[9] << 24) | (data[10] << 16) | (data[11] << 8) | data[12]);
+
+
+	const char* act = NULL;
+	switch (sftp_cmd) {
+	case 0x03:
+		// 0x03 = 3 = SSH_FXP_OPEN
+		act = "open file";
+		break;
+		// 	case 0x0b:
+		// 		// 0x0b = 11 = SSH_FXP_OPENDIR
+		// 		act = "open dir";
+		// 		break;
+	case 0x0d:
+		// 0x0d = 13 = SSH_FXP_REMOVE
+		act = "remove file";
+		break;
+	case 0x0e:
+		// 0x0e = 14 = SSH_FXP_MKDIR
+		act = "create dir";
+		break;
+	case 0x0f:
+		// 0x0f = 15 = SSH_FXP_RMDIR
+		act = "remove dir";
+		break;
+	case 0x12:
+		// 0x12 = 18 = SSH_FXP_RENAME
+		// rename操作数据中包含两个字符串
+		act = "rename";
+		str2_ptr = str1_ptr + str1_len + 4;
+		str2_len = (int)((str2_ptr[0] << 24) | (str2_ptr[1] << 16) | (str2_ptr[2] << 8) | str2_ptr[3]);
+		break;
+	case 0x15:
+		// 0x15 = 21 = SSH_FXP_LINK
+		// link操作数据中包含两个字符串，前者是新的链接文件名，后者是现有被链接的文件名
+		act = "create link";
+		str2_ptr = str1_ptr + str1_len + 4;
+		str2_len = (int)((str2_ptr[0] << 24) | (str2_ptr[1] << 16) | (str2_ptr[2] << 8) | str2_ptr[3]);
+		break;
+	default:
+		return;
+	}
+
+	int total_len = 5 + str1_len + 4;
+	if (str2_len > 0)
+		total_len += str2_len + 4;
+	if (total_len > pkg_len)
+		return;
+
+	char msg[2048] = { 0 };
+	if (str2_len == 0) {
+		ex_astr str1((char*)((ex_u8*)data + 13), str1_len);
+		ex_strformat(msg, 2048, "%d:%s:%s:\r\n", sftp_cmd, act, str1.c_str());
+	}
+	else {
+		ex_astr str1((char*)(str1_ptr + 4), str1_len);
+		ex_astr str2((char*)(str2_ptr + 4), str2_len);
+		ex_strformat(msg, 2048, "%d:%s:%s:%s\r\n", sftp_cmd, act, str1.c_str(), str2.c_str());
+	}
+
+	cp->rec.record_command(msg);
 }

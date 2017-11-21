@@ -40,11 +40,16 @@ private:
 	int retcode;
 	int db_id;
 	int channel_id;	// for debug only.
+
+	bool is_first_server_data;
+
+	// for ssh command record cache.
+	int cmd_flag;
+	std::list<char> cmd_char_list;
+	std::list<char>::iterator cmd_char_pos;
 };
 
 typedef std::list<TP_SSH_CHANNEL_PAIR*> tp_channels;
-
-
 
 class SshSession : public ExThreadBase
 {
@@ -75,17 +80,14 @@ protected:
 	// stop record because channel closed.
 	void _record_end(TP_SSH_CHANNEL_PAIR* cp);
 
-	void _process_ssh_command(TppSshRec* rec, int from, const ex_u8* data, int len);
-	void _process_sftp_command(TppSshRec* rec, const ex_u8* data, int len);
+	void _process_ssh_command(TP_SSH_CHANNEL_PAIR* cp, int from, const ex_u8* data, int len);
+	void _process_sftp_command(TP_SSH_CHANNEL_PAIR* cp, const ex_u8* data, int len);
 
 private:
 	void _run(void);
 
 	void _close_channels(void);
 	void _check_channels(void);
-
-// 	void _client_channel_closed(TP_SSH_CHANNEL_PAIR* cp, bool& need_removed);
-// 	void _server_channel_closed(TP_SSH_CHANNEL_PAIR* cp, bool& need_removed);
 
 	static int _on_auth_password_request(ssh_session session, const char *user, const char *password, void *userdata);
 	static ssh_channel _on_new_channel_request(ssh_session session, void *userdata);
@@ -121,8 +123,6 @@ private:
 	ex_astr m_acc_secret;
 	int m_auth_type;
 
-	bool m_is_first_server_data;
-
 	bool m_is_logon;
 	// 一个ssh_session中可以打开多个ssh_channel
 	tp_channels m_channels;
@@ -135,11 +135,6 @@ private:
 	struct ssh_server_callbacks_struct m_srv_cb;
 	struct ssh_channel_callbacks_struct m_cli_channel_cb;
 	struct ssh_channel_callbacks_struct m_srv_channel_cb;
-
-	int m_command_flag;
-
-	std::list<char> m_cmd_char_list;
-	std::list<char>::iterator m_cmd_char_pos;
 };
 
 #endif // __SSH_SESSION_H__
