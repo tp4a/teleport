@@ -16,6 +16,13 @@ TP_SSH_CHANNEL_PAIR::TP_SSH_CHANNEL_PAIR() {
 	channel_id = 0;
 
 	is_first_server_data = true;
+
+	//last_client_char = TP_CHAR_NUL;
+	//cmd_flag = 0;
+	maybe_cmd = false;
+	process_srv = false;
+
+	cmd_char_pos = cmd_char_list.begin();
 }
 
 SshSession::SshSession(SshProxy *proxy, ssh_session sess_client) :
@@ -864,48 +871,44 @@ void SshSession::_on_server_channel_close(ssh_session session, ssh_channel chann
 
 void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR* cp, int from, const ex_u8* data, int len)
 {
+	if (len == 0)
+		return;
+
+	// ls;ls
+
+
 	if (TP_SSH_CLIENT_SIDE == from)
 	{
 		// 客户端输入回车时，可能时执行了一条命令，需要根据服务端返回的数据进行进一步判断
-		if (data[len - 1] == 0x0d)
-			cp->cmd_flag = 1;
+		cp->maybe_cmd = (data[len - 1] == 0x0d);
+		if(cp->maybe_cmd)
+			EXLOGD("[ssh]   maybe cmd.\n");
 
-// 		cp->cmd_flag = 0;
-// 
-// 		if (len == 3)
-// 		{
-// 			if ((data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x41)			// key-up
-// 				|| (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x42)		// key-down
-// 				)
-// 			{
-// 				cp->cmd_flag = 1;
-// 				return;
-// 			}
-// 			else if (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x43)		// key-right
-// 			{
-// 				if (cp->cmd_char_pos != cp->cmd_char_list.end())
-// 					cp->cmd_char_pos++;
-// 				return;
-// 			}
-// 			else if (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x44)		// key-left
-// 			{
-// 				if (cp->cmd_char_pos != cp->cmd_char_list.begin())
-// 					cp->cmd_char_pos--;
-// 				return;
-// 			}
-// 			else if (
-// 				(data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x41)
-// 				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x42)
-// 				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x43)
-// 				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x44)
-// 				)
-// 			{
-// 				// 编辑模式下的上下左右键
-// 				return;
-// 			}
-// 		}
-// 		else if (len == 1)
-// 		{
+		cp->process_srv = false;
+
+		if (len == 1)
+		{
+			switch (data[0]) {
+			case 0x08:// 08=Backspace (回删一个字符)
+				if (cp->cmd_char_pos != cp->cmd_char_list.begin())
+				{
+					cp->cmd_char_pos--;
+					cp->cmd_char_pos = cp->cmd_char_list.erase(cp->cmd_char_pos);
+				}
+				return;
+			case 0x09:// 09=TAB键，需要根据服务端返回的数据进一步判断
+				cp->process_srv = true;
+				return;
+			case 0x0d:// 0d=回车
+				return;
+			case 0x7f:// 7f=DEL (删除一个字符)
+				if (cp->cmd_char_pos != cp->cmd_char_list.end())
+				{
+					cp->cmd_char_pos = cp->cmd_char_list.erase(cp->cmd_char_pos);
+				}
+				return;
+			}
+
 // 			if (data[0] == 0x08 || data[0] == 0x09)  // 08=光标左移
 // 			{
 // 				cp->cmd_flag = 1;
@@ -925,24 +928,53 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR* cp, int from, const e
 // 				// 按下 Esc 键
 // 				return;
 // 			}
-// 
-// 			if (data[0] != 0x0d && !isprint(data[0]))
-// 				return;
-// 		}
-// 		else if (len > 3)
-// 		{
-// 			if (data[0] == 0x1b && data[1] == 0x5b)
-// 			{
-// 				cp->cmd_flag = 1;
-// 				// 
-// 				// 				// 不是命令行上的上下左右，也不是编辑模式下的上下左右，那么就忽略（应该是编辑模式下的其他输入）
-// 				// 				m_cmd_char_list.clear();
-// 				// 				m_cmd_char_pos = m_cmd_char_list.begin();
-// 				return;
-// 			}
-// 		}
-// 
-// 		int processed = 0;
+
+			if (!isprint(data[0]))
+				return;
+		}
+		else if (len == 3)
+		{
+			if ((data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x41)			// key-up
+				|| (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x42)		// key-down
+				)
+			{
+				// 上下键是 bash 的历史记录
+				cp->process_srv = true;
+				return;
+			}
+			else if (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x43)		// key-right
+			{
+				if (cp->cmd_char_pos != cp->cmd_char_list.end())
+					cp->cmd_char_pos++;
+				return;
+			}
+			else if (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x44)		// key-left
+			{
+				if (cp->cmd_char_pos != cp->cmd_char_list.begin())
+					cp->cmd_char_pos--;
+				return;
+			}
+			else if (
+				(data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x41)
+				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x42)
+				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x43)
+				|| (data[0] == 0x1b && data[1] == 0x4f && data[2] == 0x44)
+				)
+			{
+				// 编辑模式下的上下左右键
+				return;
+			}
+		}
+		else if (len > 3)
+		{
+			if (data[0] == 0x1b && data[1] == 0x5b)
+			{
+				cp->process_srv = true;
+				return;
+			}
+		}
+
+		int processed = 0;
 // 		for (int i = 0; i < len; i++)
 // 		{
 // 			if (data[i] == 0x0d)
@@ -955,46 +987,258 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR* cp, int from, const e
 // 					cp->cmd_char_pos++;
 // 				}
 // 
-// 				if (cp->cmd_char_list.size() > 0)
-// 				{
-// 					ex_astr str(cp->cmd_char_list.begin(), cp->cmd_char_list.end());
-// 					ex_replace_all(str, "\r", "");
-// 					ex_replace_all(str, "\n", "");
-// 					EXLOGD("[ssh] save cmd: [%s]\n", str.c_str());
-// 					str += "\r\n";
-// 					cp->rec.record_command(str);
-// 				}
-// 				cp->cmd_char_list.clear();
-// 				cp->cmd_char_pos = cp->cmd_char_list.begin();
-// 
 // 				processed = i + 1;
 // 			}
 // 		}
 // 
-// 		if (processed < len)
-// 		{
-// 			for (int j = processed; j < len; ++j)
+		if (processed < len)
+		{
+			for (int j = processed; j < len; ++j)
+			{
+				cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, data[j]);
+				cp->cmd_char_pos++;
+			}
+		}
+
+// 		const ex_u8* d = data;
+// 		int l = len;
+// 		bool esc_mode = false;
+// 		int esc_arg = 0;
+// 
+// 		for (; l > 0; ) {
+// 			ex_u8 ch = d[0];
+// 
+// 			if (esc_mode)
 // 			{
-// 				cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, data[j]);
-// 				cp->cmd_char_pos++;
+// 				switch (ch)
+// 				{
+// 				case '0':
+// 				case '1':
+// 				case '2':
+// 				case '3':
+// 				case '4':
+// 				case '5':
+// 				case '6':
+// 				case '7':
+// 				case '8':
+// 				case '9':
+// 					esc_arg = esc_arg * 10 + (ch - '0');
+// 					break;
+// 
+// 				case 0x3f:
+// 				case ';':
+// 				case '>':
+// 					cp->cmd_char_list.clear();
+// 					cp->cmd_char_pos = cp->cmd_char_list.begin();
+// 					return;
+// 					break;
+// 
+// 				case 0x4b:	// 'K'
+// 				{
+// 					if (0 == esc_arg)
+// 					{
+// 						// 删除光标到行尾的字符串
+// 						cp->cmd_char_list.erase(cp->cmd_char_pos, cp->cmd_char_list.end());
+// 						cp->cmd_char_pos = cp->cmd_char_list.end();
+// 					}
+// 					else if (1 == esc_arg)
+// 					{
+// 						// 删除从开始到光标处的字符串
+// 						cp->cmd_char_list.erase(cp->cmd_char_list.begin(), cp->cmd_char_pos);
+// 						cp->cmd_char_pos = cp->cmd_char_list.end();
+// 					}
+// 					else if (2 == esc_arg)
+// 					{
+// 						// 删除整行
+// 						cp->cmd_char_list.clear();
+// 						cp->cmd_char_pos = cp->cmd_char_list.begin();
+// 					}
+// 
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 				case 0x43:	// ^[C
+// 				{
+// 					// 光标右移
+// 					if (esc_arg == 0)
+// 						esc_arg = 1;
+// 					for (int j = 0; j < esc_arg; ++j)
+// 					{
+// 						if (cp->cmd_char_pos != cp->cmd_char_list.end())
+// 							cp->cmd_char_pos++;
+// 					}
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 				case 0x44:  // ^[D
+// 				{
+// 					// 光标左移
+// 					if (esc_arg == 0)
+// 						esc_arg = 1;
+// 					for (int j = 0; j < esc_arg; ++j)
+// 					{
+// 						if (cp->cmd_char_pos != cp->cmd_char_list.begin())
+// 							cp->cmd_char_pos--;
+// 					}
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 
+// 				case 0x50:	// 'P' 删除指定数量的字符
+// 				{
+// 					if (esc_arg == 0)
+// 						esc_arg = 1;
+// 					for (int j = 0; j < esc_arg; ++j)
+// 					{
+// 						if (cp->cmd_char_pos != cp->cmd_char_list.end())
+// 							cp->cmd_char_pos = cp->cmd_char_list.erase(cp->cmd_char_pos);
+// 					}
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 
+// 				case 0x40:	// '@' 插入指定数量的空白字符
+// 				{
+// 					if (esc_arg == 0)
+// 						esc_arg = 1;
+// 					for (int j = 0; j < esc_arg; ++j)
+// 					{
+// 						cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, ' ');
+// 					}
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 
+// 				default:
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 
+// 				d += 1;
+// 				l -= 1;
+// 				continue;
 // 			}
+// 
+// 			switch (ch)
+// 			{
+// 			case 0x07:
+// 			{
+// 				// 响铃
+// 				break;
+// 			}
+// 			case 0x08:
+// 			{
+// 				// 光标左移
+// 				if (cp->cmd_char_pos != cp->cmd_char_list.begin())
+// 					cp->cmd_char_pos--;
+// 				break;
+// 			}
+// 			case 0x09:
+// 			case 0x0d:
+// 			{
+// 				break;
+// 			}
+// 			case 0x1b:
+// 			{
+// 				//if (i + 1 < len)
+// 				if (l > 1)
+// 				{
+// 					//if (data[i + 1] == 0x5b)
+// 					if (d[1] == 0x5b)
+// 					{
+// 						esc_mode = true;
+// 						esc_arg = 0;
+// 
+// 						//i += 1;
+// 						d += 1;
+// 						l -= 1;
+// 						break;
+// 					}
+// 				}
+// 
+// 				break;
+// 			}
+// 			default:
+// 				if (cp->cmd_char_pos != cp->cmd_char_list.end())
+// 				{
+// 					cp->cmd_char_pos = cp->cmd_char_list.erase(cp->cmd_char_pos);
+// 					cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, ch);
+// 					cp->cmd_char_pos++;
+// 				}
+// 				else
+// 				{
+// 					cp->cmd_char_list.push_back(ch);
+// 					cp->cmd_char_pos = cp->cmd_char_list.end();
+// 				}
+// 			}
+// 
+// 			d += 1;
+// 			l -= 1;
 // 		}
+
 	}
 	else if (TP_SSH_SERVER_SIDE == from)
 	{
-		if (cp->cmd_flag == 0)
+		// TODO: 不能直接判断第一个字节，有时候客户端输入得非常快就回车时，服务端的回显字符可能跟回车换行符一起发回来，因此
+		// 应该将判断放到后面的循环中去。另外，不能只判断一个0d，需要判断两个字节 0d0a，否则在编辑器模式（vim/nano等）下客户端输入也会记录
+
+		const ex_u8* d = data;
+		int l = len;
+		// 如果上一个客户端数据包的最后一个字节是 0d，且当前服务端数据包以 0d0a 打头，则当前命令缓存区中的数据就是一条命令了，需要记录
+		//if (len >= 2 && (data[0] == 0x0d && data[1] == 0x0a)) {
+		if(data[0] == 0x0d) {
+			if (cp->maybe_cmd)
+				EXLOGD("[ssh]   maybe cmd.\n");
+			if (cp->maybe_cmd) {
+				if (cp->cmd_char_list.size() > 0)
+				{
+					ex_astr str(cp->cmd_char_list.begin(), cp->cmd_char_list.end());
+					EXLOGD("[ssh]   --==--==-- save cmd: [%s]\n", str.c_str());
+					cp->rec.record_command(str);
+				}
+
+				cp->cmd_char_list.clear();
+				cp->cmd_char_pos = cp->cmd_char_list.begin();
+				cp->maybe_cmd = false;
+			}
+			//else {
+			//	cp->cmd_char_list.clear();
+			//	cp->cmd_char_pos = cp->cmd_char_list.begin();
+			//}
+			else {
+				cp->process_srv = false;
+			}
+
+			//cp->maybe_cmd = false;
+
 			return;
-		if (len != 2 || !(data[0] == 0x0d && data[1] == 0x0a))
+		}
+		
+		if (cp->maybe_cmd) {
+			//if (!(len >= 2 && (data[0] == 0x0d && data[1] == 0x0a))) {
+			if(data[0] != 0x0d) {
+				cp->cmd_char_list.clear();
+				cp->cmd_char_pos = cp->cmd_char_list.begin();
+				cp->maybe_cmd = false;
+				return;
+			}
+		}
+
+// 		if (cp->cmd_flag == 0)
+// 			return;
+
+		if (!cp->process_srv)
 			return;
+		cp->process_srv = false;
 
 		bool esc_mode = false;
 		int esc_arg = 0;
+		for (; l > 0; ) {
+			ex_u8 ch = d[0];
 
-		for (int i = 0; i < len; i++)
-		{
 			if (esc_mode)
 			{
-				switch (data[i])
+				switch (ch)
 				{
 				case '0':
 				case '1':
@@ -1006,7 +1250,7 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR* cp, int from, const e
 				case '7':
 				case '8':
 				case '9':
-					esc_arg = esc_arg * 10 + (data[i] - '0');
+					esc_arg = esc_arg * 10 + (ch - '0');
 					break;
 
 				case 0x3f:
@@ -1098,10 +1342,12 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR* cp, int from, const e
 					break;
 				}
 
+				d += 1;
+				l -= 1;
 				continue;
 			}
 
-			switch (data[i])
+			switch (ch)
 			{
 			case 0x07:
 			{
@@ -1117,15 +1363,15 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR* cp, int from, const e
 			}
 			case 0x1b:
 			{
-				if (i + 1 < len)
+				if (l > 1)
 				{
-					if (data[i + 1] == 0x5b)
+					if (d[1] == 0x5b)
 					{
 						esc_mode = true;
 						esc_arg = 0;
 
-						i += 1;
-						break;
+						d += 1;
+						l -= 1;
 					}
 				}
 
@@ -1142,16 +1388,184 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR* cp, int from, const e
 				if (cp->cmd_char_pos != cp->cmd_char_list.end())
 				{
 					cp->cmd_char_pos = cp->cmd_char_list.erase(cp->cmd_char_pos);
-					cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, data[i]);
+					cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, ch);
 					cp->cmd_char_pos++;
 				}
 				else
 				{
-					cp->cmd_char_list.push_back(data[i]);
+					cp->cmd_char_list.push_back(ch);
 					cp->cmd_char_pos = cp->cmd_char_list.end();
 				}
 			}
+
+			d += 1;
+			l -= 1;
 		}
+
+// 		bool esc_mode = false;
+// 		int esc_arg = 0;
+// 		for (int i = 0; i < len; i++)
+// 		{
+// 			if (esc_mode)
+// 			{
+// 				switch (data[i])
+// 				{
+// 				case '0':
+// 				case '1':
+// 				case '2':
+// 				case '3':
+// 				case '4':
+// 				case '5':
+// 				case '6':
+// 				case '7':
+// 				case '8':
+// 				case '9':
+// 					esc_arg = esc_arg * 10 + (data[i] - '0');
+// 					break;
+// 
+// 				case 0x3f:
+// 				case ';':
+// 				case '>':
+// 					cp->cmd_char_list.clear();
+// 					cp->cmd_char_pos = cp->cmd_char_list.begin();
+// 					return;
+// 					break;
+// 
+// 				case 0x4b:	// 'K'
+// 				{
+// 					if (0 == esc_arg)
+// 					{
+// 						// 删除光标到行尾的字符串
+// 						cp->cmd_char_list.erase(cp->cmd_char_pos, cp->cmd_char_list.end());
+// 						cp->cmd_char_pos = cp->cmd_char_list.end();
+// 					}
+// 					else if (1 == esc_arg)
+// 					{
+// 						// 删除从开始到光标处的字符串
+// 						cp->cmd_char_list.erase(cp->cmd_char_list.begin(), cp->cmd_char_pos);
+// 						cp->cmd_char_pos = cp->cmd_char_list.end();
+// 					}
+// 					else if (2 == esc_arg)
+// 					{
+// 						// 删除整行
+// 						cp->cmd_char_list.clear();
+// 						cp->cmd_char_pos = cp->cmd_char_list.begin();
+// 					}
+// 
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 				case 0x43:	// ^[C
+// 				{
+// 					// 光标右移
+// 					if (esc_arg == 0)
+// 						esc_arg = 1;
+// 					for (int j = 0; j < esc_arg; ++j)
+// 					{
+// 						if (cp->cmd_char_pos != cp->cmd_char_list.end())
+// 							cp->cmd_char_pos++;
+// 					}
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 				case 0x44:  // ^[D
+// 				{
+// 					// 光标左移
+// 					if (esc_arg == 0)
+// 						esc_arg = 1;
+// 					for (int j = 0; j < esc_arg; ++j)
+// 					{
+// 						if (cp->cmd_char_pos != cp->cmd_char_list.begin())
+// 							cp->cmd_char_pos--;
+// 					}
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 
+// 				case 0x50:	// 'P' 删除指定数量的字符
+// 				{
+// 					if (esc_arg == 0)
+// 						esc_arg = 1;
+// 					for (int j = 0; j < esc_arg; ++j)
+// 					{
+// 						if (cp->cmd_char_pos != cp->cmd_char_list.end())
+// 							cp->cmd_char_pos = cp->cmd_char_list.erase(cp->cmd_char_pos);
+// 					}
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 
+// 				case 0x40:	// '@' 插入指定数量的空白字符
+// 				{
+// 					if (esc_arg == 0)
+// 						esc_arg = 1;
+// 					for (int j = 0; j < esc_arg; ++j)
+// 					{
+// 						cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, ' ');
+// 					}
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 
+// 				default:
+// 					esc_mode = false;
+// 					break;
+// 				}
+// 
+// 				continue;
+// 			}
+// 
+// 			switch (data[i])
+// 			{
+// 			case 0x07:
+// 			{
+// 				// 响铃
+// 				break;
+// 			}
+// 			case 0x08:
+// 			{
+// 				// 光标左移
+// 				if (cp->cmd_char_pos != cp->cmd_char_list.begin())
+// 					cp->cmd_char_pos--;
+// 				break;
+// 			}
+// 			case 0x1b:
+// 			{
+// 				if (i + 1 < len)
+// 				{
+// 					if (data[i + 1] == 0x5b)
+// 					{
+// 						esc_mode = true;
+// 						esc_arg = 0;
+// 
+// 						i += 1;
+// 						break;
+// 					}
+// 				}
+// 
+// 				break;
+// 			}
+// 			case 0x0d:
+// 			{
+// 				cp->cmd_char_list.clear();
+// 				cp->cmd_char_pos = cp->cmd_char_list.begin();
+// 
+// 				break;
+// 			}
+// 			default:
+// 				if (cp->cmd_char_pos != cp->cmd_char_list.end())
+// 				{
+// 					cp->cmd_char_pos = cp->cmd_char_list.erase(cp->cmd_char_pos);
+// 					cp->cmd_char_pos = cp->cmd_char_list.insert(cp->cmd_char_pos, data[i]);
+// 					cp->cmd_char_pos++;
+// 				}
+// 				else
+// 				{
+// 					cp->cmd_char_list.push_back(data[i]);
+// 					cp->cmd_char_pos = cp->cmd_char_list.end();
+// 				}
+// 			}
+// 		}
 	}
 
 	return;

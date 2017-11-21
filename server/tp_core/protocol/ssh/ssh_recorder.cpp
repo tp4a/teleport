@@ -127,6 +127,7 @@ void TppSshRec::record_command(const ex_astr& cmd)
 
 	m_cmd_cache.append((ex_u8*)szTime, lenTime);
 	m_cmd_cache.append((ex_u8*)cmd.c_str(), cmd.length());
+	m_cmd_cache.append((ex_u8*)"\r\n", 2);
 }
 
 bool TppSshRec::_save_to_info_file() {
