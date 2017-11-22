@@ -23,10 +23,6 @@
 class SshProxy;
 class SshSession;
 
-#define TP_CHAR_NUL		0x00
-#define TP_CHAR_CR		0x0D
-#define TP_CHAR_TAB		0x09
-
 class TP_SSH_CHANNEL_PAIR {
 
 	friend class SshSession;
@@ -45,13 +41,15 @@ private:
 	int db_id;
 	int channel_id;	// for debug only.
 
+	int win_width; // window width, in char count.
+
 	bool is_first_server_data;
 
 	// for ssh command record cache.
-	//ex_u8 last_client_char;	// 最近一次收到的客户端数据的最后一个字节
+	bool server_ready;
 	bool maybe_cmd;
-	//int cmd_flag;
 	bool process_srv;
+	bool client_single_char;
 	std::list<char> cmd_char_list;
 	std::list<char>::iterator cmd_char_pos;
 };

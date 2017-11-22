@@ -26,7 +26,7 @@ public:
 	void record(ex_u8 type, const ex_u8* data, size_t size);
 	void record_win_size_startup(int width, int height);
 	void record_win_size_change(int width, int height);
-	void record_command(const ex_astr& cmd);
+	void record_command(int flag, const ex_astr& cmd);
 
     void save_record();
 

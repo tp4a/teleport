@@ -103,24 +103,26 @@ void TppSshRec::record_win_size_change(int width, int height)
 	record(TS_RECORD_TYPE_SSH_TERM_SIZE, (ex_u8*)&pkg, sizeof(TS_RECORD_WIN_SIZE));
 }
 
-void TppSshRec::record_command(const ex_astr& cmd)
+// TODO: 为了录像回放和命令历史能够对应（比如点击命令直接跳到录像的对应时点），应该仿照录像数据包的方式记录相对时间偏移，而不是绝对时间。
+void TppSshRec::record_command(int flag, const ex_astr& cmd)
 {
 	char szTime[100] = { 0 };
 #ifdef EX_OS_WIN32
-	SYSTEMTIME st;
-	GetLocalTime(&st);
-	sprintf_s(szTime, 100, "[%04d-%02d-%02d %02d:%02d:%02d] ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+// 	SYSTEMTIME st;
+// 	GetLocalTime(&st);
+// 	sprintf_s(szTime, 100, "[%04d-%02d-%02d %02d:%02d:%02d %d] ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, flag);
 #else
-	time_t timep;
-	struct tm *p;
-	time(&timep);
-	p = localtime(&timep);
-	if (p == NULL)
-		return;
-	sprintf(szTime, "[%04d-%02d-%02d %02d:%02d:%02d] ", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
+// 	time_t timep;
+// 	struct tm *p;
+// 	time(&timep);
+// 	p = localtime(&timep);
+// 	if (p == NULL)
+// 		return;
+// 	sprintf(szTime, "[%04d-%02d-%02d %02d:%02d:%02d %d] ", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, flag);
 #endif
-	size_t lenTime = strlen(szTime);
 
+	ex_strformat(szTime, 99, "%d,%d,", (ex_u32)(ex_get_tick_count() - m_start_time), flag);
+	size_t lenTime = strlen(szTime);
 
 	if (m_cmd_cache.size() + cmd.length() + lenTime > MAX_SIZE_PER_FILE)
 		_save_to_cmd_file();

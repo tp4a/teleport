@@ -170,19 +170,25 @@ class ReplayHandler(TPBaseHandler):
 class ComandLogHandler(TPBaseHandler):
     @tornado.gen.coroutine
     def get(self, protocol, record_id):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY)
+        if ret != TPE_OK:
+            return
 
+        param = dict()
         header, err = record.read_record_head(record_id)
         if header is None:
-            return self.write('操作失败')
+            # return self.write('操作失败！[{}]'.format(err))
+            param['code'] = err
+            return self.render('audit/record-ssh-cmd.mako', page_param=json.dumps(param))
 
         # ret = dict()
         # ret['header'] = header
         # return self.write_json(0, data=ret)
 
-        param = dict()
         param['header'] = header
         param['count'] = 0
         param['op'] = list()
+        param['code'] = TPE_OK
 
         cmd_type = 0  # 0 = ssh, 1 = sftp
         protocol = int(protocol)
@@ -195,18 +201,24 @@ class ComandLogHandler(TPBaseHandler):
                 file = open(file_info, 'r')
                 data = file.readlines()
                 for i in range(len(data)):
+                    cmd = data[i].split(',', 2)
+                    if len(cmd) != 3:
+                        continue
                     if 0 == i:
-                        cmd = data[i][22:-1]
-                        if 'SFTP INITIALIZE' == cmd:
+                        if 'SFTP INITIALIZE' == cmd[2]:
                             cmd_type = 1
                             continue
+
+                    t = int(cmd[0])
+                    f = int(cmd[1])
+
                     if cmd_type == 0:
-                        param['op'].append({'t': data[i][1:20], 'c': data[i][22:-1]})
+                        param['op'].append({'t': t, 'f': f, 'c': cmd[2]})
                     else:
-                        cmd_info = data[i][22:-1].split(':')
+                        cmd_info = cmd[2].split(':')
                         if len(cmd_info) != 4:
                             continue
-                        param['op'].append({'t': data[i][1:20], 'c': cmd_info[0], 'p1': cmd_info[2], 'p2': cmd_info[3]})
+                        param['op'].append({'t': t, 'c': cmd[2], 'p1': cmd_info[2], 'p2': cmd_info[3]})
             except:
                 pass
             param['count'] = len(param['op'])
