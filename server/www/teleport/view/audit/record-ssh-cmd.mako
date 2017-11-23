@@ -9,11 +9,11 @@
 
 <%block name="extend_css">
     <style type="text/css">
-        #err-box, #op-box, #no-msg-box {
+        #err-box, #op-box, #no-op-box {
             display: none;
         }
 
-        #no-msg-box {
+        #no-op-box {
             padding: 20px;
             margin: 50px;
             background-color: #fffed5;
@@ -102,7 +102,7 @@
             错误原因：<span id="err-more-info" class="bold"></span>
         </div>
     </div>
-    <div id="no-msg-box">
+    <div id="no-op-box">
         他悄悄地来，又悄悄地走，挥一挥衣袖，没有留下任何操作~~~~
     </div>
     <div id="op-box">
@@ -117,6 +117,7 @@
 
 <%block name="embed_js">
     <script type="text/javascript">
+        "use strict";
 
         $app.add_options(${page_param});
 
@@ -130,7 +131,7 @@
                 , rec_info: $('#recorder-info')
                 , err_box: $('#err-box')
                 , err_more: $('#err-more-info')
-                , no_msg_box: $('#no-op-msg')
+                , no_op_box: $('#no-op-box')
                 , op_box: $('#op-box')
                 , op_list: $('#op-list')
             };
@@ -151,7 +152,7 @@
 
             var op = $app.options.op;
             if (op.length === 0) {
-                $app.dom.no_msg_box.show();
+                $app.dom.no_op_box.show();
                 cb_stack.exec();
                 return;
             }

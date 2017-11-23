@@ -201,7 +201,7 @@ class ComandLogHandler(TPBaseHandler):
                 file = open(file_info, 'r')
                 data = file.readlines()
                 for i in range(len(data)):
-                    cmd = data[i].split(',', 2)
+                    cmd = data[i].rstrip('\r\n').split(',', 2)
                     if len(cmd) != 3:
                         continue
                     if 0 == i:
@@ -215,13 +215,20 @@ class ComandLogHandler(TPBaseHandler):
                     if cmd_type == 0:
                         param['op'].append({'t': t, 'f': f, 'c': cmd[2]})
                     else:
-                        cmd_info = cmd[2].split(':')
-                        if len(cmd_info) != 4:
+                        cmd_info = cmd[2].split(',', 2)
+                        if len(cmd_info) != 3:
                             continue
-                        param['op'].append({'t': t, 'c': cmd[2], 'p1': cmd_info[2], 'p2': cmd_info[3]})
+                        c = int(cmd_info[0])
+                        r = int(cmd_info[1])
+                        p = cmd_info[2].split(':')
+                        p1 = p[0]
+                        p2 = ''
+                        if len(p) > 1:
+                            p2 = p[1]
+                        param['op'].append({'t': t, 'c': c, 'r': r, 'p1': p1, 'p2': p2})
             except:
                 pass
-            param['count'] = len(param['op'])
+            # param['count'] = len(param['op'])
 
         if cmd_type == 0:
             self.render('audit/record-ssh-cmd.mako', page_param=json.dumps(param))
@@ -277,19 +284,3 @@ class DoGetRecordDataHandler(TPBaseJsonHandler):
 
         data_list, data_size, err = record.read_record_data(record_id, offset)
         self.write_json(err, data={'data_list': data_list, 'data_size': data_size})
-
-# class DeleteLog(TPBaseAdminAuthJsonHandler):
-#     # TODO: 用户可能会批量删除大量录像文件，因此io操作可能会比较耗时，这里应该改为异步方式。
-#     def post(self):
-#         args = self.get_argument('args', None)
-#         if args is not None:
-#             args = json.loads(args)
-#         else:
-#             return self.write_json(-1, '参数错误')
-#
-#         log_list = args['log_list']
-#
-#         if not record.delete_log(log_list):
-#             return self.write_json(-3, '操作失败')
-#
-#         return self.write_json(0)

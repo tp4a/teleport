@@ -136,6 +136,11 @@
                     <div class="row">
                         <div class="col-md-4">
                             <ul class="list">
+                                <li>微信小程序
+                                    <ul class="list">
+                                        <li><a href="javascript:;" data-switch="wechat"><i class="fa fa-wechat fa-fw"></i> 二次验证码</a> <span class="label label-success">推荐</span></li>
+                                    </ul>
+                                </li>
                                 <li>谷歌身份验证器
                                     <ul class="list">
                                         <li><a href="javascript:;" data-switch="g-ios-appstore"><i class="fa fa-apple fa-fw"></i> iOS（Apple Store）</a></li>
@@ -147,11 +152,6 @@
                                     <ul class="list">
                                         <li><a href="javascript:;" data-switch="mi-ios-appstore"><i class="fa fa-apple fa-fw"></i> iOS（Apple Store）</a></li>
                                         <li><a href="javascript:;" data-switch="mi-android-mi"><i class="fa fa-android fa-fw"></i> Android（小米应用商店）</a></li>
-                                    </ul>
-                                </li>
-                                <li>微信小程序
-                                    <ul class="list">
-                                        <li><a href="javascript:;" data-switch="wechat"><i class="fa fa-wechat fa-fw"></i> 二次验证码</a> <span class="label label-success">推荐</span></li>
                                     </ul>
                                 </li>
                             </ul>
