@@ -47,7 +47,7 @@ class BuilderBase:
 class BuilderWin(BuilderBase):
     def __init__(self):
         super().__init__()
-        self.name = 'teleport-server-windows-{}-{}'.format(ctx.bits_path, VER_TELEPORT_SERVER)
+        self.name = 'teleport-server-windows-{}-{}'.format(ctx.bits_path, VER_TP_WEB_SERVER)
         self._final_file = os.path.join(env.root_path, 'out', 'installer', '{}.zip'.format(self.name))
 
         self.dist_path = os.path.join(env.root_path, 'dist', 'server')
@@ -92,7 +92,7 @@ class BuilderWin(BuilderBase):
 class BuilderLinux(BuilderBase):
     def __init__(self):
         super().__init__()
-        self.name = 'teleport-server-linux-{}-{}'.format(ctx.bits_path, VER_TELEPORT_SERVER)
+        self.name = 'teleport-server-linux-{}-{}'.format(ctx.bits_path, VER_TP_WEB_SERVER)
         self._final_file = os.path.join(env.root_path, 'out', 'installer', '{}.tar.gz'.format(self.name))
 
         self.dist_path = os.path.join(env.root_path, 'dist', 'server')
