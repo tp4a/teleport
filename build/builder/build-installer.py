@@ -10,6 +10,8 @@ from core.context import *
 from core.ver import *
 
 ctx = BuildContext()
+with_rdp = os.path.exists(os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'rdp'))
+with_telnet = os.path.exists(os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'telnet'))
 
 
 # COMMON_MODULES = ['paste', 'pyasn1', 'pymemcache', 'pymysql', 'rsa', 'tornado', 'six.py']
@@ -47,7 +49,7 @@ class BuilderBase:
 class BuilderWin(BuilderBase):
     def __init__(self):
         super().__init__()
-        self.name = 'teleport-server-windows-{}-{}'.format(ctx.bits_path, VER_TP_WEB_SERVER)
+        self.name = 'teleport-server-windows-{}-{}'.format(ctx.bits_path, VER_TP_SERVER)
         self._final_file = os.path.join(env.root_path, 'out', 'installer', '{}.zip'.format(self.name))
 
         self.dist_path = os.path.join(env.root_path, 'dist', 'server')
@@ -73,7 +75,8 @@ class BuilderWin(BuilderBase):
         utils.copy_ex(out_path, bin_path, 'tp_web.exe')
         utils.copy_ex(out_path, bin_path, 'tp_core.exe')
         utils.copy_ex(out_path, bin_path, 'tpssh.dll')
-        utils.copy_ex(out_path, bin_path, 'tprdp.dll')
+        if with_rdp:
+            utils.copy_ex(out_path, bin_path, 'tprdp.dll')
 
         utils.copy_ex(os.path.join(env.root_path, 'out', 'pysrt'), bin_path, (ctx.dist_path, 'pysrt'))
 
@@ -92,7 +95,7 @@ class BuilderWin(BuilderBase):
 class BuilderLinux(BuilderBase):
     def __init__(self):
         super().__init__()
-        self.name = 'teleport-server-linux-{}-{}'.format(ctx.bits_path, VER_TP_WEB_SERVER)
+        self.name = 'teleport-server-linux-{}-{}'.format(ctx.bits_path, VER_TP_SERVER)
         self._final_file = os.path.join(env.root_path, 'out', 'installer', '{}.tar.gz'.format(self.name))
 
         self.dist_path = os.path.join(env.root_path, 'dist', 'server')
@@ -129,7 +132,8 @@ class BuilderLinux(BuilderBase):
         utils.copy_ex(out_path, bin_path, 'tp_web')
         utils.copy_ex(out_path, bin_path, 'tp_core')
         utils.copy_ex(out_path, bin_path, 'libtpssh.so')
-        utils.copy_ex(out_path, bin_path, 'libtprdp.so')
+        if with_rdp:
+            utils.copy_ex(out_path, bin_path, 'libtprdp.so')
 
         utils.copy_ex(os.path.join(env.root_path, 'out', 'pysrt'), bin_path, (ctx.dist_path, 'pysrt'))
 

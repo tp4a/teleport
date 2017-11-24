@@ -810,7 +810,11 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 			else
 				auth_mode = "unknown";
 
+#ifdef EX_OS_WIN32
+			int w = min(cp->win_width, 128);
+#else
 			int w = std::min(cp->win_width, 128);
+#endif
 			ex_astr line(w, '=');
 
 			snprintf(buf, sizeof(buf),

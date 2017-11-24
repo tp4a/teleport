@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
-# import codecs
-# import shutil
-# import time
 from core import colorconsole as cc
 from core import utils
 from core.context import *
 from core.env import env
 
 ctx = BuildContext()
+with_rdp = os.path.exists(os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'rdp'))
+with_telnet = os.path.exists(os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'telnet'))
 
 
 class BuilderBase:
@@ -52,7 +51,7 @@ class BuilderWin(BuilderBase):
         utils.msvc_build(sln_file, 'tpssh', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
 
-        if os.path.exists(os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'ssh', 'tpssh.vs2015.sln')):
+        if with_rdp:
             cc.n('build RDP protocol ...')
             sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'rdp', 'tprdp.vs2015.sln')
             out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tprdp.dll')
@@ -70,8 +69,11 @@ class BuilderLinux(BuilderBase):
         cc.n('build server app (tp_core/libtpssh/tp_web)...')
 
         out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
-        out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'libtpssh.so'),
-                     os.path.join(out_path, 'tp_web')]
+        out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'tp_web')]
+        out_files.extend(os.path.join(out_path, 'libtpssh.so'))
+        if with_rdp:
+            out_files.extend(os.path.join(out_path, 'libtprdp.so'))
+        # out_files.extend(os.path.join(out_path, 'libtptelnet.so'))
 
         for f in out_files:
             if os.path.exists(f):
@@ -95,8 +97,11 @@ class BuilderMacOS(BuilderBase):
         cc.n('build server app (tp_core/libtpssh/tp_web)...')
 
         out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
-        out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'libtpssh.so'),
-                     os.path.join(out_path, 'tp_web')]
+        out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'tp_web')]
+        out_files.extend(os.path.join(out_path, 'libtpssh.so'))
+        if with_rdp:
+            out_files.extend(os.path.join(out_path, 'libtprdp.so'))
+        # out_files.extend(os.path.join(out_path, 'libtptelnet.so'))
 
         for f in out_files:
             if os.path.exists(f):
