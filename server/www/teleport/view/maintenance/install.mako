@@ -50,7 +50,7 @@
 ## Begin Main Body.
 
 <div class="content-box">
-    <p class="welcome-message"><i class="fa fa-heart"></i> <span>欢迎安装使用 TELEPORT v${app_ver.TP_SERVER_VER} 社区版！</span></p>
+    <p class="welcome-message"><i class="fa fa-heart"></i> <span>欢迎安装使用 TELEPORT v${app_ver.TP_SRV_WWW_VER} 社区版！</span></p>
 
     <hr/>
     <h2><i class="fa fa-chevron-right"></i> 确定数据库类型</h2>

@@ -77,12 +77,20 @@ body {
         //line-height: 20px;
 
         & > li + li:before {
-          //font-size: 24px;
-          //line-height: 20px;
-          //padding: 0 5px;
-          //color: #ccc;
           content: "\f105";
           font-family: 'FontAwesome';
+        }
+
+        &.breadcrumb-list {
+          & > li {
+            font-size: @text-size-normal;
+          }
+          & > li + li:before {
+            //content: "\f105";
+            //font-family: 'FontAwesome';
+            content: " ";
+            margin:0 5px;
+          }
         }
       }
     }
@@ -1073,7 +1081,7 @@ textarea.cert_pub {
 
   &.tp-editable {
     cursor: pointer;
-      color: #459dee;
+    color: #459dee;
     &:hover {
       color: #53af43;
     }

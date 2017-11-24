@@ -16,6 +16,13 @@
     </style>
 </%block>
 
+<%block name="breadcrumb_extra">
+    <ol class="breadcrumb breadcrumb-list">
+##         <li><i class="fa fa-clock-o"></i> 服务器时间：<span id="tp-timer">-</span></li>
+        <li><i class="fa fa-flash"></i> 助手版本：<span id="tp-assist-ver"></span></li>
+    </ol>
+</%block>
+
 ## Begin Main Body.
 
 <div class="page-content-inner">
@@ -29,8 +36,6 @@
             </div>
             <div class="table-extend-cell table-extend-cell-right group-actions">
                 <button id="btn-add-host" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 添加主机</button>
-                ##                 <button id="btn-add-temp-account" class="btn btn-sm btn-success"><i class="fa fa-plus-circle fa-fw"></i> 添加主机</button>
-
                 <button id="btn-import-asset" class="btn btn-sm btn-default"><i class="fa fa-plus-square fa-fw"></i> 导入主机和账号</button>
             </div>
         </div>

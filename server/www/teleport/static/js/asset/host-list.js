@@ -2,6 +2,7 @@
 
 $app.on_init = function (cb_stack) {
     $app.dom = {
+        assist_ver: $('#tp-assist-ver'),
         btn_refresh_host: $('#btn-refresh-host'),
         btn_add_host: $('#btn-add-host'),
         chkbox_host_select_all: $('#table-host-select-all'),
@@ -16,6 +17,15 @@ $app.on_init = function (cb_stack) {
         btn_do_upload: $('#btn-do-upload-file'),
         upload_file_info: $('#upload-file-info'),
         upload_file_message: $('#upload-file-message')
+    };
+
+    $tp.assist_checked = function() {
+        console.log("---------");
+        if($tp.assist.running) {
+            $app.dom.assist_ver.html($tp.assist.version);
+        } else {
+            $app.dom.assist_ver.html('<a href="http://teleport.eomsoft.net/download" target="_blank" class="error">未能检测到</a>');
+        }
     };
 
     cb_stack

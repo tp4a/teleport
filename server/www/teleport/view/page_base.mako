@@ -50,10 +50,10 @@
             </%block>
         </div>
 
-        <div class="page-header-extra" style="display:inline-block;float:right;padding-top:12px;">
-##             <ol class="bread-crumb">
-##                 <li><i class="fa fa-clock-o fa-fw"></i> <span id="system-timer">111</span></li>
-##             </ol>
+        <div class="page-header-extra" style="display:inline-block;float:right;">
+            <div class="breadcrumb-container">
+                <%block name="breadcrumb_extra"/>
+            </div>
         </div>
     </div>
 </div>

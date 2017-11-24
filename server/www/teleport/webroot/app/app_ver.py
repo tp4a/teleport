@@ -1,2 +1,2 @@
 # -*- coding: utf8 -*-
-TP_SRV_WWW_VER = "3.0.0.1"
+TP_SERVER_VER = "3.0.0.1"

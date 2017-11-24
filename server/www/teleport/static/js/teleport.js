@@ -59,17 +59,17 @@ var CALLBACK_STACK = {
 
 // Teleport核心JS
 var $tp = {
-    // server_host: window.location.hostname || '',
-    // server_port: (window.location.port === "") ? 80 : parseInt(window.location.port),
-    web_server: window.location.protocol+'://'+window.location.host,
+    web_server: window.location.protocol+'://'+window.location.host
 
     // Teleport页面应用对象，放置页面自身特有的属性和函数
-    app: {
-        options: {},
-        on_init: function (cb_stack) {
+    , app: {
+        options: {}
+        , on_init: function (cb_stack) {
             cb_stack.exec();
         }   // should be overwrite.
     }
+
+    , assist_checked: null
 };
 
 $tp.init = function () {
@@ -115,11 +115,13 @@ $tp.init = function () {
     ];
 
     var cs = CALLBACK_STACK.create();
-    cs.add($tp.app.init);
+
 
     if(!_.isUndefined($tp.assist)) {
         cs.add($tp.assist.init);
     }
+
+    cs.add($tp.app.init);
 
     cs.exec();
 };

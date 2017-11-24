@@ -1,9 +1,8 @@
 "use strict";
 
 $tp.assist = {
-    ver_request: '',
-    ver_last: '',
-    ver_current: '',
+    running: false,
+    version: '',
     api_url: 'http://localhost:50022/api',
     teleport_ip: window.location.hostname
 };
@@ -25,7 +24,12 @@ $assist.init = function (cb_stack) {
         jsonp: 'callback',
         dataType: 'json',
         success: function (ret) {
-            $assist.ver_current = ret.version;
+            $assist.running = true;
+            $assist.version = ret.version;
+
+            if(_.isFunction($tp.assist_checked)) {
+                $tp.assist_checked();
+            }
             // if (version_compare()) {
             //     error_process(ret, func_success, func_error);
             // } else {
@@ -33,6 +37,10 @@ $assist.init = function (cb_stack) {
             // }
         },
         error: function () {
+            $assist.running = false;
+            if(_.isFunction($tp.assist_checked)) {
+                $tp.assist_checked();
+            }
             // func_error({}, TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
             // $tp.notify_error('无法连接到teleport助手，可能尚未启动！');
             // $assist.alert_assist_not_found();

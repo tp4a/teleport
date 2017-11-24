@@ -205,7 +205,8 @@
 
     <hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:0;"/>
     <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:70px;text-align: right">服务端：</span><span class="mono">v${app_ver.TP_SERVER_VER}</span></div>
-    <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:70px;text-align: right">助手：</span><span class="mono" id="tp-assist-version" data-req-version=${app_ver.TP_ASSIST_REQUIRE}>v${app_ver.TP_ASSIST_LAST_VER}</span></div>
+##     <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:70px;text-align: right">助手：</span><span class="mono" id="tp-assist-version" data-req-version=$ { app_ver.TP_ASSIST_REQUIRE}>v$ { app_ver.TP_ASSIST_LAST_VER}</span></div>
+##     <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:70px;text-align: right">助手：</span><span class="mono" id="tp-assist-version">未连接</span></div>
     <hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:20px;margin-top:5px;"/>
 
 ## </div>
