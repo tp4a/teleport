@@ -9,6 +9,7 @@ import time
 import platform
 
 from . import colorconsole as cc
+from . import utils
 
 rm_file_every_level = ['.pyc', '.pyo']
 
@@ -47,7 +48,8 @@ def remove_cache(path):
         for d in dir_list:
             d = d.lower()
             if d == '__pycache__':
-                shutil.rmtree(os.path.join(parent, d))
+                # shutil.rmtree(os.path.join(parent, d))
+                utils.remove(os.path.join(parent, d))
                 continue
             remove_cache(os.path.join(parent, d))
 

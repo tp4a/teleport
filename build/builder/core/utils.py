@@ -107,7 +107,7 @@ def extension_suffixes():
 
 
 def remove(*args):
-    path = os.path.join(*args)
+    path = os.path.abspath(os.path.join(*args))
 
     cc.v('remove [%s] ...' % path, end='')
     if not os.path.exists(path):
@@ -118,6 +118,8 @@ def remove(*args):
         cc.v('.', end='')
         try:
             if os.path.isdir(path):
+                if path == '/':
+                    raise RuntimeError('### What are you doing?!! ###')
                 shutil.rmtree(path, ignore_errors=True)
                 time.sleep(0.5)
             else:

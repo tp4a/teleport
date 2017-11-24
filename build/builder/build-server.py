@@ -7,7 +7,6 @@ from core.env import env
 
 ctx = BuildContext()
 with_rdp = os.path.exists(os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'rdp'))
-with_telnet = os.path.exists(os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'telnet'))
 
 
 class BuilderBase:
@@ -70,9 +69,9 @@ class BuilderLinux(BuilderBase):
 
         out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
         out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'tp_web')]
-        out_files.extend(os.path.join(out_path, 'libtpssh.so'))
+        out_files.append(os.path.join(out_path, 'libtpssh.so'))
         if with_rdp:
-            out_files.extend(os.path.join(out_path, 'libtprdp.so'))
+            out_files.append(os.path.join(out_path, 'libtprdp.so'))
         # out_files.extend(os.path.join(out_path, 'libtptelnet.so'))
 
         for f in out_files:
@@ -98,9 +97,9 @@ class BuilderMacOS(BuilderBase):
 
         out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
         out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'tp_web')]
-        out_files.extend(os.path.join(out_path, 'libtpssh.so'))
+        out_files.append(os.path.join(out_path, 'libtpssh.so'))
         if with_rdp:
-            out_files.extend(os.path.join(out_path, 'libtprdp.so'))
+            out_files.append(os.path.join(out_path, 'libtprdp.so'))
         # out_files.extend(os.path.join(out_path, 'libtptelnet.so'))
 
         for f in out_files:
@@ -154,15 +153,6 @@ def main():
 
     if 'server' in argv:
         builder.build_server()
-
-        # if 'app' in argv:
-        #     builder.build_app()
-
-        # if 'installer' in argv:
-        #     builder.build_installer()
-
-        # if 'runtime' in argv:
-        #     builder.build_runtime()
 
 
 if __name__ == '__main__':
