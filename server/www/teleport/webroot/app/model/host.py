@@ -97,7 +97,7 @@ def add_host(handler, args):
     if db_ret is not None and len(db_ret) > 0:
         return TPE_EXISTS, 0
 
-    sql = 'INSERT INTO `{}host` (type, os_type, name, ip, router_ip, router_port, state, creator_id, create_time, cid, desc) VALUES ' \
+    sql = 'INSERT INTO `{}host` (`type`, `os_type`, `name`, `ip`, `router_ip`, `router_port`, `state`, `creator_id`, `create_time`, `cid`, `desc`) VALUES ' \
           '(1, {os_type}, "{name}", "{ip}", "{router_ip}", {router_port}, {state}, {creator_id}, {create_time}, "{cid}", "{desc}");' \
           ''.format(db.table_prefix,
                     os_type=args['os_type'], name=args['name'], ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'],
@@ -221,7 +221,7 @@ def update_host(handler, args):
         return TPE_NOT_EXISTS
 
     sql_list = []
-    sql = 'UPDATE `{}host` SET os_type="{os_type}", name="{name}", ip="{ip}", router_ip="{router_ip}", router_port={router_port}, cid="{cid}", desc="{desc}" WHERE id={host_id};' \
+    sql = 'UPDATE `{}host` SET `os_type`="{os_type}", `name`="{name}", `ip`="{ip}", `router_ip`="{router_ip}", `router_port`={router_port}, `cid`="{cid}", `desc`="{desc}" WHERE `id`={host_id};' \
           ''.format(db.table_prefix,
                     os_type=args['os_type'], name=args['name'], ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'],
                     cid=args['cid'], desc=args['desc'], host_id=args['id']
@@ -229,7 +229,7 @@ def update_host(handler, args):
     sql_list.append(sql)
 
     # 更新所有此主机相关的账号
-    sql = 'UPDATE `{}acc` SET host_ip="{ip}", router_ip="{router_ip}", router_port={router_port} WHERE host_id={id};' \
+    sql = 'UPDATE `{}acc` SET `host_ip`="{ip}", `router_ip`="{router_ip}", `router_port`={router_port} WHERE `host_id`={id};' \
           ''.format(db.table_prefix,
                     ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'], id=args['id'])
     sql_list.append(sql)
@@ -247,16 +247,16 @@ def update_hosts_state(handler, host_ids, state):
 
     sql_list = []
 
-    sql = 'UPDATE `{}host` SET state={state} WHERE id IN ({host_ids});' \
+    sql = 'UPDATE `{}host` SET `state`={state} WHERE `id` IN ({host_ids});' \
           ''.format(db.table_prefix, state=state, host_ids=host_ids)
     sql_list.append(sql)
 
     # sync to update the ops-audit table.
-    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE rtype={rtype} AND rid IN ({rid});' \
+    sql = 'UPDATE `{}ops_auz` SET `state`={state} WHERE `rtype`={rtype} AND `rid` IN ({rid});' \
           ''.format(db.table_prefix, state=state, rtype=TP_ACCOUNT, rid=host_ids)
     sql_list.append(sql)
 
-    sql = 'UPDATE `{}ops_map` SET h_state={state} WHERE h_id IN ({host_ids});' \
+    sql = 'UPDATE `{}ops_map` SET `h_state`={state} WHERE `h_id` IN ({host_ids});' \
           ''.format(db.table_prefix, state=state, host_ids=host_ids)
     sql_list.append(sql)
 

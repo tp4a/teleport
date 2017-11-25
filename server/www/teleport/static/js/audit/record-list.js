@@ -2,8 +2,11 @@
 
 $app.on_init = function (cb_stack) {
     $app.dom = {
+        storage_info: $('#storage-info'),
         btn_refresh_record: $('#btn-refresh-record')
     };
+
+    $app.dom.storage_info.html('总 ' + tp_size2str($app.options.total_size, 2) + '，' + '可用 ' + tp_size2str($app.options.free_size, 2));
 
     cb_stack
         .add($app.create_controls)

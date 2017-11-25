@@ -256,7 +256,7 @@ def update_user(handler, args):
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
-    sql = 'UPDATE `{}user` SET surname="{surname}", auth_type={auth_type}, role_id={role}, email="{email}", mobile="{mobile}", qq="{qq}", wechat="{wechat}", `desc`="{desc}" WHERE id={user_id};' \
+    sql = 'UPDATE `{}user` SET `surname`="{surname}", `auth_type`={auth_type}, `role_id`={role}, `email`="{email}", `mobile`="{mobile}", `qq`="{qq}", `wechat`="{wechat}", `desc`="{desc}" WHERE `id`={user_id};' \
           ''.format(db.table_prefix,
                     surname=args['surname'], auth_type=args['auth_type'], role=args['role'], email=args['email'],
                     mobile=args['mobile'], qq=args['qq'], wechat=args['wechat'], desc=args['desc'],

@@ -144,7 +144,7 @@ def update(handler, gid, name, desc):
         return TPE_NOT_EXISTS
 
     # 2. 更新记录
-    sql = 'UPDATE `{}group` SET name="{name}", desc="{desc}" WHERE id={gid};' \
+    sql = 'UPDATE `{}group` SET `name`="{name}", `desc`="{desc}" WHERE id={gid};' \
           ''.format(db.table_prefix, name=name, desc=desc, gid=gid)
     db_ret = db.exec(sql)
     if not db_ret:
@@ -157,7 +157,7 @@ def add_members(gtype, gid, members):
     db = get_db()
     sql = []
     for uid in members:
-        sql.append('INSERT INTO `{}group_map` (type, gid, mid) VALUES ({}, {}, {});'.format(db.table_prefix, gtype, gid, uid))
+        sql.append('INSERT INTO `{}group_map` (`type`, `gid`, `mid`) VALUES ({}, {}, {});'.format(db.table_prefix, gtype, gid, uid))
     if db.transaction(sql):
         return TPE_OK
     else:

@@ -103,7 +103,7 @@ def create_policy(handler, args):
         return TPE_DATABASE, 0
     rank = db_ret[0][0] + 1
 
-    sql = 'INSERT INTO `{}ops_policy` (rank, name, desc, creator_id, create_time) VALUES ' \
+    sql = 'INSERT INTO `{}ops_policy` (`rank`, `name`, `desc`, `creator_id`, `create_time`) VALUES ' \
           '({rank}, "{name}", "{desc}", {creator_id}, {create_time});' \
           ''.format(db.table_prefix,
                     rank=rank, name=args['name'], desc=args['desc'],
@@ -131,7 +131,7 @@ def update_policy(handler, args):
     if len(s.recorder) == 0:
         return TPE_NOT_EXISTS
 
-    sql = 'UPDATE `{}ops_policy` SET name="{name}", desc="{desc}" WHERE id={p_id};' \
+    sql = 'UPDATE `{}ops_policy` SET `name`="{name}", `desc`="{desc}" WHERE `id`={p_id};' \
           ''.format(db.table_prefix,
                     name=args['name'], desc=args['desc'], p_id=args['id']
                     )
@@ -149,13 +149,13 @@ def update_policies_state(handler, p_ids, state):
 
     sql_list = []
 
-    sql = 'UPDATE `{}ops_policy` SET state={state} WHERE id IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
+    sql = 'UPDATE `{}ops_policy` SET `state`={state} WHERE `id` IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
     sql_list.append(sql)
 
-    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE policy_id IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
+    sql = 'UPDATE `{}ops_auz` SET `state`={state} WHERE `policy_id` IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
     sql_list.append(sql)
 
-    sql = 'UPDATE `{}ops_map` SET p_state={state} WHERE p_id IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
+    sql = 'UPDATE `{}ops_map` SET `p_state`={state} WHERE `p_id` IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
     sql_list.append(sql)
 
     if db.transaction(sql_list):
@@ -171,13 +171,13 @@ def remove_policies(handler, p_ids):
 
     sql_list = []
 
-    sql = 'DELETE FROM `{}ops_policy` WHERE id IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
+    sql = 'DELETE FROM `{}ops_policy` WHERE `id` IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
     sql_list.append(sql)
 
-    sql = 'DELETE FROM `{}ops_auz` WHERE policy_id IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
+    sql = 'DELETE FROM `{}ops_auz` WHERE `policy_id` IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
     sql_list.append(sql)
 
-    sql = 'DELETE FROM `{}ops_map` WHERE p_id IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
+    sql = 'DELETE FROM `{}ops_map` WHERE `p_id` IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
     sql_list.append(sql)
 
     if db.transaction(sql_list):
@@ -212,7 +212,7 @@ def add_members(handler, policy_id, policy_type, ref_type, members):
     for m in members:
         if m['id'] in exists_ids:
             continue
-        str_sql = 'INSERT INTO `{}ops_auz` (policy_id, type, rtype, rid, name, creator_id, create_time) VALUES ' \
+        str_sql = 'INSERT INTO `{}ops_auz` (policy_id, type, rtype, rid, `name`, creator_id, create_time) VALUES ' \
                   '({pid}, {t}, {rtype}, {rid}, "{name}", {creator_id}, {create_time});' \
                   ''.format(db.table_prefix,
                             pid=policy_id, t=policy_type, rtype=ref_type,
@@ -523,7 +523,7 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
     ######################################################
     # step 2.
     ######################################################
-    sql_2 = 'SELECT * FROM ({}) GROUP BY ua_id'.format(sql_1)
+    sql_2 = 'SELECT * FROM ({}) AS s1 GROUP BY ua_id'.format(sql_1)
 
     _f = ['id', 'p_id', 'h_id', 'h_state', 'gh_state', 'h_name', 'ip', 'router_ip', 'router_port']
 
@@ -533,7 +533,7 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
     sql = []
     sql.append('SELECT {}'.format(','.join(_f)))
     sql.append('FROM')
-    sql.append('({})'.format(sql_2))
+    sql.append('({}) AS s2'.format(sql_2))
     sql.append('GROUP BY h_id')
     sql.append('ORDER BY ip')
     sql.append('LIMIT {},{}'.format(sql_limit['page_index'] * sql_limit['per_page'], sql_limit['per_page']))
@@ -542,11 +542,14 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
     sql_counter = []
     sql_counter.append('SELECT COUNT(*)')
     sql_counter.append('FROM')
-    sql_counter.append('({})'.format(sql_2))
+    sql_counter.append('({}) AS s3'.format(sql_2))
     sql_counter.append('GROUP BY h_id')
     sql_counter.append(';')
 
     db_ret = db.query(' '.join(sql_counter))
+    if db_ret is None or len(db_ret) == 0:
+        return TPE_OK, 0, 1, []
+
     total = len(db_ret)
 
     ret_recorder = []  # 用于构建最终返回的数据
@@ -580,11 +583,13 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
     _f = ['id', 'uni_id', 'policy_auth_type', 'p_id', 'h_id', 'a_id', 'a_state', 'ga_state', 'a_name', 'protocol_type']
     sql.append('SELECT {}'.format(','.join(_f)))
     sql.append('FROM')
-    sql.append('({})'.format(sql_4))
+    sql.append('({}) AS s4'.format(sql_4))
     sql.append('GROUP BY ua_id')
     sql.append(';')
 
     db_ret = db.query(' '.join(sql))
+    if db_ret is None:
+        return TPE_OK, 0, 1, []
 
     p_ids = []  # 涉及到的策略的ID列表
 
@@ -601,7 +606,7 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
                 ret_recorder[j].accounts_.append(item)
 
     # 查询所有相关的授权策略的详细信息
-    print('p-ids:', p_ids)
+    # print('p-ids:', p_ids)
     policy_ids = [str(i) for i in p_ids]
     _f = ['id', 'flag_rdp', 'flag_ssh']
     sql = []
@@ -610,7 +615,7 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
     sql.append('WHERE id IN ({})'.format(','.join(policy_ids)))
     sql.append(';')
     db_ret = db.query(' '.join(sql))
-    print('', db_ret)
+    # print('', db_ret)
     for db_item in db_ret:
         item = AttrDict()
         for i in range(len(_f)):
@@ -621,7 +626,7 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
                 if ret_recorder[i].accounts_[j].p_id == item.id:
                     ret_recorder[i].accounts_[j].policy_ = item
 
-    print(json.dumps(ret_recorder, indent='  '))
+    # print(json.dumps(ret_recorder, indent='  '))
     return TPE_OK, total, sql_limit['page_index'], ret_recorder
 
 

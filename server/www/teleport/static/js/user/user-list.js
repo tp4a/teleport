@@ -1046,7 +1046,7 @@ $app.create_dlg_reset_password = function () {
         dlg.dom.btn_reset_password.click(dlg.do_reset_password);
 
         dlg.dom.btn_gen_random_password.click(function () {
-            dlg.dom.password.val(tp_gen_random_string(8));
+            dlg.dom.password.val(tp_gen_password(8));
             dlg.dom.password.attr('type', 'text');
             dlg.dom.btn_switch_password_icon.removeClass('fa-eye').addClass('fa-eye-slash')
         });

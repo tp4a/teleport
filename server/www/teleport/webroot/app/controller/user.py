@@ -291,13 +291,12 @@ class DoGetUsersHandler(TPBaseJsonHandler):
 class DoImportHandler(TPBaseHandler):
     IDX_USERNAME = 0
     IDX_SURNAME = 1
-    IDX_AUTH_TYPE = 2
-    IDX_EMAIL = 3
-    IDX_MOBILE = 4
-    IDX_QQ = 5
-    IDX_WECHAT = 6
-    IDX_GROUP = 7
-    IDX_DESC = 8
+    IDX_EMAIL = 2
+    IDX_MOBILE = 3
+    IDX_QQ = 4
+    IDX_WECHAT = 5
+    IDX_GROUP = 6
+    IDX_DESC = 7
 
     @tornado.gen.coroutine
     def post(self):
@@ -375,7 +374,7 @@ class DoImportHandler(TPBaseHandler):
                         continue
 
                     # 格式错误则记录在案，然后继续
-                    if len(csv_recorder) != 9:
+                    if len(csv_recorder) != 8:
                         failed.append({'line': line, 'error': '格式错误，字段数量不匹配。'})
                         continue
 
@@ -385,20 +384,7 @@ class DoImportHandler(TPBaseHandler):
                         failed.append({'line': line, 'error': '格式错误，用户账号必须填写。'})
                         continue
 
-                    # _auth = csv_recorder[self.IDX_AUTH_TYPE].strip()
-                    # if len(_auth) == 0:
-                    #     failed.append({'line': line, 'error': '格式错误，用户认证类型必须填写。'})
-                    #     continue
-                    # try:
-                    #     _auth = int(_auth)
-                    # except:
-                    #     failed.append({'line': line, 'error': '格式错误，用户认证类型必须是数字。'})
-                    #     continue
-
                     _email = csv_recorder[self.IDX_EMAIL].strip()
-                    # if len(_email) == 0:
-                    #     failed.append({'line': line, 'error': '格式错误，用户邮箱必须填写。'})
-                    #     continue
 
                     _group = csv_recorder[self.IDX_GROUP].split('|')
 
@@ -636,14 +622,24 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
             except:
                 return self.write_json(TPE_PARAM)
 
-            # 根据需要进行弱密码检测
-            if get_cfg().sys.password.force_strong:
-                if not tp_check_strong_password(password):
-                    return self.write_json(TPE_FAILED, '抱歉，不能使用弱密码！')
-
             err, user_id = user.check_reset_token(token)
             if err != TPE_OK:
                 return self.write_json(err)
+
+        elif mode == 5:
+            # 用户输入当前密码和新密码进行设置
+            try:
+                current_password = args['current_password']
+                password = args['password']
+            except:
+                return self.write_json(TPE_PARAM)
+
+            err, user_info = user.get_by_username(self.get_current_user()['username'])
+            if err != TPE_OK:
+                return self.write_json(err)
+            if not tp_password_verify(current_password, user_info['password']):
+                return self.write_json(TPE_USER_AUTH)
+            user_id = user_info['id']
 
         else:
             return self.write_json(TPE_PARAM)
@@ -673,9 +669,14 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
 
             return self.write_json(err, msg)
 
-        elif mode == 2 or mode == 4:
+        elif mode == 2 or mode == 4 or mode == 5:
             if len(password) == 0:
                 return self.write_json(TPE_PARAM)
+
+            # 根据需要进行弱密码检测
+            if get_cfg().sys.password.force_strong:
+                if not tp_check_strong_password(password):
+                    return self.write_json(TPE_FAILED, '密码强度太弱！强密码需要至少8个英文字符，必须包含大写字母、小写字母和数字。')
 
             password = tp_password_generate_secret(password)
             err = user.set_password(self, user_id, password)

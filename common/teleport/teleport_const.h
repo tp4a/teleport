@@ -68,6 +68,7 @@
 #define TPE_NEED_MORE_DATA			1		// 需要更多数据（不一定是错误）
 #define TPE_NEED_LOGIN				2		// 需要登录
 #define TPE_PRIVILEGE				3		// 没有操作权限
+#define TPE_NOT_IMPLEMENT			7		// 功能尚未实现
 #define TPE_EXISTS					8		// 目标已经存在
 #define TPE_NOT_EXISTS              9		// 目标不存在
 

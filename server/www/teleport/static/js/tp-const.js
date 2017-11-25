@@ -183,6 +183,7 @@ var TPE_NEED_MORE_DATA = 1; // 需要更多数据（不一定是错误）
 var TPE_NEED_LOGIN = 2;
 var TPE_PRIVILEGE = 3;
 
+var TPE_NOT_IMPLEMENT = 7;  // 尚未实现
 var TPE_EXISTS = 8;
 var TPE_NOT_EXISTS = 9;
 

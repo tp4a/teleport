@@ -12,7 +12,7 @@ from app.base.configs import get_cfg
 from app.base.utils import AttrDict, tp_make_dir
 from app.base.logger import log
 from .database.create import DatabaseInit
-from .database.upgrade import DatabaseUpgrade
+#from .database.upgrade import DatabaseUpgrade
 from .database.export import export_database
 
 __all__ = ['get_db', 'SQL']

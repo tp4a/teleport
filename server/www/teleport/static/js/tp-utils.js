@@ -286,6 +286,40 @@ function tp_gen_random_string(len) {
     return ret;
 }
 
+// 生成一个随机密码
+function tp_gen_password(len) {
+    len = len || 8;
+    var _chars = ['ABCDEFGHJKMNPQRSTWXYZ', 'abcdefhijkmnprstwxyz', '2345678']; // 默认去掉了容易混淆的字符oO,Ll,9gq,Vv,Uu,I1
+    var _chars_len = [];
+    var i = 0;
+    for (i = 0; i < _chars.length; ++i) {
+        _chars_len[i] = _chars[i].length;
+    }
+    var ret = '';
+
+    var have_CHAR = false;
+    var have_char = false;
+    var have_num = false;
+    for(;;) {
+        ret = '';
+        for (i = 0; i < len; i++) {
+            var idx = Math.floor(Math.random() * _chars.length);
+            if(idx === 0)
+                have_CHAR = true;
+            else if(idx === 1)
+                have_char = true;
+            else
+                have_num = true;
+            ret += _chars[idx].charAt(Math.floor(Math.random() * _chars_len[idx]));
+        }
+
+        if(have_CHAR && have_char && have_num)
+            break;
+    }
+
+    return ret;
+}
+
 // 弱密码检测
 function tp_check_strong_password(p) {
     var s = 0;

@@ -111,17 +111,17 @@
 		'name': '系统',
 		'icon': 'fa-cog',
 		'sub': [
-			{
-                'privilege': const.TP_PRIVILEGE_SYS_ROLE,
-                'id': 'role',
-                'link': '/system/role',
-                'name': '角色管理',
-            },
             {
                 'privilege': const.TP_PRIVILEGE_SYS_LOG,
                 'id': 'syslog',
                 'link': '/system/syslog',
                 'name': '系统日志',
+            },
+			{
+                'privilege': const.TP_PRIVILEGE_SYS_ROLE,
+                'id': 'role',
+                'link': '/system/role',
+                'name': '角色管理',
             },
             {
                 'privilege': const.TP_PRIVILEGE_SYS_CONFIG,
@@ -136,77 +136,78 @@
 
 ## <div id="sidebar-menu-slim-scroll">
     <!-- begin sidebar nav -->
-    <div class="nav">
-        <ul class="nav nav-menu">
-            %for menu in _sidebar:
-                %if menu['id'] == 'me':
-                    <li id="sidebar_menu_${menu['id']}" class="profile">
-                        <div class="image">
-                            <img src="/static/img/avatar/001.png" width="36"/>
-                        </div>
+<div class="nav">
+    <ul class="nav nav-menu">
+        %for menu in _sidebar:
+            %if menu['id'] == 'me':
+                <li id="sidebar_menu_${menu['id']}" class="profile">
+                    <div class="image">
+                        <img src="/static/img/avatar/001.png" width="36"/>
+                    </div>
 
-                        <div class="dropdown">
-                            <a class="title" href="#" id="user-profile" data-target="#" data-toggle="dropdown" role="button"
-                               aria-haspopup="true" aria-expanded="false">
-                                <span class="name">${ current_user['surname'] }</span>
-                                <span class="role">${ current_user['role'] } <i class="fa fa-caret-right"></i></span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-right">
-                                <li><a href="/user/me"><i class="fa fa-vcard-o fa-fw"></i> 个人中心</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li><a href="/auth/logout" id="btn-sidebar-menu-logout"><i class="fa fa-sign-out fa-fw"></i> 退出</a></li>
-                            </ul>
-                        </div>
-                    </li>
-                %else:
-                    %if 'sub' in menu and len(menu['sub']) > 0:
+                    <div class="dropdown">
+                        <a class="title" href="#" id="user-profile" data-target="#" data-toggle="dropdown" role="button"
+                           aria-haspopup="true" aria-expanded="false">
+                            <span class="name">${ current_user['surname'] }</span>
+                            <span class="role">${ current_user['role'] } <i class="fa fa-caret-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-right">
+                            <li><a href="/user/me"><i class="fa fa-vcard-o fa-fw"></i> 个人中心</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="/auth/logout" id="btn-sidebar-menu-logout"><i class="fa fa-sign-out fa-fw"></i> 退出</a></li>
+                        </ul>
+                    </div>
+                </li>
+            %else:
+                %if 'sub' in menu and len(menu['sub']) > 0:
+                    <%
+                        menu['privilege'] = 0
+                    %>
+                    %for sub in menu['sub']:
                         <%
-                            menu['privilege'] = 0
+                            menu['privilege'] |= sub['privilege']
                         %>
-                        %for sub in menu['sub']:
-                            <%
-                                menu['privilege'] |= sub['privilege']
-                            %>
-                        %endfor
-                    %endif
-
-                    %if menu['privilege'] & current_user['privilege'] != 0:
-                        %if 'sub' in menu and len(menu['sub']) > 0:
-                            <li id="sidebar_menu_${menu['id']}">
-                                <a href="javascript:;" onclick="$app.sidebar_menu.toggle_submenu('${menu['id']}');">
-                                    <i class="fa ${menu['icon']} fa-fw icon"></i>
-                                    <span>${menu['name']}</span>
-                                    <i class="menu-caret"></i>
-                                </a>
-                                <ul class="sub-menu" id="sidebar_submenu_${menu['id']}" style="display:none;">
-                                    %for sub in menu['sub']:
-                                        %if (sub['privilege'] & current_user['privilege']) != 0:
-                                            <li id="sidebar_menu_${menu['id']}_${sub['id']}"><a href="${sub['link']}"><span>${sub['name']}</span></a></li>
-                                        %endif
-                                    %endfor
-                                </ul>
-                            </li>
-                        %else:
-                            <li id="sidebar_menu_${menu['id']}"><a href="${menu['link']}"
-                                %if 'target' in menu:
-                                                                   target="${menu['target']}"
-                                %endif
-                            ><i class="fa ${menu['icon']} fa-fw icon"></i><span>${menu['name']}</span></a></li>
-                        %endif
-                    %endif
+                    %endfor
                 %endif
 
+                %if menu['privilege'] & current_user['privilege'] != 0:
+                    %if 'sub' in menu and len(menu['sub']) > 0:
+                        <li id="sidebar_menu_${menu['id']}">
+                            <a href="javascript:;" onclick="$app.sidebar_menu.toggle_submenu('${menu['id']}');">
+                                <i class="fa ${menu['icon']} fa-fw icon"></i>
+                                <span>${menu['name']}</span>
+                                <i class="menu-caret"></i>
+                            </a>
+                            <ul class="sub-menu" id="sidebar_submenu_${menu['id']}" style="display:none;">
+                                %for sub in menu['sub']:
+                                    %if (sub['privilege'] & current_user['privilege']) != 0:
+                                        <li id="sidebar_menu_${menu['id']}_${sub['id']}"><a href="${sub['link']}"><span>${sub['name']}</span></a></li>
+                                    %endif
+                                %endfor
+                            </ul>
+                        </li>
+                    %else:
+                        <li id="sidebar_menu_${menu['id']}"><a href="${menu['link']}"
+                            %if 'target' in menu:
+                                                               target="${menu['target']}"
+                            %endif
+                        ><i class="fa ${menu['icon']} fa-fw icon"></i><span>${menu['name']}</span></a></li>
+                    %endif
+                %endif
+            %endif
 
-            %endfor
 
-        </ul>
-    </div>
-    <!-- end sidebar nav -->
+        %endfor
 
-    <hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:0;"/>
-    <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:70px;text-align: right">服务端：</span><span class="mono">v${app_ver.TP_SERVER_VER}</span></div>
-##     <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:70px;text-align: right">助手：</span><span class="mono" id="tp-assist-version" data-req-version=$ { app_ver.TP_ASSIST_REQUIRE}>v$ { app_ver.TP_ASSIST_LAST_VER}</span></div>
-##     <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:70px;text-align: right">助手：</span><span class="mono" id="tp-assist-version">未连接</span></div>
-    <hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:20px;margin-top:5px;"/>
+    </ul>
+</div>
+<!-- end sidebar nav -->
+
+<hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:0;"/>
+<div style="color:#717171;font-size:90%;margin-top:5px;text-align:center;">
+    <div style="margin-top:5px;text-align:center;">服务端：<span class="mono">v${app_ver.TP_SERVER_VER}</span></div>
+    <div style="font-size:80%;margin-top:5px;text-align:center;"><span class="error">技术预览版</span></div>
+</div>
+<hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:20px;margin-top:5px;"/>
 
 ## </div>

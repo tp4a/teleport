@@ -25,22 +25,13 @@ def get_free_space_bytes(folder):
     except:
         return 0, 0
 
-        # if platform.system() == 'Windows':
-        #     _free_bytes = ctypes.c_ulonglong(0)
-        #     _total_bytes = ctypes.c_ulonglong(0)
-        #     ctypes.windll.kernel32.GetDiskFreeSpaceExW(folder, None, ctypes.pointer(_total_bytes), ctypes.pointer(_free_bytes))
-        #     total_bytes = _total_bytes.value
-        #     free_bytes = _free_bytes.value
-        # else:
-        #     try:
-        #         st = os.statvfs(folder)
-        #         total_bytes = st.f_blocks * st.f_frsize
-        #         free_bytes = st.f_bavail * st.f_frsize
-        #     except:
-        #         total_bytes = 0
-        #         free_bytes = 0
-        #
-        # return total_bytes, free_bytes
+
+class AuzListHandler(TPBaseHandler):
+    def get(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+        self.show_error_page(TPE_NOT_IMPLEMENT)
 
 
 class RecordHandler(TPBaseHandler):
@@ -56,7 +47,6 @@ class RecordHandler(TPBaseHandler):
             total_size, free_size = get_free_space_bytes(get_cfg().core.replay_path)
 
         param = {
-            # 'user_list': user.get_user_list(with_admin=True),
             'total_size': total_size,
             'free_size': free_size,
         }

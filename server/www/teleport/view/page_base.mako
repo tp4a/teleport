@@ -34,7 +34,7 @@
 <div id="page-header" class="page-header navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
 
-        <div class="brand"><a href="http://teleport.eomsoft.net" target="_blank"><span class="logo"></span></a></div>
+        <div class="brand"><a href="/"><span class="logo"></span></a></div>
 
         <div class="breadcrumb-container">
             <%block name="breadcrumb">
@@ -69,26 +69,6 @@
     ${self.body()}
 </div>
 <!-- end #page-content -->
-
-
-    ## <div class="modal fade" id="dlg-ywl-message-box" tabindex="-1" role="dialog">
-    ##     <div class="modal-dialog" role="document">
-    ##         <div class="modal-content">
-    ##             <div class="modal-header">
-    ##                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-    ##                 <h4 class="modal-title" ywl-title></h4>
-    ##             </div>
-    ##             <div class="modal-body" ywl-content style="font-size: 20px">
-    ##
-    ##             </div>
-    ##             <div class="modal-footer">
-    ##                 <input type="hidden" ywl-record-id="" ywl-row-id="">
-    ##                 <button type="button" class="btn btn-success btn-sm" ywl-btn-ok="ok"><i class="glyphicon glyphicon-ok"></i></button>
-    ##                 <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i></button>
-    ##             </div>
-    ##         </div>
-    ##     </div>
-    ## </div>
 
     <%block name="extend_content" />
 <script type="text/javascript" src="${ static_url('plugins/underscore/underscore.js') }"></script>

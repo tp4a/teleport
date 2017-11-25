@@ -9,11 +9,6 @@
     <script type="text/javascript" src="${ static_url('js/system/role.js') }"></script>
 </%block>
 
-## <%block name="embed_css">
-##     <style>
-##     </style>
-## </%block>
-
 <div class="page-content-inner">
     <div class="box">
         <div class="alert alert-info">
@@ -38,7 +33,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div style="float:right;">
+                            <div style="float:right;" id="area-action">
                                 <button id="btn-edit-role" class="btn btn-sm btn-primary"><i class="fa fa-edit fa-fw"></i> 编辑角色</button>
                                 <button id="btn-remove-role" class="btn btn-sm btn-danger"><i class="fa fa-trash-o fa-fw"></i> 删除角色</button>
                             </div>

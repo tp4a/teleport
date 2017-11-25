@@ -7,6 +7,7 @@ $app.on_init = function (cb_stack) {
 
     $app.dom = {
         role_list: $('#role-list'),
+        area_action: $('#area-action'),
         btn_edit_role: $('#btn-edit-role'),
         btn_remove_role: $('#btn-remove-role'),
         btn_save_role: $('#btn-save-role'),
@@ -154,6 +155,12 @@ $app.show_role = function (role_id, edit_mode) {
     var edit = edit_mode || false;
     var role = null;
 
+    if (role_id === 1 || role_id === 0 || edit_mode) {
+        $app.dom.area_action.hide();
+    } else {
+        $app.dom.area_action.show();
+    }
+
     if (role_id === 1 && edit_mode) {
         $tp.notify_error('禁止修改管理员角色！');
         return;
@@ -254,7 +261,7 @@ $app.save_role = function () {
                     $app.dom.btn_create_role.before($(html.join('')));
 
 
-                    $app.dom.role_list.find('[data-role-id="'+role_id+'"]').click(function () {
+                    $app.dom.role_list.find('[data-role-id="' + role_id + '"]').click(function () {
                         var obj = $(this);
                         if (obj.hasClass('active')) {
                             return;
@@ -295,33 +302,45 @@ $app.remove_role = function () {
         return;
     }
 
-    $tp.ajax_post_json('/system/role-remove',
-        {
-            role_id: $app.selected_role_id
-        },
-        function (ret) {
-            if (ret.code === TPE_OK) {
-                $tp.notify_success('角色删除成功！');
-                for (var i = 0; i < $app.role_list; ++i) {
-                    if ($app.role_list[i].id === $app.selected_role_id) {
-                        delete $app.role_list[i];
-                        break;
+    var _fn_sure = function (cb_stack, cb_args) {
+        $tp.ajax_post_json('/system/role-remove',
+            {
+                role_id: $app.selected_role_id
+            },
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    $tp.notify_success('角色删除成功！');
+                    for (var i = 0; i < $app.role_list; ++i) {
+                        if ($app.role_list[i].id === $app.selected_role_id) {
+                            delete $app.role_list[i];
+                            break;
+                        }
                     }
+
+                    $app.dom.role_list.find('[data-role-id="' + $app.selected_role_id + '"]').remove();
+
+                    if ($app.last_role_id === $app.selected_role_id)
+                        $app.last_role_id = 1;
+                    $app.show_role($app.last_role_id, false);
+
+                    cb_stack.exec();
+                } else {
+                    $tp.notify_error('角色删除失败：' + tp_error_msg(ret.code, ret.message));
+                    cb_stack.exec();
                 }
-
-                $app.dom.role_list.find('[data-role-id="' + $app.selected_role_id + '"]').remove();
-
-                if ($app.last_role_id === $app.selected_role_id)
-                    $app.last_role_id = 1;
-                $app.show_role($app.last_role_id, false);
-
-            } else {
-                $tp.notify_error('角色删除失败：' + tp_error_msg(ret.code, ret.message));
+            },
+            function () {
+                $tp.notify_error('网路故障，角色删除失败！');
             }
-        },
-        function () {
-            $tp.notify_error('网路故障，角色删除失败！');
-        }
-    );
+        );
+
+    };
+
+
+    var cb_stack = CALLBACK_STACK.create();
+    $tp.dlg_confirm(cb_stack, {
+        msg: '<p>删除角色后，属于此角色的用户将没有任何操作权限，直到为用户重新指定角色！</p><p>您确定要将删除此角色吗？</p>',
+        fn_yes: _fn_sure
+    });
 
 };

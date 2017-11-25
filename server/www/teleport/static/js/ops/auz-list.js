@@ -23,8 +23,8 @@ $app.on_init = function (cb_stack) {
         dom: {}
     };
 
-    $('#btn-test').click(function () {
-        $app.on_test();
+    $('#btn-rebuild').click(function () {
+        $app.on_rebuild();
     });
 
     // $app.dragging = false;
@@ -43,7 +43,7 @@ $app.on_init = function (cb_stack) {
     cb_stack.exec();
 };
 
-$app.on_test = function () {
+$app.on_rebuild = function () {
     $tp.ajax_post_json('/ops/build-auz-map', {},
         function (ret) {
             if (ret.code === TPE_OK) {

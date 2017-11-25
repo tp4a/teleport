@@ -1,43 +1,38 @@
 # -*- coding: utf-8 -*-
 
-#import os
-
 from app.base.configs import get_cfg
 from app.controller import auth
-from . import index
-# from . import cert
-# from . import config
-from . import dashboard
-# from . import group
-from . import host
 from . import account
-from . import maintenance
 from . import audit
-from . import rpc
-from . import user
+from . import dashboard
 from . import group
+from . import host
+from . import index
+from . import maintenance
 from . import ops
+from . import rpc
 from . import system
+from . import user
 
 __all__ = ['controllers', 'fix_controller']
 
 controllers = [
     (r'/', index.IndexHandler),
-    # (r'/', user.UserListHandler),
 
     # ====================================================
     # 控制台
+    # ====================================================
     #  - 控制台页面
     (r'/dashboard', dashboard.IndexHandler),
 
-
     # ====================================================
-    # 远程调用
+    # 外部调用接口
+    # ====================================================
     (r'/rpc', rpc.RpcHandler),
 
-    #
     # ====================================================
     # 登录认证相关
+    # ====================================================
     #  - 登录页面
     (r'/auth/login', auth.LoginHandler),
     #  - [json] 执行登录操作
@@ -50,25 +45,10 @@ controllers = [
     (r'/auth/captcha', auth.CaptchaHandler),
     #  - [json] 执行验证码验证操作
     (r'/auth/verify-captcha', auth.VerifyCaptchaHandler),
-    # (r'/auth/modify-pwd', auth.ModifyPwd),
-    # (r'/auth/oath-verify', auth.OathVerifyHandler),
-    # (r'/auth/oath-secret-qrcode', auth.OathSecretQrCodeHandler),
-    # (r'/auth/oath-secret-reset', auth.OathSecretResetHandler),
-    # (r'/auth/oath-update-secret', auth.OathUpdateSecretHandler),
-    #
-    # # (r"/log/replay/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(cfg.data_path, 'replay')}),
-    # (r"/log/replay/(.*)", record.ReplayStaticFileHandler, {"path": os.path.join(get_cfg().data_path, 'replay')}),
-    #
-    # (r'/log/list', record.LogList),
-    # (r'/log/get-record-header', record.RecordGetHeader),
-    # (r'/log/get-record-file-info', record.RecordGetInfo),
-    # (r'/log/delete-log', record.DeleteLog),
-    # # (r'/log/play-rdp/(.*)/(.*)', record.PlayRdpHandler),
-    # (r'/log/', record.LogHandler),
-    # (r'/log', record.LogHandler),
-    #
+
     # ====================================================
-    # 用户账号相关
+    # 用户相关
+    # ====================================================
     #  - 个人中心页面
     (r'/user/me', user.MeHandler),
     #  - 用户管理页面
@@ -97,7 +77,7 @@ controllers = [
     (r'/user/verify-user', user.DoVerifyUserHandler),
     #  - [json] 绑定身份认证器
     (r'/user/do-bind-oath', user.DoBindOathHandler),
-
+    #
     #  - 用户组管理页面
     (r'/user/group', user.GroupListHandler),
     #  - 某个用户组的管理页面
@@ -109,11 +89,14 @@ controllers = [
     #  - [json] 批量设置角色
     (r'/user/set-role', user.DoSetRoleForUsersHandler),
 
+    # ====================================================
+    # 资产相关
+    # ====================================================
     #  - 主机及账号管理页面
     (r'/asset/host', host.HostListHandler),
     #  - [json] 批量导入
     (r'/asset/upload-import', host.DoImportHandler),
-
+    #
     #  - 主机分组管理页面
     (r'/asset/host-group', host.HostGroupListHandler),
     #  - 某个主机组的管理页面
@@ -128,7 +111,7 @@ controllers = [
     (r'/asset/get-hosts', host.DoGetHostsHandler),
     #  - [json] 获取账号组列表（包括不超过5个组内成员）
     (r'/asset/get-host-groups-with-member', host.DoGetHostGroupWithMemberHandler),
-
+    #
     #  - 远程账号分组管理页面
     (r'/asset/account-group', account.AccGroupListHandler),
     #  - 某个账号组的管理页面
@@ -143,6 +126,9 @@ controllers = [
     (r'/asset/get-account-groups-with-member', account.DoGetAccountGroupWithMemberHandler),
 
 
+    # ====================================================
+    # 远程运维相关
+    # ====================================================
     #  - 运维授权管理页面
     (r'/ops/auz', ops.AuzListHandler),
     #  - 远程运维页面
@@ -176,11 +162,16 @@ controllers = [
     #  - [json] 构建授权映射表
     (r'/ops/build-auz-map', ops.DoBuildAuzMapHandler),
 
+    # ====================================================
+    # 审计相关
+    # ====================================================
+    #  - 审计授权管理页面
+    (r'/audit/auz', audit.AuzListHandler),
     #  - 审计页面（录像列表）
     (r'/audit/record', audit.RecordHandler),
     #  - [json] 审计页面（录像列表）
     (r'/audit/get-records', audit.DoGetRecordsHandler),
-
+    #
     #  - ssh录像回放页面
     (r'/audit/replay/(.*)/(.*)', audit.ReplayHandler),
     #  - ssh命令日志页面
@@ -191,15 +182,12 @@ controllers = [
     (r'/audit/get-record-data', audit.DoGetRecordDataHandler),
 
     # (r'/host/export-host', host.ExportHostHandler),
-    # (r'/host/get-session-id', host.GetSessionId),
-    # (r'/host/admin-get-session-id', host.AdminGetSessionId),
-    # (r'/host/admin-fast-get-session-id', host.AdminFastGetSessionId),
-    #
     # (r'/config/export-database', config.ExportDatabaseHandler),
     # (r'/config/import-database', config.ImportDatabaseHandler),
 
     # ====================================================
     # 分组操作相关
+    # ====================================================
     #  - [json] 创建或更新分组
     (r'/group/update', group.DoUpdateGroupHandler),
     #  - [json] 禁用分组
@@ -217,6 +205,7 @@ controllers = [
 
     # ====================================================
     # 系统管理设置相关
+    # ====================================================
     #  - 角色管理页面
     (r'/system/role', system.RoleHandler),
     #  - [json] 创建/更新 角色
@@ -235,20 +224,19 @@ controllers = [
     (r'/system/send-test-mail', system.DoSendTestMailHandler),
     #  - [json] 系统配置-清理存储空间
     (r'/system/cleanup-storage', system.DoCleanupStorageHandler),
-
+    #
     #  - [json] 获取服务器时间
     (r'/system/get-time', system.DoGetTimeHandler),
 
     # ====================================================
     # 安装维护相关
+    # ====================================================
     #  - 初始安装设置（新安装，未创建数据库时自动跳转到此页面）
     (r'/maintenance/install', maintenance.InstallHandler),
     #  - 升级（数据库版本发生变化时跳转到此页面）
     # (r'/maintenance/upgrade', maintenance.UpgradeHandler),
     #  - [json] 维护过程中页面与后台的通讯接口
     (r'/maintenance/rpc', maintenance.RpcHandler),
-    # (r'/maintenance/index', maintenance.IndexHandler),
-    # # (r'/maintenance', maintenance.IndexHandler),
 
     (r'/.*', index.CatchAllHandler),
 ]

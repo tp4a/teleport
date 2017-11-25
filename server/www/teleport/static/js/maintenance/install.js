@@ -30,15 +30,11 @@ $app.on_init = function (cb_stack, cb_args) {
 
         var _t = [];
         _t.push('<div class="alert alert-warning">');
-        _t.push('注意：请确保您在执行后续创建操作之前，已经在MySQL数据库中创建了数据库"');
+        _t.push('<i class="fa fa-warning"></i> 注意：请确保您在执行后续创建操作之前，已经在MySQL中使用 <span class="bold">UTF8字符集</span> 创建了库“');
         _t.push($app.options.db.mysql_db);
-        _t.push('"和用户"');
+        _t.push('”，并且用户“');
         _t.push($app.options.db.mysql_user);
-        _t.push('"，并为用户"');
-        _t.push($app.options.db.mysql_user);
-        _t.push('"设置了在数据库"');
-        _t.push($app.options.db.mysql_db);
-        _t.push('"创建表的权限！');
+        _t.push('”拥有在此库创建表的权限！');
         _t.push('</div>');
         $app.dom.db_info.after(_t.join(''));
     } else {
@@ -73,7 +69,7 @@ $app.on_init = function (cb_stack, cb_args) {
             $app.dom.email.focus();
             return;
         }
-        if(!tp_check_email(str_email)) {
+        if (!tp_check_email(str_email)) {
             $app.show_op_box('error', '电子邮件地址格式错啦，你会收不到邮件的！');
             $app.dom.email.focus();
             return;
