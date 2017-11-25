@@ -57,7 +57,7 @@ TsHttpRpc::~TsHttpRpc()
 
 void TsHttpRpc::_thread_loop(void)
 {
-	EXLOGV("[core] TeleportServer-RPC ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
+	EXLOGI("[core] TeleportServer-RPC ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 
 	while (!m_stop_flag)
 	{

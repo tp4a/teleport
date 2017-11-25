@@ -76,8 +76,10 @@ bool TsEnv::init(bool load_config)
 	{
 		m_replay_path = replay_path;
 	}
+    ex_mkdirs(m_replay_path);
 
-	ex_wstr log_file;
+
+    ex_wstr log_file;
 	if (!ps->GetStr(L"log-file", log_file))
 	{
 		EXLOG_FILE(L"tpcore.log", log_path.c_str());
@@ -99,15 +101,15 @@ bool TsEnv::init(bool load_config)
 	}
 
 	int log_level = EX_LOG_LEVEL_INFO;
-	if (ps->GetInt(L"log-level", log_level))
-	{
-		EXLOG_LEVEL(log_level);
-	}
+	ps->GetInt(L"log-level", log_level, EX_LOG_LEVEL_INFO);
+	EXLOG_LEVEL(log_level);
 
 	int debug_mode = 0;
 	ps->GetInt(L"debug-mode", debug_mode, 0);
-	if (debug_mode == 1)
+	if (debug_mode == 1) {
+		EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
 		EXLOG_DEBUG(true);
+	}
 
 	ex_wstr tmp;
 

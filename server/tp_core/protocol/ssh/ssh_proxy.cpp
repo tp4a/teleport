@@ -80,7 +80,7 @@ void SshProxy::timer() {
 
 void SshProxy::_thread_loop()
 {
-	EXLOGV("[ssh] TeleportServer-SSH ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
+	EXLOGI("[ssh] TeleportServer-SSH ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 
 	for (;;)
 	{
