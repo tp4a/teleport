@@ -25,13 +25,13 @@ class InstallerBase:
 
         self._def_install_path = ''
 
-        ver_file = os.path.join(env.root_path, 'data', 'www', 'teleport', 'app', 'eom_ver.py')
+        ver_file = os.path.join(env.root_path, 'data', 'www', 'teleport', 'webroot', 'app', 'app_ver.py')
         try:
             with open(ver_file, 'r') as f:
                 x = f.readlines()
                 for i in x:
                     s = i.split('=', 1)
-                    if 'TS_VER' == s[0].strip():
+                    if 'TP_SERVER_VER' == s[0].strip():
                         self._current_ver = s[1].strip()[1:-1]
                         break
         except FileNotFoundError:
@@ -46,7 +46,7 @@ class InstallerBase:
         cc.v(' |{}|'.format('=' * (_width - 4)))
         cc.o((cc.CR_VERBOSE, ' |    ver: '), (cc.CR_NORMAL, self._current_ver),
              (cc.CR_VERBOSE, '{}|'.format(' ' * (_width - 13 - len(self._current_ver)))))
-        _str = 'author: apexliu@eomsoft.net'
+        _str = 'author: apex.liu@qq.com'
         cc.v(' | {}{}|'.format(_str, ' ' * (_width - 5 - len(_str))))
         cc.v('[]{}[]'.format('=' * (_width - 4)))
         cc.v('')
@@ -54,7 +54,8 @@ class InstallerBase:
         cc.v('')
         # cc.v('  NOTICE: if you want to use the default settings, just press `Enter`...')
         cc.o((cc.CR_VERBOSE,
-              'NOTICE: There are a few steps need you enter information or make choice,\n        if you want to use the '),
+              'NOTICE: There are a few steps need you enter information or make choice,\n'
+              '        if you want to use the '),
              (cc.CR_WARN, 'default settings'), (cc.CR_VERBOSE, ', just press `Enter` key.'))
         cc.o((cc.CR_VERBOSE, '        Otherwise you need enter the '), (cc.CR_NORMAL, 'highlight character'),
              (cc.CR_VERBOSE, ' to make choice.'))
@@ -77,13 +78,12 @@ class InstallerBase:
             while True:
                 x = self._prompt_choice('What are you wanna to do?',
                                         [('upgrade', 2, True), ('uninstall', 0, False), ('quit', 0, False)])
-                x = x.lower()
-                if 'q' == x:
+                if x in ['q', 'quit']:
                     break
-                elif 'u' == x:
+                elif x in ['u', 'uninstall']:
                     self._do_uninstall()
                     break
-                elif 'g' == x:
+                elif x in ['g', 'upgrade']:
                     self._do_upgrade()
                     break
 
@@ -98,11 +98,10 @@ class InstallerBase:
                     x = self._prompt_choice(
                         'The target path `{}` has already exists,\ndo you want to use it anyway?'.format(
                             self._install_path), [('Yes', 0, True), ('No', 0, False)])
-                    x = x.lower()
-                    if 'y' == x:
+                    if x in ['y', 'yes']:
                         _use_anyway = True
                         break
-                    elif 'n' == x:
+                    elif x in ['n', 'no']:
                         break
 
                 if _use_anyway:
@@ -128,10 +127,9 @@ class InstallerBase:
             cc.v('')
             x = self._prompt_choice('Do you want to keep your database and settings?',
                                     [('Yes', 0, True), ('No', 0, False)])
-            x = x.lower()
-            if 'y' == x:
+            if x in ['y', 'yes']:
                 break
-            elif 'n' == x:
+            elif x in ['n', 'no']:
                 _del_settings = True
                 break
 
@@ -140,10 +138,9 @@ class InstallerBase:
                 cc.v('')
                 x = self._prompt_choice('Seriously!! Are you sure to remove all data and settings?',
                                         [('Yes', 0, False), ('No', 0, True)])
-                x = x.lower()
-                if 'y' == x:
+                if x in ['y', 'yes']:
                     break
-                elif 'n' == x:
+                elif x in ['n', 'no']:
                     _del_settings = False
                     break
 
@@ -160,10 +157,9 @@ class InstallerBase:
                 x = self._prompt_choice(
                     'The same version `{}` installed, are you sure to overwrite?'.format(self._current_ver),
                     [('Yes', 0, False), ('No', 0, True)])
-                x = x.lower()
-                if 'y' == x:
+                if x in ['y', 'yes']:
                     break
-                elif 'n' == x:
+                elif x in ['n', 'no']:
                     return
         elif x < 0:
             while True:
@@ -171,10 +167,9 @@ class InstallerBase:
                 x = self._prompt_choice(
                     'A new version `{}` installed, rollback to old version `{}` may cause Teleport Server not functionally.\nAre you sure to rollback to old version?'.format(
                         self._installed_ver_str, self._current_ver), [('Yes', 0, False), ('No', 0, True)])
-                x = x.lower()
-                if 'y' == x:
+                if x in ['y', 'yes']:
                     break
-                elif 'n' == x:
+                elif x in ['n', 'no']:
                     return
         else:
             while True:
@@ -182,10 +177,9 @@ class InstallerBase:
                 x = self._prompt_choice(
                     'Now upgrade from version `{}` to `{}`, \nAre you sure to upgrade to new version?'.format(
                         self._installed_ver_str, self._current_ver), [('Yes', 0, False), ('No', 0, True)])
-                x = x.lower()
-                if 'y' == x:
+                if x in ['y', 'yes']:
                     break
-                elif 'n' == x:
+                elif x in ['n', 'no']:
                     return
 
         while True:
@@ -193,9 +187,9 @@ class InstallerBase:
             x = self._prompt_choice('Make sure you have backup your database and settings.\nAre you sure to continue?',
                                     [('Yes', 0, False), ('No', 0, True)])
             x = x.lower()
-            if 'y' == x:
+            if x in ['y', 'yes']:
                 break
-            elif 'n' == x:
+            elif x in ['n', 'yes']:
                 return
 
         self._stop_service()
@@ -222,7 +216,7 @@ class InstallerBase:
             idx = choices[i][1]
             if choices[i][2]:
                 msg = msg.upper()
-                def_choice = msg[idx].lower()
+                def_choice = msg[idx]
                 cc.w(msg[:idx], end='')
                 cc.n(msg[idx], end='')
                 cc.w(msg[idx + 1:], end='')
@@ -240,7 +234,7 @@ class InstallerBase:
         except EOFError:
             x = def_choice
 
-        return x
+        return x.lower()
 
     @staticmethod
     def _prompt_input(message, def_value):
@@ -289,14 +283,14 @@ class InstallerBase:
             return
 
         # try to get the installed version from www/teleport/app/eom_ver.py
-        cc.v(' - check installed version ... ', end='')
-        ver_file = os.path.join(self._install_path, 'www', 'teleport', 'app', 'eom_ver.py')
+        cc.o(' - check installed version ... ', end='')
+        ver_file = os.path.join(self._install_path, 'www', 'teleport', 'webroot', 'app', 'app_ver.py')
         try:
             with open(ver_file) as f:
                 x = f.readlines()
                 for i in x:
                     s = i.split('=', 1)
-                    if 'TS_VER' == s[0].strip():
+                    if 'TP_SERVER_VER' == s[0].strip():
                         self._installed_ver_str = s[1].strip()[1:-1]
                         cc.i('[{}]'.format(self._installed_ver_str))
                         # self._installed_ver = self._ver_str_to_ver(self._installed_ver_str)

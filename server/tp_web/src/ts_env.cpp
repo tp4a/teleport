@@ -100,19 +100,18 @@ bool TsEnv::init(bool load_config)
 	int log_level = EX_LOG_LEVEL_INFO;
 	if (ps->GetInt(L"log-level", log_level))
 	{
-		EXLOGV("[tpweb] log-level: %d\n", log_level);
+//		EXLOGV("[tpweb] log-level: %d\n", log_level);
 		EXLOG_LEVEL(log_level);
 	}
 
 	int debug_mode = 0;
 	if (ps->GetInt(L"debug-mode", debug_mode))
 	{
-		EXLOGV("[tpweb] debug-mode: %d\n", debug_mode);
+//		EXLOGV("[tpweb] debug-mode: %d\n", debug_mode);
 //		EXLOG_LEVEL(log_level);
-	}
-
-	if (1 == debug_mode) {
-		EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
+		if (1 == debug_mode) {
+			EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
+		}
 	}
 
 	return true;

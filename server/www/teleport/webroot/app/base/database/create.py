@@ -89,7 +89,7 @@ class DatabaseInit:
         # name: 角色名称
         f.append('name varchar(128) NOT NULL')
         # desc: 角色描述
-        f.append('desc varchar(255) DEFAULT ""')
+        f.append('desc varchar(255) DEFAULT NULL')
 
         # privilege: 权限，可按位异或组合，请参考 TP_PRIVILEGE_XXXX 定义
         f.append('privilege int(11) DEFAULT 0')
@@ -118,15 +118,15 @@ class DatabaseInit:
         # username: teleport系统登录名
         f.append('username varchar(32) NOT NULL')
         # surname: 真实姓名
-        f.append('surname varchar(64) DEFAULT ""')
+        f.append('surname varchar(64) DEFAULT NULL')
         # type 1=本地账号，2=LDAP（待扩展）
         f.append('type int(11) DEFAULT 1')
         # auth_type: 0=使用全局设置，其他参考 TP_LOGIN_AUTH_XXX 系列值
         f.append('auth_type int(11) DEFAULT 0')
         # password: 登录密码（如果是LDAP账号则忽略此字段）
-        f.append('password varchar(128) DEFAULT ""')
+        f.append('password varchar(128) DEFAULT NULL')
         # oath_secret: 身份验证器密钥（使用核心服务加密存储）
-        f.append('oath_secret varchar(64) DEFAULT ""')
+        f.append('oath_secret varchar(64) DEFAULT NULL')
         # state: 状态，1=正常，2=禁用，3=临时锁定
         f.append('state int(3) DEFAULT 1')
         # fail_count: 连续登录失败的次数（根据设置，超过一定数量时将临时锁定）
@@ -136,20 +136,20 @@ class DatabaseInit:
         # last_chpass: 最近一次修改密码时间（根据设置，密码可能有有效期限制）
         f.append('last_chpass int(11) DEFAULT 0')
         # email: 用户邮箱
-        f.append('email varchar(64) DEFAULT ""')
-        f.append('mobile varchar(24) DEFAULT ""')
-        f.append('qq varchar(24) DEFAULT ""')
-        f.append('wechat varchar(32) DEFAULT ""')
-        f.append('desc varchar(255) DEFAULT ""')
+        f.append('email varchar(64) DEFAULT NULL')
+        f.append('mobile varchar(24) DEFAULT NULL')
+        f.append('qq varchar(24) DEFAULT NULL')
+        f.append('wechat varchar(32) DEFAULT NULL')
+        f.append('desc varchar(255) DEFAULT NULL')
 
         # login_time: 本次成功登录时间
         f.append('login_time int(11) DEFAULT 0')
         # last_login: 最近一次成功登录时间
         f.append('last_login int(11) DEFAULT 0')
         # login_ip: 本次成功登录IP
-        f.append('login_ip varchar(40) DEFAULT ""')
+        f.append('login_ip varchar(40) DEFAULT NULL')
         # last_ip: 最近一次成功登录IP
-        f.append('last_ip varchar(40) DEFAULT ""')
+        f.append('last_ip varchar(40) DEFAULT NULL')
 
         # creator_id: 创建者的用户id，0=系统默认创建
         f.append('creator_id int(11) DEFAULT 0')
@@ -171,7 +171,7 @@ class DatabaseInit:
         # user_id:  user's id
         f.append('user_id int(11) DEFAULT 0')
         # token: token
-        f.append('token varchar(48) DEFAULT ""')
+        f.append('token varchar(48) DEFAULT NULL')
         # create_time: 创建时间
         f.append('create_time int(11) DEFAULT 0')
 
@@ -190,9 +190,9 @@ class DatabaseInit:
         # type  1=用户组，2=主机组，3=账号组
         f.append('type int(11) DEFAULT 1')
         # name: 组名称
-        f.append('name varchar(128) DEFAULT ""')
+        f.append('name varchar(128) DEFAULT NULL')
         # desc: 详细描述
-        f.append('desc varchar(255) DEFAULT ""')
+        f.append('desc varchar(255) DEFAULT NULL')
 
         # state: 状态，1=正常，2=禁用
         f.append('state int(3) DEFAULT 1')
@@ -241,14 +241,14 @@ class DatabaseInit:
         # os_type: 操作系统类型，1=win（101=win2003srv，102=win2008srv，etc...），2=linux（201=ubuntu，202=centos，etc...），3=others.
         f.append('os_type int(11) DEFAULT 1')
         # os_ver: 操作系统具体名称和版本，可选（手工填写，将来可以通过自动发现功能自动获取）
-        f.append('os_ver varchar(128) DEFAULT ""')
+        f.append('os_ver varchar(128) DEFAULT NULL')
         # name: 名称，用于快速区分
-        f.append('name varchar(64) DEFAULT ""')
+        f.append('name varchar(64) DEFAULT NULL')
 
         # ip: IP地址，长度40是为了将来的ipv6准备的，IPV6=X:X:X:X:X:X:X:X，每个X为最长4字节，总计39字节
         f.append('ip varchar(40) NOT NULL')
         # router_ip: 路由IP，仅用于路由连接模式（即，teleport与远程主机之间有路由网关，该路由网关通过端口映射不同的远程主机）
-        f.append('router_ip varchar(40) DEFAULT ""')
+        f.append('router_ip varchar(40) DEFAULT NULL')
         # router_port: 路由端口，仅用于路由连接模式
         f.append('router_port int(11) DEFAULT 0')
 
@@ -257,10 +257,10 @@ class DatabaseInit:
         # acc_count: 远程账号数量（注意创建/删除远程账号时更新此数据）
         f.append('acc_count int(11) DEFAULT 0')
         # cid: 公司内部用，资产统一编号
-        f.append('cid varchar(64) DEFAULT ""')
+        f.append('cid varchar(64) DEFAULT NULL')
 
         # desc: 对此资产的详细描述
-        f.append('desc varchar(255) DEFAULT ""')
+        f.append('desc varchar(255) DEFAULT NULL')
 
         # creator_id: 账号创建者的id，0=系统默认创建
         f.append('creator_id int(11) DEFAULT 0')
@@ -288,7 +288,7 @@ class DatabaseInit:
         # host_ip: 主机IP地址
         f.append('host_ip varchar(40) NOT NULL')
         # router_ip: 路由IP
-        f.append('router_ip varchar(40) DEFAULT ""')
+        f.append('router_ip varchar(40) DEFAULT NULL')
         # router_port: 路由端口
         f.append('router_port int(11) DEFAULT 0')
 
@@ -308,15 +308,15 @@ class DatabaseInit:
         # auth_type: 登录认证类型：0=无认证，1=password，2=public-key
         f.append('auth_type int(11) DEFAULT 0')
         # username: 登录账号
-        f.append('username varchar(128) DEFAULT ""')
+        f.append('username varchar(128) DEFAULT NULL')
         # username_prompt: 输入用户名的提示（仅用于telnet协议）
-        f.append('username_prompt varchar(128) DEFAULT ""')
+        f.append('username_prompt varchar(128) DEFAULT NULL')
         # password_prompt: 输入密码的提示（仅用于telnet协议）
-        f.append('password_prompt varchar(128) DEFAULT ""')
+        f.append('password_prompt varchar(128) DEFAULT NULL')
         # password: 登录密码（仅当auth=1时有效）
-        f.append('password varchar(255) DEFAULT ""')
+        f.append('password varchar(255) DEFAULT NULL')
         # pri_key: 私钥（仅当auth=2时有效）
-        f.append('pri_key varchar(4096) DEFAULT ""')
+        f.append('pri_key varchar(4096) DEFAULT NULL')
 
         # creator_id: 账号创建者的id，0=系统默认创建
         f.append('creator_id int(11) DEFAULT 0')
@@ -337,20 +337,20 @@ class DatabaseInit:
         # id: 自增主键
         f.append('id integer PRIMARY KEY {}'.format(self.db.auto_increment))
         # name: 此条账号认证信息的名称，用于显示
-        f.append('name varchar(128) DEFAULT ""')
+        f.append('name varchar(128) DEFAULT NULL')
 
         # auth_type: 登录认证类型：0=无认证，1=password，2=public-key
         f.append('auth_type int(11) DEFAULT 0')
         # username: 登录账号
-        f.append('username varchar(128) DEFAULT ""')
+        f.append('username varchar(128) DEFAULT NULL')
         # username_prompt: 输入用户名的提示（仅用于telnet协议）
-        f.append('username_prompt varchar(128) DEFAULT ""')
+        f.append('username_prompt varchar(128) DEFAULT NULL')
         # password_prompt: 输入密码的提示（仅用于telnet协议）
-        f.append('password_prompt varchar(128) DEFAULT ""')
+        f.append('password_prompt varchar(128) DEFAULT NULL')
         # password: 登录密码（仅当auth=1时有效）
-        f.append('password varchar(255) DEFAULT ""')
+        f.append('password varchar(255) DEFAULT NULL')
         # pri_key: 私钥（仅当auth=2时有效）
-        f.append('pri_key varchar(4096) DEFAULT ""')
+        f.append('pri_key varchar(4096) DEFAULT NULL')
 
         # creator_id: 创建者的id，0=系统默认创建
         f.append('creator_id int(11) DEFAULT 0')
@@ -373,9 +373,9 @@ class DatabaseInit:
         f.append('rank int(11) DEFAULT 0')
 
         # name: 策略名称
-        f.append('name varchar(128) DEFAULT ""')
+        f.append('name varchar(128) DEFAULT NULL')
         # desc: 策略描述
-        f.append('desc varchar(255) DEFAULT ""')
+        f.append('desc varchar(255) DEFAULT NULL')
         # start_time: 策略有效期起始时间(为0则忽略)
         f.append('start_time int(11) DEFAULT 0')
         # end_time: 策略有效期结束时间(为0则忽略)
@@ -387,7 +387,7 @@ class DatabaseInit:
         # limit_ip: 是否启用来源限制，0=不限制，1=白名单，2=黑名单（尚未实现）
         f.append('limit_ip int(3) DEFAULT 0')
         # ip_list: 限制IP列表（白名单或者黑名单）
-        f.append('ip_list TEXT DEFAULT ""')
+        f.append('ip_list TEXT DEFAULT NULL')
 
         # limit_time: 是否启用限时连接，0=不限制，1=限制（尚未实现）
         f.append('limit_time int(3) DEFAULT 0')
@@ -452,7 +452,7 @@ class DatabaseInit:
         # rid: 外链对象的ID
         f.append('rid int(11) DEFAULT 0')
         # name: 外链对象的名称
-        f.append('name varchar(64) DEFAULT ""')
+        f.append('name varchar(64) DEFAULT NULL')
         # state: 状态，1=正常，2=禁用，3=临时锁定
         f.append('state int(3) DEFAULT 1')
 
@@ -518,21 +518,21 @@ class DatabaseInit:
         # 后续字段仅用于显示
 
         # u_name: 用户登录名
-        f.append('u_name varchar(32) DEFAULT ""')
+        f.append('u_name varchar(32) DEFAULT NULL')
         # u_surname: 用户姓名
-        f.append('u_surname varchar(64) DEFAULT ""')
+        f.append('u_surname varchar(64) DEFAULT NULL')
 
         # h_name: 主机名称
-        f.append('h_name varchar(64) DEFAULT ""')
+        f.append('h_name varchar(64) DEFAULT NULL')
         # ip: IP地址
         f.append('ip varchar(40) NOT NULL')
         # router_ip: 路由IP
-        f.append('router_ip varchar(40) DEFAULT ""')
+        f.append('router_ip varchar(40) DEFAULT NULL')
         # router_port: 路由端口
         f.append('router_port int(11) DEFAULT 0')
 
         # a_name: 登录账号
-        f.append('a_name varchar(128) DEFAULT ""')
+        f.append('a_name varchar(128) DEFAULT NULL')
         # protocol_type: 协议类型，0=？，1=SSH，2=RDP，3=TELNET
         f.append('protocol_type int(11) DEFAULT 0')
         # protocol_port: 协议端口
@@ -551,9 +551,9 @@ class DatabaseInit:
         f.append('id integer PRIMARY KEY {}'.format(self.db.auto_increment))
 
         # name: 策略名称
-        f.append('name varchar(128) DEFAULT ""')
+        f.append('name varchar(128) DEFAULT NULL')
         # desc: 策略描述
-        f.append('desc varchar(255) DEFAULT ""')
+        f.append('desc varchar(255) DEFAULT NULL')
         # start_time: 策略有效期起始时间(为0则忽略)
         f.append('start_time int(11) DEFAULT 0')
         # end_time: 策略有效期结束时间(为0则忽略)
@@ -621,11 +621,11 @@ class DatabaseInit:
         # 后续字段仅用于显示
 
         # host_name: 主机名称
-        f.append('host_name varchar(64) DEFAULT ""')
+        f.append('host_name varchar(64) DEFAULT NULL')
         # ip: IP地址
         f.append('ip varchar(40) NOT NULL')
         # router_ip: 路由IP
-        f.append('router_ip varchar(40) DEFAULT ""')
+        f.append('router_ip varchar(40) DEFAULT NULL')
         # router_port: 路由端口
         f.append('router_port int(11) DEFAULT 0')
 
@@ -642,20 +642,20 @@ class DatabaseInit:
         f.append('id integer PRIMARY KEY {}'.format(self.db.auto_increment))
 
         # user_name: 用户名
-        f.append('user_name varchar(32) DEFAULT ""')
+        f.append('user_name varchar(32) DEFAULT NULL')
         # user_surname: 用户真实姓名
-        f.append('user_surname varchar(64) DEFAULT ""')
+        f.append('user_surname varchar(64) DEFAULT NULL')
 
         # client_ip: 操作发起的IP地址
-        f.append('client_ip varchar(40) DEFAULT ""')
+        f.append('client_ip varchar(40) DEFAULT NULL')
         # code: 操作结果（成功还是失败 TPE_XXXX）
         f.append('code int(11) DEFAULT 0')
         # time: 日志发生时间
         f.append('log_time int(11) DEFAULT 0')
         # message: 说明
-        f.append('message varchar(255) DEFAULT ""')
+        f.append('message varchar(255) DEFAULT NULL')
         # detail: 详细描述
-        f.append('detail TEXT DEFAULT ""')
+        f.append('detail TEXT DEFAULT NULL')
 
         self._db_exec(
             '创建系统日志表...',
@@ -670,7 +670,7 @@ class DatabaseInit:
         f.append('id integer PRIMARY KEY {}'.format(self.db.auto_increment))
 
         # sid: 会话ID
-        f.append('sid varchar(32) DEFAULT ""')
+        f.append('sid varchar(32) DEFAULT NULL')
 
         # 下列三个ID主要用于在线会话管理（强行终止会话）
         # user_id: 操作的用户
@@ -684,20 +684,20 @@ class DatabaseInit:
         f.append('state int(11) DEFAULT 0')
 
         # user_name: 用户名
-        f.append('user_username varchar(32) DEFAULT ""')
+        f.append('user_username varchar(32) DEFAULT NULL')
         # user_surname: 用户姓名
-        f.append('user_surname varchar(64) DEFAULT ""')
+        f.append('user_surname varchar(64) DEFAULT NULL')
 
         # host_ip: 目标主机IP
-        f.append('host_ip varchar(40) DEFAULT ""')
+        f.append('host_ip varchar(40) DEFAULT NULL')
         # conn_ip: 端口转发模式=路由主机IP，直连模式=目标主机IP
-        f.append('conn_ip varchar(40) DEFAULT ""')
+        f.append('conn_ip varchar(40) DEFAULT NULL')
         f.append('conn_port int(11) DEFAULT 0')
         # client_ip: 操作发起的IP地址
-        f.append('client_ip varchar(40) DEFAULT ""')
+        f.append('client_ip varchar(40) DEFAULT NULL')
 
         # acc_username: 账号（远程主机登录账号名称）
-        f.append('acc_username varchar(128) DEFAULT ""')
+        f.append('acc_username varchar(128) DEFAULT NULL')
 
         # auth_type: 远程登录认证方式
         f.append('auth_type int(11) DEFAULT 0')

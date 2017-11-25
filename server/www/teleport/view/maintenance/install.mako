@@ -50,7 +50,7 @@
 ## Begin Main Body.
 
 <div class="content-box">
-    <p class="welcome-message"><i class="fa fa-heart"></i> <span>欢迎安装使用 TELEPORT v${app_ver.TP_SRV_WWW_VER} 社区版！</span></p>
+    <p class="welcome-message"><i class="fa fa-heart"></i> <span>欢迎安装使用 TELEPORT v${app_ver.TP_SERVER_VER} 社区版！</span></p>
 
     <hr/>
     <h2><i class="fa fa-chevron-right"></i> 确定数据库类型</h2>
@@ -74,15 +74,15 @@
             </tr>
             <tr>
                 <td class="key"><label for="sysadmin-email">电子邮件地址：</label></td>
-                <td><input type="text" class="form-control" id="sysadmin-email" value=""></td>
+                <td><input type="text" class="form-control" id="sysadmin-email"></td>
             </tr>
             <tr>
                 <td class="key"><label for="password">密码：</label></td>
-                <td><input type="password" class="form-control" id="password" value="admin"></td>
+                <td><input type="password" class="form-control" id="password"></td>
             </tr>
             <tr>
                 <td class="key"><label for="password-again">再次确认密码：</label></td>
-                <td><input type="password" class="form-control" id="password-again" value="admin"></td>
+                <td><input type="password" class="form-control" id="password-again"></td>
             </tr>
         </table>
 
