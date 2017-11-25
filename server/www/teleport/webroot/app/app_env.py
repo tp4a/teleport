@@ -28,6 +28,8 @@ for p in x:
 
 PATH_APP_ROOT = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
 
+sys.path.append(os.path.join(PATH_APP_ROOT, 'webroot'))
+
 # 检查操作系统，目前支持Win/Linux/MacOS
 PLATFORM = platform.system().lower()
 if PLATFORM not in ['windows', 'linux', 'darwin']:
