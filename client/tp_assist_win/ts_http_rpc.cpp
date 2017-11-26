@@ -44,9 +44,9 @@ End Sub
 手工测试了，ubuntu服务器可以，不知道是否能够支持所有的Linux。SecureCRT对此表示忽略。
 */
 
-// #define RDP_CLIENT_SYSTEM_BUILTIN
+#define RDP_CLIENT_SYSTEM_BUILTIN
 // #define RDP_CLIENT_SYSTEM_ACTIVE_CONTROL
-#define RDP_CLIENT_FREERDP
+//#define RDP_CLIENT_FREERDP
 
 
 #ifdef RDP_CLIENT_SYSTEM_BUILTIN
