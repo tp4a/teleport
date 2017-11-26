@@ -275,7 +275,6 @@ bool ExIniFile::LoadFromMemory(const ex_wstr& strData, bool bClearOld)
 			posLF = ex_wstr::npos;
 			posCR = strAll.find(L"\r");
 			posLF = strAll.find(L"\n");
-			int tttt = 0;
 
 			if(posCR == ex_wstr::npos && posLF == ex_wstr::npos) {
 				if (strAll.empty())
