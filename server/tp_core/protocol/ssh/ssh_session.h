@@ -37,7 +37,7 @@ private:
 
 	TppSshRec rec;
 
-	int retcode;
+	int state;
 	int db_id;
 	int channel_id;	// for debug only.
 

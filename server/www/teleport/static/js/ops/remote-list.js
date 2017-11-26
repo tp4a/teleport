@@ -129,7 +129,7 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
             console.log(uni_id, protocol_sub_type);
 
             if (action === 'rdp') {
-                $tp.notify_error('尚未实现！');
+                $app.connect_remote(uni_id, TP_PROTOCOL_TYPE_RDP, TP_PROTOCOL_TYPE_RDP_DESKTOP);
             } else if (action === 'ssh') {
                 $app.connect_remote(uni_id, TP_PROTOCOL_TYPE_SSH, protocol_sub_type);
             } else if (action === 'telnet') {

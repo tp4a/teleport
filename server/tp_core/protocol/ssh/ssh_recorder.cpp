@@ -103,7 +103,7 @@ void TppSshRec::record_win_size_change(int width, int height)
 	record(TS_RECORD_TYPE_SSH_TERM_SIZE, (ex_u8*)&pkg, sizeof(TS_RECORD_WIN_SIZE));
 }
 
-// TODO: 为了录像回放和命令历史能够对应（比如点击命令直接跳到录像的对应时点），应该仿照录像数据包的方式记录相对时间偏移，而不是绝对时间。
+// 为了录像回放和命令历史能够对应（比如点击命令直接跳到录像的对应时点），仿照录像数据包的方式记录相对时间偏移，而不是绝对时间。
 void TppSshRec::record_command(int flag, const ex_astr& cmd)
 {
 	char szTime[100] = { 0 };

@@ -11,7 +11,7 @@ TP_SSH_CHANNEL_PAIR::TP_SSH_CHANNEL_PAIR() {
 	cli_channel = NULL;
 	srv_channel = NULL;
 
-	retcode = TP_SESS_STAT_RUNNING;
+	state = TP_SESS_STAT_RUNNING;
 	db_id = 0;
 	channel_id = 0;
 
@@ -127,13 +127,13 @@ void SshSession::_record_end(TP_SSH_CHANNEL_PAIR* cp)
 {
 	if (cp->db_id > 0)
 	{
-		//EXLOGD("[ssh] [channel:%d] channel end with code: %d\n", cp->channel_id, cp->retcode);
+		//EXLOGD("[ssh] [channel:%d] channel end with code: %d\n", cp->channel_id, cp->state);
 
 		// 如果会话过程中没有发生错误，则将其状态改为结束，否则记录下错误值
-		if (cp->retcode == TP_SESS_STAT_RUNNING || cp->retcode == TP_SESS_STAT_STARTED)
-			cp->retcode = TP_SESS_STAT_END;
+		if (cp->state == TP_SESS_STAT_RUNNING || cp->state == TP_SESS_STAT_STARTED)
+			cp->state = TP_SESS_STAT_END;
 
-		g_ssh_env.session_end(m_sid.c_str(), cp->db_id, cp->retcode);
+		g_ssh_env.session_end(m_sid.c_str(), cp->db_id, cp->state);
 
 		cp->db_id = 0;
 	}
@@ -320,7 +320,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	_this->m_sid = user;
 	EXLOGV("[ssh] authenticating, session-id: %s\n", _this->m_sid.c_str());
 
-	int protocol = 0;
+// 	int protocol = 0;
 	//TPP_CONNECT_INFO* sess_info = g_ssh_env.get_connect_info(_this->m_sid.c_str());
 	_this->m_conn_info = g_ssh_env.get_connect_info(_this->m_sid.c_str());
 
@@ -336,16 +336,15 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		_this->m_auth_type = _this->m_conn_info->auth_type;
 		_this->m_acc_name = _this->m_conn_info->acc_username;
 		_this->m_acc_secret = _this->m_conn_info->acc_secret;
-		protocol = _this->m_conn_info->protocol_type;
+		//protocol = _this->m_conn_info->protocol_type;
+		if (_this->m_conn_info->protocol_type != TP_PROTOCOL_TYPE_SSH) {
+			EXLOGE("[ssh] session '%s' is not for SSH.\n", _this->m_sid.c_str());
+			_this->m_have_error = true;
+			_this->_session_error(TP_SESS_STAT_ERR_INTERNAL);
+			return SSH_AUTH_DENIED;
+		}
 	}
-
-	if (protocol != TP_PROTOCOL_TYPE_SSH) {
-		EXLOGE("[ssh] session '%s' is not for SSH.\n", _this->m_sid.c_str());
-		_this->m_have_error = true;
-		_this->_session_error(TP_SESS_STAT_ERR_INTERNAL);
-		return SSH_AUTH_DENIED;
-	}
-
+	
 	// 现在尝试根据session-id获取得到的信息，连接并登录真正的SSH服务器
 	EXLOGV("[ssh] try to connect to real SSH server %s:%d\n", _this->m_conn_ip.c_str(), _this->m_conn_port);
 	_this->m_srv_session = ssh_new();
@@ -722,7 +721,7 @@ int SshSession::_on_client_channel_subsystem_request(ssh_session session, ssh_ch
 	// 目前只支持SFTP子系统
 	if (strcmp(subsystem, "sftp") != 0) {
 		EXLOGE("[ssh] support `sftp` subsystem only, but got `%s`.\n", subsystem);
-		cp->retcode = TP_SESS_STAT_ERR_UNSUPPORT_PROTOCOL;
+		cp->state = TP_SESS_STAT_ERR_UNSUPPORT_PROTOCOL;
 		return SSH_ERROR;
 	}
 
