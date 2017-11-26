@@ -354,9 +354,6 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		
 
 		FILE* file = ex_fopen(index_path.c_str(), "rb");
-// 
-// 		FILE* file = NULL;
-// 		file = fopen(index_path.c_str(), "rb");
 		if (file)
 		{
 			unsigned long file_size = 0;
@@ -574,12 +571,6 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		return;
 	}
 
-// 	int pro_sub = 0;
-// 	if (!jsRoot["protocol_sub_type"].isNull()) {
-// 		if (jsRoot["protocol_sub_type"].isNumeric()) {
-// 			pro_sub = jsRoot["protocol_sub_type"].asInt();
-// 		}
-// 	}
 	int pro_sub = jsRoot["protocol_sub_type"].asInt();
 
 	ex_astr teleport_ip = jsRoot["teleport_ip"].asCString();
@@ -844,41 +835,12 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			w_exe_path = _T("\"");
 			w_exe_path += g_cfg.ssh_app + _T("\" ");
 			w_exe_path += g_cfg.ssh_cmdline;
-
-
-// 			clientsetmap::iterator it = g_cfgSSH.m_clientsetmap.find(g_cfgSSH.m_current_client);
-// 			if (it == g_cfgSSH.m_clientsetmap.end())
-// 			{
-// 				w_exe_path = _T("\"");
-// 				w_exe_path += g_env.m_tools_path;
-// 				w_exe_path += _T("\\putty\\putty.exe\"");
-// 				w_exe_path += _T(" -ssh -pw **** -P {host_port} -l {user_name} {host_ip}");
-// 			}
-// 			else
-// 			{
-// 				w_exe_path = _T("\"");
-// 				w_exe_path += it->second.path + _T("\" ");
-// 				w_exe_path += it->second.commandline;
-// 			}
 		}
 		else
 		{
 			w_exe_path = _T("\"");
 			w_exe_path += g_cfg.scp_app + _T("\" ");
 			w_exe_path += g_cfg.scp_cmdline;
-
-// 			clientsetmap::iterator it = g_cfgScp.m_clientsetmap.find(g_cfgScp.m_current_client);
-// 			if (it == g_cfgScp.m_clientsetmap.end())
-// 			{
-// 				w_exe_path = _T("\"");
-// 				w_exe_path += g_env.m_tools_path;
-// 				w_exe_path += _T("\\winscp\\winscp.exe\"");
-// 				w_exe_path += _T(" /sessionname=\"TP#{real_ip}\" {user_name}:****@{host_ip}:{host_port}");
-// 			}
-// 			else {
-// 				w_exe_path = it->second.path + _T(" ");
-// 				w_exe_path += it->second.commandline;
-// 			}
 		}
 	}
 	else if (pro_type == TP_PROTOCOL_TYPE_TELNET)
@@ -889,21 +851,6 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		w_exe_path = _T("\"");
 		w_exe_path += g_cfg.telnet_app + _T("\" ");
 		w_exe_path += g_cfg.telnet_cmdline;
-
-// 		clientsetmap::iterator it = g_cfgTelnet.m_clientsetmap.find(g_cfgTelnet.m_current_client);
-// 		if (it == g_cfgTelnet.m_clientsetmap.end())
-// 		{
-// 			w_exe_path = _T("\"");
-// 			w_exe_path += g_env.m_tools_path;
-// 			w_exe_path += _T("\\putty\\putty.exe\"");
-// 			w_exe_path += _T(" telnet://{user_name}@{host_ip}:{host_port}");
-// 		}
-// 		else
-// 		{
-// 			w_exe_path = _T("\"");
-// 			w_exe_path += it->second.path + _T("\" ");
-// 			w_exe_path += it->second.commandline;
-// 		}
 	}
 
 	ex_replace_all(w_exe_path, _T("{host_port}"), w_port);
@@ -1026,26 +973,18 @@ void TsHttpRpc::_rpc_func_check(const ex_astr& func_args, ex_astr& buf)
 		{
 			//printf("gethostbyname error for host:%s/n", ptr);
 			_create_json_ret(buf, TPE_PARAM);
-			return; /* 如果调用gethostbyname发生错误，返回1 */
+			return;
 		}
-		/* 将主机的规范名打出来 */
-		//printf("official hostname:%s/n", hptr->h_name);
-		// 主机可能有多个别名，将所有别名分别打出来
-		//for (pptr = hptr->h_aliases; *pptr != NULL; pptr++)
-		//	printf(" alias:%s/n", *pptr);
-		/* 根据地址类型，将地址打出来 */
+
 		char szbuf[1204] = { 0 };
 		switch (hptr->h_addrtype)
 		{
 		case AF_INET:
 		case AF_INET6:
 			pptr = hptr->h_addr_list;
-			/* 将刚才得到的所有地址都打出来。其中调用了inet_ntop()函数 */
-
 			for (; *pptr != NULL; pptr++)
 				inet_ntop(hptr->h_addrtype, *pptr, IP, sizeof(IP));
 			server_ip = IP;
-			//printf(" address:%s/n", inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str)));
 			break;
 		default:
 			printf("unknown address type/n");
@@ -1128,7 +1067,7 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 		}
 		/* 将主机的规范名打出来 */
 		//printf("official hostname:%s/n", hptr->h_name);
-		///* 主机可能有多个别名，将所有别名分别打出来 */
+		/* 主机可能有多个别名，将所有别名分别打出来 */
 		//for (pptr = hptr->h_aliases; *pptr != NULL; pptr++)
 		//	printf(" alias:%s/n", *pptr);
 		/* 根据地址类型，将地址打出来 */
@@ -1165,7 +1104,6 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 	ex_wstr w_exe_path;
 	w_exe_path = _T("\"");
 	w_exe_path += g_env.m_tools_path + _T("\\tprdp\\tprdp-replay.exe\"");
-	//swprintf_s(w_szCommandLine, _T(" -ssh -pw **** -P %d -l %s %s"), teleport_port, w_s_id.c_str(), w_teleport_ip.c_str());
 	w_exe_path += _T(" ");
 	w_exe_path += w_url;
 

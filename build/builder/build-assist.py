@@ -48,7 +48,7 @@ class BuilderWin(BuilderBase):
     def build_installer(self):
         cc.i('build assist installer...')
 
-        name = 'teleport-assist-{}'.format(VER_TP_ASSIST)
+        name = 'teleport-assist-{}-{}'.format(ctx.dist, VER_TP_ASSIST)
 
         out_path = os.path.join(env.root_path, 'out', 'installer')
         utils.makedirs(out_path)

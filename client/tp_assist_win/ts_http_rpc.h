@@ -12,27 +12,6 @@
 
 #include "../../external/mongoose/mongoose.h"
 
-
-// typedef ex_u32 ts_rv;
-
-// #define TSR_OK						0x0000
-// #define TSR_INVALID_DATA			0x0001
-// #define TSR_SEND_ERROR				0x0002
-// #define TSR_NEED_MORE_DATA			0x0005
-// #define TSR_FAILED					0x0006
-// #define TSR_PING_OK					0x0007
-// #define TSR_PING_ERROR				0x0008
-// 
-// #define TSR_INVALID_REQUEST			0x1000
-// #define TSR_INVALID_URI				0x1001
-// #define TSR_INVALID_URL_ENCODE		0x1002
-// #define TSR_NO_SUCH_METHOD			0x1003
-// #define TSR_INVALID_JSON_FORMAT		0x1004
-// #define TSR_INVALID_JSON_PARAM		0x1005
-// #define TSR_CREATE_PROCESS_ERROR	0x1006
-// #define TSR_OPENFILE_ERROR			0x1007
-// #define TSR_GETTEMPPATH_ERROR		0x1007
-
 /*
 //=================================================================
 接口使用说明：
@@ -64,14 +43,6 @@ void http_rpc_main_loop(void);
 void http_rpc_stop(void);
 
 typedef std::map<ex_astr, ex_astr> content_type_map;
-
-// struct sid_info
-// {
-// 	ex_astr host_ip;
-// 	ex_astr s_id;
-// 	bool update;
-// };
-// typedef std::map<DWORD, sid_info> PidSidMap;
 
 class TsHttpRpc
 {
