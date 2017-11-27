@@ -5,9 +5,9 @@
 %>
 <%inherit file="../page_base.mako"/>
 
-## <%block name="extend_js_file">
-##     <script type="text/javascript" src="${ static_url('js/ui/config/info.js') }"></script>
-## </%block>
+<%block name="extend_js_file">
+    <script type="text/javascript" src="${ static_url('js/dashboard/dashboard.js') }"></script>
+</%block>
 
 <%block name="extend_css_file">
     <link href="${ static_url('css/dashboard.css') }" rel="stylesheet" type="text/css"/>
@@ -27,7 +27,7 @@
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">用户</div>
-                    <div class="stats-value">-</div>
+                    <div class="stats-value" id="count-user">-</div>
                 </div>
             </div>
         </div>
@@ -38,7 +38,7 @@
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">主机</div>
-                    <div class="stats-value">-</div>
+                    <div class="stats-value" id="count-host">-</div>
                 </div>
             </div>
         </div>
@@ -49,7 +49,7 @@
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">主机账号</div>
-                    <div class="stats-value">-</div>
+                    <div class="stats-value" id="count-acc">-</div>
                 </div>
             </div>
         </div>
@@ -60,7 +60,7 @@
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">当前连接</div>
-                    <div class="stats-value">-</div>
+                    <div class="stats-value" id="count-conn">-</div>
                 </div>
             </div>
         </div>

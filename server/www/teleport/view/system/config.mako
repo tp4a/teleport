@@ -70,7 +70,7 @@
                     <tr>
                         <td class="key">WEB会话超时</td>
                         <td class="value">
-                            <input id="sec-session-timeout" type="text" value="30"/><span class="unit">分钟</span><span class="desc">5~1440。超过设定时长无操作，用户将被强制登出。默认为30分钟。</span>
+                            <input id="sec-session-timeout" type="text" value="30"/><span class="unit">分钟</span><span class="desc">5~1440。超过设定时长无操作，用户将被强制登出。默认为60分钟。</span>
                         </td>
                     </tr>
                     <tr>

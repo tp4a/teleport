@@ -93,3 +93,4 @@ build/*
 xcuserdata
 profile
 *.moved-aside
+/server/share/tmp

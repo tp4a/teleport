@@ -251,15 +251,15 @@ class TPDatabase:
             log.e('database create and initialize failed.\n')
             return False
 
-    def upgrade_database(self, step_begin, step_end):
-        log.v('start database upgrade process.\n')
-        if DatabaseUpgrade(self, step_begin, step_end).do_upgrade():
-            log.v('database upgraded.\n')
-            self.need_upgrade = False
-            return True
-        else:
-            log.e('database upgrade failed.\n')
-            return False
+    # def upgrade_database(self, step_begin, step_end):
+    #     log.v('start database upgrade process.\n')
+    #     if DatabaseUpgrade(self, step_begin, step_end).do_upgrade():
+    #         log.v('database upgraded.\n')
+    #         self.need_upgrade = False
+    #         return True
+    #     else:
+    #         log.e('database upgrade failed.\n')
+    #         return False
 
     def alter_table(self, table_names, field_names=None):
         """
@@ -450,7 +450,7 @@ class TPMysqlPool(TPDatabasePool):
 
     def _do_connect(self):
         try:
-            return pymysql.connect(host=self._host,
+            conn = pymysql.connect(host=self._host,
                                    user=self._user,
                                    passwd=self._password,
                                    db=self._db_name,
@@ -458,6 +458,10 @@ class TPMysqlPool(TPDatabasePool):
                                    autocommit=False,
                                    connect_timeout=3.0,
                                    charset='utf8')
+            err = self._do_exec(conn, 'SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,"ONLY_FULL_GROUP_BY",""));', args=())
+            if err is None:
+                log.e('[mysql] can not disable ONLY_FULL_GROUP_BY flag.\n')
+            return conn
         except pymysql.err.OperationalError as e:
             errno, _ = e.args
             if 2003 == errno:

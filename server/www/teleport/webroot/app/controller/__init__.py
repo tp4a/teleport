@@ -24,6 +24,8 @@ controllers = [
     # ====================================================
     #  - 控制台页面
     (r'/dashboard', dashboard.IndexHandler),
+    #  - [json] 获取基本信息
+    (r'/dashboard/do-get-basic', dashboard.DoGetBasicHandler),
 
     # ====================================================
     # 外部调用接口

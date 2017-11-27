@@ -344,10 +344,11 @@ class DoImportHandler(TPBaseHandler):
                     pass
 
             if file_encode is None:
-                with open(csv_filename, encoding='utf8') as f:
+                log.v('file `{}` is not gbk, try utf8\n'.format(csv_filename))
+                with open(csv_filename, encoding='utf_8_sig') as f:
                     try:
                         f.readlines()
-                        file_encode = 'utf8'
+                        file_encode = 'utf_8_sig'
                     except:
                         pass
 

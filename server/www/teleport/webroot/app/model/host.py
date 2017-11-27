@@ -118,6 +118,7 @@ def add_host(handler, args):
 
 
 def remove_hosts(handler, hosts):
+    print('----', hosts)
     db = get_db()
 
     host_ids = ','.join([str(i) for i in hosts])
@@ -134,36 +135,37 @@ def remove_hosts(handler, hosts):
     if err != TPE_OK:
         return err
 
-    acc_ids = []
+    accs = []
     acc_names = []
     for acc in s.recorder:
-        if str(acc['id']) not in acc_ids:
-            acc_ids.append(str(acc['id']))
+        if str(acc['id']) not in accs:
+            accs.append(str(acc['id']))
         acc_name = '{}@{}'.format(acc['username'], acc['host_ip'])
         if len(acc['router_ip']) > 0:
             acc_name += '（由{}:{}路由）'.format(acc['router_ip'], acc['router_port'])
         if acc_name not in acc_names:
             acc_names.append(acc_name)
 
-    if len(acc_ids) > 0:
+    acc_ids = ','.join([i for i in accs])
+    if len(accs) > 0:
         # 1.2 将账号从所在组中移除
-        where = 'mid IN ({})'.format(','.join(acc_ids))
+        where = 'mid IN ({})'.format(acc_ids)
         sql = 'DELETE FROM `{}group_map` WHERE (type={} AND {});'.format(db.table_prefix, TP_GROUP_ACCOUNT, where)
         sql_list.append(sql)
         # if not db.exec(sql):
         #     return TPE_DATABASE
 
         # 1.3 将账号删除
-        where = 'id IN ({})'.format(','.join(acc_ids))
+        where = 'id IN ({})'.format(acc_ids)
         sql = 'DELETE FROM `{}acc` WHERE {};'.format(db.table_prefix, where)
         sql_list.append(sql)
         # if not db.exec(sql):
         #     return TPE_DATABASE
 
-        sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=','.join(acc_ids))
+        sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=acc_ids)
         sql_list.append(sql)
 
-        sql = 'DELETE FROM `{}ops_map` WHERE a_id IN ({});'.format(db.table_prefix, ','.join(acc_ids))
+        sql = 'DELETE FROM `{}ops_map` WHERE a_id IN ({acc_ids});'.format(db.table_prefix, acc_ids=acc_ids)
         sql_list.append(sql)
 
     # step 2. 处理主机
@@ -192,9 +194,9 @@ def remove_hosts(handler, hosts):
     sql = 'DELETE FROM `{}host` WHERE {};'.format(db.table_prefix, where)
     sql_list.append(sql)
 
-    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_HOST, rid=','.join(host_ids))
+    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_HOST, rid=host_ids)
     sql_list.append(sql)
-    sql = 'DELETE FROM `{}ops_map` WHERE h_id IN ({});'.format(db.table_prefix, ','.join(host_ids))
+    sql = 'DELETE FROM `{}ops_map` WHERE h_id IN ({host_ids});'.format(db.table_prefix, host_ids=host_ids)
     sql_list.append(sql)
 
     if not db.transaction(sql_list):

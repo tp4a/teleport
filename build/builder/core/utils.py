@@ -355,6 +355,17 @@ def strip(filename):
     return True
 
 
+def fix_new_line_flag(filename):
+    cc.n('fix new line flag to CR for text file', filename)
+    if not os.path.exists(filename):
+        return False
+    cmd = 'dos2unix {}'.format(filename)
+    ret, _ = sys_exec(cmd, direct_output=True)
+    if ret != 0:
+        raise RuntimeError('failed to dos2unix file [{}], ret={}.'.format(filename, ret))
+    return True
+
+
 def make_zip(src_path, to_file, from_parent=True):
     cc.v('compress folder into .zip...')
 
