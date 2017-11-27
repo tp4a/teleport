@@ -240,7 +240,7 @@ class DoUpdateAccountHandler(TPBaseJsonHandler):
         if param['auth_type'] == TP_AUTH_TYPE_PASSWORD and len(param['password']) > 0:
             code, ret_data = yield core_service_async_enc(param['password'])
             if code != TPE_OK:
-                return self.write_json(code, '无法加密存储密码！')
+                return self.write_json(code)
             else:
                 param['password'] = ret_data
         elif param['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY and len(param['pri_key']) > 0:

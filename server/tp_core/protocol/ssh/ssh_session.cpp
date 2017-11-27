@@ -348,6 +348,8 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	// 现在尝试根据session-id获取得到的信息，连接并登录真正的SSH服务器
 	EXLOGV("[ssh] try to connect to real SSH server %s:%d\n", _this->m_conn_ip.c_str(), _this->m_conn_port);
 	_this->m_srv_session = ssh_new();
+	int verbosity = 4;
+	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
 	ssh_set_blocking(_this->m_srv_session, 1);
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_HOST, _this->m_conn_ip.c_str());
 	int port = (int)_this->m_conn_port;
@@ -596,7 +598,7 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
 	cp->type = TS_SSH_CHANNEL_TYPE_SHELL;
 	g_ssh_env.session_update(cp->db_id, TP_PROTOCOL_TYPE_SSH_SHELL, TP_SESS_STAT_STARTED);
 
-	// FIXME: if client is putty, it will block here. the following function will never return.
+	// FIXME: sometimes it will block here. the following function will never return.
 	// at this time, can not write data to this channel. read from this channel with timeout, got 0 byte.
 	// I have no idea how to fix it...  :(
 	int err = ssh_channel_request_shell(cp->srv_channel);
@@ -630,7 +632,7 @@ void SshSession::_on_client_channel_close(ssh_session session, ssh_channel chann
 
 int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata)
 {
-	//EXLOG_BIN((ex_u8*)data, len, "on_client_channel_data [is_stderr=%d]:", is_stderr);
+	EXLOG_BIN((ex_u8*)data, len, "on_client_channel_data [is_stderr=%d]:", is_stderr);
 
 	SshSession *_this = (SshSession *)userdata;
 
@@ -742,7 +744,7 @@ int SshSession::_on_client_channel_exec_request(ssh_session session, ssh_channel
 }
 
 int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata) {
-	//EXLOG_BIN((ex_u8*)data, len, "on_server_channel_data [is_stderr=%d]:", is_stderr);
+	EXLOG_BIN((ex_u8*)data, len, "on_server_channel_data [is_stderr=%d]:", is_stderr);
 
 	SshSession *_this = (SshSession *)userdata;
 

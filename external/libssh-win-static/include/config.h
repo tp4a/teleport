@@ -173,6 +173,7 @@
 
 /* Define to 1 if you want to enable SSH1 */
 /* #undef WITH_SSH1 */
+#define WITH_SSH1
 
 /* Define to 1 if you want to enable server support */
 #define WITH_SERVER 1
