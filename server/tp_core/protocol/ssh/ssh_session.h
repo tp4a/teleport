@@ -32,6 +32,7 @@ public:
 
 private:
 	int type;	// TS_SSH_CHANNEL_TYPE_SHELL or TS_SSH_CHANNEL_TYPE_SFTP
+
 	ssh_channel cli_channel;
 	ssh_channel srv_channel;
 
@@ -109,7 +110,6 @@ private:
 	static void _on_server_channel_close(ssh_session session, ssh_channel channel, void* userdata);
 
 private:
-
 	SshProxy* m_proxy;
 	ssh_session m_cli_session;
 	ssh_session m_srv_session;
@@ -129,6 +129,9 @@ private:
 	int m_auth_type;
 
 	bool m_is_logon;
+
+	int m_ssh_ver;
+
 	// 一个ssh_session中可以打开多个ssh_channel
 	tp_channels m_channels;
 

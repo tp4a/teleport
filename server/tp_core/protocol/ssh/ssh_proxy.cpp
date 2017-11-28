@@ -88,6 +88,7 @@ void SshProxy::_thread_loop()
 		ssh_session sess_to_client = ssh_new();
 // 		int verbosity = 4;
 // 		ssh_options_set(sess_to_client, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+
 		ssh_set_blocking(sess_to_client, 1);
 
 		struct sockaddr_storage sock_client;
