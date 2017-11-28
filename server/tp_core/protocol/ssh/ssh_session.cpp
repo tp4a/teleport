@@ -173,6 +173,7 @@ void SshSession::_close_channels(void) {
 }
 
 void SshSession::_check_channels() {
+	EXLOGD("[ssh] -- check channels\n");
 	ExThreadSmartLock locker(m_lock);
 
 	//EXLOGD("[ssh] -- check channels, have %d\n", m_channels.size());
@@ -214,6 +215,19 @@ void SshSession::_check_channels() {
 			m_channels.erase(it++);
 		}
 		else {
+// 			if ((*it)->type == TS_SSH_CHANNEL_TYPE_SHELL) {
+// 				// 尝试发点信息：看看还会不会继续卡住
+// 				char* msg = "\r\n\r\n";
+// 				int len = ssh_channel_write(srv, msg, strlen(msg));
+// 				if (len != strlen(msg)) {
+// 					EXLOGE("[ssh]   -- try send failed. srv:err:%s\n", ssh_get_error(m_srv_session));
+// 					EXLOGE("[ssh]   -- try send failed. cli:err:%s\n", ssh_get_error(m_cli_session));
+// 				}
+// 				else {
+// 					EXLOGD("[ssh]   -- try send ok.\n");
+// 				}
+// 			}
+
 			++it;
 		}
 	}
@@ -278,7 +292,7 @@ void SshSession::_run(void) {
 	// 现在双方的连接已经建立好了，开始转发
 	ssh_event_add_session(event_loop, m_srv_session);
 	do {
-		r = ssh_event_dopoll(event_loop, 10000);
+		r = ssh_event_dopoll(event_loop, 5000);
 		//EXLOGD("ssh_event_dopoll() return %d.\n", r);
 		if (r == SSH_ERROR) {
 			if (0 != ssh_get_error_code(m_cli_session))
@@ -378,8 +392,11 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	_timeout = 10; // 10 sec.
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
+	// TODO: 获取服务端ssh版本，是v1还是v2
+	int ssh_ver = ssh_get_version(_this->m_srv_session);
+
 	// 	// 检查服务端支持的认证协议
-	ssh_userauth_none(_this->m_srv_session, NULL);
+	//ssh_userauth_none(_this->m_srv_session, _this->m_acc_name.c_str());
 	// 	rc = ssh_userauth_none(_this->m_srv_session, NULL);
 	// 	if (rc == SSH_AUTH_ERROR) {
 	// 			EXLOGE("[ssh] invalid password for password mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
@@ -395,8 +412,33 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 
 
 	if (_this->m_auth_type == TP_AUTH_TYPE_PASSWORD) {
-		// 优先尝试交互式登录（SSHv2推荐）
 		int retry_count = 0;
+
+		if (ssh_ver == 1) {
+			// 远程主机是SSHv1，则优先尝试密码登录
+			rc = ssh_userauth_password(_this->m_srv_session, _this->m_acc_name.c_str(), _this->m_acc_secret.c_str());
+			for (;;) {
+				if (rc == SSH_AUTH_AGAIN) {
+					retry_count += 1;
+					if (retry_count >= 3)
+						break;
+					ex_sleep_ms(100);
+					rc = ssh_userauth_password(_this->m_srv_session, _this->m_acc_name.c_str(), _this->m_acc_secret.c_str());
+					continue;
+				}
+				if (rc == SSH_AUTH_SUCCESS) {
+					EXLOGW("[ssh] logon with password mode.\n");
+					_this->m_is_logon = true;
+					return SSH_AUTH_SUCCESS;
+				}
+				else {
+					EXLOGW("[ssh] failed to login with password mode, got %d.\n", rc);
+				}
+			}
+		}
+
+		// SSHv2则优先尝试交互式登录（SSHv2推荐）
+		retry_count = 0;
 		rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
 		for (;;) {
 			if (rc == SSH_AUTH_AGAIN) {
@@ -443,15 +485,17 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 			EXLOGW("[ssh] failed to login with keyboard interactive mode, got %d, try password mode.\n", rc);
 		}
 
-		// 不支持交互式登录，则尝试密码方式
-		rc = ssh_userauth_password(_this->m_srv_session, NULL, _this->m_acc_secret.c_str());
-		if (rc == SSH_AUTH_SUCCESS) {
-			EXLOGW("[ssh] logon with password mode.\n");
-			_this->m_is_logon = true;
-			return SSH_AUTH_SUCCESS;
-		}
-		else {
-			EXLOGW("[ssh] failed to login with password mode, got %d.\n", rc);
+		if (ssh_ver != 1) {
+			// 不支持交互式登录，则尝试密码方式
+			rc = ssh_userauth_password(_this->m_srv_session, _this->m_acc_name.c_str(), _this->m_acc_secret.c_str());
+			if (rc == SSH_AUTH_SUCCESS) {
+				EXLOGW("[ssh] logon with password mode.\n");
+				_this->m_is_logon = true;
+				return SSH_AUTH_SUCCESS;
+			}
+			else {
+				EXLOGW("[ssh] failed to login with password mode, got %d.\n", rc);
+			}
 		}
 
 		EXLOGE("[ssh] can not use password mode or interactive mode to login to real SSH server %s:%d.\n", _this->m_conn_ip.c_str(), _this->m_conn_port);
@@ -602,8 +646,17 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
 	// at this time, can not write data to this channel. read from this channel with timeout, got 0 byte.
 	// I have no idea how to fix it...  :(
 	int err = ssh_channel_request_shell(cp->srv_channel);
-	if (err != SSH_OK)
+	if (err != SSH_OK) {
 		EXLOGE("[ssh] shell request from server got %d\n", err);
+	}
+// 	else {
+// 		// 尝试发点信息：看看还会不会继续卡住
+// 		char* msg = "\r\n\r\n";
+// 		err = ssh_channel_write(cp->srv_channel, msg, strlen(msg));
+// 		if (err != SSH_OK) {
+// 			EXLOGE("[ssh]   -- try send failed.\n");
+// 		}
+// 	}
 	return err;
 }
 
