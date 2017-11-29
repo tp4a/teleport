@@ -78,6 +78,10 @@ $app.on_init = function (cb_stack) {
         function (ret) {
             if (ret.code === TPE_OK) {
                 g_header = ret.data;
+                if(g_header.width === 0)
+                    g_header.width = 80;
+                if(g_header.height === 0)
+                    g_header.height = 24;
                 console.log('header', g_header);
 
                 $('#recorder-info').html(tp_format_datetime(g_header.start) + ': ' + g_header.user_name + '@' + g_header.client_ip + ' 访问 ' + g_header.account + '@' + g_header.conn_ip + ':' + g_header.conn_port);

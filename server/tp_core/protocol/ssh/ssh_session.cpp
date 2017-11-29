@@ -214,24 +214,6 @@ void SshSession::_check_channels() {
 			m_channels.erase(it++);
 		}
 		else {
-			// 			if ((*it)->type == TS_SSH_CHANNEL_TYPE_SHELL) {
-			// 				// 尝试从服务器读取点东西
-			// 				ex_u8 buf[4096] = { 0 };
-			// 				int len = 0;
-			// 
-			// 				len = ssh_channel_read_nonblocking(srv, buf, 4096, 0);
-			// 				if (len < 0) {
-			// 					EXLOGE("[ssh]   -- try read failed. srv:err:%s\n", ssh_get_error(m_srv_session));
-			// 					EXLOGE("[ssh]   -- try read failed. cli:err:%s\n", ssh_get_error(m_cli_session));
-			// 					ssh_channel_close(srv);
-			// 				}
-			// 				else if(len > 0) {
-			// 					EXLOGD("[ssh]   -- try read server ok.\n");
-			// 					EXLOG_BIN(buf, len, "RECV\n");
-			// 					_on_server_channel_data(m_srv_session, srv, buf, len, 0, this);
-			// 				}
-			// 			}
-
 			++it;
 		}
 	}
@@ -342,13 +324,10 @@ void SshSession::_run(void) {
 
 
 
-		// 如果是SSHv2
-		//if (m_ssh_ver == 2) {
-			// 现在双方的连接已经建立好了，开始转发
+	// 现在双方的连接已经建立好了，开始转发
 	ssh_event_add_session(event_loop, m_srv_session);
 	do {
 		err = ssh_event_dopoll(event_loop, 5000);
-		//EXLOGD("ssh_event_dopoll() return %d.\n", r);
 		if (err == SSH_ERROR) {
 			if (0 != ssh_get_error_code(m_cli_session))
 			{
@@ -380,14 +359,13 @@ void SshSession::_run(void) {
 	ssh_event_remove_session(event_loop, m_cli_session);
 	ssh_event_remove_session(event_loop, m_srv_session);
 	ssh_event_free(event_loop);
-	//}
 
 
-		// TODO: 这里还是有问题，如果一边是走SSHv1，另一边是SSHv2，放在同一个event_loop时，SSHv1会收不到数据，放到循环中时，SSHv2得不到数据
+	// 如果一边是走SSHv1，另一边是SSHv2，放在同一个event_loop时，SSHv1会收不到数据，放到循环中时，SSHv2得不到数据
+	// 所以，当SSHv1的远程主机连接后，到建立好shell环境之后，就进入另一种读取数据的循环，不再使用ssh_event_dopoll()了。
 
 	if (m_ssh_ver == 1)
 	{
-
 		tp_channels::iterator it = m_channels.begin(); // SSHv1只能打开一个channel
 		ssh_channel cli = (*it)->cli_channel;
 		ssh_channel srv = (*it)->srv_channel;
@@ -399,31 +377,32 @@ void SshSession::_run(void) {
 
 			if (ok) {
 				len = ssh_channel_read_nonblocking(cli, buf, 4096, 0);
-				if (len < 0) {
-					EXLOGE("[ssh]   -- try read failed. srv:err:%s\n", ssh_get_error(m_srv_session));
-					EXLOGE("[ssh]   -- try read failed. cli:err:%s\n", ssh_get_error(m_cli_session));
+				if (len < 0)
 					ok = false;
-				}
-				else if (len > 0) {
-					EXLOGD("[ssh]   -- try read client ok.\n");
-					//EXLOG_BIN(buf, len, "RECV\n");
+				else if (len > 0)
 					_on_client_channel_data(m_cli_session, cli, buf, len, 0, this);
-				}
+
+				len = ssh_channel_read_nonblocking(cli, buf, 4096, 1);
+				if (len < 0)
+					ok = false;
+				else if (len > 0) 
+					_on_client_channel_data(m_cli_session, cli, buf, len, 1, this);
 
 				len = ssh_channel_read_nonblocking(srv, buf, 4096, 0);
-				if (len < 0) {
-					EXLOGE("[ssh]   -- try read failed. srv:err:%s\n", ssh_get_error(m_srv_session));
-					EXLOGE("[ssh]   -- try read failed. cli:err:%s\n", ssh_get_error(m_cli_session));
+				if (len < 0)
 					ok = false;
-				}
-				else if (len > 0) {
-					EXLOGD("[ssh]   -- try read server ok.\n");
-					//EXLOG_BIN(buf, len, "RECV\n");
+				else if (len > 0)
 					_on_server_channel_data(m_srv_session, srv, buf, len, 0, this);
-				}
 
-				if (!ok)
+				len = ssh_channel_read_nonblocking(srv, buf, 4096, 1);
+				if (len < 0)
+					ok = false;
+				else if (len > 0)
+					_on_server_channel_data(m_srv_session, srv, buf, len, 1, this);
+
+				if (!ok) {
 					_close_channels();
+				}
 			}
 
 			if (!ok) {
@@ -434,6 +413,8 @@ void SshSession::_run(void) {
 
 			ex_sleep_ms(30);
 		} while (m_channels.size() > 0);
+
+		EXLOGV("[ssh] [%s:%d] all channel in this session are closed.\n", m_client_ip.c_str(), m_client_port);
 	}
 }
 
@@ -514,7 +495,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	_timeout = 10; // 10 sec.
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
-	// TODO: 获取服务端ssh版本，是v1还是v2
+	// 获取服务端ssh版本，是v1还是v2
 	_this->m_ssh_ver = ssh_get_version(_this->m_srv_session);
 	EXLOGW("[ssh] real host is SSHv%d\n", _this->m_ssh_ver);
 
@@ -668,6 +649,13 @@ ssh_channel SshSession::_on_new_channel_request(ssh_session session, void *userd
 
 	SshSession *_this = (SshSession *)userdata;
 
+	// TODO: 客户端与TP连接使用的总是SSHv2协议，因为最开始连接时还不知道真正的远程主机是不是SSHv1。
+	// 因此此处行为与客户端直连远程主机有些不一样。直连时，SecureCRT的克隆会话功能会因为以为连接的是SSHv1而自动重新连接，而不是打开新通道。
+	if (_this->m_ssh_ver == 1 && _this->m_channels.size() != 0) {
+		EXLOGE("[ssh] SSH1 supports only one execution channel. One has already been opened.\n");
+		return NULL;
+	}
+
 	ssh_channel cli_channel = ssh_channel_new(session);
 	if (cli_channel == NULL) {
 		EXLOGE("[ssh] can not create channel for client.\n");
@@ -803,7 +791,7 @@ void SshSession::_on_client_channel_close(ssh_session session, ssh_channel chann
 
 int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata)
 {
-	//EXLOG_BIN((ex_u8*)data, len, "on_client_channel_data [is_stderr=%d]:", is_stderr);
+	//EXLOG_BIN((ex_u8*)data, len, " ---> on_client_channel_data [is_stderr=%d]:", is_stderr);
 
 	SshSession *_this = (SshSession *)userdata;
 
@@ -885,6 +873,12 @@ int SshSession::_on_client_channel_subsystem_request(ssh_session session, ssh_ch
 	EXLOGD("[ssh] on_client_channel_subsystem_request(): %s\n", subsystem);
 	SshSession *_this = (SshSession *)userdata;
 
+	if (_this->m_ssh_ver == 1) {
+		// SSHv1 not support subsystem, so some client like WinSCP will use shell-mode instead.
+		EXLOGE("[ssh] real host running on SSHv1, does not support subsystem `%s`.\n", subsystem);
+		return SSH_ERROR;
+	}
+
 	TP_SSH_CHANNEL_PAIR* cp = _this->_get_channel_pair(TP_SSH_CLIENT_SIDE, channel);
 	if (NULL == cp) {
 		EXLOGE("[ssh] when request channel subsystem, not found channel pair.\n");
@@ -915,7 +909,7 @@ int SshSession::_on_client_channel_exec_request(ssh_session session, ssh_channel
 }
 
 int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel, void *data, unsigned int len, int is_stderr, void *userdata) {
-	//EXLOG_BIN((ex_u8*)data, len, "on_server_channel_data [is_stderr=%d]:", is_stderr);
+	//EXLOG_BIN((ex_u8*)data, len, " <--- on_server_channel_data [is_stderr=%d]:", is_stderr);
 
 	SshSession *_this = (SshSession *)userdata;
 
@@ -931,17 +925,17 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 		return SSH_ERROR;
 	}
 
-#ifdef EX_OS_WIN32
-	// TODO: hard code not good... :(
-	// 偶尔，某次操作会导致ssh_session->session_state为SSH_SESSION_STATE_ERROR
-	// 但是将其强制改为SSH_SESSION_STATE_AUTHENTICATED，后续操作仍然能成功（主要在向客户端发送第一包数据时）
-	ex_u8* _t = (ex_u8*)(ssh_channel_get_session(cp->cli_channel));
-	if (_t[1116] == 9) // SSH_SESSION_STATE_AUTHENTICATED = 8, SSH_SESSION_STATE_ERROR = 9
-	{
-		EXLOGW(" --- [ssh] hard code to fix client connect session error state.\n");
-		_t[1116] = 8;
-	}
-#endif
+// #ifdef EX_OS_WIN32
+// 	// TODO: hard code not good... :(
+// 	// 偶尔，某次操作会导致ssh_session->session_state为SSH_SESSION_STATE_ERROR
+// 	// 但是将其强制改为SSH_SESSION_STATE_AUTHENTICATED，后续操作仍然能成功（主要在向客户端发送第一包数据时）
+// 	ex_u8* _t = (ex_u8*)(ssh_channel_get_session(cp->cli_channel));
+// 	if (_t[1116] == 9) // SSH_SESSION_STATE_AUTHENTICATED = 8, SSH_SESSION_STATE_ERROR = 9
+// 	{
+// 		EXLOGW(" --- [ssh] hard code to fix client connect session error state.\n");
+// 		_t[1116] = 8;
+// 	}
+// #endif
 
 	_this->m_recving_from_srv = true;
 
