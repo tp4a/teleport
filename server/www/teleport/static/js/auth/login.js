@@ -106,6 +106,12 @@ $app.on_init = function (cb_stack) {
         }
     });
 
+    if($app.options.default_auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA) {
+        $app.dom.btn_login_type_password.click();
+    } else if($app.options.default_auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH) {
+        $app.dom.btn_login_type_oath.click();
+    }
+
     cb_stack.exec();
 };
 

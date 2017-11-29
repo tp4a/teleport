@@ -44,9 +44,11 @@ class LoginHandler(TPBaseHandler):
         else:
             username = _user['username']
 
+        default_auth_type = get_cfg().sys.login.auth
         param = {
             'ref': _ref,
-            'username': username
+            'username': username,
+            'default_auth': default_auth_type
         }
         self.render('auth/login.mako', page_param=json.dumps(param))
 
