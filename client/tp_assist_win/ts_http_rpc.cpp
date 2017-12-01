@@ -220,9 +220,9 @@ bool TsHttpRpc::init(const char* ip, int port)
 
 	char addr[128] = { 0 };
 	if (0 == strcmp(ip, "127.0.0.1") || 0 == strcmp(ip, "localhost"))
-		ex_strformat(addr, 128, ":%d", port);
+		ex_strformat(addr, 128, "tcp://127.0.0.1:%d", port);
 	else
-		ex_strformat(addr, 128, "%s:%d", ip, port);
+		ex_strformat(addr, 128, "tcp://%s:%d", ip, port);
 
 	nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
 	if (nc == NULL)
