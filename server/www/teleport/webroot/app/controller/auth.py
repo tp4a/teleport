@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import json
+from urllib.parse import quote
 
 from app.base.configs import get_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
-from app.base.utils import tp_timestamp_utc_now
 from app.const import *
 from app.logic.auth.captcha import tp_captcha_generate_image
-from app.logic.auth.oath import tp_oath_verify_code
-from app.logic.auth.password import tp_password_verify
 from app.model import syslog
 from app.model import user
 
@@ -31,7 +29,7 @@ class LoginHandler(TPBaseHandler):
             return
 
         _user = self.get_current_user()
-        _ref = self.get_argument('ref', '/')
+        _ref = quote(self.get_argument('ref', '/'))
 
         if _user['_is_login']:
             self.redirect(_ref)
