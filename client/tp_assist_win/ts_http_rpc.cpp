@@ -50,8 +50,8 @@ End Sub
 
 
 #ifdef RDP_CLIENT_SYSTEM_BUILTIN
-#include <WinCrypt.h>
-#pragma comment(lib, "Crypt32.lib")
+// #include <WinCrypt.h>
+// #pragma comment(lib, "Crypt32.lib")
 
 std::string rdp_content = "\
 connect to console:i:%d\n\
@@ -174,34 +174,34 @@ int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_f
 	return i >= src_len ? j : -1;
 }
 
-#ifdef RDP_CLIENT_SYSTEM_BUILTIN
-bool calc_psw51b(const char* password, std::string& ret)
-{
-	DATA_BLOB DataIn;
-	DATA_BLOB DataOut;
-
-	ex_wstr w_pswd;
-	ex_astr2wstr(password, w_pswd, EX_CODEPAGE_ACP);
-
-	DataIn.cbData = w_pswd.length() * sizeof(wchar_t);
-	DataIn.pbData = (BYTE*)w_pswd.c_str();
-
-
-	if (!CryptProtectData(&DataIn, L"psw", NULL, NULL, NULL, 0, &DataOut))
-		return false;
-
-	char szRet[5] = {0};
-	for (int i = 0; i < DataOut.cbData; ++i)
-	{
-		sprintf_s(szRet, 5, "%02X", DataOut.pbData[i]);
-		ret += szRet;
-	}
-	
-	LocalFree(DataOut.pbData);
-	return true;
-}
-#endif
-
+// #ifdef RDP_CLIENT_SYSTEM_BUILTIN
+// bool calc_psw51b(const char* password, std::string& ret)
+// {
+// 	DATA_BLOB DataIn;
+// 	DATA_BLOB DataOut;
+// 
+// 	ex_wstr w_pswd;
+// 	ex_astr2wstr(password, w_pswd, EX_CODEPAGE_ACP);
+// 
+// 	DataIn.cbData = w_pswd.length() * sizeof(wchar_t);
+// 	DataIn.pbData = (BYTE*)w_pswd.c_str();
+// 
+// 
+// 	if (!CryptProtectData(&DataIn, L"psw", NULL, NULL, NULL, 0, &DataOut))
+// 		return false;
+// 
+// 	char szRet[5] = {0};
+// 	for (int i = 0; i < DataOut.cbData; ++i)
+// 	{
+// 		sprintf_s(szRet, 5, "%02X", DataOut.pbData[i]);
+// 		ret += szRet;
+// 	}
+// 	
+// 	LocalFree(DataOut.pbData);
+// 	return true;
+// }
+// #endif
+// 
 TsHttpRpc::TsHttpRpc()
 {
 	m_stop = false;
