@@ -24,6 +24,10 @@ public:
 	ex_wstr telnet_app;
 	ex_wstr telnet_cmdline;
 
+	ex_wstr rdp_name;
+	ex_wstr rdp_app;
+	ex_wstr rdp_cmdline;
+
 protected:
 	bool _load(const ex_astr& str_json);
 

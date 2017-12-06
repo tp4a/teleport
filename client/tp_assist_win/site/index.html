@@ -41,7 +41,7 @@
 
         <div class="arg-detail arg-detail-common">
             <p><strong>此处配置保存到本地计算机上，如果更换计算机，需要重新配置！</strong></p>
-            <span><strong>注意：</strong>命令参数设置中，如需传递主机信息和登录信息，可以用以下变量替换（注意大小写！）：</span>
+            <span><strong>注意：</strong>命令行参数设置中，可以用以下变量替换（注意大小写！）：</span>
             <ul>
                 <li><span class="arg-varb">{host_ip}</span> 替换主机IP地址</li>
                 <li><span class="arg-varb">{host_port}</span> 替换主机端口号</li>
@@ -143,6 +143,49 @@
             </div>
 
         </div>
+
+
+        <hr/>
+        <p class="cfg-title">本地 RDP 客户端配置</p>
+
+        <div class="arg-detail arg-detail-common">
+            RDP专用命令行参数：
+            <ul>
+                <li><span class="arg-varb">{tmp_rdp_file}</span> 替换为助手工具生成的临时配置文件（.rdp）的绝对路径，用于支持按.rdp配置文件进行连接的RDP客户端</li>
+                <li><span class="arg-varb">{size}</span> [仅FreeRDP] 替换为屏幕尺寸</li>
+                <li><span class="arg-varb">{console}</span> [仅FreeRDP] 替换为是否以Console模式连接</li>
+                <li><span class="arg-varb">{clipboard}</span> [仅FreeRDP] 替换为是否允许剪贴板</li>
+                <li><span class="arg-varb">{drives}</span> [仅FreeRDP] 替换为是否允许映射本地磁盘</li>
+            </ul>
+        </div>
+
+
+        <div class="form-horizontal">
+            <div class="form-group form-group-sm">
+                <label for="ssh-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
+                <div class="col-sm-4">
+                    <select id="rdp-type" class="form-control"></select>
+                </div>
+            </div>
+
+            <div class="form-group form-group-sm">
+                <label for="ssh-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
+                <div class="col-sm-9">
+                    <div class="input-group">
+                        <input id="rdp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
+                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="rdp-select-app">选择...</button></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group form-group-sm">
+                <label for="rdp-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
+                <div class="col-sm-9">
+                    <input id="rdp-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
+                </div>
+            </div>
+        </div>
+
 
         <hr/>
         <div class="form-horizontal">

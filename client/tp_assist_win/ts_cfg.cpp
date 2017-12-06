@@ -208,5 +208,59 @@ bool TsCfg::_load(const ex_astr& str_json) {
 		return false;
 	}
 
+	//===================================
+	// check rdp config
+	//===================================
+
+	if (!m_root["rdp"].isObject()) {
+		EXLOGE("invalid config, error 1.\n");
+		return false;
+	}
+
+	if (!m_root["rdp"]["selected"].isString()) {
+		EXLOGE("invalid config, error 2.\n");
+		return false;
+	}
+
+	sel_name = m_root["rdp"]["selected"].asCString();
+
+	if (!m_root["rdp"]["available"].isArray() || m_root["rdp"]["available"].size() == 0) {
+		EXLOGE("invalid config, error 3.\n");
+		return false;
+	}
+
+	for (i = 0; i < m_root["rdp"]["available"].size(); ++i) {
+
+		if (
+			!m_root["rdp"]["available"][i]["name"].isString()
+			|| !m_root["rdp"]["available"][i]["app"].isString()
+			|| !m_root["rdp"]["available"][i]["cmdline"].isString()
+			) {
+			EXLOGE("invalid config, error 4.\n");
+			return false;
+		}
+
+		if (m_root["rdp"]["available"][i]["display"].isNull()) {
+			m_root["rdp"]["available"][i]["display"] = m_root["rdp"]["available"][i]["name"];
+		}
+
+		if (m_root["rdp"]["available"][i]["name"].asCString() != sel_name)
+			continue;
+
+		tmp = m_root["rdp"]["available"][i]["app"].asCString();
+		ex_astr2wstr(tmp, rdp_app, EX_CODEPAGE_UTF8);
+		tmp = m_root["rdp"]["available"][i]["cmdline"].asCString();
+		ex_astr2wstr(tmp, rdp_cmdline, EX_CODEPAGE_UTF8);
+		tmp = m_root["rdp"]["available"][i]["name"].asCString();
+		ex_astr2wstr(tmp, rdp_name, EX_CODEPAGE_UTF8);
+
+		break;
+	}
+
+	if (rdp_app.length() == 0 || rdp_cmdline.length() == 0 || rdp_name.length() == 0) {
+		EXLOGE("invalid config, error 6.\n");
+		return false;
+	}
+
 	return true;
 }

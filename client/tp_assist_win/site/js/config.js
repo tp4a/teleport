@@ -22,6 +22,11 @@ var dom = {
     telnet_cmdline: $('#telnet-cmdline'),
     telnet_select_app: $('#telnet-select-app'),
 
+    rdp_type: $('#rdp-type'),
+    rdp_app: $('#rdp-app'),
+    rdp_cmdline: $('#rdp-cmdline'),
+    rdp_select_app: $('#rdp-select-app'),
+
     btn_save: $('#btn-save')
 };
 
@@ -168,6 +173,39 @@ function update_dom() {
             dom.telnet_cmdline.val(cmdline);
         }
     }
+
+
+    dom.rdp_type.html('');
+    if (!_.isUndefined(g_cfg.rdp)) {
+        if (_.isUndefined(g_cfg.rdp.selected)) {
+            g_cfg.rdp.selected = '';
+        }
+
+        if (!_.isUndefined(g_cfg.rdp.available) && g_cfg.rdp.available.length > 0) {
+            var selected = '';
+            var app = '';
+            var cmdline = '';
+
+            var html = [];
+            for (var i = 0; i < g_cfg.rdp.available.length; i++) {
+                var item = g_cfg.rdp.available[i];
+
+                if (selected === '' || item.name === g_cfg.rdp.selected) {
+                    selected = item.name;
+                    app = item.app;
+                    cmdline = item.cmdline;
+                }
+
+                html.push('<option value="' + item.name + '">' + item.display + '</option>');
+            }
+
+            dom.rdp_type.html(html.join(''));
+
+            dom.rdp_type.val(selected);
+            dom.rdp_app.val(app);
+            dom.rdp_cmdline.val(cmdline);
+        }
+    }
 }
 
 function on_save() {
@@ -196,6 +234,14 @@ function on_save() {
         if (item.name === g_cfg.telnet.selected) {
             item.app = dom.telnet_app.val();
             item.cmdline = dom.telnet_cmdline.val();
+            break;
+        }
+    }
+    for (i = 0; i < g_cfg.rdp.available.length; i++) {
+        var item = g_cfg.rdp.available[i];
+        if (item.name === g_cfg.rdp.selected) {
+            item.app = dom.rdp_app.val();
+            item.cmdline = dom.rdp_cmdline.val();
             break;
         }
     }
@@ -336,6 +382,29 @@ $(document).ready(function () {
         select_local_file(function (code, path) {
             if (code == 0) {
                 dom.telnet_app.val(path);
+            } else {
+                console.log("can not select file.");
+            }
+        });
+    });
+
+
+    dom.rdp_type.change(function () {
+        g_cfg.rdp.selected = dom.rdp_type.val();
+        for (var i = 0; i < g_cfg.rdp.available.length; i++) {
+            var item = g_cfg.rdp.available[i];
+            if (item.name === g_cfg.rdp.selected) {
+                dom.rdp_app.val(item.app);
+                dom.rdp_cmdline.val(item.cmdline);
+                return;
+            }
+        }
+        notify_error('所选的配置项不存在！');
+    });
+    dom.rdp_select_app.click(function () {
+        select_local_file(function (code, path) {
+            if (code == 0) {
+                dom.rdp_app.val(path);
             } else {
                 console.log("can not select file.");
             }
