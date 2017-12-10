@@ -839,7 +839,8 @@ $tp.create_table_header = function (tbl, on_created) {
 
         if (_.isFunction(on_created))
             on_created(_tbl_header);
-        else if (!_.isUndefined(on_created))
+        //else if (!_.isUndefined(on_created))
+        else if (!_.isNull(on_created))
             console.error('create table header, on_created() is not callable.');
 
         cb_stack.exec();

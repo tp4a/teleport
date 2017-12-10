@@ -27,7 +27,7 @@ $assist.init = function (cb_stack) {
             $assist.running = true;
             $assist.version = ret.version;
 
-            if(_.isFunction($tp.assist_checked)) {
+            if (_.isFunction($tp.assist_checked)) {
                 $tp.assist_checked();
             }
             // if (version_compare()) {
@@ -38,7 +38,7 @@ $assist.init = function (cb_stack) {
         },
         error: function () {
             $assist.running = false;
-            if(_.isFunction($tp.assist_checked)) {
+            if (_.isFunction($tp.assist_checked)) {
                 $tp.assist_checked();
             }
             // func_error({}, TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
@@ -120,7 +120,7 @@ $assist.do_teleport = function (args, func_success, func_error) {
                     jsonp: 'callback',
                     dataType: 'json',
                     success: function (ret) {
-                        if(ret.code === TPE_OK) {
+                        if (ret.code === TPE_OK) {
                             func_success();
                         } else {
                             func_error(ret.code, ret.message);
@@ -140,6 +140,45 @@ $assist.do_teleport = function (args, func_success, func_error) {
         },
         error: function () {
             func_error(TPE_NETWORK, '远程网络通讯失败！');
+        }
+    });
+};
+
+$assist.do_rdp_replay = function (args, func_success, func_error) {
+    // ==================================================
+    // args is dict with fields shown below:
+    //   rid: (int) - record-id in database.
+    //   user: (string) - who did the RDP connection.
+    //   acc: (string) - account to login to remote RDP server.
+    //   host: (string) - IP of the remote RDP server.
+    //   start: (string) - when start the RDP connection, should be a UTC timestamp.
+    // ==================================================
+
+    // now fix the args.
+    args.web = $tp.web_server; // (string) - teleport server base address, like "http://127.0.0.1:7190", without end-slash.
+    args.sid = Cookies.get('_sid'); // (string) - current login user's session-id.
+    args.start = tp_format_datetime(tp_utc2local(args.start), 'yyyyMMdd-HHmmss'); // (string) - convert UTC timestamp to local human-readable string.
+
+    console.log('do-rdp-replay:', args);
+
+    var args_ = encodeURIComponent(JSON.stringify(args));
+    $.ajax({
+        type: 'GET',
+        timeout: 6000,
+        url: $assist.api_url + '/rdp_play/' + args_,
+        jsonp: 'callback',
+        dataType: 'json',
+        success: function (ret) {
+            console.log('ret', ret);
+            if (ret.code === TPE_OK) {
+                func_success();
+            } else {
+                // func_error(ret.code, '查看远程桌面操作录像失败！');
+                func_error(ret.code, ret.message);
+            }
+        },
+        error: function () {
+            func_error(TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
         }
     });
 };

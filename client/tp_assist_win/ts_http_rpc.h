@@ -1,6 +1,8 @@
 #ifndef __TS_HTTP_RPC_H__
 #define __TS_HTTP_RPC_H__
 
+#include "../../external/mongoose/mongoose.h"
+
 #include "ts_const.h"
 
 #include <vector>
@@ -10,7 +12,6 @@
 #include <ex.h>
 #include <json/json.h>
 
-#include "../../external/mongoose/mongoose.h"
 
 /*
 //=================================================================

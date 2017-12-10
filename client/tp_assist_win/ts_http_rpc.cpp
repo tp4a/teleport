@@ -1174,92 +1174,124 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 	}
 
 	// 判断参数是否正确
-	if (!jsRoot["host"].isString())
+// 	if (!jsRoot["host"].isString())
+// 	{
+// 		_create_json_ret(buf, TPE_PARAM);
+// 		return;
+// 	}
+// 	if (!jsRoot["port"].isInt())
+// 	{
+// 		_create_json_ret(buf, TPE_PARAM);
+// 		return;
+// 	}
+
+	if (!jsRoot["rid"].isInt()
+		|| !jsRoot["web"].isString()
+		|| !jsRoot["sid"].isString()
+		|| !jsRoot["user"].isString()
+		|| !jsRoot["acc"].isString()
+		|| !jsRoot["host"].isString()
+		|| !jsRoot["start"].isString()
+		)
 	{
 		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
-	if (!jsRoot["port"].isInt())
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-	if (!jsRoot["tail"].isString())
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
+
+
+
+// 	if (!jsRoot["tail"].isString())
+// 	{
+// 		_create_json_ret(buf, TPE_PARAM);
+// 		return;
+// 	}
+
+	int rid = jsRoot["rid"].asInt();
+	ex_astr a_url_base = jsRoot["web"].asCString();
+	ex_astr a_sid = jsRoot["sid"].asCString();
+	ex_astr a_user = jsRoot["user"].asCString();
+	ex_astr a_acc = jsRoot["acc"].asCString();
 	ex_astr a_host = jsRoot["host"].asCString();
-	int port = jsRoot["port"].asInt();
-	ex_astr a_tail = jsRoot["tail"].asCString();
-	ex_astr server_ip;
-	if (isIPAddress(a_host.c_str()))
-	{
-		server_ip = a_host;
-	}
-	else
-	{
-		char *ptr, **pptr;
-		struct hostent *hptr;
-		char IP[128] = { 0 };
-		/* 取得命令后第一个参数，即要解析的域名或主机名 */
-		ptr = (char*)a_host.c_str();
-		/* 调用gethostbyname()。调用结果都存在hptr中 */
-		if ((hptr = gethostbyname(ptr)) == NULL)
-		{
-			//printf("gethostbyname error for host:%s/n", ptr);
-			_create_json_ret(buf, TPE_PARAM);
-			return;
-		}
-		/* 将主机的规范名打出来 */
-		//printf("official hostname:%s/n", hptr->h_name);
-		/* 主机可能有多个别名，将所有别名分别打出来 */
-		//for (pptr = hptr->h_aliases; *pptr != NULL; pptr++)
-		//	printf(" alias:%s/n", *pptr);
-		/* 根据地址类型，将地址打出来 */
-		char szbuf[1204] = { 0 };
-		switch (hptr->h_addrtype)
-		{
-		case AF_INET:
-		case AF_INET6:
-			pptr = hptr->h_addr_list;
-			/* 将刚才得到的所有地址都打出来。其中调用了inet_ntop()函数 */
+	ex_astr a_start = jsRoot["start"].asCString();
+	//ex_astr a_tail = jsRoot["tail"].asCString();
 
-			for (; *pptr != NULL; pptr++)
-				inet_ntop(hptr->h_addrtype, *pptr, IP, sizeof(IP));
-			server_ip = IP;
-			break;
-		default:
-			printf("unknown address type/n");
-			break;
-		}
-	}
-	char szURL[256] = { 0 };
-	sprintf_s(szURL, 256, "http://%s:%d/%s", server_ip.c_str(), port, a_tail.c_str());
-	ex_astr a_url = szURL;
-	ex_wstr w_url;
-	ex_astr2wstr(a_url, w_url);
+	char cmd_args[1024] = { 0 };
+	ex_strformat(cmd_args, 1023, "%d \"%s\" \"%09d-%s-%s-%s-%s\"", rid, a_sid.c_str(), rid, a_user.c_str(), a_acc.c_str(), a_host.c_str(), a_start.c_str());
 
-	char szHost[256] = { 0 };
-	sprintf_s(szHost, 256, "%s:%d", a_host.c_str(), port);
 
-	a_host = szHost;
-	ex_wstr w_host;
-	ex_astr2wstr(a_host, w_host);
+// 	ex_astr a_host = jsRoot["host"].asCString();
+// 	int port = jsRoot["port"].asInt();
+// 	ex_astr a_tail = jsRoot["tail"].asCString();
+// 	ex_astr server_ip;
+// 	if (isIPAddress(a_host.c_str()))
+// 	{
+// 		server_ip = a_host;
+// 	}
+// 	else
+// 	{
+// 		char *ptr, **pptr;
+// 		struct hostent *hptr;
+// 		char IP[128] = { 0 };
+// 		// 取得命令后第一个参数，即要解析的域名或主机名
+// 		ptr = (char*)a_host.c_str();
+// 		// 调用gethostbyname()。调用结果都存在hptr中
+// 		if ((hptr = gethostbyname(ptr)) == NULL)
+// 		{
+// 			//printf("gethostbyname error for host:%s/n", ptr);
+// 			_create_json_ret(buf, TPE_PARAM);
+// 			return;
+// 		}
+// 		// 将主机的规范名打出来
+// 		//printf("official hostname:%s/n", hptr->h_name);
+// 		// 主机可能有多个别名，将所有别名分别打出来
+// 		//for (pptr = hptr->h_aliases; *pptr != NULL; pptr++)
+// 		//	printf(" alias:%s/n", *pptr);
+// 		// 根据地址类型，将地址打出来
+// 		char szbuf[1204] = { 0 };
+// 		switch (hptr->h_addrtype)
+// 		{
+// 		case AF_INET:
+// 		case AF_INET6:
+// 			pptr = hptr->h_addr_list;
+// 			// 将刚才得到的所有地址都打出来。其中调用了inet_ntop()函数
+// 
+// 			for (; *pptr != NULL; pptr++)
+// 				inet_ntop(hptr->h_addrtype, *pptr, IP, sizeof(IP));
+// 			server_ip = IP;
+// 			break;
+// 		default:
+// 			printf("unknown address type/n");
+// 			break;
+// 		}
+// 	}
+
+// 	char szURL[256] = { 0 };
+// 	sprintf_s(szURL, 256, "http://%s:%d/%s", server_ip.c_str(), port, a_tail.c_str());
+// 	ex_astr a_url = szURL;
+	ex_wstr w_url_base;
+	ex_astr2wstr(a_url_base, w_url_base);
+	ex_wstr w_cmd_args;
+	ex_astr2wstr(cmd_args, w_cmd_args);
+
+// 	char szHost[256] = { 0 };
+// 	sprintf_s(szHost, 256, "%s:%d", a_host.c_str(), port);
+// 
+// 	a_host = szHost;
+// 	ex_wstr w_host;
+// 	ex_astr2wstr(a_host, w_host);
 	
 	ex_wstr w_exe_path;
 	w_exe_path = _T("\"");
 	w_exe_path += g_env.m_tools_path + _T("\\tprdp\\tprdp-replay.exe\"");
-	w_exe_path += _T(" ");
-	w_exe_path += w_url;
-
-	w_exe_path += _T(" ");
-	w_exe_path += w_host;
+	w_exe_path += _T(" \"");
+	w_exe_path += w_url_base;
+	w_exe_path += _T("\" ");
+	w_exe_path += w_cmd_args;
 
 	Json::Value root_ret;
 	ex_astr utf8_path;
 	ex_wstr2astr(w_exe_path, utf8_path, EX_CODEPAGE_UTF8);
-	root_ret["path"] = utf8_path;
+	root_ret["cmdline"] = utf8_path;
 
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;

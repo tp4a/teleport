@@ -183,6 +183,9 @@ controllers = [
     #  - [json] 读取录像数据
     (r'/audit/get-record-data', audit.DoGetRecordDataHandler),
 
+    #  - 读取录像文件（用于RDP录像回放）
+    (r'/audit/get-file', audit.DoGetFileHandler),
+
     # (r'/host/export-host', host.ExportHostHandler),
     # (r'/config/export-database', config.ExportDatabaseHandler),
     # (r'/config/import-database', config.ImportDatabaseHandler),

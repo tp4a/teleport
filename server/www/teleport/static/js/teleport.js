@@ -53,13 +53,11 @@ var CALLBACK_STACK = {
     }
 };
 
-
 // console.log(window.location, window.location.protocol+'://'+window.location.host);
-
 
 // Teleport核心JS
 var $tp = {
-    web_server: window.location.protocol+'://'+window.location.host
+    web_server: window.location.protocol+'//'+window.location.host
 
     // Teleport页面应用对象，放置页面自身特有的属性和函数
     , app: {
@@ -78,28 +76,6 @@ $tp.init = function () {
         {id: TP_STATE_DISABLED, name: '禁用', style: 'danger'},
         {id: TP_STATE_LOCKED, name: '临时锁定', style: 'warning'}
     ];
-
-    // $app.user_states = [
-    //     {id: 1, name: '正常', style: 'success'},
-    //     {id: 2, name: '临时锁定', style: 'warning'},
-    //     {id: 3, name: '禁用', style: 'danger'}
-    // ];
-    //
-    // $app.acc_states = [
-    //     {id: 1, name: '正常', style: 'success'},
-    //     {id: 2, name: '临时锁定', style: 'warning'},
-    //     {id: 3, name: '禁用', style: 'danger'}
-    // ];
-    //
-    // $app.host_states = [
-    //     {id: 1, name: '正常', style: 'success'},
-    //     {id: 2, name: '禁用', style: 'danger'}
-    // ];
-    //
-    // $app.policy_states = [
-    //     {id: 1, name: '正常', style: 'success'},
-    //     {id: 2, name: '禁用', style: 'danger'}
-    // ];
 
     $app.host_types = [
         {id: 1, name: '物理主机', style: 'success'},

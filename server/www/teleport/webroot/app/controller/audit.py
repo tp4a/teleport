@@ -274,3 +274,82 @@ class DoGetRecordDataHandler(TPBaseJsonHandler):
 
         data_list, data_size, err = record.read_record_data(record_id, offset)
         self.write_json(err, data={'data_list': data_list, 'data_size': data_size})
+
+
+class DoGetFileHandler(TPBaseHandler):
+    @tornado.gen.coroutine
+    def get(self):
+
+        log.v('--{}\n'.format(self.request.uri))
+
+        require_privilege = TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY
+
+        # sid = self.get_argument('sid', None)
+        # if sid is None:
+        #     self.set_status(403)
+        #     return self.write('need login first.')
+        #
+        # self._s_id = sid
+        # _user = self.get_session('user')
+        # if _user is None:
+        #     self.set_status(403)
+        #     return self.write('need login first.')
+        # self._user = _user
+
+        if not self._user['_is_login']:
+            self.set_status(401)  # 401=未授权, 要求身份验证
+            return self.write('need login first.')
+        if (self._user['privilege'] & require_privilege) == 0:
+            self.set_status(403)  # 403=禁止
+            return self.write('you have no such privilege.')
+
+        act = self.get_argument('act', None)
+        _type = self.get_argument('type', None)
+        rid = self.get_argument('rid', None)
+        filename = self.get_argument('f', None)
+        offset = int(self.get_argument('offset', '0'))
+        length = int(self.get_argument('length', '-1'))  # -1 means read all content.
+        if act is None or _type is None or rid is None or filename is None:
+            self.set_status(400)  # 400=错误请求
+            return self.write('invalid param, `rid` and `f` must present.')
+
+        if act not in ['size', 'read']:
+            self.set_status(400)
+            return self.write('invalid param, `act` should be `size` or `read`.')
+        if _type not in ['rdp', 'ssh', 'telnet']:
+            self.set_status(400)
+            return self.write('invalid param, `type` should be `rdp`, `ssh` or `telnet`.')
+
+        file = os.path.join(get_cfg().core.replay_path, 'rdp', '{:09d}'.format(int(rid)), filename)
+        if not os.path.exists(file):
+            self.set_status(404)
+            return self.write('file does not exists.')
+
+        file_size = os.path.getsize(file)
+
+        if act == 'size':
+            log.d('--return size:{}\n'.format(file_size))
+            return self.write('{}'.format(file_size))
+
+        if offset >= file_size:
+            self.set_status(416)  # 416=请求范围不符合要求
+            return self.write('no more data.')
+
+        # we read most 4096 bytes one time.
+        BULK_SIZE = 4096
+        total_need = file_size - offset
+        if length != -1 and length < total_need:
+            total_need = length
+        total_read = 0
+        with open(file, 'rb') as f:
+            f.seek(offset)
+            read_this_time = BULK_SIZE if total_need > BULK_SIZE else total_need
+            while read_this_time > 0:
+                self.write(f.read(read_this_time))
+                total_read += read_this_time
+                if total_read >= total_need:
+                    break
+                read_left = total_need - total_read
+                read_this_time = BULK_SIZE if read_left > BULK_SIZE else read_left
+
+        # all need data read.

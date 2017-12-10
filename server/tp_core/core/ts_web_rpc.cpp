@@ -54,6 +54,9 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 // 		EXLOGV("\n");
 		return TPE_NETWORK;
 	}
+	if (body.length() == 0) {
+		return TPE_NETWORK;
+	}
 
 	Json::Reader jreader;
 	Json::Value jret;
