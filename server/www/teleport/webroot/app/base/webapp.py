@@ -15,6 +15,7 @@ from app.base.configs import get_cfg
 from app.base.db import get_db
 from app.base.logger import log
 from app.base.session import session_manager
+from app.base.cron import tp_corn
 
 
 class WebApp:
@@ -131,11 +132,17 @@ class WebApp:
         # 启动session超时管理
         session_manager().start()
 
+        def job():
+            log.v('---job--\n')
+        tp_corn().add_job('test', job, first_interval_seconds=None, interval_seconds=10)
+        tp_corn().start()
+
         try:
             tornado.ioloop.IOLoop.instance().start()
         except:
             log.e('\n')
 
+        tp_corn().stop()
         session_manager().stop()
 
         return 0
