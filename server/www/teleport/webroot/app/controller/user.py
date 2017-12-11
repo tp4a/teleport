@@ -7,10 +7,10 @@ import time
 
 import tornado.gen
 from app.base import mail
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.logger import *
-from app.base.session import session_manager
+from app.base.session import tp_session
 from app.base.utils import tp_check_strong_password
 from app.base.utils import tp_timestamp_utc_now
 from app.logic.auth.oath import tp_oath_verify_code
@@ -30,14 +30,14 @@ class UserListHandler(TPBaseHandler):
             return
 
         is_sys_smtp = False
-        if get_cfg().sys.loaded:
-            smtp = get_cfg().sys.smtp
+        if tp_cfg().sys.loaded:
+            smtp = tp_cfg().sys.smtp
             if len(smtp.server) > 0:
                 is_sys_smtp = True
 
         param = {
             'sys_smtp': is_sys_smtp,
-            'sys_cfg': get_cfg().sys
+            'sys_cfg': tp_cfg().sys
         }
 
         self.render('user/user-list.mako', page_param=json.dumps(param))
@@ -92,10 +92,10 @@ class ResetPasswordHandler(TPBaseHandler):
         _token = self.get_argument('token', None)
         if _token is None:
             # 如果尚未设置SMTP或者系统限制，不允许发送密码重置邮件
-            if len(get_cfg().sys.smtp.server) == 0:
+            if len(tp_cfg().sys.smtp.server) == 0:
                 param['mode'] = 2  # mode=2, show 'error' page
                 param['code'] = TPE_NETWORK
-            elif not get_cfg().sys.password.allow_reset:
+            elif not tp_cfg().sys.password.allow_reset:
                 param['mode'] = 2  # mode=2, show 'error' page
                 param['code'] = TPE_PRIVILEGE
             else:
@@ -110,7 +110,7 @@ class ResetPasswordHandler(TPBaseHandler):
                 param['mode'] = 2  # mode=2, show 'error' page
             else:
                 param['mode'] = 3  # mode=3, show 'set-new-password' page
-                param['force_strong'] = get_cfg().sys.password.force_strong
+                param['force_strong'] = tp_cfg().sys.password.force_strong
 
         self.render('user/reset-password.mako', page_param=json.dumps(param))
 
@@ -323,7 +323,7 @@ class DoImportHandler(TPBaseHandler):
         csv_filename = ''
 
         try:
-            upload_path = os.path.join(get_cfg().data_path, 'tmp')  # 文件的暂存路径
+            upload_path = os.path.join(tp_cfg().data_path, 'tmp')  # 文件的暂存路径
             if not os.path.exists(upload_path):
                 os.mkdir(upload_path)
             file_metas = self.request.files['csvfile']  # 提取表单中‘name’为‘file’的文件元数据
@@ -675,7 +675,7 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
                 return self.write_json(TPE_PARAM)
 
             # 根据需要进行弱密码检测
-            if get_cfg().sys.password.force_strong:
+            if tp_cfg().sys.password.force_strong:
                 if not tp_check_strong_password(password):
                     return self.write_json(TPE_FAILED, '密码强度太弱！强密码需要至少8个英文字符，必须包含大写字母、小写字母和数字。')
 
@@ -721,10 +721,10 @@ class DoUpdateUsersHandler(TPBaseJsonHandler):
             return self.write_json(err)
 
         if action == 'lock' or action == 'remove':
-            v = session_manager().get_start_with('user-')
+            v = tp_session().get_start_with('user-')
             for k in v:
                 if v[k]['v']['id'] in users:
-                    session_manager().taken(k)
+                    tp_session().taken(k)
 
         self.write_json(err)
 

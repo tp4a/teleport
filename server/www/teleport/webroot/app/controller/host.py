@@ -9,7 +9,7 @@ import ipaddress
 import tornado.gen
 import tornado.httpclient
 
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.const import *
 from app.model import host
 from app.model import account
@@ -171,7 +171,7 @@ class DoImportHandler(TPBaseHandler):
         csv_filename = ''
 
         try:
-            upload_path = os.path.join(get_cfg().data_path, 'tmp')  # 文件的暂存路径
+            upload_path = os.path.join(tp_cfg().data_path, 'tmp')  # 文件的暂存路径
             if not os.path.exists(upload_path):
                 os.mkdir(upload_path)
             file_metas = self.request.files['csvfile']  # 提取表单中‘name’为‘file’的文件元数据

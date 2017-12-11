@@ -12,7 +12,7 @@ from app.const import *
 from app.model import account
 from app.model import group
 
-# cfg = get_cfg()
+# cfg = tp_cfg()
 
 # 临时认证ID的基数，每次使用时均递减
 tmp_auth_id_base = -1

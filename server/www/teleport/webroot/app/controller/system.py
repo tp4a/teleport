@@ -8,7 +8,7 @@ import app.model.system as system_model
 import tornado.gen
 from app.app_ver import TP_SERVER_VER
 from app.base import mail
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.logger import *
 from app.const import *
@@ -16,6 +16,7 @@ from app.base.db import get_db
 from app.model import syslog
 from app.model import record
 from app.base.core_server import core_service_async_post_http
+from app.base.session import tp_session
 
 
 class DoGetTimeHandler(TPBaseJsonHandler):
@@ -31,7 +32,7 @@ class ConfigHandler(TPBaseHandler):
         if ret != TPE_OK:
             return
 
-        cfg = get_cfg()
+        cfg = tp_cfg()
 
         # core_detected = False
         req = {'method': 'get_config', 'param': []}
@@ -42,11 +43,11 @@ class ConfigHandler(TPBaseHandler):
         else:
             cfg.update_core(ret_data)
 
-        if not get_cfg().core.detected:
+        if not tp_cfg().core.detected:
             total_size = 0
             free_size = 0
         else:
-            total_size, _, free_size = shutil.disk_usage(get_cfg().core.replay_path)
+            total_size, _, free_size = shutil.disk_usage(tp_cfg().core.replay_path)
 
         _db = get_db()
         db = {'type': _db.db_type}
@@ -61,11 +62,11 @@ class ConfigHandler(TPBaseHandler):
         param = {
             'total_size': total_size,
             'free_size': free_size,
-            'core_cfg': get_cfg().core,
-            'sys_cfg': get_cfg().sys,
+            'core_cfg': tp_cfg().core,
+            'sys_cfg': tp_cfg().sys,
             'web_cfg': {
                 'version': TP_SERVER_VER,
-                'core_server_rpc': get_cfg().common.core_server_rpc,
+                'core_server_rpc': tp_cfg().common.core_server_rpc,
                 'db': db
             }
         }
@@ -238,12 +239,12 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 err = system_model.save_config(self, '更新SMTP设置', 'smtp', _cfg)
                 if err == TPE_OK:
                     # 同时更新内存缓存
-                    get_cfg().sys.smtp.server = _server
-                    get_cfg().sys.smtp.port = _port
-                    get_cfg().sys.smtp.ssl = _ssl
-                    get_cfg().sys.smtp.sender = _sender
+                    tp_cfg().sys.smtp.server = _server
+                    tp_cfg().sys.smtp.port = _port
+                    tp_cfg().sys.smtp.ssl = _ssl
+                    tp_cfg().sys.smtp.sender = _sender
                     # 特殊处理，防止前端拿到密码
-                    get_cfg().sys_smtp_password = _password
+                    tp_cfg().sys_smtp_password = _password
                 else:
                     return self.write_json(err)
 
@@ -254,9 +255,9 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 _timeout = _cfg['timeout']
                 err = system_model.save_config(self, '更新密码策略设置', 'password', _cfg)
                 if err == TPE_OK:
-                    get_cfg().sys.password.allow_reset = _allow_reset
-                    get_cfg().sys.password.force_strong = _force_strong
-                    get_cfg().sys.password.timeout = _timeout
+                    tp_cfg().sys.password.allow_reset = _allow_reset
+                    tp_cfg().sys.password.force_strong = _force_strong
+                    tp_cfg().sys.password.timeout = _timeout
                 else:
                     return self.write_json(err)
 
@@ -268,10 +269,11 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 _auth = _cfg['auth']
                 err = system_model.save_config(self, '更新登录策略设置', 'login', _cfg)
                 if err == TPE_OK:
-                    get_cfg().sys.login.session_timeout = _session_timeout
-                    get_cfg().sys.login.retry = _retry
-                    get_cfg().sys.login.lock_timeout = _lock_timeout
-                    get_cfg().sys.login.auth = _auth
+                    tp_cfg().sys.login.session_timeout = _session_timeout
+                    tp_cfg().sys.login.retry = _retry
+                    tp_cfg().sys.login.lock_timeout = _lock_timeout
+                    tp_cfg().sys.login.auth = _auth
+                    tp_session().update_default_expire()
                 else:
                     return self.write_json(err)
 
@@ -283,10 +285,10 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 _cleanup_minute = _cfg['cleanup_minute']
                 err = system_model.save_config(self, '更新存储策略设置', 'storage', _cfg)
                 if err == TPE_OK:
-                    get_cfg().sys.storage.keep_log = _keep_log
-                    get_cfg().sys.storage.keep_record = _keep_record
-                    get_cfg().sys.storage.cleanup_hour = _cleanup_hour
-                    get_cfg().sys.storage.cleanup_minute = _cleanup_minute
+                    tp_cfg().sys.storage.keep_log = _keep_log
+                    tp_cfg().sys.storage.keep_record = _keep_record
+                    tp_cfg().sys.storage.cleanup_hour = _cleanup_hour
+                    tp_cfg().sys.storage.cleanup_minute = _cleanup_minute
                 else:
                     return self.write_json(err)
 

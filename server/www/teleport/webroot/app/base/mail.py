@@ -9,7 +9,7 @@ from email.mime.text import MIMEText
 from email.utils import formataddr, parseaddr
 
 import tornado.gen
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.logger import log
 from app.const import *
 
@@ -60,8 +60,8 @@ def tp_send_mail(recipient, message, subject=None, sender=None, cc=None, bcc=Non
     :type password: string | None
     :rtype: dict
     """
-    sys_smtp = get_cfg().sys.smtp
-    sys_smtp_password = get_cfg().sys_smtp_password
+    sys_smtp = tp_cfg().sys.smtp
+    sys_smtp_password = tp_cfg().sys_smtp_password
 
     _subject = subject if subject is not None else '系统消息'
     _sender = sender if sender is not None else sys_smtp.sender

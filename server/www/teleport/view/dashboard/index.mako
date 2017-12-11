@@ -6,6 +6,7 @@
 <%inherit file="../page_base.mako"/>
 
 <%block name="extend_js_file">
+    <script type="text/javascript" src="${ static_url('plugins/echarts/echarts.min.js') }"></script>
     <script type="text/javascript" src="${ static_url('js/dashboard/dashboard.js') }"></script>
 </%block>
 
@@ -69,8 +70,8 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="stats stats-bar">
-                <div class="stats-name">CPU负载</div>
-                <div class="stats-value">
+##                 <div class="stats-name">CPU负载</div>
+                <div class="stats-value" id="bar-cpu" style="height:260px;">
                 </div>
             </div>
         </div>

@@ -8,7 +8,7 @@ from app.const import *
 from .logger import log
 from .utils import AttrDict, tp_convert_to_attr_dict, tp_make_dir
 
-__all__ = ['get_cfg']
+__all__ = ['tp_cfg']
 
 
 class BaseAppConfig(dict):
@@ -541,7 +541,7 @@ class AppConfig(BaseAppConfig):
         return True
 
 
-def get_cfg():
+def tp_cfg():
     """
     :rtype: app.base.configs.AppConfig
     """

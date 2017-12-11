@@ -7,10 +7,10 @@ import time
 import tornado.gen
 import tornado.httpclient
 from app.base.logger import log
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.core_server import *
-from app.base.session import session_manager
+from app.base.session import tp_session
 from app.const import *
 from app.model import account
 from app.model import host
@@ -218,7 +218,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             conn_id = tmp_conn_id_base
 
         log.v(conn_info)
-        session_manager().set('tmp-conn-info-{}'.format(conn_id), conn_info, 10)
+        tp_session().set('tmp-conn-info-{}'.format(conn_id), conn_info, 10)
 
         req = {'method': 'request_session', 'param': {'conn_id': conn_id}}
         _yr = core_service_async_post_http(req)
@@ -236,11 +236,11 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         data['host_ip'] = host_info['ip']
 
         if conn_info['protocol_type'] == TP_PROTOCOL_TYPE_RDP:
-            data['teleport_port'] = get_cfg().core.rdp.port
+            data['teleport_port'] = tp_cfg().core.rdp.port
         elif conn_info['protocol_type'] == TP_PROTOCOL_TYPE_SSH:
-            data['teleport_port'] = get_cfg().core.ssh.port
+            data['teleport_port'] = tp_cfg().core.ssh.port
         elif conn_info['protocol_type'] == TP_PROTOCOL_TYPE_TELNET:
-            data['teleport_port'] = get_cfg().core.telnet.port
+            data['teleport_port'] = tp_cfg().core.telnet.port
 
         return self.write_json(0, data=data)
 

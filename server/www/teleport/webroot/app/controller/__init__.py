@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.controller import auth
 from . import account
 from . import audit
@@ -13,6 +13,7 @@ from . import ops
 from . import rpc
 from . import system
 from . import user
+from . import ws
 
 __all__ = ['controllers', 'fix_controller']
 
@@ -243,11 +244,15 @@ controllers = [
     #  - [json] 维护过程中页面与后台的通讯接口
     (r'/maintenance/rpc', maintenance.RpcHandler),
 
+    # WebSocket for real-time information
+    # ws-client call 'http://ip:7190/ws/action/'
+    (r'/ws/(.*)', ws.WebSocketHandler),
+
     (r'/.*', index.CatchAllHandler),
 ]
 
 
 def fix_controller():
-    dbg_mode, _ = get_cfg().get_bool('common::debug-mode', False)
+    dbg_mode, _ = tp_cfg().get_bool('common::debug-mode', False)
     if dbg_mode:
         controllers.append((r'/exit/9E37CBAEE2294D9D9965112025CEE87F', index.ExitHandler))

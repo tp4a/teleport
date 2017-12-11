@@ -2,7 +2,7 @@
 
 # import hashlib
 
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.db import get_db, SQL
 from app.base.logger import log
 from app.base.utils import tp_timestamp_utc_now, tp_generate_random
@@ -49,7 +49,7 @@ def get_by_username(username):
 
 
 def login(handler, username, password=None, oath_code=None):
-    sys_cfg = get_cfg().sys
+    sys_cfg = tp_cfg().sys
 
     err, user_info = get_by_username(username)
     if err != TPE_OK:
@@ -456,7 +456,7 @@ def update_users_state(handler, user_ids, state):
 
 def update_fail_count(handler, user_info):
     db = get_db()
-    sys_cfg = get_cfg().sys
+    sys_cfg = tp_cfg().sys
     sql_list = []
     is_locked = False
     fail_count = user_info.fail_count + 1

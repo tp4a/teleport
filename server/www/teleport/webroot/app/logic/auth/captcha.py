@@ -4,7 +4,7 @@ import io
 import os
 import random
 
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from wheezy.captcha.image import background
 from wheezy.captcha.image import captcha
 from wheezy.captcha.image import curve
@@ -32,7 +32,7 @@ def tp_captcha_generate_image(h):
                 noise(number=80, color='#eeeeee', level=3),
                 smooth(),
                 text(fonts=[
-                    os.path.join(get_cfg().res_path, 'fonts', '001.ttf')
+                    os.path.join(tp_cfg().res_path, 'fonts', '001.ttf')
                 ],
                     # font_sizes=(28, 34, 36, 32),
                     font_sizes=(h-4, h-2, h, h+1),
@@ -61,7 +61,7 @@ def tp_captcha_generate_image(h):
                 noise(number=40, color='#eeeeee', level=2),
                 smooth(),
                 text(fonts=[
-                    os.path.join(get_cfg().res_path, 'fonts', '001.ttf')
+                    os.path.join(tp_cfg().res_path, 'fonts', '001.ttf')
                 ],
                     # font_sizes=(28, 34, 36, 32),
                     font_sizes=(h-2, h-1, h, h+1),

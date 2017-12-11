@@ -5,8 +5,8 @@ import urllib.parse
 
 import tornado.gen
 from app.const import *
-from app.base.configs import get_cfg
-from app.base.session import session_manager
+from app.base.configs import tp_cfg
+from app.base.session import tp_session
 from app.base.core_server import core_service_async_post_http
 from app.model import record
 from app.base.logger import *
@@ -62,7 +62,7 @@ class RpcHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         conn_id = param['conn_id']
-        x = session_manager().taken('tmp-conn-info-{}'.format(conn_id), None)
+        x = tp_session().taken('tmp-conn-info-{}'.format(conn_id), None)
         return self.write_json(0, data=x)
 
     def _session_begin(self, param):
@@ -120,7 +120,7 @@ class RpcHandler(TPBaseJsonHandler):
         if 'rpc' not in param:
             return self.write_json(-1, 'invalid param.')
 
-        get_cfg().common.core_server_rpc = param['rpc']
+        tp_cfg().common.core_server_rpc = param['rpc']
 
         # 获取core服务的配置信息
         req = {'method': 'get_config', 'param': []}
@@ -130,7 +130,7 @@ class RpcHandler(TPBaseJsonHandler):
             return self.write_json(code, 'get config from core-service failed.')
 
         log.d('update base server config info.\n')
-        get_cfg().update_core(ret_data)
+        tp_cfg().update_core(ret_data)
 
         return self.write_json(0)
 

@@ -7,7 +7,7 @@ import os
 import shutil
 
 from app.const import *
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.logger import *
 from app.model import record
 # from app.model import user
@@ -40,11 +40,11 @@ class RecordHandler(TPBaseHandler):
         if ret != TPE_OK:
             return
 
-        if not get_cfg().core.detected:
+        if not tp_cfg().core.detected:
             total_size = 0
             free_size = 0
         else:
-            total_size, free_size = get_free_space_bytes(get_cfg().core.replay_path)
+            total_size, free_size = get_free_space_bytes(tp_cfg().core.replay_path)
 
         param = {
             'total_size': total_size,
@@ -153,7 +153,7 @@ class ReplayHandler(TPBaseHandler):
 # class ReplayStaticFileHandler(tornado.web.StaticFileHandler):
 #     def initialize(self, path, default_filename=None):
 #         super().initialize(path, default_filename)
-#         self.root = get_cfg().core.replay_path
+#         self.root = tp_cfg().core.replay_path
 #         # self.default_filename = default_filename
 #
 #
@@ -185,7 +185,7 @@ class ComandLogHandler(TPBaseHandler):
         if protocol == 1:
             pass
         elif protocol == 2:
-            record_path = os.path.join(get_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
+            record_path = os.path.join(tp_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
             file_info = os.path.join(record_path, 'tp-ssh-cmd.txt')
             try:
                 file = open(file_info, 'r')
@@ -320,7 +320,7 @@ class DoGetFileHandler(TPBaseHandler):
             self.set_status(400)
             return self.write('invalid param, `type` should be `rdp`, `ssh` or `telnet`.')
 
-        file = os.path.join(get_cfg().core.replay_path, 'rdp', '{:09d}'.format(int(rid)), filename)
+        file = os.path.join(tp_cfg().core.replay_path, 'rdp', '{:09d}'.format(int(rid)), filename)
         if not os.path.exists(file):
             self.set_status(404)
             return self.write('file does not exists.')

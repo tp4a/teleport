@@ -11,11 +11,12 @@ import tornado.netutil
 import tornado.process
 import tornado.web
 from app.const import *
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.db import get_db
 from app.base.logger import log
-from app.base.session import session_manager
-from app.base.cron import tp_corn
+from app.base.session import tp_session
+# from app.base.cron import tp_corn
+from app.base.status import tp_sys_status
 
 
 class WebApp:
@@ -27,7 +28,7 @@ class WebApp:
     def init(self, path_app_root, path_data):
         log.initialize()
 
-        cfg = get_cfg()
+        cfg = tp_cfg()
         cfg.app_path = path_app_root
         cfg.static_path = os.path.join(path_app_root, 'static')
         cfg.template_path = os.path.join(path_app_root, 'view')
@@ -44,7 +45,7 @@ class WebApp:
         return True
 
     def _get_core_server_config(self):
-        cfg = get_cfg()
+        cfg = tp_cfg()
         try:
             req = {'method': 'get_config', 'param': []}
             req_data = json.dumps(req)
@@ -71,16 +72,16 @@ class WebApp:
             log.e('can not initialize database interface.\n')
             return 0
 
-        cfg = get_cfg()
+        cfg = tp_cfg()
 
         if _db.need_create or _db.need_upgrade:
             cfg.app_mode = APP_MODE_MAINTENANCE
-            get_cfg().update_sys(None)
+            tp_cfg().update_sys(None)
         else:
             cfg.app_mode = APP_MODE_NORMAL
             _db.load_system_config()
 
-        if not session_manager().init():
+        if not tp_session().init():
             log.e('can not initialize session manager.\n')
             return 0
 
@@ -130,25 +131,29 @@ class WebApp:
             return 0
 
         # 启动session超时管理
-        session_manager().start()
+        tp_session().start()
 
         def job():
             log.v('---job--\n')
-        tp_corn().add_job('test', job, first_interval_seconds=None, interval_seconds=10)
-        tp_corn().start()
+        # tp_corn().add_job('test', job, first_interval_seconds=None, interval_seconds=10)
+        # tp_corn().init()
+        # tp_corn().start()
+        tp_sys_status().init()
+        tp_sys_status().start()
 
         try:
             tornado.ioloop.IOLoop.instance().start()
         except:
             log.e('\n')
 
-        tp_corn().stop()
-        session_manager().stop()
+        # tp_corn().stop()
+        tp_sys_status().stop()
+        tp_session().stop()
 
         return 0
 
 
-def get_web_app():
+def tp_web_app():
     """
     取得WebApp的唯一实例
 

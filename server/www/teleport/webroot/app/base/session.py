@@ -4,11 +4,12 @@ import datetime
 import threading
 
 from app.base.logger import log
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 
 
 class SessionManager(threading.Thread):
-    SESSION_EXPIRE = 3600  # 60*60  默认超时时间为1小时
+    # SESSION_EXPIRE = 3600  # 60*60  默认超时时间为1小时
+    _expire = 3600
 
     def __init__(self):
         super().__init__(name='session-manager-thread')
@@ -20,12 +21,18 @@ class SessionManager(threading.Thread):
         # session表，session_id为索引，每个项为一个字典，包括 v(value), t(last access), e(expire seconds)
         self._session_dict = dict()
 
+        self._expire = 0
         self._lock = threading.RLock()
         self._stop_flag = False
         self._timer_cond = threading.Condition()
 
+        self.update_default_expire()
+
     def init(self):
         return True
+
+    def update_default_expire(self):
+        self._expire = tp_cfg().sys.login.session_timeout * 60
 
     def stop(self):
         self._stop_flag = True
@@ -63,8 +70,7 @@ class SessionManager(threading.Thread):
         """
 
         if expire is None:
-            # expire = self.SESSION_EXPIRE
-            expire = get_cfg().sys.login.session_timeout * 60
+            expire = tp_cfg().sys.login.session_timeout * 60
 
         if expire < 0:
             with self._lock:
@@ -110,7 +116,7 @@ class SessionManager(threading.Thread):
                 return _default
 
 
-def session_manager():
+def tp_session():
     """
     取得Session管理器的唯一实例
 

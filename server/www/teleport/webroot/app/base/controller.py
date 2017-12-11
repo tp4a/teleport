@@ -10,7 +10,7 @@ import mako.lookup
 import mako.template
 import tornado.web
 from app.base.logger import log
-from app.base.session import session_manager
+from app.base.session import tp_session
 from app.const import *
 from tornado.escape import json_encode
 
@@ -109,15 +109,15 @@ class TPBaseHandler(tornado.web.RequestHandler):
 
     def set_session(self, name, value, expire=None):
         k = '{}-{}'.format(name, self._s_id)
-        session_manager().set(k, value, expire)
+        tp_session().set(k, value, expire)
 
     def get_session(self, name, _default=None):
         k = '{}-{}'.format(name, self._s_id)
-        return session_manager().get(k, _default)
+        return tp_session().get(k, _default)
 
     def del_session(self, name):
         k = '{}-{}'.format(name, self._s_id)
-        return session_manager().set(k, '', -1)
+        return tp_session().set(k, '', -1)
 
     def get_current_user(self):
         return self._user

@@ -8,7 +8,7 @@ import threading
 import builtins
 
 from app.const import *
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.utils import AttrDict, tp_make_dir
 from app.base.logger import log
 from .database.create import DatabaseInit
@@ -56,7 +56,7 @@ class TPDatabase:
         return self._table_prefix
 
     def init(self):
-        cfg = get_cfg()
+        cfg = tp_cfg()
         if 'sqlite' == cfg.database.type:
             if cfg.database.sqlite_file is None:
                 cfg.set_default('database::sqlite-file', os.path.join(cfg.data_path, 'db', 'teleport.db'))
@@ -105,7 +105,7 @@ class TPDatabase:
             sys_cfg[item[0]] = item[1]
 
         if len(sys_cfg) > 0:
-            get_cfg().update_sys(sys_cfg)
+            tp_cfg().update_sys(sys_cfg)
 
     def _init_sqlite(self, db_file):
         self.db_type = self.DB_TYPE_SQLITE

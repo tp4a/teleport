@@ -4,11 +4,11 @@ import json
 import threading
 
 from app.const import *
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.db import get_db
 
-cfg = get_cfg()
+cfg = tp_cfg()
 
 
 class IndexHandler(TPBaseHandler):

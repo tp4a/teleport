@@ -3,7 +3,7 @@
 import json
 from urllib.parse import quote
 
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.const import *
 from app.logic.auth.captcha import tp_captcha_generate_image
@@ -14,7 +14,7 @@ from app.model import user
 class LoginHandler(TPBaseHandler):
     def get(self):
         from app.base.db import get_db
-        if get_cfg().app_mode == APP_MODE_MAINTENANCE and get_db().need_create:
+        if tp_cfg().app_mode == APP_MODE_MAINTENANCE and get_db().need_create:
             _user = {
                 'id': 0,
                 'username': 'installer',
@@ -42,7 +42,7 @@ class LoginHandler(TPBaseHandler):
         else:
             username = _user['username']
 
-        default_auth_type = get_cfg().sys.login.auth
+        default_auth_type = tp_cfg().sys.login.auth
         param = {
             'ref': _ref,
             'username': username,
@@ -53,7 +53,7 @@ class LoginHandler(TPBaseHandler):
 
 class DoLoginHandler(TPBaseJsonHandler):
     def post(self):
-        sys_cfg = get_cfg().sys
+        sys_cfg = tp_cfg().sys
 
         args = self.get_argument('args', None)
         if args is None:

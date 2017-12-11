@@ -7,7 +7,7 @@ import struct
 import base64
 
 from app.const import *
-from app.base.configs import get_cfg
+from app.base.configs import tp_cfg
 from app.base.db import get_db, SQL
 from app.base.logger import log
 from app.base.utils import tp_timestamp_utc_now
@@ -71,10 +71,10 @@ def get_records(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
 
 
 def read_record_head(record_id):
-    if not get_cfg().core.detected:
+    if not tp_cfg().core.detected:
         return None, TPE_NO_CORE_SERVER
 
-    record_path = os.path.join(get_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
+    record_path = os.path.join(tp_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
     header_file_path = os.path.join(record_path, 'tp-ssh.tpr')
 
     if not os.path.exists(header_file_path):
@@ -154,11 +154,11 @@ def read_record_head(record_id):
 
 
 def read_record_data(record_id, offset):
-    if not get_cfg().core.detected:
+    if not tp_cfg().core.detected:
         return None, TPE_NO_CORE_SERVER
 
     # read 1000 packages one time from offset.
-    record_path = os.path.join(get_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
+    record_path = os.path.join(tp_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
     file_data = os.path.join(record_path, 'tp-ssh.dat')
 
     if not os.path.exists(file_data):
@@ -245,10 +245,10 @@ def delete_log(log_list):
         for item in log_list:
             log_id = int(item)
             try:
-                record_path = os.path.join(get_cfg().core.replay_path, 'ssh', '{:06d}'.format(log_id))
+                record_path = os.path.join(tp_cfg().core.replay_path, 'ssh', '{:06d}'.format(log_id))
                 if os.path.exists(record_path):
                     shutil.rmtree(record_path)
-                record_path = os.path.join(get_cfg().core.replay_path, 'rdp', '{:06d}'.format(log_id))
+                record_path = os.path.join(tp_cfg().core.replay_path, 'rdp', '{:06d}'.format(log_id))
                 if os.path.exists(record_path):
                     shutil.rmtree(record_path)
             except Exception:
@@ -308,7 +308,7 @@ def session_end(record_id, ret_code):
 @tornado.gen.coroutine
 def cleanup_storage(handler):
     # storage config
-    sto = get_cfg().sys.storage
+    sto = tp_cfg().sys.storage
 
     db = get_db()
     _now = tp_timestamp_utc_now()
@@ -341,7 +341,7 @@ def cleanup_storage(handler):
                     msg.append('{} 条系统日志已清除！'.format(removed_log))
 
     if sto.keep_record > 0:
-        core_cfg = get_cfg().core
+        core_cfg = tp_cfg().core
         if not core_cfg.detected:
             have_error = True
             msg.append('清除指定会话录像失败：未能检测到核心服务！')
