@@ -75,7 +75,7 @@ private:
 	void _create_json_ret(ex_astr& buf, Json::Value& jr_root);
 
 	void _rpc_func_run_client(const ex_astr& func_args, ex_astr& buf);
-	void _rpc_func_check(const ex_astr& func_args, ex_astr& buf);
+// 	void _rpc_func_check(const ex_astr& func_args, ex_astr& buf);
 	void _rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf);
 	void _rpc_func_get_config(const ex_astr& func_args, ex_astr& buf);
 	void _rpc_func_set_config(const ex_astr& func_args, ex_astr& buf);

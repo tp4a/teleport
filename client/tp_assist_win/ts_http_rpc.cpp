@@ -477,10 +477,10 @@ void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func
 	{
 		_rpc_func_run_client(func_args, buf);
 	}
-	else if (func_cmd == "check")
-	{
-		_rpc_func_check(func_args, buf);
-	}
+// 	else if (func_cmd == "check")
+// 	{
+// 		_rpc_func_check(func_args, buf);
+// 	}
 	else if (func_cmd == "rdp_play")
 	{
 		_rpc_func_rdp_play(func_args, buf);
@@ -1030,137 +1030,137 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	_create_json_ret(buf, root_ret);
 }
 
-bool isIPAddress(const char *s)
-{
-	const char *pChar;
-	bool rv = true;
-	int tmp1, tmp2, tmp3, tmp4, i;
-	while (1)
-	{
-		i = sscanf_s(s, "%d.%d.%d.%d", &tmp1, &tmp2, &tmp3, &tmp4);
-		if (i != 4)
-		{
-			rv = false;
-			break;
-		}
-
-		if ((tmp1 > 255) || (tmp2 > 255) || (tmp3 > 255) || (tmp4 > 255))
-		{
-			rv = false;
-			break;
-		}
-
-		for (pChar = s; *pChar != 0; pChar++)
-		{
-			if ((*pChar != '.')
-				&& ((*pChar < '0') || (*pChar > '9')))
-			{
-				rv = false;
-				break;
-			}
-		}
-		break;
-	}
-
-	return rv;
-}
-
-void TsHttpRpc::_rpc_func_check(const ex_astr& func_args, ex_astr& buf)
-{
-	// 入参：{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
-	//   authmode: 1=password, 2=private-key
-	//   protocol: 1=rdp, 2=ssh
-	// SSH返回： {"code":0, "data":{"sid":"0123abcde"}}
-	// RDP返回： {"code":0, "data":{"sid":"0123abcde0A"}}
-
-	Json::Reader jreader;
-	Json::Value jsRoot;
-
-	if (!jreader.parse(func_args.c_str(), jsRoot))
-	{
-		_create_json_ret(buf, TPE_JSON_FORMAT);
-		return;
-	}
-	if (jsRoot.isArray())
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-	int windows_size = 2;
-
-
-
-	// 判断参数是否正确
-	if (!jsRoot["server_ip"].isString() || !jsRoot["ssh_port"].isNumeric()
-		|| !jsRoot["rdp_port"].isNumeric()
-		)
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-
-	std::string host = jsRoot["server_ip"].asCString();
-	int rdp_port = jsRoot["rdp_port"].asUInt();
-	int ssh_port = jsRoot["rdp_port"].asUInt();
-	std::string server_ip;
-	if (isIPAddress(host.c_str()))
-	{
-		server_ip = host;
-	}
-	else
-	{
-		char *ptr, **pptr;
-		struct hostent *hptr;
-		char IP[128] = { 0 };
-		/* 取得命令后第一个参数，即要解析的域名或主机名 */
-		ptr = (char*)host.c_str();
-		/* 调用gethostbyname()。调用结果都存在hptr中 */
-		if ((hptr = gethostbyname(ptr)) == NULL)
-		{
-			//printf("gethostbyname error for host:%s/n", ptr);
-			_create_json_ret(buf, TPE_PARAM);
-			return;
-		}
-
-		char szbuf[1204] = { 0 };
-		switch (hptr->h_addrtype)
-		{
-		case AF_INET:
-		case AF_INET6:
-			pptr = hptr->h_addr_list;
-			for (; *pptr != NULL; pptr++)
-				inet_ntop(hptr->h_addrtype, *pptr, IP, sizeof(IP));
-			server_ip = IP;
-			break;
-		default:
-			printf("unknown address type/n");
-			break;
-		}
-	}
-	if (!isIPAddress(server_ip.c_str()))
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-	if (TestTCPPort(server_ip, rdp_port) && TestTCPPort(server_ip, ssh_port))
-	{
-		_create_json_ret(buf, TPE_OK);
-		return;
-	}
-	ICMPheaderRet temp = { 0 };
-	int b_ok = ICMPSendTo(&temp, (char*)server_ip.c_str(), 16, 8);
-	if (b_ok == 0)
-	{
-		_create_json_ret(buf, TPE_OK);
-		return;
-	}
-	else
-	{
-		_create_json_ret(buf, TPE_NETWORK);
-	}
-
-	return;
-}
+// bool isIPAddress(const char *s)
+// {
+// 	const char *pChar;
+// 	bool rv = true;
+// 	int tmp1, tmp2, tmp3, tmp4, i;
+// 	while (1)
+// 	{
+// 		i = sscanf_s(s, "%d.%d.%d.%d", &tmp1, &tmp2, &tmp3, &tmp4);
+// 		if (i != 4)
+// 		{
+// 			rv = false;
+// 			break;
+// 		}
+// 
+// 		if ((tmp1 > 255) || (tmp2 > 255) || (tmp3 > 255) || (tmp4 > 255))
+// 		{
+// 			rv = false;
+// 			break;
+// 		}
+// 
+// 		for (pChar = s; *pChar != 0; pChar++)
+// 		{
+// 			if ((*pChar != '.')
+// 				&& ((*pChar < '0') || (*pChar > '9')))
+// 			{
+// 				rv = false;
+// 				break;
+// 			}
+// 		}
+// 		break;
+// 	}
+// 
+// 	return rv;
+// }
+// 
+// void TsHttpRpc::_rpc_func_check(const ex_astr& func_args, ex_astr& buf)
+// {
+// 	// 入参：{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
+// 	//   authmode: 1=password, 2=private-key
+// 	//   protocol: 1=rdp, 2=ssh
+// 	// SSH返回： {"code":0, "data":{"sid":"0123abcde"}}
+// 	// RDP返回： {"code":0, "data":{"sid":"0123abcde0A"}}
+// 
+// 	Json::Reader jreader;
+// 	Json::Value jsRoot;
+// 
+// 	if (!jreader.parse(func_args.c_str(), jsRoot))
+// 	{
+// 		_create_json_ret(buf, TPE_JSON_FORMAT);
+// 		return;
+// 	}
+// 	if (jsRoot.isArray())
+// 	{
+// 		_create_json_ret(buf, TPE_PARAM);
+// 		return;
+// 	}
+// 	int windows_size = 2;
+// 
+// 
+// 
+// 	// 判断参数是否正确
+// 	if (!jsRoot["server_ip"].isString() || !jsRoot["ssh_port"].isNumeric()
+// 		|| !jsRoot["rdp_port"].isNumeric()
+// 		)
+// 	{
+// 		_create_json_ret(buf, TPE_PARAM);
+// 		return;
+// 	}
+// 
+// 	std::string host = jsRoot["server_ip"].asCString();
+// 	int rdp_port = jsRoot["rdp_port"].asUInt();
+// 	int ssh_port = jsRoot["rdp_port"].asUInt();
+// 	std::string server_ip;
+// 	if (isIPAddress(host.c_str()))
+// 	{
+// 		server_ip = host;
+// 	}
+// 	else
+// 	{
+// 		char *ptr, **pptr;
+// 		struct hostent *hptr;
+// 		char IP[128] = { 0 };
+// 		/* 取得命令后第一个参数，即要解析的域名或主机名 */
+// 		ptr = (char*)host.c_str();
+// 		/* 调用gethostbyname()。调用结果都存在hptr中 */
+// 		if ((hptr = gethostbyname(ptr)) == NULL)
+// 		{
+// 			//printf("gethostbyname error for host:%s/n", ptr);
+// 			_create_json_ret(buf, TPE_PARAM);
+// 			return;
+// 		}
+// 
+// 		char szbuf[1204] = { 0 };
+// 		switch (hptr->h_addrtype)
+// 		{
+// 		case AF_INET:
+// 		case AF_INET6:
+// 			pptr = hptr->h_addr_list;
+// 			for (; *pptr != NULL; pptr++)
+// 				ex_inet_ntop(hptr->h_addrtype, *pptr, IP, sizeof(IP));
+// 			server_ip = IP;
+// 			break;
+// 		default:
+// 			printf("unknown address type/n");
+// 			break;
+// 		}
+// 	}
+// 	if (!isIPAddress(server_ip.c_str()))
+// 	{
+// 		_create_json_ret(buf, TPE_PARAM);
+// 		return;
+// 	}
+// 	if (TestTCPPort(server_ip, rdp_port) && TestTCPPort(server_ip, ssh_port))
+// 	{
+// 		_create_json_ret(buf, TPE_OK);
+// 		return;
+// 	}
+// 	ICMPheaderRet temp = { 0 };
+// 	int b_ok = ICMPSendTo(&temp, (char*)server_ip.c_str(), 16, 8);
+// 	if (b_ok == 0)
+// 	{
+// 		_create_json_ret(buf, TPE_OK);
+// 		return;
+// 	}
+// 	else
+// 	{
+// 		_create_json_ret(buf, TPE_NETWORK);
+// 	}
+// 
+// 	return;
+// }
 
 void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 {

@@ -47,4 +47,8 @@ void ex_dlclose(EX_DYLIB_HANDLE dylib);
 // inet...
 int ex_ip4_name(const struct sockaddr_in* src, char* dst, size_t size);
 
+#define EX_IPV4_NAME_LEN   16
+#define EX_IPV6_NAME_LEN   46
+const char* ex_inet_ntop(int af, const void *src, char *dst, size_t size);
+
 #endif // __LIB_EX_UTIL_H__
