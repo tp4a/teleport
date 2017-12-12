@@ -169,6 +169,10 @@ def tp_timestamp_utc_now():
     return int(datetime.datetime.utcnow().timestamp())
 
 
+def tp_utc_timestamp_ms():
+    return int(datetime.datetime.utcnow().timestamp()*1000)
+
+
 def tp_bytes2string(b, encode='utf8'):
     for c in range(len(b)):
         if b[c] == 0:

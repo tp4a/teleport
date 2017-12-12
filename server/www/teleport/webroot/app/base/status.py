@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import time
-import datetime
-import threading
 import psutil
-import json
-
-from app.base.logger import log
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_utc_now, tp_utc_timestamp_ms
 from app.controller.ws import tp_wss
 from app.base.cron import tp_corn
 
@@ -31,18 +25,18 @@ class TPSysStatus(object):
         self._net_sent = 0
 
     def init(self):
-        t = tp_timestamp_utc_now() - 10 * 60
+        t = tp_utc_timestamp_ms() - 10 * 60 * 1000
         cnt = int((10 * 60 + self._INTERVAL - 1) / self._INTERVAL)
         for i in range(cnt):
             val = {
                 't': t,
-                'c': {'u': 0, 's': 0},
-                'm': {'u': 1, 't': 100},
-                'd': {'r': 0, 'w': 0},
-                'n': {'r': 0, 's': 0}
+                'cpu': {'u': 0, 's': 0},
+                'mem': {'u': 1, 't': 100},
+                'disk': {'r': 0, 'w': 0},
+                'net': {'r': 0, 's': 0}
             }
             self._history.append(val)
-            t += self._INTERVAL
+            t += self._INTERVAL*1000
 
         psutil.cpu_times_percent()
         net = psutil.net_io_counters(pernic=False)
@@ -57,20 +51,15 @@ class TPSysStatus(object):
         return True
 
     def _check_status(self):
-        # time.sleep(self._interval)
-        val = {'t': tp_timestamp_utc_now()}
+        val = {'t': tp_utc_timestamp_ms()}
 
         cpu = psutil.cpu_times_percent()
-        # print(int(cpu.user * 100), int(cpu.system * 100))
-        val['c'] = {'u': cpu.user, 's': cpu.system}
-        #
+        val['cpu'] = {'u': cpu.user, 's': cpu.system}
+
         mem = psutil.virtual_memory()
-        val['m'] = {'u': mem.used, 't': mem.total}
-        # print(mem.total, mem.used, int(mem.used * 100 / mem.total))
+        val['mem'] = {'u': mem.used, 't': mem.total}
 
         disk = psutil.disk_io_counters(perdisk=False)
-        # val['d'] = {'r': disk.read_byes, 'w': disk.write_bytes}
-        # print(disk.read_bytes, disk.write_bytes)
         _read = disk.read_bytes - self._disk_read
         _write = disk.write_bytes - self._disk_write
         self._disk_read = disk.read_bytes
@@ -80,8 +69,7 @@ class TPSysStatus(object):
             _read = 0
         if _write < 0:
             _write = 0
-        val['d'] = {'r': int(_read / self._INTERVAL), 'w': int(_write / self._INTERVAL)}
-        # print(int(_read / self._interval), int(_write / self._interval))
+        val['disk'] = {'r': int(_read / self._INTERVAL), 'w': int(_write / self._INTERVAL)}
 
         net = psutil.net_io_counters(pernic=False)
         _recv = net.bytes_recv - self._net_recv
@@ -95,8 +83,7 @@ class TPSysStatus(object):
             _recv = 0
         if _sent < 0:
             _sent = 0
-        val['n'] = {'r': int(_recv / self._INTERVAL), 's': int(_sent / self._INTERVAL)}
-        # print(int(_recv / self._interval), int(_sent / self._interval))
+        val['net'] = {'r': int(_recv / self._INTERVAL), 's': int(_sent / self._INTERVAL)}
 
         self._history.pop(0)
         self._history.append(val)

@@ -70,13 +70,13 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="stats stats-bar">
-                <div class="stats-value" id="bar-cpu" style="height:180px;">
+                <div class="stats-value" id="bar-cpu">
                 </div>
             </div>
         </div>
         <div class="col-sm-6">
             <div class="stats stats-bar">
-                <div class="stats-value" id="bar-mem" style="height:180px;">
+                <div class="stats-value" id="bar-mem">
                 </div>
             </div>
         </div>
@@ -85,15 +85,13 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="stats stats-bar">
-                <div class="stats-name">网络流量</div>
-                <div class="stats-value">
+                <div class="stats-value" id="bar-net">
                 </div>
             </div>
         </div>
         <div class="col-sm-6">
             <div class="stats stats-bar">
-                <div class="stats-name">网络连接</div>
-                <div class="stats-value">
+                <div class="stats-value" id="bar-disk">
                 </div>
             </div>
         </div>
