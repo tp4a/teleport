@@ -54,13 +54,13 @@ function tp_check_ip(ip) {
 // useful functions.
 //===================================================
 
-function digital_precision(num, keep) {
+function tp_digital_precision(num, keep) {
     return Math.round(num * Math.pow(10, keep)) / Math.pow(10, keep);
 }
 
-function prefixInteger(num, length) {
-    return (num / Math.pow(10, length)).toFixed(length).substr(2);
-}
+// function prefixInteger(num, length) {
+//     return (num / Math.pow(10, length)).toFixed(length).substr(2);
+// }
 
 function tp_size2str(size, precision) {
     precision = precision || 0;
@@ -71,23 +71,23 @@ function tp_size2str(size, precision) {
         k = 'B';
     }
     else if (size < MB) {
-        s = digital_precision(size / KB, precision);
+        s = tp_digital_precision(size / KB, precision);
         k = 'KB'
     }
     else if (size < GB) {
-        s = digital_precision(size / MB, precision);
+        s = tp_digital_precision(size / MB, precision);
         k = 'MB'
     }
     else if (size < TB) {
-        s = digital_precision(size / GB, precision);
+        s = tp_digital_precision(size / GB, precision);
         k = 'GB'
     }
     else if (size < PB) {
-        s = digital_precision(size / TB, precision);
+        s = tp_digital_precision(size / TB, precision);
         k = 'TB'
     }
     else {
-        s = digital_precision(size / PB, precision);
+        s = tp_digital_precision(size / PB, precision);
         k = 'PB'
     }
 

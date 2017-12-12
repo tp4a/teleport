@@ -70,15 +70,13 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="stats stats-bar">
-##                 <div class="stats-name">CPU负载</div>
-                <div class="stats-value" id="bar-cpu" style="height:260px;">
+                <div class="stats-value" id="bar-cpu" style="height:180px;">
                 </div>
             </div>
         </div>
         <div class="col-sm-6">
             <div class="stats stats-bar">
-                <div class="stats-name">内存使用</div>
-                <div class="stats-value">
+                <div class="stats-value" id="bar-mem" style="height:180px;">
                 </div>
             </div>
         </div>

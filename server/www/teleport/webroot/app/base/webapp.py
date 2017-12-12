@@ -15,7 +15,7 @@ from app.base.configs import tp_cfg
 from app.base.db import get_db
 from app.base.logger import log
 from app.base.session import tp_session
-# from app.base.cron import tp_corn
+from app.base.cron import tp_corn
 from app.base.status import tp_sys_status
 
 
@@ -84,6 +84,9 @@ class WebApp:
         if not tp_session().init():
             log.e('can not initialize session manager.\n')
             return 0
+        if not tp_sys_status().init():
+            log.e('can not initialize system status collector.\n')
+            return 0
 
         settings = {
             #
@@ -130,25 +133,30 @@ class WebApp:
             log.e('can not listen on port {}:{}, make sure it not been used by another application.\n'.format(cfg.common.ip, cfg.common.port))
             return 0
 
+        # 启动定时任务调度器
+        tp_corn().init()
+        tp_corn().start()
         # 启动session超时管理
-        tp_session().start()
+        # tp_session().start()
 
-        def job():
-            log.v('---job--\n')
+        # def job():
+        #     log.v('---job--\n')
         # tp_corn().add_job('test', job, first_interval_seconds=None, interval_seconds=10)
-        # tp_corn().init()
-        # tp_corn().start()
-        tp_sys_status().init()
-        tp_sys_status().start()
+        # tp_sys_status().init()
+        # tp_sys_status().start()
+
+        tp_corn().add_job('session_expire', tp_session().check_expire, first_interval_seconds=None, interval_seconds=60)
+        # tp_corn().add_job('sys_status', tp_sys_status().check_status, first_interval_seconds=5, interval_seconds=5)
+
 
         try:
             tornado.ioloop.IOLoop.instance().start()
         except:
             log.e('\n')
 
-        # tp_corn().stop()
-        tp_sys_status().stop()
-        tp_session().stop()
+        tp_corn().stop()
+        # tp_sys_status().stop()
+        # tp_session().stop()
 
         return 0
 

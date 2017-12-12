@@ -26,6 +26,11 @@ class TPWebSocketServer(object):
         if '__tp_websocket_server__' in builtins.__dict__:
             raise RuntimeError('TPWebSocketServer object exists, you can not create more than one instance.')
 
+        self._cb_get_sys_status = None
+
+    def register_get_sys_status_callback(self, cb):
+        self._cb_get_sys_status = cb
+
     def have_callbacker(self, callbacker):
         return callbacker in self._clients
 
@@ -56,24 +61,23 @@ class TPWebSocketServer(object):
             for p in req['params']:
                 if p not in self._clients[callbacker]['subscribe']:
                     self._clients[callbacker]['subscribe'].append(p)
+        elif req['method'] == 'request':
+            if req['param'] == 'sys_status':
+                if self._cb_get_sys_status is not None:
+                    message = self._cb_get_sys_status()
+                    msg = {'method': 'request', 'param': 'sys_status', 'data': message}
+                    s = json.dumps(msg, separators=(',', ':'))
+                    callbacker.write_message(s)
 
     def send_message(self, subscribe, message):
-        msg = {'subscribe': subscribe, 'data': message}
-        s = json.dumps(msg, separators=(',', ':'))
+        s = None
         with self._lock:
             for c in self._clients:
-
                 if subscribe in self._clients[c]['subscribe']:
+                    if s is None:
+                        msg = {'method': 'subscribe', 'param': subscribe, 'data': message}
+                        s = json.dumps(msg, separators=(',', ':'))
                     c.write_message(s)
-
-    # def response(self, _id, data):
-    #     # print('send to client:', url, data)
-    #     for callbacker in self.clients:
-    #         if self.clients[callbacker].get_id() == _id:
-    #             print('[ws] response', _id, data)
-    #             callbacker.write_message(data)
-    #             return
-    #     print('## [ws] response no client.', _id)
 
 
 def tp_wss():
@@ -118,4 +122,3 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             self.write_message(json.dumps(ret))
             return
         tp_wss().on_message(self, message)
-

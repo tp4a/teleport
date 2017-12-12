@@ -7,12 +7,15 @@ from app.base.logger import log
 from app.base.configs import tp_cfg
 
 
-class SessionManager(threading.Thread):
+# class SessionManager(threading.Thread):
+class SessionManager(object):
+
     # SESSION_EXPIRE = 3600  # 60*60  默认超时时间为1小时
     _expire = 3600
 
     def __init__(self):
-        super().__init__(name='session-manager-thread')
+        # super().__init__(name='session-manager-thread')
+        super().__init__()
 
         import builtins
         if '__session_manager__' in builtins.__dict__:
@@ -26,39 +29,48 @@ class SessionManager(threading.Thread):
         self._stop_flag = False
         self._timer_cond = threading.Condition()
 
-        self.update_default_expire()
-
     def init(self):
+        self.update_default_expire()
         return True
 
     def update_default_expire(self):
         self._expire = tp_cfg().sys.login.session_timeout * 60
 
-    def stop(self):
-        self._stop_flag = True
-        self._timer_cond.acquire()
-        self._timer_cond.notify()
-        self._timer_cond.release()
-        self.join()
-        log.v('{} stopped.\n'.format(self.name))
+    # def stop(self):
+    #     self._stop_flag = True
+    #     self._timer_cond.acquire()
+    #     self._timer_cond.notify()
+    #     self._timer_cond.release()
+    #     self.join()
+    #     log.v('{} stopped.\n'.format(self.name))
 
-    def run(self):
-        while True:
-            self._timer_cond.acquire()
-            # 每隔一分钟醒来检查一次超时的会话
-            self._timer_cond.wait(60)
-            self._timer_cond.release()
-            if self._stop_flag:
-                break
+    # def run(self):
+    #     while True:
+    #         self._timer_cond.acquire()
+    #         # 每隔一分钟醒来检查一次超时的会话
+    #         self._timer_cond.wait(60)
+    #         self._timer_cond.release()
+    #         if self._stop_flag:
+    #             break
+    #
+    #         _now = int(datetime.datetime.utcnow().timestamp())
+    #         with self._lock:
+    #             _keys = [k for k in self._session_dict]
+    #             for k in _keys:
+    #                 if self._session_dict[k]['e'] == 0:
+    #                     continue
+    #                 if _now - self._session_dict[k]['t'] > self._session_dict[k]['e']:
+    #                     del self._session_dict[k]
 
-            _now = int(datetime.datetime.utcnow().timestamp())
-            with self._lock:
-                _keys = [k for k in self._session_dict]
-                for k in _keys:
-                    if self._session_dict[k]['e'] == 0:
-                        continue
-                    if _now - self._session_dict[k]['t'] > self._session_dict[k]['e']:
-                        del self._session_dict[k]
+    def check_expire(self):
+        _now = int(datetime.datetime.utcnow().timestamp())
+        with self._lock:
+            _keys = [k for k in self._session_dict]
+            for k in _keys:
+                if self._session_dict[k]['e'] == 0:
+                    continue
+                if _now - self._session_dict[k]['t'] > self._session_dict[k]['e']:
+                    del self._session_dict[k]
 
     def set(self, s_id, value, expire=None):
         """
