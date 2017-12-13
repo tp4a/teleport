@@ -21,11 +21,12 @@ var SLOGAN = [
 ];
 
 
-// $app.on_init = function (cb_stack, cb_args) {
 $app.on_init = function (cb_stack) {
     $app.login_type = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA;
     $app.dom = {
         slogan: $('#msg-slogan'),
+        auth_box: $('#auth-box-container'),
+
         btn_login_type_password: $('#login-type-password'),
         btn_login_type_oath: $('#login-type-oath'),
         area_captcha: $('#login-area-captcha'),
@@ -46,7 +47,7 @@ $app.on_init = function (cb_stack) {
     $app.last_img_idx = 0;
     $app.last_slogan_idx = 0;
 
-    console.log($app.options);
+    // console.log($app.options);
     if ($app.options.username.length > 0) {
         $app.dom.input_username.val($app.options.username);
     }
@@ -55,7 +56,7 @@ $app.on_init = function (cb_stack) {
 
     window.onresize = $app.on_screen_resize;
     $app.init_blur_bg();
-    $app.init_slogan();
+    //$app.init_slogan();
 
     $app.dom.btn_login_type_password.click(function () {
         $app.login_type = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA;
@@ -233,6 +234,16 @@ $app.init_blur_bg = function () {
     });
 
     setInterval($app._update_blur_bg, 20500);
+
+    setTimeout(function(){
+        $app.init_slogan();
+    }, 2000);
+
+    setTimeout(function(){
+        $app.dom.auth_box.fadeIn(800, function(){
+            $app.dom.input_username.focus();
+        });
+    }, 300);
 };
 
 $app._update_blur_bg = function () {
@@ -250,7 +261,6 @@ $app.init_slogan = function () {
     $app.last_slogan_idx = Math.floor(Math.random() * SLOGAN.length);
     $app.dom.slogan.html(SLOGAN[$app.last_slogan_idx]).fadeIn(1000);
 
-    // $app._update_slogan();
     setInterval($app._update_slogan, 8100);
 };
 
