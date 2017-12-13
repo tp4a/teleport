@@ -42,9 +42,9 @@ class InstallerBase:
         cc.v('')
         cc.v('[]{}[]'.format('=' * (_width - 4)))
         _str = 'Teleport Server Installation'
-        cc.o((cc.CR_VERBOSE, ' | '), (cc.CR_INFO, _str), (cc.CR_VERBOSE, '{}|'.format(' ' * (_width - 5 - len(_str)))))
+        cc.o((cc.CR_VERBOSE, ' | '), (cc.CR_VERBOSE, _str), (cc.CR_VERBOSE, '{}|'.format(' ' * (_width - 5 - len(_str)))))
         cc.v(' |{}|'.format('=' * (_width - 4)))
-        cc.o((cc.CR_VERBOSE, ' |    ver: '), (cc.CR_NORMAL, self._current_ver),
+        cc.o((cc.CR_VERBOSE, ' |    ver: '), (cc.CR_ERROR, self._current_ver),
              (cc.CR_VERBOSE, '{}|'.format(' ' * (_width - 13 - len(self._current_ver)))))
         _str = 'author: apex.liu@qq.com'
         cc.v(' | {}{}|'.format(_str, ' ' * (_width - 5 - len(_str))))
@@ -52,12 +52,10 @@ class InstallerBase:
         cc.v('')
         cc.v('Welcome to install Teleport Server!')
         cc.v('')
-        # cc.v('  NOTICE: if you want to use the default settings, just press `Enter`...')
         cc.o((cc.CR_VERBOSE,
               'NOTICE: There are a few steps need you enter information or make choice,\n'
-              '        if you want to use the '),
-             (cc.CR_WARN, 'default settings'), (cc.CR_VERBOSE, ', just press `Enter` key.'))
-        cc.o((cc.CR_VERBOSE, '        Otherwise you need enter the '), (cc.CR_NORMAL, 'highlight character'),
+              '        if you want to use the DEFAULT choice, just press `Enter` key.'))
+        cc.o((cc.CR_VERBOSE, '        Otherwise you need enter the '), (cc.CR_ERROR, 'highlight character'),
              (cc.CR_VERBOSE, ' to make choice.'))
         cc.v('')
         cc.v('')
@@ -217,13 +215,13 @@ class InstallerBase:
             if choices[i][2]:
                 msg = msg.upper()
                 def_choice = msg[idx]
-                cc.w(msg[:idx], end='')
-                cc.n(msg[idx], end='')
-                cc.w(msg[idx + 1:], end='')
+                cc.v(msg[:idx], end='')
+                cc.e(msg[idx], end='')
+                cc.v(msg[idx + 1:], end='')
             else:
                 msg = msg.lower()
                 cc.v(msg[:idx], end='')
-                cc.n(msg[idx], end='')
+                cc.e(msg[idx], end='')
                 cc.v(msg[idx + 1:], end='')
 
         cc.v(']: ', end='')
@@ -629,7 +627,7 @@ def _main():
 def main():
     try:
         _main()
-        cc.i('\n--==[ ALL DONE ]==--\n')
+        cc.v('\n--==[ ALL DONE ]==--\n')
         return 0
     except KeyboardInterrupt:
         return 1

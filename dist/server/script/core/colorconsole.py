@@ -31,10 +31,16 @@ CR_LIGHT_BLUE = 14  # 亮蓝色 - 其实在黑色背景上还是比较深
 CR_LIGHT_MAGENTA = 15  # 亮紫色 - 警告
 CR_LIGHT_CYAN = 16  # 亮青色
 
-CR_VERBOSE = CR_LIGHT_GRAY
-CR_NORMAL = CR_WHITE
+# CR_VERBOSE = CR_LIGHT_GRAY
+# CR_NORMAL = CR_WHITE
+# CR_INFO = CR_GREEN
+# CR_WARN = CR_LIGHT_YELLOW
+# CR_ERROR = CR_LIGHT_RED
+
+CR_VERBOSE = CR_RESTORE
+CR_NORMAL = CR_GRAY
 CR_INFO = CR_GREEN
-CR_WARN = CR_LIGHT_YELLOW
+CR_WARN = CR_YELLOW
 CR_ERROR = CR_LIGHT_RED
 
 COLORS = {
@@ -212,79 +218,6 @@ class ColorConsole:
         self._console_restore_color()
         sys.stdout.flush()
 
-    # def _do_log(self, msg, color=None):
-    #     self._log_console(msg, color)
-    #
-    # def _console_default(self, msg, color=None):
-    #     if msg is None:
-    #         return
-    #
-    #     sys.stdout.writelines(msg)
-    #     sys.stdout.flush()
-    #
-    # def _console_win(self, msg, color=None):
-    #     if msg is None:
-    #         return
-    #
-    #     # 这里的问题很复杂，日常使用没有问题，但是当在工作机上使用时，部分内容是捕获另一个脚本执行的结果再输出
-    #     # 如果结果中有中文，这里就会显示乱码。如果尝试编码转换，会抛出异常。目前暂时采用显示乱码的方式了。
-    #
-    #     # if CONSOLE_WIN_CMD == self.console_type:
-    #     # 	try:
-    #     # 		_msg = unicode(msg, 'utf-8')
-    #     # 	except:
-    #     # 		_msg = msg
-    #     # else:
-    #     # 	_msg = msg
-    #     # _msg = None
-    #     # if isinstance(msg, unicode):
-    #     #     _msg = msg
-    #     # else:
-    #     #     # _msg = unicode(msg, 'utf-8')
-    #     #     try:
-    #     #         _msg = unicode(msg, 'utf-8')
-    #     #     except:
-    #     #         _msg = unicode(msg, 'gb2312')
-    #     #         # _msg = msg
-    #     #
-    #     #         # if CONSOLE_WIN_CMD == self.console_type:
-    #     #         # 	sys.stdout.writelines(msg.encode('gb2312'))
-    #     #         # else:
-    #     #         # 	sys.stdout.writelines(msg.encode('utf-8'))
-    #     #
-    #     #
-    #     #         # try:
-    #     #         #	_msg = unicode(msg, 'utf-8')
-    #     #         # except:
-    #     # _msg = msg
-    #
-    #     if color is None:
-    #         sys.stdout.writelines(msg)
-    #     else:
-    #         self._win_color.set_color(COLORS[color][1])
-    #         sys.stdout.writelines(msg)
-    #         sys.stdout.flush()
-    #         self._win_color.set_color(COLORS[CR_RESTORE][1])
-    #
-    #     sys.stdout.flush()
-    #
-    # def _console_linux(self, msg, cr=None):
-    #     if msg is None:
-    #         return
-    #
-    #     if cr is None:
-    #         sys.stdout.writelines(msg)
-    #     else:
-    #         sys.stdout.writelines('\x1B')
-    #         sys.stdout.writelines(COLORS[cr][0])
-    #         sys.stdout.writelines(msg)
-    #         sys.stdout.writelines('\x1B[0m')
-    #
-    #     sys.stdout.flush()
-
-    # def _console_set_color_default(self, cr=None):
-    #     pass
-
     def _console_set_color_win(self, cr=None):
         if cr is None:
             return
@@ -325,55 +258,16 @@ class ColorConsole:
         sys.stdout.writelines(end)
         sys.stdout.flush()
 
-        # def _test(self):
-        #     self.log('###################', CR_RESTORE)
-        #     self.log(' CR_RESTORE\n')
-        #     self.log('###################', CR_BLACK)
-        #     self.log(' CR_BLACK\n')
-        #     self.log('###################', CR_LIGHT_GRAY)
-        #     self.log(' CR_LIGHT_GRAY\n')
-        #     self.log('###################', CR_GRAY)
-        #     self.log(' CR_GRAY\n')
-        #     self.log('###################', CR_WHITE)
-        #     self.log(' CR_WHITE\n')
-        #     self.log('###################', CR_RED)
-        #     self.log(' CR_RED\n')
-        #     self.log('###################', CR_GREEN)
-        #     self.log(' CR_GREEN\n')
-        #     self.log('###################', CR_YELLOW)
-        #     self.log(' CR_YELLOW\n')
-        #     self.log('###################', CR_BLUE)
-        #     self.log(' CR_BLUE\n')
-        #     self.log('###################', CR_MAGENTA)
-        #     self.log(' CR_MAGENTA\n')
-        #     self.log('###################', CR_CYAN)
-        #     self.log(' CR_CYAN\n')
-        #     self.log('###################', CR_LIGHT_RED)
-        #     self.log(' CR_LIGHT_RED\n')
-        #     self.log('###################', CR_LIGHT_GREEN)
-        #     self.log(' CR_LIGHT_GREEN\n')
-        #     self.log('###################', CR_LIGHT_YELLOW)
-        #     self.log(' CR_LIGHT_YELLOW\n')
-        #     self.log('###################', CR_LIGHT_BLUE)
-        #     self.log(' CR_LIGHT_BLUE\n')
-        #     self.log('###################', CR_LIGHT_MAGENTA)
-        #     self.log(' CR_LIGHT_MAGENTA\n')
-        #     self.log('###################', CR_LIGHT_CYAN)
-        #     self.log(' CR_LIGHT_CYAN\n')
-        #     # data = b'This is a test string and you can see binary format data here.'
-        #     # self.bin('Binary Data:\n', data)
-        #     # data = b''
-        #     # self.bin('Empty binary\n', data)
-        #     # self.bin('This is string\n\n', 'data')
-        #
-        #     # self.d('This is DEBUG message.\n')
-        #     self.v('This is VERBOSE message.\n')
-        #     self.i('This is INFORMATION message.\n')
-        #     self.w('This is WARNING message.\n')
-        #     self.e('This is ERROR message.\n')
-        #     self.f('This is FAIL message.\n')
-        #
-        #     self.v('test auto\nsplit lines.\nYou should see\nmulti-lines.\n')
+    def test(self):
+        self.o('o()......')
+        self.v('v()......')
+        self.n('n()......')
+        self.i('i()......')
+        self.w('w()......')
+        self.e('e()......')
+        self.f('f()......')
+
+        self.v('test auto\nsplit lines.\nYou should see\nmulti-lines.\n')
 
 
 class Win32ColorConsole:
@@ -442,6 +336,8 @@ class Win32ColorConsole:
 
 _cc = ColorConsole()
 del ColorConsole
+
+# _cc.test()
 
 
 def set_default(*args, **kwargs):

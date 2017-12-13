@@ -68,11 +68,12 @@ class BuilderLinux(BuilderBase):
         cc.n('build server app (tp_core/libtpssh/tp_web)...')
 
         out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
-        out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'tp_web')]
+        out_files = list()
+        out_files.append(os.path.join(out_path, 'tp_core'))
+        out_files.append(os.path.join(out_path, 'tp_web'))
         out_files.append(os.path.join(out_path, 'libtpssh.so'))
         if with_rdp:
             out_files.append(os.path.join(out_path, 'libtprdp.so'))
-        # out_files.extend(os.path.join(out_path, 'libtptelnet.so'))
 
         for f in out_files:
             if os.path.exists(f):
@@ -96,7 +97,9 @@ class BuilderMacOS(BuilderBase):
         cc.n('build server app (tp_core/libtpssh/tp_web)...')
 
         out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
-        out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'tp_web')]
+        out_files = list()
+        out_files.append(os.path.join(out_path, 'tp_core'))
+        out_files.append(os.path.join(out_path, 'tp_web'))
         out_files.append(os.path.join(out_path, 'libtpssh.so'))
         if with_rdp:
             out_files.append(os.path.join(out_path, 'libtprdp.so'))

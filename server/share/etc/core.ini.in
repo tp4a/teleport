@@ -40,7 +40,7 @@ bind-ip=0.0.0.0
 bind-port=52189
 
 [protocol-rdp]
-enabled=false
+enabled=true
 lib=tprdp
 bind-ip=0.0.0.0
 bind-port=52089
