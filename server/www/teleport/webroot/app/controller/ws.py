@@ -103,7 +103,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         # 处理新的连接
         k = '{}-{}'.format('user', sid)
         _user = tp_session().get(k, None)
-        print(_user)
         if _user is None:
             ret = {'code': TPE_NEED_LOGIN, 'message': '需要登录'}
             self.write_message(json.dumps(ret))

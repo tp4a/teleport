@@ -118,7 +118,6 @@ def add_host(handler, args):
 
 
 def remove_hosts(handler, hosts):
-    print('----', hosts)
     db = get_db()
 
     host_ids = ','.join([str(i) for i in hosts])

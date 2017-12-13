@@ -275,8 +275,6 @@ def make_group_map(gtype, gm):
 
 
 def get_groups(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
-    print(sql_filter)
-
     dbtp = get_db().table_prefix
     s = SQL(get_db())
     s.select_from('group', ['id', 'state', 'name', 'desc'], alt_name='g')

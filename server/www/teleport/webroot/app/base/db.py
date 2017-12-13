@@ -41,6 +41,7 @@ class TPDatabase:
         self.mysql_user = ''
         self.mysql_password = ''
 
+        self.connected = False  # 数据库是否已经连接上了
         self.need_create = False  # 数据尚未存在，需要创建
         self.need_upgrade = False  # 数据库已存在但版本较低，需要升级
         self.current_ver = 0
@@ -62,8 +63,8 @@ class TPDatabase:
                 cfg.set_default('database::sqlite-file', os.path.join(cfg.data_path, 'db', 'teleport.db'))
             if not self._init_sqlite(cfg.database.sqlite_file):
                 return False
-            if self.need_create:
-                return True
+            # if self.need_create:
+            #     return True
         elif 'mysql' == cfg.database.type:
             if not self._init_mysql(cfg.database.mysql_host, cfg.database.mysql_port,
                                     cfg.database.mysql_db, cfg.database.mysql_prefix,
@@ -73,13 +74,20 @@ class TPDatabase:
             log.e('unknown database type `{}`, support sqlite/mysql now.\n'.format(cfg.database.type))
             return False
 
+        return True
+
+    def connect(self):
+        if self._conn_pool.connect():
+            self.connected = True
+
+    def check_status(self):
         # 看看数据库中是否存在指定的数据表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
         # ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}account";'.format(self._table_prefix))
         ret = self.is_table_exists('{}config'.format(self._table_prefix))
         if ret is None or not ret:
             log.w('database need create.\n')
             self.need_create = True
-            return True
+            return
 
         # 尝试从配置表中读取当前数据库版本号（如果不存在，说明是比较旧的版本了）
         ret = self.query('SELECT `value` FROM `{}config` WHERE `name`="db_ver";'.format(self._table_prefix))
@@ -91,12 +99,7 @@ class TPDatabase:
         if self.current_ver < self.DB_VERSION:
             log.w('database need upgrade.\n')
             self.need_upgrade = True
-            return True
-
-        # DO TEST
-        # self.alter_table('ts_account', [['account_id', 'id'], ['account_type', 'type']])
-
-        return True
+            return
 
     def load_system_config(self):
         sys_cfg = dict()
@@ -180,7 +183,6 @@ class TPDatabase:
                 return False
         elif self.db_type == self.DB_TYPE_MYSQL:
             ret = self.query('DESC `{}` `{}`;'.format(table_name, field_name))
-            print(ret)
             if ret is None:
                 return None
             if len(ret) == 0:
@@ -324,6 +326,9 @@ class TPDatabasePool:
     def __init__(self):
         self._locker = threading.RLock()
         self._connections = dict()
+
+    def connect(self):
+        return False if self._get_connect() is None else True
 
     def query(self, sql, args):
         _conn = self._get_connect()
@@ -471,6 +476,21 @@ class TPMysqlPool(TPDatabasePool):
             log.e('[mysql] connect [{}:{}] failed: {}\n'.format(self._host, self._port, e.__str__()))
             return None
 
+    def _reconnect(self):
+        log.w('[mysql] lost connection, reconnect.\n')
+        with self._locker:
+            thread_id = threading.get_ident()
+            if thread_id not in self._connections:
+                log.e('[mysql] database pool internal error.\n')
+                return None
+            _conn = self._do_connect()
+            if _conn is not None:
+                self._connections[thread_id] = _conn
+                return _conn
+            else:
+                del self._connections[thread_id]
+                return None
+
     def _do_query(self, conn, sql, args):
         for retry in range(2):
             cursor = conn.cursor()
@@ -485,19 +505,18 @@ class TPMysqlPool(TPDatabasePool):
                     log.v('[mysql] SQL={}\n'.format(sql))
                     log.e('[mysql] _do_query() failed: {}\n'.format(e.__str__()))
                     return None
+                conn = self._reconnect()
+                if conn is None:
+                    return None
+            except pymysql.err.InterfaceError as e:
+                if retry == 1:
+                    log.v('[mysql] SQL={}\n'.format(sql))
+                    log.e('[mysql] _do_query() failed: {}\n'.format(e.__str__()))
+                    return None
+                conn = self._reconnect()
+                if conn is None:
+                    return None
 
-                log.w('[mysql] lost connection, reconnect.\n')
-                with self._locker:
-                    thread_id = threading.get_ident()
-                    if thread_id not in self._connections:
-                        log.e('[mysql] database pool internal error.\n')
-                        return None
-                    _conn = self._do_connect()
-                    if _conn is not None:
-                        self._connections[thread_id] = _conn
-                        conn = _conn
-                    else:
-                        return None
             except Exception as e:
                 log.v('[mysql] SQL={}\n'.format(sql))
                 log.e('[mysql] _do_query() failed: {}\n'.format(e.__str__()))
@@ -518,19 +537,18 @@ class TPMysqlPool(TPDatabasePool):
                     log.v('[mysql] SQL={}\n'.format(sql))
                     log.e('[mysql] _do_exec() failed: {}\n'.format(e.__str__()))
                     return None
+                conn = self._reconnect()
+                if conn is None:
+                    return None
 
-                log.w('[mysql] lost connection, reconnect.\n')
-                with self._locker:
-                    thread_id = threading.get_ident()
-                    if thread_id not in self._connections:
-                        log.e('[mysql] database pool internal error.\n')
-                        return None
-                    _conn = self._do_connect()
-                    if _conn is not None:
-                        self._connections[thread_id] = _conn
-                        conn = _conn
-                    else:
-                        return None
+            except pymysql.err.InterfaceError as e:
+                if retry == 1:
+                    log.v('[mysql] SQL={}\n'.format(sql))
+                    log.e('[mysql] _do_exec() failed: {}\n'.format(e.__str__()))
+                    return None
+                conn = self._reconnect()
+                if conn is None:
+                    return None
 
             except Exception as e:
                 log.e('[mysql] _do_exec() failed: {}\n'.format(e.__str__()))
@@ -553,19 +571,17 @@ class TPMysqlPool(TPDatabasePool):
                 if retry == 1 or errno not in [2006, 2013]:
                     log.e('[mysql] _do_transaction() failed: {}\n'.format(e.__str__()))
                     return False
+                conn = self._reconnect()
+                if conn is None:
+                    return None
 
-                log.w('[mysql] lost connection, reconnect.\n')
-                with self._locker:
-                    thread_id = threading.get_ident()
-                    if thread_id not in self._connections:
-                        log.e('[mysql] database pool internal error.\n')
-                        return False
-                    _conn = self._do_connect()
-                    if _conn is not None:
-                        self._connections[thread_id] = _conn
-                        conn = _conn
-                    else:
-                        return False
+            except pymysql.err.InterfaceError as e:
+                if retry == 1:
+                    log.e('[mysql] _do_transaction() failed: {}\n'.format(e.__str__()))
+                    return None
+                conn = self._reconnect()
+                if conn is None:
+                    return None
 
             except Exception as e:
                 conn.rollback()

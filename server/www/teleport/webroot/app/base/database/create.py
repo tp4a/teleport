@@ -716,27 +716,27 @@ class DatabaseInit:
             'CREATE TABLE `{}syslog` ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
-    def _create_sys_state(self):
-        """ 系统运行状态记录，用于dashboard页面展示
-        系统每5分钟记录一次当前cpu负载/磁盘IO负载/网络IO负载/远程连接数，用来显示曲线图
-        然后系统定时每天做一次清理操作，将超过30天的数据清除掉
-        """
-        f = list()
-
-        # id: 自增主键
-        f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
-
-        # type 数据类型：1=cpu, 2=disk-io, 3=net-io, 4=remote-count
-        f.append('`type` int(11) DEFAULT 0')
-        # val: 记录的值
-        f.append('`val` int(11) DEFAULT 0')
-        # ts: 记录时间
-        f.append('`ts` int(11) DEFAULT 0')
-
-        self._db_exec(
-            '创建系统运行状态记录表...',
-            'CREATE TABLE `{}sys_state` ({});'.format(self.db.table_prefix, ','.join(f))
-        )
+    # def _create_sys_state(self):
+    #     """ 系统运行状态记录，用于dashboard页面展示
+    #     系统每5分钟记录一次当前cpu负载/磁盘IO负载/网络IO负载/远程连接数，用来显示曲线图
+    #     然后系统定时每天做一次清理操作，将超过30天的数据清除掉
+    #     """
+    #     f = list()
+    #
+    #     # id: 自增主键
+    #     f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
+    #
+    #     # type 数据类型：1=cpu, 2=disk-io, 3=net-io, 4=remote-count
+    #     f.append('`type` int(11) DEFAULT 0')
+    #     # val: 记录的值
+    #     f.append('`val` int(11) DEFAULT 0')
+    #     # ts: 记录时间
+    #     f.append('`ts` int(11) DEFAULT 0')
+    #
+    #     self._db_exec(
+    #         '创建系统运行状态记录表...',
+    #         'CREATE TABLE `{}sys_state` ({});'.format(self.db.table_prefix, ','.join(f))
+    #     )
 
     def _create_record(self):
         """ 运维录像日志 """

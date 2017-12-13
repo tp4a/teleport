@@ -41,8 +41,6 @@ class TPCron(threading.Thread):
         log.v('{} stopped.\n'.format(self.name))
 
     def run(self):
-        pass
-
         while not self._stop_flag:
             time.sleep(1)
 

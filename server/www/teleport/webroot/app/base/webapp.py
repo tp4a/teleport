@@ -2,6 +2,7 @@
 
 import json
 import os
+import time
 import urllib.parse
 import urllib.request
 
@@ -64,6 +65,8 @@ class WebApp:
         log.i('###############################################################\n')
         log.i('Web Server starting ...\n')
 
+        tp_corn().init()
+
         # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口以及录像文件存放路径）
         self._get_core_server_config()
 
@@ -72,8 +75,15 @@ class WebApp:
             log.e('can not initialize database interface.\n')
             return 0
 
+        _db.connect()
+        while not _db.connected:
+            log.w('database not connected, retry after 5 seconds.\n')
+            time.sleep(5)
+            _db.connect()
+
         cfg = tp_cfg()
 
+        _db.check_status()
         if _db.need_create or _db.need_upgrade:
             cfg.app_mode = APP_MODE_MAINTENANCE
             tp_cfg().update_sys(None)
@@ -134,20 +144,7 @@ class WebApp:
             return 0
 
         # 启动定时任务调度器
-        tp_corn().init()
         tp_corn().start()
-        # 启动session超时管理
-        # tp_session().start()
-
-        # def job():
-        #     log.v('---job--\n')
-        # tp_corn().add_job('test', job, first_interval_seconds=None, interval_seconds=10)
-        # tp_sys_status().init()
-        # tp_sys_status().start()
-
-        tp_corn().add_job('session_expire', tp_session().check_expire, first_interval_seconds=None, interval_seconds=60)
-        # tp_corn().add_job('sys_status', tp_sys_status().check_status, first_interval_seconds=5, interval_seconds=5)
-
 
         try:
             tornado.ioloop.IOLoop.instance().start()
@@ -155,9 +152,6 @@ class WebApp:
             log.e('\n')
 
         tp_corn().stop()
-        # tp_sys_status().stop()
-        # tp_session().stop()
-
         return 0
 
 
