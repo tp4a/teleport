@@ -558,9 +558,9 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	ex_astr teleport_ip = jsRoot["teleport_ip"].asCString();
 	int teleport_port = jsRoot["teleport_port"].asUInt();
 
-	int windows_size = 2;
+	int windows_size = 3;
 	if (jsRoot["size"].isNull())
-		windows_size = 2;
+		windows_size = 3;
 	else
 		windows_size = jsRoot["size"].asUInt();
 
@@ -833,26 +833,20 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				display = 2;
 				break;
 			case 1:
-			{
 				width = 800;
 				higth = 600;
 				display = 1;
 				break;
-			}
 			case 2:
-			{
 				width = 1024;
 				higth = 768;
 				display = 1;
 				break;
-			}
 			case 3:
-			{
 				width = 1280;
 				higth = 1024;
 				display = 1;
 				break;
-			}
 			default:
 				width = 800;
 				higth = 600;
@@ -956,6 +950,8 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			}
 
 			ex_astr2wstr(real_sid, w_sid);
+			w_exe_path += L" /gdi:sw"; // 使用软件渲染，gdi:hw使用硬件加速，但是会出现很多黑块（录像回放时又是正常的！）
+			w_exe_path += L" -grab-keyboard"; // 防止启动FreeRDP后，失去本地键盘响应，必须得先最小化一下FreeRDP窗口（不过貌似不起作用）
 
 			// 变量替换
 			ex_replace_all(w_exe_path, _T("{size}"), w_screen);

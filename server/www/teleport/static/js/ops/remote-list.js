@@ -126,7 +126,7 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
             var protocol_sub_type = $(this).attr('data-sub-protocol');
             var uni_id = $(this).attr('data-id');
 
-            console.log(uni_id, protocol_sub_type);
+            // console.log(uni_id, protocol_sub_type);
 
             if (action === 'rdp') {
                 $app.connect_remote(uni_id, TP_PROTOCOL_TYPE_RDP, TP_PROTOCOL_TYPE_RDP_DESKTOP);
@@ -267,7 +267,7 @@ $app.on_table_host_render_created = function (render) {
         return h.join('');
     };
     render.action = function (row_id, fields) {
-        console.log(fields);
+        // console.log(fields);
         var h = [];
         for (var i = 0; i < fields.accs.length; ++i) {
             var acc = fields.accs[i];
@@ -321,7 +321,7 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.state = function (row_id, fields) {
-        console.log(fields);
+        // console.log(fields);
         var _prompt, _style, _state;
 
         if ((fields.h_state === TP_STATE_NORMAL || fields.h_state === 0)

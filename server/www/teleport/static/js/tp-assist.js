@@ -104,13 +104,13 @@ $assist.do_teleport = function (args, func_success, func_error) {
                     teleport_port: teleport_port,
                     remote_host_ip: remote_host_ip,
                     // remote_host_port: args.host_port,
-                    size: 0, //parseInt(args.size),
+                    size: 3, //parseInt(args.size),
                     console: 0, //args.console,
                     session_id: session_id,
                     protocol_type: parseInt(args.protocol_type),
                     protocol_sub_type: parseInt(args.protocol_sub_type)
                 };
-                console.log('---', data);
+                // console.log('---', data);
                 var args_ = encodeURIComponent(JSON.stringify(data));
                 $.ajax({
                     type: 'GET',
@@ -120,6 +120,7 @@ $assist.do_teleport = function (args, func_success, func_error) {
                     jsonp: 'callback',
                     dataType: 'json',
                     success: function (ret) {
+                        console.log('ret', ret);
                         if (ret.code === TPE_OK) {
                             func_success();
                         } else {
