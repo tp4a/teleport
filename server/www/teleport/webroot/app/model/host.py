@@ -7,6 +7,7 @@ from app.const import *
 from app.base.logger import log
 from app.base.db import get_db, SQL
 from . import syslog
+from app.base.stats import tp_stats
 from app.base.utils import tp_timestamp_utc_now
 
 
@@ -113,6 +114,7 @@ def add_host(handler, args):
     if len(args['router_ip']) > 0:
         h_name += '（由{}:{}路由）'.format(args['router_ip'], args['router_port'])
     syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "创建主机：{}".format(h_name))
+    tp_stats().host_counter_change(1)
 
     return TPE_OK, _id
 
@@ -203,8 +205,10 @@ def remove_hosts(handler, hosts):
 
     if len(acc_names) > 0:
         syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除账号：{}".format('，'.join(acc_names)))
+        tp_stats().acc_counter_change(0 - len(acc_names))
     if len(host_names) > 0:
         syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除主机：{}".format('，'.join(host_names)))
+        tp_stats().host_counter_change(0 - len(host_names))
 
     return TPE_OK
 
@@ -265,6 +269,7 @@ def update_hosts_state(handler, host_ids, state):
         return TPE_OK
     else:
         return TPE_DATABASE
+
 
 #
 # def unlock_hosts(handler, host_ids):

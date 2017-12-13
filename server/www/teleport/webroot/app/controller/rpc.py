@@ -9,6 +9,7 @@ from app.base.configs import tp_cfg
 from app.base.session import tp_session
 from app.base.core_server import core_service_async_post_http
 from app.model import record
+from app.base.stats import tp_stats
 from app.base.logger import *
 from app.base.controller import TPBaseJsonHandler
 
@@ -63,7 +64,10 @@ class RpcHandler(TPBaseJsonHandler):
 
         conn_id = param['conn_id']
         x = tp_session().taken('tmp-conn-info-{}'.format(conn_id), None)
-        return self.write_json(0, data=x)
+        if x is None:
+            return self.write_json(TPE_NOT_EXISTS)
+        else:
+            return self.write_json(TPE_OK, data=x)
 
     def _session_begin(self, param):
         try:
@@ -87,6 +91,7 @@ class RpcHandler(TPBaseJsonHandler):
         if err != TPE_OK:
             return self.write_json(err, message='can not write database.')
         else:
+            tp_stats().conn_counter_change(1)
             return self.write_json(TPE_OK, data={'rid': record_id})
 
     def _session_update(self, param):
@@ -106,19 +111,20 @@ class RpcHandler(TPBaseJsonHandler):
 
     def _session_end(self, param):
         if 'rid' not in param or 'code' not in param:
-            return self.write_json(-1, message='invalid request.')
+            return self.write_json(TPE_PARAM, message='invalid request.')
 
         if not record.session_end(param['rid'], param['code']):
-            return self.write_json(-1, 'can not write database.')
+            return self.write_json(TPE_DATABASE, 'can not write database.')
         else:
-            return self.write_json(0)
+            tp_stats().conn_counter_change(-1)
+            return self.write_json(TPE_OK)
 
     def _register_core(self, param):
         # 因为core服务启动了（之前可能非正常终止了），做一下数据库中会话状态的修复操作
         record.session_fix()
 
         if 'rpc' not in param:
-            return self.write_json(-1, 'invalid param.')
+            return self.write_json(TPE_PARAM, 'invalid param.')
 
         tp_cfg().common.core_server_rpc = param['rpc']
 
@@ -132,8 +138,8 @@ class RpcHandler(TPBaseJsonHandler):
         log.d('update base server config info.\n')
         tp_cfg().update_core(ret_data)
 
-        return self.write_json(0)
+        return self.write_json(TPE_OK)
 
     def _exit(self):
         # set exit flag.
-        return self.write_json(0)
+        return self.write_json(TPE_OK)

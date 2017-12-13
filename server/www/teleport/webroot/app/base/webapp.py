@@ -17,7 +17,7 @@ from app.base.db import get_db
 from app.base.logger import log
 from app.base.session import tp_session
 from app.base.cron import tp_corn
-from app.base.status import tp_sys_status
+from app.base.stats import tp_stats
 
 
 class WebApp:
@@ -94,7 +94,7 @@ class WebApp:
         if not tp_session().init():
             log.e('can not initialize session manager.\n')
             return 0
-        if not tp_sys_status().init():
+        if not tp_stats().init():
             log.e('can not initialize system status collector.\n')
             return 0
 

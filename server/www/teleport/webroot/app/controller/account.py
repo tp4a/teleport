@@ -12,8 +12,6 @@ from app.const import *
 from app.model import account
 from app.model import group
 
-# cfg = tp_cfg()
-
 # 临时认证ID的基数，每次使用时均递减
 tmp_auth_id_base = -1
 tmp_auth_id_lock = threading.RLock()
@@ -293,30 +291,3 @@ class DoUpdateAccountsHandler(TPBaseJsonHandler):
             return self.write_json(err)
         else:
             return self.write_json(TPE_PARAM)
-
-# class DoRemoveAccountHandler(TPBaseJsonHandler):
-#     def post(self):
-#         ret = self.check_privilege(TP_PRIVILEGE_ACCOUNT | TP_PRIVILEGE_ACCOUNT_GROUP)
-#         if ret != TPE_OK:
-#             return
-#
-#         args = self.get_argument('args', None)
-#         if args is None:
-#             return self.write_json(TPE_PARAM)
-#         try:
-#             args = json.loads(args)
-#         except:
-#             return self.write_json(TPE_JSON_FORMAT)
-#
-#         try:
-#             host_id = int(args['host_id'])
-#             acc_id = int(args['acc_id'])
-#         except:
-#             log.e('\n')
-#             return self.write_json(TPE_PARAM)
-#
-#         if host_id <= 0 or acc_id <= 0:
-#             return self.write_json(TPE_PARAM)
-#
-#         err = account.delete_account(self, host_id, acc_id)
-#         self.write_json(err)

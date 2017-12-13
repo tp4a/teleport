@@ -5,6 +5,7 @@ from app.base.logger import log
 from app.base.db import get_db, SQL
 from . import syslog
 from app.base.utils import tp_timestamp_utc_now
+from app.base.stats import tp_stats
 
 
 def get_account_info(acc_id):
@@ -215,6 +216,8 @@ def add_account(handler, host_id, args):
     # if not db_ret:
     #     return TPE_DATABASE, 0
 
+    tp_stats().acc_counter_change(1)
+
     return TPE_OK, _id
 
 
@@ -348,6 +351,8 @@ def remove_accounts(handler, host_id, acc_ids):
         return TPE_NOT_EXISTS
 
     syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除账号：{}".format('，'.join(acc_names)))
+
+    tp_stats().acc_counter_change(-1)
 
     return TPE_OK
 

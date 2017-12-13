@@ -13,36 +13,19 @@ $app.on_init = function (cb_stack) {
         bar_disk: $('#bar-disk')
     };
 
-    window.onresize = $app.on_screen_resize;
+    $app.stat_counter = {
+        user: -1,
+        host: -1,
+        acc: -1,
+        conn: -1
+    };
 
-    // refresh basic info every 1m.
-    $app.load_basic_info();
+    window.onresize = $app.on_screen_resize;
 
     $app.ws = null;
     $app.init_ws();
 
     cb_stack.exec();
-};
-
-$app.load_basic_info = function () {
-    $tp.ajax_post_json('/dashboard/do-get-basic', {},
-        function (ret) {
-            if (ret.code === TPE_OK) {
-                $app.dom.count_user.text(ret.data.count_user);
-                $app.dom.count_host.text(ret.data.count_host);
-                $app.dom.count_acc.text(ret.data.count_acc);
-                $app.dom.count_conn.text(ret.data.count_conn);
-            } else {
-                console.log('do-get-basic failed：' + tp_error_msg(ret.code, ret.message));
-            }
-
-        },
-        function () {
-            console.log('can not connect to server.');
-        }
-    );
-
-    setTimeout($app.load_basic_info, 60 * 1000);
 };
 
 $app.init_sys_status_info = function (data) {
@@ -100,8 +83,6 @@ $app.init_sys_status_info = function (data) {
             }
         }
     };
-
-    console.log(axis_size_cfg);
 
     //=====================================
     // CPU
@@ -405,6 +386,48 @@ $app.init_sys_status_info = function (data) {
 
 };
 
+$app.update_stat_counter = function (data) {
+    if ($app.stat_counter.user === -1) {
+        $app.stat_counter.user = data.user;
+        $app.dom.count_user.text(data.user);
+    } else if ($app.stat_counter.user !== data.user) {
+        $app.stat_counter.user = data.user;
+        $app.dom.count_user.fadeOut(300, function () {
+            $app.dom.count_user.text(data.user).fadeIn(400);
+        });
+    }
+
+    if ($app.stat_counter.host === -1) {
+        $app.stat_counter.host = data.host;
+        $app.dom.count_host.text(data.host);
+    } else if ($app.stat_counter.host !== data.host) {
+        $app.stat_counter.host = data.host;
+        $app.dom.count_host.fadeOut(300, function () {
+            $app.dom.count_host.text(data.host).fadeIn(400);
+        });
+    }
+
+    if ($app.stat_counter.acc === -1) {
+        $app.stat_counter.acc = data.acc;
+        $app.dom.count_acc.text(data.acc);
+    } else if ($app.stat_counter.acc !== data.acc) {
+        $app.stat_counter.acc = data.acc;
+        $app.dom.count_acc.fadeOut(300, function () {
+            $app.dom.count_acc.text(data.acc).fadeIn(400);
+        });
+    }
+
+    if ($app.stat_counter.conn === -1) {
+        $app.stat_counter.conn = data.conn;
+        $app.dom.count_conn.text(data.conn);
+    } else if ($app.stat_counter.conn !== data.conn) {
+        $app.stat_counter.conn = data.conn;
+        $app.dom.count_conn.fadeOut(300, function () {
+            $app.dom.count_conn.text(data.conn).fadeIn(400);
+        });
+    }
+};
+
 $app.init_ws = function () {
     if ($app.ws !== null)
         delete $app.ws;
@@ -414,21 +437,25 @@ $app.init_ws = function () {
 
     $app.ws.onopen = function (e) {
         $app.ws.send('{"method": "request", "param": "sys_status"}');
-        // 订阅：
-        // $app.ws.send('{"method": "subscribe", "params": ["sys_status"]}');
+        $app.ws.send('{"method": "request", "param": "stat_counter"}');
     };
     $app.ws.onclose = function (e) {
-        // console.log('[ws] ws-on-close', e);
         setTimeout($app.init_ws, 5000);
     };
     $app.ws.onmessage = function (e) {
         var t = JSON.parse(e.data);
-        // console.log(t);
 
         if (t.method === 'request' && t.param === 'sys_status') {
             $app.init_sys_status_info(t.data);
             // 订阅系统状态信息
             $app.ws.send('{"method": "subscribe", "params": ["sys_status"]}');
+            return;
+        }
+
+        if (t.method === 'request' && t.param === 'stat_counter') {
+            $app.update_stat_counter(t.data);
+            // 订阅数量信息
+            $app.ws.send('{"method": "subscribe", "params": ["stat_counter"]}');
             return;
         }
 
@@ -462,6 +489,10 @@ $app.init_ws = function () {
             $app.bar_disk.setOption(
                 {series: [{data: $app.bar_disk_read}, {data: $app.bar_disk_write}]}
             );
+        }
+
+        if (t.method === 'subscribe' && t.param === 'stat_counter') {
+            $app.update_stat_counter(t.data);
         }
     };
 };

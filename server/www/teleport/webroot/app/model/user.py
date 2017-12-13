@@ -8,6 +8,7 @@ from app.base.logger import log
 from app.base.utils import tp_timestamp_utc_now, tp_generate_random
 from app.const import *
 from app.model import syslog
+from app.base.stats import tp_stats
 from app.logic.auth.password import tp_password_verify
 from app.logic.auth.oath import tp_oath_verify_code
 
@@ -204,6 +205,7 @@ def create_users(handler, user_list, success, failed):
 
     if len(name_list) > 0:
         syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "创建用户：{}".format('，'.join(name_list)))
+        tp_stats().user_counter_change(len(name_list))
 
 
 def create_user(handler, args):
@@ -240,6 +242,7 @@ def create_user(handler, args):
     _id = db.last_insert_id()
 
     syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "创建用户：{}".format(args['username']))
+    tp_stats().user_counter_change(1)
 
     return TPE_OK, _id
 
@@ -511,6 +514,8 @@ def remove_users(handler, users):
     #     return TPE_DATABASE
 
     syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除用户：{}".format('，'.join(name_list)))
+
+    tp_stats().user_counter_change(0 - len(name_list))
 
     return TPE_OK
 
