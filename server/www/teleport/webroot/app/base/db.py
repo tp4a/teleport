@@ -194,7 +194,7 @@ class TPDatabase:
             return None
 
     def query(self, sql, args=()):
-        log.d('[db] {}, {}\n'.format(sql, args))
+        # log.d('[db] {}, {}\n'.format(sql, args))
         # _start = datetime.datetime.utcnow().timestamp()
         ret = self._conn_pool.query(sql, args)
         # _end = datetime.datetime.utcnow().timestamp()
@@ -203,7 +203,7 @@ class TPDatabase:
 
     def exec(self, sql, args=()):
         # log.d('[db] {}\n'.format(sql, args))
-        print('[db]', sql, args)
+        # print('[db]', sql, args)
         # _start = datetime.datetime.utcnow().timestamp()
         ret = self._conn_pool.exec(sql, args)
         # _end = datetime.datetime.utcnow().timestamp()
@@ -211,9 +211,9 @@ class TPDatabase:
         return ret
 
     def transaction(self, sql_list):
-        log.d('[db] transaction\n')
-        for sql in sql_list:
-            log.d('[db]  * {}\n'.format(sql))
+        # log.d('[db] transaction\n')
+        # for sql in sql_list:
+        #     log.d('[db]  * {}\n'.format(sql))
 
         # _start = datetime.datetime.utcnow().timestamp()
         ret = self._conn_pool.transaction(sql_list)

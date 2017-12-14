@@ -41,7 +41,7 @@ class TPStats(object):
             val = {
                 't': t,
                 'cpu': {'u': 0, 's': 0},
-                'mem': {'u': 1, 't': 100},
+                'mem': {'u': 0, 't': 100},
                 'disk': {'r': 0, 'w': 0},
                 'net': {'r': 0, 's': 0}
             }

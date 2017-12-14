@@ -39,6 +39,8 @@ $app.init_sys_status_info = function (data) {
         type: 'time',
         boundaryGap: false,
         splitNumber: 10,
+        minInterval: 1000 * 60,
+        maxInterval: 1000 * 60,
         axisLine: {show: false},
         axisTick: {show: false},
         axisLabel: {
@@ -117,7 +119,7 @@ $app.init_sys_status_info = function (data) {
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
-                return params[0].name + '<br/>' + params[1].seriesName + ': ' + params[1].value[1] + '%<br/>' + params[0].seriesName + ': ' + params[0].value[1] + '%';
+                return params[0].name + '<br/>' + params[0].seriesName + ': ' + params[0].value[1] + '%<br/>' + params[1].seriesName + ': ' + params[1].value[1] + '%';
             },
             axisPointer: {
                 animation: false
@@ -348,7 +350,8 @@ $app.init_sys_status_info = function (data) {
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
-                return params[0].name + '<br/>' + params[1].seriesName + ': ' + tp_size2str(params[1].value[1], 2) + '<br/>' + params[0].seriesName + ': ' + tp_size2str(params[0].value[1], 2);
+                return params[0].name + '<br/>' + params[0].seriesName + ': ' + tp_size2str(params[0].value[1], 1) + '<br/>' + params[1].seriesName + ': ' + tp_size2str(params[1].value[1], 1);
+                //return params[0].name + '<br/>' + params[0].seriesName + ': ' + params[0].value[1] + '<br/>' + params[1].seriesName + ': ' + params[1].value[1];
             },
             axisPointer: {
                 animation: false
@@ -362,7 +365,36 @@ $app.init_sys_status_info = function (data) {
             ]
         },
         xAxis: axis_time_cfg,
-        yAxis: axis_size_cfg,
+        yAxis: {
+            type: 'value',
+            axisLine: {show: false},
+            axisTick: {show: false},
+            splitNumber: 5,
+            boundaryGap: [0, '20%'],
+            max: function (val) {
+                var t= Math.floor(val.max / 1000 + 0.9) * 1000;
+                console.log('max:', val.max, t);
+                return t;
+                //var t = tp_echarts_size(val.max).s;
+                //console.log(val, t);
+                //return t;
+
+            },
+            axisLabel: {
+                margin: 3,
+                fontSize: 11,
+                fontFamily: 'monospace',
+                formatter: function (value, index) {
+                    if (index === 0)
+                        return '';
+                    // return tp_size2str(value, 1);
+                    console.log('lab:', value);
+                    // return tp_size2str(value, 1);
+                    var t = tp_echarts_size(value);
+                    return ''+t.s+t.k;
+                }
+            }
+        },
         series: [
             {
                 name: '读取',
