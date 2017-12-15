@@ -45,6 +45,8 @@ $app.init_sys_status_info = function (data) {
         axisTick: {show: false},
         axisLabel: {
             margin: 3,
+            fontSize: 11,
+            fontFamily: 'Monaco, Lucida Console, Consolas, Courier',
             formatter: function (value, index) {
                 return tp_format_datetime_ms(tp_utc2local_ms(value), 'HH:mm');
             }
@@ -59,7 +61,9 @@ $app.init_sys_status_info = function (data) {
         // max: 100,
         boundaryGap: [0, '60%'],
         axisLabel: {
-            margin: 3,
+            margin: 5,
+            fontSize: 11,
+            fontFamily: 'Monaco, Lucida Console, Consolas, Courier',
             formatter: function (value, index) {
                 if (index === 0)
                     return '';
@@ -76,8 +80,8 @@ $app.init_sys_status_info = function (data) {
         boundaryGap: [0, '20%'],
         axisLabel: {
             margin: 3,
-            fontSize: 10,
-            fontFamily: 'Courier New',
+            fontSize: 11,
+            fontFamily: 'Monaco, Lucida Console, Consolas, Courier',
             formatter: function (value, index) {
                 if (index === 0)
                     return '';
@@ -119,7 +123,13 @@ $app.init_sys_status_info = function (data) {
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
-                return params[0].name + '<br/>' + params[0].seriesName + ': ' + params[0].value[1] + '%<br/>' + params[1].seriesName + ': ' + params[1].value[1] + '%';
+                var ret = [];
+                ret.push(params[0].name);
+                ret.push(params[0].seriesName + ': ' + params[0].value[1] + '%');
+                if(params.length > 1) {
+                    ret.push(params[1].seriesName + ': ' + params[1].value[1] + '%');
+                }
+                return ret.join('<br/>');
             },
             axisPointer: {
                 animation: false
@@ -206,7 +216,7 @@ $app.init_sys_status_info = function (data) {
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
-                return params[0].name + ': ' + params[0].value[1] + '%';
+                return params[0].name + '<br/>内存使用: ' + params[0].value[1] + '%';
             },
             axisPointer: {animation: false}
         },
@@ -219,7 +229,9 @@ $app.init_sys_status_info = function (data) {
             max: 100,
             // boundaryGap: [0, '60%'],
             axisLabel: {
-                margin: 3,
+                margin: 5,
+                fontSize: 11,
+                fontFamily: 'Monaco, Lucida Console, Consolas, Courier',
                 formatter: function (value, index) {
                     if (index === 0)
                         return '';
@@ -263,8 +275,8 @@ $app.init_sys_status_info = function (data) {
         $app.bar_net_sent.push({name: tp_format_datetime_ms(tp_utc2local_ms(data[i].t), 'HH:mm:ss'), value: [data[i].t, data[i].net.s]});
     }
 
-    var clr_net_recv = '#e2524c';
     var clr_net_sent = '#558c5a';
+    var clr_net_recv = '#e2524c';
 
     $app.bar_net = echarts.init(document.getElementById('bar-net'));
     $app.bar_net.setOption({
@@ -278,12 +290,18 @@ $app.init_sys_status_info = function (data) {
             }
         },
         useUTC: true,
-        color: [clr_net_recv, clr_net_sent],
+        color: [clr_net_sent, clr_net_recv],
         grid: grid_cfg,
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
-                return params[0].name + '<br/>' + params[1].seriesName + ': ' + tp_size2str(params[1].value[1], 2) + '<br/>' + params[0].seriesName + ': ' + tp_size2str(params[0].value[1], 2);
+                var ret = [];
+                ret.push(params[0].name);
+                ret.push(params[0].seriesName + ': ' + tp_size2str(params[0].value[1], 2));
+                if(params.length > 1) {
+                    ret.push(params[1].seriesName + ': ' + tp_size2str(params[1].value[1], 2));
+                }
+                return ret.join('<br/>');
             },
             axisPointer: {
                 animation: false
@@ -300,6 +318,13 @@ $app.init_sys_status_info = function (data) {
         yAxis: axis_size_cfg,
         series: [
             {
+                name: '发送', type: 'line', smooth: true, symbol: 'none', stack: 'b', showSymbol: false,
+                lineStyle: {
+                    normal: {width: 1}
+                },
+                data: $app.bar_net_sent
+            },
+            {
                 name: '接收',
                 type: 'line', smooth: true, symbol: 'none', stack: 'a', showSymbol: false,
                 lineStyle: {
@@ -308,13 +333,6 @@ $app.init_sys_status_info = function (data) {
                     }
                 },
                 data: $app.bar_net_recv
-            },
-            {
-                name: '发送', type: 'line', smooth: true, symbol: 'none', stack: 'b', showSymbol: false,
-                lineStyle: {
-                    normal: {width: 1}
-                },
-                data: $app.bar_net_sent
             }
         ]
     });
@@ -350,8 +368,13 @@ $app.init_sys_status_info = function (data) {
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
-                return params[0].name + '<br/>' + params[0].seriesName + ': ' + tp_size2str(params[0].value[1], 1) + '<br/>' + params[1].seriesName + ': ' + tp_size2str(params[1].value[1], 1);
-                //return params[0].name + '<br/>' + params[0].seriesName + ': ' + params[0].value[1] + '<br/>' + params[1].seriesName + ': ' + params[1].value[1];
+                var ret = [];
+                ret.push(params[0].name);
+                ret.push(params[0].seriesName + ': ' + tp_size2str(params[0].value[1], 2));
+                if(params.length > 1) {
+                    ret.push(params[1].seriesName + ': ' + tp_size2str(params[1].value[1], 2));
+                }
+                return ret.join('<br/>');
             },
             axisPointer: {
                 animation: false
@@ -365,36 +388,7 @@ $app.init_sys_status_info = function (data) {
             ]
         },
         xAxis: axis_time_cfg,
-        yAxis: {
-            type: 'value',
-            axisLine: {show: false},
-            axisTick: {show: false},
-            splitNumber: 5,
-            boundaryGap: [0, '20%'],
-            max: function (val) {
-                var t= Math.floor(val.max / 1000 + 0.9) * 1000;
-                console.log('max:', val.max, t);
-                return t;
-                //var t = tp_echarts_size(val.max).s;
-                //console.log(val, t);
-                //return t;
-
-            },
-            axisLabel: {
-                margin: 3,
-                fontSize: 11,
-                fontFamily: 'monospace',
-                formatter: function (value, index) {
-                    if (index === 0)
-                        return '';
-                    // return tp_size2str(value, 1);
-                    console.log('lab:', value);
-                    // return tp_size2str(value, 1);
-                    var t = tp_echarts_size(value);
-                    return ''+t.s+t.k;
-                }
-            }
-        },
+        yAxis: axis_size_cfg,
         series: [
             {
                 name: '读取',
@@ -511,7 +505,7 @@ $app.init_ws = function () {
             $app.bar_net_sent.shift();
             $app.bar_net_sent.push({name: tp_format_datetime_ms(tp_utc2local_ms(t.data.t), 'HH:mm:ss'), value: [t.data.t, t.data.net.s]});
             $app.bar_net.setOption(
-                {series: [{data: $app.bar_net_recv}, {data: $app.bar_net_sent}]}
+                {series: [{data: $app.bar_net_sent}, {data: $app.bar_net_recv}]}
             );
 
             $app.bar_disk_read.shift();

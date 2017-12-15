@@ -45,7 +45,7 @@ class TPWebSocketServer(object):
                 pass
 
     def on_message(self, callbacker, message):
-        print('got message', message)
+        # print('got message', message)
         try:
             req = json.loads(message)
         except:

@@ -94,39 +94,6 @@ function tp_size2str(size, precision) {
     return '' + s + ' ' + k;
 }
 
-function tp_echarts_size(size) {
-    var s = 0;
-    var k = '';
-    if (size < KB) {
-        s = size;
-        k = 'B';
-    }
-    else if (size < MB) {
-        s = Math.floor(size / KB);
-        k = 'KB'
-    }
-    else if (size < GB) {
-        s = Math.floor(size / MB);
-        k = 'MB'
-    }
-    else if (size < TB) {
-        s = Math.floor(size / GB);
-        k = 'GB'
-    }
-    else if (size < PB) {
-        s = Math.floor(size / TB);
-        k = 'TB'
-    }
-    else {
-        s = Math.floor(size / PB);
-        k = 'PB'
-    }
-
-    //s = Math.floor((s+999)/1000*1000);
-
-    return {s: s, k: k};
-}
-
 function tp_second2str(sec) {
     var _ret = '';
     if (sec >= SECONDS_PER_DAY) {
