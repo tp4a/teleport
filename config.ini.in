@@ -1,6 +1,6 @@
 [toolchain]
 #============================================
-# for windows
+# for Windows
 #============================================
 
 # Need wget to download necessary dependency files.
@@ -24,7 +24,7 @@ wget = C:\Program Files (x86)\wget\wget.exe
 
 
 # ============================================
-# for linux
+# for Linux and macOS
 # ============================================
 
 # if not set cmake path, default to '/usr/bin/cmake'
