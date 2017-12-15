@@ -31,6 +31,7 @@ class DatabaseInit:
             self._create_audit_map()
             self._create_syslog()
             self._create_record()
+            self._create_record_audit()
             self._make_builtin_data(sysadmin, email, password)
         except:
             log.e('[db] can not create and initialize database.\n')
@@ -127,7 +128,7 @@ class DatabaseInit:
         f.append('`auth_type` int(11) DEFAULT 0')
         # password: 登录密码（如果是LDAP账号则忽略此字段）
         f.append('`password` varchar(128) DEFAULT ""')
-        # oath_secret: 身份验证器密钥（使用核心服务加密存储）
+        # oath_secret: 身份验证器密钥
         f.append('`oath_secret` varchar(64) DEFAULT ""')
         # state: 状态，1=正常，2=禁用，3=临时锁定
         f.append('`state` int(3) DEFAULT 1')
@@ -165,6 +166,7 @@ class DatabaseInit:
 
     def _create_user_rpt(self):
         """ 用户忘记密码时重置需要进行验证的token，24小时有效
+        rpt = Reset Password Token
         """
         f = list()
 
@@ -178,7 +180,7 @@ class DatabaseInit:
         f.append('`create_time` int(11) DEFAULT 0')
 
         self._db_exec(
-            '创建用户找回密码表...',
+            '创建用户密码重置表...',
             'CREATE TABLE `{}user_rpt` ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
@@ -745,6 +747,9 @@ class DatabaseInit:
         # id: 自增主键
         f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
 
+        # audited: 是否已审查
+        f.append('`audited` int(3) DEFAULT 0')
+
         # sid: 会话ID
         f.append('`sid` varchar(32) DEFAULT ""')
 
@@ -783,13 +788,39 @@ class DatabaseInit:
         f.append('`protocol_sub_type` int(11) DEFAULT 0')
 
         # time_begin: 会话开始时间
-        f.append('`time_begin` int(11)')
+        f.append('`time_begin` int(11) DEFAULT 0')
         # time_end: 会话结束时间
         f.append('`time_end` int(11) DEFAULT 0')
 
         self._db_exec(
             '创建运维录像日志表...',
             'CREATE TABLE `{}record` ({});'.format(self.db.table_prefix, ','.join(f))
+        )
+
+    def _create_record_audit(self):
+        """ 运维录像日志审计操作及结果 """
+        f = list()
+
+        # id: 自增主键
+        f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
+        # record_id: 运维日志ID
+        f.append('`record_id` int(11) DEFAULT 0')
+        # user_id: 审计者ID
+        f.append('`user_id` int(11) DEFAULT 0')
+        # user_name: 审计者用户名
+        f.append('`user_username` varchar(32) DEFAULT ""')
+        # user_surname: 审计者用户姓名
+        f.append('`user_surname` varchar(64) DEFAULT ""')
+        # ts: 审计时间 timestamp
+        f.append('`ts` int(11) DEFAULT 0')
+        # ret_code: 审计结果
+        f.append('`ret_code` TEXT')
+        # ret_desc: 审计结果说明
+        f.append('`ret_desc` TEXT')
+
+        self._db_exec(
+            '创建运维审计操作表...',
+            'CREATE TABLE `{}record_audit` ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
     def _make_builtin_data(self, sysadmin, email, password):

@@ -63,8 +63,8 @@ class TPDatabase:
                 cfg.set_default('database::sqlite-file', os.path.join(cfg.data_path, 'db', 'teleport.db'))
             if not self._init_sqlite(cfg.database.sqlite_file):
                 return False
-            # if self.need_create:
-            #     return True
+            if self.need_create:
+                return True
         elif 'mysql' == cfg.database.type:
             if not self._init_mysql(cfg.database.mysql_host, cfg.database.mysql_port,
                                     cfg.database.mysql_db, cfg.database.mysql_prefix,
@@ -81,6 +81,8 @@ class TPDatabase:
             self.connected = True
 
     def check_status(self):
+        if self.need_create:
+            return True
         # 看看数据库中是否存在指定的数据表（如果不存在，可能是一个空数据库文件），则可能是一个新安装的系统
         # ret = self.query('SELECT COUNT(*) FROM `sqlite_master` WHERE `type`="table" AND `name`="{}account";'.format(self._table_prefix))
         ret = self.is_table_exists('{}config'.format(self._table_prefix))
@@ -194,6 +196,8 @@ class TPDatabase:
             return None
 
     def query(self, sql, args=()):
+        if self.need_create:
+            return None
         # log.d('[db] {}, {}\n'.format(sql, args))
         # _start = datetime.datetime.utcnow().timestamp()
         ret = self._conn_pool.query(sql, args)
@@ -388,9 +392,9 @@ class TPSqlitePool(TPDatabasePool):
         self._db_file = db_file
 
     def _do_connect(self):
-        if not os.path.exists(self._db_file):
-            log.e('[sqlite] can not connect, database file not exists.\n')
-            return None
+        # if not os.path.exists(self._db_file):
+        #     log.e('[sqlite] can not connect, database file not exists.\n')
+        #     return None
 
         try:
             return sqlite3.connect(self._db_file)
