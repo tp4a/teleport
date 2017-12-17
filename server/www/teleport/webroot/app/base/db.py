@@ -122,6 +122,11 @@ class TPDatabase:
         self._conn_pool = TPSqlitePool(db_file)
 
         if not os.path.exists(db_file):
+
+            p = os.path.dirname(os.path.abspath(db_file))
+            if not os.path.exists(p):
+                os.makedirs(p)
+
             log.w('database need create.\n')
             self.need_create = True
             return True

@@ -34,7 +34,7 @@ core-server-rpc=http://127.0.0.1:52080/rpc
 ; database in use, should be sqlite/mysql, default to sqlite.
 ; type=sqlite
 
-; sqlite-file=/var/lib/teleport/data/ts_db.db
+; sqlite-file=/usr/local/teleport/data/db/teleport.db
 
 ; mysql-host=127.0.0.1
 
