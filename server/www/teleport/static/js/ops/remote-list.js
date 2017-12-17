@@ -2,9 +2,8 @@
 
 $app.on_init = function (cb_stack) {
     $app.dom = {
-        btn_refresh_host: $('#btn-refresh-host'),
-        btn_add_user: $('#btn-add-host'),
-        chkbox_host_select_all: $('#table-host-select-all')
+        btn_refresh_host: $('#btn-refresh-host')
+        // box_rdp_option: $('#rdp-options')
     };
 
     cb_stack
@@ -101,6 +100,8 @@ $app.create_controls = function (cb_stack) {
     //-------------------------------
     // 对话框
     //-------------------------------
+    $app.dlg_rdp_options = $app.create_dlg_rdp_options();
+    cb_stack.add($app.dlg_rdp_options.init);
 
     //-------------------------------
     // 页面控件事件绑定
@@ -109,19 +110,19 @@ $app.create_controls = function (cb_stack) {
         $app.table_host.load_data();
     });
 
+    // $app.dom.box_rdp_option.mouseleave(function(){
+    //     console.log('---mouseleave');
+    //     $app.dom.box_rdp_option.hide();
+    // });
+
     cb_stack.exec();
 };
 
 $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
 
-    // if (col_key === 'chkbox') {
-    //     cell_obj.find('[data-check-box]').click(function () {
-    //         $app.check_host_all_selected();
-    //     });
-    // } else
     if (col_key === 'action') {
         // 绑定系统选择框事件
-        cell_obj.find('[data-action]').click(function () {
+        cell_obj.find('[data-action]').click(function (e) {
             var action = $(this).attr('data-action');
             var protocol_sub_type = $(this).attr('data-sub-protocol');
             var uni_id = $(this).attr('data-id');
@@ -130,6 +131,9 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
 
             if (action === 'rdp') {
                 $app.connect_remote(uni_id, TP_PROTOCOL_TYPE_RDP, TP_PROTOCOL_TYPE_RDP_DESKTOP);
+            } else if (action === 'rdp-option') {
+                $app.dlg_rdp_options.show(e.pageX, e.pageY, uni_id, TP_PROTOCOL_TYPE_RDP, TP_PROTOCOL_TYPE_RDP_DESKTOP);
+                //$app.connect_remote(uni_id, TP_PROTOCOL_TYPE_SSH, protocol_sub_type);
             } else if (action === 'ssh') {
                 $app.connect_remote(uni_id, TP_PROTOCOL_TYPE_SSH, protocol_sub_type);
             } else if (action === 'telnet') {
@@ -138,30 +142,6 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
         });
     }
 };
-
-// $app.check_host_all_selected = function (cb_stack) {
-//     var _all_checked = true;
-//     var _objs = $('#' + $app.table_host.dom_id + ' tbody').find('[data-check-box]');
-//     if (_objs.length === 0) {
-//         _all_checked = false;
-//     } else {
-//         $.each(_objs, function (i, _obj) {
-//             if (!$(_obj).is(':checked')) {
-//                 _all_checked = false;
-//                 return false;
-//             }
-//         });
-//     }
-//
-//     if (_all_checked) {
-//         $app.dom.chkbox_host_select_all.prop('checked', true);
-//     } else {
-//         $app.dom.chkbox_host_select_all.prop('checked', false);
-//     }
-//
-//     if (cb_stack)
-//         cb_stack.exec();
-// };
 
 $app.on_table_host_render_created = function (render) {
     // render.filter_role = function (header, title, col) {
@@ -290,32 +270,43 @@ $app.on_table_host_render_created = function (render) {
             } else {
                 if (acc.protocol_type === TP_PROTOCOL_TYPE_RDP) {
                     if ((acc.policy_.flag_rdp & TP_FLAG_RDP_DESKTOP) !== 0) {
-                        act_btn.push('<li class="remote-action-btn">');
-                        act_btn.push('<button type="button" class="btn btn-sm btn-primary" data-action="rdp" data-id="' + acc.uni_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_RDP_DESKTOP + '"><i class="fa fa-desktop fa-fw"></i> RDP</button>');
-                        act_btn.push('</li>');
+                        act_btn.push('<div class="btn-group btn-group-sm">');
+                        act_btn.push('<button type="button" class="btn btn-primary" data-action="rdp" data-id="' + acc.uni_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_RDP_DESKTOP + '"><i class="fa fa-desktop fa-fw"></i> RDP</button>');
+                        // act_btn.push('<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">');
+                        act_btn.push('<a href="javascript:;" class="btn btn-primary dropdown-toggle" data-action="rdp-option" data-id="' + acc.uni_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_RDP_DESKTOP + '">');
+                        //act_btn.push('<span class="caret"></span>');
+                        act_btn.push('<i class="fa fa-cog"></i>');
+                        act_btn.push('</a>');
+                        // act_btn.push('<ul class="dropdown-menu">');
+                        // act_btn.push('<li><a href="#">Another action</a></li>');
+                        // act_btn.push('<li><a href="#"><i class="fa fa-desktop fa-fw"></i> 连接</a></li>');
+                        // act_btn.push('<li role="separator" class="divider"></li>');
+                        // // act_btn.push('<li><a href="#"><i class="fa fa-desktop fa-fw"></i> Console模式</a></li>');
+                        // // act_btn.push('<li><input type="checkbox">Console模式</input></li>');
+                        // act_btn.push('<li><a href="javascript:;" class="tp-checkbox tp-editable">Console模式</a></li>');
+                        // act_btn.push('<li role="separator" class="divider"></li>');
+                        // act_btn.push('<li><a href="#"><i class="fa fa-desktop fa-fw"></i> 连接</a></li>');
+                        // act_btn.push('</ul>');
+                        act_btn.push('</div>');
                     }
                 } else if (acc.protocol_type === TP_PROTOCOL_TYPE_SSH) {
+                    act_btn.push('<div class="btn-group btn-group-sm">');
                     if ((acc.policy_.flag_ssh & TP_FLAG_SSH_SHELL) !== 0) {
-                        act_btn.push('<li class="remote-action-btn">');
-                        act_btn.push('<button type="button" class="btn btn-sm btn-success" data-action="ssh" data-id="' + acc.uni_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_SSH_SHELL + '"><i class="fa fa-keyboard-o fa-fw"></i> SSH</button>');
-                        act_btn.push('</li>');
+                        act_btn.push('<button type="button" class="btn btn-success" data-action="ssh" data-id="' + acc.uni_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_SSH_SHELL + '"><i class="fa fa-keyboard-o fa-fw"></i> SSH</button>');
                     }
 
                     if ((acc.policy_.flag_ssh & TP_FLAG_SSH_SFTP) !== 0) {
-                        act_btn.push('<li class="remote-action-btn">');
-                        act_btn.push('<button type="button" class="btn btn-sm btn-info" data-action="ssh" data-id="' + acc.uni_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_SSH_SFTP + '"><i class="fa fa-upload fa-fw"></i> SFTP</button>');
-                        act_btn.push('</li>');
+                        act_btn.push('<button type="button" class="btn btn-info" data-action="ssh" data-id="' + acc.uni_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_SSH_SFTP + '"><i class="fa fa-upload fa-fw"></i> SFTP</button>');
                     }
+                    act_btn.push('</div>');
                 } else if (acc.protocol_type === TP_PROTOCOL_TYPE_TELNET) {
-                    act_btn.push('<li class="remote-action-btn">');
-                    act_btn.push('<button type="button" class="btn btn-sm btn-success" data-action="telnet" data-id="' + acc.uni_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_TELNET_SHELL + '"><i class="fa fa-keyboard-o fa-fw"></i> TELNET</button>');
-                    act_btn.push('</li>');
+                    act_btn.push('<button type="button" class="btn btn-warning" data-action="telnet" data-id="' + acc.uni_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_TELNET_SHELL + '"><i class="fa fa-keyboard-o fa-fw"></i> TELNET</button>');
                 }
             }
 
-            h.push('<div class="remote-action-group" id =' + "account-id-" + acc.id + '"><ul>');
+            h.push('<div class="remote-action-group" id =' + "account-id-" + acc.id + '">');
             h.push(act_btn.join(''));
-            h.push('</ul></div>');
+            h.push('</div>');
         }
         return h.join('');
     };
@@ -386,31 +377,126 @@ $app.on_table_host_header_created = function (header) {
             .exec();
     });
 
-    // TODO: 当过滤器不是默认值时，让“重置过滤器按钮”有呼吸效果，避免用户混淆 - 实验性质
-    // var t1 = function(){
-    //     $app.dom.btn_table_host_reset_filter.fadeTo(1000, 1.0, function(){
-    //         $app.dom.btn_table_host_reset_filter.fadeTo(1000, 0.2, t1);
-    //     });
-    // };
-    // $app.dom.btn_table_host_reset_filter.fadeTo(1000, 0.2, t1);
-
     // 表格内嵌过滤器的事件绑定在这时进行（也可以延期到整个表格创建完成时进行）
     header._table_ctrl.get_filter_ctrl('search').on_created();
-    // header._table_ctrl.get_filter_ctrl('role').on_created();
-    // header._table_ctrl.get_filter_ctrl('state').on_created();
 };
 
-$app.get_selected_user = function (tbl) {
-    var users = [];
-    var _objs = $('#' + $app.table_host.dom_id + ' tbody tr td input[data-check-box]');
-    $.each(_objs, function (i, _obj) {
-        if ($(_obj).is(':checked')) {
-            var _row_data = tbl.get_row(_obj);
-            // _all_checked = false;
-            users.push(_row_data.id);
+$app.create_dlg_rdp_options = function () {
+    var dlg = {};
+    dlg.dom_id = 'dlg-rdp-options';
+    dlg.uni_id = '';
+    dlg.protocol_type = TP_PROTOCOL_TYPE_RDP;
+    dlg.protocol_sub_type = TP_PROTOCOL_TYPE_RDP_DESKTOP;
+    dlg.rdp_w = 0;
+    dlg.rdp_h = 0;
+    dlg.rdp_console = false;
+
+    dlg.dom = {
+        dialog: $('#' + dlg.dom_id),
+        screen_size: $('#' + dlg.dom_id + ' [data-field="screen-size"]'),
+        console_mode: $('#' + dlg.dom_id + ' input[data-field="console-mode"]'),
+        btn_connect: $('#' + dlg.dom_id + ' [data-field="do-rdp-connect"]')
+    };
+    dlg.timer = null;
+
+    dlg.init = function (cb_stack) {
+        dlg.dom.dialog.mouseleave(function () {
+            dlg.timer = setTimeout(function () {
+                dlg.hide();
+            }, 800);
+        });
+        dlg.dom.dialog.mouseenter(function () {
+            if (dlg.timer !== null) {
+                clearTimeout(dlg.timer);
+                dlg.timer = null;
+            }
+        });
+
+        dlg.dom.btn_connect.click(function () {
+            dlg.hide();
+
+            var _size_obj = $('#' + dlg.dom_id + ' input[name="screen-size"]:checked');
+            var _console = dlg.dom.console_mode.is(':checked');
+            var _w = parseInt(_size_obj.attr('data-w'));
+            var _h = parseInt(_size_obj.attr('data-h'));
+
+            dlg.rdp_w = _w;
+            dlg.rdp_h = _h;
+            Cookies.set('rdp_options', {w: _w, h: _h, 'c': _console}, {path: '/ops/remote'});
+
+            $app.connect_remote(dlg.uni_id, dlg.protocol_type, dlg.protocol_sub_type);
+        });
+
+        var ops = Cookies.getJSON('rdp_options');
+        dlg.rdp_w = 0;
+        dlg.rdp_h = 0;
+        dlg.rdp_console = false;
+        if (!_.isUndefined(ops)) {
+            dlg.rdp_w = ops.w;
+            dlg.rdp_h = ops.h;
+            dlg.rdp_console = ops.c;
         }
-    });
-    return users;
+        if (_.isUndefined(dlg.rdp_w) || _.isUndefined(dlg.rdp_h)) {
+            dlg.rdp_w = 0;
+            dlg.rdp_h = 0;
+        }
+        if (_.isUndefined(dlg.rdp_console))
+            dlg.rdp_console = false;
+
+        var ss = [
+            {w: 800, h: 600},
+            {w: 1024, h: 768},
+            {w: 1280, h: 1024},
+            {w: 1366, h: 768},
+            {w: 1440, h: 900}
+        ];
+
+        var h = [];
+        h.push('<div class="radio">');
+        h.push('<div><label><input type="radio" name="screen-size" data-w="0" data-h="0"');
+        if (dlg.rdp_w === 0 && dlg.rdp_h === 0)
+            h.push(' checked');
+        h.push('> 全屏</label></div>');
+
+        for (var i = 0; i < ss.length; ++i) {
+            var _w = ss[i].w;
+            var _h = ss[i].h;
+            h.push('<div><label><input type="radio" name="screen-size" data-w="'+_w+'" data-h="'+_h+'"');
+            if (dlg.rdp_w === _w && dlg.rdp_h === _h)
+                h.push(' checked');
+            h.push('> ' + _w + ' x ' + _h + '</label></div>');
+        }
+        h.push('</div>');
+        dlg.dom.screen_size.html($(h.join('')));
+
+        if(dlg.rdp_console)
+            dlg.dom.console_mode.prop('checked', true);
+
+        cb_stack.exec();
+    };
+
+    dlg.show = function (x, y, uni_id, protocol_type, protocol_sub_type) {
+        if (dlg.timer !== null) {
+            clearTimeout(dlg.timer);
+            dlg.timer = null;
+        }
+
+        dlg.uni_id = uni_id;
+        dlg.protocol_type = protocol_type;
+        dlg.protocol_sub_type = protocol_sub_type;
+
+        var w = dlg.dom.dialog.width();
+        x -= w / 3;
+        y -= 12;
+        dlg.dom.dialog.css({left: x, top: y});
+        dlg.dom.dialog.fadeIn();
+    };
+
+    dlg.hide = function () {
+        dlg.dom.dialog.fadeOut();
+    };
+
+    return dlg;
 };
 
 $app.connect_remote = function (uni_id, protocol_type, protocol_sub_type) {
@@ -418,7 +504,10 @@ $app.connect_remote = function (uni_id, protocol_type, protocol_sub_type) {
         {
             auth_id: uni_id,
             protocol_type: protocol_type,
-            protocol_sub_type: protocol_sub_type
+            protocol_sub_type: protocol_sub_type,
+            rdp_width: $app.dlg_rdp_options.rdp_w,
+            rdp_height: $app.dlg_rdp_options.rdp_h,
+            rdp_console: $app.dlg_rdp_options.rdp_console
         },
         function () {
             // func_success

@@ -27,23 +27,24 @@
                 <button id="btn-refresh-host" class="btn btn-sm btn-default"><i class="fa fa-rotate-right fa-fw"></i> 刷新列表</button>
             </div>
             <div class="table-extend-cell table-extend-cell-right group-actions">
-##                 <button id="btn-add-host" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 添加主机</button>
+                ##                 <button id="btn-add-host" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 添加主机</button>
             </div>
         </div>
 
         <table id="table-host" class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
 
         <div class="table-extend-area">
-##             <div class="table-extend-cell checkbox-select-all"><input id="table-host-select-all" type="checkbox"/></div>
-##             <div class="table-extend-cell group-actions">
-##                 <div class="btn-group" role="group">
-##                     ##                     <button id="btn-edit-host" type="button" class="btn btn-default"><i class="fa fa-edit fa-fw"></i> 编辑</button>
-##
-##                     <button id="btn-lock-host" type="button" class="btn btn-default"><i class="fa fa-lock fa-fw"></i> 禁用</button>
-##                     <button id="btn-unlock-host" type="button" class="btn btn-default"><i class="fa fa-unlock fa-fw"></i> 解禁</button>
-##                     <button id="btn-remove-host" type="button" class="btn btn-default"><i class="fa fa-times-circle fa-fw"></i> 删除</button>
-##                 </div>
-##             </div>
+            ##             <div class="table-extend-cell checkbox-select-all"><input id="table-host-select-all" type="checkbox"/></div>
+            ##             <div class="table-extend-cell group-actions">
+            ##                 <div class="btn-group" role="group">
+            ##                     ##                     <button id="btn-edit-host" type="button" class="btn btn-default"><i class="fa fa-edit fa-fw"></i> 编辑</button>
+            ##
+            ##                     <button id="btn-lock-host" type="button" class="btn btn-default"><i class="fa fa-lock fa-fw"></i> 禁用</button>
+            ##                     <button id="btn-unlock-host" type="button" class="btn btn-default"><i class="fa fa-unlock fa-fw"></i> 解禁</button>
+            ##                     <button id="btn-remove-host" type="button" class="btn btn-default"><i class="fa fa-times-circle fa-fw"></i> 删除</button>
+            ##                 </div>
+            ##             </div>
+
             <div class="table-extend-cell table-item-counter">
                 <ol id="table-host-paging"></ol>
             </div>
@@ -71,7 +72,45 @@
 
 
 <%block name="extend_content">
+    <div id="dlg-rdp-options" class="rdp-options">
+        <div class="title">RDP连接选项</div>
+        <div class="item" data-field="screen-size">
+            ##             屏幕尺寸：
+            ##             <select data-field="screen-size">
+            ##                 <option value="0">全屏</option>
+            ##                 <option value="800x600">800x600</option>
+            ##                 <option value="1024x768">1024x768</option>
+            ##                 <option value="1280x1024">1280x1024</option>
+            ##                 <option value="1366x768">1366x768</option>
+            ##                 <option value="1440x900">1440x900</option>
+            ##                 <option value="1600x1024">1600x1024</option>
+            ##             </select>
 
+            <div class="radio">
+                <div><label><input type="radio" name="screen-size" id="ss-800x600" checked> 800 x 600</label></div>
+                <div><label><input type="radio" name="screen-size" id="ss-1024x768"> 1024 x 768</label></div>
+            </div>
+        </div>
+
+
+        ##         <div class="item"><a href="javascript:;" data-field="allow-clipboard" class="tp-checkbox tp-editable">允许映射剪贴板</a></div>
+        ##         <div class="item"><a href="javascript:;" class="tp-checkbox tp-editable">允许映射本地磁盘</a></div>
+
+        <hr/>
+        <div class="item">
+            ##             <a href="javascript:;" data-field="console-mode" class="tp-checkbox tp-editable">Console模式</a>
+
+            <div class="checkbox">
+                <label><input type="checkbox" data-field="console-mode"> Console模式</label>
+            </div>
+        </div>
+        <hr/>
+        <div class="item">
+            <div class="center">
+                <button type="button" data-field="do-rdp-connect" class="btn btn-sm btn-primary"><i class="fa fa-desktop fa-fw"></i> 开始连接</button>
+            </div>
+        </div>
+    </div>
 </%block>
 
 ## <%block name="embed_js">

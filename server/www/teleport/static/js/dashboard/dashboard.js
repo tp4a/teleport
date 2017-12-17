@@ -57,11 +57,8 @@ $app.init_sys_status_info = function (data) {
         type: 'value',
         axisLine: {show: false},
         axisTick: {show: false},
-        // min: 0,
-        // max: 100,
-        boundaryGap: [0, '60%'],
+        boundaryGap: [0, '70%'],
         axisLabel: {
-            margin: 5,
             fontSize: 11,
             fontFamily: 'Monaco, Lucida Console, Consolas, Courier',
             formatter: function (value, index) {
@@ -86,6 +83,7 @@ $app.init_sys_status_info = function (data) {
                 if (index === 0)
                     return '';
                 return tp_size2str(value, 1);
+                // return tp_echarts_size(value).val;
             }
         }
     };
@@ -126,7 +124,7 @@ $app.init_sys_status_info = function (data) {
                 var ret = [];
                 ret.push(params[0].name);
                 ret.push(params[0].seriesName + ': ' + params[0].value[1] + '%');
-                if(params.length > 1) {
+                if (params.length > 1) {
                     ret.push(params[1].seriesName + ': ' + params[1].value[1] + '%');
                 }
                 return ret.join('<br/>');
@@ -298,7 +296,7 @@ $app.init_sys_status_info = function (data) {
                 var ret = [];
                 ret.push(params[0].name);
                 ret.push(params[0].seriesName + ': ' + tp_size2str(params[0].value[1], 2));
-                if(params.length > 1) {
+                if (params.length > 1) {
                     ret.push(params[1].seriesName + ': ' + tp_size2str(params[1].value[1], 2));
                 }
                 return ret.join('<br/>');
@@ -371,7 +369,7 @@ $app.init_sys_status_info = function (data) {
                 var ret = [];
                 ret.push(params[0].name);
                 ret.push(params[0].seriesName + ': ' + tp_size2str(params[0].value[1], 2));
-                if(params.length > 1) {
+                if (params.length > 1) {
                     ret.push(params[1].seriesName + ': ' + tp_size2str(params[1].value[1], 2));
                 }
                 return ret.join('<br/>');

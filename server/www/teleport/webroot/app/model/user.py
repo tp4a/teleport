@@ -58,8 +58,6 @@ def login(handler, username, password=None, oath_code=None):
         #     syslog.sys_log({'username': username, 'surname': username}, handler.request.remote_ip, TPE_NOT_EXISTS, '用户身份验证失败，用户`{}`不存在'.format(username))
         return err, None
 
-    print(user_info)
-
     if user_info.privilege == 0:
         # 尚未为此用户设置角色
         return TPE_PRIVILEGE, None

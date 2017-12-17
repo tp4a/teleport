@@ -104,12 +104,19 @@ $assist.do_teleport = function (args, func_success, func_error) {
                     teleport_port: teleport_port,
                     remote_host_ip: remote_host_ip,
                     // remote_host_port: args.host_port,
-                    size: 3, //parseInt(args.size),
-                    console: 0, //args.console,
+                    // rdp_size: args.rdp_size,
+                    // rdp_console: args.rdp_console,
                     session_id: session_id,
                     protocol_type: parseInt(args.protocol_type),
                     protocol_sub_type: parseInt(args.protocol_sub_type)
                 };
+
+                if(args.protocol_type === TP_PROTOCOL_TYPE_RDP) {
+                    data.rdp_width = args.rdp_width;
+                    data.rdp_height = args.rdp_height;
+                    data.rdp_console = args.rdp_console;
+                }
+
                 // console.log('---', data);
                 var args_ = encodeURIComponent(JSON.stringify(data));
                 $.ajax({

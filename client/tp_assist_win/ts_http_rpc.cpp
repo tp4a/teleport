@@ -544,7 +544,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	}
 
 	// 判断参数是否正确
-	if (!jsRoot["teleport_ip"].isString() || !jsRoot["size"].isNumeric()
+	if (!jsRoot["teleport_ip"].isString()
 		|| !jsRoot["teleport_port"].isNumeric() || !jsRoot["remote_host_ip"].isString()
 		|| !jsRoot["session_id"].isString() || !jsRoot["protocol_type"].isNumeric() || !jsRoot["protocol_sub_type"].isNumeric()
 		)
@@ -553,27 +553,14 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		return;
 	}
 
+	int pro_type = jsRoot["protocol_type"].asUInt();
 	int pro_sub = jsRoot["protocol_sub_type"].asInt();
 
 	ex_astr teleport_ip = jsRoot["teleport_ip"].asCString();
 	int teleport_port = jsRoot["teleport_port"].asUInt();
 
-	int windows_size = 3;
-	if (jsRoot["size"].isNull())
-		windows_size = 3;
-	else
-		windows_size = jsRoot["size"].asUInt();
-
-	int console = 0;
-	if (jsRoot["console"].isNull())
-		console = 0;
-	else
-		console = jsRoot["console"].asUInt();
-
 	ex_astr real_host_ip = jsRoot["remote_host_ip"].asCString();
 	ex_astr sid = jsRoot["session_id"].asCString();
-
-	int pro_type = jsRoot["protocol_type"].asUInt();
 
 	ex_wstr w_exe_path;
 	WCHAR w_szCommandLine[MAX_PATH] = { 0 };
@@ -592,6 +579,40 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 	if (pro_type == TP_PROTOCOL_TYPE_RDP)
 	{
+		int rdp_w = 800;
+		int rdp_h = 640;
+		bool rdp_console = false;
+
+		if (!jsRoot["rdp_width"].isNull()) {
+			if (jsRoot["rdp_width"].isNumeric()) {
+				rdp_w = jsRoot["rdp_width"].asUInt();
+			}
+			else {
+				_create_json_ret(buf, TPE_PARAM);
+				return;
+			}
+		}
+
+		if (!jsRoot["rdp_height"].isNull()) {
+			if (jsRoot["rdp_height"].isNumeric()) {
+				rdp_h = jsRoot["rdp_height"].asUInt();
+			}
+			else {
+				_create_json_ret(buf, TPE_PARAM);
+				return;
+			}
+		}
+
+		if (!jsRoot["rdp_console"].isNull()) {
+			if (jsRoot["rdp_console"].isBool()) {
+				rdp_console = jsRoot["rdp_console"].asBool();
+			}
+			else {
+				_create_json_ret(buf, TPE_PARAM);
+				return;
+			}
+		}
+
 		//==============================================
 		// RDP
 		//==============================================
@@ -816,41 +837,25 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 		ex_wstr rdp_name = g_cfg.rdp_name;
 		if (rdp_name == L"mstsc") {
-			int width = 800;
-			int higth = 600;
+			int width = 0;
+			int higth = 0;
 			int cx = 0;
 			int cy = 0;
 
 			int display = 1;
 			int iWidth = GetSystemMetrics(SM_CXSCREEN);
 			int iHeight = GetSystemMetrics(SM_CYSCREEN);
-			switch (windows_size)
-			{
-			case 0:
+
+			if (rdp_w == 0 || rdp_h == 0) {
 				//全屏
 				width = iWidth;
 				higth = iHeight;
 				display = 2;
-				break;
-			case 1:
-				width = 800;
-				higth = 600;
+			}
+			else {
+				width = rdp_w;
+				higth = rdp_h;
 				display = 1;
-				break;
-			case 2:
-				width = 1024;
-				higth = 768;
-				display = 1;
-				break;
-			case 3:
-				width = 1280;
-				higth = 1024;
-				display = 1;
-				break;
-			default:
-				width = 800;
-				higth = 600;
-				break;
 			}
 
 			cx = (iWidth - width) / 2;
@@ -864,15 +869,16 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				cy = 0;
 			}
 
-			int split_pos = sid.length() - 2;
-			std::string real_sid = sid.substr(0, split_pos);
+			char* sz_console = "0";
+			if (rdp_console)
+				sz_console = "1";
 
 			char sz_rdp_file_content[4096] = { 0 };
 			sprintf_s(sz_rdp_file_content, rdp_content.c_str(),
-				console, display, width, higth
-				, cx, cy, cx + width + 20, cy + higth + 40
+				sz_console, display, width, higth
+				, cx, cy, cx + width + 100, cy + higth + 100
 				, teleport_ip.c_str(), teleport_port
-				, real_sid.c_str()
+				, sid.c_str()
 				);
 
 			char sz_file_name[MAX_PATH] = { 0 };
@@ -884,10 +890,8 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				_create_json_ret(buf, TPE_FAILED);
 				return;
 			}
-			ex_wstr w_s_id;
-			ex_astr2wstr(real_sid, w_s_id);
 
-			ex_astr temp_host_ip = real_host_ip;// replace_all_distinct(real_host_ip, ("."), "-");
+			ex_astr temp_host_ip = real_host_ip;
 			ex_replace_all(temp_host_ip, ".", "-");
 
 			sprintf_s(sz_file_name, ("%s%s.rdp"), temp_path, temp_host_ip.c_str());
@@ -908,28 +912,21 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			ex_replace_all(w_exe_path, _T("{tmp_rdp_file}"), tmp_rdp_file);
 		}
 		else if (g_cfg.rdp_name == L"freerdp") {
-			wchar_t* w_screen = NULL;
+			ex_wstr w_screen;
 
-			switch (windows_size)
-			{
-			case 0: //全屏
+			if (rdp_w == 0 || rdp_h == 0) {
+				//全屏
 				w_screen = _T("/f");
-				break;
-			case 2:
-				w_screen = _T("/size:1024x768");
-				break;
-			case 3:
-				w_screen = _T("/size:1280x1024");
-				break;
-			case 1:
-			default:
-				w_screen = _T("/size:800x600");
-				break;
+			}
+			else {
+				char sz_size[64] = {0};
+				ex_strformat(sz_size, 63, "/size:%dx%d", rdp_w, rdp_h);
+				ex_astr2wstr(sz_size, w_screen);
 			}
 
 			wchar_t* w_console = NULL;
 
-			if (console != 0)
+			if (rdp_console)
 			{
 				w_console = L"/admin";
 			}
@@ -938,18 +935,6 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				w_console = L"";
 			}
 
-			int split_pos = sid.length() - 2;
-			std::string real_sid = sid.substr(0, split_pos);
-			std::string str_pwd_len = sid.substr(split_pos, sid.length());
-			int n_pwd_len = strtol(str_pwd_len.c_str(), NULL, 16);
-			n_pwd_len -= real_sid.length();
-			WCHAR w_szPwd[256] = { 0 };
-			for (int i = 0; i < n_pwd_len; i++)
-			{
-				w_szPwd[i] = '*';
-			}
-
-			ex_astr2wstr(real_sid, w_sid);
 			w_exe_path += L" /gdi:sw"; // 使用软件渲染，gdi:hw使用硬件加速，但是会出现很多黑块（录像回放时又是正常的！）
 			w_exe_path += L" -grab-keyboard"; // 防止启动FreeRDP后，失去本地键盘响应，必须得先最小化一下FreeRDP窗口（不过貌似不起作用）
 
