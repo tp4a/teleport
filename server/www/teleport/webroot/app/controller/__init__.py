@@ -172,6 +172,16 @@ controllers = [
     (r'/audit/record', audit.RecordHandler),
     #  - [json] 审计页面（录像列表）
     (r'/audit/get-records', audit.DoGetRecordsHandler),
+    #  - 某个策略的管理页面
+    (r'/audit/policy/detail/(.*)', audit.PolicyDetailHandler),
+    #  - [json] 获取策略列表
+    (r'/audit/get-policies', audit.DoGetPoliciesHandler),
+    #  - [json] 添加/更新策略
+    (r'/audit/policy/update', audit.DoUpdatePolicyHandler),
+    #  - [json] 禁用/解禁/删除策略
+    (r'/audit/policies/update', audit.DoUpdatePoliciesHandler),
+    #  - [json] 调整顺序（rank）
+    (r'/audit/policy/rank-reorder', audit.DoRankReorderHandler),
     #
     #  - ssh录像回放页面
     (r'/audit/replay/(.*)/(.*)', audit.ReplayHandler),

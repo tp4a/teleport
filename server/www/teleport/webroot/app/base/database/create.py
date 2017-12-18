@@ -561,29 +561,9 @@ class DatabaseInit:
         f.append('`name` varchar(128) DEFAULT ""')
         # desc: 策略描述
         f.append('`desc` varchar(255) DEFAULT ""')
-        # start_time: 策略有效期起始时间(为0则忽略)
-        f.append('`start_time` int(11) DEFAULT 0')
-        # end_time: 策略有效期结束时间(为0则忽略)
-        f.append('`end_time` int(11) DEFAULT 0')
 
         # state: 状态，1=正常，2=禁用
         f.append('`state` int(3) DEFAULT 1')
-
-        # limit_ip: 是否启用来源限制，0=不限制，1=白名单，2=黑名单（尚未实现）
-        f.append('`limit_ip` int(3) DEFAULT 0')
-        # ip_list: 限制IP列表（白名单或者黑名单）
-        f.append('`ip_list` TEXT')
-
-        # limit_time: 是否启用限时连接，0=不限制，1=限制（尚未实现）
-        f.append('`limit_time` int(3) DEFAULT 0')
-        # 每一个weekX表示一天的时间段，按位异或表示24个小时的每个小时是否限制连接，对应位为0表示不限制（允许连接）
-        f.append('`limit_week1` int(11) DEFAULT 0')
-        f.append('`limit_week2` int(11) DEFAULT 0')
-        f.append('`limit_week3` int(11) DEFAULT 0')
-        f.append('`limit_week4` int(11) DEFAULT 0')
-        f.append('`limit_week5` int(11) DEFAULT 0')
-        f.append('`limit_week6` int(11) DEFAULT 0')
-        f.append('`limit_week7` int(11) DEFAULT 0')
 
         # creator_id: 授权者的id，0=系统默认创建
         f.append('`creator_id` int(11) DEFAULT 0')
@@ -605,7 +585,7 @@ class DatabaseInit:
         # policy_id: 所属的策略
         f.append('`policy_id` int(11) DEFAULT 0')
 
-        # type 指明本条记录是授权还是被授权，0=授权（用户/用户组），1=被授权（资产：主机/主机组）
+        # type 指明本条记录是授权还是被授权，0=授权（用户/用户组），1=被授权（资产：用户/用户组/主机/主机组）
         f.append('`type` int(11) DEFAULT 0')
 
         # rtype : 外链类型

@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 
-# import ctypes
 import json
 import os
-# import platform
 import shutil
 
 from app.const import *
 from app.base.configs import tp_cfg
 from app.base.logger import *
+from app.model import audit
 from app.model import record
-# from app.model import user
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
-# import tornado.web
 import tornado.gen
 
 
@@ -31,7 +28,195 @@ class AuzListHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
         if ret != TPE_OK:
             return
-        self.show_error_page(TPE_NOT_IMPLEMENT)
+        self.render('audit/auz-list.mako')
+
+
+class PolicyDetailHandler(TPBaseHandler):
+    def get(self, pid):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+        pid = int(pid)
+        err, policy = audit.get_by_id(pid)
+        if err == TPE_OK:
+            param = {
+                'policy_id': pid,
+                'policy_name': policy['name'],
+                'policy_desc': policy['desc']
+            }
+        else:
+            param = {
+                'policy_id': 0,
+                'policy_name': '',
+                'policy_desc': ''
+            }
+        self.render('audit/auz-info.mako', page_param=json.dumps(param))
+
+
+class DoGetPoliciesHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        sql_filter = {}
+        sql_order = dict()
+        sql_order['name'] = 'rank'
+        sql_order['asc'] = True
+        sql_limit = dict()
+        sql_limit['page_index'] = 0
+        sql_limit['per_page'] = 25
+
+        try:
+            tmp = list()
+            _filter = args['filter']
+            for i in _filter:
+                if i == 'state' and _filter[i] == 0:
+                    tmp.append(i)
+                    continue
+                if i == 'search':
+                    if len(_filter[i].strip()) == 0:
+                        tmp.append(i)
+
+            for i in tmp:
+                del _filter[i]
+
+            sql_filter.update(_filter)
+
+            _limit = args['limit']
+            if _limit['page_index'] < 0:
+                _limit['page_index'] = 0
+            if _limit['per_page'] < 10:
+                _limit['per_page'] = 10
+            if _limit['per_page'] > 100:
+                _limit['per_page'] = 100
+
+            sql_limit.update(_limit)
+
+            # _order = args['order']
+            # if _order is not None:
+            #     sql_order['name'] = _order['k']
+            #     sql_order['asc'] = _order['v']
+
+        except:
+            return self.write_json(TPE_PARAM)
+
+        err, total, page_index, row_data = audit.get_policies(sql_filter, sql_order, sql_limit)
+        ret = dict()
+        ret['page_index'] = page_index
+        ret['total'] = total
+        ret['data'] = row_data
+        self.write_json(err, data=ret)
+
+
+class DoUpdatePolicyHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            args['id'] = int(args['id'])
+            args['name'] = args['name'].strip()
+            args['desc'] = args['desc'].strip()
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        if len(args['name']) == 0:
+            return self.write_json(TPE_PARAM)
+
+        if args['id'] == -1:
+            err, info = audit.create_policy(self, args)
+        else:
+            err = audit.update_policy(self, args)
+            info = {}
+        self.write_json(err, data=info)
+
+
+class DoUpdatePoliciesHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            action = args['action']
+            p_ids = args['policy_ids']
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        if action == 'lock':
+            err = audit.update_policies_state(self, p_ids, TP_STATE_DISABLED)
+            return self.write_json(err)
+        elif action == 'unlock':
+            err = audit.update_policies_state(self, p_ids, TP_STATE_NORMAL)
+            return self.write_json(err)
+        elif action == 'remove':
+            err = audit.remove_policies(self, p_ids)
+            return self.write_json(err)
+        else:
+            return self.write_json(TPE_PARAM)
+
+
+class DoRankReorderHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            pid = int(args['pid'])
+            new_rank = int(args['new_rank'])
+            start_rank = int(args['start_rank'])
+            end_rank = int(args['end_rank'])
+            direct = int(args['direct'])
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        if direct == -1:
+            direct = '-1'
+        elif direct == 1:
+            direct = '+1'
+        else:
+            return self.write_json(TPE_PARAM)
+
+        err = audit.rank_reorder(self, pid, new_rank, start_rank, end_rank, direct)
+        self.write_json(err)
 
 
 class RecordHandler(TPBaseHandler):
