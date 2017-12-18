@@ -2,7 +2,7 @@
 
 [common]
 ; 'log-file' define the log file location. if not set, default locate
-; to $INSTDIR%/log/tpcore.log
+; to $INSTDIR%/data/log/tpcore.log
 ;log-file=/var/log/teleport/tpcore.log
 
 ; log-level can be 0 ~ 4, default value is 2.
@@ -18,7 +18,7 @@ log-level=2
 debug-mode=0
 
 ; 'replay-path' define the replay file location. if not set, default locate
-; to $INSTDIR%/data/replay/
+; to `$INSTDIR%/data/replay`
 ;replay-path=/var/lib/teleport/replay
 
 ; `web-server-rpc` is the rpc interface of web server.
@@ -28,9 +28,9 @@ web-server-rpc=http://127.0.0.1:7190/rpc
 
 [rpc]
 ; Request by web server. `bind-ip` should be the ip of core server. If web server and
-; core server running at the same machine, it should be 127.0.0.1.
-bind-ip=127.0.0.1
+; core server running at the same machine, it should be `127.0.0.1`.
 ; DO NOT FORGET update `common::core-server-rpc` in web.ini if you modified this setting. 
+bind-ip=127.0.0.1
 bind-port=52080
 
 [protocol-ssh]

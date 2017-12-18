@@ -112,11 +112,13 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             if 'protocol_sub_type' not in args:
                 return self.write_json(TPE_PARAM)
 
+            # 根据auth_id从数据库中取得此授权相关的用户、主机、账号三者详细信息
             auth_id = args['auth_id']
             protocol_sub_type = int(args['protocol_sub_type'])
             ops_auth, err = ops.get_auth(auth_id)
+            if err != TPE_OK:
+                return self.write_json(err)
 
-            # TODO: 根据auth_id从数据库中取得此授权相关的用户、主机、账号三者详细信息
             acc_id = ops_auth['a_id']
             host_id = ops_auth['h_id']
             user_id = ops_auth['u_id']

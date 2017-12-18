@@ -556,6 +556,9 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
     h_ids = []  # 涉及到的主机的ID列表
 
     db_ret = db.query(' '.join(sql))
+    if db_ret is None:
+        return TPE_OK, 0, 1, []
+
     for db_item in db_ret:
         item = AttrDict()
         for i in range(len(_f)):

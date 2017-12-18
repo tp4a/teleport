@@ -49,12 +49,11 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 	ex_astr body;
 	if (!ts_http_get(url, body))
 	{
-// 		EXLOGV("request `get_auth_info` from web return: ");
-// 		EXLOGV(body.c_str());
-// 		EXLOGV("\n");
+		EXLOGE("[core] get conn info from web-server failed: can not connect to web-server.\n");
 		return TPE_NETWORK;
 	}
 	if (body.length() == 0) {
+		EXLOGE("[core] get conn info from web-server failed: got nothing.\n");
 		return TPE_NETWORK;
 	}
 
