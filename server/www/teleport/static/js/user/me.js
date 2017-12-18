@@ -12,7 +12,7 @@ $app.on_init = function (cb_stack, cb_args) {
     $app.fix_time_display = function(selector) {
         var obj = $('[data-field="'+selector+'"]');
         var val = parseInt(obj.attr('data-value'));
-        if(val === 0)
+        if (val === 0)
             obj.text('-');
         else
             obj.text(tp_format_datetime(tp_utc2local(val)));
