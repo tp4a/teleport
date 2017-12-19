@@ -487,10 +487,10 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
 def build_auz_map():
     _users = {}
     _hosts = {}
-    _accs = {}
+    # _accs = {}
     _gusers = {}
     _ghosts = {}
-    _gaccs = {}
+    # _gaccs = {}
     _groups = {}
     _policies = {}
 
@@ -498,6 +498,10 @@ def build_auz_map():
     _p_assets = {}
 
     _map = []
+
+    db = get_db()
+    dbtp = db.table_prefix
+    db.exec('DELETE FROM {}audit_map'.format(dbtp))
 
     s = SQL(get_db())
 
@@ -547,8 +551,8 @@ def build_auz_map():
             _gusers[i.id] = []
         elif i.type == TP_GROUP_HOST:
             _ghosts[i.id] = []
-        elif i.type == TP_GROUP_ACCOUNT:
-            _gaccs[i.id] = []
+            # elif i.type == TP_GROUP_ACCOUNT:
+            #     _gaccs[i.id] = []
 
     # 加载所有的组
     err = s.reset().select_from('group_map', ['id', 'type', 'gid', 'mid'], alt_name='g').query()
@@ -563,10 +567,10 @@ def build_auz_map():
             # if g.gid not in _ghosts:
             #     _ghosts[g.gid] = []
             _ghosts[g.gid].append(_hosts[g.mid])
-        # elif g.type == TP_GROUP_ACCOUNT:
-        #     # if g.gid not in _gaccs:
-        #     #     _gaccs[g.gid] = []
-        #     _gaccs[g.gid].append(_accs[g.mid])
+            # elif g.type == TP_GROUP_ACCOUNT:
+            #     # if g.gid not in _gaccs:
+            #     #     _gaccs[g.gid] = []
+            #     _gaccs[g.gid].append(_accs[g.mid])
 
     # 加载所有策略明细
     err = s.reset().select_from('audit_auz', ['id', 'policy_id', 'type', 'rtype', 'rid'], alt_name='o').query()
@@ -613,94 +617,95 @@ def build_auz_map():
             if i.policy_id not in _p_assets:
                 _p_assets[i.policy_id] = []
 
-            if i.rtype == TP_ACCOUNT:
-                a = _accs[i.rid]
-                h = _hosts[a.host_id]
+            # if i.rtype == TP_ACCOUNT:
+            #     a = _accs[i.rid]
+            #     h = _hosts[a.host_id]
+            #     _p_assets[i.policy_id].append({
+            #         'a_id': i.rid,
+            #         'a_state': a.state,
+            #         'ga_id': 0,
+            #         'ga_state': 0,
+            #         'h_id': h.id,
+            #         'h_state': h.state,
+            #         'gh_id': 0,
+            #         'gh_state': 0,
+            #         'a_name': a.username,
+            #         'protocol_type': a.protocol_type,
+            #         'protocol_port': a.protocol_port,
+            #         'h_name': h.name,
+            #         'ip': h.ip,
+            #         'router_ip': h.router_ip,
+            #         'router_port': h.router_port,
+            #         'auth_to_': 'ACC'
+            #     })
+            # elif i.rtype == TP_GROUP_ACCOUNT:
+            #     for a in _gaccs[i.rid]:
+            #         h = _hosts[a.host_id]
+            #         _p_assets[i.policy_id].append({
+            #             'a_id': a.id,
+            #             'a_state': a.state,
+            #             'ga_id': i.rid,
+            #             'ga_state': _groups[i.rid].state,
+            #             'h_id': h.id,
+            #             'h_state': h.state,
+            #             'gh_id': 0,
+            #             'gh_state': 0,
+            #             'a_name': a.username,
+            #             'protocol_type': a.protocol_type,
+            #             'protocol_port': a.protocol_port,
+            #             'h_name': h.name,
+            #             'ip': h.ip,
+            #             'router_ip': h.router_ip,
+            #             'router_port': h.router_port,
+            #             'auth_to_': 'gACC'
+            #         })
+            # el
+            if i.rtype == TP_HOST:
+                # for aid in _accs:
+                #     if _accs[aid].host_id == i.rid:
+                #         a = _accs[aid]
+                h = _hosts[i.rid]
                 _p_assets[i.policy_id].append({
-                    'a_id': i.rid,
-                    'a_state': a.state,
-                    'ga_id': 0,
-                    'ga_state': 0,
+                    # 'a_id': aid,
+                    # 'a_state': a.state,
+                    # 'ga_id': 0,
+                    # 'ga_state': 0,
                     'h_id': h.id,
-                    'h_state': h.state,
+                    # 'h_state': h.state,
                     'gh_id': 0,
-                    'gh_state': 0,
-                    'a_name': a.username,
-                    'protocol_type': a.protocol_type,
-                    'protocol_port': a.protocol_port,
+                    # 'gh_state': 0,
+                    # 'a_name': a.username,
+                    # 'protocol_type': h.protocol_type,
+                    # 'protocol_port': h.protocol_port,
                     'h_name': h.name,
                     'ip': h.ip,
                     'router_ip': h.router_ip,
                     'router_port': h.router_port,
-                    'auth_to_': 'ACC'
+                    'auth_to_': 'HOST'
                 })
-            elif i.rtype == TP_GROUP_ACCOUNT:
-                for a in _gaccs[i.rid]:
-                    h = _hosts[a.host_id]
+            elif i.rtype == TP_GROUP_HOST:
+                for h in _ghosts[i.rid]:
+                    # for aid in _accs:
+                    #     if _accs[aid].host_id == h.id:
+                    #         a = _accs[aid]
                     _p_assets[i.policy_id].append({
-                        'a_id': a.id,
-                        'a_state': a.state,
-                        'ga_id': i.rid,
-                        'ga_state': _groups[i.rid].state,
+                        # 'a_id': aid,
+                        # 'a_state': a.state,
+                        'ga_id': 0,
+                        'ga_state': 0,
                         'h_id': h.id,
-                        'h_state': h.state,
-                        'gh_id': 0,
-                        'gh_state': 0,
-                        'a_name': a.username,
-                        'protocol_type': a.protocol_type,
-                        'protocol_port': a.protocol_port,
+                        # 'h_state': h.state,
+                        'gh_id': i.rid,
+                        # 'gh_state': _groups[i.rid].state,
+                        # 'a_name': a.username,
+                        # 'protocol_type': a.protocol_type,
+                        # 'protocol_port': a.protocol_port,
                         'h_name': h.name,
                         'ip': h.ip,
                         'router_ip': h.router_ip,
                         'router_port': h.router_port,
-                        'auth_to_': 'gACC'
+                        'auth_to_': 'gHOST'
                     })
-            elif i.rtype == TP_HOST:
-                for aid in _accs:
-                    if _accs[aid].host_id == i.rid:
-                        a = _accs[aid]
-                        h = _hosts[i.rid]
-                        _p_assets[i.policy_id].append({
-                            'a_id': aid,
-                            'a_state': a.state,
-                            'ga_id': 0,
-                            'ga_state': 0,
-                            'h_id': h.id,
-                            'h_state': h.state,
-                            'gh_id': 0,
-                            'gh_state': 0,
-                            'a_name': a.username,
-                            'protocol_type': a.protocol_type,
-                            'protocol_port': a.protocol_port,
-                            'h_name': h.name,
-                            'ip': h.ip,
-                            'router_ip': h.router_ip,
-                            'router_port': h.router_port,
-                            'auth_to_': 'HOST'
-                        })
-            elif i.rtype == TP_GROUP_HOST:
-                for h in _ghosts[i.rid]:
-                    for aid in _accs:
-                        if _accs[aid].host_id == h.id:
-                            a = _accs[aid]
-                            _p_assets[i.policy_id].append({
-                                'a_id': aid,
-                                'a_state': a.state,
-                                'ga_id': 0,
-                                'ga_state': 0,
-                                'h_id': h.id,
-                                'h_state': h.state,
-                                'gh_id': i.rid,
-                                'gh_state': _groups[i.rid].state,
-                                'a_name': a.username,
-                                'protocol_type': a.protocol_type,
-                                'protocol_port': a.protocol_port,
-                                'h_name': h.name,
-                                'ip': h.ip,
-                                'router_ip': h.router_ip,
-                                'router_port': h.router_port,
-                                'auth_to_': 'gHOST'
-                            })
             else:
                 log.e('invalid asset type.\n')
                 return TPE_FAILED
@@ -725,47 +730,47 @@ def build_auz_map():
                 x.update(u)
                 x.update(a)
 
-                x.uni_id = '{}-{}-{}-{}-{}-{}-{}'.format(x.p_id, x.gu_id, x.u_id, x.gh_id, x.h_id, x.ga_id, x.a_id)
-                x.ua_id = 'u{}-a{}'.format(x.u_id, x.a_id)
+                x.uni_id = '{}-{}-{}-{}-{}'.format(x.p_id, x.gu_id, x.u_id, x.gh_id, x.h_id)
+                x.uh_id = 'u{}-h{}'.format(x.u_id, x.h_id)
 
                 x.policy_auth_type = TP_POLICY_AUTH_UNKNOWN
-                if u['auth_from_'] == 'USER' and a['auth_to_'] == 'ACC':
-                    x.policy_auth_type = TP_POLICY_AUTH_USER_ACC
-                elif u['auth_from_'] == 'USER' and a['auth_to_'] == 'gACC':
-                    x.policy_auth_type = TP_POLICY_AUTH_USER_gACC
-                elif u['auth_from_'] == 'USER' and a['auth_to_'] == 'HOST':
+                # if u['auth_from_'] == 'USER' and a['auth_to_'] == 'ACC':
+                #     x.policy_auth_type = TP_POLICY_AUTH_USER_ACC
+                # elif u['auth_from_'] == 'USER' and a['auth_to_'] == 'gACC':
+                #     x.policy_auth_type = TP_POLICY_AUTH_USER_gACC
+                # el
+                if u['auth_from_'] == 'USER' and a['auth_to_'] == 'HOST':
                     x.policy_auth_type = TP_POLICY_AUTH_USER_HOST
                 elif u['auth_from_'] == 'USER' and a['auth_to_'] == 'gHOST':
                     x.policy_auth_type = TP_POLICY_AUTH_USER_gHOST
-                elif u['auth_from_'] == 'gUSER' and a['auth_to_'] == 'ACC':
-                    x.policy_auth_type = TP_POLICY_AUTH_gUSER_ACC
-                elif u['auth_from_'] == 'gUSER' and a['auth_to_'] == 'gACC':
-                    x.policy_auth_type = TP_POLICY_AUTH_gUSER_gACC
+                # elif u['auth_from_'] == 'gUSER' and a['auth_to_'] == 'ACC':
+                #     x.policy_auth_type = TP_POLICY_AUTH_gUSER_ACC
+                # elif u['auth_from_'] == 'gUSER' and a['auth_to_'] == 'gACC':
+                #     x.policy_auth_type = TP_POLICY_AUTH_gUSER_gACC
                 elif u['auth_from_'] == 'gUSER' and a['auth_to_'] == 'HOST':
                     x.policy_auth_type = TP_POLICY_AUTH_gUSER_HOST
                 elif u['auth_from_'] == 'gUSER' and a['auth_to_'] == 'gHOST':
                     x.policy_auth_type = TP_POLICY_AUTH_gUSER_gHOST
+                else:
+                    log.w('invalid policy data.\n')
+                    continue
 
                 _map.append(x)
 
-    db = get_db()
-    dbtp = db.table_prefix
-
-    db.exec('DELETE FROM {}audit_map'.format(dbtp))
+    if len(_map) == 0:
+        return TPE_OK
 
     values = []
     for i in _map:
-        v = '("{uni_id}","{ua_id}",{p_id},{p_rank},{p_state},{policy_auth_type},{u_id},{u_state},{gu_id},{gu_state},{h_id},{h_state},{gh_id},{gh_state},{a_id},{a_state},{ga_id},{ga_state},' \
-            '"{u_name}","{u_surname}","{h_name}","{ip}","{router_ip}",{router_port},"{a_name}",{protocol_type},{protocol_port})' \
-            ''.format(uni_id=i.uni_id, ua_id=i.ua_id, p_id=i.p_id, p_rank=i.p_rank, p_state=i.p_state,policy_auth_type=i.policy_auth_type,
-                      u_id=i.u_id, u_state=i.u_state, gu_id=i.gu_id, gu_state=i.gu_state, h_id=i.h_id, h_state=i.h_state,
-                      gh_id=i.gh_id, gh_state=i.gh_state, a_id=i.a_id, a_state=i.a_state, ga_id=i.ga_id, ga_state=i.ga_state,
-                      u_name=i.u_name, u_surname=i.u_surname, h_name=i.h_name, ip=i.ip, router_ip=i.router_ip, router_port=i.router_port,
-                      a_name=i.a_name, protocol_type=i.protocol_type, protocol_port=i.protocol_port)
+        v = '("{uni_id}","{uh_id}",{p_id},{p_rank},{p_state},{policy_auth_type},{u_id},{u_state},{gu_id},{gu_state},{h_id},{gh_id},' \
+            '"{u_name}","{u_surname}","{h_name}","{ip}","{router_ip}",{router_port})' \
+            ''.format(uni_id=i.uni_id, uh_id=i.uh_id, p_id=i.p_id, p_rank=i.p_rank, p_state=i.p_state, policy_auth_type=i.policy_auth_type,
+                      u_id=i.u_id, u_state=i.u_state, gu_id=i.gu_id, gu_state=i.gu_state, h_id=i.h_id,gh_id=i.gh_id,
+                      u_name=i.u_name, u_surname=i.u_surname, h_name=i.h_name, ip=i.ip, router_ip=i.router_ip, router_port=i.router_port)
         values.append(v)
 
-    sql = 'INSERT INTO `{dbtp}audit_map` (uni_id,ua_id,p_id,p_rank,p_state,policy_auth_type,u_id,u_state,gu_id,gu_state,h_id,h_state,gh_id,gh_state,a_id,a_state,ga_id,ga_state,' \
-          'u_name,u_surname,h_name,ip,router_ip,router_port,a_name,protocol_type,protocol_port) VALUES \n{values};' \
+    sql = 'INSERT INTO `{dbtp}audit_map` (uni_id,uh_id,p_id,p_rank,p_state,policy_auth_type,u_id,u_state,gu_id,gu_state,h_id,gh_id,' \
+          'u_name,u_surname,h_name,ip,router_ip,router_port) VALUES \n{values};' \
           ''.format(dbtp=dbtp, values=',\n'.join(values))
 
     db_ret = db.exec(sql)

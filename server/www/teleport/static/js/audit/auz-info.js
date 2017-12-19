@@ -12,8 +12,8 @@ $app.on_init = function (cb_stack) {
         btn_remove_auditor: $('#btn-remove-auditor'),
 
         btn_refresh_auditee: $('#btn-refresh-auditee'),
-        btn_add_auditee_user: $('#btn-add-auditee-user'),
-        btn_add_auditee_user_group: $('#btn-add-auditee-user-group'),
+        // btn_add_auditee_user: $('#btn-add-auditee-user'),
+        // btn_add_auditee_user_group: $('#btn-add-auditee-user-group'),
         btn_add_auditee_host: $('#btn-add-auditee-host'),
         btn_add_auditee_host_group: $('#btn-add-auditee-host-group'),
         select_all_auditee: $('#table-auditee-select-all'),
@@ -277,6 +277,7 @@ $app.create_controls = function (cb_stack) {
     $app.dlg_sel_auditor_user = $app.create_dlg_sel_auditor_user();
     cb_stack.add($app.dlg_sel_auditor_user.init);
 
+/*
     //-------------------------------
     // 选择用户（资源）对话框
     //-------------------------------
@@ -354,6 +355,7 @@ $app.create_controls = function (cb_stack) {
 
     $app.dlg_sel_auditee_user = $app.create_dlg_sel_auditee_user();
     cb_stack.add($app.dlg_sel_auditee_user.init);
+*/
 
     //-------------------------------
     // 选择用户组（操作者）对话框
@@ -412,6 +414,7 @@ $app.create_controls = function (cb_stack) {
     $app.dlg_sel_auditor_ug = $app.create_dlg_sel_auditor_ug();
     cb_stack.add($app.dlg_sel_auditor_ug.init);
 
+/*
     //-------------------------------
     // 选择用户组（资源）对话框
     //-------------------------------
@@ -468,6 +471,7 @@ $app.create_controls = function (cb_stack) {
 
     $app.dlg_sel_auditee_ug = $app.create_dlg_sel_auditee_ug();
     cb_stack.add($app.dlg_sel_auditee_ug.init);
+*/
 
     //-------------------------------
     // 选择主机对话框
@@ -623,12 +627,12 @@ $app.create_controls = function (cb_stack) {
     $app.dom.btn_add_auditor_user_group.click(function () {
         $app.dlg_sel_auditor_ug.show();
     });
-    $app.dom.btn_add_auditee_user.click(function () {
-        $app.dlg_sel_auditee_user.show();
-    });
-    $app.dom.btn_add_auditee_user_group.click(function () {
-        $app.dlg_sel_auditee_ug.show();
-    });
+    // $app.dom.btn_add_auditee_user.click(function () {
+    //     $app.dlg_sel_auditee_user.show();
+    // });
+    // $app.dom.btn_add_auditee_user_group.click(function () {
+    //     $app.dlg_sel_auditee_ug.show();
+    // });
     $app.dom.btn_add_auditee_host.click(function () {
         $app.dlg_sel_host.show();
     });
@@ -1132,7 +1136,7 @@ $app.create_dlg_sel_auditor_user = function () {
     return dlg;
 };
 
-
+/*
 //-------------------------------
 // 选择用户（资源）对话框
 //-------------------------------
@@ -1305,7 +1309,7 @@ $app.create_dlg_sel_auditee_user = function () {
 
     return dlg;
 };
-
+*/
 
 //-------------------------------
 // 选择用户组（操作者）对话框
@@ -1445,6 +1449,7 @@ $app.create_dlg_sel_auditor_ug = function () {
     return dlg;
 };
 
+/*
 //-------------------------------
 // 选择用户组（资源）对话框
 //-------------------------------
@@ -1582,6 +1587,7 @@ $app.create_dlg_sel_auditee_ug = function () {
 
     return dlg;
 };
+*/
 
 //-------------------------------
 // 选择主机对话框

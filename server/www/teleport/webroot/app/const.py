@@ -101,10 +101,10 @@ TP_POLICY_AUTH_gUSER_gACC = 6  # 6=用户组:账号组
 TP_POLICY_AUTH_gUSER_HOST = 7  # 7=用户组:主机
 TP_POLICY_AUTH_gUSER_gHOST = 8  # 8=用户组:主机组
 # 下列四个仅用于审计授权
-TP_POLICY_AUTH_USER_USER = 9  # 1=用户:用户
-TP_POLICY_AUTH_USER_gUSER = 10  # 2=用户:用户组
-TP_POLICY_AUTH_gUSER_USER = 11  # 5=用户组:用户
-TP_POLICY_AUTH_gUSER_gUSER = 12  # 6=用户组:用户组
+# TP_POLICY_AUTH_USER_USER = 9  # 1=用户:用户
+# TP_POLICY_AUTH_USER_gUSER = 10  # 2=用户:用户组
+# TP_POLICY_AUTH_gUSER_USER = 11  # 5=用户组:用户
+# TP_POLICY_AUTH_gUSER_gUSER = 12  # 6=用户组:用户组
 
 
 # =======================================================

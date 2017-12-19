@@ -142,7 +142,7 @@
 
             <div class="col-md-6">
                 <div id="area-auditee">
-                    <div class="area-title"><span class="name">被审计资源</span><span class="desc">（被审计的用户或主机）</span></div>
+                    <div class="area-title"><span class="name">被审计资源</span><span class="desc">（被审计的主机）</span></div>
 
                     <div style="padding:5px;">
                         <div class="table-extend-area">
@@ -153,8 +153,8 @@
                             </div>
                             <div class="table-extend-cell table-item-counter">
                                 <div class="btn-group btn-group-sm">
-                                    <btn class="btn btn-success" id="btn-add-auditee-user"><i class="fa fa-plus"></i> 添加用户</btn>
-                                    <btn class="btn btn-primary" id="btn-add-auditee-user-group"><i class="fa fa-plus-circle"></i> 添加用户组</btn>
+##                                     <btn class="btn btn-success" id="btn-add-auditee-user"><i class="fa fa-plus"></i> 添加用户</btn>
+##                                     <btn class="btn btn-primary" id="btn-add-auditee-user-group"><i class="fa fa-plus-circle"></i> 添加用户组</btn>
                                     <btn class="btn btn-success" id="btn-add-auditee-host"><i class="fa fa-plus"></i> 添加主机</btn>
                                     <btn class="btn btn-primary" id="btn-add-auditee-host-group"><i class="fa fa-plus-circle"></i> 添加主机组</btn>
                                 </div>
@@ -243,46 +243,46 @@
         </div>
     </div>
 
-    <div class="modal fade" id="dlg-sel-auditee-user" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
-                    <h3 data-field="dlg-title" class="modal-title">选择用户</h3>
-                </div>
-                <div class="modal-body">
-
-                    <table id="table-sel-auditee-user" class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
-                    <div class="table-extend-area">
-                        <div class="table-extend-cell checkbox-select-all"><input data-action="sel-all" type="checkbox"/></div>
-                        <div class="table-extend-cell group-actions">
-                            <div class="btn-group" role="group">
-                                <button data-action="use-selected" type="button" class="btn btn-primary"><i class="fa fa-edit fa-fw"></i> 添加为被授权资源</button>
-                            </div>
-                        </div>
-                        <div class="table-extend-cell table-item-counter">
-                            <ol id="table-sel-auditee-user-paging"></ol>
-                        </div>
-                    </div>
-                    <div class="table-extend-area">
-                        <div class="table-extend-cell">
-                            <div style="text-align:right;">
-                                <nav>
-                                    <ul id="table-sel-auditee-user-pagination" class="pagination"></ul>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
-                </div>
-            </div>
-        </div>
-    </div>
+##     <div class="modal fade" id="dlg-sel-auditee-user" tabindex="-1" role="dialog">
+##         <div class="modal-dialog modal-lg" role="document">
+##             <div class="modal-content">
+##                 <div class="modal-header">
+##                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
+##                     <h3 data-field="dlg-title" class="modal-title">选择用户</h3>
+##                 </div>
+##                 <div class="modal-body">
+##
+##                     <table id="table-sel-auditee-user" class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
+##                     <div class="table-extend-area">
+##                         <div class="table-extend-cell checkbox-select-all"><input data-action="sel-all" type="checkbox"/></div>
+##                         <div class="table-extend-cell group-actions">
+##                             <div class="btn-group" role="group">
+##                                 <button data-action="use-selected" type="button" class="btn btn-primary"><i class="fa fa-edit fa-fw"></i> 添加为被授权资源</button>
+##                             </div>
+##                         </div>
+##                         <div class="table-extend-cell table-item-counter">
+##                             <ol id="table-sel-auditee-user-paging"></ol>
+##                         </div>
+##                     </div>
+##                     <div class="table-extend-area">
+##                         <div class="table-extend-cell">
+##                             <div style="text-align:right;">
+##                                 <nav>
+##                                     <ul id="table-sel-auditee-user-pagination" class="pagination"></ul>
+##                                 </nav>
+##                             </div>
+##                         </div>
+##                     </div>
+##
+##                 </div>
+##
+##
+##                 <div class="modal-footer">
+##                     <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+##                 </div>
+##             </div>
+##         </div>
+##     </div>
 
     <div class="modal fade" id="dlg-sel-auditor-user-group" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
@@ -325,46 +325,46 @@
         </div>
     </div>
 
-    <div class="modal fade" id="dlg-sel-auditee-user-group" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
-                    <h3 data-field="dlg-title" class="modal-title">选择用户组</h3>
-                </div>
-                <div class="modal-body">
-
-                    <table id="table-sel-auditee-user-group" class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
-                    <div class="table-extend-area">
-                        <div class="table-extend-cell checkbox-select-all"><input data-action="sel-all" type="checkbox"/></div>
-                        <div class="table-extend-cell group-actions">
-                            <div class="btn-group" role="group">
-                                <button data-action="use-selected" type="button" class="btn btn-primary"><i class="fa fa-edit fa-fw"></i> 添加为被授权资源</button>
-                            </div>
-                        </div>
-                        <div class="table-extend-cell table-item-counter">
-                            <ol id="table-sel-auditee-user-group-paging"></ol>
-                        </div>
-                    </div>
-                    <div class="table-extend-area">
-                        <div class="table-extend-cell">
-                            <div style="text-align:right;">
-                                <nav>
-                                    <ul id="table-sel-auditee-user-group-pagination" class="pagination"></ul>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
-                </div>
-            </div>
-        </div>
-    </div>
+##     <div class="modal fade" id="dlg-sel-auditee-user-group" tabindex="-1" role="dialog">
+##         <div class="modal-dialog" role="document">
+##             <div class="modal-content">
+##                 <div class="modal-header">
+##                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
+##                     <h3 data-field="dlg-title" class="modal-title">选择用户组</h3>
+##                 </div>
+##                 <div class="modal-body">
+##
+##                     <table id="table-sel-auditee-user-group" class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
+##                     <div class="table-extend-area">
+##                         <div class="table-extend-cell checkbox-select-all"><input data-action="sel-all" type="checkbox"/></div>
+##                         <div class="table-extend-cell group-actions">
+##                             <div class="btn-group" role="group">
+##                                 <button data-action="use-selected" type="button" class="btn btn-primary"><i class="fa fa-edit fa-fw"></i> 添加为被授权资源</button>
+##                             </div>
+##                         </div>
+##                         <div class="table-extend-cell table-item-counter">
+##                             <ol id="table-sel-auditee-user-group-paging"></ol>
+##                         </div>
+##                     </div>
+##                     <div class="table-extend-area">
+##                         <div class="table-extend-cell">
+##                             <div style="text-align:right;">
+##                                 <nav>
+##                                     <ul id="table-sel-auditee-user-group-pagination" class="pagination"></ul>
+##                                 </nav>
+##                             </div>
+##                         </div>
+##                     </div>
+##
+##                 </div>
+##
+##
+##                 <div class="modal-footer">
+##                     <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+##                 </div>
+##             </div>
+##         </div>
+##     </div>
 
     <div class="modal fade" id="dlg-sel-host" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
