@@ -219,6 +219,191 @@ class DoRankReorderHandler(TPBaseJsonHandler):
         self.write_json(err)
 
 
+class DoGetAuditorsHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        print('---get operator:', args)
+
+        sql_filter = {}
+        sql_order = dict()
+        sql_order['name'] = 'id'
+        sql_order['asc'] = True
+        sql_limit = dict()
+        sql_limit['page_index'] = 0
+        sql_limit['per_page'] = 25
+
+        try:
+            tmp = list()
+            _filter = args['filter']
+            for i in _filter:
+                # if i == 'user_id' and _filter[i] == 0:
+                #     tmp.append(i)
+                #     continue
+                if i == '_name':
+                    if len(_filter[i].strip()) == 0:
+                        tmp.append(i)
+
+            for i in tmp:
+                del _filter[i]
+
+            sql_filter.update(_filter)
+
+            _limit = args['limit']
+            if _limit['page_index'] < 0:
+                _limit['page_index'] = 0
+            if _limit['per_page'] < 10:
+                _limit['per_page'] = 10
+            if _limit['per_page'] > 100:
+                _limit['per_page'] = 100
+
+            sql_limit.update(_limit)
+
+            _order = args['order']
+            if _order is not None:
+                sql_order['name'] = _order['k']
+                sql_order['asc'] = _order['v']
+
+        except:
+            return self.write_json(TPE_PARAM)
+
+        err, total, page_index, row_data = audit.get_auditors(sql_filter, sql_order, sql_limit)
+        ret = dict()
+        ret['page_index'] = page_index
+        ret['total'] = total
+        ret['data'] = row_data
+        self.write_json(err, data=ret)
+
+
+class DoGetAuditeesHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        print('---get auditee:', args)
+
+        sql_filter = {}
+        sql_order = dict()
+        sql_order['name'] = 'id'
+        sql_order['asc'] = True
+        sql_limit = dict()
+        sql_limit['page_index'] = 0
+        sql_limit['per_page'] = 25
+
+        try:
+            # tmp = list()
+            # _filter = args['filter']
+            # for i in _filter:
+            #     # if i == 'user_id' and _filter[i] == 0:
+            #     #     tmp.append(i)
+            #     #     continue
+            #     if i == '_name':
+            #         if len(_filter[i].strip()) == 0:
+            #             tmp.append(i)
+            #
+            # for i in tmp:
+            #     del _filter[i]
+
+            sql_filter.update(args['filter'])
+
+            _limit = args['limit']
+            if _limit['page_index'] < 0:
+                _limit['page_index'] = 0
+            if _limit['per_page'] < 10:
+                _limit['per_page'] = 10
+            if _limit['per_page'] > 100:
+                _limit['per_page'] = 100
+
+            sql_limit.update(_limit)
+
+            _order = args['order']
+            if _order is not None:
+                sql_order['name'] = _order['k']
+                sql_order['asc'] = _order['v']
+
+        except:
+            return self.write_json(TPE_PARAM)
+
+        err, total, page_index, row_data = audit.get_auditees(sql_filter, sql_order, sql_limit)
+        ret = dict()
+        ret['page_index'] = page_index
+        ret['total'] = total
+        ret['data'] = row_data
+        self.write_json(err, data=ret)
+
+
+class DoAddMembersHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            policy_id = int(args['policy_id'])
+            policy_type = int(args['type'])
+            ref_type = int(args['rtype'])
+            members = args['members']
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        err = audit.add_members(self, policy_id, policy_type, ref_type, members)
+        self.write_json(err)
+
+
+class DoRemoveMembersHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            policy_id = int(args['policy_id'])
+            policy_type = int(args['policy_type'])
+            ids = args['ids']
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        err = audit.remove_members(self, policy_id, policy_type, ids)
+        self.write_json(err)
+
+
 class RecordHandler(TPBaseHandler):
     def get(self):
         ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY)
@@ -538,3 +723,13 @@ class DoGetFileHandler(TPBaseHandler):
                 read_this_time = BULK_SIZE if read_left > BULK_SIZE else read_left
 
         # all need data read.
+
+
+class DoBuildAuzMapHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+
+        err = audit.build_auz_map()
+        self.write_json(err)

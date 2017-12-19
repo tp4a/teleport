@@ -182,6 +182,16 @@ controllers = [
     (r'/audit/policies/update', audit.DoUpdatePoliciesHandler),
     #  - [json] 调整顺序（rank）
     (r'/audit/policy/rank-reorder', audit.DoRankReorderHandler),
+    #  - [json] 获取指定策略中的操作者
+    (r'/audit/policy/get-auditors', audit.DoGetAuditorsHandler),
+    #  - [json] 获取指定策略中的被授权目标
+    (r'/audit/policy/get-auditees', audit.DoGetAuditeesHandler),
+    #  - [json] 向指定策略中添加对象（操作者或资产）
+    (r'/audit/policy/add-members', audit.DoAddMembersHandler),
+    #  - [json] 从指定策略中移除对象（操作者或资产）
+    (r'/audit/policy/remove-members', audit.DoRemoveMembersHandler),
+    #  - [json] 构建授权映射表
+    (r'/audit/build-auz-map', audit.DoBuildAuzMapHandler),
     #
     #  - ssh录像回放页面
     (r'/audit/replay/(.*)/(.*)', audit.ReplayHandler),

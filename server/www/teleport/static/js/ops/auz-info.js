@@ -569,7 +569,7 @@ $app.create_controls = function (cb_stack) {
                 Cookies.set($app.page_id('ops_auz_detail') + '_sel_host_per_page', per_page, {expires: 365});
             }
         });
-    $tp.create_table_pagination($app.table_sel_acc, 'table-sel-host-pagination');
+    $tp.create_table_pagination($app.table_sel_host, 'table-sel-host-pagination');
 
     $app.dlg_sel_host = $app.create_dlg_sel_host();
     cb_stack.add($app.dlg_sel_host.init);

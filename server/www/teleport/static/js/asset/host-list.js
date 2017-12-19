@@ -1444,7 +1444,6 @@ $app.create_dlg_edit_account = function () {
             dlg.dom.username.val('');
 
         } else {
-            console.log(account);
             dlg.account = account;
             dlg.field_id = account.id;
             dlg.dom.dlg_title.html('编辑：' + account.username);

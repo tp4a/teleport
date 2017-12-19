@@ -129,6 +129,10 @@ def get_users(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
                 _where.append('u.id NOT IN (SELECT mid FROM {dbtp}group_map WHERE type={gtype} AND gid={gid})'.format(dbtp=dbtp, gtype=TP_GROUP_USER, gid=sql_exclude[k]))
             elif k == 'ops_policy_id':
                 _where.append('u.id NOT IN (SELECT rid FROM {dbtp}ops_auz WHERE policy_id={pid} AND rtype={rtype})'.format(dbtp=dbtp, pid=sql_exclude[k], rtype=TP_USER))
+            elif k == 'auditor_policy_id':
+                _where.append('u.id NOT IN (SELECT rid FROM {dbtp}audit_auz WHERE policy_id={pid} AND `type`={ptype} AND rtype={rtype})'.format(dbtp=dbtp, pid=sql_exclude[k], ptype=TP_POLICY_OPERATOR, rtype=TP_USER))
+            elif k == 'auditee_policy_id':
+                _where.append('u.id NOT IN (SELECT rid FROM {dbtp}audit_auz WHERE policy_id={pid} AND `type`={ptype} AND rtype={rtype})'.format(dbtp=dbtp, pid=sql_exclude[k], ptype=TP_POLICY_ASSET, rtype=TP_USER))
             else:
                 log.w('unknown exclude field: {}\n'.format(k))
 

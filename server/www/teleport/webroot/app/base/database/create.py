@@ -727,8 +727,8 @@ class DatabaseInit:
         # id: 自增主键
         f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
 
-        # audited: 是否已审查
-        f.append('`audited` int(3) DEFAULT 0')
+        # flag: 是否已审查/是否要永久保留
+        f.append('`flag` int(11) DEFAULT 0')
 
         # sid: 会话ID
         f.append('`sid` varchar(32) DEFAULT ""')

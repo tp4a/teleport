@@ -648,6 +648,10 @@ def build_auz_map():
 
     _map = []
 
+    db = get_db()
+    dbtp = db.table_prefix
+    db.exec('DELETE FROM {}ops_map'.format(dbtp))
+
     s = SQL(get_db())
 
     # 加载所有策略
@@ -897,10 +901,8 @@ def build_auz_map():
 
                 _map.append(x)
 
-    db = get_db()
-    dbtp = db.table_prefix
-
-    db.exec('DELETE FROM {}ops_map'.format(dbtp))
+    if len(_map) == 0:
+        return TPE_OK
 
     values = []
     for i in _map:

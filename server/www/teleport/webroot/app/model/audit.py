@@ -212,7 +212,7 @@ def remove_members(handler, policy_id, policy_type, ids):
     return TPE_OK
 
 
-def get_operators(sql_filter, sql_order, sql_limit):
+def get_auditors(sql_filter, sql_order, sql_limit):
     ss = SQL(get_db())
     ss.select_from('audit_auz', ['id', 'policy_id', 'rtype', 'rid', 'name'], alt_name='p')
 
@@ -252,7 +252,7 @@ def get_operators(sql_filter, sql_order, sql_limit):
     return TPE_OK, ss.total_count, ss.page_index, ss.recorder
 
 
-def get_asset(sql_filter, sql_order, sql_limit):
+def get_auditees(sql_filter, sql_order, sql_limit):
     ss = SQL(get_db())
     ss.select_from('audit_auz', ['id', 'policy_id', 'rtype', 'rid', 'name'], alt_name='p')
 
@@ -502,7 +502,7 @@ def build_auz_map():
     s = SQL(get_db())
 
     # 加载所有策略
-    err = s.reset().select_from('ops_policy', ['id', 'rank', 'state'], alt_name='p').query()
+    err = s.reset().select_from('audit_policy', ['id', 'rank', 'state'], alt_name='p').query()
     if err != TPE_OK:
         return err
     if 0 == len(s.recorder):
@@ -528,14 +528,14 @@ def build_auz_map():
     for i in s.recorder:
         _hosts[i.id] = i
 
-    # 加载所有的账号
-    err = s.reset().select_from('acc', ['id', 'host_id', 'username', 'protocol_type', 'protocol_port', 'auth_type', 'state'], alt_name='a').query()
-    if err != TPE_OK:
-        return err
-    if 0 == len(s.recorder):
-        return TPE_OK
-    for i in s.recorder:
-        _accs[i.id] = i
+    # # 加载所有的账号
+    # err = s.reset().select_from('acc', ['id', 'host_id', 'username', 'protocol_type', 'protocol_port', 'auth_type', 'state'], alt_name='a').query()
+    # if err != TPE_OK:
+    #     return err
+    # if 0 == len(s.recorder):
+    #     return TPE_OK
+    # for i in s.recorder:
+    #     _accs[i.id] = i
 
     # 加载所有的组
     err = s.reset().select_from('group', ['id', 'type', 'state'], alt_name='g').query()
@@ -563,13 +563,13 @@ def build_auz_map():
             # if g.gid not in _ghosts:
             #     _ghosts[g.gid] = []
             _ghosts[g.gid].append(_hosts[g.mid])
-        elif g.type == TP_GROUP_ACCOUNT:
-            # if g.gid not in _gaccs:
-            #     _gaccs[g.gid] = []
-            _gaccs[g.gid].append(_accs[g.mid])
+        # elif g.type == TP_GROUP_ACCOUNT:
+        #     # if g.gid not in _gaccs:
+        #     #     _gaccs[g.gid] = []
+        #     _gaccs[g.gid].append(_accs[g.mid])
 
     # 加载所有策略明细
-    err = s.reset().select_from('ops_auz', ['id', 'policy_id', 'type', 'rtype', 'rid'], alt_name='o').query()
+    err = s.reset().select_from('audit_auz', ['id', 'policy_id', 'type', 'rtype', 'rid'], alt_name='o').query()
     if err != TPE_OK:
         return err
     if 0 == len(s.recorder):
@@ -751,7 +751,7 @@ def build_auz_map():
     db = get_db()
     dbtp = db.table_prefix
 
-    db.exec('DELETE FROM {}ops_map'.format(dbtp))
+    db.exec('DELETE FROM {}audit_map'.format(dbtp))
 
     values = []
     for i in _map:
@@ -764,7 +764,7 @@ def build_auz_map():
                       a_name=i.a_name, protocol_type=i.protocol_type, protocol_port=i.protocol_port)
         values.append(v)
 
-    sql = 'INSERT INTO `{dbtp}ops_map` (uni_id,ua_id,p_id,p_rank,p_state,policy_auth_type,u_id,u_state,gu_id,gu_state,h_id,h_state,gh_id,gh_state,a_id,a_state,ga_id,ga_state,' \
+    sql = 'INSERT INTO `{dbtp}audit_map` (uni_id,ua_id,p_id,p_rank,p_state,policy_auth_type,u_id,u_state,gu_id,gu_state,h_id,h_state,gh_id,gh_state,a_id,a_state,ga_id,ga_state,' \
           'u_name,u_surname,h_name,ip,router_ip,router_port,a_name,protocol_type,protocol_port) VALUES \n{values};' \
           ''.format(dbtp=dbtp, values=',\n'.join(values))
 

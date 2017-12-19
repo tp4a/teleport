@@ -297,6 +297,14 @@ def get_groups(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
                 pid = sql_exclude[k]['pid']
                 gtype = sql_exclude[k]['gtype']
                 _where.append('g.id NOT IN (SELECT rid FROM {dbtp}ops_auz WHERE policy_id={pid} AND rtype={rtype})'.format(dbtp=dbtp, pid=pid, rtype=gtype))
+            elif k == 'auditor_policy_id':
+                pid = sql_exclude[k]['pid']
+                gtype = sql_exclude[k]['gtype']
+                _where.append('g.id NOT IN (SELECT rid FROM {dbtp}audit_auz WHERE policy_id={pid} AND `type`={ptype} AND rtype={rtype})'.format(dbtp=dbtp, pid=pid, ptype=TP_POLICY_OPERATOR, rtype=gtype))
+            elif k == 'auditee_policy_id':
+                pid = sql_exclude[k]['pid']
+                gtype = sql_exclude[k]['gtype']
+                _where.append('g.id NOT IN (SELECT rid FROM {dbtp}audit_auz WHERE policy_id={pid} AND `type`={ptype} AND rtype={rtype})'.format(dbtp=dbtp, pid=pid, ptype=TP_POLICY_ASSET, rtype=gtype))
             else:
                 log.w('unknown exclude field: {}\n'.format(k))
 

@@ -37,13 +37,13 @@ $app.on_init = function (cb_stack) {
 $app.create_controls = function (cb_stack) {
 
     //-------------------------------
-    // 操作者列表表格
+    // 授权操作者列表表格
     //-------------------------------
-    var table_operator_options = {
-        dom_id: 'table-operator',
+    var table_auditor_options = {
+        dom_id: 'table-auditor',
         data_source: {
             type: 'ajax-post',
-            url: '/audit/policy/get-operators'
+            url: '/audit/policy/get-auditors'
         },
         message_no_data: '还没有授权的操作者...',
         column_default: {sort: false, align: 'left'},
@@ -75,36 +75,36 @@ $app.create_controls = function (cb_stack) {
         ],
 
         // 重载回调函数
-        on_header_created: $app.on_table_operator_header_created,
-        on_render_created: $app.on_table_operator_render_created,
-        on_cell_created: $app.on_table_operator_cell_created
+        on_header_created: $app.on_table_auditor_header_created,
+        on_render_created: $app.on_table_auditor_render_created,
+        on_cell_created: $app.on_table_auditor_cell_created
     };
 
-    $app.table_operator = $tp.create_table(table_operator_options);
+    $app.table_auditor = $tp.create_table(table_auditor_options);
     cb_stack
-        .add($app.table_operator.load_data)
-        .add($app.table_operator.init);
+        .add($app.table_auditor.load_data)
+        .add($app.table_auditor.init);
 
-    $tp.create_table_header_filter_search($app.table_operator, {
+    $tp.create_table_header_filter_search($app.table_auditor, {
         name: 'search',
         place_holder: '搜索：用户名/用户组名'
     });
-    $tp.create_table_filter_fixed_value($app.table_operator, {policy_id: $app.options.policy_id});
+    $tp.create_table_filter_fixed_value($app.table_auditor, {policy_id: $app.options.policy_id});
 
-    $tp.create_table_paging($app.table_operator, 'table-operator-paging',
+    $tp.create_table_paging($app.table_auditor, 'table-auditor-paging',
         {
             per_page: Cookies.get($app.page_id('audit_auz') + '_operator_per_page'),
             on_per_page_changed: function (per_page) {
                 Cookies.set($app.page_id('audit_auz') + '_operator_per_page', per_page, {expires: 365});
             }
         });
-    $tp.create_table_pagination($app.table_operator, 'table-operator-pagination');
+    $tp.create_table_pagination($app.table_auditor, 'table-auditor-pagination');
 
     $app.dom.btn_refresh_auditor.click(function () {
-        $app.table_operator.load_data();
+        $app.table_auditor.load_data();
     });
     $app.dom.select_all_auditor.click(function () {
-        var _objects = $('#' + $app.table_operator.dom_id + ' tbody').find('[data-check-box]');
+        var _objects = $('#' + $app.table_auditor.dom_id + ' tbody').find('[data-check-box]');
         if ($(this).is(':checked')) {
             $.each(_objects, function (i, _obj) {
                 $(_obj).prop('checked', true);
@@ -115,18 +115,19 @@ $app.create_controls = function (cb_stack) {
             });
         }
     });
-    $app.dom.btn_remove_auditor.click($app.on_btn_remove_operator_click);
+    $app.dom.btn_remove_auditor.click($app.on_btn_remove_auditor_click);
+
 
     //-------------------------------
-    // 资产列表表格
+    // 被授权资源列表表格
     //-------------------------------
-    var table_asset_options = {
-        dom_id: 'table-asset',
+    var table_auditee_options = {
+        dom_id: 'table-auditee',
         data_source: {
             type: 'ajax-post',
-            url: '/audit/policy/get-asset'
+            url: '/audit/policy/get-auditees'
         },
-        message_no_data: '还没有分配被授权访问的资产哦...',
+        message_no_data: '还没有分配被授权访问的资源哦...',
         column_default: {sort: false, align: 'left'},
         columns: [
             {
@@ -156,36 +157,36 @@ $app.create_controls = function (cb_stack) {
         ],
 
         // 重载回调函数
-        on_header_created: $app.on_table_asset_header_created,
-        on_render_created: $app.on_table_asset_render_created,
-        on_cell_created: $app.on_table_asset_cell_created
+        on_header_created: $app.on_table_auditee_header_created,
+        on_render_created: $app.on_table_auditee_render_created,
+        on_cell_created: $app.on_table_auditee_cell_created
     };
 
-    $app.table_asset = $tp.create_table(table_asset_options);
+    $app.table_auditee = $tp.create_table(table_auditee_options);
     cb_stack
-        .add($app.table_asset.load_data)
-        .add($app.table_asset.init);
+        .add($app.table_auditee.load_data)
+        .add($app.table_auditee.init);
 
-    $tp.create_table_header_filter_search($app.table_asset, {
+    $tp.create_table_header_filter_search($app.table_auditee, {
         name: 'search',
-        place_holder: '搜索：账号名/账号组名/主机名/主机组名'
+        place_holder: '搜索：用户名/用户组名/主机名/主机组名'
     });
-    $tp.create_table_filter_fixed_value($app.table_asset, {policy_id: $app.options.policy_id});
+    $tp.create_table_filter_fixed_value($app.table_auditee, {policy_id: $app.options.policy_id});
 
-    $tp.create_table_paging($app.table_asset, 'table-asset-paging',
+    $tp.create_table_paging($app.table_auditee, 'table-auditee-paging',
         {
             per_page: Cookies.get($app.page_id('audit_auz') + '_asset_per_page'),
             on_per_page_changed: function (per_page) {
                 Cookies.set($app.page_id('audit_auz') + '_asset_per_page', per_page, {expires: 365});
             }
         });
-    $tp.create_table_pagination($app.table_asset, 'table-asset-pagination');
+    $tp.create_table_pagination($app.table_auditee, 'table-auditee-pagination');
 
     $app.dom.btn_refresh_auditee.click(function () {
-        $app.table_asset.load_data();
+        $app.table_auditee.load_data();
     });
     $app.dom.select_all_auditee.click(function () {
-        var _objects = $('#' + $app.table_asset.dom_id + ' tbody').find('[data-check-box]');
+        var _objects = $('#' + $app.table_auditee.dom_id + ' tbody').find('[data-check-box]');
         if ($(this).is(':checked')) {
             $.each(_objects, function (i, _obj) {
                 $(_obj).prop('checked', true);
@@ -196,17 +197,17 @@ $app.create_controls = function (cb_stack) {
             });
         }
     });
-    $app.dom.btn_remove_auditee.click($app.on_btn_remove_asset_click);
+    $app.dom.btn_remove_auditee.click($app.on_btn_remove_auditee_click);
 
     //-------------------------------
-    // 选择用户对话框
+    // 选择用户（操作者）对话框
     //-------------------------------
-    var table_sel_user_options = {
-        dom_id: 'table-sel-user',
+    var table_sel_auditor_user_options = {
+        dom_id: 'table-sel-auditor-user',
         data_source: {
             type: 'ajax-post',
             url: '/user/get-users',
-            exclude: {'audit_policy_id': $app.options.policy_id}
+            exclude: {'auditor_policy_id': $app.options.policy_id}
         },
         message_no_data: '所有用户都被授权了哦...',
         column_default: {sort: false, align: 'left'},
@@ -250,43 +251,119 @@ $app.create_controls = function (cb_stack) {
         ],
 
         // 重载回调函数
-        on_header_created: $app.on_table_sel_user_header_created,
-        on_render_created: $app.on_table_sel_user_render_created,
-        on_cell_created: $app.on_table_sel_user_cell_created
+        on_header_created: $app.on_table_sel_auditor_user_header_created,
+        on_render_created: $app.on_table_sel_auditor_user_render_created,
+        on_cell_created: $app.on_table_sel_auditor_user_cell_created
     };
-    $app.table_sel_user = $tp.create_table(table_sel_user_options);
-    cb_stack.add($app.table_sel_user.init);
+    $app.table_sel_auditor_user = $tp.create_table(table_sel_auditor_user_options);
+    cb_stack.add($app.table_sel_auditor_user.init);
 
-    $tp.create_table_header_filter_search($app.table_sel_user, {
+    $tp.create_table_header_filter_search($app.table_sel_auditor_user, {
         name: 'search',
         place_holder: '搜索：用户账号/姓名/邮箱/描述/等等...'
     });
-    $tp.create_table_filter_role($app.table_sel_user, $app.role_list);
-    $tp.create_table_header_filter_state($app.table_sel_user, 'state', $app.obj_states);
+    $tp.create_table_filter_role($app.table_sel_auditor_user, $app.role_list);
+    $tp.create_table_header_filter_state($app.table_sel_auditor_user, 'state', $app.obj_states);
 
-    $tp.create_table_paging($app.table_sel_user, 'table-sel-user-paging',
+    $tp.create_table_paging($app.table_sel_auditor_user, 'table-sel-auditor-user-paging',
         {
             per_page: Cookies.get($app.page_id('audit_auz_detail') + '_sel_user_per_page'),
             on_per_page_changed: function (per_page) {
                 Cookies.set($app.page_id('audit_auz_detail') + '_sel_user_per_page', per_page, {expires: 365});
             }
         });
-    $tp.create_table_pagination($app.table_sel_user, 'table-sel-user-pagination');
+    $tp.create_table_pagination($app.table_sel_auditor_user, 'table-sel-auditor-user-pagination');
 
-    $app.dlg_sel_user = $app.create_dlg_sel_user();
-    cb_stack.add($app.dlg_sel_user.init);
-    cb_stack.add($app.load_role_list);
-
+    $app.dlg_sel_auditor_user = $app.create_dlg_sel_auditor_user();
+    cb_stack.add($app.dlg_sel_auditor_user.init);
 
     //-------------------------------
-    // 选择用户组对话框
+    // 选择用户（资源）对话框
     //-------------------------------
-    var table_sel_user_group_options = {
-        dom_id: 'table-sel-user-group',
+    var table_sel_auditee_user_options = {
+        dom_id: 'table-sel-auditee-user',
+        data_source: {
+            type: 'ajax-post',
+            url: '/user/get-users',
+            exclude: {'auditee_policy_id': $app.options.policy_id}
+        },
+        message_no_data: '所有用户都被授权了哦...',
+        column_default: {sort: false, align: 'left'},
+        columns: [
+            {
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                key: 'chkbox',
+                sort: false,
+                width: 36,
+                align: 'center',
+                render: 'make_check_box',
+                fields: {id: 'id'}
+            },
+            {
+                title: "用户",
+                key: "username",
+                sort: true,
+                header_render: 'filter_search',
+                render: 'user_info',
+                fields: {id: 'id', username: 'username', surname: 'surname', email: 'email'}
+            },
+            {
+                title: "角色",
+                key: "role_id",
+                width: 120,
+                sort: true,
+                header_render: 'filter_role',
+                render: 'role',
+                fields: {role_id: 'role_id'}
+            },
+            {
+                title: "状态",
+                key: "state",
+                sort: true,
+                width: 120,
+                align: 'center',
+                header_render: 'filter_state',
+                render: 'state',
+                fields: {state: 'state'}
+            }
+        ],
+
+        // 重载回调函数
+        on_header_created: $app.on_table_sel_auditee_user_header_created,
+        on_render_created: $app.on_table_sel_auditee_user_render_created,
+        on_cell_created: $app.on_table_sel_auditee_user_cell_created
+    };
+    $app.table_sel_auditee_user = $tp.create_table(table_sel_auditee_user_options);
+    cb_stack.add($app.table_sel_auditee_user.init);
+
+    $tp.create_table_header_filter_search($app.table_sel_auditee_user, {
+        name: 'search',
+        place_holder: '搜索：用户账号/姓名/邮箱/描述/等等...'
+    });
+    $tp.create_table_filter_role($app.table_sel_auditee_user, $app.role_list);
+    $tp.create_table_header_filter_state($app.table_sel_auditee_user, 'state', $app.obj_states);
+
+    $tp.create_table_paging($app.table_sel_auditee_user, 'table-sel-auditee-user-paging',
+        {
+            per_page: Cookies.get($app.page_id('audit_auz_detail') + '_sel_user_per_page'),
+            on_per_page_changed: function (per_page) {
+                Cookies.set($app.page_id('audit_auz_detail') + '_sel_user_per_page', per_page, {expires: 365});
+            }
+        });
+    $tp.create_table_pagination($app.table_sel_auditee_user, 'table-sel-auditee-user-pagination');
+
+    $app.dlg_sel_auditee_user = $app.create_dlg_sel_auditee_user();
+    cb_stack.add($app.dlg_sel_auditee_user.init);
+
+    //-------------------------------
+    // 选择用户组（操作者）对话框
+    //-------------------------------
+    var table_sel_auditor_ug_options = {
+        dom_id: 'table-sel-auditor-user-group',
         data_source: {
             type: 'ajax-post',
             url: '/group/get-groups',
-            exclude: {'audit_policy_id': {pid: $app.options.policy_id, gtype: TP_GROUP_USER}}  // 排除指定成员
+            exclude: {'auditor_policy_id': {pid: $app.options.policy_id, gtype: TP_GROUP_USER}}  // 排除指定成员
         },
         message_no_data: '所有用户组都被授权了哦...',
         column_default: {sort: false, align: 'left'},
@@ -311,126 +388,41 @@ $app.create_controls = function (cb_stack) {
         ],
 
         // 重载回调函数
-        on_header_created: $app.on_table_sel_user_group_header_created,
-        on_render_created: $app.on_table_sel_user_group_render_created,
-        on_cell_created: $app.on_table_sel_user_group_cell_created
+        on_header_created: $app.on_table_sel_auditor_ug_header_created,
+        on_render_created: $app.on_table_sel_auditor_ug_render_created,
+        on_cell_created: $app.on_table_sel_auditor_ug_cell_created
     };
-    $app.table_sel_user_group = $tp.create_table(table_sel_user_group_options);
-    cb_stack.add($app.table_sel_user_group.init);
+    $app.table_sel_auditor_ug = $tp.create_table(table_sel_auditor_ug_options);
+    cb_stack.add($app.table_sel_auditor_ug.init);
 
-    $tp.create_table_header_filter_search($app.table_sel_user_group, {
+    $tp.create_table_header_filter_search($app.table_sel_auditor_ug, {
         name: 'search',
         place_holder: '搜索：用户组名称/描述/等等...'
     });
-    $tp.create_table_filter_fixed_value($app.table_sel_user_group, {type: TP_GROUP_USER});
-    $tp.create_table_paging($app.table_sel_user_group, 'table-sel-user-group-paging',
+    $tp.create_table_filter_fixed_value($app.table_sel_auditor_ug, {type: TP_GROUP_USER});
+    $tp.create_table_paging($app.table_sel_auditor_ug, 'table-sel-auditor-user-group-paging',
         {
             per_page: Cookies.get($app.page_id('audit_auz_detail') + '_user_group_per_page'),
             on_per_page_changed: function (per_page) {
                 Cookies.set($app.page_id('audit_auz_detail') + '_user_group_per_page', per_page, {expires: 365});
             }
         });
-    $tp.create_table_pagination($app.table_sel_user_group, 'table-sel-user-group-pagination');
+    $tp.create_table_pagination($app.table_sel_auditor_ug, 'table-sel-auditor-user-group-pagination');
 
-    $app.dlg_sel_user_group = $app.create_dlg_sel_user_group();
-    cb_stack.add($app.dlg_sel_user_group.init);
-
-
-    //-------------------------------
-    // 选择账号对话框
-    //-------------------------------
-    var table_sel_acc_options = {
-        dom_id: 'table-sel-acc',
-        data_source: {
-            type: 'ajax-post',
-            url: '/asset/get-accounts',
-            exclude: {'audit_policy_id': $app.options.policy_id}  // 排除指定成员
-        },
-        message_no_data: '所有账号都被授权了哦...',
-        column_default: {sort: false, align: 'left'},
-        columns: [
-            {
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
-                key: 'chkbox',
-                sort: false,
-                width: 36,
-                align: 'center',
-                render: 'make_check_box',
-                fields: {id: 'id'}
-            },
-            {
-                title: "账号",
-                key: "username",
-                sort: true,
-                header_render: 'filter_search',
-                render: 'acc_info',
-                fields: {id: 'id', username: 'username', host_ip: 'host_ip', router_ip: 'router_ip', router_port: 'router_port'}
-            },
-            {
-                title: "远程连接协议",
-                key: "protocol_type",
-                sort: true,
-                width: 120,
-                align: 'center',
-                render: 'protocol',
-                fields: {protocol_type: 'protocol_type'}
-            },
-            {
-                title: "认证方式",
-                key: "auth_type",
-                width: 80,
-                align: 'center',
-                render: 'auth_type',
-                fields: {auth_type: 'auth_type'}
-            },
-            {
-                title: "状态",
-                key: "state",
-                sort: true,
-                width: 80,
-                align: 'center',
-                render: 'state',
-                fields: {state: 'state'}
-            }
-        ],
-
-        // 重载回调函数
-        on_header_created: $app.on_table_sel_acc_header_created,
-        on_render_created: $app.on_table_sel_acc_render_created,
-        on_cell_created: $app.on_table_sel_acc_cell_created
-    };
-    $app.table_sel_acc = $tp.create_table(table_sel_acc_options);
-    cb_stack.add($app.table_sel_acc.init);
-
-    $tp.create_table_header_filter_search($app.table_sel_acc, {
-        name: 'search',
-        place_holder: '搜索：账号/主机IP/等等...'
-    });
-    // 从cookie中读取用户分页限制的选择
-    $tp.create_table_paging($app.table_sel_acc, 'table-sel-acc-paging',
-        {
-            per_page: Cookies.get($app.page_id('audit_auz_detail') + '_sel_acc_per_page'),
-            on_per_page_changed: function (per_page) {
-                Cookies.set($app.page_id('audit_auz_detail') + '_sel_acc_per_page', per_page, {expires: 365});
-            }
-        });
-    $tp.create_table_pagination($app.table_sel_acc, 'table-sel-acc-pagination');
-
-    $app.dlg_sel_acc = $app.create_dlg_sel_acc();
-    cb_stack.add($app.dlg_sel_acc.init);
-
+    $app.dlg_sel_auditor_ug = $app.create_dlg_sel_auditor_ug();
+    cb_stack.add($app.dlg_sel_auditor_ug.init);
 
     //-------------------------------
-    // 选择账号组对话框
+    // 选择用户组（资源）对话框
     //-------------------------------
-    var table_sel_acc_group_options = {
-        dom_id: 'table-sel-acc-group',
+    var table_sel_auditee_ug_options = {
+        dom_id: 'table-sel-auditee-user-group',
         data_source: {
             type: 'ajax-post',
             url: '/group/get-groups',
-            exclude: {'audit_policy_id': {pid: $app.options.policy_id, gtype: TP_GROUP_ACCOUNT}}  // 排除指定成员
+            exclude: {'auditee_policy_id': {pid: $app.options.policy_id, gtype: TP_GROUP_USER}}  // 排除指定成员
         },
-        message_no_data: '所有账号组都被授权了哦...',
+        message_no_data: '所有用户组都被授权了哦...',
         column_default: {sort: false, align: 'left'},
         columns: [
             {
@@ -443,7 +435,7 @@ $app.create_controls = function (cb_stack) {
                 fields: {id: 'id'}
             },
             {
-                title: "账号组",
+                title: "用户组",
                 key: "name",
                 sort: true,
                 header_render: 'filter_search',
@@ -453,30 +445,29 @@ $app.create_controls = function (cb_stack) {
         ],
 
         // 重载回调函数
-        on_header_created: $app.on_table_sel_acc_group_header_created,
-        on_render_created: $app.on_table_sel_acc_group_render_created,
-        on_cell_created: $app.on_table_sel_acc_group_cell_created
+        on_header_created: $app.on_table_sel_auditee_ug_header_created,
+        on_render_created: $app.on_table_sel_auditee_ug_render_created,
+        on_cell_created: $app.on_table_sel_auditee_ug_cell_created
     };
-    $app.table_sel_acc_group = $tp.create_table(table_sel_acc_group_options);
-    cb_stack.add($app.table_sel_acc_group.init);
+    $app.table_sel_auditee_ug = $tp.create_table(table_sel_auditee_ug_options);
+    cb_stack.add($app.table_sel_auditee_ug.init);
 
-    $tp.create_table_header_filter_search($app.table_sel_acc_group, {
+    $tp.create_table_header_filter_search($app.table_sel_auditee_ug, {
         name: 'search',
-        place_holder: '搜索：账号组名称/描述/等等...'
+        place_holder: '搜索：用户组名称/描述/等等...'
     });
-    $tp.create_table_filter_fixed_value($app.table_sel_acc_group, {type: TP_GROUP_ACCOUNT});
-    $tp.create_table_paging($app.table_sel_acc_group, 'table-sel-acc-group-paging',
+    $tp.create_table_filter_fixed_value($app.table_sel_auditee_ug, {type: TP_GROUP_USER});
+    $tp.create_table_paging($app.table_sel_auditee_ug, 'table-sel-auditee-user-group-paging',
         {
-            per_page: Cookies.get($app.page_id('audit_auz_detail') + '_acc_group_per_page'),
+            per_page: Cookies.get($app.page_id('audit_auz_detail') + '_user_group_per_page'),
             on_per_page_changed: function (per_page) {
-                Cookies.set($app.page_id('audit_auz_detail') + '_acc_group_per_page', per_page, {expires: 365});
+                Cookies.set($app.page_id('audit_auz_detail') + '_user_group_per_page', per_page, {expires: 365});
             }
         });
-    $tp.create_table_pagination($app.table_sel_acc_group, 'table-sel-acc-group-pagination');
+    $tp.create_table_pagination($app.table_sel_auditee_ug, 'table-sel-auditee-user-group-pagination');
 
-    $app.dlg_sel_acc_group = $app.create_dlg_sel_acc_group();
-    cb_stack.add($app.dlg_sel_acc_group.init);
-
+    $app.dlg_sel_auditee_ug = $app.create_dlg_sel_auditee_ug();
+    cb_stack.add($app.dlg_sel_auditee_ug.init);
 
     //-------------------------------
     // 选择主机对话框
@@ -486,7 +477,7 @@ $app.create_controls = function (cb_stack) {
         data_source: {
             type: 'ajax-post',
             url: '/asset/get-hosts',
-            exclude: {'audit_policy_id': $app.options.policy_id}  // 排除指定成员
+            exclude: {'auditee_policy_id': $app.options.policy_id}  // 排除指定成员
         },
         message_no_data: '所有主机都被授权了哦...',
         column_default: {sort: false, align: 'left'},
@@ -558,7 +549,7 @@ $app.create_controls = function (cb_stack) {
                 Cookies.set($app.page_id('audit_auz_detail') + '_sel_host_per_page', per_page, {expires: 365});
             }
         });
-    $tp.create_table_pagination($app.table_sel_acc, 'table-sel-host-pagination');
+    $tp.create_table_pagination($app.table_sel_host, 'table-sel-host-pagination');
 
     $app.dlg_sel_host = $app.create_dlg_sel_host();
     cb_stack.add($app.dlg_sel_host.init);
@@ -572,7 +563,7 @@ $app.create_controls = function (cb_stack) {
         data_source: {
             type: 'ajax-post',
             url: '/group/get-groups',
-            exclude: {'audit_policy_id': {pid: $app.options.policy_id, gtype: TP_GROUP_HOST}}  // 排除指定成员
+            exclude: {'auditee_policy_id': {pid: $app.options.policy_id, gtype: TP_GROUP_HOST}}  // 排除指定成员
         },
         message_no_data: '所有主机组都被授权了哦...',
         column_default: {sort: false, align: 'left'},
@@ -621,21 +612,22 @@ $app.create_controls = function (cb_stack) {
     $app.dlg_sel_host_group = $app.create_dlg_sel_host_group();
     cb_stack.add($app.dlg_sel_host_group.init);
 
+    cb_stack.add($app.load_role_list);
 
     //-------------------------------
     // 页面控件事件绑定
     //-------------------------------
     $app.dom.btn_add_auditor_user.click(function () {
-        $app.dlg_sel_user.show();
+        $app.dlg_sel_auditor_user.show();
     });
     $app.dom.btn_add_auditor_user_group.click(function () {
-        $app.dlg_sel_user_group.show();
+        $app.dlg_sel_auditor_ug.show();
     });
     $app.dom.btn_add_auditee_user.click(function () {
-        $app.dlg_sel_acc.show();
+        $app.dlg_sel_auditee_user.show();
     });
     $app.dom.btn_add_auditee_user_group.click(function () {
-        $app.dlg_sel_acc_group.show();
+        $app.dlg_sel_auditee_ug.show();
     });
     $app.dom.btn_add_auditee_host.click(function () {
         $app.dlg_sel_host.show();
@@ -763,9 +755,9 @@ $app._add_common_render = function (render) {
 // 操作者列表
 //-------------------------------
 
-$app.check_operator_all_selected = function (cb_stack) {
+$app.check_auditor_all_selected = function (cb_stack) {
     var _all_checked = true;
-    var _objs = $('#' + $app.table_operator.dom_id + ' tbody').find('[data-check-box]');
+    var _objs = $('#' + $app.table_auditor.dom_id + ' tbody').find('[data-check-box]');
     if (_objs.length === 0) {
         _all_checked = false;
     } else {
@@ -787,21 +779,21 @@ $app.check_operator_all_selected = function (cb_stack) {
         cb_stack.exec();
 };
 
-$app.on_table_operator_cell_created = function (tbl, row_id, col_key, cell_obj) {
+$app.on_table_auditor_cell_created = function (tbl, row_id, col_key, cell_obj) {
     if (col_key === 'chkbox') {
         cell_obj.find('[data-check-box]').click(function () {
-            $app.check_operator_all_selected();
+            $app.check_auditor_all_selected();
         });
     }
 };
 
-$app.on_table_operator_render_created = function (render) {
+$app.on_table_auditor_render_created = function (render) {
 
     $app._add_common_render(render);
 
 };
 
-$app.on_table_operator_header_created = function (header) {
+$app.on_table_auditor_header_created = function (header) {
     $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
         CALLBACK_STACK.create()
             .add(header._table_ctrl.load_data)
@@ -813,9 +805,9 @@ $app.on_table_operator_header_created = function (header) {
     header._table_ctrl.get_filter_ctrl('search').on_created();
 };
 
-$app.get_selected_operator = function (tbl) {
+$app.get_selected_auditor = function (tbl) {
     var items = [];
-    var _objs = $('#' + $app.table_operator.dom_id + ' tbody tr td input[data-check-box]');
+    var _objs = $('#' + $app.table_auditor.dom_id + ' tbody tr td input[data-check-box]');
     $.each(_objs, function (i, _obj) {
         if ($(_obj).is(':checked')) {
             var _row_data = tbl.get_row(_obj);
@@ -825,8 +817,8 @@ $app.get_selected_operator = function (tbl) {
     return items;
 };
 
-$app.on_btn_remove_operator_click = function () {
-    var items = $app.get_selected_operator($app.table_operator);
+$app.on_btn_remove_auditor_click = function () {
+    var items = $app.get_selected_auditor($app.table_auditor);
     if (items.length === 0) {
         $tp.notify_error('请选择要移除的操作者！');
         return;
@@ -838,9 +830,9 @@ $app.on_btn_remove_operator_click = function () {
                 if (ret.code === TPE_OK) {
                     cb_stack
                         .add($app.sync_height)
-                        .add($app.check_operator_all_selected)
-                        .add($app.check_operator_all_selected)
-                        .add($app.table_operator.load_data);
+                        //.add($app.check_auditor_all_selected)
+                        .add($app.check_auditor_all_selected)
+                        .add($app.table_auditor.load_data);
                     $tp.notify_success('移除授权操作者成功！');
                 } else {
                     $tp.notify_error('移除授权操作者失败：' + tp_error_msg(ret.code, ret.message));
@@ -865,12 +857,12 @@ $app.on_btn_remove_operator_click = function () {
 
 
 //-------------------------------
-// 资产列表
+// 资源列表
 //-------------------------------
 
-$app.check_asset_all_selected = function (cb_stack) {
+$app.check_auditee_all_selected = function (cb_stack) {
     var _all_checked = true;
-    var _objs = $('#' + $app.table_asset.dom_id + ' tbody').find('[data-check-box]');
+    var _objs = $('#' + $app.table_auditee.dom_id + ' tbody').find('[data-check-box]');
     if (_objs.length === 0) {
         _all_checked = false;
     } else {
@@ -892,19 +884,19 @@ $app.check_asset_all_selected = function (cb_stack) {
         cb_stack.exec();
 };
 
-$app.on_table_asset_cell_created = function (tbl, row_id, col_key, cell_obj) {
+$app.on_table_auditee_cell_created = function (tbl, row_id, col_key, cell_obj) {
     if (col_key === 'chkbox') {
         cell_obj.find('[data-check-box]').click(function () {
-            $app.check_asset_all_selected();
+            $app.check_auditee_all_selected();
         });
     }
 };
 
-$app.on_table_asset_render_created = function (render) {
+$app.on_table_auditee_render_created = function (render) {
     $app._add_common_render(render);
 };
 
-$app.on_table_asset_header_created = function (header) {
+$app.on_table_auditee_header_created = function (header) {
     $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
         CALLBACK_STACK.create()
             .add(header._table_ctrl.load_data)
@@ -916,9 +908,9 @@ $app.on_table_asset_header_created = function (header) {
     header._table_ctrl.get_filter_ctrl('search').on_created();
 };
 
-$app.get_selected_asset = function (tbl) {
+$app.get_selected_auditee = function (tbl) {
     var items = [];
-    var _objs = $('#' + $app.table_asset.dom_id + ' tbody tr td input[data-check-box]');
+    var _objs = $('#' + $app.table_auditee.dom_id + ' tbody tr td input[data-check-box]');
     $.each(_objs, function (i, _obj) {
         if ($(_obj).is(':checked')) {
             var _row_data = tbl.get_row(_obj);
@@ -928,8 +920,8 @@ $app.get_selected_asset = function (tbl) {
     return items;
 };
 
-$app.on_btn_remove_asset_click = function () {
-    var items = $app.get_selected_asset($app.table_asset);
+$app.on_btn_remove_auditee_click = function () {
+    var items = $app.get_selected_auditee($app.table_auditee);
     if (items.length === 0) {
         $tp.notify_error('请选择要移除的被授权资产！');
         return;
@@ -941,9 +933,9 @@ $app.on_btn_remove_asset_click = function () {
                 if (ret.code === TPE_OK) {
                     cb_stack
                         .add($app.sync_height)
-                        .add($app.check_asset_all_selected)
-                        .add($app.check_asset_all_selected)
-                        .add($app.table_asset.load_data);
+                        //.add($app.check_auditee_all_selected)
+                        .add($app.check_auditee_all_selected)
+                        .add($app.table_auditee.load_data);
                     $tp.notify_success('移除被授权资产成功！');
                 } else {
                     $tp.notify_error('移除被授权资产失败：' + tp_error_msg(ret.code, ret.message));
@@ -968,18 +960,18 @@ $app.on_btn_remove_asset_click = function () {
 
 
 //-------------------------------
-// 选择用户对话框
+// 选择用户（操作者）对话框
 //-------------------------------
 
-$app.on_table_sel_user_cell_created = function (tbl, row_id, col_key, cell_obj) {
+$app.on_table_sel_auditor_user_cell_created = function (tbl, row_id, col_key, cell_obj) {
     if (col_key === 'chkbox') {
         cell_obj.find('[data-check-box]').click(function () {
-            $app.dlg_sel_user.check_all_selected();
+            $app.dlg_sel_auditor_user.check_all_selected();
         });
     }
 };
 
-$app.on_table_sel_user_render_created = function (render) {
+$app.on_table_sel_auditor_user_render_created = function (render) {
     $app._add_common_render(render);
 
     render.filter_role = function (header, title, col) {
@@ -1016,7 +1008,7 @@ $app.on_table_sel_user_render_created = function (render) {
     };
 };
 
-$app.on_table_sel_user_header_created = function (header) {
+$app.on_table_sel_auditor_user_header_created = function (header) {
     $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
         CALLBACK_STACK.create()
             .add(header._table_ctrl.load_data)
@@ -1030,9 +1022,9 @@ $app.on_table_sel_user_header_created = function (header) {
     header._table_ctrl.get_filter_ctrl('state').on_created();
 };
 
-$app.create_dlg_sel_user = function () {
+$app.create_dlg_sel_auditor_user = function () {
     var dlg = {};
-    dlg.dom_id = 'dlg-sel-user';
+    dlg.dom_id = 'dlg-sel-auditor-user';
     dlg.field_id = -1;
     dlg.field_name = '';
     dlg.field_desc = '';
@@ -1050,12 +1042,12 @@ $app.create_dlg_sel_user = function () {
     };
 
     dlg.show = function () {
-        $app.table_sel_user.load_data();
+        $app.table_sel_auditor_user.load_data();
         dlg.dom.dialog.modal();
     };
 
     dlg.on_sel_all = function () {
-        var _objects = $('#' + $app.table_sel_user.dom_id + ' tbody').find('[data-check-box]');
+        var _objects = $('#' + $app.table_sel_auditor_user.dom_id + ' tbody').find('[data-check-box]');
         if ($(this).is(':checked')) {
             $.each(_objects, function (i, _obj) {
                 $(_obj).prop('checked', true);
@@ -1095,7 +1087,7 @@ $app.create_dlg_sel_user = function () {
         var _objs = $('#' + dlg.dom_id + ' tbody tr td input[data-check-box]');
         $.each(_objs, function (i, _obj) {
             if ($(_obj).is(':checked')) {
-                var _row_data = $app.table_sel_user.get_row(_obj);
+                var _row_data = $app.table_sel_auditor_user.get_row(_obj);
 
                 var name = _row_data.username;
                 if (_row_data.surname.length > 0 && _row_data.surname !== name)
@@ -1113,7 +1105,7 @@ $app.create_dlg_sel_user = function () {
 
         $tp.ajax_post_json('/audit/policy/add-members', {
                 policy_id: $app.options.policy_id,
-                type: TP_POLICY_OPERATOR, // 授权操作者
+                type: TP_POLICY_OPERATOR,
                 rtype: TP_USER,  // 用户
                 members: items
             },
@@ -1123,8 +1115,8 @@ $app.create_dlg_sel_user = function () {
                     CALLBACK_STACK.create()
                         .add($app.sync_height)
                         .add(dlg.check_all_selected)
-                        .add($app.table_operator.load_data)
-                        .add($app.table_sel_user.load_data)
+                        .add($app.table_auditor.load_data)
+                        .add($app.table_sel_auditor_user.load_data)
                         .exec();
                 } else {
                     $tp.notify_error('授权操作者添加失败：' + tp_error_msg(ret.code, ret.message));
@@ -1142,27 +1134,55 @@ $app.create_dlg_sel_user = function () {
 
 
 //-------------------------------
-// 选择用户组对话框
+// 选择用户（资源）对话框
 //-------------------------------
 
-$app.on_table_sel_user_group_cell_created = function (tbl, row_id, col_key, cell_obj) {
+$app.on_table_sel_auditee_user_cell_created = function (tbl, row_id, col_key, cell_obj) {
     if (col_key === 'chkbox') {
         cell_obj.find('[data-check-box]').click(function () {
-            $app.dlg_sel_user_group.check_all_selected();
+            $app.dlg_sel_auditee_user.check_all_selected();
         });
     }
 };
 
-$app.on_table_sel_user_group_render_created = function (render) {
-
+$app.on_table_sel_auditee_user_render_created = function (render) {
     $app._add_common_render(render);
 
-    render.name = function (row_id, fields) {
-        return '<span class="field-name">' + fields.name + '</span><span class="field-desc">' + fields.desc + '</span>';
+    render.filter_role = function (header, title, col) {
+        var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+        _ret.push('<div class="tp-table-filter-inner">');
+        _ret.push('<div class="search-title">' + title + '</div>');
+
+        // 表格内嵌过滤器的DOM实体在这时生成
+        var filter_ctrl = header._table_ctrl.get_filter_ctrl('role');
+        _ret.push(filter_ctrl.render());
+
+        _ret.push('</div></div>');
+
+        return _ret.join('');
+    };
+
+    render.user_info = function (row_id, fields) {
+        var ret = [];
+        ret.push('<span class="field-name">' + fields.surname + '</span>');
+        ret.push('<span class="field-desc mono">');
+        ret.push(fields.username);
+        if (fields.email.length > 0)
+            ret.push(' &lt;' + fields.email + '&gt;');
+        ret.push('</span>');
+        return ret.join('')
+    };
+
+    render.role = function (row_id, fields) {
+        for (var i = 0; i < $app.role_list.length; ++i) {
+            if ($app.role_list[i].id === fields.role_id)
+                return $app.role_list[i].name;
+        }
+        return '<span class="label label-sm label-info"><i class="fa fa-question-circle"></i> 未设置</span>';
     };
 };
 
-$app.on_table_sel_user_group_header_created = function (header) {
+$app.on_table_sel_auditee_user_header_created = function (header) {
     $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
         CALLBACK_STACK.create()
             .add(header._table_ctrl.load_data)
@@ -1172,12 +1192,14 @@ $app.on_table_sel_user_group_header_created = function (header) {
 
     // 表格内嵌过滤器的事件绑定在这时进行（也可以延期到整个表格创建完成时进行）
     header._table_ctrl.get_filter_ctrl('search').on_created();
+    header._table_ctrl.get_filter_ctrl('role').on_created();
+    header._table_ctrl.get_filter_ctrl('state').on_created();
 };
 
-$app.create_dlg_sel_user_group = function () {
+$app.create_dlg_sel_auditee_user = function () {
     var dlg = {};
-    dlg.dom_id = 'dlg-sel-user-group';
-    dlg.field_id = -1;  // 用户id
+    dlg.dom_id = 'dlg-sel-auditee-user';
+    dlg.field_id = -1;
     dlg.field_name = '';
     dlg.field_desc = '';
 
@@ -1194,12 +1216,12 @@ $app.create_dlg_sel_user_group = function () {
     };
 
     dlg.show = function () {
-        $app.table_sel_user_group.load_data();
+        $app.table_sel_auditee_user.load_data();
         dlg.dom.dialog.modal();
     };
 
     dlg.on_sel_all = function () {
-        var _objects = $('#' + $app.table_sel_user_group.dom_id + ' tbody').find('[data-check-box]');
+        var _objects = $('#' + $app.table_sel_auditee_user.dom_id + ' tbody').find('[data-check-box]');
         if ($(this).is(':checked')) {
             $.each(_objects, function (i, _obj) {
                 $(_obj).prop('checked', true);
@@ -1239,7 +1261,151 @@ $app.create_dlg_sel_user_group = function () {
         var _objs = $('#' + dlg.dom_id + ' tbody tr td input[data-check-box]');
         $.each(_objs, function (i, _obj) {
             if ($(_obj).is(':checked')) {
-                var _row_data = $app.table_sel_user_group.get_row(_obj);
+                var _row_data = $app.table_sel_auditee_user.get_row(_obj);
+
+                var name = _row_data.username;
+                if (_row_data.surname.length > 0 && _row_data.surname !== name)
+                    name += '（' + _row_data.surname + '）';
+
+                items.push({id: _row_data.id, name: name});
+            }
+        });
+
+        return items;
+    };
+
+    dlg.on_add = function () {
+        var items = dlg.get_selected_items();
+
+        $tp.ajax_post_json('/audit/policy/add-members', {
+                policy_id: $app.options.policy_id,
+                type: TP_POLICY_ASSET,
+                rtype: TP_USER,  // 用户
+                members: items
+            },
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    $tp.notify_success('授权操作者添加成功！');
+                    CALLBACK_STACK.create()
+                        .add($app.sync_height)
+                        .add(dlg.check_all_selected)
+                        .add($app.table_auditee.load_data)
+                        .add($app.table_sel_auditee_user.load_data)
+                        .exec();
+                } else {
+                    $tp.notify_error('授权操作者添加失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                $tp.notify_error('网络故障，授权操作者添加失败！');
+            }
+        );
+
+    };
+
+    return dlg;
+};
+
+
+//-------------------------------
+// 选择用户组（操作者）对话框
+//-------------------------------
+
+$app.on_table_sel_auditor_ug_cell_created = function (tbl, row_id, col_key, cell_obj) {
+    if (col_key === 'chkbox') {
+        cell_obj.find('[data-check-box]').click(function () {
+            $app.dlg_sel_auditor_ug.check_all_selected();
+        });
+    }
+};
+
+$app.on_table_sel_auditor_ug_render_created = function (render) {
+
+    $app._add_common_render(render);
+
+    render.name = function (row_id, fields) {
+        return '<span class="field-name">' + fields.name + '</span><span class="field-desc">' + fields.desc + '</span>';
+    };
+};
+
+$app.on_table_sel_auditor_ug_header_created = function (header) {
+    $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
+        CALLBACK_STACK.create()
+            .add(header._table_ctrl.load_data)
+            .add(header._table_ctrl.reset_filters)
+            .exec();
+    });
+
+    // 表格内嵌过滤器的事件绑定在这时进行（也可以延期到整个表格创建完成时进行）
+    header._table_ctrl.get_filter_ctrl('search').on_created();
+};
+
+$app.create_dlg_sel_auditor_ug = function () {
+    var dlg = {};
+    dlg.dom_id = 'dlg-sel-auditor-user-group';
+    dlg.field_id = -1;  // 用户id
+    dlg.field_name = '';
+    dlg.field_desc = '';
+
+    dlg.dom = {
+        dialog: $('#' + dlg.dom_id),
+        btn_sel_all: $('#' + dlg.dom_id + ' input[data-action="sel-all"]'),
+        btn_add: $('#' + dlg.dom_id + ' button[data-action="use-selected"]')
+    };
+
+    dlg.init = function (cb_stack) {
+        dlg.dom.btn_add.click(dlg.on_add);
+        dlg.dom.btn_sel_all.click(dlg.on_sel_all);
+        cb_stack.exec();
+    };
+
+    dlg.show = function () {
+        $app.table_sel_auditor_ug.load_data();
+        dlg.dom.dialog.modal();
+    };
+
+    dlg.on_sel_all = function () {
+        var _objects = $('#' + $app.table_sel_auditor_ug.dom_id + ' tbody').find('[data-check-box]');
+        if ($(this).is(':checked')) {
+            $.each(_objects, function (i, _obj) {
+                $(_obj).prop('checked', true);
+            });
+        } else {
+            $.each(_objects, function (i, _obj) {
+                $(_obj).prop('checked', false);
+            });
+        }
+    };
+
+    dlg.check_all_selected = function (cb_stack) {
+        var _all_checked = true;
+        var _objs = $('#' + dlg.dom_id + ' tbody').find('[data-check-box]');
+        if (_objs.length === 0) {
+            _all_checked = false;
+        } else {
+            $.each(_objs, function (i, _obj) {
+                if (!$(_obj).is(':checked')) {
+                    _all_checked = false;
+                    return false;
+                }
+            });
+        }
+
+        if (_all_checked) {
+            dlg.dom.btn_sel_all.prop('checked', true);
+        } else {
+            dlg.dom.btn_sel_all.prop('checked', false);
+        }
+        if (cb_stack)
+            cb_stack.exec();
+    };
+
+    dlg.get_selected_items = function () {
+        var items = [];
+        var _objs = $('#' + dlg.dom_id + ' tbody tr td input[data-check-box]');
+        $.each(_objs, function (i, _obj) {
+            if ($(_obj).is(':checked')) {
+                var _row_data = $app.table_sel_auditor_ug.get_row(_obj);
                 items.push({id: _row_data.id, name: _row_data.name});
             }
         });
@@ -1262,8 +1428,8 @@ $app.create_dlg_sel_user_group = function () {
                     CALLBACK_STACK.create()
                         .add($app.sync_height)
                         .add(dlg.check_all_selected)
-                        .add($app.table_operator.load_data)
-                        .add($app.table_sel_user_group.load_data)
+                        .add($app.table_auditor.load_data)
+                        .add($app.table_sel_auditor_ug.load_data)
                         .exec();
                 } else {
                     $tp.notify_error('授权操作者添加失败：' + tp_error_msg(ret.code, ret.message));
@@ -1280,196 +1446,18 @@ $app.create_dlg_sel_user_group = function () {
 };
 
 //-------------------------------
-// 选择账号对话框
+// 选择用户组（资源）对话框
 //-------------------------------
 
-$app.on_table_sel_acc_cell_created = function (tbl, row_id, col_key, cell_obj) {
+$app.on_table_sel_auditee_ug_cell_created = function (tbl, row_id, col_key, cell_obj) {
     if (col_key === 'chkbox') {
         cell_obj.find('[data-check-box]').click(function () {
-            $app.dlg_sel_acc.check_all_selected();
+            $app.dlg_sel_auditee_ug.check_all_selected();
         });
     }
 };
 
-$app.on_table_sel_acc_render_created = function (render) {
-
-    $app._add_common_render(render);
-
-    render.acc_info = function (row_id, fields) {
-        var ret = [];
-
-        ret.push('<span class="field-name">' + fields.username + '@' + fields.host_ip + '</span>');
-        if (fields.router_ip.length > 0)
-            ret.push('<span class="field-desc">由 ' + fields.router_ip + ':' + fields.router_port + ' 路由</span>');
-
-        return ret.join('');
-    };
-
-    render.protocol = function (row_id, fields) {
-        switch (fields.protocol_type) {
-            case TP_PROTOCOL_TYPE_RDP:
-                return '<span class="label label-success"><i class="fa fa-desktop fa-fw"></i> RDP</span>';
-            case TP_PROTOCOL_TYPE_SSH:
-                return '<span class="label label-primary"><i class="fa fa-keyboard-o fa-fw"></i> SSH</span>';
-            case TP_PROTOCOL_TYPE_TELNET:
-                return '<span class="label label-info"><i class="fa fa-keyboard-o fa-fw"></i> TELNET</span>';
-            default:
-                return '<span class="label label-ignore"><i class="fa fa-question-circle-o fa-fw"></i> 未设置</span>';
-        }
-    };
-
-    render.auth_type = function (row_id, fields) {
-        switch (fields.auth_type) {
-            case TP_AUTH_TYPE_NONE:
-                return '<span class="label label-warning">无</span>';
-            case TP_AUTH_TYPE_PASSWORD:
-                return '<span class="label label-primary">密码</span>';
-            case TP_AUTH_TYPE_PRIVATE_KEY:
-                return '<span class="label label-success">私钥</span>';
-            default:
-                return '<span class="label label-ignore">未设置</span>';
-        }
-    };
-};
-
-$app.on_table_sel_acc_header_created = function (header) {
-    $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
-        CALLBACK_STACK.create()
-            .add(header._table_ctrl.load_data)
-            .add(header._table_ctrl.reset_filters)
-            .exec();
-    });
-
-    // 表格内嵌过滤器的事件绑定在这时进行（也可以延期到整个表格创建完成时进行）
-    header._table_ctrl.get_filter_ctrl('search').on_created();
-};
-
-$app.create_dlg_sel_acc = function () {
-    var dlg = {};
-    dlg.dom_id = 'dlg-sel-acc';
-    dlg.field_id = -1;
-    dlg.field_name = '';
-    dlg.field_desc = '';
-
-    dlg.dom = {
-        dialog: $('#' + dlg.dom_id),
-        btn_sel_all: $('#' + dlg.dom_id + ' input[data-action="sel-all"]'),
-        btn_add: $('#' + dlg.dom_id + ' button[data-action="use-selected"]')
-    };
-
-    dlg.init = function (cb_stack) {
-        dlg.dom.btn_add.click(dlg.on_add);
-        dlg.dom.btn_sel_all.click(dlg.on_sel_all);
-        cb_stack.exec();
-    };
-
-    dlg.show = function () {
-        // dlg.init_fields();
-        $app.table_sel_acc.load_data();
-        dlg.dom.dialog.modal();
-    };
-
-    dlg.on_sel_all = function () {
-        var _objects = $('#' + $app.table_sel_acc.dom_id + ' tbody').find('[data-check-box]');
-        if ($(this).is(':checked')) {
-            $.each(_objects, function (i, _obj) {
-                $(_obj).prop('checked', true);
-            });
-        } else {
-            $.each(_objects, function (i, _obj) {
-                $(_obj).prop('checked', false);
-            });
-        }
-    };
-
-    dlg.check_all_selected = function (cb_stack) {
-        var _all_checked = true;
-        var _objs = $('#' + dlg.dom_id + ' tbody').find('[data-check-box]');
-        if (_objs.length === 0) {
-            _all_checked = false;
-        } else {
-            $.each(_objs, function (i, _obj) {
-                if (!$(_obj).is(':checked')) {
-                    _all_checked = false;
-                    return false;
-                }
-            });
-        }
-
-        if (_all_checked) {
-            dlg.dom.btn_sel_all.prop('checked', true);
-        } else {
-            dlg.dom.btn_sel_all.prop('checked', false);
-        }
-        if (cb_stack)
-            cb_stack.exec();
-    };
-
-    dlg.get_selected_items = function () {
-        var items = [];
-        var _objs = $('#' + dlg.dom_id + ' tbody tr td input[data-check-box]');
-        $.each(_objs, function (i, _obj) {
-            if ($(_obj).is(':checked')) {
-                var _row_data = $app.table_sel_acc.get_row(_obj);
-
-                var name = _row_data.username + '@' + _row_data.host_ip;
-                if (_row_data.router_ip.length > 0)
-                    name += ' （由 ' + _row_data.router_ip + ':' + _row_data.router_port + ' 路由）';
-
-
-                items.push({id: _row_data.id, name: name});
-            }
-        });
-
-        return items;
-    };
-
-    dlg.on_add = function () {
-        var items = dlg.get_selected_items();
-
-        $tp.ajax_post_json('/audit/policy/add-members', {
-                policy_id: $app.options.policy_id,
-                type: TP_POLICY_ASSET, // 被授权资产
-                rtype: TP_ACCOUNT,  // 账号
-                members: items
-            },
-            function (ret) {
-                if (ret.code === TPE_OK) {
-                    $tp.notify_success('被授权资产添加成功！');
-                    CALLBACK_STACK.create()
-                        .add($app.sync_height)
-                        .add(dlg.check_all_selected)
-                        .add($app.table_asset.load_data)
-                        .add($app.table_sel_acc.load_data)
-                        .exec();
-                } else {
-                    $tp.notify_error('被授权资产添加失败：' + tp_error_msg(ret.code, ret.message));
-                }
-            },
-            function () {
-                $tp.notify_error('网络故障，被授权资产添加失败！');
-            }
-        );
-
-    };
-
-    return dlg;
-};
-
-//-------------------------------
-// 选择账号组对话框
-//-------------------------------
-
-$app.on_table_sel_acc_group_cell_created = function (tbl, row_id, col_key, cell_obj) {
-    if (col_key === 'chkbox') {
-        cell_obj.find('[data-check-box]').click(function () {
-            // $app.check_users_all_selected();
-            $app.dlg_sel_acc_group.check_all_selected();
-        });
-    }
-};
-
-$app.on_table_sel_acc_group_render_created = function (render) {
+$app.on_table_sel_auditee_ug_render_created = function (render) {
 
     $app._add_common_render(render);
 
@@ -1478,7 +1466,7 @@ $app.on_table_sel_acc_group_render_created = function (render) {
     };
 };
 
-$app.on_table_sel_acc_group_header_created = function (header) {
+$app.on_table_sel_auditee_ug_header_created = function (header) {
     $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
         CALLBACK_STACK.create()
             .add(header._table_ctrl.load_data)
@@ -1490,9 +1478,9 @@ $app.on_table_sel_acc_group_header_created = function (header) {
     header._table_ctrl.get_filter_ctrl('search').on_created();
 };
 
-$app.create_dlg_sel_acc_group = function () {
+$app.create_dlg_sel_auditee_ug = function () {
     var dlg = {};
-    dlg.dom_id = 'dlg-sel-acc-group';
+    dlg.dom_id = 'dlg-sel-auditee-user-group';
     dlg.field_id = -1;  // 用户id
     dlg.field_name = '';
     dlg.field_desc = '';
@@ -1510,13 +1498,12 @@ $app.create_dlg_sel_acc_group = function () {
     };
 
     dlg.show = function () {
-        // dlg.init_fields();
-        $app.table_sel_acc_group.load_data();
+        $app.table_sel_auditee_ug.load_data();
         dlg.dom.dialog.modal();
     };
 
     dlg.on_sel_all = function () {
-        var _objects = $('#' + $app.table_sel_acc_group.dom_id + ' tbody').find('[data-check-box]');
+        var _objects = $('#' + $app.table_sel_auditee_ug.dom_id + ' tbody').find('[data-check-box]');
         if ($(this).is(':checked')) {
             $.each(_objects, function (i, _obj) {
                 $(_obj).prop('checked', true);
@@ -1556,7 +1543,7 @@ $app.create_dlg_sel_acc_group = function () {
         var _objs = $('#' + dlg.dom_id + ' tbody tr td input[data-check-box]');
         $.each(_objs, function (i, _obj) {
             if ($(_obj).is(':checked')) {
-                var _row_data = $app.table_sel_acc_group.get_row(_obj);
+                var _row_data = $app.table_sel_auditee_ug.get_row(_obj);
                 items.push({id: _row_data.id, name: _row_data.name});
             }
         });
@@ -1570,24 +1557,24 @@ $app.create_dlg_sel_acc_group = function () {
         $tp.ajax_post_json('/audit/policy/add-members', {
                 policy_id: $app.options.policy_id,
                 type: TP_POLICY_ASSET, // 授权操作者
-                rtype: TP_GROUP_ACCOUNT,  // 账号组
+                rtype: TP_GROUP_USER,  // 用户组
                 members: items
             },
             function (ret) {
                 if (ret.code === TPE_OK) {
-                    $tp.notify_success('被授权资产添加成功！');
+                    $tp.notify_success('授权操作者添加成功！');
                     CALLBACK_STACK.create()
                         .add($app.sync_height)
                         .add(dlg.check_all_selected)
-                        .add($app.table_asset.load_data)
-                        .add($app.table_sel_acc_group.load_data)
+                        .add($app.table_auditee.load_data)
+                        .add($app.table_sel_auditee_ug.load_data)
                         .exec();
                 } else {
-                    $tp.notify_error('被授权资产添加失败：' + tp_error_msg(ret.code, ret.message));
+                    $tp.notify_error('授权操作者添加失败：' + tp_error_msg(ret.code, ret.message));
                 }
             },
             function () {
-                $tp.notify_error('网络故障，被授权资产添加失败！');
+                $tp.notify_error('网络故障，授权操作者添加失败！');
             }
         );
 
@@ -1740,7 +1727,7 @@ $app.create_dlg_sel_host = function () {
                     CALLBACK_STACK.create()
                         .add($app.sync_height)
                         .add(dlg.check_all_selected)
-                        .add($app.table_asset.load_data)
+                        .add($app.table_auditee.load_data)
                         .add($app.table_sel_host.load_data)
                         .exec();
                 } else {
@@ -1880,7 +1867,7 @@ $app.create_dlg_sel_host_group = function () {
                     CALLBACK_STACK.create()
                         .add($app.sync_height)
                         .add(dlg.check_all_selected)
-                        .add($app.table_asset.load_data)
+                        .add($app.table_auditee.load_data)
                         .add($app.table_sel_host_group.load_data)
                         .exec();
                 } else {

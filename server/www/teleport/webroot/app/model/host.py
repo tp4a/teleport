@@ -44,6 +44,8 @@ def get_hosts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
                 _where.append('h.id NOT IN (SELECT mid FROM {}group_map WHERE type={} AND gid={})'.format(get_db().table_prefix, TP_GROUP_HOST, sql_exclude[k]))
             elif k == 'ops_policy_id':
                 _where.append('h.id NOT IN (SELECT rid FROM {dbtp}ops_auz WHERE policy_id={pid} AND rtype={rtype})'.format(dbtp=get_db().table_prefix, pid=sql_exclude[k], rtype=TP_HOST))
+            elif k == 'auditee_policy_id':
+                _where.append('h.id NOT IN (SELECT rid FROM {dbtp}audit_auz WHERE policy_id={pid} AND `type`={ptype} AND rtype={rtype})'.format(dbtp=get_db().table_prefix, pid=sql_exclude[k], ptype=TP_POLICY_ASSET, rtype=TP_HOST))
             else:
                 log.w('unknown exclude field: {}\n'.format(k))
 
