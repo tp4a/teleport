@@ -1397,12 +1397,6 @@ $app.create_dlg_edit_account = function () {
         block_username: $('#block-username'),
         block_password: $('#block-password'),
         block_sshkey: $('#block-sshkey'),
-        // btn_allow_ssh: $('#btn-allow-ssh'),
-        // btn_allow_sftp: $('#btn-allow-sftp'),
-        // btn_allow_rdp_desktop: $('#btn-allow-rdp-desktop'),
-        // btn_allow_rdp_clipboard: $('#btn-allow-rdp-clipboard'),
-        // btn_allow_rdp_driver: $('#btn-allow-rdp-driver-map'),
-        // btn_allow_rdp_console: $('#btn-allow-rdp-console'),
         prompt_username: $('#account-username-prompt'),
         prompt_password: $('#account-password-prompt'),
         btn_show_password: $('#btn-show-account-password'),
@@ -1445,12 +1439,12 @@ $app.create_dlg_edit_account = function () {
             } else if (dlg.host.os_type === TP_OS_TYPE_WINDOWS) {
                 dlg.dom.protocol_type.val(TP_PROTOCOL_TYPE_RDP);
             } else {
-
             }
 
             dlg.dom.username.val('');
 
         } else {
+            console.log(account);
             dlg.account = account;
             dlg.field_id = account.id;
             dlg.dom.dlg_title.html('编辑：' + account.username);
@@ -1475,18 +1469,18 @@ $app.create_dlg_edit_account = function () {
 
         var html = [];
         if (dlg.field_protocol === TP_PROTOCOL_TYPE_RDP) {
-            // $('#dlg-edit-host-protocol-port').val('3389');
             dlg.dom.block_rdp_param.show();
             dlg.dom.block_ssh_param.hide();
             dlg.dom.block_prompt.hide();
-            // dlg.dom.block_sshkey.hide();
-            // dlg.dom.block_password.show();
-            // dlg.dom.block_username.show();
 
             html.push('<option value="1">用户名/密码 认证</option>');
 
-            if (dlg.host.router_ip.length === 0)
-                dlg.dom.protocol_port.val(3389);
+            if (dlg.host.router_ip.length === 0) {
+                if(_.isNull(dlg.account))
+                    dlg.dom.protocol_port.val(3389);
+                else
+                    dlg.dom.protocol_port.val(dlg.account.protocol_port);
+            }
 
             dlg.protocol_sub_type = TP_PROTOCOL_TYPE_RDP_DESKTOP;
         } else if (dlg.field_protocol === TP_PROTOCOL_TYPE_SSH) {
@@ -1497,8 +1491,12 @@ $app.create_dlg_edit_account = function () {
             html.push('<option value="1">用户名/密码 认证</option>');
             html.push('<option value="2">SSH私钥 认证</option>');
 
-            if (dlg.host.router_ip.length === 0)
-                dlg.dom.protocol_port.val(22);
+            if (dlg.host.router_ip.length === 0) {
+                if(_.isNull(dlg.account))
+                    dlg.dom.protocol_port.val(22);
+                else
+                    dlg.dom.protocol_port.val(dlg.account.protocol_port);
+            }
 
             dlg.protocol_sub_type = TP_PROTOCOL_TYPE_SSH_SHELL;
         } else if (dlg.field_protocol === TP_PROTOCOL_TYPE_TELNET) {
@@ -1509,8 +1507,12 @@ $app.create_dlg_edit_account = function () {
             html.push('<option value="1">用户名/密码 认证</option>');
             html.push('<option value="0">无需认证</option>');
 
-            if (dlg.host.router_ip.length === 0)
-                dlg.dom.protocol_port.val(23);
+            if (dlg.host.router_ip.length === 0) {
+                if(_.isNull(dlg.account))
+                    dlg.dom.protocol_port.val(23);
+                else
+                    dlg.dom.protocol_port.val(dlg.account.protocol_port);
+            }
 
             dlg.protocol_sub_type = TP_PROTOCOL_TYPE_TELNET_SHELL;
         } else {
@@ -1518,8 +1520,6 @@ $app.create_dlg_edit_account = function () {
         }
 
         dlg.dom.auth_type.empty().append($(html.join('')));
-        //console.log(dlg.account);
-        //dlg.dom.auth_type.val(dlg.account.auth_type);
         dlg.on_auth_change();
     };
 
