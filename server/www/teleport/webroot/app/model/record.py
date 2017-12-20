@@ -14,7 +14,52 @@ from app.base.utils import tp_timestamp_utc_now
 import tornado.gen
 
 
-def get_records(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
+def get_records(handler, sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
+    """
+    获取会话列表
+    会话审计列表的显示策略（下列的`审计`操作指为会话做标记、置为保留状态、写备注等）：
+     1. 运维权限：可以查看自己的会话，但不能审计；
+     2. 运维授权权限：可以查看所有会话，但不能审计；
+     3. 审计权限：可以查看被授权的主机相关的会话，且可以审计；
+     4. 审计授权权限：可以查看所有会话，且可以审计。
+
+    :param handler:
+    :param sql_filter:
+    :param sql_order:
+    :param sql_limit:
+    :param sql_restrict:
+    :param sql_exclude:
+    :return:
+    """
+
+    allow_uid = 0
+    allow_hids = list()
+    allow_all = False
+    user = handler.get_current_user()
+    if (user['privilege'] & TP_PRIVILEGE_OPS_AUZ) != 0 or (user['privilege'] & TP_PRIVILEGE_AUDIT_AUZ) != 0:
+        allow_all = True
+    if not allow_all:
+        if (user['privilege'] & TP_PRIVILEGE_OPS) != 0:
+            allow_uid = user.id
+        if (user['privilege'] & TP_PRIVILEGE_AUDIT) != 0:
+            s = SQL(get_db())
+            s.select_from('audit_map', ['h_id'], alt_name='a')
+            s.where(
+                'a.p_state={enable_state} AND'
+                '('
+                '((a.policy_auth_type={U2H} OR a.policy_auth_type={U2HG}) AND a.u_state={enable_state}) OR '
+                '((a.policy_auth_type={UG2H} OR a.policy_auth_type={UG2HG}) AND a.u_state={enable_state} AND a.gu_state={enable_state})'
+                ')'.format(enable_state=TP_STATE_NORMAL, U2H=TP_POLICY_AUTH_USER_HOST, U2HG=TP_POLICY_AUTH_USER_gHOST, UG2H=TP_POLICY_AUTH_gUSER_HOST, UG2HG=TP_POLICY_AUTH_gUSER_gHOST))
+            err = s.query()
+            if err != TPE_OK:
+                return err, 0, []
+            for h in s.recorder:
+                if h.h_id not in allow_hids:
+                    allow_hids.append(h.h_id)
+
+        if allow_uid == 0 and len(allow_hids) == 0:
+            return TPE_FAILED, 0, []
+
     s = SQL(get_db())
     s.select_from('record', ['id', 'sid', 'user_id', 'host_id', 'acc_id', 'state', 'user_username', 'user_surname', 'host_ip', 'conn_ip', 'conn_port', 'client_ip', 'acc_username', 'protocol_type', 'protocol_sub_type', 'time_begin', 'time_end'], alt_name='r')
 
@@ -41,6 +86,13 @@ def get_records(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
                 _where.append('r.state={}'.format(sql_filter[k]))
             # elif k == 'search_record':
             #     _where.append('(h.name LIKE "%{}%" OR h.ip LIKE "%{}%" OR h.router_addr LIKE "%{}%" OR h.desc LIKE "%{}%" OR h.cid LIKE "%{}%")'.format(sql_filter[k], sql_filter[k], sql_filter[k], sql_filter[k], sql_filter[k]))
+
+    if not allow_all:
+        if allow_uid != 0:
+            _where.append('r.user_id={uid}'.format(uid=allow_uid))
+        if len(allow_hids) > 0:
+            hids = [str(h) for h in allow_hids]
+            _where.append('r.host_id IN ({hids})'.format(hids=','.join(hids)))
 
     if len(_where) > 0:
         str_where = '( {} )'.format(' AND '.join(_where))

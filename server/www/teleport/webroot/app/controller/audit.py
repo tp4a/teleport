@@ -17,7 +17,7 @@ def get_free_space_bytes(folder):
     """ Return folder/drive free space (in bytes)
     """
     try:
-        total, used, free = shutil.disk_usage(folder)
+        total, _, free = shutil.disk_usage(folder)
         return total, free
     except:
         return 0, 0
@@ -406,7 +406,7 @@ class DoRemoveMembersHandler(TPBaseJsonHandler):
 
 class RecordHandler(TPBaseHandler):
     def get(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
         if ret != TPE_OK:
             return
 
@@ -426,7 +426,7 @@ class RecordHandler(TPBaseHandler):
 
 class DoGetRecordsHandler(TPBaseJsonHandler):
     def post(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
         if ret != TPE_OK:
             return
 
@@ -482,21 +482,12 @@ class DoGetRecordsHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
-        err, total, row_data = record.get_records(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude)
+        err, total, row_data = record.get_records(self, sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude)
         ret = dict()
         ret['page_index'] = sql_limit['page_index']
         ret['total'] = total
         ret['data'] = row_data
         self.write_json(err, data=ret)
-
-        # err, total, record_list = record.get_records(filter, order, _limit)
-        # if err != TPE_OK:
-        #     return self.write_json(err)
-        # ret = dict()
-        # ret['page_index'] = limit['page_index']
-        # ret['total'] = total
-        # ret['data'] = record_list
-        # return self.write_json(0, data=ret)
 
 
 class ReplayHandler(TPBaseHandler):
@@ -530,7 +521,7 @@ class ReplayHandler(TPBaseHandler):
 class ComandLogHandler(TPBaseHandler):
     @tornado.gen.coroutine
     def get(self, protocol, record_id):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
         if ret != TPE_OK:
             return
 
@@ -599,7 +590,7 @@ class ComandLogHandler(TPBaseHandler):
 class DoGetRecordHeaderHandler(TPBaseJsonHandler):
     @tornado.gen.coroutine
     def post(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
         if ret != TPE_OK:
             return
 
@@ -652,7 +643,7 @@ class DoGetFileHandler(TPBaseHandler):
 
         log.v('--{}\n'.format(self.request.uri))
 
-        require_privilege = TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT_OPS_HISTORY
+        require_privilege = TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT
 
         # sid = self.get_argument('sid', None)
         # if sid is None:

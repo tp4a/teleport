@@ -80,7 +80,7 @@ $app.create_controls = function () {
         },
         {
             t: '审计', i: [
-            {n: '审计（回放操作录像）', p: TP_PRIVILEGE_AUDIT_OPS_HISTORY},
+            {n: '审计（回放操作录像）', p: TP_PRIVILEGE_AUDIT},
             {n: '审计授权管理', p: TP_PRIVILEGE_AUDIT_AUZ}]
         },
         {

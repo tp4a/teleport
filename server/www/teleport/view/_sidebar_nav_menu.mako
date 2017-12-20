@@ -98,7 +98,7 @@
                 'name': '审计授权',
             },
 			{
-                'privilege': const.TP_PRIVILEGE_AUDIT_OPS_HISTORY | const.TP_PRIVILEGE_OPS,
+                'privilege': const.TP_PRIVILEGE_AUDIT | const.TP_PRIVILEGE_OPS,
                 'id': 'record',
                 'link': '/audit/record',
                 'name': '会话审计',
