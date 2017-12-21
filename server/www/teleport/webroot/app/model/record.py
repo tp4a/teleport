@@ -22,14 +22,6 @@ def get_records(handler, sql_filter, sql_order, sql_limit, sql_restrict, sql_exc
      2. 运维授权权限：可以查看所有会话，但不能审计；
      3. 审计权限：可以查看被授权的主机相关的会话，且可以审计；
      4. 审计授权权限：可以查看所有会话，且可以审计。
-
-    :param handler:
-    :param sql_filter:
-    :param sql_order:
-    :param sql_limit:
-    :param sql_restrict:
-    :param sql_exclude:
-    :return:
     """
 
     allow_uid = 0

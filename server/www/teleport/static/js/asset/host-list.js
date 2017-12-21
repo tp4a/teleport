@@ -1660,6 +1660,8 @@ $app.create_dlg_edit_account = function () {
 
         $assist.do_teleport(
             {
+                mode: 0,
+                auth_id: 'none',
                 acc_id: dlg.field_id,
                 host_id: dlg.host.id,
                 protocol_type: dlg.field_protocol,

@@ -496,9 +496,89 @@ def get_auth(auth_id):
     return s.recorder[0], TPE_OK
 
 
+def get_all_remotes(handler, sql_filter, sql_order, sql_limit):
+    s = SQL(get_db())
+    s.select_from('host', ['id', 'name', 'ip', 'router_ip', 'router_port', 'state'], alt_name='h')
+
+    str_where = ''
+    _where = list()
+
+    if len(sql_filter) > 0:
+        for k in sql_filter:
+            if k == 'state':
+                _where.append('h.state={}'.format(sql_filter[k]))
+            elif k == 'search':
+                _where.append('(h.name LIKE "%{k}%" OR h.ip LIKE "%{k}%" OR h.router_ip LIKE "%{k}%")'.format(k=sql_filter[k]))
+
+    if len(_where) > 0:
+        str_where = '( {} )'.format(' AND '.join(_where))
+
+    s.where(str_where)
+
+    if sql_order is not None:
+        _sort = False if not sql_order['asc'] else True
+        if 'id' == sql_order['name']:
+            s.order_by('h.id', _sort)
+        elif 'ip' == sql_order['name']:
+            s.order_by('h.ip', _sort)
+        elif 'name' == sql_order['name']:
+            s.order_by('h.name', _sort)
+        else:
+            log.e('unknown order field: {}\n'.format(sql_order['name']))
+            return TPE_PARAM, s.total_count, s.page_index, s.recorder
+
+    if len(sql_limit) > 0:
+        s.limit(sql_limit['page_index'], sql_limit['per_page'])
+
+    err = s.query()
+    if err != TPE_OK:
+        return err, 0, 1, []
+
+    ret = s.recorder
+    for h in ret:
+        h['h_id'] = h.id
+        h['h_state'] = TP_STATE_NORMAL
+        h['gh_state'] = TP_STATE_NORMAL
+        h['h_name'] = h.name
+        del h['id']
+        del h['name']
+        h['accounts_'] = []
+
+        sa = SQL(get_db())
+        sa.select_from('acc', ['id', 'protocol_type', 'protocol_port', 'username'], alt_name='a')
+        sa.where('a.host_id={}'.format(h.h_id))
+        sa.order_by('a.username', True)
+        err = sa.query()
+        if err != TPE_OK:
+            continue
+        for a in sa.recorder:
+            h['accounts_'].append({
+                'a_name': a.username,
+                'id': a.id,
+                'a_id': a.id,
+                'policy_auth_type': TP_POLICY_AUTH_USER_ACC,
+                'uni_id': 'none',
+                'a_state': TP_STATE_NORMAL,
+                'ga_state': TP_STATE_NORMAL,
+                'protocol_type': a.protocol_type,
+                'h_id': h.h_id,
+                'policy_': {
+                    'flag_ssh': TP_FLAG_ALL,
+                    'flag_rdp': TP_FLAG_ALL
+                }
+            })
+
+    # print(json.dumps(s.recorder, indent='  '))
+    return err, s.total_count, s.page_index, s.recorder
+
+
 def get_remotes(handler, sql_filter, sql_order, sql_limit):
     """
     获取当前登录用户的可以远程登录的主机（及账号）
+    远程连接列表的显示策略：
+     1. 运维权限：可以使用被授权的远程账号进行远程连接；
+     2. 运维授权权限：可以使用所有的远程账号进行远程连接。
+
     步骤：
       1. 查询满足条件的项（用户->账号），按授权策略顺序排序
       2. 在此基础上选出非重复的（用户->账号）关系项
@@ -506,6 +586,9 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
       4. 为每一个主机查询满足条件的账号项
     """
     operator = handler.get_current_user()
+    if (operator['privilege'] & TP_PRIVILEGE_OPS_AUZ) != 0:
+        return get_all_remotes(handler, sql_filter, sql_order, sql_limit)
+
     db = get_db()
 
     ######################################################
@@ -908,7 +991,7 @@ def build_auz_map():
     for i in _map:
         v = '("{uni_id}","{ua_id}",{p_id},{p_rank},{p_state},{policy_auth_type},{u_id},{u_state},{gu_id},{gu_state},{h_id},{h_state},{gh_id},{gh_state},{a_id},{a_state},{ga_id},{ga_state},' \
             '"{u_name}","{u_surname}","{h_name}","{ip}","{router_ip}",{router_port},"{a_name}",{protocol_type},{protocol_port})' \
-            ''.format(uni_id=i.uni_id, ua_id=i.ua_id, p_id=i.p_id, p_rank=i.p_rank, p_state=i.p_state,policy_auth_type=i.policy_auth_type,
+            ''.format(uni_id=i.uni_id, ua_id=i.ua_id, p_id=i.p_id, p_rank=i.p_rank, p_state=i.p_state, policy_auth_type=i.policy_auth_type,
                       u_id=i.u_id, u_state=i.u_state, gu_id=i.gu_id, gu_state=i.gu_state, h_id=i.h_id, h_state=i.h_state,
                       gh_id=i.gh_id, gh_state=i.gh_state, a_id=i.a_id, a_state=i.a_state, ga_id=i.ga_id, ga_state=i.ga_state,
                       u_name=i.u_name, u_surname=i.u_surname, h_name=i.h_name, ip=i.ip, router_ip=i.router_ip, router_port=i.router_port,

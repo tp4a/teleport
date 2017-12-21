@@ -108,8 +108,14 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
 
         protocol_sub_type = TP_PROTOCOL_TYPE_UNKNOWN
 
-        if 'auth_id' in args:
-            if 'protocol_sub_type' not in args:
+        if 'mode' not in args:
+            return self.write_json(TPE_PARAM)
+        # mode = 0:  test connect
+        # mode = 1:  user connect
+        # mode = 2:  admin connect
+
+        if args['mode'] == 1:
+            if 'auth_id' not in args or 'protocol_sub_type' not in args:
                 return self.write_json(TPE_PARAM)
 
             # 根据auth_id从数据库中取得此授权相关的用户、主机、账号三者详细信息
@@ -132,7 +138,8 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
                 return self.write_json(err)
             log.v(acc_info)
 
-        elif len(args) == 2 and 'acc_id' in args and 'host_id' in args:
+        # elif len(args) == 2 and 'acc_id' in args and 'host_id' in args:
+        elif args['mode'] == 2:
             acc_id = args['acc_id']
             host_id = args['host_id']
 
@@ -140,7 +147,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             if err != TPE_OK:
                 return self.write_json(err)
 
-        else:
+        elif args['mode'] == 0:
             conn_info['_test'] = 1
             try:
                 acc_id = int(args['acc_id'])
@@ -184,6 +191,9 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
                     acc_info['pri_key'] = _acc_info['pri_key']
 
                     conn_info['_enc'] = 1
+
+        else:
+            return self.write_json(TPE_PARAM)
 
         # 获取要远程连接的主机信息（要访问的IP地址，如果是路由模式，则是路由主机的IP+端口）
         err, host_info = host.get_host_info(host_id)
@@ -627,7 +637,7 @@ class DoRankReorderHandler(TPBaseJsonHandler):
 
 class DoGetRemotesHandler(TPBaseJsonHandler):
     def post(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_OPS)
         if ret != TPE_OK:
             return
 
