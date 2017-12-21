@@ -155,7 +155,7 @@
                     <tr>
                         <td class="key">保留时间</td>
                         <td class="value">
-                            <input id="storage-keep-log" type="text" value="0"/><span class="unit">天</span><span class="desc">30~180。仅保留指定天数的系统日志，为0则永久保留。默认为0。</span>
+                            <input id="storage-keep-log" type="text" value="0"/><span class="unit">天</span><span class="desc">30~365。仅保留指定天数的系统日志，为0则永久保留。默认为0。</span>
                         </td>
                     </tr>
 
@@ -168,7 +168,7 @@
                     <tr>
                         <td class="key">保留时间</td>
                         <td class="value">
-                            <input id="storage-keep-record" type="text" value="0"/><span class="unit">天</span><span class="desc">30~180。仅保留指定天数的会话录像（以会话开始时间为准），为0则永久保留。默认为0。</span>
+                            <input id="storage-keep-record" type="text" value="0"/><span class="unit">天</span><span class="desc">30~365。仅保留指定天数的会话录像（以会话开始时间为准），为0则永久保留。默认为0。</span>
                         </td>
                     </tr>
 
@@ -181,7 +181,7 @@
                     <tr>
                         <td class="key">时间点</td>
                         <td class="value">
-                            <select id="select-cleanup-storage-hour">
+                            <select id="select-cleanup-storage-hour" style="width:4rem;">
                                 <option value="0">00</option>
                                 <option value="1">01</option>
                                 <option value="2">02</option>
@@ -208,7 +208,7 @@
                                 <option value="23">23</option>
                             </select>
                             时
-                            <select id="select-cleanup-storage-minute">
+                            <select id="select-cleanup-storage-minute" style="width:4rem;">
                                 <option value="0">00</option>
                                 <option value="5">05</option>
                                 <option value="10">10</option>
@@ -223,7 +223,7 @@
                                 <option value="55">55</option>
                             </select>
                             分
-                            <span class="desc">每天在指定时间点清理存储。</span>
+                            <span class="desc">每天在指定时间点清理超出保留时间的数据。</span>
                         </td>
                     </tr>
                     <tr>

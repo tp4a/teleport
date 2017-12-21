@@ -507,12 +507,12 @@ $app.create_config_storage = function () {
         var _cleanup_hour = parseInt(_sto.dom.select_cleanup_hour.val());
         var _cleanup_minute = parseInt(_sto.dom.select_cleanup_minute.val());
 
-        if (!(_keep_log === 0 || (_keep_log >= 30 && _keep_log <= 180))) {
+        if (!(_keep_log === 0 || (_keep_log >= 30 && _keep_log <= 365))) {
             $tp.notify_error('日志保留时间超出范围！');
             _sto.dom.input_keep_log.focus();
             return;
         }
-        if (!(_keep_record === 0 || (_keep_record >= 30 && _keep_record <= 180))) {
+        if (!(_keep_record === 0 || (_keep_record >= 30 && _keep_record <= 365))) {
             $tp.notify_error('会话录像保留时间超出范围！');
             _sto.dom.input_keep_record.focus();
             return;
