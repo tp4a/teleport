@@ -440,14 +440,11 @@ $app.on_btn_do_upload_click = function () {
         .html('<i class="fa fa-cog fa-spin fa-fw"></i> 正在导入，请稍候...')
         .show();
 
-
-    console.log('xxx');
-
     var param = {};
     $.ajaxFileUpload({
         url: "/user/upload-import",// 需要链接到服务器地址
         fileElementId: "file-selector", // 文件选择框的id属性
-        timeout: 60000,
+        timeout: 120000,
         secureuri: false,
         dataType: 'text',
         data: param,
@@ -888,7 +885,7 @@ $app.create_dlg_edit_user = function () {
             if (dlg.dom.btn_auth_username_password_oath.hasClass('tp-selected'))
                 dlg.field_auth_type |= TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH;
 
-            if(dlg.field_auth_type === 0) {
+            if (dlg.field_auth_type === 0) {
                 $tp.notify_error('请设置用户登录时身份验证方式！');
                 return false;
             }
@@ -902,6 +899,7 @@ $app.create_dlg_edit_user = function () {
             return;
 
         var action = (dlg.field_id === -1) ? '创建' : '更新';
+        var timeout = (dlg.field_id === -1) ? 60000 : 3000;
 
         // 如果id为-1表示创建，否则表示更新
         $tp.ajax_post_json('/user/update-user', {
@@ -918,7 +916,10 @@ $app.create_dlg_edit_user = function () {
             },
             function (ret) {
                 if (ret.code === TPE_OK) {
-                    $tp.notify_success('用户账号' + action + '成功！');
+                    if (ret.message.length > 0)
+                        $tp.notify_success(ret.message);
+                    else
+                        $tp.notify_success('用户账号' + action + '成功！');
                     $app.table_users.load_data();
                     dlg.dom.dialog.modal('hide');
                 } else {
@@ -927,7 +928,8 @@ $app.create_dlg_edit_user = function () {
             },
             function () {
                 $tp.notify_error('网络故障，用户账号' + action + '失败！');
-            }
+            },
+            timeout
         );
 
     };

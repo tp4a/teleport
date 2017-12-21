@@ -6,6 +6,7 @@ import time
 import datetime
 import hashlib
 import threading
+import random
 
 __all__ = ['AttrDict', 'tp_make_dir']
 
@@ -170,7 +171,7 @@ def tp_timestamp_utc_now():
 
 
 def tp_utc_timestamp_ms():
-    return int(datetime.datetime.utcnow().timestamp()*1000)
+    return int(datetime.datetime.utcnow().timestamp() * 1000)
 
 
 def tp_bytes2string(b, encode='utf8'):
@@ -197,6 +198,33 @@ def tp_md5file(file_name):
 
     f.close()
     return m.hexdigest()
+
+
+def tp_gen_password(length=8):
+    random.seed()
+
+    # 生成一个随机密码
+    _chars = ['ABCDEFGHJKMNPQRSTWXYZ', 'abcdefhijkmnprstwxyz', '2345678']  # 默认去掉了容易混淆的字符oO,Ll,9gq,Vv,Uu,I1
+
+    have_CHAR = False
+    have_char = False
+    have_num = False
+    while True:
+        ret = []
+        for i in range(length):
+            idx = random.randint(0, len(_chars) - 1)
+            if idx == 0:
+                have_CHAR = True
+            elif idx == 1:
+                have_char = True
+            else:
+                have_num = True
+            ret.append(random.choice(_chars[idx]))
+
+        if have_CHAR and have_char and have_num:
+            break
+
+    return ''.join(ret)
 
 
 def tp_check_strong_password(p):

@@ -9,7 +9,7 @@ from app.base.utils import tp_timestamp_utc_now, tp_generate_random
 from app.const import *
 from app.model import syslog
 from app.base.stats import tp_stats
-from app.logic.auth.password import tp_password_verify
+from app.logic.auth.password import tp_password_verify, tp_password_generate_secret
 from app.logic.auth.oath import tp_oath_verify_code
 
 
@@ -191,10 +191,12 @@ def create_users(handler, user_list, success, failed):
             failed.append({'line': user['_line'], 'error': '账号 `{}` 已经存在'.format(user['username'])})
             continue
 
-        sql = 'INSERT INTO `{}user` (`type`, `auth_type`, `username`, `surname`, `role_id`, `state`, `email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `desc`) VALUES ' \
-              '(1, 0, "{username}", "{surname}", 0, {state}, "{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
+        _password = tp_password_generate_secret(user['password'])
+
+        sql = 'INSERT INTO `{}user` (`type`, `auth_type`, `password`, `username`, `surname`, `role_id`, `state`, `email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `desc`) VALUES ' \
+              '(1, 0, "{password}", "{username}", "{surname}", 0, {state}, "{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
               ''.format(db.table_prefix,
-                        username=user['username'], surname=user['surname'], state=TP_STATE_NORMAL, email=user['email'],
+                        username=user['username'], surname=user['surname'], password=_password, state=TP_STATE_NORMAL, email=user['email'],
                         creator_id=operator['id'], create_time=_time_now, last_login=0, last_chpass=0, desc=user['desc'])
         db_ret = db.exec(sql)
         if not db_ret:
@@ -206,7 +208,7 @@ def create_users(handler, user_list, success, failed):
         user['_id'] = db.last_insert_id()
 
     if len(name_list) > 0:
-        syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "创建用户：{}".format('，'.join(name_list)))
+        syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "批量导入方式创建用户：{}".format('，'.join(name_list)))
         tp_stats().user_counter_change(len(name_list))
 
 
@@ -230,10 +232,11 @@ def create_user(handler, args):
     # db_ret = db.query(sql)
     # if db_ret is not None and len(db_ret) > 0:
     #     return TPE_EXISTS, 0
+    _password = tp_password_generate_secret(args['password'])
 
-    sql = 'INSERT INTO `{}user` (`type`, `auth_type`, `username`, `surname`, `role_id`, `state`, `email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `desc`) VALUES ' \
-          '(1, {auth_type}, "{username}", "{surname}", {role}, {state}, "{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
-          ''.format(db.table_prefix, auth_type=args['auth_type'],
+    sql = 'INSERT INTO `{}user` (`type`, `auth_type`, `password`, `username`, `surname`, `role_id`, `state`, `email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `desc`) VALUES ' \
+          '(1, {auth_type}, "{password}", "{username}", "{surname}", {role}, {state}, "{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
+          ''.format(db.table_prefix, auth_type=args['auth_type'], password=_password,
                     username=args['username'], surname=args['surname'], role=args['role'], state=TP_STATE_NORMAL, email=args['email'],
                     creator_id=operator['id'],
                     create_time=_time_now, last_login=0, last_chpass=0, desc=args['desc'])
@@ -256,14 +259,22 @@ def update_user(handler, args):
     db = get_db()
 
     # 1. 判断此账号是否已经存在
-    sql = 'SELECT id FROM {}user WHERE id="{}";'.format(db.table_prefix, args['id'])
+    sql = 'SELECT `username` FROM {}user WHERE id={};'.format(db.table_prefix, args['id'])
     db_ret = db.query(sql)
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
-    sql = 'UPDATE `{}user` SET `surname`="{surname}", `auth_type`={auth_type}, `role_id`={role}, `email`="{email}", `mobile`="{mobile}", `qq`="{qq}", `wechat`="{wechat}", `desc`="{desc}" WHERE `id`={user_id};' \
+    old_username = db_ret[0][0]
+    if old_username == args['username']:
+        # 如果要更新用户登录名，则需要判断是否已经存在了
+        sql = 'SELECT `id` FROM {}user WHERE username="{}";'.format(db.table_prefix, args['username'])
+        db_ret = db.query(sql)
+        if db_ret is not None and len(db_ret) > 0:
+            return TPE_EXISTS
+
+    sql = 'UPDATE `{}user` SET `username`="{username}", `surname`="{surname}", `auth_type`={auth_type}, `role_id`={role}, `email`="{email}", `mobile`="{mobile}", `qq`="{qq}", `wechat`="{wechat}", `desc`="{desc}" WHERE `id`={user_id};' \
           ''.format(db.table_prefix,
-                    surname=args['surname'], auth_type=args['auth_type'], role=args['role'], email=args['email'],
+                    username=args['username'], surname=args['surname'], auth_type=args['auth_type'], role=args['role'], email=args['email'],
                     mobile=args['mobile'], qq=args['qq'], wechat=args['wechat'], desc=args['desc'],
                     user_id=args['id']
                     )

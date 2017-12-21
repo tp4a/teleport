@@ -11,14 +11,14 @@ from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.logger import *
 from app.base.session import tp_session
-from app.base.utils import tp_check_strong_password
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_check_strong_password, tp_gen_password
+# from app.base.utils import tp_timestamp_utc_now
 from app.logic.auth.oath import tp_oath_verify_code
 from app.const import *
 from app.logic.auth.oath import tp_oath_generate_secret, tp_oath_generate_qrcode
 from app.logic.auth.password import tp_password_generate_secret, tp_password_verify
 from app.model import group
-from app.model import syslog
+# from app.model import syslog
 from app.model import user
 
 
@@ -401,6 +401,8 @@ class DoImportHandler(TPBaseHandler):
                     u['wechat'] = csv_recorder[self.IDX_WECHAT].strip()
                     u['desc'] = csv_recorder[self.IDX_DESC].strip()
 
+                    u['password'] = tp_gen_password(8)
+
                     # fix
                     if len(u['surname']) == 0:
                         u['surname'] = _username
@@ -455,15 +457,47 @@ class DoImportHandler(TPBaseHandler):
 
             group.make_group_map(TP_GROUP_USER, gm)
 
+            # 对于创建成功的用户，发送密码邮件函
+            sys_smtp_password = tp_cfg().sys_smtp_password
+            if len(sys_smtp_password) > 0:
+                web_url = '{}://{}'.format(self.request.protocol, self.request.host)
+                for u in user_list:
+                    if u['_id'] == 0 or len(u['email']) == 0:
+                        continue
+                    err, msg = yield mail.tp_send_mail(
+                        u['email'],
+                        '{surname} 您好！\n\n已为您创建teleport系统用户账号，现在可以使用以下信息登录teleport系统：\n\n'
+                        '登录用户名：{username}\n'
+                        '密码：{password}\n'
+                        '地址：{web_url}\n\n\n\n'
+                        '[本邮件由teleport系统自动发出，请勿回复]'
+                        '\n\n'
+                        ''.format(surname=u['surname'], username=u['username'], password=u['password'], web_url=web_url),
+                        subject='用户密码函'
+                    )
+                    if err != TPE_OK:
+                        failed.append({'line': u['_line'], 'error': '无法发送密码函到邮箱 {}，错误：{}。'.format(u['email'], msg)})
+
+            # 统计结果
+            total_success = 0
+            total_failed = 0
+            for u in user_list:
+                if u['_id'] == 0:
+                    total_failed += 1
+                else:
+                    total_success += 1
+
+            # 生成最终结果信息
             if len(failed) == 0:
                 ret['code'] = TPE_OK
-                ret['message'] = '所有 {} 个用户账号均已导入！'.format(len(success))
+                ret['message'] = '共导入 {} 个用户账号！'.format(total_success)
                 return self.write(json.dumps(ret).encode('utf8'))
             else:
                 ret['code'] = TPE_FAILED
-                if len(success) > 0:
-                    ret['message'] = '{} 个用户账号导入成功，'.format(len(success))
-                ret['message'] += '{} 个用户账号未能导入！'.format(len(failed))
+                if total_success > 0:
+                    ret['message'] = '{} 个用户账号导入成功，'.format(total_success)
+                if total_failed > 0:
+                    ret['message'] += '{} 个用户账号未能导入！'.format(total_failed)
 
                 ret['data'] = failed
                 return self.write(json.dumps(ret).encode('utf8'))
@@ -474,8 +508,8 @@ class DoImportHandler(TPBaseHandler):
                 ret['message'] += '{} 个用户账号导入后发生异常！'.format(len(success))
             else:
                 ret['message'] = '发生异常！'
-            if len(failed) > 0:
-                ret['data'] = failed
+
+            ret['data'] = failed
             return self.write(json.dumps(ret).encode('utf8'))
 
         finally:
@@ -484,6 +518,7 @@ class DoImportHandler(TPBaseHandler):
 
 
 class DoUpdateUserHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
         if ret != TPE_OK:
@@ -511,15 +546,37 @@ class DoUpdateUserHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
-        if len(args['username']) == 0:  # or len(args['email']) == 0:
+        if len(args['username']) == 0:
             return self.write_json(TPE_PARAM)
 
         if args['id'] == -1:
-            err, info = user.create_user(self, args)
+            args['password'] = tp_gen_password(8)
+            err, _ = user.create_user(self, args)
+            if err == TPE_OK:
+                # 对于创建成功的用户，发送密码邮件函
+                sys_smtp_password = tp_cfg().sys_smtp_password
+                if len(sys_smtp_password) > 0:
+                    web_url = '{}://{}'.format(self.request.protocol, self.request.host)
+                    err, msg = yield mail.tp_send_mail(
+                        args['email'],
+                        '{surname} 您好！\n\n已为您创建teleport系统用户账号，现在可以使用以下信息登录teleport系统：\n\n'
+                        '登录用户名：{username}\n'
+                        '密码：{password}\n'
+                        '地址：{web_url}\n\n\n\n'
+                        '[本邮件由teleport系统自动发出，请勿回复]'
+                        '\n\n'
+                        ''.format(surname=args['surname'], username=args['username'], password=args['password'], web_url=web_url),
+                        subject='用户密码函'
+                    )
+                    if err != TPE_OK:
+                        return self.write_json(TPE_OK, '用户账号创建成功，但发送密码函失败：{}'.format(msg))
+                    else:
+                        return self.write_json(TPE_OK)
+            else:
+                return self.write_json(err)
         else:
             err = user.update_user(self, args)
-            info = {}
-        self.write_json(err, data=info)
+            self.write_json(err)
 
 
 class DoSetRoleForUsersHandler(TPBaseJsonHandler):
@@ -943,85 +1000,6 @@ class DoGetGroupWithMemberHandler(TPBaseJsonHandler):
         ret['total'] = total_count
         ret['data'] = row_data
         self.write_json(err, data=ret)
-
-
-# class DoAddGroupMemberHandler(TPBaseJsonHandler):
-#     def post(self):
-#         ret = self.check_privilege(TP_PRIVILEGE_USER_GROUP)
-#         if ret != TPE_OK:
-#             return
-#
-#         args = self.get_argument('args', None)
-#         if args is None:
-#             return self.write_json(TPE_PARAM)
-#         try:
-#             args = json.loads(args)
-#         except:
-#             return self.write_json(TPE_JSON_FORMAT)
-#
-#         try:
-#             gid = args['group_id']
-#             members = args['members']
-#         except:
-#             return self.write_json(TPE_PARAM)
-#
-#         err = user.add_group_members(gid, members)
-#         self.write_json(err)
-
-
-# class DoRemoveGroupMemberHandler(TPBaseJsonHandler):
-#     def post(self):
-#         ret = self.check_privilege(TP_PRIVILEGE_USER_GROUP)
-#         if ret != TPE_OK:
-#             return
-#
-#         args = self.get_argument('args', None)
-#         if args is None:
-#             return self.write_json(TPE_PARAM)
-#         try:
-#             args = json.loads(args)
-#         except:
-#             return self.write_json(TPE_JSON_FORMAT)
-#
-#         try:
-#             gid = args['group_id']
-#             members = args['members']
-#         except:
-#             return self.write_json(TPE_PARAM)
-#
-#         err = user.remove_group_members(gid, members)
-#         self.write_json(err)
-
-
-# class DoUpdateGroupHandler(TPBaseJsonHandler):
-#     def post(self):
-#         ret = self.check_privilege(TP_PRIVILEGE_USER_GROUP)
-#         if ret != TPE_OK:
-#             return
-#
-#         args = self.get_argument('args', None)
-#         if args is None:
-#             return self.write_json(TPE_PARAM)
-#         try:
-#             args = json.loads(args)
-#         except:
-#             return self.write_json(TPE_JSON_FORMAT)
-#
-#         try:
-#             args['id'] = int(args['id'])
-#             args['name'] = args['name'].strip()
-#             args['desc'] = args['desc'].strip()
-#         except:
-#             return self.write_json(TPE_PARAM)
-#
-#         if len(args['name']) == 0:
-#             return self.write_json(TPE_PARAM)
-#
-#         if args['id'] == -1:
-#             err, _ = user.create_group(self, args)
-#         else:
-#             err = user.update_group(self, args)
-#         self.write_json(err)
 
 
 class DoGetRoleListHandler(TPBaseJsonHandler):

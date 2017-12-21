@@ -38,7 +38,6 @@ def core_service_async_post_http(post_data):
 @tornado.gen.coroutine
 def core_service_async_enc(data):
 
-    # url = 'http://{}:{}/rpc'.format(ts_server_rpc_ip, ts_server_rpc_port)
     req = {'method': 'enc', 'param': {'p': data}}
 
     _yr = core_service_async_post_http(req)
