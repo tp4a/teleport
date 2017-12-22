@@ -80,9 +80,9 @@ class SessionListsHandler(TPBaseHandler):
 class DoGetSessionIDHandler(TPBaseJsonHandler):
     @tornado.gen.coroutine
     def post(self):
-        ret = self.check_privilege(TP_PRIVILEGE_ASSET_CREATE | TP_PRIVILEGE_ASSET_DELETE | TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ)
-        if ret != TPE_OK:
-            return
+        # ret = self.check_privilege(TP_PRIVILEGE_ASSET_CREATE | TP_PRIVILEGE_ASSET_DELETE | TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ)
+        # if ret != TPE_OK:
+        #     return
 
         args = self.get_argument('args', None)
         if args is None:
@@ -117,6 +117,11 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         # mode = 1:  user connect
         # mode = 2:  admin connect
         if _mode == 1:
+            # 通过指定的auth_id连接（需要授权），必须具有远程运维的权限方可进行
+            ret = self.check_privilege(TP_PRIVILEGE_OPS)
+            if ret != TPE_OK:
+                return
+
             if 'auth_id' not in args or 'protocol_sub_type' not in args:
                 return self.write_json(TPE_PARAM)
 
@@ -129,17 +134,17 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             acc_id = ops_auth['a_id']
             host_id = ops_auth['h_id']
 
-            # TODO: 如果当前用户具有管理权限，则替换上述信息中的用户信息，否则检查当前用户是否是授权的用户
-            # TODO: 条件均满足的情况下，将主机、账号信息放入临时授权信息中（仅10秒有效期），并生产一个临时授权ID
-            # TODO: 核心服务通过此临时授权ID来获取远程连接认证数据，生成会话ID。
-
             err, acc_info = account.get_account_info(acc_id)
             if err != TPE_OK:
                 return self.write_json(err)
             # log.v(acc_info)
 
-        # elif len(args) == 2 and 'acc_id' in args and 'host_id' in args:
         elif _mode == 2:
+            # 直接连接（无需授权），必须具有运维授权管理的权限方可进行
+            ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)
+            if ret != TPE_OK:
+                return
+
             acc_id = args['acc_id']
             host_id = args['host_id']
 
@@ -148,6 +153,11 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
                 return self.write_json(err)
 
         elif _mode == 0:
+            # 测试连接，必须具有主机信息创建、编辑的权限方可进行
+            ret = self.check_privilege(TP_PRIVILEGE_ASSET_CREATE)
+            if ret != TPE_OK:
+                return
+
             conn_info['_test'] = 1
             try:
                 acc_id = int(args['acc_id'])
@@ -156,8 +166,6 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
                 username = args['username']
                 password = args['password']
                 pri_key = args['pri_key']
-                # protocol_type = int(args['protocol_type'])
-                # protocol_sub_type = int(args['protocol_sub_type'])
                 protocol_port = int(args['protocol_port'])
             except:
                 return self.write_json(TPE_PARAM)
