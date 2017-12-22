@@ -492,7 +492,7 @@ def get_auth(auth_id):
     if len(s.recorder) != 1:
         return None, TPE_FAILED
 
-    log.v(s.recorder[0])
+    # log.v(s.recorder[0])
     return s.recorder[0], TPE_OK
 
 

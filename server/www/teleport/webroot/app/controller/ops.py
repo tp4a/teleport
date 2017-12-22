@@ -136,7 +136,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             err, acc_info = account.get_account_info(acc_id)
             if err != TPE_OK:
                 return self.write_json(err)
-            log.v(acc_info)
+            # log.v(acc_info)
 
         # elif len(args) == 2 and 'acc_id' in args and 'host_id' in args:
         elif args['mode'] == 2:
@@ -229,7 +229,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             tmp_conn_id_base += 1
             conn_id = tmp_conn_id_base
 
-        log.v(conn_info)
+        # log.v(conn_info)
         tp_session().set('tmp-conn-info-{}'.format(conn_id), conn_info, 10)
 
         req = {'method': 'request_session', 'param': {'conn_id': conn_id}}
@@ -482,7 +482,7 @@ class DoGetOperatorsHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_JSON_FORMAT)
 
-        print('---get operator:', args)
+        # print('---get operator:', args)
 
         sql_filter = {}
         sql_order = dict()
@@ -548,7 +548,7 @@ class DoGetAssetHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_JSON_FORMAT)
 
-        print('---get asset:', args)
+        # print('---get asset:', args)
 
         sql_filter = {}
         sql_order = dict()

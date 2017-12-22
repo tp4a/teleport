@@ -233,7 +233,7 @@ class DoGetAuditorsHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_JSON_FORMAT)
 
-        print('---get operator:', args)
+        # print('---get operator:', args)
 
         sql_filter = {}
         sql_order = dict()

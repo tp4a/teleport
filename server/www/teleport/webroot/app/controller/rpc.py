@@ -41,6 +41,8 @@ class RpcHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_JSON_FORMAT)
 
+        log.d('WEB-JSON-RPC, method=`{}`\n'.format(_req['method']))
+
         if 'get_conn_info' == _req['method']:
             return self._get_conn_info(_req['param'])
         elif 'session_begin' == _req['method']:

@@ -869,13 +869,13 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				cy = 0;
 			}
 
-			char* sz_console = "0";
+			int console_mode = 0;
 			if (rdp_console)
-				sz_console = "1";
+				console_mode = 1;
 
 			char sz_rdp_file_content[4096] = { 0 };
 			sprintf_s(sz_rdp_file_content, rdp_content.c_str(),
-				sz_console, display, width, higth
+				console_mode, display, width, higth
 				, cx, cy, cx + width + 100, cy + higth + 100
 				, teleport_ip.c_str(), teleport_port
 				, sid.c_str()

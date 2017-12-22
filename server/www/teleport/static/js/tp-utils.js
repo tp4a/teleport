@@ -40,8 +40,10 @@ if (!String.prototype.realLength) {
 //===================================================
 // input field validation check
 //===================================================
+// http://jsfiddle.net/ghvj4gy9/embedded/result,js/
 function tp_check_email(email) {
-    var re = /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/;
+    //var re = /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/;
+    var re = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
     return re.test(email);
 }
 
