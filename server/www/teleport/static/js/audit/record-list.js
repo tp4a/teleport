@@ -161,10 +161,9 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
             var action = $(this).attr('data-action');
 
             if (action === 'replay') {
-                //$app.dlg_edit_host.show_edit(row_id);
                 if (row_data.protocol_type === TP_PROTOCOL_TYPE_RDP) {
-                    // $tp.notify_error('sorry, not impl.');
-                    $app.do_replay_rdp(row_data.id, row_data.user_username, row_data.acc_username, row_data.host_ip, row_data.time_begin);
+                    // $app.do_replay_rdp(row_data.id, row_data.user_username, row_data.acc_username, row_data.host_ip, row_data.time_begin);
+                    window.open('/audit/replay/' + row_data.protocol_type + '/' + row_data.id);
                 } else if (row_data.protocol_type === TP_PROTOCOL_TYPE_SSH) {
                     window.open('/audit/replay/' + row_data.protocol_type + '/' + row_data.id);
                 }

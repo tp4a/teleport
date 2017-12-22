@@ -114,12 +114,26 @@ def get_records(handler, sql_filter, sql_order, sql_limit, sql_restrict, sql_exc
     return err, s.total_count, s.recorder
 
 
-def read_record_head(record_id):
+def _remove_padding_space(s):
+    r = []
+    for i in range(len(s)):
+        if s[i] == 0x00:
+            break
+        r.append(s[i])
+    return bytearray(r)
+
+
+def read_record_head(protocol_type, record_id):
     if not tp_cfg().core.detected:
         return None, TPE_NO_CORE_SERVER
 
-    record_path = os.path.join(tp_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
-    header_file_path = os.path.join(record_path, 'tp-ssh.tpr')
+    if protocol_type == TP_PROTOCOL_TYPE_RDP:
+        path_name = 'rdp'
+    elif protocol_type == TP_PROTOCOL_TYPE_SSH:
+        path_name = 'ssh'
+
+    record_path = os.path.join(tp_cfg().core.replay_path, path_name, '{:09d}'.format(int(record_id)))
+    header_file_path = os.path.join(record_path, 'tp-{}.tpr'.format(path_name))
 
     if not os.path.exists(header_file_path):
         return None, TPE_NOT_EXISTS
@@ -156,22 +170,22 @@ def read_record_head(record_id):
         # offset += 4
 
         user_name, = struct.unpack_from('64s', data, offset)
-        user_name = user_name.decode()
+        user_name = _remove_padding_space(user_name).decode()
         offset += 64
         account, = struct.unpack_from('64s', data, offset)
-        account = account.decode()
+        account = _remove_padding_space(account).decode()
         offset += 64
 
         host_ip, = struct.unpack_from('40s', data, offset)
-        host_ip = host_ip.decode()
+        host_ip = _remove_padding_space(host_ip).decode()
         offset += 40
         conn_ip, = struct.unpack_from('40s', data, offset)
-        conn_ip = conn_ip.decode()
+        conn_ip = _remove_padding_space(conn_ip).decode()
         offset += 40
         conn_port, = struct.unpack_from('H', data, offset)
         offset += 2
         client_ip, = struct.unpack_from('40s', data, offset)
-        client_ip = client_ip.decode()
+        client_ip = _remove_padding_space(client_ip).decode()
         offset += 40
 
     except Exception as e:
@@ -197,11 +211,82 @@ def read_record_head(record_id):
     return header, TPE_OK
 
 
-def read_record_data(record_id, offset):
+def read_rdp_record_data(record_id, offset):
     if not tp_cfg().core.detected:
         return None, TPE_NO_CORE_SERVER
 
-    # read 1000 packages one time from offset.
+    record_path = os.path.join(tp_cfg().core.replay_path, 'rdp', '{:09d}'.format(int(record_id)))
+    file_data = os.path.join(record_path, 'tp-rdp.dat')
+
+    if not os.path.exists(file_data):
+        return None, 0, TPE_NOT_EXISTS
+
+    data_list = list()
+    data_size = 0
+    file = None
+    try:
+        file_size = os.path.getsize(file_data)
+        if offset >= file_size:
+            return None, 0, TPE_FAILED
+
+        file = open(file_data, 'rb')
+        if offset > 0:
+            file.seek(offset, io.SEEK_SET)
+
+        # read 1000 packages one time from offset.
+        for i in range(1000):
+            """
+            // 一个数据包的头
+            typedef struct TS_RECORD_PKG
+            {
+                ex_u8 type;			// 包的数据类型
+                ex_u32 size;		// 这个包的总大小（不含包头）
+                ex_u32 time_ms;		// 这个包距起始时间的时间差（毫秒，意味着一个连接不能持续超过49天）
+                ex_u8 _reserve[3];	// 保留
+            }TS_RECORD_PKG;
+            """
+            _data = file.read(12)
+            data_size += 12
+            _action, _size, _time, = struct.unpack_from('=BII', _data)
+            if offset + data_size + _size > file_size:
+                return None, 0, TPE_FAILED
+
+            _data = file.read(_size)
+            data_size += _size
+
+            temp = dict()
+            temp['a'] = _action
+            temp['t'] = _time
+            if _action == 0x10:
+                # this is mouse movement event.
+                x, y = struct.unpack_from('HH', _data)
+                temp['x'] = x
+                temp['y'] = y
+            elif _action == 0x11:
+                # this is a data package.
+                _data = base64.b64encode(_data)
+                temp['d'] = _data.decode()
+            else:
+                return None, 0, TPE_FAILED
+
+            data_list.append(temp)
+            if offset + data_size == file_size:
+                break
+
+    except Exception:
+        log.e('failed to read record file: {}\n'.format(file_data))
+        return None, 0, TPE_FAILED
+    finally:
+        if file is not None:
+            file.close()
+
+    return data_list, data_size, TPE_OK
+
+
+def read_ssh_record_data(record_id, offset):
+    if not tp_cfg().core.detected:
+        return None, TPE_NO_CORE_SERVER
+
     record_path = os.path.join(tp_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
     file_data = os.path.join(record_path, 'tp-ssh.dat')
 
@@ -220,6 +305,7 @@ def read_record_data(record_id, offset):
         if offset > 0:
             file.seek(offset, io.SEEK_SET)
 
+        # read 1000 packages one time from offset.
         for i in range(1000):
             """
             // 一个数据包的头

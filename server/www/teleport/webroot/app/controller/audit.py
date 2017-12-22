@@ -494,7 +494,8 @@ class ReplayHandler(TPBaseHandler):
     def get(self, protocol, record_id):
         protocol = int(protocol)
         if protocol == TP_PROTOCOL_TYPE_RDP:
-            return
+            param = {'record_id': record_id}
+            self.render('audit/replay-rdp.mako', page_param=json.dumps(param))
         elif protocol == TP_PROTOCOL_TYPE_SSH:
             param = {'record_id': record_id}
             self.render('audit/replay-ssh.mako', page_param=json.dumps(param))
@@ -603,12 +604,13 @@ class DoGetRecordHeaderHandler(TPBaseJsonHandler):
             return self.write_json(TPE_JSON_FORMAT)
 
         try:
+            protocol_type = int(args['protocol'])
             record_id = int(args['id'])
         except:
             log.e('\n')
             return self.write_json(TPE_PARAM)
 
-        header, err = record.read_record_head(record_id)
+        header, err = record.read_record_head(protocol_type, record_id)
         if header is None:
             return self.write_json(err)
 
@@ -627,13 +629,19 @@ class DoGetRecordDataHandler(TPBaseJsonHandler):
             return self.write_json(TPE_JSON_FORMAT)
 
         try:
+            protocol_type = int(args['protocol'])
             record_id = int(args['id'])
             offset = int(args['offset'])
         except:
             log.e('\n')
             return self.write_json(TPE_PARAM)
 
-        data_list, data_size, err = record.read_record_data(record_id, offset)
+        if protocol_type == TP_PROTOCOL_TYPE_RDP:
+            data_list, data_size, err = record.read_rdp_record_data(record_id, offset)
+        elif protocol_type == TP_PROTOCOL_TYPE_RDP:
+            data_list, data_size, err = record.read_ssh_record_data(record_id, offset)
+        else:
+            self.write_json(TPE_NOT_EXISTS)
         self.write_json(err, data={'data_list': data_list, 'data_size': data_size})
 
 

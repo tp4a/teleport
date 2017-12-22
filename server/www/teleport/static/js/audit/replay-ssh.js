@@ -1,29 +1,5 @@
 "use strict";
 
-$app.req_record_data = function (record_id, offset) {
-    $tp.ajax_post_json('/audit/get-record-data', {id: record_id, offset: offset},
-        function (ret) {
-            if (ret.code === TPE_OK) {
-                // console.log('data', ret.data);
-                $app.record_data = $app.record_data.concat(ret.data.data_list);
-                $app.record_data_offset += ret.data.data_size;
-
-                if ($app.record_data.length < $app.record_hdr.pkg_count) {
-                    $app.req_record_data(record_id, $app.record_data_offset);
-                }
-            } else {
-                $app.dom.status.text("读取录像数据失败：" + tp_error_msg(ret.code));
-                $tp.notify_error('读取录像数据失败：' + tp_error_msg(ret.code, ret.message));
-                console.log('req_record_info error ', ret.code);
-            }
-        },
-        function () {
-            console.log('req_record_info error');
-        },
-        30 * 1000
-    );
-};
-
 $app.on_init = function (cb_stack) {
     var record_id = $app.options.record_id;
 
@@ -70,7 +46,7 @@ $app.on_init = function (cb_stack) {
 
     Terminal.cursorBlink = false;
 
-    $tp.ajax_post_json('/audit/get-record-header', {id: record_id},
+    $tp.ajax_post_json('/audit/get-record-header', {protocol: TP_PROTOCOL_TYPE_SSH, id: record_id},
         function (ret) {
             if (ret.code === TPE_OK) {
                 $app.record_hdr = ret.data;
@@ -182,6 +158,30 @@ $app.on_init = function (cb_stack) {
     };
 
     cb_stack.exec();
+};
+
+$app.req_record_data = function (record_id, offset) {
+    $tp.ajax_post_json('/audit/get-record-data', {protocol: TP_PROTOCOL_TYPE_SSH, id: record_id, offset: offset},
+        function (ret) {
+            if (ret.code === TPE_OK) {
+                // console.log('data', ret.data);
+                $app.record_data = $app.record_data.concat(ret.data.data_list);
+                $app.record_data_offset += ret.data.data_size;
+
+                if ($app.record_data.length < $app.record_hdr.pkg_count) {
+                    $app.req_record_data(record_id, $app.record_data_offset);
+                }
+            } else {
+                $app.dom.status.text("读取录像数据失败：" + tp_error_msg(ret.code));
+                $tp.notify_error('读取录像数据失败：' + tp_error_msg(ret.code, ret.message));
+                console.log('req_record_info error ', ret.code);
+            }
+        },
+        function () {
+            console.log('req_record_info error');
+        },
+        30 * 1000
+    );
 };
 
 $app.init_and_play = function() {
