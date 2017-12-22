@@ -99,6 +99,13 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         #
         # WEB服务根据上述信息产生临时的远程连接ID，核心服务通过此远程连接ID来获取远程连接所需数据，生成会话ID。
 
+        try:
+            _mode = int(args['mode'])
+            _protocol_type = int(args['protocol_type'])
+            _protocol_sub_type = int(args['protocol_sub_type'])
+        except:
+            return self.write_json(TPE_PARAM)
+
         conn_info = dict()
         conn_info['_enc'] = 1
         conn_info['host_id'] = 0
@@ -106,28 +113,21 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         conn_info['user_id'] = self.get_current_user()['id']
         conn_info['user_username'] = self.get_current_user()['username']
 
-        protocol_sub_type = TP_PROTOCOL_TYPE_UNKNOWN
-
-        if 'mode' not in args:
-            return self.write_json(TPE_PARAM)
         # mode = 0:  test connect
         # mode = 1:  user connect
         # mode = 2:  admin connect
-
-        if args['mode'] == 1:
+        if _mode == 1:
             if 'auth_id' not in args or 'protocol_sub_type' not in args:
                 return self.write_json(TPE_PARAM)
 
             # 根据auth_id从数据库中取得此授权相关的用户、主机、账号三者详细信息
             auth_id = args['auth_id']
-            protocol_sub_type = int(args['protocol_sub_type'])
             ops_auth, err = ops.get_auth(auth_id)
             if err != TPE_OK:
                 return self.write_json(err)
 
             acc_id = ops_auth['a_id']
             host_id = ops_auth['h_id']
-            user_id = ops_auth['u_id']
 
             # TODO: 如果当前用户具有管理权限，则替换上述信息中的用户信息，否则检查当前用户是否是授权的用户
             # TODO: 条件均满足的情况下，将主机、账号信息放入临时授权信息中（仅10秒有效期），并生产一个临时授权ID
@@ -139,7 +139,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             # log.v(acc_info)
 
         # elif len(args) == 2 and 'acc_id' in args and 'host_id' in args:
-        elif args['mode'] == 2:
+        elif _mode == 2:
             acc_id = args['acc_id']
             host_id = args['host_id']
 
@@ -147,7 +147,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             if err != TPE_OK:
                 return self.write_json(err)
 
-        elif args['mode'] == 0:
+        elif _mode == 0:
             conn_info['_test'] = 1
             try:
                 acc_id = int(args['acc_id'])
@@ -156,8 +156,8 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
                 username = args['username']
                 password = args['password']
                 pri_key = args['pri_key']
-                protocol_type = int(args['protocol_type'])
-                protocol_sub_type = int(args['protocol_sub_type'])
+                # protocol_type = int(args['protocol_type'])
+                # protocol_sub_type = int(args['protocol_sub_type'])
                 protocol_port = int(args['protocol_port'])
             except:
                 return self.write_json(TPE_PARAM)
@@ -168,7 +168,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             acc_info = dict()
 
             acc_info['auth_type'] = auth_type
-            acc_info['protocol_type'] = protocol_type
+            acc_info['protocol_type'] = _protocol_type
             acc_info['protocol_port'] = protocol_port
             acc_info['username'] = username
 
@@ -216,7 +216,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         conn_info['protocol_flag'] = 1
 
         conn_info['protocol_type'] = acc_info['protocol_type']
-        conn_info['protocol_sub_type'] = protocol_sub_type
+        conn_info['protocol_sub_type'] = _protocol_sub_type
 
         conn_info['auth_type'] = acc_info['auth_type']
         if acc_info['auth_type'] == TP_AUTH_TYPE_PASSWORD:
