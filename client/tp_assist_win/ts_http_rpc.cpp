@@ -51,6 +51,8 @@ End Sub
 
 //#ifdef RDP_CLIENT_SYSTEM_BUILTIN
 
+//compression:i:1
+
 std::string rdp_content = "\
 connect to console:i:%d\n\
 screen mode id:i:%d\n\
@@ -74,7 +76,7 @@ allow desktop composition:i:0\n\
 disable full window drag:i:1\n\
 disable menu anims:i:1\n\
 disable themes:i:1\n\
-disable cursor setting:i:0\n\
+disable cursor setting:i:1\n\
 bitmapcachepersistenable:i:1\n\
 full address:s:%s:%d\n\
 audiomode:i:0\n\
