@@ -467,9 +467,12 @@ class BuilderLinux(BuilderBase):
                        ' -D_OPENSSL_VERSION={}' \
                        ' -DOPENSSL_INCLUDE_DIR={}/include' \
                        ' -DOPENSSL_LIBRARIES={}/lib' \
+                       ' -DWITH_SSH1=ON' \
+                       ' -DWITH_SFTP=ON' \
+                       ' -DWITH_SERVER=ON' \
+                       ' -DWITH_STATIC_LIB=ON' \
                        ' -DWITH_GSSAPI=OFF' \
                        ' -DWITH_ZLIB=OFF' \
-                       ' -DWITH_STATIC_LIB=ON' \
                        ' -DWITH_PCAP=OFF' \
                        ' -DWITH_TESTING=OFF' \
                        ' -DWITH_CLIENT_TESTING=OFF' \
