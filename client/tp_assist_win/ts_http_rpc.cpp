@@ -52,6 +52,7 @@ End Sub
 //#ifdef RDP_CLIENT_SYSTEM_BUILTIN
 
 //compression:i:1
+//bitmapcachepersistenable:i:1
 
 std::string rdp_content = "\
 connect to console:i:%d\n\
@@ -62,6 +63,7 @@ desktopheight:i:%d\n\
 session bpp:i:16\n\
 winposstr:s:0,1,%d,%d,%d,%d\n\
 compression:i:1\n\
+bitmapcachepersistenable:i:1\n\
 keyboardhook:i:2\n\
 audiocapturemode:i:0\n\
 videoplaybackmode:i:1\n\

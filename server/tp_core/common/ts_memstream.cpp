@@ -17,7 +17,7 @@ void MemStream::reset(void)
 
 bool MemStream::seek(size_t offset)
 {
-	if (offset >= m_mbuf.size())
+	if (offset > m_mbuf.size())
 		return false;
 
 	m_offset = offset;
@@ -26,7 +26,10 @@ bool MemStream::seek(size_t offset)
 
 bool MemStream::skip(size_t n)
 {
-	if (m_offset + n >= m_mbuf.size())
+	if (0 == n)
+		return true;
+
+	if (m_offset + n > m_mbuf.size())
 		return false;
 	m_offset += n;
 	return true;
