@@ -481,10 +481,6 @@ void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func
 	{
 		_rpc_func_run_client(func_args, buf);
 	}
-// 	else if (func_cmd == "check")
-// 	{
-// 		_rpc_func_check(func_args, buf);
-// 	}
 	else if (func_cmd == "rdp_play")
 	{
 		_rpc_func_rdp_play(func_args, buf);
@@ -583,6 +579,10 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 	if (pro_type == TP_PROTOCOL_TYPE_RDP)
 	{
+		//==============================================
+		// RDP
+		//==============================================
+
 		int rdp_w = 800;
 		int rdp_h = 640;
 		bool rdp_console = false;
@@ -616,224 +616,6 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				return;
 			}
 		}
-
-		//==============================================
-		// RDP
-		//==============================================
-#if 0
-
-#if defined(RDP_CLIENT_SYSTEM_ACTIVE_CONTROL)
-		int split_pos = session_id.length() - 2;
-		std::string real_s_id = session_id.substr(0, split_pos);
-		std::string str_pwd_len = session_id.substr(split_pos, session_id.length());
-		int n_pwd_len = strtol(str_pwd_len.c_str(), NULL, 16);
-		n_pwd_len -= real_s_id.length();
-		WCHAR w_szPwd[256] = { 0 };
-		for (int i = 0; i < n_pwd_len; i++)
-		{
-			w_szPwd[i] = '*';
-		}
-
-		w_exe_path = g_env.m_tools_path + _T("\\tprdp\\tp_rdp.exe");
-		ex_wstr w_s_id;
-		ex_astr2str(real_s_id, w_s_id);
-		ex_wstr w_server_ip;
-		ex_astr2str(server_ip, w_server_ip);
-
-		ex_wstr w_host_ip;
-		ex_astr2str(host_ip, w_host_ip);
-
-		swprintf_s(w_szCommandLine, _T(" -h%s -u%s -p%s -x%d -d%s -r%d"), w_server_ip.c_str(), w_s_id.c_str(), w_szPwd, host_port, w_host_ip.c_str(), windows_size);
-
-		// 		sprintf_s(sz_file_name, ("%s\\%s.rdp"), temp_path, temp_host_ip.c_str());
-		// 		FILE* f = fopen(sz_file_name, ("wt"));
-		// 		if (f == NULL)
-		// 		{
-		// 			printf("fopen failed (%d).\n", GetLastError());
-		// 			_create_json_ret(buf, TSR_OPENFILE_ERROR);
-		// 			return;
-		// 		}
-		// 		// Write a string into the file.
-		// 		fwrite(sz_rdp_file_content, strlen(sz_rdp_file_content), 1, f);
-		// 		fclose(f);
-		// 		ex_wstr w_sz_file_name;
-		// 		ex_astr2str(sz_file_name, w_sz_file_name);
-		//		swprintf_s(w_szCommandLine, _T("mstsc %s"), w_sz_file_name.c_str());
-
-		w_exe_path += w_szCommandLine;
-		//BOOL bRet = DeleteFile(w_sz_file_name.c_str());
-#elif defined(RDP_CLIENT_FREERDP)
-		wchar_t* w_screen = NULL;
-
-		switch (windows_size)
-		{
-		case 0: //全屏
-			w_screen = _T("/f");
-			break;
-		case 2:
-			w_screen = _T("/size:1024x768");
-			break;
-		case 3:
-			w_screen = _T("/size:1280x1024");
-			break;
-		case 1:
-		default:
-			w_screen = _T("/size:800x600");
-			break;
-		}
-
-		int split_pos = sid.length() - 2;
-		std::string real_sid = sid.substr(0, split_pos);
-		std::string str_pwd_len = sid.substr(split_pos, sid.length());
-		int n_pwd_len = strtol(str_pwd_len.c_str(), NULL, 16);
-		n_pwd_len -= real_sid.length();
-		WCHAR w_szPwd[256] = { 0 };
-		for (int i = 0; i < n_pwd_len; i++)
-		{
-			w_szPwd[i] = '*';
-		}
-
-		ex_astr2wstr(real_sid, w_sid);
-
-
-		w_exe_path = _T("\"");
-		w_exe_path += g_env.m_tools_path + _T("\\tprdp\\tprdp-client.exe\"");
-
-		// use /gdi:sw otherwise the display will be yellow.
-		if (console != 0)
-		{
-			swprintf_s(w_szCommandLine, _T(" %s /v:{host_ip}:{host_port} /admin /u:{user_name} /p:%s +clipboard /drives /gdi:sw /t:\"TP#{real_ip}\""),
-				w_screen, w_szPwd
-				);
-		}
-		else
-		{
-			swprintf_s(w_szCommandLine, _T(" %s /v:{host_ip}:{host_port} /u:{user_name} /p:%s +clipboard /drives /gdi:sw /t:\"TP#{real_ip}\""),
-				w_screen, w_szPwd
-				);
-		}
-
-		w_exe_path += w_szCommandLine;
-
-
-#elif defined(RDP_CLIENT_SYSTEM_BUILTIN)
-		int width = 800;
-		int higth = 600;
-		int cx = 0;
-		int cy = 0;
-
-		int display = 1;
-		int iWidth = GetSystemMetrics(SM_CXSCREEN);
-		int iHeight = GetSystemMetrics(SM_CYSCREEN);
-		switch (windows_size)
-		{
-		case 0:
-			//全屏
-			width = iWidth;
-			higth = iHeight;
-			display = 2;
-			break;
-		case 1:
-		{
-			width = 800;
-			higth = 600;
-			display = 1;
-			break;
-		}
-		case 2:
-		{
-			width = 1024;
-			higth = 768;
-			display = 1;
-			break;
-		}
-		case 3:
-		{
-			width = 1280;
-			higth = 1024;
-			display = 1;
-			break;
-		}
-		default:
-			//int iWidth = GetSystemMetrics(SM_CXSCREEN);
-			//int iHeight = GetSystemMetrics(SM_CYSCREEN);
-			//width = iWidth;
-			//width = iHeight - 50;
-			width = 800;
-			higth = 600;
-			break;
-		}
-
-		cx = (iWidth - width) / 2;
-		cy = (iHeight - higth) / 2;
-		if (cx < 0)
-		{
-			cx = 0;
-		}
-		if (cy < 0)
-		{
-			cy = 0;
-		}
-
-		int split_pos = sid.length() - 2;
-		std::string real_sid = sid.substr(0, split_pos);
-
-// 		std::string psw51b;
-// 		if (!calc_psw51b("Abcd1234", psw51b))
-// 		{
-// 			printf("calc password failed.\n");
-// 			_create_json_ret(buf, TPE_FAILED);
-// 			return;
-// 		}
-
-		char sz_rdp_file_content[4096] = { 0 };
-		sprintf_s(sz_rdp_file_content, rdp_content.c_str(),
-			console, display, width, higth
-			, cx, cy, cx + width + 20, cy + higth + 40
-			, teleport_ip.c_str(), teleport_port
-			, real_sid.c_str()
-//			, "administrator"
-//			, psw51b.c_str()
-			);
-
-		char sz_file_name[MAX_PATH] = { 0 };
-		char temp_path[MAX_PATH] = { 0 };
-		DWORD ret = GetTempPathA(MAX_PATH, temp_path);
-		if (ret <= 0)
-		{
-			printf("fopen failed (%d).\n", GetLastError());
-			_create_json_ret(buf, TPE_FAILED);
-			return;
-		}
-		ex_wstr w_s_id;
-		ex_astr2wstr(real_sid, w_s_id);
-
-		ex_astr temp_host_ip = real_host_ip;// replace_all_distinct(real_host_ip, ("."), "-");
-		ex_replace_all(temp_host_ip, ".", "-");
-
-		// for debug
-		//sprintf_s(sz_file_name, ("e:\\tmp\\rdp\\%s.rdp"), temp_host_ip.c_str());
-
-		sprintf_s(sz_file_name, ("%s%s.rdp"), temp_path, temp_host_ip.c_str());
-
-		FILE* f = NULL;
-		if(fopen_s(&f, sz_file_name, "wt") != 0)
-		{
-			printf("fopen failed (%d).\n", GetLastError());
-			_create_json_ret(buf, TPE_OPENFILE);
-			return;
-		}
-		// Write a string into the file.
-		fwrite(sz_rdp_file_content, strlen(sz_rdp_file_content), 1, f);
-		fclose(f);
-		ex_wstr w_sz_file_name;
-		ex_astr2wstr(sz_file_name, w_sz_file_name);
-
-		swprintf_s(w_szCommandLine, _T("mstsc \"%s\""), w_sz_file_name.c_str());
-		w_exe_path = w_szCommandLine;
-		//BOOL bRet = DeleteFile(w_sz_file_name.c_str());
-#endif
-#endif
 
 		w_exe_path = _T("\"");
 		w_exe_path += g_cfg.rdp_app + _T("\" ");
@@ -952,8 +734,6 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			_create_json_ret(buf, TPE_FAILED);
 			return;
 		}
-
-
 	}
 	else if (pro_type == TP_PROTOCOL_TYPE_SSH)
 	{
@@ -1015,138 +795,6 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	_create_json_ret(buf, root_ret);
 }
 
-// bool isIPAddress(const char *s)
-// {
-// 	const char *pChar;
-// 	bool rv = true;
-// 	int tmp1, tmp2, tmp3, tmp4, i;
-// 	while (1)
-// 	{
-// 		i = sscanf_s(s, "%d.%d.%d.%d", &tmp1, &tmp2, &tmp3, &tmp4);
-// 		if (i != 4)
-// 		{
-// 			rv = false;
-// 			break;
-// 		}
-// 
-// 		if ((tmp1 > 255) || (tmp2 > 255) || (tmp3 > 255) || (tmp4 > 255))
-// 		{
-// 			rv = false;
-// 			break;
-// 		}
-// 
-// 		for (pChar = s; *pChar != 0; pChar++)
-// 		{
-// 			if ((*pChar != '.')
-// 				&& ((*pChar < '0') || (*pChar > '9')))
-// 			{
-// 				rv = false;
-// 				break;
-// 			}
-// 		}
-// 		break;
-// 	}
-// 
-// 	return rv;
-// }
-// 
-// void TsHttpRpc::_rpc_func_check(const ex_astr& func_args, ex_astr& buf)
-// {
-// 	// 入参：{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
-// 	//   authmode: 1=password, 2=private-key
-// 	//   protocol: 1=rdp, 2=ssh
-// 	// SSH返回： {"code":0, "data":{"sid":"0123abcde"}}
-// 	// RDP返回： {"code":0, "data":{"sid":"0123abcde0A"}}
-// 
-// 	Json::Reader jreader;
-// 	Json::Value jsRoot;
-// 
-// 	if (!jreader.parse(func_args.c_str(), jsRoot))
-// 	{
-// 		_create_json_ret(buf, TPE_JSON_FORMAT);
-// 		return;
-// 	}
-// 	if (jsRoot.isArray())
-// 	{
-// 		_create_json_ret(buf, TPE_PARAM);
-// 		return;
-// 	}
-// 	int windows_size = 2;
-// 
-// 
-// 
-// 	// 判断参数是否正确
-// 	if (!jsRoot["server_ip"].isString() || !jsRoot["ssh_port"].isNumeric()
-// 		|| !jsRoot["rdp_port"].isNumeric()
-// 		)
-// 	{
-// 		_create_json_ret(buf, TPE_PARAM);
-// 		return;
-// 	}
-// 
-// 	std::string host = jsRoot["server_ip"].asCString();
-// 	int rdp_port = jsRoot["rdp_port"].asUInt();
-// 	int ssh_port = jsRoot["rdp_port"].asUInt();
-// 	std::string server_ip;
-// 	if (isIPAddress(host.c_str()))
-// 	{
-// 		server_ip = host;
-// 	}
-// 	else
-// 	{
-// 		char *ptr, **pptr;
-// 		struct hostent *hptr;
-// 		char IP[128] = { 0 };
-// 		/* 取得命令后第一个参数，即要解析的域名或主机名 */
-// 		ptr = (char*)host.c_str();
-// 		/* 调用gethostbyname()。调用结果都存在hptr中 */
-// 		if ((hptr = gethostbyname(ptr)) == NULL)
-// 		{
-// 			//printf("gethostbyname error for host:%s/n", ptr);
-// 			_create_json_ret(buf, TPE_PARAM);
-// 			return;
-// 		}
-// 
-// 		char szbuf[1204] = { 0 };
-// 		switch (hptr->h_addrtype)
-// 		{
-// 		case AF_INET:
-// 		case AF_INET6:
-// 			pptr = hptr->h_addr_list;
-// 			for (; *pptr != NULL; pptr++)
-// 				ex_inet_ntop(hptr->h_addrtype, *pptr, IP, sizeof(IP));
-// 			server_ip = IP;
-// 			break;
-// 		default:
-// 			printf("unknown address type/n");
-// 			break;
-// 		}
-// 	}
-// 	if (!isIPAddress(server_ip.c_str()))
-// 	{
-// 		_create_json_ret(buf, TPE_PARAM);
-// 		return;
-// 	}
-// 	if (TestTCPPort(server_ip, rdp_port) && TestTCPPort(server_ip, ssh_port))
-// 	{
-// 		_create_json_ret(buf, TPE_OK);
-// 		return;
-// 	}
-// 	ICMPheaderRet temp = { 0 };
-// 	int b_ok = ICMPSendTo(&temp, (char*)server_ip.c_str(), 16, 8);
-// 	if (b_ok == 0)
-// 	{
-// 		_create_json_ret(buf, TPE_OK);
-// 		return;
-// 	}
-// 	else
-// 	{
-// 		_create_json_ret(buf, TPE_NETWORK);
-// 	}
-// 
-// 	return;
-// }
-
 void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 {
 	Json::Reader jreader;
@@ -1159,17 +807,6 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 	}
 
 	// 判断参数是否正确
-// 	if (!jsRoot["host"].isString())
-// 	{
-// 		_create_json_ret(buf, TPE_PARAM);
-// 		return;
-// 	}
-// 	if (!jsRoot["port"].isInt())
-// 	{
-// 		_create_json_ret(buf, TPE_PARAM);
-// 		return;
-// 	}
-
 	if (!jsRoot["rid"].isInt()
 		|| !jsRoot["web"].isString()
 		|| !jsRoot["sid"].isString()
@@ -1183,14 +820,6 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 		return;
 	}
 
-
-
-// 	if (!jsRoot["tail"].isString())
-// 	{
-// 		_create_json_ret(buf, TPE_PARAM);
-// 		return;
-// 	}
-
 	int rid = jsRoot["rid"].asInt();
 	ex_astr a_url_base = jsRoot["web"].asCString();
 	ex_astr a_sid = jsRoot["sid"].asCString();
@@ -1198,73 +827,15 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 	ex_astr a_acc = jsRoot["acc"].asCString();
 	ex_astr a_host = jsRoot["host"].asCString();
 	ex_astr a_start = jsRoot["start"].asCString();
-	//ex_astr a_tail = jsRoot["tail"].asCString();
 
 	char cmd_args[1024] = { 0 };
 	ex_strformat(cmd_args, 1023, "%d \"%s\" \"%09d-%s-%s-%s-%s\"", rid, a_sid.c_str(), rid, a_user.c_str(), a_acc.c_str(), a_host.c_str(), a_start.c_str());
 
-
-// 	ex_astr a_host = jsRoot["host"].asCString();
-// 	int port = jsRoot["port"].asInt();
-// 	ex_astr a_tail = jsRoot["tail"].asCString();
-// 	ex_astr server_ip;
-// 	if (isIPAddress(a_host.c_str()))
-// 	{
-// 		server_ip = a_host;
-// 	}
-// 	else
-// 	{
-// 		char *ptr, **pptr;
-// 		struct hostent *hptr;
-// 		char IP[128] = { 0 };
-// 		// 取得命令后第一个参数，即要解析的域名或主机名
-// 		ptr = (char*)a_host.c_str();
-// 		// 调用gethostbyname()。调用结果都存在hptr中
-// 		if ((hptr = gethostbyname(ptr)) == NULL)
-// 		{
-// 			//printf("gethostbyname error for host:%s/n", ptr);
-// 			_create_json_ret(buf, TPE_PARAM);
-// 			return;
-// 		}
-// 		// 将主机的规范名打出来
-// 		//printf("official hostname:%s/n", hptr->h_name);
-// 		// 主机可能有多个别名，将所有别名分别打出来
-// 		//for (pptr = hptr->h_aliases; *pptr != NULL; pptr++)
-// 		//	printf(" alias:%s/n", *pptr);
-// 		// 根据地址类型，将地址打出来
-// 		char szbuf[1204] = { 0 };
-// 		switch (hptr->h_addrtype)
-// 		{
-// 		case AF_INET:
-// 		case AF_INET6:
-// 			pptr = hptr->h_addr_list;
-// 			// 将刚才得到的所有地址都打出来。其中调用了inet_ntop()函数
-// 
-// 			for (; *pptr != NULL; pptr++)
-// 				inet_ntop(hptr->h_addrtype, *pptr, IP, sizeof(IP));
-// 			server_ip = IP;
-// 			break;
-// 		default:
-// 			printf("unknown address type/n");
-// 			break;
-// 		}
-// 	}
-
-// 	char szURL[256] = { 0 };
-// 	sprintf_s(szURL, 256, "http://%s:%d/%s", server_ip.c_str(), port, a_tail.c_str());
-// 	ex_astr a_url = szURL;
 	ex_wstr w_url_base;
 	ex_astr2wstr(a_url_base, w_url_base);
 	ex_wstr w_cmd_args;
 	ex_astr2wstr(cmd_args, w_cmd_args);
 
-// 	char szHost[256] = { 0 };
-// 	sprintf_s(szHost, 256, "%s:%d", a_host.c_str(), port);
-// 
-// 	a_host = szHost;
-// 	ex_wstr w_host;
-// 	ex_astr2wstr(a_host, w_host);
-	
 	ex_wstr w_exe_path;
 	w_exe_path = _T("\"");
 	w_exe_path += g_env.m_tools_path + _T("\\tprdp\\tprdp-replay.exe\"");

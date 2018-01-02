@@ -167,34 +167,6 @@ int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_f
 	return i >= src_len ? j : -1;
 }
 
-#ifdef RDP_CLIENT_SYSTEM_BUILTIN
-bool calc_psw51b(const char* password, std::string& ret)
-{
-	DATA_BLOB DataIn;
-	DATA_BLOB DataOut;
-
-	ex_wstr w_pswd;
-	ex_astr2wstr(password, w_pswd, EX_CODEPAGE_ACP);
-
-	DataIn.cbData = w_pswd.length() * sizeof(wchar_t);
-	DataIn.pbData = (BYTE*)w_pswd.c_str();
-
-
-	if (!CryptProtectData(&DataIn, L"psw", NULL, NULL, NULL, 0, &DataOut))
-		return false;
-
-	char szRet[5] = {0};
-	for (int i = 0; i < DataOut.cbData; ++i)
-	{
-		sprintf_s(szRet, 5, "%02X", DataOut.pbData[i]);
-		ret += szRet;
-	}
-	
-	LocalFree(DataOut.pbData);
-	return true;
-}
-#endif
-
 TsHttpRpc::TsHttpRpc() :
 ExThreadBase("http-rpc-thread")
 {
@@ -346,8 +318,8 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		ex_wstr2astr(g_env.m_site_path, temp);
 		ex_astr index_path = temp + uri;
 		
-		FILE* file = NULL;
-		file = fopen(index_path.c_str(), "rb");
+
+		FILE* file = ex_fopen(index_path.c_str(), "rb");
 		if (file)
 		{
 			unsigned long file_size = 0;
@@ -489,10 +461,6 @@ void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func
 	{
 		_rpc_func_run_client(func_args, buf);
 	}
-	else if (func_cmd == "check")
-	{
-		_rpc_func_check(func_args, buf);
-	}
 	else if (func_cmd == "rdp_play")
 	{
 		_rpc_func_rdp_play(func_args, buf);
@@ -556,7 +524,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	}
 
 	// 判断参数是否正确
-	if (!jsRoot["teleport_ip"].isString() || !jsRoot["size"].isNumeric()
+	if (!jsRoot["teleport_ip"].isString()
 		|| !jsRoot["teleport_port"].isNumeric() || !jsRoot["remote_host_ip"].isString()
 		|| !jsRoot["session_id"].isString() || !jsRoot["protocol_type"].isNumeric() || !jsRoot["protocol_sub_type"].isNumeric()
 		)
@@ -565,33 +533,29 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		return;
 	}
 
-// 	int pro_sub = 0;
-// 	if (!jsRoot["protocol_sub_type"].isNull()) {
-// 		if (jsRoot["protocol_sub_type"].isNumeric()) {
-// 			pro_sub = jsRoot["protocol_sub_type"].asInt();
-// 		}
-// 	}
+	int pro_type = jsRoot["protocol_type"].asUInt();
 	int pro_sub = jsRoot["protocol_sub_type"].asInt();
 
 	ex_astr teleport_ip = jsRoot["teleport_ip"].asCString();
 	int teleport_port = jsRoot["teleport_port"].asUInt();
 
-	int windows_size = 2;
-	if (jsRoot["size"].isNull())
-		windows_size = 2;
-	else
-		windows_size = jsRoot["size"].asUInt();
-
-	int console = 0;
-	if (jsRoot["console"].isNull())
-		console = 0;
-	else
-		console = jsRoot["console"].asUInt();
-
 	ex_astr real_host_ip = jsRoot["remote_host_ip"].asCString();
 	ex_astr sid = jsRoot["session_id"].asCString();
 
-	int pro_type = jsRoot["protocol_type"].asUInt();
+	ex_wstr w_exe_path;
+	WCHAR w_szCommandLine[MAX_PATH] = { 0 };
+
+
+	ex_wstr w_sid;
+	ex_astr2wstr(sid, w_sid);
+	ex_wstr w_teleport_ip;
+	ex_astr2wstr(teleport_ip, w_teleport_ip);
+	ex_wstr w_real_host_ip;
+	ex_astr2wstr(real_host_ip, w_real_host_ip);
+	WCHAR w_port[32] = { 0 };
+	swprintf_s(w_port, _T("%d"), teleport_port);
+
+	ex_wstr tmp_rdp_file; // for .rdp file
 
 	if (pro_type == TP_PROTOCOL_TYPE_RDP)
 	{
@@ -600,7 +564,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//==============================================
 		
 		// sorry, RDP not supported yet for macOS.
-		_create_json_ret(buf, TPE_FAILED);
+		_create_json_ret(buf, TPE_NOT_IMPLEMENT);
 		return;
 	}
 	else if (pro_type == TP_PROTOCOL_TYPE_SSH)
@@ -627,7 +591,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		else
 		{
 			// sorry, SFTP not supported yet for macOS.
-			_create_json_ret(buf, TPE_FAILED);
+			_create_json_ret(buf, TPE_NOT_IMPLEMENT);
 			return;
 		}
 	}
@@ -638,267 +602,16 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//==============================================
 
 		// sorry, TELNET not supported yet for macOS.
-		_create_json_ret(buf, TPE_FAILED);
+		_create_json_ret(buf, TPE_NOT_IMPLEMENT);
 		return;
 	}
 }
 
-bool isIPAddress(const char *s)
-{
-//	const char *pChar;
-	bool rv = true;
-//	int tmp1, tmp2, tmp3, tmp4, i;
-//	while (1)
-//	{
-//		i = sscanf_s(s, "%d.%d.%d.%d", &tmp1, &tmp2, &tmp3, &tmp4);
-//		if (i != 4)
-//		{
-//			rv = false;
-//			break;
-//		}
-//
-//		if ((tmp1 > 255) || (tmp2 > 255) || (tmp3 > 255) || (tmp4 > 255))
-//		{
-//			rv = false;
-//			break;
-//		}
-//
-//		for (pChar = s; *pChar != 0; pChar++)
-//		{
-//			if ((*pChar != '.')
-//				&& ((*pChar < '0') || (*pChar > '9')))
-//			{
-//				rv = false;
-//				break;
-//			}
-//		}
-//		break;
-//	}
 
-	return rv;
-}
-
-void TsHttpRpc::_rpc_func_check(const ex_astr& func_args, ex_astr& buf)
-{
-	// 入参：{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
-	//   authmode: 1=password, 2=private-key
-	//   protocol: 1=rdp, 2=ssh
-	// SSH返回： {"code":0, "data":{"sid":"0123abcde"}}
-	// RDP返回： {"code":0, "data":{"sid":"0123abcde0A"}}
-
-	Json::Reader jreader;
-	Json::Value jsRoot;
-
-	if (!jreader.parse(func_args.c_str(), jsRoot))
-	{
-		_create_json_ret(buf, TPE_JSON_FORMAT);
-		return;
-	}
-	if (jsRoot.isArray())
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-	int windows_size = 2;
-
-
-
-	// 判断参数是否正确
-	if (!jsRoot["server_ip"].isString() || !jsRoot["ssh_port"].isNumeric()
-		|| !jsRoot["rdp_port"].isNumeric()
-		)
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-
-	std::string host = jsRoot["server_ip"].asCString();
-	int rdp_port = jsRoot["rdp_port"].asUInt();
-	int ssh_port = jsRoot["rdp_port"].asUInt();
-	std::string server_ip;
-	if (isIPAddress(host.c_str()))
-	{
-		server_ip = host;
-	}
-	else
-	{
-		char *ptr, **pptr;
-		struct hostent *hptr;
-		char IP[128] = { 0 };
-		/* 取得命令后第一个参数，即要解析的域名或主机名 */
-		ptr = (char*)host.c_str();
-		/* 调用gethostbyname()。调用结果都存在hptr中 */
-		if ((hptr = gethostbyname(ptr)) == NULL)
-		{
-			//printf("gethostbyname error for host:%s/n", ptr);
-			_create_json_ret(buf, TPE_PARAM);
-			return; /* 如果调用gethostbyname发生错误，返回1 */
-		}
-		/* 将主机的规范名打出来 */
-		//printf("official hostname:%s/n", hptr->h_name);
-		// 主机可能有多个别名，将所有别名分别打出来
-		//for (pptr = hptr->h_aliases; *pptr != NULL; pptr++)
-		//	printf(" alias:%s/n", *pptr);
-		/* 根据地址类型，将地址打出来 */
-		char szbuf[1204] = { 0 };
-		switch (hptr->h_addrtype)
-		{
-		case AF_INET:
-		case AF_INET6:
-			pptr = hptr->h_addr_list;
-			/* 将刚才得到的所有地址都打出来。其中调用了inet_ntop()函数 */
-
-			for (; *pptr != NULL; pptr++)
-				inet_ntop(hptr->h_addrtype, *pptr, IP, sizeof(IP));
-			server_ip = IP;
-			//printf(" address:%s/n", inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str)));
-			break;
-		default:
-			printf("unknown address type/n");
-			break;
-		}
-	}
-	if (!isIPAddress(server_ip.c_str()))
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-//	if (TestTCPPort(server_ip, rdp_port) && TestTCPPort(server_ip, ssh_port))
-//	{
-//		_create_json_ret(buf, TPE_OK);
-//		return;
-//	}
-//	ICMPheaderRet temp = { 0 };
-//	int b_ok = ICMPSendTo(&temp, (char*)server_ip.c_str(), 16, 8);
-//	if (b_ok == 0)
-//	{
-//		_create_json_ret(buf, TPE_OK);
-//		return;
-//	}
-//	else
-//	{
-//		_create_json_ret(buf, TPE_NETWORK);
-//	}
-
-	_create_json_ret(buf, TPE_FAILED);
-	return;
-}
 
 void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 {
-	Json::Reader jreader;
-	Json::Value jsRoot;
-
-	if (!jreader.parse(func_args.c_str(), jsRoot))
-	{
-		_create_json_ret(buf, TPE_JSON_FORMAT);
-		return;
-	}
-
-	// 判断参数是否正确
-	if (!jsRoot["host"].isString())
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-	if (!jsRoot["port"].isInt())
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-	if (!jsRoot["tail"].isString())
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-	ex_astr a_host = jsRoot["host"].asCString();
-	int port = jsRoot["port"].asInt();
-	ex_astr a_tail = jsRoot["tail"].asCString();
-	ex_astr server_ip;
-	if (isIPAddress(a_host.c_str()))
-	{
-		server_ip = a_host;
-	}
-	else
-	{
-		char *ptr, **pptr;
-		struct hostent *hptr;
-		char IP[128] = { 0 };
-		/* 取得命令后第一个参数，即要解析的域名或主机名 */
-		ptr = (char*)a_host.c_str();
-		/* 调用gethostbyname()。调用结果都存在hptr中 */
-		if ((hptr = gethostbyname(ptr)) == NULL)
-		{
-			//printf("gethostbyname error for host:%s/n", ptr);
-			_create_json_ret(buf, TPE_PARAM);
-			return;
-		}
-		/* 将主机的规范名打出来 */
-		//printf("official hostname:%s/n", hptr->h_name);
-		///* 主机可能有多个别名，将所有别名分别打出来 */
-		//for (pptr = hptr->h_aliases; *pptr != NULL; pptr++)
-		//	printf(" alias:%s/n", *pptr);
-		/* 根据地址类型，将地址打出来 */
-		char szbuf[1204] = { 0 };
-		switch (hptr->h_addrtype)
-		{
-		case AF_INET:
-		case AF_INET6:
-			pptr = hptr->h_addr_list;
-			/* 将刚才得到的所有地址都打出来。其中调用了inet_ntop()函数 */
-
-			for (; *pptr != NULL; pptr++)
-				inet_ntop(hptr->h_addrtype, *pptr, IP, sizeof(IP));
-			server_ip = IP;
-			break;
-		default:
-			printf("unknown address type/n");
-			break;
-		}
-	}
-//	char szURL[256] = { 0 };
-//	sprintf_s(szURL, 256, "http://%s:%d/%s", server_ip.c_str(), port, a_tail.c_str());
-//	ex_astr a_url = szURL;
-//	ex_wstr w_url;
-//	ex_astr2wstr(a_url, w_url);
-//
-//	char szHost[256] = { 0 };
-//	sprintf_s(szHost, 256, "%s:%d", a_host.c_str(), port);
-//
-//	a_host = szHost;
-//	ex_wstr w_host;
-//	ex_astr2wstr(a_host, w_host);
-//	
-//	ex_wstr w_exe_path;
-//	w_exe_path = _T("\"");
-//	w_exe_path += g_env.m_tools_path + _T("\\tprdp\\tprdp-replay.exe\"");
-//	//swprintf_s(w_szCommandLine, _T(" -ssh -pw **** -P %d -l %s %s"), teleport_port, w_s_id.c_str(), w_teleport_ip.c_str());
-//	w_exe_path += _T(" ");
-//	w_exe_path += w_url;
-//
-//	w_exe_path += _T(" ");
-//	w_exe_path += w_host;
-//
-//	Json::Value root_ret;
-//	ex_astr utf8_path;
-//	ex_wstr2astr(w_exe_path, utf8_path, EX_CODEPAGE_UTF8);
-//	root_ret["path"] = utf8_path;
-//
-//	STARTUPINFO si;
-//	PROCESS_INFORMATION pi;
-//
-//	ZeroMemory(&si, sizeof(si));
-//	si.cb = sizeof(si);
-//	ZeroMemory(&pi, sizeof(pi));
-//	if (!CreateProcess(NULL, (wchar_t *)w_exe_path.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-//	{
-//		EXLOGE(_T("CreateProcess() failed. Error=0x%08X.\n  %s\n"), GetLastError(), w_exe_path.c_str());
-//		root_ret["code"] = TPE_START_CLIENT;
-//		_create_json_ret(buf, root_ret);
-//		return;
-//	}
-
-	_create_json_ret(buf, TPE_OK);
+	_create_json_ret(buf, TPE_NOT_IMPLEMENT);
 }
 
 void TsHttpRpc::_rpc_func_get_config(const ex_astr& func_args, ex_astr& buf)
@@ -926,134 +639,8 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 }
 
 void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
-	_create_json_ret(buf, TPE_DATA);
-	return;
-//
-//	Json::Reader jreader;
-//	Json::Value jsRoot;
-//
-//	if (!jreader.parse(func_args.c_str(), jsRoot))
-//	{
-//		_create_json_ret(buf, TPE_JSON_FORMAT);
-//		return;
-//	}
-//	// 判断参数是否正确
-//	if (!jsRoot["action"].isNumeric())
-//	{
-//		_create_json_ret(buf, TPE_PARAM);
-//		return;
-//	}
-//	int action = jsRoot["action"].asUInt();
-//
-//	HWND hParent = GetForegroundWindow();
-//	if (NULL == hParent)
-//		hParent = g_hDlgMain;
-//
-//	BOOL ret = FALSE;
-//	wchar_t wszReturnPath[MAX_PATH] = _T("");
-//
-//	if (action == 1 || action == 2)
-//	{
-//		OPENFILENAME ofn;
-//		ex_wstr wsDefaultName;
-//		ex_wstr wsDefaultPath;
-//		StringCchCopy(wszReturnPath, MAX_PATH, wsDefaultName.c_str());
-//
-//		ZeroMemory(&ofn, sizeof(ofn));
-//
-//		ofn.lStructSize = sizeof(ofn);
-//		ofn.lpstrTitle = _T("选择文件");
-//		ofn.hwndOwner = hParent;
-//		ofn.lpstrFilter = _T("可执行程序 (*.exe)\0*.exe\0");
-//		ofn.lpstrFile = wszReturnPath;
-//		ofn.nMaxFile = MAX_PATH;
-//		ofn.lpstrInitialDir = wsDefaultPath.c_str();
-//		ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST;
-//
-//		if (action == 1)
-//		{
-//			ofn.Flags |= OFN_FILEMUSTEXIST;
-//			ret = GetOpenFileName(&ofn);
-//		}
-//		else
-//		{
-//			ofn.Flags |= OFN_OVERWRITEPROMPT;
-//			ret = GetSaveFileName(&ofn);
-//		}
-//	}
-//	else if (action == 3)
-//	{
-//		BROWSEINFO bi;
-//		ZeroMemory(&bi, sizeof(BROWSEINFO));
-//		bi.hwndOwner = NULL;
-//		bi.pidlRoot = NULL;
-//		bi.pszDisplayName = wszReturnPath; //此参数如为NULL则不能显示对话框
-//		bi.lpszTitle = _T("选择目录");
-//		bi.ulFlags = BIF_RETURNONLYFSDIRS;
-//		bi.lpfn = NULL;
-//		bi.iImage = 0;   //初始化入口参数bi结束
-//		LPITEMIDLIST pIDList = SHBrowseForFolder(&bi);//调用显示选择对话框
-//		if (pIDList)
-//		{
-//			ret = true;
-//			SHGetPathFromIDList(pIDList, wszReturnPath);
-//		}
-//		else
-//		{
-//			ret = false;
-//		}
-//	}
-//	else if (action == 4)
-//	{
-//		ex_wstr wsDefaultName;
-//		ex_wstr wsDefaultPath;
-//
-//		if (wsDefaultPath.length() == 0)
-//		{
-//			_create_json_ret(buf, TPE_PARAM);
-//			return;
-//		}
-//
-//		ex_wstr::size_type pos = 0;
-//
-//		while (ex_wstr::npos != (pos = wsDefaultPath.find(L"/", pos)))
-//		{
-//			wsDefaultPath.replace(pos, 1, L"\\");
-//			pos += 1;
-//		}
-//
-//		ex_wstr wArg = L"/select, \"";
-//		wArg += wsDefaultPath;
-//		wArg += L"\"";
-//		if ((int)ShellExecute(hParent, _T("open"), _T("explorer"), wArg.c_str(), NULL, SW_SHOW) > 32)
-//			ret = true;
-//		else
-//			ret = false;
-//	}
-//
-//	if (ret)
-//	{
-//		if (action == 1 || action == 2 || action == 3)
-//		{
-//			ex_astr utf8_path;
-//			ex_wstr2astr(wszReturnPath, utf8_path, EX_CODEPAGE_UTF8);
-//			Json::Value root;
-//			root["path"] = utf8_path;
-//			_create_json_ret(buf, root);
-//
-//			return;
-//		}
-//		else
-//		{
-//			_create_json_ret(buf, TPE_OK);
-//			return;
-//		}
-//	}
-//	else
-//	{
-//		_create_json_ret(buf, TPE_DATA);
-//		return;
-//	}
+	_create_json_ret(buf, TPE_NOT_IMPLEMENT);
+
 }
 
 void TsHttpRpc::_rpc_func_get_version(const ex_astr& func_args, ex_astr& buf)
