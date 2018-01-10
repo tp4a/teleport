@@ -270,7 +270,7 @@ $app.do_play = function () {
                 // console.log('mouse pos:', play_data, play_data.x, play_data.y);
                 $app._draw_cursor(play_data.x, play_data.y);
 
-                // console.log('cursor-t-delta:', play_data.t - $app.last_cursor_t);
+                console.log('cursor-t-delta:', play_data.t - $app.last_cursor_t);
 
                 $app.last_cursor_t = play_data.t;
             }
