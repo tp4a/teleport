@@ -7,7 +7,9 @@
 <%block name="extend_js_file">
     ##     <script type="text/javascript" src="${ static_url('plugins/xterm/xterm.js') }"></script>
 
+    <script type="text/javascript" src="${ static_url('js/audit/replay-rdp-img.js') }"></script>
     <script type="text/javascript" src="${ static_url('js/audit/replay-rdp.js') }"></script>
+    <script type="text/javascript" src="${ static_url('js/audit/rle.js') }"></script>
 </%block>
 
 <%block name="extend_css_file">

@@ -206,6 +206,42 @@ function tp_base64_encode(input) {
     return output;
 }
 
+function tp_base64_to_binarray(data) {
+    var o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
+        ac = 0,
+        tmp_arr = [];
+
+    if (!data) {
+        return tmp_arr;
+    }
+
+    do { // unpack four hexets into three octets using index points in b64
+        h1 = base64KeyStr.indexOf(data.charAt(i++));
+        h2 = base64KeyStr.indexOf(data.charAt(i++));
+        h3 = base64KeyStr.indexOf(data.charAt(i++));
+        h4 = base64KeyStr.indexOf(data.charAt(i++));
+
+        bits = h1 << 18 | h2 << 12 | h3 << 6 | h4;
+
+        o1 = bits >> 16 & 0xff;
+        o2 = bits >> 8 & 0xff;
+        o3 = bits & 0xff;
+
+        if (h3 === 64) {
+            tmp_arr.push(o1);
+        } else if (h4 === 64) {
+            tmp_arr.push(o1);
+            tmp_arr.push(o2);
+        } else {
+            tmp_arr.push(o1);
+            tmp_arr.push(o2);
+            tmp_arr.push(o3);
+        }
+    } while (i < data.length);
+
+    return tmp_arr;
+}
+
 function tp_base64_decode(data) {
     var o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
         ac = 0,
