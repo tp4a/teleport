@@ -311,7 +311,7 @@ $app.do_play = function () {
 
                 $app.last_cursor_t = play_data.t;
             }
-            else {
+            else if(play_data.a === 0x12) {
                 //$app.player_console_term.write(tp_base64_decode(play_data.d));
                 var _data = tp_base64_to_binarray(play_data.d);
                 console.log('pkg size:', _data.length);
@@ -362,7 +362,7 @@ $app.do_play = function () {
                         output = $app.decompress(bitmap);
                     else
                         output = {width : bitmap.width, height : bitmap.height, data : new Uint8ClampedArray(bitmap.data)};
-                    console.log(output);
+                    // console.log(output);
 
                     var img = $app.canvas.createImageData(output.width, output.height);
                     img.data.set(output.data);
