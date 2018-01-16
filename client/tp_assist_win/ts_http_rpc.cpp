@@ -849,6 +849,8 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 	ex_wstr2astr(w_exe_path, utf8_path, EX_CODEPAGE_UTF8);
 	root_ret["cmdline"] = utf8_path;
 
+	EXLOGD(w_exe_path.c_str());
+
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 
