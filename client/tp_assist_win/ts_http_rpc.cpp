@@ -4,6 +4,9 @@
 
 #include <commdlg.h>
 #include <ShlObj.h>
+#include <WinCrypt.h>
+
+#pragma comment(lib, "Crypt32.lib")
 
 #include <teleport_const.h>
 
@@ -105,6 +108,7 @@ rdgiskdcproxy:i:0\n\
 kdcproxyname:s:\n\
 drivestoredirect:s:*\n\
 username:s:%s\n\
+password 51:b:%s\n\
 ";
 
 //redirectdirectx:i:0\n\
@@ -171,6 +175,32 @@ int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_f
 	dst[j] = '\0'; /* Null-terminate the destination */
 
 	return i >= src_len ? j : -1;
+}
+
+bool calc_psw51b(const char* password, std::string& ret)
+{
+	DATA_BLOB DataIn;
+	DATA_BLOB DataOut;
+
+	ex_wstr w_pswd;
+	ex_astr2wstr(password, w_pswd, EX_CODEPAGE_ACP);
+
+	DataIn.cbData = w_pswd.length() * sizeof(wchar_t);
+	DataIn.pbData = (BYTE*)w_pswd.c_str();
+
+
+	if (!CryptProtectData(&DataIn, L"psw", NULL, NULL, NULL, 0, &DataOut))
+		return false;
+
+	char szRet[5] = {0};
+	for (int i = 0; i < DataOut.cbData; ++i)
+	{
+		sprintf_s(szRet, 5, "%02X", DataOut.pbData[i]);
+		ret += szRet;
+	}
+	
+	LocalFree(DataOut.pbData);
+	return true;
 }
 
 TsHttpRpc::TsHttpRpc()
@@ -617,6 +647,21 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			}
 		}
 
+
+		int split_pos = sid.length() - 2;
+		ex_astr real_sid = sid.substr(0, split_pos);
+		ex_astr str_pwd_len = sid.substr(split_pos, sid.length());
+		int n_pwd_len = strtol(str_pwd_len.c_str(), NULL, 16);
+		n_pwd_len -= real_sid.length();
+		n_pwd_len -= 2;
+		char szPwd[256] = { 0 };
+		for (int i = 0; i < n_pwd_len; i++)
+		{
+			szPwd[i] = '*';
+		}
+
+		ex_astr2wstr(real_sid, w_sid);
+
 		w_exe_path = _T("\"");
 		w_exe_path += g_cfg.rdp_app + _T("\" ");
 		w_exe_path += g_cfg.rdp_cmdline;
@@ -659,12 +704,23 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			if (rdp_console)
 				console_mode = 1;
 
+			std::string psw51b;
+			if (!calc_psw51b(szPwd, psw51b))
+			{
+				EXLOGE("calc password failed.\n");
+				_create_json_ret(buf, TPE_FAILED);
+				return;
+			}
+
+			real_sid = "01" + real_sid;
+
 			char sz_rdp_file_content[4096] = { 0 };
 			sprintf_s(sz_rdp_file_content, rdp_content.c_str(),
 				console_mode, display, width, higth
 				, cx, cy, cx + width + 100, cy + higth + 100
 				, teleport_ip.c_str(), teleport_port
-				, sid.c_str()
+				, real_sid.c_str()
+				, psw51b.c_str()
 				);
 
 			char sz_file_name[MAX_PATH] = { 0 };
@@ -672,7 +728,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			DWORD ret = GetTempPathA(MAX_PATH, temp_path);
 			if (ret <= 0)
 			{
-				printf("fopen failed (%d).\n", GetLastError());
+				EXLOGE("fopen failed (%d).\n", GetLastError());
 				_create_json_ret(buf, TPE_FAILED);
 				return;
 			}
@@ -685,7 +741,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			FILE* f = NULL;
 			if (fopen_s(&f, sz_file_name, "wt") != 0)
 			{
-				printf("fopen failed (%d).\n", GetLastError());
+				EXLOGE("fopen failed (%d).\n", GetLastError());
 				_create_json_ret(buf, TPE_OPENFILE);
 				return;
 			}
@@ -720,6 +776,13 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			{
 				w_console = L"";
 			}
+
+			ex_wstr w_password;
+			ex_astr2wstr(szPwd, w_password);
+			w_exe_path += L" /p:";
+			w_exe_path += w_password;
+
+			w_sid = L"02" + w_sid;
 
 			w_exe_path += L" /gdi:sw"; // 使用软件渲染，gdi:hw使用硬件加速，但是会出现很多黑块（录像回放时又是正常的！）
 			w_exe_path += L" -grab-keyboard"; // 防止启动FreeRDP后，失去本地键盘响应，必须得先最小化一下FreeRDP窗口（不过貌似不起作用）

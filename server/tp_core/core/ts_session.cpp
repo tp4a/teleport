@@ -153,9 +153,9 @@ bool TsSessionManager::request_session(ex_astr& sid, TS_CONNECT_INFO* info)
 	if (info->protocol_type == TP_PROTOCOL_TYPE_RDP)
 	{
 		info->ref_count = 1; // 因为RDP连接之前可能会有很长时间用于确认是否连接、是否信任证书，所以很容易超时，我们认为将引用计数+1，防止因超时被清除。
-// 		char szTmp[8] = { 0 };
-// 		snprintf(szTmp, 8, "%02X", (unsigned char)(info->acc_username.length() + info->acc_secret.length()));
-// 		sid += szTmp;
+		char szTmp[8] = { 0 };
+		snprintf(szTmp, 8, "%02X", (unsigned char)(info->acc_username.length() + info->acc_secret.length()));
+		sid += szTmp;
 	}
 
 	return true;
