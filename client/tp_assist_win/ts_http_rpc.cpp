@@ -668,6 +668,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 		ex_wstr rdp_name = g_cfg.rdp_name;
 		if (rdp_name == L"mstsc") {
+// 			w_exe_path += g_cfg.rdp_cmdline;
 			int width = 0;
 			int higth = 0;
 			int cx = 0;
@@ -754,6 +755,9 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			ex_replace_all(w_exe_path, _T("{tmp_rdp_file}"), tmp_rdp_file);
 		}
 		else if (g_cfg.rdp_name == L"freerdp") {
+// 			w_exe_path += L"{size} {console} {clipboard} {drives} ";
+// 			w_exe_path += g_cfg.rdp_cmdline;
+
 			ex_wstr w_screen;
 
 			if (rdp_w == 0 || rdp_h == 0) {
@@ -785,12 +789,14 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			w_sid = L"02" + w_sid;
 
 			w_exe_path += L" /gdi:sw"; // 使用软件渲染，gdi:hw使用硬件加速，但是会出现很多黑块（录像回放时又是正常的！）
-			w_exe_path += L" -grab-keyboard"; // 防止启动FreeRDP后，失去本地键盘响应，必须得先最小化一下FreeRDP窗口（不过貌似不起作用）
+			//w_exe_path += L" -grab-keyboard"; // [new style] 防止启动FreeRDP后，失去本地键盘响应，必须得先最小化一下FreeRDP窗口（不过貌似不起作用）
+			//w_exe_path += L" -K"; // [old style] 防止启动FreeRDP后，失去本地键盘响应，必须得先最小化一下FreeRDP窗口（不过貌似不起作用）
 
 			// 变量替换
 			ex_replace_all(w_exe_path, _T("{size}"), w_screen);
 			ex_replace_all(w_exe_path, _T("{console}"), w_console);
-			ex_replace_all(w_exe_path, _T("{clipboard}"), L"+clipboard");
+			//ex_replace_all(w_exe_path, _T("{clipboard}"), L"+clipboard");
+			ex_replace_all(w_exe_path, _T("{clipboard}"), L"/clipboard");
 			ex_replace_all(w_exe_path, _T("{drives}"), L"/drives");
 		}
 		else {
