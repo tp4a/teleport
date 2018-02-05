@@ -308,6 +308,7 @@ $app.create_dlg_rdp_options = function () {
 
             dlg.rdp_w = _w;
             dlg.rdp_h = _h;
+            dlg.rdp_console = _console;
             Cookies.set('rdp_options', {w: _w, h: _h, 'c': _console}, {path: '/ops/remote'});
 
             $app.connect_remote(dlg.uni_id, dlg.acc_id, dlg.host_id, dlg.protocol_type, dlg.protocol_sub_type);
@@ -400,6 +401,8 @@ $app.connect_remote = function (uni_id, acc_id, host_id, protocol_type, protocol
         rdp_height: $app.dlg_rdp_options.rdp_h,
         rdp_console: $app.dlg_rdp_options.rdp_console
     };
+
+    console.log('--s--', args);
 
     if(uni_id === 'none')
         args.mode = 2;

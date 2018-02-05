@@ -823,7 +823,7 @@ class DatabaseInit:
             'INSERT INTO `{}user` (`type`, `auth_type`, `username`, `surname`, `password`, `role_id`, `state`, `email`, `creator_id`, `create_time`, `last_login`, `last_chpass`) VALUES '
             '(1, {auth_type}, "{username}", "{surname}", "{password}", 1, {state}, "{email}", 0, {create_time}, {last_login}, {last_chpass});'
             ''.format(self.db.table_prefix,
-                      auth_type=TP_LOGIN_AUTH_SYS_DEFAULT,
+                      auth_type=TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA,
                       username=sysadmin, surname=sysadmin, password=tp_password_generate_secret(password), state=TP_STATE_NORMAL, email=email,
                       create_time=_time_now, last_login=_time_now, last_chpass=_time_now)
         )

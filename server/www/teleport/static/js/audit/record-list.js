@@ -162,8 +162,8 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
 
             if (action === 'replay') {
                 if (row_data.protocol_type === TP_PROTOCOL_TYPE_RDP) {
-                    // $app.do_replay_rdp(row_data.id, row_data.user_username, row_data.acc_username, row_data.host_ip, row_data.time_begin);
-                    window.open('/audit/replay/' + row_data.protocol_type + '/' + row_data.id);
+                    $app.do_replay_rdp(row_data.id, row_data.user_username, row_data.acc_username, row_data.host_ip, row_data.time_begin);
+                    // window.open('/audit/replay/' + row_data.protocol_type + '/' + row_data.id);
                 } else if (row_data.protocol_type === TP_PROTOCOL_TYPE_SSH) {
                     window.open('/audit/replay/' + row_data.protocol_type + '/' + row_data.id);
                 }
@@ -292,7 +292,7 @@ $app.on_table_host_render_created = function (render) {
             case TP_SESS_STAT_RUNNING:
                 return '<span class="label label-warning">正在连接</span>';
             case TP_SESS_STAT_STARTED:
-                return '<span class="label label-primary">使用中</span>';
+                return '<span class="label label-success">使用中</span>';
             case TP_SESS_STAT_END:
                 return '<span class="label label-ignore">已结束</span>';
             case TP_SESS_STAT_ERR_AUTH_DENIED:

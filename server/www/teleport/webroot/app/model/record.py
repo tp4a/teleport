@@ -266,6 +266,10 @@ def read_rdp_record_data(record_id, offset):
                 # this is a data package.
                 _data = base64.b64encode(_data)
                 temp['d'] = _data.decode()
+            elif _action == 0x12:
+                # this is a bitmap package.
+                _data = base64.b64encode(_data)
+                temp['d'] = _data.decode()
             else:
                 return None, 0, TPE_FAILED
 
