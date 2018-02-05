@@ -638,7 +638,7 @@ class DoGetRecordDataHandler(TPBaseJsonHandler):
 
         if protocol_type == TP_PROTOCOL_TYPE_RDP:
             data_list, data_size, err = record.read_rdp_record_data(record_id, offset)
-        elif protocol_type == TP_PROTOCOL_TYPE_RDP:
+        elif protocol_type == TP_PROTOCOL_TYPE_SSH:
             data_list, data_size, err = record.read_ssh_record_data(record_id, offset)
         else:
             self.write_json(TPE_NOT_EXISTS)

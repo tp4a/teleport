@@ -69,7 +69,7 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
     [menu setDelegate:self];
 
 
-	http_rpc_start((__bridge void*)self);
+	//http_rpc_start((__bridge void*)self);
 	
 	NSString *resPath = [[NSBundle mainBundle] resourcePath];
 	std::string cpp_res_path = [resPath cStringUsingEncoding:NSUTF8StringEncoding];
