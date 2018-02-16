@@ -15,6 +15,7 @@ cmake_install.cmake
 Makefile
 cmake-build
 cmake-build-debug
+client/tp_assist_macos/build
 
 # for Python
 __pycache__

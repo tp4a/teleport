@@ -579,8 +579,8 @@ class BuilderMacOS(BuilderBase):
         os.chdir(old_p)
 
     def _build_libuv(self, file_name):
-        cc.w('build libuv...skip')
-        return
+        cc.w('build libuv...')
+        # return
         if not os.path.exists(self.LIBUV_PATH_SRC):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
@@ -592,7 +592,7 @@ class BuilderMacOS(BuilderBase):
         cc.v('')
 
         # we need following...
-        # apt-get install autoconf aptitude libtool gcc-c++
+        # brew install automake libtool
 
         old_p = os.getcwd()
         os.chdir(self.LIBUV_PATH_SRC)

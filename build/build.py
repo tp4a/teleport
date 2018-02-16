@@ -200,7 +200,7 @@ def make_options():
     # options = list()
     # options_idx = 0
 
-    if ctx.host_os == 'windows':
+    if ctx.host_os in ['windows', 'macos']:
         add_option('x86', 'ver', 'Update version setting')
         add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % env.py_ver_str)
         add_option('x64', 'external', 'Build external dependency')
