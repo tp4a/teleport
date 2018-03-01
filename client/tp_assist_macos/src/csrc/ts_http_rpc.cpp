@@ -21,22 +21,22 @@
 
 /*
 1.
-SecureCRTÖ§³ÖÉèÖÃ±êÇ©Ò³µÄ±êÌâ£¬ÃüÁîĞĞ²ÎÊı /N "tab name"¾Í¿ÉÒÔ
+SecureCRTÃ·ÃŸâ‰¥Ã·â€¦Ã‹Ã·âˆšÂ±ÃÂ«Â©â€œâ‰¥ÂµÆ’Â±ÃÃƒâ€šÂ£Â¨âˆšÂ¸Â¡Ã“â€“â€“â‰¤Å’Â Ë /N "tab name"Ã¦Ã•Ã¸â€¦â€œâ€˜
 Example:
 To launch a new Telnet session, displaying the name "Houston, TX" on the tab, use the following:
 /T /N "Houston, TX" /TELNET 192.168.0.6
 
 2.
-¶à´ÎÆô¶¯µÄSecureCRT·Åµ½Ò»¸ö´°¿ÚµÄ²»Í¬±êÇ©Ò³ÖĞ£¬Ê¹ÓÃ²ÎÊı£º  /T
+âˆ‚â€¡Â¥Å’âˆ†Ã™âˆ‚Ã˜ÂµÆ’SecureCRTâˆ‘â‰ˆÂµÎ©â€œÂªâˆË†Â¥âˆÃ¸â„ÂµÆ’â‰¤ÂªÃ•Â¨Â±ÃÂ«Â©â€œâ‰¥Ã·â€“Â£Â¨Â Ï€â€âˆšâ‰¤Å’Â ËÂ£âˆ«  /T
   SecureCRT.exe /T /N "TP#ssh://192.168.1.3" /SSH2 /L root /PASSWORD 1234 120.26.109.25
 
 3.
-telnet¿Í»§¶ËµÄÆô¶¯£º
+telnetÃ¸Ã•ÂªÃŸâˆ‚Ã€ÂµÆ’âˆ†Ã™âˆ‚Ã˜Â£âˆ«
   putty.exe telnet://administrator@127.0.0.1:52389
-Èç¹ûÊÇSecureCRT£¬ÔòĞèÒª
+Â»ÃÏ€ËšÂ Â«SecureCRTÂ£Â¨â€˜Ãšâ€“Ã‹â€œâ„¢
   SecureCRT.exe /T /N "TP#telnet://192.168.1.3" /SCRIPT X:\path\to\startup.vbs /TELNET 127.0.0.1 52389
-ÆäÖĞ£¬startup.vbsµÄÄÚÈİÎª£º
----------ÎÄ¼ş¿ªÊ¼---------
+âˆ†â€°Ã·â€“Â£Â¨startup.vbsÂµÆ’Æ’â„Â»â€ºÅ’â„¢Â£âˆ«
+---------Å’Æ’ÂºË›Ã¸â„¢Â Âº---------
 #$language = "VBScript"
 #$interface = "1.0"
 Sub main
@@ -45,11 +45,11 @@ Sub main
   crt.Screen.Send "SESSION-ID" & VbCr
   crt.Screen.Synchronous = False
 End Sub
----------ÎÄ¼ş½áÊø---------
+---------Å’Æ’ÂºË›Î©Â·Â Â¯---------
 
-4. ÎªÁËÈÃputtyµÄ´°¿Ú±êÇ©ÏÔÊ¾Õı³£µÄIP£¬¿ÉÒÔ³¢ÊÔÔÚÁ¬½Ó³É¹¦ºó£¬Ö÷¶¯Ïò·şÎñ¶Ë·¢ËÍÏÂÁĞÃüÁî£º
+4. Å’â„¢Â¡Ã€Â»âˆšputtyÂµÆ’Â¥âˆÃ¸â„Â±ÃÂ«Â©Å“â€˜Â Ã¦â€™Ëâ‰¥Â£ÂµÆ’IPÂ£Â¨Ã¸â€¦â€œâ€˜â‰¥Â¢Â â€˜â€˜â„Â¡Â¨Î©â€â‰¥â€¦Ï€Â¶âˆ«Ã›Â£Â¨Ã·Ëœâˆ‚Ã˜Å“Ãšâˆ‘Ë›Å’Ã’âˆ‚Ã€âˆ‘Â¢Ã€Ã•Å“Â¬Â¡â€“âˆšÂ¸Â¡Ã“Â£âˆ«
 	PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@192.168.1.2: \w\a\]$PS1"
-ÊÖ¹¤²âÊÔÁË£¬ubuntu·şÎñÆ÷¿ÉÒÔ£¬²»ÖªµÀÊÇ·ñÄÜ¹»Ö§³ÖËùÓĞµÄLinux¡£SecureCRT¶Ô´Ë±íÊ¾ºöÂÔ¡£
+Â Ã·Ï€Â§â‰¤â€šÂ â€˜Â¡Ã€Â£Â¨ubuntuâˆ‘Ë›Å’Ã’âˆ†ËœÃ¸â€¦â€œâ€˜Â£Â¨â‰¤ÂªÃ·â„¢ÂµÂ¿Â Â«âˆ‘Ã’Æ’â€¹Ï€ÂªÃ·ÃŸâ‰¥Ã·Ã€Ë˜â€â€“ÂµÆ’LinuxÂ°Â£SecureCRTâˆ‚â€˜Â¥Ã€Â±ÃŒÂ Ã¦âˆ«Ë†Â¬â€˜Â°Â£
 */
 
 // #define RDP_CLIENT_SYSTEM_BUILTIN
@@ -253,7 +253,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		uri = &_uri[0];
 
 #ifdef EX_DEBUG
-		char* dbg_method = NULL;
+		const char* dbg_method = NULL;
 		if (hm->method.len == 3 && 0 == memcmp(hm->method.p, "GET", hm->method.len))
 			dbg_method = "GET";
 		else if (hm->method.len == 4 && 0 == memcmp(hm->method.p, "POST", hm->method.len))
@@ -283,7 +283,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 		}
 
 		ex_astr temp;
-		int offset = uri.find("/", 1);
+		size_t offset = uri.find("/", 1);
 		if (offset > 0)
 		{
 			temp = uri.substr(1, offset-1);
@@ -375,7 +375,7 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 
 	ex_astrs strs;
 
-	size_t pos_start = 1;	// Ìø¹ıµÚÒ»¸ö×Ö½Ú£¬Ò»¶¨ÊÇ '/'
+	size_t pos_start = 1;	// ÃƒÂ¯Ï€ËÂµâ„â€œÂªâˆË†â—ŠÃ·Î©â„Â£Â¨â€œÂªâˆ‚Â®Â Â« '/'
 
 	size_t i = 0;
 	for (i = pos_start; i < req->uri.len; ++i)
@@ -388,7 +388,7 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 				tmp_uri.assign(req->uri.p + pos_start, i - pos_start);
 				strs.push_back(tmp_uri);
 			}
-			pos_start = i + 1;	// Ìø¹ıµ±Ç°ÕÒµ½µÄ·Ö¸ô·û
+			pos_start = i + 1;	// ÃƒÂ¯Ï€ËÂµÂ±Â«âˆâ€™â€œÂµÎ©ÂµÆ’âˆ‘Ã·âˆÃ™âˆ‘Ëš
 		}
 	}
 	if (pos_start < req->uri.len)
@@ -436,12 +436,12 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 
 	if (func_args.length() > 0)
 	{
-		// ½«²ÎÊı½øĞĞ url-decode ½âÂë
-		int len = func_args.length() * 2;
+		// Î©Â´â‰¤Å’Â ËÎ©Â¯â€“â€“ url-decode Î©â€šÂ¬Ã
+		size_t len = func_args.length() * 2;
 		ex_chars sztmp;
 		sztmp.resize(len);
 		memset(&sztmp[0], 0, len);
-		if (-1 == ts_url_decode(func_args.c_str(), func_args.length(), &sztmp[0], len, 0))
+		if (-1 == ts_url_decode(func_args.c_str(), (int)func_args.length(), &sztmp[0], (int)len, 0))
 			return TPE_HTTP_URL_ENCODE;
 
 		func_args = &sztmp[0];
@@ -487,7 +487,7 @@ void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func
 
 void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode)
 {
-	// ·µ»Ø£º {"code":123}
+	// âˆ‘ÂµÂªÃ¿Â£âˆ« {"code":123}
 
 	Json::FastWriter jr_writer;
 	Json::Value jr_root;
@@ -504,11 +504,11 @@ void TsHttpRpc::_create_json_ret(ex_astr& buf, Json::Value& jr_root)
 
 void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 {
-	// Èë²Î£º{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
+	// Â»Ãâ‰¤Å’Â£âˆ«{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
 	//   authmode: 1=password, 2=private-key
 	//   protocol: 1=rdp, 2=ssh
-	// SSH·µ»Ø£º {"code":0, "data":{"sid":"0123abcde"}}
-	// RDP·µ»Ø£º {"code":0, "data":{"sid":"0123abcde0A"}}
+	// SSHâˆ‘ÂµÂªÃ¿Â£âˆ« {"code":0, "data":{"sid":"0123abcde"}}
+	// RDPâˆ‘ÂµÂªÃ¿Â£âˆ« {"code":0, "data":{"sid":"0123abcde0A"}}
 
 	Json::Reader jreader;
 	Json::Value jsRoot;
@@ -524,7 +524,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		return;
 	}
 
-	// ÅĞ¶Ï²ÎÊıÊÇ·ñÕıÈ·
+	// â‰ˆâ€“âˆ‚Å“â‰¤Å’Â ËÂ Â«âˆ‘Ã’â€™ËÂ»âˆ‘
 	if (!jsRoot["teleport_ip"].isString()
 		|| !jsRoot["teleport_port"].isNumeric() || !jsRoot["remote_host_ip"].isString()
 		|| !jsRoot["session_id"].isString() || !jsRoot["protocol_type"].isNumeric() || !jsRoot["protocol_sub_type"].isNumeric()
@@ -565,8 +565,111 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//==============================================
 		
 		// sorry, RDP not supported yet for macOS.
-		_create_json_ret(buf, TPE_NOT_IMPLEMENT);
-		return;
+//		_create_json_ret(buf, TPE_NOT_IMPLEMENT);
+//		return;
+
+	
+		int rdp_w = 800;
+		int rdp_h = 640;
+		bool rdp_console = false;
+		
+		if (!jsRoot["rdp_width"].isNull()) {
+			if (jsRoot["rdp_width"].isNumeric()) {
+				rdp_w = jsRoot["rdp_width"].asUInt();
+			}
+			else {
+				_create_json_ret(buf, TPE_PARAM);
+				return;
+			}
+		}
+		
+		if (!jsRoot["rdp_height"].isNull()) {
+			if (jsRoot["rdp_height"].isNumeric()) {
+				rdp_h = jsRoot["rdp_height"].asUInt();
+			}
+			else {
+				_create_json_ret(buf, TPE_PARAM);
+				return;
+			}
+		}
+		
+		if (!jsRoot["rdp_console"].isNull()) {
+			if (jsRoot["rdp_console"].isBool()) {
+				rdp_console = jsRoot["rdp_console"].asBool();
+			}
+			else {
+				_create_json_ret(buf, TPE_PARAM);
+				return;
+			}
+		}
+		
+		
+		size_t split_pos = sid.length() - 2;
+		ex_astr real_sid = sid.substr(0, split_pos);
+		ex_astr str_pwd_len = sid.substr(split_pos, sid.length());
+		size_t n_pwd_len = strtol(str_pwd_len.c_str(), NULL, 16);
+		n_pwd_len -= real_sid.length();
+		n_pwd_len -= 2;
+		char szPwd[256] = { 0 };
+		for (int i = 0; i < n_pwd_len; i++)
+		{
+			szPwd[i] = '*';
+		}
+		
+		ex_astr2wstr(real_sid, w_sid);
+		
+		//w_exe_path = _T("\"");
+		//w_exe_path += g_cfg.rdp_app + _T("\" ");
+		//w_exe_path += g_cfg.rdp_cmdline;
+		w_exe_path = _T("xfreerdp -u {user_name} {clipboard} {drives} ");
+		
+		{
+			// 			w_exe_path += L"{size} {console} {clipboard} {drives} ";
+			// 			w_exe_path += g_cfg.rdp_cmdline;
+			
+			ex_wstr w_screen;
+			
+			if (rdp_w == 0 || rdp_h == 0) {
+				w_screen = _T("/f");
+			}
+			else {
+				char sz_size[64] = {0};
+				ex_strformat(sz_size, 63, "/size:%dx%d", rdp_w, rdp_h);
+				ex_astr2wstr(sz_size, w_screen);
+			}
+			
+			const wchar_t* w_console = NULL;
+			
+			if (rdp_console)
+			{
+				w_console = _T("/admin");
+			}
+			else
+			{
+				w_console = _T("");
+			}
+			
+			ex_wstr w_password;
+			ex_astr2wstr(szPwd, w_password);
+			w_exe_path += _T(" -p ");
+			w_exe_path += w_password;
+			
+			w_sid = _T("02") + w_sid;
+			
+			//w_exe_path += _T(" /gdi:sw");
+			w_exe_path += _T(" {host_ip}:{host_port}");
+
+			ex_replace_all(w_exe_path, _T("{size}"), w_screen);
+			ex_replace_all(w_exe_path, _T("{console}"), w_console);
+			//ex_replace_all(w_exe_path, _T("{clipboard}"), L"+clipboard");
+			ex_replace_all(w_exe_path, _T("{clipboard}"), _T("/clipboard"));
+			ex_replace_all(w_exe_path, _T("{drives}"), _T("/drives"));
+//		}
+//		else {
+//			_create_json_ret(buf, TPE_FAILED);
+//			return;
+		}
+
 	}
 	else if (pro_type == TP_PROTOCOL_TYPE_SSH)
 	{
@@ -606,6 +709,31 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		_create_json_ret(buf, TPE_NOT_IMPLEMENT);
 		return;
 	}
+
+	ex_replace_all(w_exe_path, _T("{host_port}"), w_port);
+	ex_replace_all(w_exe_path, _T("{host_ip}"), w_teleport_ip.c_str());
+	ex_replace_all(w_exe_path, _T("{user_name}"), w_sid.c_str());
+	ex_replace_all(w_exe_path, _T("{real_ip}"), w_real_host_ip.c_str());
+	//ex_replace_all(w_exe_path, _T("{assist_tools_path}"), g_env.m_tools_path.c_str());
+
+
+	Json::Value root_ret;
+	ex_astr utf8_path;
+	ex_wstr2astr(w_exe_path, utf8_path, EX_CODEPAGE_UTF8);
+	root_ret["path"] = utf8_path;
+
+	// if (!CreateProcess(NULL, (wchar_t *)w_exe_path.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+	// {
+	// 	EXLOGE(_T("CreateProcess() failed. Error=0x%08X.\n  %s\n"), GetLastError(), w_exe_path.c_str());
+	// 	root_ret["code"] = TPE_START_CLIENT;
+	// 	_create_json_ret(buf, root_ret);
+	// 	return;
+	// }
+
+	system(utf8_path.c_str());
+
+	root_ret["code"] = TPE_OK;
+	_create_json_ret(buf, root_ret);
 }
 
 

@@ -114,7 +114,7 @@ class BuilderMacOS(BuilderBase):
         utils.ensure_file_exists(os.path.join(out_file, 'Contents', 'Info.plist'))
 
     def build_installer(self):
-        cc.i('build assist installer...')
+        cc.e('assist for macOS does not need an installer, you should make an .DMG file for release...')
 
         # name = 'teleport-assist-{}-{}'.format(ctx.dist, VER_TP_ASSIST)
         #

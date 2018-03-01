@@ -649,6 +649,22 @@ class DatabaseInit:
         # gh_id: 主机组ID
         f.append('`gh_id` int(11) DEFAULT 0')
 
+        # 后续字段仅用于显示
+
+        # u_name: 用户登录名
+        f.append('`u_name` varchar(32) DEFAULT ""')
+        # u_surname: 用户姓名
+        f.append('`u_surname` varchar(64) DEFAULT ""')
+
+        # h_name: 主机名称
+        f.append('`h_name` varchar(64) DEFAULT ""')
+        # ip: IP地址
+        f.append('`ip` varchar(40) NOT NULL')
+        # router_ip: 路由IP
+        f.append('`router_ip` varchar(40) DEFAULT ""')
+        # router_port: 路由端口
+        f.append('`router_port` int(11) DEFAULT 0')
+
         self._db_exec(
             '创建审计授权映射表...',
             'CREATE TABLE `{}audit_map` ({});'.format(self.db.table_prefix, ','.join(f))

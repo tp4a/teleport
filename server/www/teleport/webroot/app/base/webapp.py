@@ -16,7 +16,7 @@ from app.base.configs import tp_cfg
 from app.base.db import get_db
 from app.base.logger import log
 from app.base.session import tp_session
-from app.base.cron import tp_corn
+from app.base.cron import tp_cron
 from app.base.stats import tp_stats
 
 
@@ -25,6 +25,7 @@ class WebApp:
         import builtins
         if '__web_app__' in builtins.__dict__:
             raise RuntimeError('WebApp object exists, you can not create more than one instance.')
+        self._cfg_file = ''
 
     def init(self, path_app_root, path_data):
         log.initialize()
@@ -39,8 +40,8 @@ class WebApp:
         cfg.cfg_path = os.path.join(path_data, 'etc')
         cfg.log_path = os.path.join(path_data, 'log')
 
-        _cfg_file = os.path.join(cfg.cfg_path, 'web.ini')
-        if not cfg.load(_cfg_file):
+        self._cfg_file = os.path.join(cfg.cfg_path, 'web.ini')
+        if not cfg.load(self._cfg_file):
             return False
 
         return True
@@ -63,9 +64,10 @@ class WebApp:
     def run(self):
         log.i('\n')
         log.i('###############################################################\n')
-        log.i('Web Server starting ...\n')
+        log.i('Load config file: {}\n'.format(self._cfg_file))
+        log.i('Teleport Web Server starting ...\n')
 
-        tp_corn().init()
+        tp_cron().init()
 
         # 尝试通过CORE-JSON-RPC获取core服务的配置（主要是ssh/rdp/telnet的端口以及录像文件存放路径）
         self._get_core_server_config()
@@ -144,14 +146,14 @@ class WebApp:
             return 0
 
         # 启动定时任务调度器
-        tp_corn().start()
+        tp_cron().start()
 
         try:
             tornado.ioloop.IOLoop.instance().start()
         except:
             log.e('\n')
 
-        tp_corn().stop()
+        tp_cron().stop()
         return 0
 
 

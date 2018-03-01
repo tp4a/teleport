@@ -564,7 +564,7 @@ class BuilderMacOS(BuilderBase):
         if not os.path.exists(self.OPENSSL_PATH_SRC):
             os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
-        cc.n('build openssl static...')
+        cc.n('build openssl static...', end='')
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
             cc.w('already exists, skip.')
             return
@@ -579,7 +579,7 @@ class BuilderMacOS(BuilderBase):
         os.chdir(old_p)
 
     def _build_libuv(self, file_name):
-        cc.w('build libuv...')
+        cc.n('prepare libuv source code...', end='')
         # return
         if not os.path.exists(self.LIBUV_PATH_SRC):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))

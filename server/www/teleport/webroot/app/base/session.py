@@ -4,7 +4,7 @@ import datetime
 import threading
 
 from app.base.configs import tp_cfg
-from app.base.cron import tp_corn
+from app.base.cron import tp_cron
 
 
 class SessionManager(object):
@@ -28,7 +28,7 @@ class SessionManager(object):
 
     def init(self):
         self.update_default_expire()
-        tp_corn().add_job('session_expire', self._check_expire, first_interval_seconds=None, interval_seconds=60)
+        tp_cron().add_job('session_expire', self._check_expire, first_interval_seconds=None, interval_seconds=60)
         return True
 
     def update_default_expire(self):

@@ -526,8 +526,10 @@ class ComandLogHandler(TPBaseHandler):
         if ret != TPE_OK:
             return
 
+        protocol = int(protocol)
+
         param = dict()
-        header, err = record.read_record_head(record_id)
+        header, err = record.read_record_head(protocol, record_id)
         if header is None:
             # return self.write('操作失败！[{}]'.format(err))
             param['code'] = err
@@ -543,7 +545,6 @@ class ComandLogHandler(TPBaseHandler):
         param['code'] = TPE_OK
 
         cmd_type = 0  # 0 = ssh, 1 = sftp
-        protocol = int(protocol)
         if protocol == 1:
             pass
         elif protocol == 2:

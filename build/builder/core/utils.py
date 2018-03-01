@@ -319,7 +319,7 @@ def xcode_build(proj_file, proj_name, target, force_rebuild):
     cmd = 'xcodebuild -project "{}" -target {} -configuration {}'.format(proj_file, proj_name, target)
     ret, _ = sys_exec(cmd, direct_output=True)
     if ret != 0:
-        raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
+        raise RuntimeError('build XCode project `{}` failed.'.format(proj_name))
 
 
 def nsis_build(nsi_file, _define=''):

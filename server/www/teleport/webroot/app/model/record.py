@@ -48,6 +48,8 @@ def get_records(handler, sql_filter, sql_order, sql_limit, sql_restrict, sql_exc
             for h in s.recorder:
                 if h.h_id not in allow_hids:
                     allow_hids.append(h.h_id)
+            if len(allow_hids) == 0:
+                return TPE_OK, 0, []
 
         if allow_uid == 0 and len(allow_hids) == 0:
             return TPE_FAILED, 0, []

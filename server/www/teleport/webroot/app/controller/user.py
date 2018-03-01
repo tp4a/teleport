@@ -553,6 +553,9 @@ class DoUpdateUserHandler(TPBaseJsonHandler):
             args['password'] = tp_gen_password(8)
             err, _ = user.create_user(self, args)
             if err == TPE_OK:
+                if len(args['email']) == 0:
+                    return self.write_json(TPE_OK)
+
                 # 对于创建成功的用户，发送密码邮件函
                 sys_smtp_password = tp_cfg().sys_smtp_password
                 if len(sys_smtp_password) > 0:

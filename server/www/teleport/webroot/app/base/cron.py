@@ -56,7 +56,7 @@ class TPCron(threading.Thread):
                             log.e('got exception when exec job: {}\n'.format(j))
 
 
-def tp_corn():
+def tp_cron():
     """
     取得TPCron管理器的唯一实例
 

@@ -140,6 +140,23 @@ class Builder:
         plist_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'src', 'tp_assist-Info.plist')
         self._update_ver_plist(plist_file, self.VER_TP_ASSIST)
 
+        ver_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'src', 'csrc', 'ts_ver.h')
+        ver_content = '#ifndef __TS_ASSIST_VER_H__\n#define __TS_ASSIST_VER_H__\n\n#define TP_ASSIST_VER\tL"{}"\n\n#endif // __TS_ASSIST_VER_H__\n'.format(self.VER_TP_ASSIST)
+
+        rewrite = False
+        if not os.path.exists(ver_file):
+            rewrite = True
+        else:
+            with open(ver_file, 'r') as f:
+                old_content = f.read()
+            if old_content != ver_content:
+                rewrite = True
+
+        if rewrite:
+            cc.v('  update {}...'.format(ver_file))
+            with open(ver_file, 'w') as f:
+                f.write(ver_content)
+
     def make_tpweb_ver(self):
         ver_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'ts_ver.h')
         ver_content = '#ifndef __TS_SERVER_VER_H__\n#define __TS_SERVER_VER_H__\n\n#define TP_SERVER_VER\tL"{}"\n\n#endif // __TS_SERVER_VER_H__\n'.format(self.VER_TP_TPWEB)
@@ -403,7 +420,7 @@ class Builder:
                     old_ver = '.'.join(v)
                     if old_ver == ver:
                         continue
-                    lines[x] = '<string>{ver}</string>'.format(ver=ver)
+                    lines[x] = '\t<string>{ver}</string>\n'.format(ver=ver)
                     bOK = True
 
             if bOK:

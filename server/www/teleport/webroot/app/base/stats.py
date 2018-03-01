@@ -4,7 +4,7 @@ import psutil
 from app.base.utils import tp_utc_timestamp_ms
 from app.const import *
 from app.base.wss import tp_wss
-from app.base.cron import tp_corn
+from app.base.cron import tp_cron
 from app.model import stats
 
 
@@ -61,9 +61,9 @@ class TPStats(object):
             self._counter_stats = c
 
         # 每 5秒 采集一次系统状态统计数据
-        tp_corn().add_job('sys_status', self._check_sys_stats, first_interval_seconds=self._INTERVAL, interval_seconds=self._INTERVAL)
+        tp_cron().add_job('sys_status', self._check_sys_stats, first_interval_seconds=self._INTERVAL, interval_seconds=self._INTERVAL)
         # 每 一小时 重新查询一次数据库，得到用户数/主机数/账号数/连接数，避免统计数量出现偏差
-        tp_corn().add_job('query_counter', self._query_counter, first_interval_seconds=60 * 60, interval_seconds=60 * 60)
+        tp_cron().add_job('query_counter', self._query_counter, first_interval_seconds=60 * 60, interval_seconds=60 * 60)
         tp_wss().register_get_sys_status_callback(self.get_sys_stats)
         tp_wss().register_get_stat_counter_callback(self.get_counter_stats)
 
