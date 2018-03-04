@@ -71,18 +71,12 @@
    "rdp" : {
       "available" : [
          {
-            "app" : "mstsc.exe",
-            "cmdline" : "\"{tmp_rdp_file}\"",
-            "display" : "微软RDP客户端（系统自带）",
-            "name" : "mstsc"
-         },
-         {
             "app" : "{assist_tools_path}\\tprdp\\tprdp-client.exe",
             "cmdline" : "{size} {console} /v:{host_ip}:{host_port} /u:{user_name} /p:**** {clipboard} {drives} /t:\"TP#{real_ip}\"",
             "display" : "FreeRDP（内置）",
             "name" : "freerdp"
          }
       ],
-      "selected" : "mstsc"
+      "selected" : "freerdp"
    }
 }

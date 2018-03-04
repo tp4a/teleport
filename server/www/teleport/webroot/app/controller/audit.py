@@ -650,7 +650,7 @@ class DoGetFileHandler(TPBaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        log.v('--{}\n'.format(self.request.uri))
+        # log.v('--{}\n'.format(self.request.uri))
 
         require_privilege = TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT
 
@@ -698,7 +698,7 @@ class DoGetFileHandler(TPBaseHandler):
         file_size = os.path.getsize(file)
 
         if act == 'size':
-            log.d('--return size:{}\n'.format(file_size))
+            # log.d('--return size:{}\n'.format(file_size))
             return self.write('{}'.format(file_size))
 
         if offset >= file_size:
