@@ -284,9 +284,9 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 _cleanup_hour = _cfg['cleanup_hour']
                 _cleanup_minute = _cfg['cleanup_minute']
 
-                if not (30 <= _keep_log <= 365):
+                if not ((30 <= _keep_log <= 365) or _keep_log == 0):
                     return self.write_json(TPE_PARAM, '系统日志保留时间超出范围！')
-                if not (30 <= _keep_record <= 365):
+                if not ((30 <= _keep_record <= 365) or _keep_record == 0):
                     return self.write_json(TPE_PARAM, '会话录像保留时间超出范围！')
 
                 err = system_model.save_config(self, '更新存储策略设置', 'storage', _cfg)

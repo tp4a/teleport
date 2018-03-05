@@ -469,7 +469,7 @@ def cleanup_storage(handler):
                 msg.append('没有满足条件的系统日志需要清除！')
             else:
                 s.reset().delete_from('syslog').where('log_time<{chk_time}'.format(chk_time=chk_time))
-                err = s.query()
+                err = s.exec()
                 if err != TPE_OK:
                     have_error = True
                     msg.append('清理系统日志时发生错误：无法清除指定的系统日志！')
