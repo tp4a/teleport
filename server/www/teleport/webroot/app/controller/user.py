@@ -742,6 +742,9 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
             password = tp_password_generate_secret(password)
             err = user.set_password(self, user_id, password)
 
+            if mode == 4 and err == TPE_OK:
+                user.remove_reset_token(token)
+
             self.write_json(err)
 
         else:

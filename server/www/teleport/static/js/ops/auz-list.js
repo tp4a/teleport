@@ -49,11 +49,11 @@ $app.on_rebuild = function () {
             if (ret.code === TPE_OK) {
                 $tp.notify_success('重建授权映射成功！');
             } else {
-                $tp.notify_error('重建授权映射成功失败：' + tp_error_msg(ret.code, ret.message));
+                $tp.notify_error('重建授权映射失败：' + tp_error_msg(ret.code, ret.message));
             }
         },
         function () {
-            $tp.notify_error('网络故障，重建授权映射成功失败！');
+            $tp.notify_error('网络故障，重建授权映射失败！');
         }
     );
 };

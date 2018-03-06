@@ -385,8 +385,8 @@ def check_reset_token(token):
     _time_now = tp_timestamp_utc_now()
 
     # 0. remove expired token (after 3 days)
-    sql = 'DELETE FROM  `{dbtp}user_rpt` WHERE create_time<{dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
-    db.query(sql, (_time_now - 3 * 24 * 60 * 60,))
+    sql = 'DELETE FROM `{dbtp}user_rpt` WHERE create_time<{dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+    db.exec(sql, (_time_now - 3 * 24 * 60 * 60,))
 
     # 1. query user's id
     sql = 'SELECT user_id, create_time FROM `{dbtp}user_rpt` WHERE token={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
@@ -397,17 +397,17 @@ def check_reset_token(token):
     user_id = db_ret[0][0]
     create_time = db_ret[0][1]
 
-    # err = s.select_from('user', ['email'], alt_name='u').where('u.id="{user_id}"'.format(user_id=user_id)).query()
-    # if err != TPE_OK:
-    #     return err
-    # if len(s.recorder) == 0:
-    #     return TPE_DATABASE
-    # email = s.recorder[0].email
-
     if _time_now - create_time > 24 * 60 * 60:
         return TPE_EXPIRED, user_id
     else:
         return TPE_OK, user_id
+
+
+def remove_reset_token(token):
+    db = get_db()
+    sql = 'DELETE FROM `{dbtp}user_rpt` WHERE token={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+    err = db.exec(sql, (token,))
+    return TPE_OK if err else TPE_DATABASE
 
 
 def update_login_info(handler, user_id):

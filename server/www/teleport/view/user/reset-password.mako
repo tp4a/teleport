@@ -49,7 +49,7 @@
                         您可以：
                         <ul>
                             <li>联系管理员手工重置密码</li>
-                            <li><a href="/user/reset-password">稍后再尝试重置密码</a></li>
+                            <li><a href="/user/reset-password">重新重置密码</a></li>
                         </ul>
                     </div>
                 </div>
