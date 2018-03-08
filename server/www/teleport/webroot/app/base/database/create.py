@@ -191,7 +191,7 @@ class DatabaseInit:
 
         # id: 自增主键
         f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
-        # type  1=用户组，2=主机组，3=账号组
+        # type  2=用户组，4=远程账号组，6=资产组（主机）
         f.append('`type` int(11) DEFAULT 1')
         # name: 组名称
         f.append('`name` varchar(128) DEFAULT ""')
@@ -219,7 +219,7 @@ class DatabaseInit:
 
         # id: 自增主键
         f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
-        # type  1=用户组，2=资产组（主机），3=远程账号组
+        # type  2=用户组，4=远程账号组，6=资产组（主机）
         f.append('`type` int(11) DEFAULT 0')
         # gid: 组的ID
         f.append('`gid` int(11) DEFAULT 0')
