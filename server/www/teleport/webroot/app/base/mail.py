@@ -102,6 +102,7 @@ def tp_send_mail(recipient, message, subject=None, sender=None, cc=None, bcc=Non
         if _ssl:
             _smtp = smtplib.SMTP_SSL(_server, _port, timeout=10.0)
             _smtp.ehlo()
+            _smtp.starttls()  # Fix: smtp auth extension not supported by server
         else:
             _smtp = smtplib.SMTP(_server, _port, timeout=10.0)
             _smtp.helo()
