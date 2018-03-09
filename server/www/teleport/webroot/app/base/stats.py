@@ -122,10 +122,11 @@ class TPStats(object):
     def get_counter_stats(self):
         return self._counter_stats
 
-    def user_counter_change(self, alt_count):
-        self._counter_stats['user'] += alt_count
-        if self._counter_stats['user'] < 0:
-            self._counter_stats['user'] = 0
+    def user_counter_change(self, count):
+        self._counter_stats['user'] = count
+        # self._counter_stats['user'] += alt_count
+        # if self._counter_stats['user'] < 0:
+        #     self._counter_stats['user'] = 0
         tp_wss().send_message('stat_counter', self._counter_stats)
 
     def host_counter_change(self, alt_count):

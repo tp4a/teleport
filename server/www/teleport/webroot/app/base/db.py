@@ -663,6 +663,19 @@ class SQL:
     def page_index(self):
         return self._ret_page_index
 
+    def count(self, name):
+        _sql = list()
+        _sql.append('SELECT COUNT(*)')
+        _sql.append('FROM `{}{}`'.format(self._db.table_prefix, name))
+        if len(self._where) > 0:
+            _sql.append('WHERE {}'.format(self._where))
+        _sql.append(';')
+        sql = ' '.join(_sql)
+        db_ret = self._db.query(sql)
+        if db_ret is None or 0 == len(db_ret):
+            return TPE_OK, 0
+        return TPE_OK, db_ret[0][0]
+
     def select_from(self, name, fields, alt_name=None, out_map=None):
         if len(fields) == 0:
             raise RuntimeError('empty fields.')

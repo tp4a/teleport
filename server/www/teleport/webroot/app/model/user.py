@@ -209,7 +209,12 @@ def create_users(handler, user_list, success, failed):
 
     if len(name_list) > 0:
         syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "批量导入方式创建用户：{}".format('，'.join(name_list)))
-        tp_stats().user_counter_change(len(name_list))
+        # tp_stats().user_counter_change(len(name_list))
+
+    # calc count of users.
+    err, cnt = s.reset().count('user')
+    if err == TPE_OK:
+        tp_stats().user_counter_change(cnt)
 
 
 def create_user(handler, args):
@@ -228,10 +233,6 @@ def create_user(handler, args):
     if len(s.recorder) > 0:
         return TPE_EXISTS, 0
 
-    # sql = 'SELECT id FROM {}user WHERE account="{}";'.format(db.table_prefix, args['account'])
-    # db_ret = db.query(sql)
-    # if db_ret is not None and len(db_ret) > 0:
-    #     return TPE_EXISTS, 0
     _password = tp_password_generate_secret(args['password'])
 
     sql = 'INSERT INTO `{}user` (`type`, `auth_type`, `password`, `username`, `surname`, `role_id`, `state`, `email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `desc`) VALUES ' \
@@ -247,7 +248,11 @@ def create_user(handler, args):
     _id = db.last_insert_id()
 
     syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "创建用户：{}".format(args['username']))
-    tp_stats().user_counter_change(1)
+
+    # calc count of users.
+    err, cnt = s.reset().count('user')
+    if err == TPE_OK:
+        tp_stats().user_counter_change(cnt)
 
     return TPE_OK, _id
 
@@ -494,256 +499,51 @@ def update_fail_count(handler, user_info):
 
 
 def remove_users(handler, users):
-    s = SQL(get_db())
+    db = get_db()
+    s = SQL(db)
 
-    user_list = [str(i) for i in users]
+    str_users = ','.join([str(i) for i in users])
 
     # 1. 获取用户名称，用于记录系统日志
-    where = 'u.id IN ({})'.format(','.join(user_list))
+    where = 'u.id IN ({})'.format(str_users)
     err = s.select_from('user', ['username'], alt_name='u').where(where).query()
     if err != TPE_OK:
         return err
     if len(s.recorder) == 0:
         return TPE_NOT_EXISTS
 
-    name_list = [n['username'] for n in s.recorder]
+    str_names = '，'.join([n['username'] for n in s.recorder])
+
+    sql_list = []
 
     # 将用户从所在组中移除
-    where = 'type={} AND mid IN ({})'.format(TP_GROUP_USER, ','.join(user_list))
-    err = s.reset().delete_from('group_map').where(where).exec()
-    if err != TPE_OK:
-        return err
+    sql = 'DELETE FROM `{tpdp}group_map` WHERE type={t} AND mid IN ({ids});'.format(tpdp=db.table_prefix, t=TP_GROUP_USER, ids=str_users)
+    sql_list.append(sql)
+    # 删除用户
+    sql = 'DELETE FROM `{tpdp}user` WHERE id IN ({ids});'.format(tpdp=db.table_prefix, ids=str_users)
+    sql_list.append(sql)
+    # 将用户从运维授权中移除
+    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({ids});'.format(db.table_prefix, rtype=TP_USER, ids=str_users)
+    sql_list.append(sql)
+    sql = 'DELETE FROM `{}ops_map` WHERE u_id IN ({ids});'.format(db.table_prefix, ids=str_users)
+    sql_list.append(sql)
+    # 将用户从审计授权中移除
+    sql = 'DELETE FROM `{}audit_auz` WHERE rtype={rtype} AND rid IN ({ids});'.format(db.table_prefix, rtype=TP_USER, ids=str_users)
+    sql_list.append(sql)
+    sql = 'DELETE FROM `{}audit_map` WHERE u_id IN ({ids});'.format(db.table_prefix, ids=str_users)
+    sql_list.append(sql)
 
-    # sql = 'DELETE FROM `{}group_map` WHERE (type=1 AND ({}));'.format(db.table_prefix, where)
-    # if not db.exec(sql):
-    #     return TPE_DATABASE
+    if not db.transaction(sql_list):
+        return TPE_DATABASE
 
-    where = 'id IN ({})'.format(','.join(user_list))
-    err = s.reset().delete_from('user').where(where).exec()
-    if err != TPE_OK:
-        return err
-    # sql = 'DELETE FROM `{}user` WHERE {};'.format(db.table_prefix, where)
-    # if not db.exec(sql):
-    #     return TPE_DATABASE
+    syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除用户：{}".format(str_names))
 
-    syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除用户：{}".format('，'.join(name_list)))
-
-    tp_stats().user_counter_change(0 - len(name_list))
+    # calc count of users.
+    err, cnt = s.reset().count('user')
+    if err == TPE_OK:
+        tp_stats().user_counter_change(cnt)
 
     return TPE_OK
-
-
-# def verify_oath(user_id, oath_code):
-#     db = get_db()
-#
-#     sql = 'SELECT `oath_secret` FROM `{}account` WHERE `account_id`={};'.format(db.table_prefix, user_id)
-#     db_ret = db.query(sql)
-#     if db_ret is None:
-#         return False
-#
-#     if len(db_ret) != 1:
-#         return False
-#
-#     oath_secret = str(db_ret[0][0]).strip()
-#     if 0 == len(oath_secret):
-#         return False
-#
-#     return tp_oath_verify_code(oath_secret, oath_code)
-
-#
-# def modify_pwd(old_pwd, new_pwd, user_id):
-#     db = get_db()
-#     sql = 'SELECT `account_pwd` FROM `{}account` WHERE `account_id`={};'.format(db.table_prefix, int(user_id))
-#     db_ret = db.query(sql)
-#     if db_ret is None or len(db_ret) != 1:
-#         return -100
-#
-#     if not tp_password_verify(old_pwd, db_ret[0][0]):
-#         # 按新方法验证密码失败，可能是旧版本的密码散列格式，再尝试一下
-#         if db_ret[0][0] != hashlib.sha256(old_pwd.encode()).hexdigest():
-#             return -101
-#
-#     _new_sec_password = tp_password_generate_secret(new_pwd)
-#     sql = 'UPDATE `{}account` SET `account_pwd`="{}" WHERE `account_id`={}'.format(db.table_prefix, _new_sec_password, int(user_id))
-#     db_ret = db.exec(sql)
-#     if db_ret:
-#         return 0
-#     else:
-#         return -102
-#
-#
-# def get_user_list(with_admin=False):
-#     db = get_db()
-#     ret = list()
-#
-#     field_a = ['account_id', 'account_type', 'account_name', 'account_status', 'account_lock', 'account_desc']
-#
-#     if with_admin:
-#         where = ''
-#     else:
-#         where = 'WHERE `a`.`account_type`<100'
-#
-#     sql = 'SELECT {} FROM `{}account` as a {} ORDER BY `account_name`;'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix, where)
-#     db_ret = db.query(sql)
-#     if db_ret is None:
-#         return ret
-#
-#     for item in db_ret:
-#         x = DbItem()
-#         x.load(item, ['a_{}'.format(i) for i in field_a])
-#         h = dict()
-#         h['user_id'] = x.a_account_id
-#         h['user_type'] = x.a_account_type
-#         h['user_name'] = x.a_account_name
-#         h['user_status'] = x.a_account_status
-#         h['user_lock'] = x.a_account_lock
-#         h['user_desc'] = x.a_account_desc
-#         ret.append(h)
-#     return ret
-
-#
-# def delete_user(user_id):
-#     db = get_db()
-#     sql = 'DELETE FROM `{}account` WHERE `account_id`={};'.format(db.table_prefix, int(user_id))
-#     return db.exec(sql)
-#
-#
-# def lock_user(user_id, lock_status):
-#     db = get_db()
-#     sql = 'UPDATE `{}account` SET `account_lock`={} WHERE `account_id`={};'.format(db.table_prefix, lock_status, int(user_id))
-#     return db.exec(sql)
-#
-#
-# def reset_user(user_id):
-#     db = get_db()
-#     _new_sec_password = tp_password_generate_secret('123456')
-#     sql = 'UPDATE `{}account` SET `account_pwd`="{}" WHERE `account_id`={};'.format(db.table_prefix, _new_sec_password, int(user_id))
-#     return db.exec(sql)
-#
-#
-# def modify_user(user_id, user_desc):
-#     db = get_db()
-#     sql = 'UPDATE `{}account` SET `account_desc`="{}" WHERE `account_id`={};'.format(db.table_prefix, user_desc, int(user_id))
-#     return db.exec(sql)
-#
-#
-# def add_user(user_name, user_pwd, user_desc):
-#     db = get_db()
-#     sql = 'SELECT `account_id` FROM `{}account` WHERE `account_name`="{}";'.format(db.table_prefix, user_name)
-#     db_ret = db.query(sql)
-#     if db_ret is None or len(db_ret) != 0:
-#         return -100
-#
-#     sec_password = tp_password_generate_secret(user_pwd)
-#     sql = 'INSERT INTO `{}account` (`account_type`, `account_name`, `account_pwd`, `account_status`,' \
-#           '`account_lock`,`account_desc`) VALUES (1,"{}","{}",0,0,"{}")'.format(db.table_prefix, user_name, sec_password, user_desc)
-#     ret = db.exec(sql)
-#     if ret:
-#         return 0
-#     return -101
-
-#
-# def alloc_host(user_name, host_list):
-#     db = get_db()
-#     field_a = ['host_id']
-#     sql = 'SELECT {} FROM `{}auth` AS a WHERE `account_name`="{}";'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix, user_name)
-#     db_ret = db.query(sql)
-#     ret = dict()
-#     for item in db_ret:
-#         x = DbItem()
-#         x.load(item, ['a_{}'.format(i) for i in field_a])
-#         host_id = int(x.a_host_id)
-#         ret[host_id] = host_id
-#
-#     a_list = list()
-#     for item in host_list:
-#         if item in ret:
-#             pass
-#         else:
-#             a_list.append(item)
-#     try:
-#         for item in a_list:
-#             host_id = int(item)
-#             sql = 'INSERT INTO `{}auth` (`account_name`, `host_id`) VALUES ("{}", {});'.format(db.table_prefix, user_name, host_id)
-#             ret = db.exec(sql)
-#             if not ret:
-#                 return False
-#         return True
-#     except:
-#         return False
-
-#
-# def alloc_host_user(user_name, host_auth_dict):
-#     db = get_db()
-#     field_a = ['host_id', 'host_auth_id']
-#     sql = 'SELECT {} FROM `{}auth` AS a WHERE `account_name`="{}";'.format(','.join(['`a`.`{}`'.format(i) for i in field_a]), db.table_prefix, user_name)
-#     db_ret = db.query(sql)
-#     ret = dict()
-#     for item in db_ret:
-#         x = DbItem()
-#         x.load(item, ['a_{}'.format(i) for i in field_a])
-#         host_id = int(x.a_host_id)
-#         host_auth_id = int(x.a_host_auth_id)
-#         if host_id not in ret:
-#             ret[host_id] = dict()
-#
-#         temp = ret[host_id]
-#         temp[host_auth_id] = host_id
-#         ret[host_id] = temp
-#
-#     add_dict = dict()
-#     for k, v in host_auth_dict.items():
-#         host_id = int(k)
-#         auth_id_list = v
-#         for item in auth_id_list:
-#             host_auth_id = int(item)
-#             if host_id not in ret:
-#                 add_dict[host_auth_id] = host_id
-#                 continue
-#             temp = ret[host_id]
-#             if host_auth_id not in temp:
-#                 add_dict[host_auth_id] = host_id
-#                 continue
-#
-#     try:
-#         for k, v in add_dict.items():
-#             host_auth_id = int(k)
-#             host_id = int(v)
-#             sql = 'INSERT INTO `{}auth` (`account_name`, `host_id`, `host_auth_id`) VALUES ("{}", {}, {});'.format(db.table_prefix, user_name, host_id, host_auth_id)
-#             ret = db.exec(sql)
-#             if not ret:
-#                 return False
-#         return True
-#     except:
-#         return False
-#
-#
-# def delete_host(user_name, host_list):
-#     db = get_db()
-#     try:
-#         for item in host_list:
-#             host_id = int(item)
-#             sql = 'DELETE FROM `{}auth` WHERE `account_name`="{}" AND `host_id`={};'.format(db.table_prefix, user_name, host_id)
-#             ret = db.exec(sql)
-#             if not ret:
-#                 return False
-#         return True
-#     except:
-#         return False
-#
-#
-# def delete_host_user(user_name, auth_id_list):
-#     db = get_db()
-#     try:
-#         for item in auth_id_list:
-#             auth_id = int(item)
-#             sql = 'DELETE FROM `{}auth` WHERE `account_name`="{}" AND `auth_id`={};'.format(db.table_prefix, user_name, auth_id)
-#             ret = db.exec(sql)
-#             if not ret:
-#                 return False
-#         return True
-#     except:
-#         return False
 
 
 def get_group_with_member(sql_filter, sql_order, sql_limit):

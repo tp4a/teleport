@@ -783,6 +783,7 @@ class DoUpdateUsersHandler(TPBaseJsonHandler):
         if err != TPE_OK:
             return self.write_json(err)
 
+        # force logout if user LOCKED or REMOVED.
         if action == 'lock' or action == 'remove':
             v = tp_session().get_start_with('user-')
             for k in v:
