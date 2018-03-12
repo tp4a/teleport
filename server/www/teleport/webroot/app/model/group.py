@@ -80,12 +80,13 @@ def remove(handler, gtype, glist):
     if gtype not in TP_GROUP_TYPES:
         return TPE_PARAM
 
-    group_list = [str(i) for i in glist]
+    group_ids = ','.join([str(i) for i in glist])
 
     # 1. 获取组的名称，用于记录系统日志
-    where = 'g.type={gtype} AND g.id IN ({gids})'.format(gtype=gtype, gids=','.join(group_list))
+    where = 'g.type={gtype} AND g.id IN ({gids})'.format(gtype=gtype, gids=group_ids)
 
-    s = SQL(get_db())
+    db = get_db()
+    s = SQL(db)
     err = s.select_from('group', ['name'], alt_name='g').where(where).query()
     if err != TPE_OK:
         return err
@@ -94,17 +95,47 @@ def remove(handler, gtype, glist):
 
     name_list = [n['name'] for n in s.recorder]
 
+    sql_list = []
+
     # 删除组与成员的映射关系
-    where = 'type={} AND gid IN ({})'.format(gtype, ','.join(group_list))
-    err = s.reset().delete_from('group_map').where(where).exec()
-    if err != TPE_OK:
-        return err
+    sql = 'DELETE FROM `{tpdp}group_map` WHERE `type`={t} AND `gid` IN ({ids});'.format(tpdp=db.table_prefix, t=gtype, ids=group_ids)
+    sql_list.append(sql)
+
+    # where = 'type={} AND gid IN ({})'.format(gtype, ','.join(group_list))
+    # err = s.reset().delete_from('group_map').where(where).exec()
+    # if err != TPE_OK:
+    #     return err
 
     # 删除组
-    where = 'type={gtype} AND id IN ({gids})'.format(gtype=gtype, gids=','.join(group_list))
-    err = s.reset().delete_from('group').where(where).exec()
-    if err != TPE_OK:
-        return err
+    sql = 'DELETE FROM `{tpdp}group` WHERE `type`={t} AND `id` IN ({ids});'.format(tpdp=db.table_prefix, t=gtype, ids=group_ids)
+    sql_list.append(sql)
+    # where = 'type={gtype} AND id IN ({gids})'.format(gtype=gtype, gids=','.join(group_list))
+    # err = s.reset().delete_from('group').where(where).exec()
+    # if err != TPE_OK:
+    #     return err
+
+    if gtype == TP_GROUP_USER:
+        gname = 'gu'
+    elif gtype == TP_GROUP_HOST:
+        gname = 'gh'
+    elif gtype == TP_GROUP_ACCOUNT:
+        gname = 'ga'
+    else:
+        return TPE_PARAM
+
+    # 将组从运维授权中移除
+    sql = 'DELETE FROM `{}ops_auz` WHERE `rtype`={rtype} AND `rid` IN ({ids});'.format(db.table_prefix, rtype=gtype, ids=group_ids)
+    sql_list.append(sql)
+    sql = 'DELETE FROM `{}ops_map` WHERE `{gname}_id` IN ({ids});'.format(db.table_prefix, gname=gname, ids=group_ids)
+    sql_list.append(sql)
+    # 将组从审计授权中移除
+    sql = 'DELETE FROM `{}audit_auz` WHERE `rtype`={rtype} AND `rid` IN ({ids});'.format(db.table_prefix, rtype=gtype, ids=group_ids)
+    sql_list.append(sql)
+    sql = 'DELETE FROM `{}audit_map` WHERE `{gname}_id` IN ({ids});'.format(db.table_prefix, gname=gname, ids=group_ids)
+    sql_list.append(sql)
+
+    if not db.transaction(sql_list):
+        return TPE_DATABASE
 
     # 记录系统日志
     syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除{gtype}：{gname}".format(gtype=TP_GROUP_TYPES[gtype], gname='，'.join(name_list)))
