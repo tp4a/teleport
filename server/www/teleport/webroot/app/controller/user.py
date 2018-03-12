@@ -78,6 +78,7 @@ class MeHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_LOGIN_WEB)
         if ret != TPE_OK:
             return
+
         self.render('user/me.mako')
 
 

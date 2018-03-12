@@ -348,20 +348,21 @@ $app.on_table_session_render_created = function (render) {
     };
 
     render.record_action = function (row_id, fields) {
-        var ret = [];
-
-        if (fields.state >= TP_SESS_STAT_STARTED) {
-            if (fields.time_end === 0) {
-                ret.push('<a href="javascript:;" class="btn btn-sm btn-warning" data-action="sync" data-record-id="' + fields.id + '"><i class="fa fa-clone fa-fw"></i> 同步</a>&nbsp');
-            } else {
-                ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" data-action="play" data-record-id="' + fields.id + '"><i class="fa fa-caret-square-o-right fa-fw"></i> 播放</a>&nbsp');
-            }
-            if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_RDP_DESKTOP) {
-                ret.push('<a href="javascript:;" class="btn btn-sm btn-info" data-action="cmd" data-record-id="' + fields.id + '"><i class="fa fa-file-text-o fa-fw"></i> 日志</a>&nbsp');
-            }
-        }
-
-        return ret.join('');
+        return '';
+        // var ret = [];
+        //
+        // if (fields.state >= TP_SESS_STAT_STARTED) {
+        //     if (fields.time_end === 0) {
+        //         ret.push('<a href="javascript:;" class="btn btn-sm btn-warning" data-action="sync" data-record-id="' + fields.id + '"><i class="fa fa-clone fa-fw"></i> 同步</a>&nbsp');
+        //     } else {
+        //         ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" data-action="play" data-record-id="' + fields.id + '"><i class="fa fa-caret-square-o-right fa-fw"></i> 播放</a>&nbsp');
+        //     }
+        //     if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_RDP_DESKTOP) {
+        //         ret.push('<a href="javascript:;" class="btn btn-sm btn-info" data-action="cmd" data-record-id="' + fields.id + '"><i class="fa fa-file-text-o fa-fw"></i> 日志</a>&nbsp');
+        //     }
+        // }
+        //
+        // return ret.join('');
     };
 };
 
@@ -401,35 +402,5 @@ $app.get_selected_session = function (tbl) {
 };
 
 $app.on_btn_kill_sessions_click = function () {
-    // var records = $app.get_selected_session($app.table_session);
-    // if (records.length === 0) {
-    //     $tp.notify_error('请选择要删除的会话记录！');
-    //     return;
-    // }
-    //
-    // var _fn_sure = function (cb_stack, cb_args) {
-    //     $tp.ajax_post_json('/user/remove-user', {users: users},
-    //         function (ret) {
-    //             if (ret.code === TPE_OK) {
-    //                 cb_stack.add($app.check_host_all_selected);
-    //                 cb_stack.add($app.table_session.load_data);
-    //                 $tp.notify_success('删除用户账号操作成功！');
-    //             } else {
-    //                 $tp.notify_error('删除用户账号操作失败：' + tp_error_msg(ret.code, ret.message));
-    //             }
-    //
-    //             cb_stack.exec();
-    //         },
-    //         function () {
-    //             $tp.notify_error('网络故障，删除用户账号操作失败！');
-    //             cb_stack.exec();
-    //         }
-    //     );
-    // };
-    //
-    // var cb_stack = CALLBACK_STACK.create();
-    // $tp.dlg_confirm(cb_stack, {
-    //     msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除用户账号将同时将其从所在用户组中移除，并且删除所有分配给此用户的授权！</p></div><p>如果您希望禁止某个用户登录本系统，可对其进行“禁用”操作！</p><p>您确定要移除所有选定的 <strong>' + user_list.length + '个</strong> 用户账号吗？</p>',
-    //     fn_yes: _fn_sure
-    // });
+    $tp.notify_error('抱歉，此功能尚未实现！');
 };

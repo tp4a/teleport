@@ -334,6 +334,9 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.record_action = function (row_id, fields) {
+        if(fields.state === TP_SESS_STAT_RUNNING || fields.state === TP_SESS_STAT_STARTED)
+            return '';
+
         var ret = [];
 
         if (fields.state >= TP_SESS_STAT_STARTED || fields.state === TP_SESS_STAT_ERR_RESET) {

@@ -186,8 +186,9 @@ def remove_members(gtype, gid, members):
     _where = 'WHERE (type={gtype} AND gid={gid} AND mid IN ({mid}))'.format(gtype=gtype, gid=gid, mid=mids)
     sql = 'DELETE FROM `{dbtp}group_map` {where};'.format(dbtp=db.table_prefix, where=_where)
     sql_list.append(sql)
-
     sql = 'DELETE FROM `{}ops_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
+    sql_list.append(sql)
+    sql = 'DELETE FROM `{}audit_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
     sql_list.append(sql)
 
     if db.transaction(sql_list):
@@ -242,36 +243,6 @@ def make_group_map(gtype, gm):
                   '({gtype}, {gid}, {mid});' \
                   ''.format(dbtp=db.table_prefix, gtype=gtype, gid=item['gid'], mid=item['mid'])
             db_ret = db.exec(sql)
-
-# def make_account_groups(handler, group_list, failed):
-#     """
-#     根据传入的组列表，查询每个组的名称对应的id，如果没有，则创建之
-#     """
-#     db = get_db()
-#     _time_now = tp_timestamp_utc_now()
-#
-#     for g in group_list:
-#         sql = 'SELECT id FROM {}group WHERE type=3 AND name="{}";'.format(db.table_prefix, g)
-#         db_ret = db.query(sql)
-#         if db_ret is None or len(db_ret) == 0:
-#             # need create group.
-#             sql = 'INSERT INTO `{}group` (`type`, `name`, `creator_id`, `create_time`) VALUES ' \
-#                   '(3, "{name}", {creator_id}, {create_time});' \
-#                   ''.format(db.table_prefix,
-#                             name=g, creator_id=handler.get_current_user()['id'], create_time=_time_now)
-#
-#             db_ret = db.exec(sql)
-#             if not db_ret:
-#                 failed.append({'line': 0, 'error': '创建账号组 `{}` 失败，写入数据库时发生错误'.format(g)})
-#                 continue
-#
-#             # success.append(user['account'])
-#             group_list[g] = db.last_insert_id()
-#
-#         else:
-#             group_list[g] = db_ret[0][0]
-#
-#     return TPE_OK
 
 
 def get_groups(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
