@@ -185,7 +185,20 @@ def update(handler, gid, name, desc):
 
 
 def add_members(gtype, gid, members):
+    # 向指定组中增加成员，同时根据授权策略，更新授权映射表
+
     db = get_db()
+
+    # 1. 获取与此组相关的运维授权策略
+    s = SQL(get_db())
+    s.select_from('ops_auz', ['id', 'policy_id', 'type', 'state'], alt_name='oa')
+    s.where('`rtype`={gtype} AND `gid`={gid}'.format(gtype=gtype, gid=gid))
+    err = s.query()
+    if err != TPE_OK:
+        return err
+    if s.total_count > 0:
+        pass
+
     sql = []
     for uid in members:
         sql.append('INSERT INTO `{}group_map` (`type`, `gid`, `mid`) VALUES ({}, {}, {});'.format(db.table_prefix, gtype, gid, uid))

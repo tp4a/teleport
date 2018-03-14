@@ -471,6 +471,9 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	// 	int flag = SSH_LOG_FUNCTIONS;
 	// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_LOG_VERBOSITY, &flag);
 #endif
+	// 	int val = 0;
+	// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_STRICTHOSTKEYCHECK, &val);
+
 
 	if (_this->m_auth_type != TP_AUTH_TYPE_NONE)
 		ssh_options_set(_this->m_srv_session, SSH_OPTIONS_USER, _this->m_acc_name.c_str());
@@ -479,14 +482,10 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	int _timeout = 30; // 30 sec.
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
-
-	// 	int val = 0;
-	// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_STRICTHOSTKEYCHECK, &val);
-
 	int rc = 0;
 	rc = ssh_connect(_this->m_srv_session);
 	if (rc != SSH_OK) {
-		EXLOGE("[ssh] can not connect to real SSH server %s:%d. [%d]%s\n", _this->m_conn_ip.c_str(), _this->m_conn_port, rc, ssh_get_error(_this->m_srv_session));
+		EXLOGE("[ssh] can not connect to real SSH server %s:%d. [%d] %s\n", _this->m_conn_ip.c_str(), _this->m_conn_port, rc, ssh_get_error(_this->m_srv_session));
 		_this->m_have_error = true;
 		_this->_session_error(TP_SESS_STAT_ERR_CONNECT);
 		return SSH_AUTH_ERROR;
