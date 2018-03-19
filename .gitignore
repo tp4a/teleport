@@ -64,6 +64,7 @@ __pycache__
 /server/share/db
 /server/share/log
 /server/share/replay
+/server/testssh
 
 
 # for generated files.
