@@ -566,10 +566,10 @@ class InstallerLinux(InstallerBase):
             os.chmod(_d[1], stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
 
         # create symbolic link
-        os.symlink('/etc/init.d/teleport', '/etc/rc2.d/S50teleport')
-        os.symlink('/etc/init.d/teleport', '/etc/rc3.d/S50teleport')
-        os.symlink('/etc/init.d/teleport', '/etc/rc4.d/S50teleport')
-        os.symlink('/etc/init.d/teleport', '/etc/rc5.d/S50teleport')
+        os.symlink('/etc/init.d/teleport', '/etc/rc2.d/S95teleport')
+        os.symlink('/etc/init.d/teleport', '/etc/rc3.d/S95teleport')
+        os.symlink('/etc/init.d/teleport', '/etc/rc4.d/S95teleport')
+        os.symlink('/etc/init.d/teleport', '/etc/rc5.d/S95teleport')
 
     def _start_service(self):
         cc.v('')
@@ -603,6 +603,11 @@ class InstallerLinux(InstallerBase):
         utils.remove('/etc/rc3.d/S50teleport')
         utils.remove('/etc/rc4.d/S50teleport')
         utils.remove('/etc/rc5.d/S50teleport')
+        # from 3.0.0.3, the start order changed from 50 to 95 for MySQL compatible, because start order of MySQL is 64.
+        utils.remove('/etc/rc2.d/S95teleport')
+        utils.remove('/etc/rc3.d/S95teleport')
+        utils.remove('/etc/rc4.d/S95teleport')
+        utils.remove('/etc/rc5.d/S95teleport')
 
     def _check_service(self):
         cc.v('')

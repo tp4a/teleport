@@ -5,6 +5,7 @@ from app.base.logger import log
 from app.base.db import get_db, SQL
 from app.base.utils import tp_timestamp_utc_now
 from app.model import syslog
+from app.model import policy
 
 
 def create(handler, gtype, name, desc):
@@ -189,21 +190,12 @@ def add_members(gtype, gid, members):
 
     db = get_db()
 
-    # 1. 获取与此组相关的运维授权策略
-    s = SQL(get_db())
-    s.select_from('ops_auz', ['id', 'policy_id', 'type', 'state'], alt_name='oa')
-    s.where('`rtype`={gtype} AND `gid`={gid}'.format(gtype=gtype, gid=gid))
-    err = s.query()
-    if err != TPE_OK:
-        return err
-    if s.total_count > 0:
-        pass
-
     sql = []
     for uid in members:
         sql.append('INSERT INTO `{}group_map` (`type`, `gid`, `mid`) VALUES ({}, {}, {});'.format(db.table_prefix, gtype, gid, uid))
     if db.transaction(sql):
-        return TPE_OK
+        #return TPE_OK
+        return policy.rebuild_auz_map()
     else:
         return TPE_DATABASE
 

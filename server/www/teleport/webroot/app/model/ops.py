@@ -6,6 +6,7 @@ from app.const import *
 from app.base.logger import log
 from app.base.db import get_db, SQL
 from app.model import syslog
+from app.model import policy
 from app.base.utils import AttrDict, tp_timestamp_utc_now
 
 
@@ -206,9 +207,6 @@ def add_members(handler, policy_id, policy_type, ref_type, members):
     _time_now = tp_timestamp_utc_now()
 
     sql = []
-    # for uid in members:
-    #     sql.append('INSERT INTO `{}group_map` (type, gid, mid) VALUES ({}, {}, {});'.format(db.table_prefix, gtype, gid, uid))
-    # print(args['members'])
     for m in members:
         if m['id'] in exists_ids:
             continue
@@ -221,7 +219,8 @@ def add_members(handler, policy_id, policy_type, ref_type, members):
         sql.append(str_sql)
 
     if db.transaction(sql):
-        return TPE_OK
+        # return TPE_OK
+        return policy.rebuild_ops_auz_map()
     else:
         return TPE_DATABASE
 
@@ -237,7 +236,8 @@ def remove_members(handler, policy_id, policy_type, ids):
     if err != TPE_OK:
         return err
 
-    return TPE_OK
+    #return TPE_OK
+    return policy.rebuild_ops_auz_map()
 
 
 def set_flags(self, policy_id, flag_record, flag_rdp, flag_ssh):
@@ -477,7 +477,8 @@ def rank_reorder(handler, pid, new_rank, start_rank, end_rank, direct):
 
     syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "调整运维授权策略顺序：{}，从{}到{}".format(p_name, p_rank, new_rank))
 
-    return TPE_OK
+    return policy.rebuild_ops_auz_map()
+    # return TPE_OK
 
 
 def get_auth(auth_id):

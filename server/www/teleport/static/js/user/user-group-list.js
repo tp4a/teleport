@@ -158,7 +158,7 @@ $app.create_controls = function (cb_stack) {
     // $app.dom.btn_unlock_group.click(function () {
     //     $app.on_btn_unlock_group_click();
     // });
-    $app.dom.btn_remove_group.click(function(){
+    $app.dom.btn_remove_group.click(function () {
         $app.on_btn_remove_group_click();
     });
 
@@ -274,14 +274,33 @@ $app.on_table_groups_render_created = function (render) {
         if (_.isUndefined(fields.members))
             return '';
 
+        console.log(fields.members);
+
         var ret = [];
         for (var i = 0; i < fields.members.length; ++i) {
-            ret.push('<div class="user-info-wrap"><div class="user-info" title="' + fields.members[i].account + '\n' + fields.members[i].email + '">');
-            // ret.push('<i class="fa fa-vcard-o"></i> ' + fields.members[i].surname);
-            ret.push(fields.members[i].surname);
-            // ret.push('<span class="user-account">'+fields.members[i].account+'</span>');
-            // ret.push('，<span class="user-email">' + fields.members[i].account + '&lt;' + fields.members[i].email + '&gt;</span>');
+            var surname = fields.members[i].surname;
+            var email = fields.members[i].email;
+            if (email.length !== 0) {
+                email = '&lt;' + email + '&gt;';
+            }
+
+            var u_info = '账号：' + fields.members[i].username;
+            if (email.length > 0)
+                u_info += '\n邮箱：' + email;
+
+            if (surname.length === 0) {
+                surname = fields.members[i].username;
+            }
+            ret.push('<div class="user-info-wrap"><div class="user-info" title="' + u_info + '">');
+            ret.push(surname);
             ret.push('</div></div>');
+
+            // ret.push('<div class="user-info-wrap"><div class="user-info" title="' + fields.members[i].username + '\n' + fields.members[i].email + '">');
+            // // ret.push('<i class="fa fa-vcard-o"></i> ' + fields.members[i].surname);
+            // ret.push(fields.members[i].surname);
+            // // ret.push('<span class="user-account">'+fields.members[i].account+'</span>');
+            // // ret.push('，<span class="user-email">' + fields.members[i].account + '&lt;' + fields.members[i].email + '&gt;</span>');
+            // ret.push('</div></div>');
         }
 
         if (fields.member_count > 5) {
@@ -440,7 +459,7 @@ $app.on_btn_remove_group_click = function (_row_id) {
 
     var cb_stack = CALLBACK_STACK.create();
     var _msg_remove = '您确定要移除此用户组吗？';
-    if(group_list.length > 1)
+    if (group_list.length > 1)
         _msg_remove = '您确定要移除选定的 <strong>' + group_list.length + '个</strong> 用户组吗？';
     $tp.dlg_confirm(cb_stack, {
         msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除用户组将同时删除所有分配给此用户组的授权！</p></div><div class="alert alert-info">删除用户组不会删除组内的用户账号！</div><p>' + _msg_remove + '</p>',
