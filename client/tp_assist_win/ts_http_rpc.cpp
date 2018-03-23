@@ -899,6 +899,58 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 	char cmd_args[1024] = { 0 };
 	ex_strformat(cmd_args, 1023, "%d \"%s\" \"%09d-%s-%s-%s-%s\"", rid, a_sid.c_str(), rid, a_user.c_str(), a_acc.c_str(), a_host.c_str(), a_start.c_str());
 
+	{
+		unsigned int port_i = 0;
+		struct mg_str scheme, query, fragment, user_info, host, path;
+
+		if (mg_parse_uri(mg_mk_str(a_url_base.c_str()), &scheme, &user_info, &host, &port_i, &path, &query, &fragment) != 0) {
+			EXLOGE(_T("parse url failed.\n"));
+			Json::Value root_ret;
+			root_ret["code"] = TPE_PARAM;
+			_create_json_ret(buf, root_ret);
+			return;
+		}
+
+		ex_astr _scheme;
+		_scheme.assign(scheme.p, scheme.len);
+
+		// 将host从域名转换为IP
+		ex_astr str_tp_host;
+		str_tp_host.assign(host.p, host.len);
+		struct hostent *tp_host = gethostbyname(str_tp_host.c_str());
+		if (NULL == tp_host) {
+			EXLOGE(_T("resolve host name failed.\n"));
+			Json::Value root_ret;
+			root_ret["code"] = TPE_PARAM;
+			_create_json_ret(buf, root_ret);
+			return;
+		}
+
+		int i = 0;
+		char* _ip = NULL;
+		if (tp_host->h_addrtype == AF_INET)
+		{
+			struct in_addr addr;
+			while (tp_host->h_addr_list[i] != 0) {
+				addr.s_addr = *(u_long *)tp_host->h_addr_list[i++];
+				_ip = inet_ntoa(addr);
+				break;
+			}
+		}
+
+		if (NULL == _ip) {
+			EXLOGE(_T("resolve host name failed.\n"));
+			Json::Value root_ret;
+			root_ret["code"] = TPE_PARAM;
+			_create_json_ret(buf, root_ret);
+			return;
+		}
+
+		char _url_base[256];
+		ex_strformat(_url_base, 255, "%s://%s:%d", _scheme.c_str(), _ip, port_i);
+		a_url_base = _url_base;
+	}
+
 	ex_wstr w_url_base;
 	ex_astr2wstr(a_url_base, w_url_base);
 	ex_wstr w_cmd_args;
