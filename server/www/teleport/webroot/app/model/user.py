@@ -105,6 +105,9 @@ def login(handler, username, password=None, oath_code=None):
 
     del user_info['password']
     del user_info['oath_secret']
+
+    if len(user_info['surname']) == 0:
+        user_info['surname'] = user_info['username']
     return TPE_OK, user_info
 
 
