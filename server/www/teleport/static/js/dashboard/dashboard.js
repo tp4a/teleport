@@ -457,7 +457,13 @@ $app.init_ws = function () {
         delete $app.ws;
 
     var _sid = Cookies.get('_sid');
-    $app.ws = new WebSocket('ws://' + location.host + '/ws/' + _sid);
+    console.log(location);
+    console.log(location.host);
+    if(location.protocol === 'http') {
+        $app.ws = new WebSocket('ws://' + location.host + '/ws/' + _sid);
+    } else {
+        $app.ws = new WebSocket('wss://' + location.host + '/ws/' + _sid);
+    }
 
     $app.ws.onopen = function (e) {
         $app.ws.send('{"method": "request", "param": "sys_status"}');
