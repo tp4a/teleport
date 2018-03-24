@@ -375,7 +375,7 @@ $app.create_controls = function (cb_stack) {
                 sort: true,
                 header_render: 'filter_search',
                 render: 'acc_info',
-                fields: {id: 'id', username: 'username', host_ip: 'host_ip', router_ip: 'router_ip', router_port: 'router_port'}
+                fields: {id: 'id', username: 'username', _host: '_host'}
             },
             {
                 title: "远程连接协议",
@@ -1316,9 +1316,12 @@ $app.on_table_sel_acc_render_created = function (render) {
     render.acc_info = function (row_id, fields) {
         var ret = [];
 
-        ret.push('<span class="field-name">' + fields.username + '@' + fields.host_ip + '</span>');
-        if (fields.router_ip.length > 0)
-            ret.push('<span class="field-desc">由 ' + fields.router_ip + ':' + fields.router_port + ' 路由</span>');
+        ret.push('<span class="field-name">' + fields.username + '@' + fields._host.ip);
+        if(fields._host.name.length > 0)
+            ret.push(' (' + fields._host.name + ')</span>');
+        ret.push('</span>');
+        if (fields._host.router_ip.length > 0)
+            ret.push('<span class="field-desc">由 ' + fields._host.router_ip + ':' + fields._host.router_port + ' 路由</span>');
 
         return ret.join('');
     };

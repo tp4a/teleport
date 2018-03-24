@@ -899,6 +899,9 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 	char cmd_args[1024] = { 0 };
 	ex_strformat(cmd_args, 1023, "%d \"%s\" \"%09d-%s-%s-%s-%s\"", rid, a_sid.c_str(), rid, a_user.c_str(), a_acc.c_str(), a_host.c_str(), a_start.c_str());
 
+	// TODO: 理论上不应该由助手来提前做域名转为IP这样的操作，而是应该讲域名发送给播放器，由播放器自己去处理
+	// 但是在改造FreeRDP制作的播放器时，为了从服务器上下载文件，使用了Mongoose库，如果传入的是域名，会出现问题（貌似是异步查询DNS的问题）
+	// 所以暂时先由助手进行域名IP转换。
 	{
 		unsigned int port_i = 0;
 		struct mg_str scheme, query, fragment, user_info, host, path;

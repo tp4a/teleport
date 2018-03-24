@@ -74,7 +74,7 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
     for g in sg.recorder:
         g['member_count'] = 0
         g['members'] = []
-        g['_mid'] = []    # 临时使用，构建此组的前5个成员的id
+        g['_mid'] = []  # 临时使用，构建此组的前5个成员的id
 
     # 对于本次要返回的用户组，取其中每一个组内成员的基本信息（id/用户名/真实名称等）
     groups = [g['id'] for g in sg.recorder]
@@ -125,9 +125,12 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
 
 
 def get_accounts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
-    dbtp = get_db().table_prefix
-    s = SQL(get_db())
-    s.select_from('acc', ['id', 'host_id', 'host_ip', 'router_ip', 'router_port', 'username', 'protocol_type', 'auth_type', 'state'], alt_name='a')
+    db = get_db()
+    dbtp = db.table_prefix
+
+    s = SQL(db)
+    # s.select_from('acc', ['id', 'host_id', 'host_ip', 'router_ip', 'router_port', 'username', 'protocol_type', 'auth_type', 'state'], alt_name='a')
+    s.select_from('acc', ['id', 'host_id', 'username', 'protocol_type', 'auth_type', 'state'], alt_name='a')
 
     str_where = ''
     _where = list()
@@ -168,12 +171,35 @@ def get_accounts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
             s.order_by('a.state', _sort)
         else:
             log.e('unknown order field: {}\n'.format(sql_order['name']))
-            return TPE_PARAM, s.total_count, s.recorder
+            return TPE_PARAM, s.total_count, 1, s.recorder
 
     if len(sql_limit) > 0:
         s.limit(sql_limit['page_index'], sql_limit['per_page'])
 
     err = s.query()
+    if err != TPE_OK:
+        return err, 0, 1, None
+
+    # 得到主机id列表，然后查询相关主机的详细信息
+    host_ids = []
+    for _acc in s.recorder:
+        if _acc.host_id not in host_ids:
+            host_ids.append(_acc.host_id)
+    s_host = SQL(db)
+    s_host.select_from('host', ['id', 'name', 'ip', 'router_ip', 'router_port', 'state'], alt_name='h')
+    str_host_ids = ','.join([str(i) for i in host_ids])
+    s_host.where('h.id IN ({ids})'.format(ids=str_host_ids))
+    err = s_host.query()
+    if err != TPE_OK:
+        return err, 0, None
+    hosts = {}
+    for _host in s_host.recorder:
+        if _host.id not in hosts:
+            hosts[_host.id] = _host
+
+    for _acc in s.recorder:
+        _acc['_host'] = hosts[_acc.host_id]
+
     return err, s.total_count, s.page_index, s.recorder
 
 
@@ -355,6 +381,3 @@ def remove_accounts(handler, host_id, acc_ids):
     tp_stats().acc_counter_change(-1)
 
     return TPE_OK
-
-
-
