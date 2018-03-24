@@ -35,13 +35,14 @@ def get_records(handler, sql_filter, sql_order, sql_limit, sql_restrict, sql_exc
             allow_uid = user.id
         if (user['privilege'] & TP_PRIVILEGE_AUDIT) != 0:
             s = SQL(get_db())
-            s.select_from('audit_map', ['h_id'], alt_name='a')
+            s.select_from('audit_map', ['u_id', 'h_id', 'p_state', 'policy_auth_type', 'u_state', 'gu_state'], alt_name='a')
             s.where(
+                'a.u_id={user_id} AND '
                 'a.p_state={enable_state} AND'
                 '('
                 '((a.policy_auth_type={U2H} OR a.policy_auth_type={U2HG}) AND a.u_state={enable_state}) OR '
                 '((a.policy_auth_type={UG2H} OR a.policy_auth_type={UG2HG}) AND a.u_state={enable_state} AND a.gu_state={enable_state})'
-                ')'.format(enable_state=TP_STATE_NORMAL, U2H=TP_POLICY_AUTH_USER_HOST, U2HG=TP_POLICY_AUTH_USER_gHOST, UG2H=TP_POLICY_AUTH_gUSER_HOST, UG2HG=TP_POLICY_AUTH_gUSER_gHOST))
+                ')'.format(enable_state=TP_STATE_NORMAL, user_id=user.id, U2H=TP_POLICY_AUTH_USER_HOST, U2HG=TP_POLICY_AUTH_USER_gHOST, UG2H=TP_POLICY_AUTH_gUSER_HOST, UG2HG=TP_POLICY_AUTH_gUSER_gHOST))
             err = s.query()
             if err != TPE_OK:
                 return err, 0, []
