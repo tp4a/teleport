@@ -1016,7 +1016,12 @@ $app.on_table_sel_user_render_created = function (render) {
 
     render.user_info = function (row_id, fields) {
         var ret = [];
-        ret.push('<span class="field-name">' + fields.surname + '</span>');
+        if(fields.surname.length > 0) {
+            ret.push('<span class="field-name">' + fields.surname + '</span>');
+        }
+        else {
+            ret.push('<span class="field-name">' + fields.username + '</span>');
+        }
         ret.push('<span class="field-desc mono">');
         ret.push(fields.username);
         if (fields.email.length > 0)

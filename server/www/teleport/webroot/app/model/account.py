@@ -10,7 +10,8 @@ from app.base.stats import tp_stats
 
 def get_account_info(acc_id):
     s = SQL(get_db())
-    s.select_from('acc', ['id', 'password', 'pri_key', 'state', 'host_ip', 'router_ip', 'router_port', 'protocol_type', 'protocol_port', 'auth_type', 'username'], alt_name='a')
+    # s.select_from('acc', ['id', 'password', 'pri_key', 'state', 'host_ip', 'router_ip', 'router_port', 'protocol_type', 'protocol_port', 'auth_type', 'username'], alt_name='a')
+    s.select_from('acc', ['id', 'password', 'pri_key', 'state', 'host_id', 'protocol_type', 'protocol_port', 'auth_type', 'username'], alt_name='a')
     s.where('a.id={}'.format(acc_id))
     err = s.query()
     if err != TPE_OK:
@@ -18,13 +19,25 @@ def get_account_info(acc_id):
     if len(s.recorder) != 1:
         return TPE_DATABASE, None
 
+    sh = SQL(get_db())
+    sh.select_from('host', ['id', 'name', 'ip', 'router_ip', 'router_port', 'state'], alt_name='h')
+    sh.where('h.id={}'.format(s.recorder[0].host_id))
+    err = sh.query()
+    if err != TPE_OK:
+        return err, None
+    if len(s.recorder) != 1:
+        return TPE_DATABASE, None
+
+    s.recorder[0]['_host'] = sh.recorder[0]
+
     return TPE_OK, s.recorder[0]
 
 
 def get_host_accounts(host_id):
     # 获取指定主机的所有账号
     s = SQL(get_db())
-    s.select_from('acc', ['id', 'state', 'host_ip', 'router_ip', 'router_port', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'pri_key'], alt_name='a')
+    # s.select_from('acc', ['id', 'state', 'host_ip', 'router_ip', 'router_port', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'pri_key'], alt_name='a')
+    s.select_from('acc', ['id', 'state', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'pri_key'], alt_name='a')
 
     s.where('a.host_id={}'.format(host_id))
     s.order_by('a.username', True)
@@ -37,8 +50,9 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
     """
     获取用户组列表，以及每个组的总成员数以及不超过5个的成员
     """
+    db = get_db()
     # 首先获取要查询的组的信息
-    sg = SQL(get_db())
+    sg = SQL(db)
     sg.select_from('group', ['id', 'name', 'state', 'desc'], alt_name='g')
 
     _where = list()
@@ -106,13 +120,34 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
     users = list(set(users))
 
     su = SQL(get_db())
-    su.select_from('acc', ['id', 'host_ip', 'router_ip', 'router_port', 'username', 'protocol_type'], alt_name='a')
+    # su.select_from('acc', ['id', 'host_ip', 'router_ip', 'router_port', 'username', 'protocol_type'], alt_name='a')
+    su.select_from('acc', ['id', 'host_id', 'username', 'protocol_type'], alt_name='a')
 
     su.where('a.id IN ({})'.format(','.join([str(uid) for uid in users])))
     su.order_by('a.username')
     err = su.query()
     if err != TPE_OK or len(su.recorder) == 0:
         return err, sg.total_count, 0, sg.recorder
+
+    # 得到主机id列表，然后查询相关主机的详细信息
+    host_ids = []
+    for _acc in su.recorder:
+        if _acc.host_id not in host_ids:
+            host_ids.append(_acc.host_id)
+    s_host = SQL(db)
+    s_host.select_from('host', ['id', 'name', 'ip', 'router_ip', 'router_port', 'state'], alt_name='h')
+    str_host_ids = ','.join([str(i) for i in host_ids])
+    s_host.where('h.id IN ({ids})'.format(ids=str_host_ids))
+    err = s_host.query()
+    if err != TPE_OK:
+        return err, sg.total_count, 0, sg.recorder
+    hosts = {}
+    for _host in s_host.recorder:
+        if _host.id not in hosts:
+            hosts[_host.id] = _host
+
+    for _acc in su.recorder:
+        _acc['_host'] = hosts[_acc.host_id]
 
     # 现在可以将具体的用户信息追加到组信息中了
     for g in sg.recorder:
@@ -155,6 +190,7 @@ def get_accounts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
         for k in sql_filter:
             if k == 'search':
                 _where.append('(a.username LIKE "%{filter}%" OR a.host_ip LIKE "%{filter}%" OR a.router_ip LIKE "%{filter}%")'.format(filter=sql_filter[k]))
+                # _where.append('(a.username LIKE "%{filter}%")'.format(filter=sql_filter[k]))
 
     if len(_where) > 0:
         str_where = '( {} )'.format(' AND '.join(_where))
@@ -217,10 +253,18 @@ def add_account(handler, host_id, args):
     if db_ret is not None and len(db_ret) > 0:
         return TPE_EXISTS, 0
 
-    sql = 'INSERT INTO `{}acc` (host_id, host_ip, router_ip, router_port, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
-          '({host_id}, "{host_ip}", "{router_ip}", {router_port}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
+    # sql = 'INSERT INTO `{}acc` (host_id, host_ip, router_ip, router_port, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
+    #       '({host_id}, "{host_ip}", "{router_ip}", {router_port}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
+    #       ''.format(db.table_prefix,
+    #                 host_id=host_id, host_ip=args['host_ip'], router_ip=args['router_ip'], router_port=args['router_port'],
+    #                 protocol_type=args['protocol_type'], protocol_port=args['protocol_port'], state=TP_STATE_NORMAL,
+    #                 auth_type=args['auth_type'], username=args['username'], password=args['password'], pri_key=args['pri_key'],
+    #                 creator_id=operator['id'], create_time=_time_now)
+
+    sql = 'INSERT INTO `{}acc` (host_id, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
+          '({host_id}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
           ''.format(db.table_prefix,
-                    host_id=host_id, host_ip=args['host_ip'], router_ip=args['router_ip'], router_port=args['router_port'],
+                    host_id=host_id,
                     protocol_type=args['protocol_type'], protocol_port=args['protocol_port'], state=TP_STATE_NORMAL,
                     auth_type=args['auth_type'], username=args['username'], password=args['password'], pri_key=args['pri_key'],
                     creator_id=operator['id'], create_time=_time_now)
@@ -324,15 +368,19 @@ def remove_accounts(handler, host_id, acc_ids):
 
     s = SQL(db)
     # 1. 判断是否存在
-    s.select_from('host', ['acc_count'], alt_name='a')
+    s.select_from('host', ['name', 'ip', 'router_ip', 'router_port', 'acc_count'], alt_name='a')
     s.where('a.id={h_id}'.format(h_id=host_id, ids=acc_ids))
     err = s.query()
     if err != TPE_OK:
         return err
     if len(s.recorder) == 0:
         return TPE_NOT_EXISTS
+    _h_name = s.recorder[0].name
+    _h_ip = s.recorder[0].ip
+    _h_router_ip = s.recorder[0].router_ip
+    _h_router_port = s.recorder[0].router_port
 
-    s.reset().select_from('acc', ['host_ip', 'router_ip', 'router_port', 'username'], alt_name='a')
+    s.reset().select_from('acc', ['username'], alt_name='a')
     s.where('a.host_id={h_id} AND a.id IN ({ids}) '.format(h_id=host_id, ids=acc_ids))
     err = s.query()
     if err != TPE_OK:
@@ -342,9 +390,9 @@ def remove_accounts(handler, host_id, acc_ids):
 
     acc_names = []
     for a in s.recorder:
-        acc_name = '{}@{}'.format(a.username, a.host_ip)
-        if len(a.router_ip) > 0:
-            acc_name += '（由{}:{}路由）'.format(a.router_ip, a.router_port)
+        acc_name = '{}@{}'.format(a.username, _h_ip)
+        if len(_h_router_ip) > 0:
+            acc_name += '（由{}:{}路由）'.format(_h_router_ip, _h_router_port)
         acc_names.append(acc_name)
 
     sql_list = []
@@ -368,13 +416,13 @@ def remove_accounts(handler, host_id, acc_ids):
     if not db.transaction(sql_list):
         return TPE_DATABASE
 
-    s.reset().select_from('host', ['acc_count'], alt_name='a')
-    s.where('a.id={h_id}'.format(h_id=host_id, ids=acc_ids))
-    err = s.query()
-    if err != TPE_OK:
-        return err
-    if len(s.recorder) == 0:
-        return TPE_NOT_EXISTS
+    # s.reset().select_from('host', ['acc_count'], alt_name='a')
+    # s.where('a.id={h_id}'.format(h_id=host_id, ids=acc_ids))
+    # err = s.query()
+    # if err != TPE_OK:
+    #     return err
+    # if len(s.recorder) == 0:
+    #     return TPE_NOT_EXISTS
 
     syslog.sys_log(handler.get_current_user(), handler.request.remote_ip, TPE_OK, "删除账号：{}".format('，'.join(acc_names)))
 

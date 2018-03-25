@@ -117,6 +117,26 @@
                     </tr>
                 </table>
                 <hr/>
+
+                <table class="table table-config-list">
+                    <tr>
+                        <td colspan="2" class="title">授权策略映射</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="value">
+                            <div class="alert alert-warning">授权策略映射是根据运维授权策略和审计授权策略构建的用户权限列表。<br/>如果您的系统中用户授权出现异常，可以重建授权策略映射。构建授权策略映射可能会耗费一点时间，请谨慎操作！</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key"></td>
+                        <td class="value">
+                            <button id="btn-rebuild-ops-auz-map" class="btn btn-sm btn-danger"><i class="fa fa-leaf fa-fw"></i> 立即重建运维授权映射</button>
+                            <button id="btn-rebuild-audit-auz-map" class="btn btn-sm btn-danger"><i class="fa fa-leaf fa-fw"></i> 立即重建审计授权映射</button>
+                        </td>
+                    </tr>
+                </table>
+                <hr/>
+
                 <button id="btn-save-secure-config" class="btn btn-sm btn-primary"><i class="fa fa-check-circle fa-fw"></i> 保存安全设置</button>
 
             </div>

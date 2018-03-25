@@ -76,6 +76,9 @@ __pycache__
 /client/tp_rdp
 /server/tp_core/protocol/rdp
 /client/tools/tprdp
+/server/tp_core/testssh
+/client/tp_assist_win_it_doctor
+/dist/client/windows/assist-it-doctor
 
 # for MacOS.
 .DS_Store

@@ -15,6 +15,8 @@ from app.const import *
 from app.base.db import get_db
 from app.model import syslog
 from app.model import record
+from app.model import ops
+from app.model import audit
 from app.base.core_server import core_service_async_post_http
 from app.base.session import tp_session
 
@@ -354,3 +356,25 @@ class DoCleanupStorageHandler(TPBaseJsonHandler):
         code, msg = yield record.cleanup_storage(self)
 
         self.write_json(code, data=msg)
+
+
+class DoRebuildOpsAuzMapHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)
+        if ret != TPE_OK:
+            return
+
+        err = audit.build_auz_map()
+        self.write_json(err)
+
+
+class DoRebuildAuditAuzMapHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
+        if ret != TPE_OK:
+            return
+
+        err = ops.build_auz_map()
+        self.write_json(err)
+
+

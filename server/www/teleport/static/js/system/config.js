@@ -315,7 +315,10 @@ $app.create_config_sec = function () {
         // btn_auth_username_password: $('#sec-auth-username-password'),
         btn_auth_username_password_captcha: $('#sec-auth-username-password-captcha'),
         // btn_auth_username_oath: $('#sec-auth-username-oath'),
-        btn_auth_username_password_oath: $('#sec-auth-username-password-oath')
+        btn_auth_username_password_oath: $('#sec-auth-username-password-oath'),
+
+        btn_rebuild_ops_auz_map: $('#btn-rebuild-ops-auz-map'),
+        btn_rebuild_audit_auz_map: $('#btn-rebuild-audit-auz-map')
     };
 
     _sec.init = function (cb_stack) {
@@ -331,6 +334,14 @@ $app.create_config_sec = function () {
 
         _sec.dom.btn_save.click(function () {
             _sec.on_btn_save();
+        });
+
+        _sec.dom.btn_rebuild_ops_auz_map.click(function () {
+            _sec.on_rebuild_ops_auz_map();
+        });
+
+        _sec.dom.btn_rebuild_audit_auz_map.click(function () {
+            _sec.on_rebuild_audit_auz_map();
         });
 
         cb_stack.exec();
@@ -449,6 +460,36 @@ $app.create_config_sec = function () {
             }
         );
 
+    };
+
+    _sec.on_rebuild_ops_auz_map = function () {
+        $tp.ajax_post_json('/system/rebuild-ops-auz-map', {},
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    $tp.notify_success('重建运维授权映射成功！');
+                } else {
+                    $tp.notify_error('重建运维授权映射失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                $tp.notify_error('网络故障，重建运维授权映射失败！');
+            }
+        );
+    };
+
+    _sec.on_rebuild_audit_auz_map = function () {
+        $tp.ajax_post_json('/system/rebuild-audit-auz-map', {},
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    $tp.notify_success('重建审计授权映射成功！');
+                } else {
+                    $tp.notify_error('重建审计授权映射失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                $tp.notify_error('网络故障，重建审计授权映射失败！');
+            }
+        );
     };
 
     return _sec;

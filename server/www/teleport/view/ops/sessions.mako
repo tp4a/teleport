@@ -34,12 +34,12 @@
 
         <!-- begin page-nav -->
         <div class="table-extend-area">
-            <div class="table-extend-cell checkbox-select-all"><input id="table-session-select-all" type="checkbox"/></div>
-            <div class="table-extend-cell group-actions">
-                <div class="btn-group" role="group">
-                    <button id="btn-kill-sessions" type="button" class="btn btn-danger"><i class="fa fa-times-circle fa-fw"></i> 强行中断</button>
-                </div>
-            </div>
+##             <div class="table-extend-cell checkbox-select-all"><input id="table-session-select-all" type="checkbox"/></div>
+##             <div class="table-extend-cell group-actions">
+##                 <div class="btn-group" role="group">
+##                     <button id="btn-kill-sessions" type="button" class="btn btn-danger"><i class="fa fa-times-circle fa-fw"></i> 强行中断</button>
+##                 </div>
+##             </div>
             <div class="table-extend-cell table-item-counter">
                 <ol id="table-session-paging"></ol>
             </div>

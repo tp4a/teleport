@@ -249,12 +249,16 @@ $app.on_table_groups_render_created = function (render) {
         var ret = [];
         for (var i = 0; i < fields.members.length; ++i) {
             ret.push('<div class="acc-info-wrap"><div class="acc-info');
-            if(fields.members[i].router_ip.length > 0)
-                ret.push(' acc-info-router" title="由 ' + fields.members[i].router_ip + ':' + fields.members[i].router_port + ' 路由"');
+            if(fields.members[i]._host.router_ip.length > 0)
+                ret.push(' acc-info-router" title="由 ' + fields.members[i]._host.router_ip + ':' + fields.members[i]._host.router_port + ' 路由"');
             else
                 ret.push('"');
             ret.push('>');
-            ret.push(fields.members[i].username+'@'+fields.members[i].host_ip);
+
+            ret.push(fields.members[i].username+'@' + fields.members[i]._host.ip);
+            if(fields.members[i]._host.name.length > 0)
+                ret.push(' (' + fields.members[i]._host.name +')');
+
             ret.push('</div></div>');
         }
 

@@ -38,7 +38,7 @@
                     <div class="table-extend-cell">
                         <span class="table-name"><i class="fa fa-list fa-fw"></i> 授权策略列表</span>
                         <button id="btn-refresh-policy" class="btn btn-sm btn-default"><i class="fa fa-rotate-right fa-fw"></i> 刷新列表</button>
-                        <button id="btn-rebuild" class="btn btn-sm btn-danger"><i class="fa fa-flash fa-fw"></i> 重建授权映射</button>
+##                         <button id="btn-rebuild" class="btn btn-sm btn-danger"><i class="fa fa-flash fa-fw"></i> 重建授权映射</button>
                     </div>
                     <div class="table-extend-cell table-extend-cell-right group-actions">
                         <button id="btn-create-policy" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 新建授权策略</button>
@@ -86,7 +86,7 @@
     <div class="box">
         <p>说明：</p>
         <ul class="help-list">
-            <li><span class="error">编辑了授权策略或调整策略顺序之后，请点击“重建授权映射”来使之生效！</span>正式版本将会改进为自动进行重建。</li>
+##             <li><span class="error">编辑了授权策略或调整策略顺序之后，请点击“重建授权映射”来使之生效！</span>正式版本将会改进为自动进行重建。</li>
             <li>上下拖动“顺序”栏中的 <i class="fa fa-reorder fa-fw"></i> 可以调节策略的检查顺序。</li>
             <li>可以在“快速查找”中快速定位用户或主机的授权关系。</li>
         </ul>
