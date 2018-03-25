@@ -253,21 +253,21 @@ def add_account(handler, host_id, args):
     if db_ret is not None and len(db_ret) > 0:
         return TPE_EXISTS, 0
 
-    # sql = 'INSERT INTO `{}acc` (host_id, host_ip, router_ip, router_port, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
-    #       '({host_id}, "{host_ip}", "{router_ip}", {router_port}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
-    #       ''.format(db.table_prefix,
-    #                 host_id=host_id, host_ip=args['host_ip'], router_ip=args['router_ip'], router_port=args['router_port'],
-    #                 protocol_type=args['protocol_type'], protocol_port=args['protocol_port'], state=TP_STATE_NORMAL,
-    #                 auth_type=args['auth_type'], username=args['username'], password=args['password'], pri_key=args['pri_key'],
-    #                 creator_id=operator['id'], create_time=_time_now)
-
-    sql = 'INSERT INTO `{}acc` (host_id, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
-          '({host_id}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
+    sql = 'INSERT INTO `{}acc` (host_id, host_ip, router_ip, router_port, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
+          '({host_id}, "{host_ip}", "{router_ip}", {router_port}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
           ''.format(db.table_prefix,
-                    host_id=host_id,
+                    host_id=host_id, host_ip=args['host_ip'], router_ip=args['router_ip'], router_port=args['router_port'],
                     protocol_type=args['protocol_type'], protocol_port=args['protocol_port'], state=TP_STATE_NORMAL,
                     auth_type=args['auth_type'], username=args['username'], password=args['password'], pri_key=args['pri_key'],
                     creator_id=operator['id'], create_time=_time_now)
+
+    # sql = 'INSERT INTO `{}acc` (host_id, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
+    #       '({host_id}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
+    #       ''.format(db.table_prefix,
+    #                 host_id=host_id,
+    #                 protocol_type=args['protocol_type'], protocol_port=args['protocol_port'], state=TP_STATE_NORMAL,
+    #                 auth_type=args['auth_type'], username=args['username'], password=args['password'], pri_key=args['pri_key'],
+    #                 creator_id=operator['id'], create_time=_time_now)
     db_ret = db.exec(sql)
     if not db_ret:
         return TPE_DATABASE, 0

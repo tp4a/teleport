@@ -291,6 +291,7 @@ class DoImportHandler(TPBaseHandler):
                             _router_port = 0
 
                         _host = dict()
+                        _host['_line'] = line
                         _host['ip'] = _ip
                         _host['os'] = _host_os
                         _host['name'] = csv_recorder[self.IDX_NAME].strip()
@@ -364,6 +365,7 @@ class DoImportHandler(TPBaseHandler):
                         all_acc.append(_acc_info)
 
                         _acc = dict()
+                        _acc['_line'] = line
                         _acc['username'] = _username
                         _acc['protocol_type'] = _protocol
                         _acc['protocol_port'] = _protocol_port
@@ -375,6 +377,9 @@ class DoImportHandler(TPBaseHandler):
                         _acc['desc'] = _desc
 
                         hosts[last_ip]['acc'].append(_acc)
+
+            if os.path.exists(csv_filename):
+                os.remove(csv_filename)
 
             # 如果解析过程中发生问题，则不再继续
             if len(failed) > 0:
@@ -445,7 +450,11 @@ class DoImportHandler(TPBaseHandler):
                 args['desc'] = hosts[ip]['desc']
                 err, host_id = host.add_host(self, args)
                 if err != TPE_OK:
-                    failed.append({'line': 0, 'error': '增加主机{}失败，数据库操作失败。'.format(ip)})
+                    hosts[ip]['host_id'] = 0
+                    if err == TPE_EXISTS:
+                        failed.append({'line': hosts[ip]['_line'], 'error': '增加主机{}失败，此主机已经存在。'.format(ip)})
+                    else:
+                        failed.append({'line': hosts[ip]['_line'], 'error': '增加主机{}失败，数据库操作失败。'.format(ip)})
                     continue
                 hosts[ip]['host_id'] = host_id
 
@@ -468,9 +477,11 @@ class DoImportHandler(TPBaseHandler):
                         args['pri_key'] = hosts[ip]['acc'][i]['secret']
 
                     err, acc_id = account.add_account(self, host_id, args)
-                    if err != TPE_OK:
-                        failed.append({'line': 0, 'error': '增加账号{}@{}失败，数据库操作失败。'.format(args['username'], ip)})
+                    if err == TPE_EXISTS:
+                        failed.append({'line': hosts[ip]['acc']['_line'], 'error': '增加账号{}@{}失败，账号已经存在。'.format(args['username'], ip)})
                         continue
+                    elif err != TPE_OK:
+                        failed.append({'line': hosts[ip]['acc']['_line'], 'error': '增加账号{}@{}失败，数据库操作失败。'.format(args['username'], ip)})
 
                     hosts[ip]['acc'][i]['acc_id'] = acc_id
 
@@ -545,10 +556,6 @@ class DoImportHandler(TPBaseHandler):
             if len(failed) > 0:
                 ret['data'] = failed
             return self.write(json.dumps(ret).encode('utf8'))
-
-        finally:
-            if os.path.exists(csv_filename):
-                os.remove(csv_filename)
 
 
 class DoUpdateHostHandler(TPBaseJsonHandler):

@@ -366,8 +366,9 @@
                 </div>
                 <div class="modal-body">
 
-                    <div style="text-align:center;margin:10px;">
-                        请点击图标，选择要上传的文件！
+                    <div style="text-align:center;margin:10px 0 20px 0;">
+                        <p>请点击图标，选择要上传的文件！</p>
+                        <p><a href="/static/download/teleport-example-asset.csv"><i class="fa fa-download fa-fw"></i>下载资产信息文件模板</a>。</p>
                     </div>
                     <div style="text-align:center;">
                         <i id="btn-select-file" class="upload-button fa fa-file-text-o fa-fw"></i>

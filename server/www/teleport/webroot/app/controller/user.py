@@ -427,6 +427,9 @@ class DoImportHandler(TPBaseHandler):
 
                     user_list.append(u)
 
+            if os.path.exists(csv_filename):
+                os.remove(csv_filename)
+
             # 检查一下
             if len(user_list) == 0:
                 ret['code'] = TPE_FAILED
@@ -512,10 +515,6 @@ class DoImportHandler(TPBaseHandler):
 
             ret['data'] = failed
             return self.write(json.dumps(ret).encode('utf8'))
-
-        finally:
-            if os.path.exists(csv_filename):
-                os.remove(csv_filename)
 
 
 class DoUpdateUserHandler(TPBaseJsonHandler):
