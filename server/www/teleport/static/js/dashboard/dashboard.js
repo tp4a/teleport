@@ -459,7 +459,7 @@ $app.init_ws = function () {
     var _sid = Cookies.get('_sid');
     console.log(location);
     console.log(location.host);
-    if(location.protocol === 'http') {
+    if(location.protocol === 'http:') {
         $app.ws = new WebSocket('ws://' + location.host + '/ws/' + _sid);
     } else {
         $app.ws = new WebSocket('wss://' + location.host + '/ws/' + _sid);
