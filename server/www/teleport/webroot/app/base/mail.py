@@ -99,17 +99,24 @@ def tp_send_mail(recipient, message, subject=None, sender=None, cc=None, bcc=Non
         # 收件人去重
         _recipients = list(set(_recipients))
 
+        dbg_mode, _ = tp_cfg().get_bool('common::debug-mode', False)
+
         if _ssl:
             _smtp = smtplib.SMTP_SSL(_server, _port, timeout=10.0)
+            if dbg_mode:
+                _smtp.set_debuglevel(1)
             _smtp.ehlo()
-            _smtp.starttls()  # Fix: smtp auth extension not supported by server
+            if _smtp.has_extn("starttls"):
+                _smtp.starttls()
         else:
             _smtp = smtplib.SMTP(_server, _port, timeout=10.0)
-            _smtp.helo()
+            if dbg_mode:
+                _smtp.set_debuglevel(1)
+            _smtp.ehlo()
 
-        # _smtp.set_debuglevel(1)
         _smtp.login(_username, _password)
 
+        _smtp.set_debuglevel(0)
         send_errors = _smtp.sendmail(
             _sanitize_address(_sender),
             _sanitize_addresses(_recipients),
@@ -147,6 +154,6 @@ def tp_send_mail(recipient, message, subject=None, sender=None, cc=None, bcc=Non
         log.e('send mail failed.\n')
         return TPE_FAILED, '无法发送邮件！'
 
-    finally:
-        if _smtp is not None:
-            _smtp.quit()
+    # finally:
+    #     if _smtp is not None:
+    #         _smtp.quit()
