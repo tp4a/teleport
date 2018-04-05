@@ -121,7 +121,7 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
             } else if (action === 'ssh') {
                 $app.connect_remote(uni_id, acc_id, host_id, TP_PROTOCOL_TYPE_SSH, protocol_sub_type);
             } else if (action === 'telnet') {
-                $tp.notify_error('尚未实现！');
+                $app.connect_remote(uni_id, acc_id, host_id, TP_PROTOCOL_TYPE_TELNET, TP_PROTOCOL_TYPE_TELNET_SHELL);
             }
         });
     }
@@ -240,7 +240,9 @@ $app.on_table_host_render_created = function (render) {
                     }
                     act_btn.push('</div>');
                 } else if (acc.protocol_type === TP_PROTOCOL_TYPE_TELNET) {
+                    act_btn.push('<div class="btn-group btn-group-sm">');
                     act_btn.push('<button type="button" class="btn btn-warning" data-action="telnet" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_TELNET_SHELL + '"><i class="fa fa-keyboard-o fa-fw"></i> TELNET</button>');
+                    act_btn.push('</div>');
                 }
             }
 

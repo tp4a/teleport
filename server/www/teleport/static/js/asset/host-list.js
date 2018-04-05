@@ -19,9 +19,9 @@ $app.on_init = function (cb_stack) {
         upload_file_message: $('#upload-file-message')
     };
 
-    $tp.assist_checked = function() {
+    $tp.assist_checked = function () {
         console.log("---------");
-        if($tp.assist.running) {
+        if ($tp.assist.running) {
             $app.dom.assist_ver.html($tp.assist.version);
         } else {
             $app.dom.assist_ver.html('<a href="http://teleport.eomsoft.net/download" target="_blank" class="error">未能检测到</a>');
@@ -1380,6 +1380,8 @@ $app.create_dlg_edit_account = function () {
     dlg.field_username = '';
     dlg.field_password = '';
     dlg.field_pri_key = '';
+    dlg.field_prompt_username = '';
+    dlg.field_prompt_password = '';
     dlg.protocol_sub_type = 0;
 
     dlg.dom = {
@@ -1475,7 +1477,7 @@ $app.create_dlg_edit_account = function () {
             html.push('<option value="1">用户名/密码 认证</option>');
 
             if (dlg.host.router_ip.length === 0) {
-                if(_.isNull(dlg.account))
+                if (_.isNull(dlg.account))
                     dlg.dom.protocol_port.val(3389);
                 else
                     dlg.dom.protocol_port.val(dlg.account.protocol_port);
@@ -1491,7 +1493,7 @@ $app.create_dlg_edit_account = function () {
             html.push('<option value="2">SSH私钥 认证</option>');
 
             if (dlg.host.router_ip.length === 0) {
-                if(_.isNull(dlg.account))
+                if (_.isNull(dlg.account))
                     dlg.dom.protocol_port.val(22);
                 else
                     dlg.dom.protocol_port.val(dlg.account.protocol_port);
@@ -1507,10 +1509,16 @@ $app.create_dlg_edit_account = function () {
             html.push('<option value="0">无需认证</option>');
 
             if (dlg.host.router_ip.length === 0) {
-                if(_.isNull(dlg.account))
+                if (_.isNull(dlg.account)) {
                     dlg.dom.protocol_port.val(23);
-                else
+                    dlg.dom.prompt_username.val('ogin:');
+                    dlg.dom.prompt_password.val('assword:');
+                }
+                else {
                     dlg.dom.protocol_port.val(dlg.account.protocol_port);
+                    dlg.dom.prompt_username.val(dlg.account.username_prompt);
+                    dlg.dom.prompt_password.val(dlg.account.password_prompt);
+                }
             }
 
             dlg.protocol_sub_type = TP_PROTOCOL_TYPE_TELNET_SHELL;
@@ -1527,12 +1535,20 @@ $app.create_dlg_edit_account = function () {
         if (dlg.field_auth === TP_AUTH_TYPE_PASSWORD) {
             dlg.dom.block_password.show();
             dlg.dom.block_sshkey.hide();
+            if (dlg.field_protocol === TP_PROTOCOL_TYPE_TELNET) {
+                dlg.dom.block_prompt.show();
+                if(dlg.dom.prompt_username.val().length === 0 && dlg.account.username_prompt.length === 0)
+                    dlg.dom.prompt_username.val('ogin:');
+                if(dlg.dom.prompt_password.val().length === 0 && dlg.account.password_prompt.length === 0)
+                    dlg.dom.prompt_password.val('assword:');
+            }
         } else if (dlg.field_auth === TP_AUTH_TYPE_PRIVATE_KEY) {
             dlg.dom.block_password.hide();
             dlg.dom.block_sshkey.show();
         } else if (dlg.field_auth === TP_AUTH_TYPE_NONE) {
             dlg.dom.block_password.hide();
             dlg.dom.block_sshkey.hide();
+            dlg.dom.block_prompt.hide();
         }
     };
 
@@ -1564,6 +1580,8 @@ $app.create_dlg_edit_account = function () {
         dlg.field_username = dlg.dom.username.val();
         dlg.field_password = dlg.dom.password.val();
         dlg.field_pri_key = dlg.dom.ssh_prikey.val();
+        dlg.field_prompt_username = dlg.dom.prompt_username.val();
+        dlg.field_prompt_password = dlg.dom.prompt_password.val();
 
         if (dlg.host.router_ip.length === 0) {
             if (dlg.dom.protocol_port.val().length === 0) {
@@ -1589,18 +1607,30 @@ $app.create_dlg_edit_account = function () {
             return false;
         }
 
+        if (dlg.field_protocol !== TP_PROTOCOL_TYPE_TELNET) {
+            dlg.field_prompt_username = '';
+            dlg.field_prompt_password = '';
+        }
+
         if (dlg.field_auth_type === TP_AUTH_TYPE_PASSWORD) {
             if (dlg.field_id === -1 && dlg.field_password.length === 0) {
                 dlg.dom.password.focus();
                 $tp.notify_error('请填写登录远程主机的密码！');
                 return false;
             }
+            dlg.field_pri_key = '';
         } else if (dlg.field_auth_type === TP_AUTH_TYPE_PRIVATE_KEY) {
             if (dlg.field_id === -1 && dlg.field_pri_key.length === 0) {
                 dlg.dom.ssh_prikey.focus();
                 $tp.notify_error('请填写登录远程主机的SSH私钥！');
                 return false;
             }
+            dlg.field_password = '';
+        } else if (dlg.field_auth_type === TP_AUTH_TYPE_NONE) {
+            dlg.field_prompt_username = '';
+            dlg.field_prompt_password = '';
+            dlg.field_password = '';
+            dlg.field_pri_key = '';
         }
 
         return true;
@@ -1625,7 +1655,9 @@ $app.create_dlg_edit_account = function () {
                     auth_type: dlg.field_auth_type,
                     username: dlg.field_username,
                     password: dlg.field_password,
-                    pri_key: dlg.field_pri_key
+                    pri_key: dlg.field_pri_key,
+                    username_prompt: dlg.field_prompt_username,
+                    password_prompt: dlg.field_prompt_password
                 }
             },
             function (ret) {
@@ -1670,7 +1702,9 @@ $app.create_dlg_edit_account = function () {
                 auth_type: dlg.field_auth_type,
                 username: dlg.field_username,
                 password: dlg.field_password,
-                pri_key: dlg.field_pri_key
+                pri_key: dlg.field_pri_key,
+                username_prompt: dlg.field_prompt_username,
+                password_prompt: dlg.field_prompt_password
             },
             function () {
                 // func_success

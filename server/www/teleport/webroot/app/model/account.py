@@ -11,7 +11,7 @@ from app.base.stats import tp_stats
 def get_account_info(acc_id):
     s = SQL(get_db())
     # s.select_from('acc', ['id', 'password', 'pri_key', 'state', 'host_ip', 'router_ip', 'router_port', 'protocol_type', 'protocol_port', 'auth_type', 'username'], alt_name='a')
-    s.select_from('acc', ['id', 'password', 'pri_key', 'state', 'host_id', 'protocol_type', 'protocol_port', 'auth_type', 'username'], alt_name='a')
+    s.select_from('acc', ['id', 'password', 'pri_key', 'state', 'host_id', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'username_prompt', 'password_prompt'], alt_name='a')
     s.where('a.id={}'.format(acc_id))
     err = s.query()
     if err != TPE_OK:
@@ -37,7 +37,7 @@ def get_host_accounts(host_id):
     # 获取指定主机的所有账号
     s = SQL(get_db())
     # s.select_from('acc', ['id', 'state', 'host_ip', 'router_ip', 'router_port', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'pri_key'], alt_name='a')
-    s.select_from('acc', ['id', 'state', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'pri_key'], alt_name='a')
+    s.select_from('acc', ['id', 'state', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'username_prompt', 'password_prompt'], alt_name='a')
 
     s.where('a.host_id={}'.format(host_id))
     s.order_by('a.username', True)
@@ -165,7 +165,7 @@ def get_accounts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
 
     s = SQL(db)
     # s.select_from('acc', ['id', 'host_id', 'host_ip', 'router_ip', 'router_port', 'username', 'protocol_type', 'auth_type', 'state'], alt_name='a')
-    s.select_from('acc', ['id', 'host_id', 'username', 'protocol_type', 'auth_type', 'state'], alt_name='a')
+    s.select_from('acc', ['id', 'host_id', 'username', 'protocol_type', 'auth_type', 'state', 'username_prompt', 'password_prompt'], alt_name='a')
 
     str_where = ''
     _where = list()
@@ -253,13 +253,13 @@ def add_account(handler, host_id, args):
     if db_ret is not None and len(db_ret) > 0:
         return TPE_EXISTS, 0
 
-    sql = 'INSERT INTO `{}acc` (host_id, host_ip, router_ip, router_port, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
-          '({host_id}, "{host_ip}", "{router_ip}", {router_port}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
+    sql = 'INSERT INTO `{}acc` (host_id, host_ip, router_ip, router_port, protocol_type, protocol_port, state, auth_type, username, username_prompt, password_prompt, password, pri_key, creator_id, create_time) VALUES ' \
+          '({host_id}, "{host_ip}", "{router_ip}", {router_port}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{username_prompt}", "{password_prompt}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
           ''.format(db.table_prefix,
                     host_id=host_id, host_ip=args['host_ip'], router_ip=args['router_ip'], router_port=args['router_port'],
                     protocol_type=args['protocol_type'], protocol_port=args['protocol_port'], state=TP_STATE_NORMAL,
-                    auth_type=args['auth_type'], username=args['username'], password=args['password'], pri_key=args['pri_key'],
-                    creator_id=operator['id'], create_time=_time_now)
+                    auth_type=args['auth_type'], username=args['username'], username_prompt=args['username_prompt'], password_prompt=args['password_prompt'],
+                    password=args['password'], pri_key=args['pri_key'], creator_id=operator['id'], create_time=_time_now)
 
     # sql = 'INSERT INTO `{}acc` (host_id, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
     #       '({host_id}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
@@ -311,6 +311,8 @@ def update_account(handler, host_id, acc_id, args):
     _set.append('protocol_port={}'.format(args['protocol_port']))
     _set.append('auth_type={}'.format(args['auth_type']))
     _set.append('username="{}"'.format(args['username']))
+    _set.append('username_prompt="{}"'.format(args['username_prompt']))
+    _set.append('password_prompt="{}"'.format(args['password_prompt']))
 
     if args['auth_type'] == TP_AUTH_TYPE_PASSWORD and len(args['password']) > 0:
         _set.append('password="{}"'.format(args['password']))

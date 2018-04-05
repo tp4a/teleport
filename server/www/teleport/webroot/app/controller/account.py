@@ -221,6 +221,8 @@ class DoUpdateAccountHandler(TPBaseJsonHandler):
             param['username'] = args['param']['username'].strip()
             param['password'] = args['param']['password']
             param['pri_key'] = args['param']['pri_key'].strip()
+            param['username_prompt'] = args['param']['username_prompt'].strip()
+            param['password_prompt'] = args['param']['password_prompt'].strip()
         except:
             log.e('\n')
             return self.write_json(TPE_PARAM)

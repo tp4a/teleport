@@ -167,6 +167,8 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
                 password = args['password']
                 pri_key = args['pri_key']
                 protocol_port = int(args['protocol_port'])
+                username_prompt = args['username_prompt']
+                password_prompt = args['password_prompt']
             except:
                 return self.write_json(TPE_PARAM)
 
@@ -182,6 +184,9 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
 
             acc_info['password'] = password
             acc_info['pri_key'] = pri_key
+
+            acc_info['username_prompt'] = username_prompt
+            acc_info['password_prompt'] = password_prompt
 
             conn_info['_enc'] = 0
 
@@ -219,8 +224,8 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
 
         conn_info['acc_id'] = acc_id
         conn_info['acc_username'] = acc_info['username']
-        conn_info['username_prompt'] = ''
-        conn_info['password_prompt'] = ''
+        conn_info['username_prompt'] = acc_info['username_prompt']
+        conn_info['password_prompt'] = acc_info['password_prompt']
         conn_info['protocol_flag'] = 1
 
         conn_info['protocol_type'] = acc_info['protocol_type']
@@ -231,13 +236,15 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             conn_info['acc_secret'] = acc_info['password']
         elif acc_info['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY:
             conn_info['acc_secret'] = acc_info['pri_key']
+        else:
+            conn_info['acc_secret'] = ''
 
         with tmp_conn_id_lock:
             global tmp_conn_id_base
             tmp_conn_id_base += 1
             conn_id = tmp_conn_id_base
 
-        # log.v(conn_info)
+        log.v('CONN-INFO:', conn_info)
         tp_session().set('tmp-conn-info-{}'.format(conn_id), conn_info, 10)
 
         req = {'method': 'request_session', 'param': {'conn_id': conn_id}}

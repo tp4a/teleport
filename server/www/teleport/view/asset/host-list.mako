@@ -267,7 +267,7 @@
                                 <select id="account-protocol-type" class="form-control">
                                     <option value="1">RDP</option>
                                     <option value="2">SSH</option>
-                                    ## <option value="3">TELNET</option>
+                                    <option value="3">TELNET</option>
                                 </select>
                             </div>
                         </div>
