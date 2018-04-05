@@ -167,47 +167,6 @@
     <ClCompile Include="..\..\..\..\external\libuv\src\win\util.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\winapi.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\winsock.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\aes.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\arc4.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\asn1parse.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\base64.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\bignum.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\blowfish.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\certs.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\cipher.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\cipher_wrap.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\ctr_drbg.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\debug.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\des.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\dhm.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\entropy.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\entropy_poll.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\error.c">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)mbedtls_error.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)mbedtls_error.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\hmac_drbg.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\md.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\md5.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\md_wrap.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\oid.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pem.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pk.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pkcs12.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pkcs5.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pkparse.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pk_wrap.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\rsa.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\sha1.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\sha256.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\sha512.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\ssl_ciphersuites.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\ssl_cli.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\ssl_srv.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\ssl_tls.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\timing.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\x509.c" />
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\x509_crt.c" />
     <ClCompile Include="..\..\common\base_env.cpp" />
     <ClCompile Include="..\..\common\base_record.cpp" />
     <ClCompile Include="..\..\common\ts_membuf.cpp" />

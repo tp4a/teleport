@@ -14,8 +14,6 @@ TelnetConn::TelnetConn(TelnetSession *sess, bool is_server_side) : m_session(ses
 		m_state = TELNET_CONN_STATE_FREE;
     }
 
-    m_is_recving = false;
-
 	m_timer_running = false;
 
     uv_tcp_init(sess->get_loop(), &m_handle);
@@ -26,7 +24,6 @@ TelnetConn::~TelnetConn() {
 }
 
 bool TelnetConn::start_recv() {
-	m_is_recving = true;
 	int err = uv_read_start((uv_stream_t *)&m_handle, _on_alloc, _on_recv);
 	if (err != 0) {
 		EXLOGE("[telnet] [%s] can not start to read.\n", m_name);
@@ -34,7 +31,6 @@ bool TelnetConn::start_recv() {
 		return false;
 	}
 
-	m_is_recving = true;
 	return true;
 }
 
@@ -53,41 +49,12 @@ void TelnetConn::close() {
 		return;
 	}
 
-	if (m_is_recving) {
-		m_is_recving = false;
-		uv_read_stop((uv_stream_t*)&m_handle);
-	}
-
-// 	int uverr = 0;
-// 	uv_shutdown_t *sreq = (uv_shutdown_t *)calloc(1, sizeof(uv_shutdown_t));
-// 	sreq->data = this;
-// 	if ((uverr = uv_shutdown(sreq, stream_handle(), _uv_on_shutdown)) != 0) {
-// 		EXLOGW("[telnet] [%s] error when shutdown connection. %s\n", m_name, uv_strerror(uverr));
-// 		free(sreq);
-// 
-// 		m_state = TELNET_CONN_STATE_FREE;
-// 
-// 		m_session->on_conn_close();
-// 	}
-// 	else {
-// 		m_state = RDP_CONN_STATE_CLOSING;
-// 	}
-
+	uv_read_stop((uv_stream_t*)&m_handle);
 	uv_close(handle() , _uv_on_closed);
-
 }
-
-
-// void TelnetConn::_uv_on_shutdown(uv_shutdown_t *req, int status) {
-// 	TelnetConn *_this = (TelnetConn *)req->data;
-// 	//EXLOGD("[telnet] [%s]  .. _uv_on_shutdown, status=%d\n", _this->m_name, status);
-// 	uv_close((uv_handle_t *)req->handle, _uv_on_closed);
-// 	free(req);
-// }
 
 void TelnetConn::_uv_on_closed(uv_handle_t *handle) {
 	TelnetConn *_this = (TelnetConn *)handle->data;
-	//EXLOGD("[telnet] [%s]  .. _uv_on_closed\n", _this->m_name);
 	_this->m_state = TELNET_CONN_STATE_FREE;
 	_this->m_session->on_conn_close();
 }
@@ -101,11 +68,8 @@ void TelnetConn::_on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t 
 void TelnetConn::_on_recv(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf) {
     TelnetConn *_this = (TelnetConn *) handle->data;
 
-    //ExThreadSmartLock locker(_this->m_locker_recv);
-
     if (nread == 0) {
         free(buf->base);
-        //_this->m_session->do_next(_this);
         return;
     }
     else if (nread < 0) {
@@ -128,8 +92,6 @@ void TelnetConn::_on_recv(uv_stream_t *handle, ssize_t nread, const uv_buf_t *bu
 // #endif
 	}
 
-	EXLOG_BIN((ex_u8*)buf->base, nread, "--READ-- %s", _this->m_name);
-
     _this->m_buf_data.append((ex_u8 *) buf->base, nread);
     free(buf->base);
 
@@ -140,17 +102,6 @@ bool TelnetConn::send(MemBuffer &mbuf) {
     return _raw_send(mbuf.data(), mbuf.size());
 }
 
-// bool TelnetConn::send(TelnetPkgBase &pkg) {
-//     MemBuffer mbuf;
-//     MemStream s(mbuf);
-//     if (TPE_OK != pkg.build(s)) {
-//         EXLOGE("[telnet] when send, can not build package to binary.\n");
-//         return false;
-//     }
-// 
-//     return _raw_send(mbuf.data(), mbuf.size());
-// }
-
 bool TelnetConn::send(const ex_u8 *data, size_t size) {
     return _raw_send(data, size);
 }
@@ -158,13 +109,9 @@ bool TelnetConn::send(const ex_u8 *data, size_t size) {
 bool TelnetConn::_raw_send(const ex_u8 *data, size_t size) {
 // #ifdef LOG_DATA
 // 	if (!m_session->is_relay())
-		EXLOG_BIN(data, size, "[telnet] [%s] SEND %dB.", m_name, size);
+// 		EXLOG_BIN(data, size, "[telnet] [%s] SEND %dB.", m_name, size);
 // #endif
 
-    return raw_send(data, size);
-}
-
-bool TelnetConn::raw_send(const ex_u8 *data, size_t size) {
 	uv_write_t *w = (uv_write_t *) calloc(1, sizeof(uv_write_t));
 
     ex_u8 *_data = (ex_u8 *) calloc(1, size);
@@ -252,7 +199,6 @@ void TelnetConn::connect(const char *server_ip, ex_u16 server_port) {
 void TelnetConn::_uv_on_connect_timeout(uv_timer_t *timer)
 {
 	TelnetConn *_this = (TelnetConn *)timer->data;
-	//EXLOGD("[telnet] [%s]  .. _uv_on_connect_timeout.\n", _this->m_name);
 
 	if (_this->m_timer_running) {
 		_this->m_timer_running = false;
@@ -268,7 +214,6 @@ void TelnetConn::_uv_on_connect_timeout(uv_timer_t *timer)
 
 void TelnetConn::_uv_on_reconnect(uv_handle_t *handle) {
 	TelnetConn *_this = (TelnetConn *)handle->data;
-	//EXLOGD("[telnet] [%s]  .. _uv_on_reconnect.\n", _this->m_name);
 	_this->m_state = TELNET_CONN_STATE_FREE;
 
     uv_tcp_init(_this->m_session->get_loop(), &_this->m_handle);
@@ -280,7 +225,6 @@ void TelnetConn::_uv_on_reconnect(uv_handle_t *handle) {
 void TelnetConn::_uv_on_connected(uv_connect_t *req, int status) {
 	TelnetConn *_this = (TelnetConn *)req->data;
     free(req);
-	//EXLOGD("[telnet] [%s]  .. _uv_on_connected: status=%d.\n", _this->m_name, status);
 
 	if (_this->m_timer_running) {
 		_this->m_timer_running = false;
@@ -308,5 +252,4 @@ void TelnetConn::_uv_on_connected(uv_connect_t *req, int status) {
 
 //static
 void TelnetConn::_uv_on_timer_connect_timeout_closed(uv_handle_t *handle) {
-
 }

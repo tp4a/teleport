@@ -60,15 +60,6 @@ void TppTelnetRec::save_record() {
 	_save_to_cmd_file();
 }
 
-// void TppTelnetRec::record_time_begin(void)	// 指定从此时开始计时，之前收到的包会计时为0，这样播放时会快进到此处。
-// {
-// 	m_start_time = ex_get_tick_count();
-// //	m_head.timestamp = time(NULL);
-// 	m_head.basic.timestamp = (ex_u64)time(NULL);
-// 	m_save_full_header = true;
-// 	m_header_changed = true;
-// }
-
 void TppTelnetRec::record(ex_u8 type, const ex_u8* data, size_t size)
 {
 	if (data == NULL || 0 == size)
@@ -100,7 +91,6 @@ void TppTelnetRec::record_win_size(int width, int height)
 	m_head.basic.height = (ex_u16)height;
 	m_save_full_header = true;
 	m_header_changed = true;
-	//_save_to_info_file();
 }
 
 bool TppTelnetRec::_save_to_info_file() {

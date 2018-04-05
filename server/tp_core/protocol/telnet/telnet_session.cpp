@@ -16,8 +16,8 @@ TelnetSession::TelnetSession(TelnetProxy *proxy) :
 	m_proxy(proxy),
 	m_conn_info(NULL)
 {
-	m_client_type = 0;
 	m_state = TP_SESS_STAT_RUNNING;
+	m_record_started = false;
 	m_db_id = 0;
 	m_is_relay = false;
 	m_is_closed = false;
@@ -39,9 +39,6 @@ TelnetSession::TelnetSession(TelnetProxy *proxy) :
 TelnetSession::~TelnetSession() {
 	delete m_conn_client;
 	delete m_conn_server;
-
-// 	mbedtls_rsa_free(&m_server_pubkey);
-// 	mbedtls_rsa_free(&m_proxy_keypair_dynamic);
 
 	if (NULL != m_conn_info) {
 		g_telnet_env.free_connect_info(m_conn_info);
@@ -126,21 +123,9 @@ void TelnetSession::do_next(TelnetConn *conn) {
 	case s_negotiation_with_client:
 		new_status = _do_negotiation_with_client(conn);
 		break;
-// 	case s_ssl_handshake_with_client:    // 与客户端端进行SSL握手
-// 		new_status = _do_ssl_handshake_with_client();
-// 		break;
-// 	case s_connect_server:
-// 		new_status = _do_connect_server();
-// 		break;
 	case s_server_connected:
 		new_status = _do_server_connected();
 		break;
-// 	case s_negotiation_with_server:
-// 		new_status = _do_negotiation_with_server();
-// 		break;
-// 	case s_ssl_handshake_with_server:
-// 		new_status = _do_ssl_handshake_with_server();
-// 		break;
 	case s_relay:
 		new_status = _do_relay(conn);
 		break;
@@ -164,7 +149,6 @@ void TelnetSession::do_next(TelnetConn *conn) {
 	if (m_status == s_dead) {
 		EXLOGW("[telnet] try to remove session.\n");
 		_on_session_end();
-		//m_proxy->session_finished(this);
 		m_is_closed = true;
 		m_proxy->clean_session();
 	}
@@ -410,9 +394,6 @@ sess_state TelnetSession::_do_negotiation_with_client(TelnetConn* conn) {
 			}
 		}
 
-		// 记录日志，会话开始了
-// 		set_info(sess_info);
-
 		// try to connect to real server.
 		m_conn_server->connect(m_conn_ip.c_str(), m_conn_port);
 
@@ -439,6 +420,7 @@ sess_state TelnetSession::_do_server_connected() {
 		m_conn_server->send(_d, sizeof(_d) - 1);
 	}
 
+	m_is_relay = true;
 	EXLOGW("[telnet] enter relay mode.\n");
 
 	return s_relay;
@@ -451,15 +433,6 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 	if (conn->is_server_side())
 	{
 		// 收到了客户端发来的数据
-// 		if (!_this->m_is_changle_title_sent)
-// 		{
-// 			_this->m_is_changle_title_sent = true;
-// 			ts_astr msg = "\033]0;TP#telnet://";
-// 			msg += m_server_ip;
-// 			msg += "\007\x0d\x0a";
-// 			m_conn_client->send((ts_u8*)msg.c_str(), msg.length());
-// 		}
-
 		if (_this->m_is_putty_mode && !_this->m_is_putty_eat_username)
 		{
 			if (_this->_eat_username(m_conn_client, m_conn_server))
@@ -482,6 +455,8 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 	else
 	{
 		// 收到了服务端返回的数据
+		if(m_record_started)
+			m_rec.record(TS_RECORD_TYPE_TELNET_DATA, m_conn_server->data().data(), m_conn_server->data().size());
 
 		if (!_this->m_username_sent && _this->m_acc_name.length() > 0)
 		{
@@ -497,6 +472,14 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 			{
 				_this->m_password_sent = true;
 				is_processed = true;
+
+				if (!m_record_started) {
+					m_record_started = true;
+					if (!_on_session_begin()) {
+						return _do_close(TP_SESS_STAT_ERR_INTERNAL);
+					}
+				}
+
 			}
 		}
 
@@ -506,54 +489,7 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 			return s_relay;
 		}
 
-
-		// 替换会导致客户端窗口标题改变的数据
-		//ts_u8* data = m_conn_server->data().data();
-		//size_t len = m_conn_server->data().size();
-// 		if (len > 5)
-// 		{
-// 			const ts_u8* _begin = memmem(data, len, (const ts_u8*)"\033]0;", 4);
-// 
-// 			if (NULL != _begin)
-// 			{
-// 				size_t len_before = _begin - data;
-// 
-// 				const ts_u8* _end = memmem(_begin + 4, len - len_before, (const ts_u8*)"\007", 1);
-// 				if (NULL != _end)
-// 				{
-// 					_end++;
-// 
-// 					// 这个包中含有改变标题的数据，将标题换为我们想要的
-// 					size_t len_end = len - (_end - data);
-// 					MemBuffer mbuf;
-// 
-// 					if (len_before > 0)
-// 						mbuf.append(data, len_before);
-// 
-// 					mbuf.append((ts_u8*)"\033]0;TP#ssh://", 13);
-// 					mbuf.append((ts_u8*)_this->m_server_ip.c_str(), _this->m_server_ip.length());
-// 					mbuf.append((ts_u8*)"\007", 1);
-// 
-// 					if (len_end > 0)
-// 						mbuf.append(_end, len_end);
-// 
-// 					m_conn_client->send(mbuf.data(), mbuf.size());
-// 				}
-// 				else
-// 				{
-// 					m_conn_client->send(m_conn_server->data().data(), m_conn_server->data().size());
-// 				}
-// 			}
-// 			else
-// 			{
-// 				m_conn_client->send(m_conn_server->data().data(), m_conn_server->data().size());
-// 			}
-// 		}
-// 		else
-		{
-			m_conn_client->send(m_conn_server->data().data(), m_conn_server->data().size());
-		}
-
+		m_conn_client->send(m_conn_server->data().data(), m_conn_server->data().size());
 		m_conn_server->data().empty();
 	}
 

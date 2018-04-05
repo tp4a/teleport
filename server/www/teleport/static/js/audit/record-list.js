@@ -166,6 +166,8 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
                     // window.open('/audit/replay/' + row_data.protocol_type + '/' + row_data.id);
                 } else if (row_data.protocol_type === TP_PROTOCOL_TYPE_SSH) {
                     window.open('/audit/replay/' + row_data.protocol_type + '/' + row_data.id);
+                } else if (row_data.protocol_type === TP_PROTOCOL_TYPE_TELNET) {
+                    window.open('/audit/replay/' + row_data.protocol_type + '/' + row_data.id);
                 }
             } else if (action === 'cmd') {
                 //$app.dlg_accounts.show(row_id);
@@ -334,7 +336,7 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.record_action = function (row_id, fields) {
-        if(fields.state === TP_SESS_STAT_RUNNING || fields.state === TP_SESS_STAT_STARTED)
+        if (fields.state === TP_SESS_STAT_RUNNING || fields.state === TP_SESS_STAT_STARTED)
             return '';
 
         var ret = [];
@@ -346,7 +348,9 @@ $app.on_table_host_render_created = function (render) {
                 if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_SSH_SFTP)
                     ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" data-action="replay" data-record-id="' + fields.id + '"><i class="fa fa-caret-square-o-right fa-fw"></i> 回放</a>&nbsp');
             }
-            if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_RDP_DESKTOP) {
+            if (fields.protocol_sub_type === TP_PROTOCOL_TYPE_SSH_SHELL
+                || fields.protocol_sub_type === TP_PROTOCOL_TYPE_SSH_SFTP
+            ) {
                 ret.push('<a href="javascript:;" class="btn btn-sm btn-info" data-action="cmd" data-record-id="' + fields.id + '"><i class="fa fa-list-alt fa-fw"></i> 日志</a>&nbsp');
             }
         }

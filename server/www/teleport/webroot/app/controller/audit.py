@@ -499,6 +499,9 @@ class ReplayHandler(TPBaseHandler):
         elif protocol == TP_PROTOCOL_TYPE_SSH:
             param = {'record_id': record_id}
             self.render('audit/replay-ssh.mako', page_param=json.dumps(param))
+        elif protocol == TP_PROTOCOL_TYPE_TELNET:
+            param = {'record_id': record_id}
+            self.render('audit/replay-telnet.mako', page_param=json.dumps(param))
 
 
 # # class PlayRdpHandler(TPBaseAdminAuthHandler):
@@ -641,6 +644,8 @@ class DoGetRecordDataHandler(TPBaseJsonHandler):
             data_list, data_size, err = record.read_rdp_record_data(record_id, offset)
         elif protocol_type == TP_PROTOCOL_TYPE_SSH:
             data_list, data_size, err = record.read_ssh_record_data(record_id, offset)
+        elif protocol_type == TP_PROTOCOL_TYPE_TELNET:
+            data_list, data_size, err = record.read_telnet_record_data(record_id, offset)
         else:
             self.write_json(TPE_NOT_EXISTS)
         self.write_json(err, data={'data_list': data_list, 'data_size': data_size})

@@ -23,7 +23,6 @@ public:
 	TppTelnetRec();
 	virtual ~TppTelnetRec();
 
-// 	void record_time_begin(void); // 指定从此时开始计时，之前收到的包会计时为0，这样播放时会快进到此处。
 	void record(ex_u8 type, const ex_u8* data, size_t size);
 	void record_win_size(int width, int height);
 

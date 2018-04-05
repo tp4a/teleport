@@ -134,6 +134,8 @@ def read_record_head(protocol_type, record_id):
         path_name = 'rdp'
     elif protocol_type == TP_PROTOCOL_TYPE_SSH:
         path_name = 'ssh'
+    elif protocol_type == TP_PROTOCOL_TYPE_TELNET:
+        path_name = 'telnet'
 
     record_path = os.path.join(tp_cfg().core.replay_path, path_name, '{:09d}'.format(int(record_id)))
     header_file_path = os.path.join(record_path, 'tp-{}.tpr'.format(path_name))
@@ -296,6 +298,82 @@ def read_ssh_record_data(record_id, offset):
 
     record_path = os.path.join(tp_cfg().core.replay_path, 'ssh', '{:09d}'.format(int(record_id)))
     file_data = os.path.join(record_path, 'tp-ssh.dat')
+
+    if not os.path.exists(file_data):
+        return None, 0, TPE_NOT_EXISTS
+
+    data_list = list()
+    data_size = 0
+    file = None
+    try:
+        file_size = os.path.getsize(file_data)
+        if offset >= file_size:
+            return None, 0, TPE_FAILED
+
+        file = open(file_data, 'rb')
+        if offset > 0:
+            file.seek(offset, io.SEEK_SET)
+
+        # read 1000 packages one time from offset.
+        for i in range(1000):
+            """
+            // 一个数据包的头
+            typedef struct TS_RECORD_PKG
+            {
+                ex_u8 type;			// 包的数据类型
+                ex_u32 size;		// 这个包的总大小（不含包头）
+                ex_u32 time_ms;		// 这个包距起始时间的时间差（毫秒，意味着一个连接不能持续超过49天）
+                ex_u8 _reserve[3];	// 保留
+            }TS_RECORD_PKG;
+            """
+            _data = file.read(12)
+            data_size += 12
+            _action, _size, _time, = struct.unpack_from('=BII', _data)
+            if offset + data_size + _size > file_size:
+                return None, 0, TPE_FAILED
+
+            _data = file.read(_size)
+            data_size += _size
+
+            temp = dict()
+            temp['a'] = _action
+            temp['t'] = _time
+            if _action == 1:
+                # this is window size changed.
+                w, h = struct.unpack_from('HH', _data)
+                temp['w'] = w
+                temp['h'] = h
+            elif _action == 2:
+                try:
+                    _d = _data.decode()
+                    temp['d'] = _d
+                except:
+                    _data = base64.b64encode(_data)
+                    temp['a'] = 3
+                    temp['d'] = _data.decode()
+            else:
+                return None, 0, TPE_FAILED
+
+            data_list.append(temp)
+            if offset + data_size == file_size:
+                break
+
+    except Exception:
+        log.e('failed to read record file: {}\n'.format(file_data))
+        return None, 0, TPE_FAILED
+    finally:
+        if file is not None:
+            file.close()
+
+    return data_list, data_size, TPE_OK
+
+
+def read_telnet_record_data(record_id, offset):
+    if not tp_cfg().core.detected:
+        return None, TPE_NO_CORE_SERVER
+
+    record_path = os.path.join(tp_cfg().core.replay_path, 'telnet', '{:09d}'.format(int(record_id)))
+    file_data = os.path.join(record_path, 'tp-telnet.dat')
 
     if not os.path.exists(file_data):
         return None, 0, TPE_NOT_EXISTS

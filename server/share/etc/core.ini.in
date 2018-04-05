@@ -46,7 +46,7 @@ bind-ip=0.0.0.0
 bind-port=52089
 
 [protocol-telnet]
-enabled=false
+enabled=true
 lib=tptelnet
 bind-ip=0.0.0.0
 bind-port=52389

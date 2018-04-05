@@ -19,14 +19,14 @@ bool TppTelnetEnv::_on_init(TPP_INIT_ARGS* args) {
 
 	ex_wstr tmp;
 	if (!ps->GetStr(L"bind-ip", tmp)) {
-		bind_ip = TS_RDP_PROXY_HOST;
+		bind_ip = TS_TELNET_PROXY_HOST;
 	}
 	else {
 		ex_wstr2astr(tmp, bind_ip);
 	}
 
 	if (!ps->GetInt(L"bind-port", bind_port)) {
-		bind_port = TS_RDP_PROXY_PORT;
+		bind_port = TS_TELNET_PROXY_PORT;
 	}
 
 	return true;

@@ -36,9 +36,6 @@
     <Filter Include="libuv\src\win">
       <UniqueIdentifier>{89181d75-3db3-45a5-a35d-9083fb349de3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mbedtls">
-      <UniqueIdentifier>{bedac06f-83d5-4cd3-832d-0bce55c3dc52}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_const.h">
@@ -303,120 +300,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\external\libuv\src\win\process-stdio.c">
       <Filter>libuv\src\win</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\rsa.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\sha1.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\md5.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\bignum.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\md.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\md_wrap.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\sha256.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\sha512.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\asn1parse.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\oid.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\debug.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\x509.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pk.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pk_wrap.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\x509_crt.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\certs.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\entropy.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\ctr_drbg.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\arc4.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pem.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\dhm.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\cipher.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\aes.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\des.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\base64.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\hmac_drbg.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\entropy_poll.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\cipher_wrap.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\blowfish.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pkparse.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pkcs5.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\pkcs12.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\error.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\timing.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\ssl_tls.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\ssl_ciphersuites.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\ssl_cli.c">
-      <Filter>mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\external\mbedtls\library\ssl_srv.c">
-      <Filter>mbedtls</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
