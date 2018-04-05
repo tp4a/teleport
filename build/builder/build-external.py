@@ -408,10 +408,8 @@ class BuilderLinux(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-
-        # After upgrade to mbedtls-v2.6.1, the bug have been fixed. so we do not need fix it ourselves.
-        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
         old_p = os.getcwd()
         os.chdir(self.MBEDTLS_PATH_SRC)
