@@ -17,14 +17,14 @@ TelnetSession::TelnetSession(TelnetProxy *proxy) :
 	m_conn_info(NULL)
 {
 	m_state = TP_SESS_STAT_RUNNING;
-	m_record_started = false;
+	m_startup_win_size_recorded = false;
 	m_db_id = 0;
 	m_is_relay = false;
 	m_is_closed = false;
 	m_first_client_pkg = true;
 
-	m_win_width = 80;
-	m_win_height = 24;
+	m_win_width = 0;
+	m_win_height = 0;
 
 	m_is_putty_mode = false;
 
@@ -422,6 +422,14 @@ sess_state TelnetSession::_do_connect_server() {
 			EXLOGE("[telnet] session '%s' is not for TELNET.\n", m_sid.c_str());
 			return _do_close(TP_SESS_STAT_ERR_SESSION);
 		}
+
+		if (m_conn_info->auth_type != TP_AUTH_TYPE_NONE) {
+			if (m_acc_name.length() == 0 || m_username_prompt.length() == 0 || m_acc_secret.length() == 0 || m_password_prompt.length() == 0) {
+				EXLOGE("[telnet] invalid connection param.\n");
+				return _do_close(TP_SESS_STAT_ERR_SESSION);
+			}
+		}
+
 	}
 
 	// try to connect to real server.
@@ -432,6 +440,7 @@ sess_state TelnetSession::_do_connect_server() {
 // 	szmsg += "\r\n";
 // 	m_conn_client->send((ex_u8*)szmsg.c_str(), szmsg.length());
 
+
 	return s_noop;
 }
 
@@ -441,14 +450,71 @@ sess_state TelnetSession::_do_server_connected() {
 
 	m_status = s_relay;
 
-	if (m_is_putty_mode)
-	{
-		ex_u8 _d[] = "\xff\xfb\x1f\xff\xfb\x20\xff\xfb\x18\xff\xfb\x27\xff\xfd\x01\xff\xfb\x03\xff\xfd\x03";
-		m_conn_server->send(_d, sizeof(_d) - 1);
+	// 如果没有设置用户名/密码，则无需登录
+	if (m_conn_info->auth_type == TP_AUTH_TYPE_NONE) {
+		m_username_sent = true;
+		m_password_sent = true;
 	}
 
 	m_is_relay = true;
 	EXLOGW("[telnet] enter relay mode.\n");
+
+	if (!_on_session_begin()) {
+		return _do_close(TP_SESS_STAT_ERR_INTERNAL);
+	}
+
+	int w = 50;
+	if (m_win_width != 0) {
+#ifdef EX_OS_WIN32
+		int w = min(m_win_width, 128);
+#else
+		int w = std::min(m_win_width, 128);
+#endif
+		m_startup_win_size_recorded = true;
+		m_rec.record_win_size_startup(m_win_width, m_win_height);
+	}
+
+	char buf[512] = { 0 };
+
+	const char *auth_mode = NULL;
+	if (m_conn_info->auth_type == TP_AUTH_TYPE_PASSWORD)
+		auth_mode = "password";
+	else if (m_conn_info->auth_type == TP_AUTH_TYPE_NONE)
+		auth_mode = "nothing";
+	else
+		auth_mode = "unknown";
+
+	ex_astr line(w, '=');
+
+	snprintf(buf, sizeof(buf),
+		"\r\n"\
+		"%s\r\n"\
+		"Teleport TELNET Bastion Server...\r\n"\
+		"  - teleport to %s:%d\r\n"\
+		"  - authroized by %s\r\n"\
+		"%s\r\n"\
+		"\r\n\r\n",
+		line.c_str(),
+		m_conn_ip.c_str(),
+		m_conn_port, auth_mode,
+		line.c_str()
+	);
+
+	m_conn_client->send((ex_u8*)buf, strlen(buf));
+
+	if (m_is_putty_mode)
+	{
+		if (m_conn_info->auth_type != TP_AUTH_TYPE_NONE) {
+			ex_astr login_info = "login: ";
+			login_info += m_conn_info->acc_username;
+			login_info += "\r\n";
+			m_conn_client->send((ex_u8*)login_info.c_str(), login_info.length());
+			m_rec.record(TS_RECORD_TYPE_TELNET_DATA, (ex_u8*)login_info.c_str(), login_info.length());
+		}
+
+		ex_u8 _d[] = "\xff\xfb\x1f\xff\xfb\x20\xff\xfb\x18\xff\xfb\x27\xff\xfd\x01\xff\xfb\x03\xff\xfd\x03";
+		m_conn_server->send(_d, sizeof(_d) - 1);
+	}
 
 	return s_relay;
 }
@@ -476,8 +542,11 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 		}
 
 		if (_this->_parse_win_size(m_conn_client)) {
-			if (m_record_started)
-				m_rec.record_win_size_change(m_win_width, m_win_height);
+			if (!m_startup_win_size_recorded) {
+				m_rec.record_win_size_startup(m_win_width, m_win_height);
+				m_startup_win_size_recorded = true;
+			}
+			m_rec.record_win_size_change(m_win_width, m_win_height);
 		}
 
 		m_conn_server->send(m_conn_client->data().data(), m_conn_client->data().size());
@@ -486,7 +555,7 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 	else
 	{
 		// 收到了服务端返回的数据
-		if(m_record_started)
+		if (m_conn_server->data().data()[0] != TELNET_IAC)
 			m_rec.record(TS_RECORD_TYPE_TELNET_DATA, m_conn_server->data().data(), m_conn_server->data().size());
 
 		if (!_this->m_username_sent && _this->m_acc_name.length() > 0)
@@ -503,16 +572,6 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 			{
 				_this->m_password_sent = true;
 				is_processed = true;
-
-				if (!m_record_started) {
-					m_record_started = true;
-					if (!_on_session_begin()) {
-						return _do_close(TP_SESS_STAT_ERR_INTERNAL);
-					}
-
-					m_rec.record_win_size_startup(m_win_width, m_win_height);
-				}
-
 			}
 		}
 

@@ -79,7 +79,7 @@ private:
 	int m_state;
 
 	TPP_CONNECT_INFO* m_conn_info;
-	bool m_record_started;
+	bool m_startup_win_size_recorded;
 	int m_db_id;
 
 	bool m_first_client_pkg;
