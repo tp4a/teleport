@@ -6,12 +6,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${Project_SOURCE_DIR}/../out/server/x64/bin")
 
 
-aux_source_directory(. DIR_RDP_SRCS)
-aux_source_directory(../../common DIR_RDP_SRCS)
-aux_source_directory(../../../../common/libex/src DIR_RDP_SRCS)
+aux_source_directory(. DIR_TELNET_SRCS)
+aux_source_directory(../../common DIR_TELNET_SRCS)
+aux_source_directory(../../../../common/libex/src DIR_TELNET_SRCS)
 
-list(REMOVE_ITEM DIR_RDP_SRCS "./dllmain.cpp")
-list(REMOVE_ITEM DIR_RDP_SRCS "./stdafx.cpp")
+list(REMOVE_ITEM DIR_TELNET_SRCS "./dllmain.cpp")
+list(REMOVE_ITEM DIR_TELNET_SRCS "./stdafx.cpp")
 
 
 include_directories(
@@ -32,11 +32,13 @@ ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 
-add_library(tptelnet SHARED ${DIR_RDP_SRCS})
+add_library(tptelnet SHARED ${DIR_TELNET_SRCS})
 
 IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
-	target_link_libraries(tptelnet uv mbedx509 mbedtls mbedcrypto dl pthread rt util)
+	#target_link_libraries(tptelnet uv mbedx509 mbedtls mbedcrypto dl pthread rt util)
+	target_link_libraries(tptelnet uv dl pthread rt util)
 ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-	target_link_libraries(tptelnet uv mbedx509 mbedtls mbedcrypto dl pthread util)
+	#target_link_libraries(tptelnet uv mbedx509 mbedtls mbedcrypto dl pthread util)
+	target_link_libraries(tptelnet uv dl pthread util)
 ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 

@@ -233,10 +233,8 @@ class BuilderWin(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-
-        # After upgrade to mbedtls-v2.6.1, the bug have been fixed. so we do not need fix it ourselves.
-        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
     def _build_libuv(self, file_name):
         cc.n('prepare libuv source code... ', end='')
@@ -294,22 +292,6 @@ class BuilderLinux(BuilderBase):
 
     def _build_openssl(self, file_name):
         pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
-
-        # if not os.path.exists(self.OPENSSL_PATH_SRC):
-        #     os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-        #
-        # cc.n('build openssl static...')
-        # if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
-        #     cc.w('already exists, skip.')
-        #     return
-        #
-        # old_p = os.getcwd()
-        # os.chdir(self.OPENSSL_PATH_SRC)
-        # #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        # os.system('./config --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        # os.system('make')
-        # os.system('make install')
-        # os.chdir(old_p)
 
     def _build_libuv(self, file_name):
         if not os.path.exists(self.LIBUV_PATH_SRC):
@@ -633,52 +615,11 @@ class BuilderMacOS(BuilderBase):
         f.writelines(fl)
         f.close()
 
-        # # fix config.h
-        # mkfile = os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls', 'config.h')
-        # f = open(mkfile)
-        # fl = f.readlines()
-        # f.close()
-        #
-        # for i in range(len(fl)):
-        #     if fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED') >= 0:
-        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED\n'
-        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED') >= 0:
-        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED\n'
-        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED') >= 0:
-        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED\n'
-        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED') >= 0:
-        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED\n'
-        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED') >= 0:
-        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED\n'
-        #     elif fl[i].find('#define MBEDTLS_SELF_TEST') >= 0:
-        #         fl[i] = '//#define MBEDTLS_SELF_TEST\n'
-        #     elif fl[i].find('#define MBEDTLS_SSL_RENEGOTIATION') >= 0:
-        #         fl[i] = '//#define MBEDTLS_SSL_RENEGOTIATION\n'
-        #     elif fl[i].find('#define MBEDTLS_ECDH_C') >= 0:
-        #         fl[i] = '//#define MBEDTLS_ECDH_C\n'
-        #     elif fl[i].find('#define MBEDTLS_ECDSA_C') >= 0:
-        #         fl[i] = '//#define MBEDTLS_ECDSA_C\n'
-        #     elif fl[i].find('#define MBEDTLS_ECP_C') >= 0:
-        #         fl[i] = '//#define MBEDTLS_ECP_C\n'
-        #     elif fl[i].find('#define MBEDTLS_NET_C') >= 0:
-        #         fl[i] = '//#define MBEDTLS_NET_C\n'
-        #
-        #     elif fl[i].find('#define MBEDTLS_RSA_NO_CRT') >= 0:
-        #         fl[i] = '#define MBEDTLS_RSA_NO_CRT\n'
-        #     elif fl[i].find('#define MBEDTLS_SSL_PROTO_SSL3') >= 0:
-        #         fl[i] = '#define MBEDTLS_SSL_PROTO_SSL3\n'
-        #
-        # f = open(mkfile, 'w')
-        # f.writelines(fl)
-        # f.close()
-
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-
-        # After upgrade to mbedtls-v2.6.1, the bug have been fixed. so we do not need fix it ourselves.
-        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
         old_p = os.getcwd()
         os.chdir(self.MBEDTLS_PATH_SRC)

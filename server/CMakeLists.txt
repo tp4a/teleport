@@ -23,6 +23,7 @@ ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 add_subdirectory(tp_core/core)
 add_subdirectory(tp_core/protocol/ssh)
+add_subdirectory(tp_core/protocol/telnet)
 #add_subdirectory(testssh/testssh)
 
 IF (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tp_core/protocol/rdp")
