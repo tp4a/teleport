@@ -62,8 +62,11 @@ class TPStats(object):
 
         # 每 5秒 采集一次系统状态统计数据
         tp_cron().add_job('sys_status', self._check_sys_stats, first_interval_seconds=self._INTERVAL, interval_seconds=self._INTERVAL)
-        # 每 一小时 重新查询一次数据库，得到用户数/主机数/账号数/连接数，避免统计数量出现偏差
+        # 每 1小时 重新查询一次数据库，得到用户数/主机数/账号数/连接数，避免统计数量出现偏差
         tp_cron().add_job('query_counter', self._query_counter, first_interval_seconds=60 * 60, interval_seconds=60 * 60)
+        # 每 1分钟 检查一下临时锁定用户是否可以自动解锁了
+        tp_cron().add_job('check_temp_locked_user', self._check_temp_locked_user, interval_seconds=60)
+
         tp_wss().register_get_sys_status_callback(self.get_sys_stats)
         tp_wss().register_get_stat_counter_callback(self.get_counter_stats)
 
@@ -115,6 +118,9 @@ class TPStats(object):
         if TPE_OK == err:
             self._counter_stats = c
             tp_wss().send_message('stat_counter', self._counter_stats)
+
+    def _check_temp_locked_user(self):
+        stats.update_temp_locked_user_state()
 
     def get_sys_stats(self):
         return self._sys_stats
