@@ -3,13 +3,13 @@
 #include "tpp_env.h"
 #include <teleport_const.h>
 
-#define TELNET_IAC 255
-#define TELNET_DONT 254
-#define TELNET_DO 253
-#define TELNET_WONT 252
-#define TELNET_WILL 251
-#define TELNET_SB 250
-#define TELNET_SE 240
+#define TELNET_IAC		0xFF
+#define TELNET_DONT		0xFE
+#define TELNET_DO		0xFD
+#define TELNET_WONT		0xFC
+#define TELNET_WILL		0xFB
+#define TELNET_SB		0xFA
+#define TELNET_SE		0xF0
 
 
 TelnetSession::TelnetSession(TelnetProxy *proxy) :
@@ -21,9 +21,12 @@ TelnetSession::TelnetSession(TelnetProxy *proxy) :
 	m_db_id = 0;
 	m_is_relay = false;
 	m_is_closed = false;
+	m_first_client_pkg = true;
+
+	m_win_width = 80;
+	m_win_height = 24;
 
 	m_is_putty_mode = false;
-	m_is_putty_eat_username = false;
 
 	m_username_sent = false;
 	m_password_sent = false;
@@ -212,6 +215,32 @@ sess_state TelnetSession::_do_negotiation_with_client(TelnetConn* conn) {
 	if (0 == conn->data().size())
 		return s_negotiation_with_client;
 
+	if (m_first_client_pkg) {
+		m_first_client_pkg = false;
+
+		MemBuffer& mbuf = conn->data();
+
+		if (mbuf.size() > 14 && 0 == memcmp(mbuf.data(), "session:", 8)) {
+			m_is_putty_mode = false;
+
+			mbuf.pop(8);
+			for (; mbuf.size() > 0; ) {
+				if (mbuf.data()[mbuf.size() - 1] == 0x0a || mbuf.data()[mbuf.size() - 1] == 0x0d)
+					mbuf.size(mbuf.size() - 1);
+				else
+					break;
+			}
+
+			mbuf.append((ex_u8*)"\x00", 1);
+			m_sid = (char*)mbuf.data();
+
+			return _do_connect_server();
+		}
+		else {
+			m_is_putty_mode = true;
+		}
+	}
+
 	MemBuffer mbuf_msg;
 	mbuf_msg.reserve(128);
 	MemStream ms_msg(mbuf_msg);
@@ -239,6 +268,7 @@ sess_state TelnetSession::_do_negotiation_with_client(TelnetConn* conn) {
 			if (mbuf_sub.size() > 0)
 			{
 				// 已经得到一个sub negotiation，在处理新的数据前，先处理掉旧的
+				EXLOG_BIN(mbuf_sub.data(), mbuf_sub.size(), "-=-=-=-=-=");
 				ms_sub.reset();
 			}
 
@@ -317,26 +347,36 @@ sess_state TelnetSession::_do_negotiation_with_client(TelnetConn* conn) {
 
 	if (mbuf_sub.size() == 5)
 	{
-		if (0 == memcmp(mbuf_sub.data(), "\x1f\x00\x50\x00\x18", 5))
-		{
-			m_is_putty_mode = true;
-			// 			ts_u8 _d[] = {
-			// 				0xff, 0xfe, 0x20, 0xff, 0xfd, 0x18, 0xff, 0xfa, 0x27, 0x01, 0xff, 0xf0, 0xff, 0xfa, 0x27, 0x01,
-			// 				0x03, 0x53, 0x46, 0x55, 0x54, 0x4c, 0x4e, 0x54, 0x56, 0x45, 0x52, 0x03, 0x53, 0x46, 0x55, 0x54,
-			// 				0x4c, 0x4e, 0x54, 0x4d, 0x4f, 0x44, 0x45, 0xff, 0xf0, 0xff, 0xfd, 0x03
-			// 			};
-			ex_u8 _d[] = {
-				0xff, 0xfa, 0x27, 0x01,
-				0x03, 0x53, 0x46, 0x55, 0x54, 0x4c, 0x4e, 0x54, 0x56, 0x45, 0x52, 0x03, 0x53, 0x46, 0x55, 0x54,
-				0x4c, 0x4e, 0x54, 0x4d, 0x4f, 0x44, 0x45, 0xff, 0xf0
-			};
-			m_conn_client->send((ex_u8*)_d, sizeof(_d));
+		// 客户端窗口大小
+		if (0x1f == mbuf_sub.data()[0]) {
+			ms_sub.rewind();
+			ms_sub.skip(1);
+			m_win_width = ms_sub.get_u16_be();
+			m_win_height = ms_sub.get_u16_be();
+
+			ms_resp.reset();
+			ms_resp.put_u8(TELNET_IAC);
+			ms_resp.put_u8(TELNET_SB);
+			ms_resp.put_bin(mbuf_sub.data(), 5);
+			ms_resp.put_u8(TELNET_IAC);
+			ms_resp.put_u8(TELNET_SE);
+			conn->send(mbuf_resp.data(), mbuf_resp.size());
 		}
+
+		// 发送下列指令，putty才会将登陆用户名发过来（也就是SID）
+		ex_u8 _d[] = {
+			0xff, 0xfa, 0x27, 0x01,
+			0x03, 0x53, 0x46, 0x55, 0x54, 0x4c, 0x4e, 0x54, 0x56, 0x45, 0x52, 0x03, 0x53, 0x46, 0x55, 0x54,
+			0x4c, 0x4e, 0x54, 0x4d, 0x4f, 0x44, 0x45, 0xff, 0xf0
+		};
+		m_conn_client->send((ex_u8*)_d, sizeof(_d));
+		return s_negotiation_with_client;
 	}
-	else if (mbuf_sub.size() > 8)
+
+	if (mbuf_sub.size() > 8)
 	{
 		// 可能含有putty的登录用户名信息（就是SID啦）
-		if (0 == memcmp(mbuf_sub.data(), "\x27\x00\x00\x55\x53\x45\x52\x01", 8))	// '..USER.
+		if (0 == memcmp(mbuf_sub.data(), "\x27\x00\x00\x55\x53\x45\x52\x01", 8))	// '...USER.
 		{
 			mbuf_sub.pop(8);
 			for (; mbuf_sub.size() > 0;)
@@ -352,60 +392,47 @@ sess_state TelnetSession::_do_negotiation_with_client(TelnetConn* conn) {
 		}
 	}
 
-	if (mbuf_msg.size() > 0)
-	{
-		if (0 == memcmp(mbuf_msg.data(), "session:", 8))
-		{
-			mbuf_msg.pop(8);
-			for (; mbuf_msg.size() > 0;)
-			{
-				if (mbuf_msg.data()[mbuf_msg.size() - 1] == 0x0a || mbuf_msg.data()[mbuf_msg.size() - 1] == 0x0d)
-					mbuf_msg.size(mbuf_msg.size() - 1);
-				else
-					break;
-			}
-
-			mbuf_msg.append((ex_u8*)"\x00", 1);
-			m_sid = (char*)mbuf_msg.data();
-		}
-	}
-
 	if (m_sid.length() > 0)
 	{
-		EXLOGW("[telnet] session-id: %s\n", m_sid.c_str());
-
-		m_conn_info = g_telnet_env.get_connect_info(m_sid.c_str());
-
-		if (NULL == m_conn_info) {
-			EXLOGE("[telnet] no such session: %s\n", m_sid.c_str());
-			return _do_close(TP_SESS_STAT_ERR_SESSION);
-		}
-		else {
-			m_conn_ip = m_conn_info->conn_ip;
-			m_conn_port = m_conn_info->conn_port;
-			m_acc_name = m_conn_info->acc_username;
-			m_acc_secret = m_conn_info->acc_secret;
-			m_username_prompt = m_conn_info->username_prompt;
-			m_password_prompt = m_conn_info->password_prompt;
-
-			if (m_conn_info->protocol_type != TP_PROTOCOL_TYPE_TELNET) {
-				EXLOGE("[telnet] session '%s' is not for TELNET.\n", m_sid.c_str());
-				return _do_close(TP_SESS_STAT_ERR_SESSION);
-			}
-		}
-
-		// try to connect to real server.
-		m_conn_server->connect(m_conn_ip.c_str(), m_conn_port);
-
-		ex_astr szmsg = "Connect to ";
-		szmsg += m_conn_ip;
-		szmsg += "\r\n";
-		m_conn_client->send((ex_u8*)szmsg.c_str(), szmsg.length());
-
-		return s_noop;
+		return _do_connect_server();
 	}
 
 	return s_negotiation_with_client;
+}
+
+sess_state TelnetSession::_do_connect_server() {
+
+	EXLOGW("[telnet] session-id: [%s]\n", m_sid.c_str());
+
+	m_conn_info = g_telnet_env.get_connect_info(m_sid.c_str());
+
+	if (NULL == m_conn_info) {
+		EXLOGE("[telnet] no such session: %s\n", m_sid.c_str());
+		return _do_close(TP_SESS_STAT_ERR_SESSION);
+	}
+	else {
+		m_conn_ip = m_conn_info->conn_ip;
+		m_conn_port = m_conn_info->conn_port;
+		m_acc_name = m_conn_info->acc_username;
+		m_acc_secret = m_conn_info->acc_secret;
+		m_username_prompt = m_conn_info->username_prompt;
+		m_password_prompt = m_conn_info->password_prompt;
+
+		if (m_conn_info->protocol_type != TP_PROTOCOL_TYPE_TELNET) {
+			EXLOGE("[telnet] session '%s' is not for TELNET.\n", m_sid.c_str());
+			return _do_close(TP_SESS_STAT_ERR_SESSION);
+		}
+	}
+
+	// try to connect to real server.
+	m_conn_server->connect(m_conn_ip.c_str(), m_conn_port);
+
+// 	ex_astr szmsg = "Connect to ";
+// 	szmsg += m_conn_ip;
+// 	szmsg += "\r\n";
+// 	m_conn_client->send((ex_u8*)szmsg.c_str(), szmsg.length());
+
+	return s_noop;
 }
 
 sess_state TelnetSession::_do_server_connected() {
@@ -433,11 +460,10 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 	if (conn->is_server_side())
 	{
 		// 收到了客户端发来的数据
-		if (_this->m_is_putty_mode && !_this->m_is_putty_eat_username)
+		if (_this->m_is_putty_mode && !_this->m_username_sent)
 		{
-			if (_this->_eat_username(m_conn_client, m_conn_server))
+			if (_this->_putty_replace_username(m_conn_client, m_conn_server))
 			{
-				_this->m_is_putty_eat_username = true;
 				_this->m_username_sent = true;
 				is_processed = true;
 			}
@@ -447,6 +473,11 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 		{
 			m_conn_client->data().empty();
 			return s_relay;
+		}
+
+		if (_this->_parse_win_size(m_conn_client)) {
+			if (m_record_started)
+				m_rec.record_win_size_change(m_win_width, m_win_height);
 		}
 
 		m_conn_server->send(m_conn_client->data().data(), m_conn_client->data().size());
@@ -478,6 +509,8 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 					if (!_on_session_begin()) {
 						return _do_close(TP_SESS_STAT_ERR_INTERNAL);
 					}
+
+					m_rec.record_win_size_startup(m_win_width, m_win_height);
 				}
 
 			}
@@ -578,7 +611,7 @@ bool TelnetSession::_parse_find_and_send(TelnetConn* conn_recv, TelnetConn* conn
 	return false;
 }
 
-bool TelnetSession::_eat_username(TelnetConn* conn_recv, TelnetConn* conn_remote)
+bool TelnetSession::_putty_replace_username(TelnetConn* conn_recv, TelnetConn* conn_remote)
 {
 	bool replaced = false;
 
@@ -640,8 +673,7 @@ bool TelnetSession::_eat_username(TelnetConn* conn_recv, TelnetConn* conn_remote
 					continue;
 				}
 
-				// 到这里就找到了客户端发来的用户名，我们将其抛弃掉，发给服务端的是一个无用户名的包，这样
-				// 服务端就会提示输入用户名（login:），后续检测到服务端的提示就会发送用户名了。
+				// 到这里就找到了客户端发来的用户名，我们将其替换为真实的远程账号。
 
 				ms_msg.put_u8(TELNET_IAC);
 				ms_msg.put_u8(TELNET_SB);
@@ -676,3 +708,60 @@ bool TelnetSession::_eat_username(TelnetConn* conn_recv, TelnetConn* conn_remote
 	return false;
 }
 
+bool TelnetSession::_parse_win_size(TelnetConn* conn) {
+	if (conn->data().size() < 9)
+		return false;
+	if (conn->data().data()[0] != TELNET_IAC)
+		return false;
+
+	bool is_sub = false;
+	MemStream s(conn->data());
+	for (; s.left() > 0;)
+	{
+		if (s.get_u8() == TELNET_IAC)
+		{
+			if (s.left() < 2)
+				return false;
+
+			if (s.get_u8() == TELNET_SB)
+			{
+				size_t _begin = s.offset();
+				size_t _end = 0;
+
+				// SUB NEGOTIATION，变长数据，以 TELNET_IAC+TELNET_SE (FF F0) 结束
+				bool have_SE = false;
+				ex_u8 ch_sub = 0;
+				for (; s.left() > 0;)
+				{
+					_end = s.offset();
+					if (s.get_u8() == TELNET_IAC)
+					{
+						if (s.left() > 0)
+						{
+							if (s.get_u8() == TELNET_SE)
+							{
+								have_SE = true;
+								break;
+							}
+							else
+								return false;
+						}
+					}
+				}
+
+				if (!have_SE)
+					return false;
+
+				size_t len = _end - _begin;
+				if (len == 5 && 0x1F == conn->data().data()[_begin]) {
+					s.seek(_begin + 1);
+					m_win_width = s.get_u16_be();
+					m_win_height = s.get_u16_be();
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}

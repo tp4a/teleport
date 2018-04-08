@@ -65,13 +65,15 @@ protected:
 private:
 	sess_state _do_client_connect(TelnetConn* conn);
 	sess_state _do_negotiation_with_client(TelnetConn* conn);
+	sess_state _do_connect_server();
 	sess_state _do_server_connected();
 	sess_state _do_relay(TelnetConn* conn);
 	sess_state _do_close(int err_code);
 	sess_state _do_check_closing();
 
 	bool _parse_find_and_send(TelnetConn* conn_recv, TelnetConn* conn_remote, const char* find, const char* send);
-	bool _eat_username(TelnetConn* conn_recv, TelnetConn* conn_remote);
+	bool _putty_replace_username(TelnetConn* conn_recv, TelnetConn* conn_remote);
+	bool _parse_win_size(TelnetConn* conn);
 
 private:
 	int m_state;
@@ -80,10 +82,13 @@ private:
 	bool m_record_started;
 	int m_db_id;
 
+	bool m_first_client_pkg;
 	bool m_is_relay;	// 是否进入relay模式了（只有进入relay模式才会有录像存在）
 	bool m_is_closed;
 
 	TppTelnetRec m_rec;
+	int m_win_width;
+	int m_win_height;
 
 	TelnetProxy* m_proxy;
 	TelnetConn* m_conn_client; // 与真正客户端通讯的连接（自身作为服务端）
@@ -103,11 +108,10 @@ private:
 	ex_astr m_client_addr;
 
 	bool m_is_putty_mode;
-	bool m_is_putty_eat_username;
+	//bool m_is_putty_eat_username;
 
 	bool m_username_sent;
 	bool m_password_sent;
-
 };
 
 #endif // __TELNET_SESSION_H__

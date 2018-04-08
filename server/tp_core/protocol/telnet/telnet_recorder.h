@@ -24,7 +24,9 @@ public:
 	virtual ~TppTelnetRec();
 
 	void record(ex_u8 type, const ex_u8* data, size_t size);
-	void record_win_size(int width, int height);
+// 	void record_win_size(int width, int height);
+	void record_win_size_startup(int width, int height);
+	void record_win_size_change(int width, int height);
 
 	void save_record();
 

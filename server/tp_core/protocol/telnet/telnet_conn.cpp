@@ -88,7 +88,7 @@ void TelnetConn::_on_recv(uv_stream_t *handle, ssize_t nread, const uv_buf_t *bu
     else {
 // #ifdef LOG_DATA
 // 		if(!_this->m_session->is_relay())
-// 			EXLOG_BIN((ex_u8*)buf->base, nread, "[telnet] [%s] RECV %d.", _this->m_name, nread);
+//			EXLOG_BIN((ex_u8*)buf->base, nread, "[telnet] [%s] RECV %d.", _this->m_name, nread);
 // #endif
 	}
 
@@ -109,7 +109,7 @@ bool TelnetConn::send(const ex_u8 *data, size_t size) {
 bool TelnetConn::_raw_send(const ex_u8 *data, size_t size) {
 // #ifdef LOG_DATA
 // 	if (!m_session->is_relay())
-// 		EXLOG_BIN(data, size, "[telnet] [%s] SEND %dB.", m_name, size);
+//		EXLOG_BIN(data, size, "[telnet] [%s] SEND %dB.", m_name, size);
 // #endif
 
 	uv_write_t *w = (uv_write_t *) calloc(1, sizeof(uv_write_t));

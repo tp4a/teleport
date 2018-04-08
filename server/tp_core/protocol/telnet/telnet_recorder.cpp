@@ -85,12 +85,27 @@ void TppTelnetRec::record(ex_u8 type, const ex_u8* data, size_t size)
 	m_header_changed = true;
 }
 
-void TppTelnetRec::record_win_size(int width, int height)
+// void TppTelnetRec::record_win_size(int width, int height)
+// {
+// 	m_head.basic.width = (ex_u16)width;
+// 	m_head.basic.height = (ex_u16)height;
+// 	m_save_full_header = true;
+// 	m_header_changed = true;
+// }
+
+void TppTelnetRec::record_win_size_startup(int width, int height)
 {
 	m_head.basic.width = (ex_u16)width;
 	m_head.basic.height = (ex_u16)height;
 	m_save_full_header = true;
-	m_header_changed = true;
+}
+
+void TppTelnetRec::record_win_size_change(int width, int height)
+{
+	TS_RECORD_WIN_SIZE pkg = { 0 };
+	pkg.width = (ex_u16)width;
+	pkg.height = (ex_u16)height;
+	record(TS_RECORD_TYPE_TELNET_TERM_SIZE, (ex_u8*)&pkg, sizeof(TS_RECORD_WIN_SIZE));
 }
 
 bool TppTelnetRec::_save_to_info_file() {
