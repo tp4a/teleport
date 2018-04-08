@@ -1437,10 +1437,11 @@ $app.create_dlg_sel_acc = function () {
         $.each(_objs, function (i, _obj) {
             if ($(_obj).is(':checked')) {
                 var _row_data = $app.table_sel_acc.get_row(_obj);
+                console.log(_row_data);
 
-                var name = _row_data.username + '@' + _row_data.host_ip;
-                if (_row_data.router_ip.length > 0)
-                    name += ' （由 ' + _row_data.router_ip + ':' + _row_data.router_port + ' 路由）';
+                var name = _row_data.username + '@' + _row_data._host.ip;
+                if (_row_data._host.router_ip.length > 0)
+                    name += ' （由 ' + _row_data._host.router_ip + ':' + _row_data._host.router_port + ' 路由）';
 
 
                 items.push({id: _row_data.id, name: name});
@@ -1489,7 +1490,6 @@ $app.create_dlg_sel_acc = function () {
 $app.on_table_sel_acc_group_cell_created = function (tbl, row_id, col_key, cell_obj) {
     if (col_key === 'chkbox') {
         cell_obj.find('[data-check-box]').click(function () {
-            // $app.check_users_all_selected();
             $app.dlg_sel_acc_group.check_all_selected();
         });
     }
