@@ -4,6 +4,15 @@
 #include "../../common/ts_const.h"
 #include <teleport_const.h>
 
+ex_astr _uv_str_error(int retcode)
+{
+	ex_astr err;
+	err = uv_err_name(retcode);
+	err += ":";
+	err += uv_strerror(retcode);
+	return std::move(err);
+}
+
 TelnetConn::TelnetConn(TelnetSession *sess, bool is_server_side) : m_session(sess), m_is_server(is_server_side) {
     if (is_server_side) {
 		m_name = "cli<->tp";
@@ -75,12 +84,20 @@ void TelnetConn::_on_recv(uv_stream_t *handle, ssize_t nread, const uv_buf_t *bu
     else if (nread < 0) {
         free(buf->base);
 
-        if (nread == -4077)
-            EXLOGD("[telnet] [%s] [recv] disconnected.\n", _this->m_name);
-        else if (nread == -104)
-            EXLOGD("[telnet] [%s] [recv] connection reset by peer.\n", _this->m_name);
-        else
-            EXLOGD("[telnet] [%s] [recv] nread=%d.\n", _this->m_name, nread);
+		if (nread == UV_EOF)
+			EXLOGD("[telnet] [%s] [recv] disconnected.\n", _this->m_name);
+		else if(nread == UV_ECONNRESET)
+			EXLOGD("[telnet] [%s] [recv] connection reset by peer.\n", _this->m_name);
+		else
+			EXLOGD("[telnet] [%s] [recv] %s.\n", _this->m_name, _uv_str_error(nread).c_str());
+
+
+//         if (nread == -4077)
+//             EXLOGD("[telnet] [%s] [recv] disconnected.\n", _this->m_name);
+//         else if (nread == -104)
+//             EXLOGD("[telnet] [%s] [recv] connection reset by peer.\n", _this->m_name);
+//         else
+//             EXLOGD("[telnet] [%s] [recv] nread=%d.\n", _this->m_name, nread);
 
         _this->m_session->close(TP_SESS_STAT_END);
         return;
