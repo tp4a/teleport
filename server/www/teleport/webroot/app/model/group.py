@@ -170,16 +170,28 @@ def update(handler, gid, name, desc):
     db = get_db()
 
     # 1. 判断是否已经存在
-    sql = 'SELECT id FROM {}group WHERE id={};'.format(db.table_prefix, gid)
+    sql = 'SELECT `id`, `type` FROM `{}group` WHERE `id`={};'.format(db.table_prefix, gid)
     db_ret = db.query(sql)
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
+    gtype = db_ret[0][1]
+    sql_list = []
+
     # 2. 更新记录
     sql = 'UPDATE `{}group` SET `name`="{name}", `desc`="{desc}" WHERE id={gid};' \
           ''.format(db.table_prefix, name=name, desc=desc, gid=gid)
-    db_ret = db.exec(sql)
-    if not db_ret:
+    sql_list.append(sql)
+
+    # 3. 同步更新授权表和权限映射表
+    # 运维授权
+    sql = 'UPDATE `{}ops_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, name=name, rtype=gtype, rid=gid)
+    sql_list.append(sql)
+    # 审计授权
+    sql = 'UPDATE `{}audit_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, name=name, rtype=gtype, rid=gid)
+    sql_list.append(sql)
+
+    if not db.transaction(sql_list):
         return TPE_DATABASE
 
     return TPE_OK
@@ -187,14 +199,12 @@ def update(handler, gid, name, desc):
 
 def add_members(gtype, gid, members):
     # 向指定组中增加成员，同时根据授权策略，更新授权映射表
-
     db = get_db()
 
     sql = []
     for uid in members:
         sql.append('INSERT INTO `{}group_map` (`type`, `gid`, `mid`) VALUES ({}, {}, {});'.format(db.table_prefix, gtype, gid, uid))
     if db.transaction(sql):
-        #return TPE_OK
         return policy.rebuild_auz_map()
     else:
         return TPE_DATABASE

@@ -298,32 +298,56 @@ def update_account(handler, host_id, acc_id, args):
     db = get_db()
 
     # 1. 判断是否存在
-    sql = 'SELECT id FROM {}acc WHERE host_id={host_id} AND id={acc_id};'.format(db.table_prefix, host_id=host_id, acc_id=acc_id)
+    sql = 'SELECT `id`, `host_ip`, `router_ip`, `router_port` FROM `{}acc` WHERE `host_id`={host_id} AND `id`={acc_id};'.format(db.table_prefix, host_id=host_id, acc_id=acc_id)
     db_ret = db.query(sql)
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
+
+    _host_ip = db_ret[0][1]
+    _router_ip = db_ret[0][2]
+    _router_port = db_ret[0][3]
+
+    sql_list = []
 
     sql = list()
     sql.append('UPDATE `{}acc` SET'.format(db.table_prefix))
 
     _set = list()
-    _set.append('protocol_type={}'.format(args['protocol_type']))
-    _set.append('protocol_port={}'.format(args['protocol_port']))
-    _set.append('auth_type={}'.format(args['auth_type']))
-    _set.append('username="{}"'.format(args['username']))
-    _set.append('username_prompt="{}"'.format(args['username_prompt']))
-    _set.append('password_prompt="{}"'.format(args['password_prompt']))
+    _set.append('`protocol_type`={}'.format(args['protocol_type']))
+    _set.append('`protocol_port`={}'.format(args['protocol_port']))
+    _set.append('`auth_type`={}'.format(args['auth_type']))
+    _set.append('`username`="{}"'.format(args['username']))
+    _set.append('`username_prompt`="{}"'.format(args['username_prompt']))
+    _set.append('`password_prompt`="{}"'.format(args['password_prompt']))
 
     if args['auth_type'] == TP_AUTH_TYPE_PASSWORD and len(args['password']) > 0:
-        _set.append('password="{}"'.format(args['password']))
+        _set.append('`password`="{}"'.format(args['password']))
     elif args['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY and len(args['pri_key']) > 0:
-        _set.append('pri_key="{}"'.format(args['pri_key']))
+        _set.append('`pri_key`="{}"'.format(args['pri_key']))
 
     sql.append(','.join(_set))
-    sql.append('WHERE id={};'.format(acc_id))
+    sql.append('WHERE `id`={};'.format(acc_id))
 
-    db_ret = db.exec(' '.join(sql))
-    if not db_ret:
+    # db_ret = db.exec(' '.join(sql))
+    # if not db_ret:
+    #     return TPE_DATABASE
+    sql_list.append(' '.join(sql))
+
+    if len(_router_ip) == 0:
+        _name = '{}@{}'.format(args['username'], _host_ip)
+    else:
+        _name = '{}@{} （由{}:{}路由）'.format(args['username'], _host_ip, _router_ip, _router_port)
+
+    # 运维授权
+    sql = 'UPDATE `{}ops_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, name=_name, rtype=TP_ACCOUNT, rid=acc_id)
+    sql_list.append(sql)
+    sql = 'UPDATE `{}ops_map` SET `a_name`="{name}", `protocol_type`={protocol_type}, `protocol_port`={protocol_port} ' \
+          'WHERE (a_id={aid});'.format(db.table_prefix,
+                                       name=args['username'], protocol_type=args['protocol_type'], protocol_port=args['protocol_port'],
+                                       aid=acc_id)
+    sql_list.append(sql)
+
+    if not db.transaction(sql_list):
         return TPE_DATABASE
 
     return TPE_OK

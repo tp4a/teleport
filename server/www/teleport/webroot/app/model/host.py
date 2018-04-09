@@ -222,17 +222,17 @@ def update_host(handler, args):
     db = get_db()
 
     # 1. 判断是否存在
-    sql = 'SELECT id FROM {}host WHERE id="{}";'.format(db.table_prefix, args['id'])
+    sql = 'SELECT `id` FROM `{}host` WHERE `id`={};'.format(db.table_prefix, args['id'])
     db_ret = db.query(sql)
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
     sql_list = []
-    sql = 'UPDATE `{}host` SET `os_type`="{os_type}", `name`="{name}", `ip`="{ip}", `router_ip`="{router_ip}", `router_port`={router_port}, `cid`="{cid}", `desc`="{desc}" WHERE `id`={host_id};' \
+    sql = 'UPDATE `{}host` SET `os_type`="{os_type}", `name`="{name}", `ip`="{ip}", `router_ip`="{router_ip}", ' \
+          '`router_port`={router_port}, `cid`="{cid}", `desc`="{desc}" WHERE `id`={host_id};' \
           ''.format(db.table_prefix,
                     os_type=args['os_type'], name=args['name'], ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'],
-                    cid=args['cid'], desc=args['desc'], host_id=args['id']
-                    )
+                    cid=args['cid'], desc=args['desc'], host_id=args['id'])
     sql_list.append(sql)
 
     # 更新所有此主机相关的账号
@@ -241,10 +241,36 @@ def update_host(handler, args):
                     ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'], id=args['id'])
     sql_list.append(sql)
 
-    if db.transaction(sql_list):
-        return TPE_OK
-    else:
+    # 同步更新授权表和权限映射表
+    _name = args['ip']
+    if len(args['name']) > 0:
+        _name = '{} [{}]'.format(args['name'], args['ip'])
+    sql_list = []
+    # 运维授权
+    sql = 'UPDATE `{}ops_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});' \
+          ''.format(db.table_prefix, name=_name, rtype=TP_HOST, rid=args['id'])
+    sql_list.append(sql)
+    sql = 'UPDATE `{}ops_map` SET `h_name`="{hname}", `ip`="{ip}", `router_ip`="{router_ip}", `router_port`={router_port} ' \
+          'WHERE (h_id={hid});'.format(db.table_prefix,
+                                       hname=args['name'], ip=args['ip'], hid=args['id'],
+                                       router_ip=args['router_ip'], router_port=args['router_port'])
+    sql_list.append(sql)
+    # 审计授权
+    sql = 'UPDATE `{}audit_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, name=_name, rtype=TP_HOST, rid=args['id'])
+    sql_list.append(sql)
+    sql = 'UPDATE `{}audit_map` SET `h_name`="{hname}", `ip`="{ip}", `router_ip`="{router_ip}", `router_port`={router_port} ' \
+          'WHERE (h_id={hid});'.format(db.table_prefix,
+                                       hname=args['name'], ip=args['ip'], hid=args['id'],
+                                       router_ip=args['router_ip'], router_port=args['router_port'])
+    sql_list.append(sql)
+
+    if not db.transaction(sql_list):
         return TPE_DATABASE
+
+    operator = handler.get_current_user()
+    syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "更新主机信息：{}".format(_name))
+
+    return TPE_OK
 
 
 def update_hosts_state(handler, host_ids, state):
