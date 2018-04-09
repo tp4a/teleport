@@ -19,8 +19,8 @@ def save_config(handler, msg, name, value):
         sql = 'UPDATE `{dbtp}config` SET value={dbph} WHERE name="{name}";'.format(dbtp=db.table_prefix, dbph=db.place_holder, name=name)
         db_ret = db.exec(sql, (str_val,))
     else:
-        sql = 'INSERT INTO `{dbtp}config` (name, value) VALUES ("{name}", {dbph});'.format(dbtp=db.table_prefix, dbph=db.place_holder, name=name)
-        db_ret = db.exec(sql, (str_val,))
+        sql = 'INSERT INTO `{dbtp}config` (name, value) VALUES ({dbph}, {dbph});'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+        db_ret = db.exec(sql, (name, str_val))
 
     if not db_ret:
         return TPE_DATABASE

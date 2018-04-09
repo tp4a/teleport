@@ -267,16 +267,16 @@ def update_user(handler, args):
     db = get_db()
 
     # 1. 判断此账号是否已经存在
-    sql = 'SELECT `username` FROM {}user WHERE id={};'.format(db.table_prefix, args['id'])
-    db_ret = db.query(sql)
+    sql = 'SELECT `username` FROM {dbtp}user WHERE id={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+    db_ret = db.query(sql, (args['id'], ))
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
     old_username = db_ret[0][0]
     if old_username != args['username']:
         # 如果要更新用户登录名，则需要判断是否已经存在了
-        sql = 'SELECT `id` FROM {}user WHERE username="{}";'.format(db.table_prefix, args['username'])
-        db_ret = db.query(sql)
+        sql = 'SELECT `id` FROM {dbtp}user WHERE username={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+        db_ret = db.query(sql, (args['username'],))
         if db_ret is not None and len(db_ret) > 0:
             return TPE_EXISTS
 
@@ -289,6 +289,28 @@ def update_user(handler, args):
     db_ret = db.exec(sql)
     if not db_ret:
         return TPE_DATABASE
+
+    # 同步更新授权表和权限映射表
+    _uname = args['username']
+    if len(args['surname']) > 0:
+        _uname += '（'+args['surname']+'）'
+    sql_list = []
+    # 运维授权
+    sql = 'UPDATE `{}ops_auz` SET `name`="{uname}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, uname=_uname, rtype=TP_USER, rid=args['id'])
+    sql_list.append(sql)
+    sql = 'UPDATE `{}ops_map` SET `u_name`="{uname}", `u_surname`="{surname}" WHERE (u_id={uid});'.format(db.table_prefix, uname=args['username'], surname=args['surname'], uid=args['id'])
+    sql_list.append(sql)
+    # 审计授权
+    sql = 'UPDATE `{}audit_auz` SET `name`="{uname}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, uname=_uname, rtype=TP_USER, rid=args['id'])
+    sql_list.append(sql)
+    sql = 'UPDATE `{}audit_map` SET `u_name`="{uname}", `u_surname`="{surname}" WHERE (u_id={uid});'.format(db.table_prefix, uname=args['username'], surname=args['surname'], uid=args['id'])
+    sql_list.append(sql)
+
+    if not db.transaction(sql_list):
+        return TPE_DATABASE
+
+    operator = handler.get_current_user()
+    syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "更新用户信息：{}".format(args['username']))
 
     return TPE_OK
 
@@ -469,6 +491,14 @@ def update_users_state(handler, user_ids, state):
     sql_list.append(sql)
 
     sql = 'UPDATE `{}ops_map` SET u_state={state} WHERE u_id IN ({ids});' \
+          ''.format(db.table_prefix, state=state, ids=user_ids)
+    sql_list.append(sql)
+
+    sql = 'UPDATE `{}audit_auz` SET state={state} WHERE rtype={rtype} AND rid IN ({rid});' \
+          ''.format(db.table_prefix, state=state, rtype=TP_USER, rid=user_ids)
+    sql_list.append(sql)
+
+    sql = 'UPDATE `{}audit_map` SET u_state={state} WHERE u_id IN ({ids});' \
           ''.format(db.table_prefix, state=state, ids=user_ids)
     sql_list.append(sql)
 
