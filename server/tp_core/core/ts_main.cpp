@@ -44,6 +44,7 @@ TPP_CONNECT_INFO* tpp_get_connect_info(const char* sid)
 	info->protocol_type = sinfo.protocol_type;
 	info->protocol_sub_type = sinfo.protocol_sub_type;
 	info->protocol_flag = sinfo.protocol_flag;
+	info->record_flag = sinfo.record_flag;
 	info->auth_type= sinfo.auth_type;
 
 	return info;

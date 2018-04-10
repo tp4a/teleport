@@ -87,6 +87,7 @@ bool TsSessionManager::get_connect_info(const ex_astr& sid, TS_CONNECT_INFO& inf
 	info.protocol_type = it->second->protocol_type;
 	info.protocol_sub_type = it->second->protocol_sub_type;
 	info.protocol_flag = it->second->protocol_flag;
+	info.record_flag = it->second->record_flag;
 	info.auth_type = it->second->auth_type;
 
 	it->second->ref_count++;

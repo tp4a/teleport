@@ -131,13 +131,28 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             if err != TPE_OK:
                 return self.write_json(err)
 
+            policy_id = ops_auth['p_id']
             acc_id = ops_auth['a_id']
             host_id = ops_auth['h_id']
+
+            err, policy_info = ops.get_by_id(policy_id)
+            if err != TPE_OK:
+                return self.write_json(err)
 
             err, acc_info = account.get_account_info(acc_id)
             if err != TPE_OK:
                 return self.write_json(err)
             # log.v(acc_info)
+
+            if acc_info['protocol_type'] == TP_PROTOCOL_TYPE_RDP:
+                acc_info['protocol_flag'] = policy_info['flag_rdp']
+            elif acc_info['protocol_type'] == TP_PROTOCOL_TYPE_SSH:
+                acc_info['protocol_flag'] = policy_info['flag_ssh']
+            elif acc_info['protocol_type'] == TP_PROTOCOL_TYPE_TELNET:
+                acc_info['protocol_flag'] = policy_info['flag_telnet']
+            else:
+                acc_info['protocol_flag'] = 0
+            acc_info['record_flag'] = policy_info['flag_record']
 
         elif _mode == 2:
             # 直接连接（无需授权），必须具有运维授权管理的权限方可进行
@@ -151,6 +166,9 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             err, acc_info = account.get_account_info(acc_id)
             if err != TPE_OK:
                 return self.write_json(err)
+
+            acc_info['protocol_flag'] = TP_FLAG_ALL
+            acc_info['record_flag'] = TP_FLAG_ALL
 
         elif _mode == 0:
             # 测试连接，必须具有主机信息创建、编辑的权限方可进行
@@ -180,6 +198,8 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             acc_info['auth_type'] = auth_type
             acc_info['protocol_type'] = _protocol_type
             acc_info['protocol_port'] = protocol_port
+            acc_info['protocol_flag'] = TP_FLAG_ALL
+            acc_info['record_flag'] = TP_FLAG_ALL
             acc_info['username'] = username
 
             acc_info['password'] = password
@@ -226,7 +246,8 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         conn_info['acc_username'] = acc_info['username']
         conn_info['username_prompt'] = acc_info['username_prompt']
         conn_info['password_prompt'] = acc_info['password_prompt']
-        conn_info['protocol_flag'] = 1
+        conn_info['protocol_flag'] = acc_info['protocol_flag']
+        conn_info['record_flag'] = acc_info['record_flag']
 
         conn_info['protocol_type'] = acc_info['protocol_type']
         conn_info['protocol_sub_type'] = _protocol_sub_type
@@ -261,6 +282,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         data = dict()
         data['session_id'] = ret_data['sid']
         data['host_ip'] = host_info['ip']
+        data['protocol_flag'] = acc_info['protocol_flag']
 
         if conn_info['protocol_type'] == TP_PROTOCOL_TYPE_RDP:
             data['teleport_port'] = tp_cfg().core.rdp.port

@@ -33,6 +33,7 @@ typedef struct TS_CONNECT_INFO
 	int protocol_type;
 	int protocol_sub_type;
 	int protocol_flag;
+	int record_flag;
 	int auth_type;
 
 	int ref_count;// 这个连接信息的引用计数，如果创建的连接信息从来未被使用，则超过30秒后自动销毁

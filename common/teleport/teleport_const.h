@@ -59,6 +59,27 @@
 
 
 //=======================================================
+// 授权标记
+//=======================================================
+#define TP_FLAG_ALL					0xFFFFFFFF
+// 会话记录相关
+#define TP_FLAG_RECORD_REPLAY		0x00000001	// 允许记录历史（录像回放）
+#define TP_FLAG_RECORD_REAL_TIME	0x00000002	// 允许实时监控
+// RDP相关
+#define TP_FLAG_RDP_DESKTOP			0x00000001	// 允许远程桌面
+#define TP_FLAG_RDP_CLIPBOARD		0x00000002	// 允许剪贴板
+#define TP_FLAG_RDP_DISK			0x00000004	// 允许磁盘映射
+#define TP_FLAG_RDP_APP				0x00000008	// 允许远程APP（尚未实现）
+#define TP_FLAG_RDP_CONSOLE			0x00001000	//允许连接到管理员会话（RDP的console选项）
+// SSH相关
+#define TP_FLAG_SSH_SHELL			0x00000001	// 允许SHELL
+#define TP_FLAG_SSH_SFTP			0x00000002	// 允许SFTP
+#define TP_FLAG_SSH_X11				0x00000004	// 允许X11转发（尚未实现）
+#define TP_FLAG_SSH_EXEC			0x00000008	// 允许exec执行远程命令（尚未实现）
+#define TP_FLAG_SSH_TUNNEL			0x00000010	// allow ssh tunnel. (not impl.)
+
+
+//=======================================================
 // 错误值
 //=======================================================
 #define TPE_OK						0		// 成功

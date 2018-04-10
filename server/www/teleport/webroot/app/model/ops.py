@@ -24,21 +24,6 @@ def get_by_id(pid):
     return TPE_OK, s.recorder[0]
 
 
-# def get_by_username(username):
-#     s = SQL(get_db())
-#     s.select_from('user', ['id', 'type', 'auth_type', 'username', 'surname', 'password', 'oath_secret', 'role_id', 'state', 'email', 'last_login'], alt_name='u')
-#     s.left_join('role', ['name', 'privilege'], join_on='r.id=u.id', alt_name='r', out_map={'name': 'role'})
-#     s.where('u.username="{}"'.format(username))
-#     err = s.query()
-#     if err != TPE_OK:
-#         return err
-#
-#     if len(s.recorder) == 0:
-#         return TPE_NOT_EXISTS, {}
-#
-#     return TPE_OK, s.recorder[0]
-#
-
 def get_policies(sql_filter, sql_order, sql_limit):
     dbtp = get_db().table_prefix
     s = SQL(get_db())
@@ -484,7 +469,7 @@ def rank_reorder(handler, pid, new_rank, start_rank, end_rank, direct):
 def get_auth(auth_id):
     db = get_db()
     s = SQL(db)
-    err = s.select_from('ops_map', ['id', 'h_id', 'u_id', 'a_id']).where('ops_map.uni_id="{}"'.format(auth_id)).query()
+    err = s.select_from('ops_map', ['id', 'p_id', 'h_id', 'u_id', 'a_id']).where('ops_map.uni_id="{}"'.format(auth_id)).query()
     if err != TPE_OK:
         return None, err
     if len(s.recorder) == 0:

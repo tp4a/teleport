@@ -108,7 +108,8 @@ $assist.do_teleport = function (args, func_success, func_error) {
                     // rdp_console: args.rdp_console,
                     session_id: session_id,
                     protocol_type: parseInt(args.protocol_type),
-                    protocol_sub_type: parseInt(args.protocol_sub_type)
+                    protocol_sub_type: parseInt(args.protocol_sub_type),
+                    protocol_flag: parseInt(ret.data.protocol_flag)
                 };
 
                 if(args.protocol_type === TP_PROTOCOL_TYPE_RDP) {

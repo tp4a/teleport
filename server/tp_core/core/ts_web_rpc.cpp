@@ -83,9 +83,11 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
         EXLOGE("connection info: need `protocol_sub_type`.\n");
     if(!_jret["auth_type"].isInt())
         EXLOGE("connection info: need `auth_type`.\n");
-    if(!_jret["protocol_flag"].isInt())
-        EXLOGE("connection info: need `protocol_flag`.\n");
-    if(!_jret["_enc"].isInt())
+	if (!_jret["protocol_flag"].isUInt())
+		EXLOGE("connection info: need `protocol_flag`.\n");
+	if (!_jret["record_flag"].isUInt())
+		EXLOGE("connection info: need `record_flag`.\n");
+	if (!_jret["_enc"].isInt())
         EXLOGE("connection info: need `_enc`.\n");
     if(!_jret["user_username"].isString())
         EXLOGE("connection info: need `user_username`.\n");
@@ -112,7 +114,8 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 		|| !_jret["protocol_type"].isInt()
 		|| !_jret["protocol_sub_type"].isInt()
 		|| !_jret["auth_type"].isInt()
-		|| !_jret["protocol_flag"].isInt()
+		|| !_jret["protocol_flag"].isUInt()
+		|| !_jret["record_flag"].isUInt()
 		|| !_jret["_enc"].isInt()
 
 		|| !_jret["user_username"].isString()
@@ -145,6 +148,7 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 	int protocol_sub_type = 0;
 	int auth_type = 0;
 	int protocol_flag = 0;
+	int record_flag = 0;
 	bool _enc;
 
 	user_id = _jret["user_id"].asInt();
@@ -161,7 +165,8 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 	password_prompt = _jret["password_prompt"].asString();
 	protocol_type = _jret["protocol_type"].asInt();
 	protocol_sub_type = _jret["protocol_sub_type"].asInt();
-	protocol_flag = _jret["protocol_flag"].asInt();
+	protocol_flag = _jret["protocol_flag"].asUInt();
+	record_flag = _jret["record_flag"].asUInt();
 	auth_type = _jret["auth_type"].asInt();
 	_enc = _jret["_enc"].asBool();
 
@@ -204,6 +209,7 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 	info.protocol_sub_type = protocol_sub_type;
 	info.auth_type = auth_type;
 	info.protocol_flag = protocol_flag;
+	info.record_flag = record_flag;
 
 	return TPE_OK;
 }

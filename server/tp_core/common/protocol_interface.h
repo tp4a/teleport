@@ -38,6 +38,7 @@ typedef struct TPP_CONNECT_INFO
 	int protocol_type;
 	int protocol_sub_type;
 	int protocol_flag;
+	int record_flag;
 	int auth_type;
 }TPP_CONNECT_INFO;
 

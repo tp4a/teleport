@@ -88,7 +88,7 @@ audiomode:i:0\n\
 redirectprinters:i:0\n\
 redirectcomports:i:0\n\
 redirectsmartcards:i:0\n\
-redirectclipboard:i:1\n\
+redirectclipboard:i:%d\n\
 redirectposdevices:i:0\n\
 autoreconnection enabled:i:0\n\
 authentication level:i:2\n\
@@ -106,7 +106,7 @@ gatewaybrokeringtype:i:0\n\
 use redirection server name:i:0\n\
 rdgiskdcproxy:i:0\n\
 kdcproxyname:s:\n\
-drivestoredirect:s:*\n\
+drivestoredirect:s:%s\n\
 username:s:%s\n\
 password 51:b:%s\n\
 ";
@@ -577,6 +577,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	if (!jsRoot["teleport_ip"].isString()
 		|| !jsRoot["teleport_port"].isNumeric() || !jsRoot["remote_host_ip"].isString()
 		|| !jsRoot["session_id"].isString() || !jsRoot["protocol_type"].isNumeric() || !jsRoot["protocol_sub_type"].isNumeric()
+		|| !jsRoot["protocol_flag"].isNumeric()
 		)
 	{
 		_create_json_ret(buf, TPE_PARAM);
@@ -585,6 +586,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 	int pro_type = jsRoot["protocol_type"].asUInt();
 	int pro_sub = jsRoot["protocol_sub_type"].asInt();
+	ex_u32 protocol_flag = jsRoot["protocol_flag"].asUInt();
 
 	ex_astr teleport_ip = jsRoot["teleport_ip"].asCString();
 	int teleport_port = jsRoot["teleport_port"].asUInt();
@@ -612,6 +614,10 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//==============================================
 		// RDP
 		//==============================================
+
+		bool flag_clipboard = (protocol_flag & TP_FLAG_RDP_CLIPBOARD);
+		bool flag_disk = (protocol_flag & TP_FLAG_RDP_DISK);
+		bool flag_console = (protocol_flag & TP_FLAG_RDP_CONSOLE);
 
 		int rdp_w = 800;
 		int rdp_h = 640;
@@ -646,6 +652,9 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				return;
 			}
 		}
+
+		if (!flag_console)
+			rdp_console = false;
 
 
 		int split_pos = sid.length() - 2;
@@ -701,9 +710,9 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				cy = 0;
 			}
 
-			int console_mode = 0;
-			if (rdp_console)
-				console_mode = 1;
+// 			int console_mode = 0;
+// 			if (rdp_console)
+// 				console_mode = 1;
 
 			std::string psw51b;
 			if (!calc_psw51b(szPwd, psw51b))
@@ -716,10 +725,13 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			real_sid = "01" + real_sid;
 
 			char sz_rdp_file_content[4096] = { 0 };
-			sprintf_s(sz_rdp_file_content, rdp_content.c_str(),
-				console_mode, display, width, higth
+			sprintf_s(sz_rdp_file_content, rdp_content.c_str()
+				, (flag_console && rdp_console) ? 1 : 0
+				, display, width, higth
 				, cx, cy, cx + width + 100, cy + higth + 100
+				, flag_clipboard ? 1 : 0
 				, teleport_ip.c_str(), teleport_port
+				, flag_disk ? "*" : ""
 				, real_sid.c_str()
 				, psw51b.c_str()
 				);
@@ -770,16 +782,16 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				ex_astr2wstr(sz_size, w_screen);
 			}
 
-			wchar_t* w_console = NULL;
-
-			if (rdp_console)
-			{
-				w_console = L"/admin";
-			}
-			else
-			{
-				w_console = L"";
-			}
+// 			wchar_t* w_console = NULL;
+// 
+// 			if (flag_console && rdp_console)
+// 			{
+// 				w_console = L"/admin";
+// 			}
+// 			else
+// 			{
+// 				w_console = L"";
+// 			}
 
 			ex_wstr w_password;
 			ex_astr2wstr(szPwd, w_password);
@@ -793,10 +805,23 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 			// ±äÁ¿Ìæ»»
 			ex_replace_all(w_exe_path, _T("{size}"), w_screen);
-			ex_replace_all(w_exe_path, _T("{console}"), w_console);
+
+			if (flag_console && rdp_console)
+				ex_replace_all(w_exe_path, _T("{console}"), L"/admin");
+			else
+				ex_replace_all(w_exe_path, _T("{console}"), L"");
+
 			//ex_replace_all(w_exe_path, _T("{clipboard}"), L"+clipboard");
-			ex_replace_all(w_exe_path, _T("{clipboard}"), L"/clipboard");
-			ex_replace_all(w_exe_path, _T("{drives}"), L"/drives");
+
+			if(flag_clipboard)
+				ex_replace_all(w_exe_path, _T("{clipboard}"), L"/clipboard");
+			else
+				ex_replace_all(w_exe_path, _T("{clipboard}"), L"-clipboard");
+
+			if(flag_disk)
+				ex_replace_all(w_exe_path, _T("{drives}"), L"/drives");
+			else
+				ex_replace_all(w_exe_path, _T("{drives}"), L"-drives");
 		}
 		else {
 			_create_json_ret(buf, TPE_FAILED);

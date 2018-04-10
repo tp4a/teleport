@@ -69,6 +69,7 @@ class RpcHandler(TPBaseJsonHandler):
         if x is None:
             return self.write_json(TPE_NOT_EXISTS)
         else:
+            print(x)
             return self.write_json(TPE_OK, data=x)
 
     def _session_begin(self, param):
