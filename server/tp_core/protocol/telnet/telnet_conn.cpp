@@ -10,7 +10,7 @@ ex_astr _uv_str_error(int retcode)
 	err = uv_err_name(retcode);
 	err += ":";
 	err += uv_strerror(retcode);
-	return std::move(err);
+	return err;
 }
 
 TelnetConn::TelnetConn(TelnetSession *sess, bool is_server_side) : m_session(sess), m_is_server(is_server_side) {
