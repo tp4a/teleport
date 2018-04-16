@@ -6,7 +6,7 @@
 <%inherit file="../page_base.mako"/>
 
 <%block name="extend_js_file">
-    <script type="text/javascript" src="${ static_url('js/tp-assist.js') }"></script>
+##     <script type="text/javascript" src="${ static_url('js/tp-assist.js') }"></script>
     <script type="text/javascript" src="${ static_url('js/ops/remote-list.js') }"></script>
 </%block>
 

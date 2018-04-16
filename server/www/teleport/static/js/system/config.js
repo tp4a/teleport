@@ -29,7 +29,7 @@ $app.create_info_table = function () {
         core_info: $('#core-info-kv')
     };
 
-    _info.init = function () {
+    _info.init = function (cb_stack) {
         var h = [];
 
         h.push(_info._make_info('WEB服务版本', $app.options.web_cfg.version));
@@ -65,6 +65,7 @@ $app.create_info_table = function () {
 
         _info.dom.core_info.append(h.join(''));
 
+        cb_stack.exec();
     };
 
     _info._make_info = function (k, v) {

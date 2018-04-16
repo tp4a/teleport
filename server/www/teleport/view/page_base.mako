@@ -89,6 +89,8 @@
 <script type="text/javascript" src="${ static_url('js/teleport/common.js') }"></script>
 <script type="text/javascript" src="${ static_url('js/teleport/controls.js') }"></script>
 
+<script type="text/javascript" src="${ static_url('js/tp-assist.js') }"></script>
+<script type="text/javascript" src="${ static_url('js/_sidebar_nav_menu.js') }"></script>
 
     <%block name="extend_js_file"/>
 

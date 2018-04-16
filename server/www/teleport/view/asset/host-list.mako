@@ -6,7 +6,7 @@
 <%inherit file="../page_base.mako"/>
 
 <%block name="extend_js_file">
-    <script type="text/javascript" src="${ static_url('js/tp-assist.js') }"></script>
+##     <script type="text/javascript" src="${ static_url('js/tp-assist.js') }"></script>
     <script type="text/javascript" src="${ static_url('js/asset/host-list.js') }"></script>
     <script type="text/javascript" src="${ static_url('plugins/jquery/ajaxfileupload.js') }"></script>
 </%block>
@@ -19,7 +19,7 @@
 <%block name="breadcrumb_extra">
     <ol class="breadcrumb breadcrumb-list">
 ##         <li><i class="fa fa-clock-o"></i> 服务器时间：<span id="tp-timer">-</span></li>
-        <li><i class="fa fa-flash"></i> 助手版本：<span id="tp-assist-ver"></span></li>
+##         <li><i class="fa fa-flash"></i> 助手版本：<span id="tp-assist-ver"></span></li>
     </ol>
 </%block>
 

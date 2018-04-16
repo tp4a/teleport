@@ -32,7 +32,7 @@ $app.on_init = function (cb_stack) {
     cb_stack.exec();
 };
 
-$app.create_controls = function () {
+$app.create_controls = function (cb_stack) {
     console.log($app.role_list);
     var nodes = [];
     var selected_role_id = 0;
@@ -149,6 +149,8 @@ $app.create_controls = function () {
     $app.dom.btn_remove_role.click(function () {
         $app.remove_role();
     });
+
+    cb_stack.exec();
 };
 
 $app.show_role = function (role_id, edit_mode) {
