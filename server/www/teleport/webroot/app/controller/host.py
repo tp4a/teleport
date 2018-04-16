@@ -476,6 +476,9 @@ class DoImportHandler(TPBaseHandler):
                     elif args['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY:
                         args['pri_key'] = hosts[ip]['acc'][i]['secret']
 
+                    args['username_prompt'] = _acc['username_prompt']
+                    args['password_prompt'] = _acc['password_prompt']
+
                     err, acc_id = account.add_account(self, host_id, args)
                     if err == TPE_EXISTS:
                         failed.append({'line': hosts[ip]['acc']['_line'], 'error': '增加账号{}@{}失败，账号已经存在。'.format(args['username'], ip)})

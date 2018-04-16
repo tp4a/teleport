@@ -132,8 +132,10 @@ def remove(handler, gtype, glist):
     # 将组从审计授权中移除
     sql = 'DELETE FROM `{}audit_auz` WHERE `rtype`={rtype} AND `rid` IN ({ids});'.format(db.table_prefix, rtype=gtype, ids=group_ids)
     sql_list.append(sql)
-    sql = 'DELETE FROM `{}audit_map` WHERE `{gname}_id` IN ({ids});'.format(db.table_prefix, gname=gname, ids=group_ids)
-    sql_list.append(sql)
+    # 注意，审计授权映射表中，没有远程账号相关信息，所以如果是远程账号组，则忽略
+    if gtype != TP_GROUP_ACCOUNT:
+        sql = 'DELETE FROM `{}audit_map` WHERE `{gname}_id` IN ({ids});'.format(db.table_prefix, gname=gname, ids=group_ids)
+        sql_list.append(sql)
 
     if not db.transaction(sql_list):
         return TPE_DATABASE
