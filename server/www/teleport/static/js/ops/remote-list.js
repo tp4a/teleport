@@ -232,7 +232,7 @@ $app.on_table_host_render_created = function (render) {
                 } else if (acc.protocol_type === TP_PROTOCOL_TYPE_SSH) {
                     act_btn.push('<div class="btn-group btn-group-sm">');
                     if ((acc.policy_.flag_ssh & TP_FLAG_SSH_SHELL) !== 0) {
-                        act_btn.push('<button type="button" class="btn btn-success" data-action="ssh" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_SSH_SHELL + '"><i class="fa fa-keyboard-o fa-fw"></i> SSH</button>');
+                        act_btn.push('<button type="button" class="btn btn-success" data-action="ssh" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_SSH_SHELL + '"><i class="far fa-keyboard fa-fw"></i> SSH</button>');
                     }
 
                     if ((acc.policy_.flag_ssh & TP_FLAG_SSH_SFTP) !== 0) {
@@ -241,7 +241,7 @@ $app.on_table_host_render_created = function (render) {
                     act_btn.push('</div>');
                 } else if (acc.protocol_type === TP_PROTOCOL_TYPE_TELNET) {
                     act_btn.push('<div class="btn-group btn-group-sm">');
-                    act_btn.push('<button type="button" class="btn btn-warning" data-action="telnet" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_TELNET_SHELL + '"><i class="fa fa-keyboard-o fa-fw"></i> TELNET</button>');
+                    act_btn.push('<button type="button" class="btn btn-warning" data-action="telnet" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_TELNET_SHELL + '"><i class="far fa-keyboard fa-fw"></i> TELNET</button>');
                     act_btn.push('</div>');
                 }
             }

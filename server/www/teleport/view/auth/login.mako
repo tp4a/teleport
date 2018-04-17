@@ -31,7 +31,7 @@
                         <div id="login-area-username" class="login-account">
                             <div class="inputbox">
                                 <div class="input-group input-group-lg">
-                                    <span class="input-group-addon"><i class="fa fa-user-circle-o fa-fw"></i></span>
+                                    <span class="input-group-addon"><i class="far fa-user fa-fw"></i></span>
                                     <input data-field="username" type="text" class="form-control" placeholder="用户名" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 </div>
                             </div>
@@ -48,7 +48,7 @@
 
                         <div id="login-area-captcha" class="inputbox" style="display:none;">
                             <div class="input-group input-group-lg">
-                                <span class="input-group-addon"><i class="fa fa-check-square-o fa-fw"></i></span>
+                                <span class="input-group-addon"><i class="far fa-check-square fa-fw"></i></span>
                                 <input id="captcha" type="text" class="form-control" placeholder="验证码" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 <span class="input-group-addon"><a href="javascript:;"><img id="captcha-image" src=""></a></span>
                             </div>
@@ -57,7 +57,7 @@
 
                         <div id="login-area-oath" class="inputbox" style="display:none;">
                             <div class="input-group input-group-lg">
-                                <span class="input-group-addon"><i class="fa fa-shield fa-fw"></i></span>
+                                <span class="input-group-addon"><i class="fas fa-shield-alt fa-fw"></i></span>
                                 <input id="oath-code" type="text" class="form-control" placeholder="6位数字身份验证器动态验证码" data-toggle="popover" data-trigger="manual" data-placement="top">
                             </div>
                             <p class="input-addon-desc"><a href="/user/bind-oath">尚未绑定身份验证器？</a></p>

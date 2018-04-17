@@ -58,27 +58,27 @@ $app.on_init = function (cb_stack) {
 
         var name, img, desc;
         if (n === 'g-ios-appstore') {
-            name = '<i class="fa fa-apple"></i> 谷歌身份验证器';
+            name = '<i class="fab fa-apple"></i> 谷歌身份验证器';
             img = 'img/qrcode/google-oath-appstore.png';
             desc = '适用于 iOS，从 Apple Store 安装';
         } else if (n === 'g-android-baidu') {
-            name = '<i class="fa fa-android"></i> 谷歌身份验证器';
+            name = '<i class="fab fa-android"></i> 谷歌身份验证器';
             img = 'img/qrcode/google-oath-baidu.png';
             desc = '适用于 Android，从百度手机助手安装';
         } else if (n === 'g-android-google') {
-            name = '<i class="fa fa-android"></i> 谷歌身份验证器';
+            name = '<i class="fab fa-android"></i> 谷歌身份验证器';
             img = 'img/qrcode/google-oath-googleplay.png';
             desc = '适用于 Android，从 Google Play 安装';
         } else if (n === 'mi-ios-appstore') {
-            name = '<i class="fa fa-apple"></i> 小米安全令牌';
+            name = '<i class="fab fa-apple"></i> 小米安全令牌';
             img = 'img/qrcode/xiaomi-oath-appstore.png';
             desc = '适用于 iOS，从 Apple Store 安装';
         } else if (n === 'mi-android-mi') {
-            name = '<i class="fa fa-android"></i> 小米安全令牌';
+            name = '<i class="fab fa-android"></i> 小米安全令牌';
             img = 'img/qrcode/xiaomi-oath-xiaomi.png';
             desc = '适用于 Android，从小米应用商店安装';
         } else if (n === 'wechat') {
-            name = '<i class="fa fa-wechat"></i> 微信 · 小程序';
+            name = '<i class="fab fa-wexin"></i> 微信 · 小程序';
             img = 'img/qrcode/wechat.png';
             desc = '适用于 iOS/Android，在微信小程序中搜索“二次验证码”即可';
         }

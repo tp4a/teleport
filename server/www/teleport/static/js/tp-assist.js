@@ -70,7 +70,7 @@ $assist._make_message_box = function () {
         '<p>如果您尚未运行TELEPORT助手，请 <a href="http://teleport.eomsoft.net/download" target="_blank"><strong>下载最新版TELEPORT助手</strong></a> 并安装。一旦运行了TELEPORT助手，即可重新进行远程连接。</p>',
         '</div>',
         '<div class="modal-footer">',
-        '<button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 我知道了</button>',
+        '<button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 我知道了</button>',
         '</div>',
         '</div>',
         '</div>',

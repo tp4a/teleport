@@ -9,7 +9,7 @@
         <div class="brand"><a href="/" target="_blank"><span class="site-logo"></span></a></div>
         <div class="breadcrumb-container">
             <ol class="breadcrumb">
-                <li><i class="fa fa-file-text-o"></i> <span id="page-title"></span></li>
+                <li><i class="far fa-file-alt"></i> <span id="page-title"></span></li>
             </ol>
         </div>
     </div>

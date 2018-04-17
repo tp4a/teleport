@@ -11,13 +11,13 @@
 		'id': 'dashboard',
 		'link': '/dashboard',
 		'name': '总览',
-		'icon': 'fa-dashboard',
+		'icon': 'fas fa-tachometer-alt',
 	},
 	{
 		'id': 'asset',
 		'link': '',
 		'name': '资产',
-		'icon': 'fa-cubes',
+		'icon': 'fa fa-cubes',
 		'sub': [
 			{
                 'privilege': const.TP_PRIVILEGE_ASSET_CREATE | const.TP_PRIVILEGE_ASSET_GROUP,
@@ -43,7 +43,7 @@
 		'id': 'user',
 		'link': '',
 		'name': '用户',
-		'icon': 'fa-address-book-o',
+		'icon': 'far fa-address-book',
 		'sub': [
 			{
                 'privilege': const.TP_PRIVILEGE_USER_CREATE,
@@ -63,7 +63,7 @@
 		'id': 'ops',
 		'link': '',
 		'name': '运维',
-		'icon': 'fa-wrench',
+		'icon': 'fa fa-wrench',
 		'sub': [
             {
                 'privilege': const.TP_PRIVILEGE_OPS_AUZ,
@@ -89,7 +89,7 @@
 		'id': 'audit',
 		'link': '',
 		'name': '审计',
-		'icon': 'fa-eye',
+		'icon': 'fa fa-eye',
 		'sub': [
             {
                 'privilege': const.TP_PRIVILEGE_AUDIT_AUZ,
@@ -109,7 +109,7 @@
 		'id': 'system',
 		'link': '',
 		'name': '系统',
-		'icon': 'fa-cog',
+		'icon': 'fa fa-cog',
 		'sub': [
             {
                 'privilege': const.TP_PRIVILEGE_SYS_LOG,
@@ -137,7 +137,7 @@
 		'link': 'http://127.0.0.1:50022/config',
 		'target': '_blank',
 		'name': '助手设置',
-		'icon': 'fa-flash'
+		'icon': 'fas fa-bolt'
 	}
 ]
 %>
@@ -160,9 +160,9 @@
                             <span class="role">${ current_user['role'] } <i class="fa fa-caret-right"></i></span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-right">
-                            <li><a href="/user/me"><i class="fa fa-vcard-o fa-fw"></i> 个人中心</a></li>
+                            <li><a href="/user/me"><i class="far fa-id-card fa-fw"></i> 个人中心</a></li>
                             <li role="separator" class="divider"></li>
-                            <li><a href="/auth/logout" id="btn-sidebar-menu-logout"><i class="fa fa-sign-out fa-fw"></i> 退出</a></li>
+                            <li><a href="/auth/logout" id="btn-sidebar-menu-logout"><i class="fas fa-sign-out-alt fa-fw"></i> 退出</a></li>
                         </ul>
                     </div>
                 </li>
@@ -199,7 +199,7 @@
                             %if 'target' in menu:
                                                                target="${menu['target']}"
                             %endif
-                        ><i class="fa ${menu['icon']} fa-fw icon"></i><span>${menu['name']}</span></a></li>
+                        ><i class="${menu['icon']} fa-fw icon"></i><span>${menu['name']}</span></a></li>
                     %endif
                 %endif
             %endif

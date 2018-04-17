@@ -81,7 +81,7 @@
 <div class="page-content">
     <div class="info-box">
         <div class="info-icon-box">
-            <i class="fa fa-shield" style="color:#8140f1;"></i>
+            <i class="fas fa-shield-alt" style="color:#8140f1;"></i>
         </div>
         <div class="info-message-box">
             <div class="title">绑定身份验证器</div>
@@ -101,7 +101,7 @@
                     <div id="area-auth">
                         <div class="col-md-5">
                             <div class="input-group">
-                                <span class="input-group-addon"><i class="fa fa-user-circle-o fa-fw"></i></span>
+                                <span class="input-group-addon"><i class="far fa-user fa-fw"></i></span>
                                 <input data-field="input-username" type="text" class="form-control mono" placeholder="teleport系统用户名" data-toggle="popover" data-trigger="manual" data-placement="top">
                             </div>
                             <div class="input-group" style="margin-top:10px;">
@@ -127,7 +127,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title"><i class="fa fa-shield"></i> 身份验证器</h3>
+                    <h3 class="modal-title"><i class="fas fa-shield-alt"></i> 身份验证器</h3>
                 </div>
                 <div class="modal-body">
 
@@ -138,20 +138,20 @@
                             <ul class="list">
                                 <li>微信小程序
                                     <ul class="list">
-                                        <li><a href="javascript:;" data-switch="wechat"><i class="fa fa-wechat fa-fw"></i> 二次验证码</a> <span class="label label-success">推荐</span></li>
+                                        <li><a href="javascript:;" data-switch="wechat"><i class="fab fa-weixin fa-fw"></i> 二次验证码</a> <span class="label label-success">推荐</span></li>
                                     </ul>
                                 </li>
                                 <li>谷歌身份验证器
                                     <ul class="list">
-                                        <li><a href="javascript:;" data-switch="g-ios-appstore"><i class="fa fa-apple fa-fw"></i> iOS（Apple Store）</a></li>
-                                        <li><a href="javascript:;" data-switch="g-android-baidu"><i class="fa fa-android fa-fw"></i> Android（百度手机助手）</a></li>
-                                        <li><a href="javascript:;" data-switch="g-android-google"><i class="fa fa-android fa-fw"></i> Android（Google Play）</a></li>
+                                        <li><a href="javascript:;" data-switch="g-ios-appstore"><i class="fab fa-apple fa-fw"></i> iOS（Apple Store）</a></li>
+                                        <li><a href="javascript:;" data-switch="g-android-baidu"><i class="fab fa-android fa-fw"></i> Android（百度手机助手）</a></li>
+                                        <li><a href="javascript:;" data-switch="g-android-google"><i class="fab fa-android fa-fw"></i> Android（Google Play）</a></li>
                                     </ul>
                                 </li>
                                 <li>小米安全令牌
                                     <ul class="list">
-                                        <li><a href="javascript:;" data-switch="mi-ios-appstore"><i class="fa fa-apple fa-fw"></i> iOS（Apple Store）</a></li>
-                                        <li><a href="javascript:;" data-switch="mi-android-mi"><i class="fa fa-android fa-fw"></i> Android（小米应用商店）</a></li>
+                                        <li><a href="javascript:;" data-switch="mi-ios-appstore"><i class="fab fa-apple fa-fw"></i> iOS（Apple Store）</a></li>
+                                        <li><a href="javascript:;" data-switch="mi-android-mi"><i class="fab fa-android fa-fw"></i> Android（小米应用商店）</a></li>
                                     </ul>
                                 </li>
                             </ul>
@@ -168,7 +168,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 关闭</button>
                 </div>
             </div>
         </div>
@@ -203,7 +203,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-primary" data-field="btn-submit"><i class="fa fa-check fa-fw"></i> 验证并完成绑定</button>
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 取消</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 取消</button>
                 </div>
             </div>
         </div>

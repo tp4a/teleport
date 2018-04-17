@@ -1,5 +1,5 @@
 <%!
-    page_icon_class_ = 'fa fa-address-book-o fa-fw'
+    page_icon_class_ = 'far fa-address-book fa-fw'
     page_title_ = ['用户', '用户管理']
     page_id_ = ['user', 'user']
 %>
@@ -44,7 +44,7 @@
         <div class="table-prefix-area">
             <div class="table-extend-cell">
                 <span class="table-name"><i class="fa fa-list fa-fw"></i> 用户列表</span>
-                <button id="btn-refresh-user-list" class="btn btn-sm btn-default"><i class="fa fa-rotate-right fa-fw"></i> 刷新列表</button>
+                <button id="btn-refresh-user-list" class="btn btn-sm btn-default"><i class="fa fa-redo fa-fw"></i> 刷新列表</button>
             </div>
             <div class="table-extend-cell table-extend-cell-right group-actions">
                 <button id="btn-create-user" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 创建用户</button>
@@ -103,7 +103,7 @@
     <div class="box">
         <p>说明：</p>
         <ul class="help-list">
-            <li>可以通过表格标题栏进行搜索或过滤，以便快速定位你需要的信息。标题栏左侧的 <i class="fa fa-rotate-left fa-fw"></i> 可以重置过滤器。</li>
+            <li>可以通过表格标题栏进行搜索或过滤，以便快速定位你需要的信息。标题栏左侧的 <i class="fa fa-undo fa-fw"></i> 可以重置过滤器。</li>
             <li>批量导入用户需要上传.csv格式的文件，您可以 <a href="/static/download/teleport-example-user.csv"><i class="fa fa-download fa-fw"></i>下载用户信息文件模板</a> 进行编辑。</li>
         </ul>
     </div>
@@ -127,7 +127,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-primary" data-field="btn-edit"><i class="fa fa-edit fa-fw"></i> 编辑用户信息</button>
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 关闭</button>
                 </div>
             </div>
         </div>
@@ -234,7 +234,7 @@
                         </div>
                         <div class="col-sm-4">
                             <button type="button" class="btn btn-sm btn-primary" id="btn-edit-user-save"><i class="fa fa-check fa-fw"></i> 确定</button>
-                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 取消</button>
+                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 取消</button>
                         </div>
                     </div>
                 </div>
@@ -296,7 +296,7 @@
                                 </div>
                             </div>
                             <div class="col-sm-4">
-                                <button type="button" class="btn btn-sm btn-info" id="btn-gen-random-password"><i class="fa fa-snowflake-o fa-fw"></i> 生成随机密码</button>
+                                <button type="button" class="btn btn-sm btn-info" id="btn-gen-random-password"><i class="far fa-snowflake fa-fw"></i> 生成随机密码</button>
                             </div>
                         </div>
 
@@ -316,7 +316,7 @@
                             <div id="edit-user-message" class="alert alert-danger" style="text-align:left;display:none;"></div>
                         </div>
                         <div class="col-sm-4">
-                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 取消</button>
+                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 取消</button>
                         </div>
                     </div>
                 </div>
@@ -335,10 +335,10 @@
 
                     <div style="text-align:center;margin:10px 0 20px 0;">
                         <p>请点击图标，选择要上传的文件！</p>
-                        <p><a href="/static/download/teleport-example-user.csv"><i class="fa fa-download fa-fw"></i>下载用户信息文件模板</a>。</p>
+                        <p><a href="/static/download/teleport-example-user.csv"><i class="fa fa-download fa-fw"></i>下载用户信息文件模板</a></p>
                     </div>
                     <div style="text-align:center;">
-                        <i id="btn-select-file" class="upload-button fa fa-file-text-o fa-fw"></i>
+                        <i id="btn-select-file" class="upload-button far fa-file-alt fa-fw"></i>
                     </div>
                     <div style="text-align:center;margin:10px;" id="upload-file-info">- 尚未选择文件 -</div>
                     <div style="text-align:center;">

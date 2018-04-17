@@ -58,16 +58,16 @@
                     <div class="row" style="padding:0 20px;">
                         <div class="col-md-5">
                             <div class="input-group">
-                                <span class="input-group-addon"><i class="fa fa-user-circle-o fa-fw"></i></span>
+                                <span class="input-group-addon"><i class="far fa-user-circle fa-fw"></i></span>
                                 <input data-field="input-username" type="text" class="form-control mono" placeholder="teleport系统用户名" data-toggle="popover" data-trigger="manual" data-placement="top">
                             </div>
                             <div class="input-group" style="margin-top:10px;">
-                                <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+                                <span class="input-group-addon"><i class="far fa-envelope fa-fw"></i></span>
                                 <input data-field="input-email" type="text" class="form-control mono" placeholder="用户绑定的电子邮箱" data-toggle="popover" data-trigger="manual" data-placement="top">
                             </div>
 
                             <div class="input-group" style="margin-top:10px;">
-                                <span class="input-group-addon"><i class="fa fa-check-square-o fa-fw"></i></span>
+                                <span class="input-group-addon"><i class="far fa-check-square fa-fw"></i></span>
                                 <input data-field="input-captcha" type="text" class="form-control" placeholder="验证码" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 <span class="input-group-addon captcha-box"><a href="javascript:;"><img data-field="captcha-image" src=""></a></span>
                             </div>

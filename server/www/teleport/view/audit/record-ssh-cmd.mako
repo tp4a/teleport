@@ -71,11 +71,12 @@
             width: 16px;
             float: left;
             margin-right: 3px;
-            margin-top: 0px;
+            margin-top: 0;
             color: #ff533e;
             font-size: 16px;
             content: "\f06a";
-            font-family: 'FontAwesome';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
         }
 
         .cmd-info {
@@ -177,7 +178,7 @@
                     cmd_class += ' cmd-info';
                 }
 
-                var t = tp_format_datetime(header.start + parseInt(op[i].t/1000));
+                var t = tp_format_datetime(header.start + parseInt(op[i].t / 1000));
                 html.push('<div class="op-item"><span class="' + time_class + '">' + t + '</span> <span class="' + cmd_class + '">' + op[i].c + '</span></div>');
             }
             $app.dom.op_list.append(html.join(''));

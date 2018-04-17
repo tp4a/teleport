@@ -355,10 +355,10 @@ $app.on_table_session_render_created = function (render) {
         //     if (fields.time_end === 0) {
         //         ret.push('<a href="javascript:;" class="btn btn-sm btn-warning" data-action="sync" data-record-id="' + fields.id + '"><i class="fa fa-clone fa-fw"></i> 同步</a>&nbsp');
         //     } else {
-        //         ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" data-action="play" data-record-id="' + fields.id + '"><i class="fa fa-caret-square-o-right fa-fw"></i> 播放</a>&nbsp');
+        //         ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" data-action="play" data-record-id="' + fields.id + '"><i class="fas fa-caret-square-right fa-fw"></i> 播放</a>&nbsp');
         //     }
         //     if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_RDP_DESKTOP) {
-        //         ret.push('<a href="javascript:;" class="btn btn-sm btn-info" data-action="cmd" data-record-id="' + fields.id + '"><i class="fa fa-file-text-o fa-fw"></i> 日志</a>&nbsp');
+        //         ret.push('<a href="javascript:;" class="btn btn-sm btn-info" data-action="cmd" data-record-id="' + fields.id + '"><i class="far fa-file-alt fa-fw"></i> 日志</a>&nbsp');
         //     }
         // }
         //

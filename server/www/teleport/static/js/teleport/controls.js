@@ -1161,7 +1161,7 @@ $tp.create_table_render = function (tbl, on_created) {
 //     // };
 // //
     _tbl_render.second2str = function (row_id, fields) {
-        return '<i class="fa fa-clock-o fa-fw"></i> ' + tp_second2str(fields.seconds);
+        return '<i class="far fa-clock fa-fw"></i> ' + tp_second2str(fields.seconds);
     };
 
     // _tbl_render.host_rate_show = function (row_id, fields) {

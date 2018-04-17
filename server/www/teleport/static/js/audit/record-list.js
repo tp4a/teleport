@@ -265,7 +265,7 @@ $app.on_table_host_render_created = function (render) {
             return '<span class="label label-' + _style + '"><i class="fa fa-cog fa-spin"></i> ' + tp_second2str(tp_local2utc() - fields.time_begin) + '</span>';
         } else {
             if (fields.time_end === 0) {
-                return '<span class="label label-danger"><i class="fa fa-clock-o fa-fw"></i> 未知</span>';
+                return '<span class="label label-danger"><i class="far fa-clock fa-fw"></i> 未知</span>';
             }
             else {
                 if (fields.state === TP_SESS_STAT_ERR_START_RESET) {
@@ -346,7 +346,7 @@ $app.on_table_host_render_created = function (render) {
                 //ret.push('<a href="javascript:;" class="btn btn-sm btn-warning" data-action="sync" data-record-id="' + fields.id + '"><i class="fa fa-clone fa-fw"></i> 同步</a>&nbsp');
             } else {
                 if (fields.protocol_sub_type !== TP_PROTOCOL_TYPE_SSH_SFTP)
-                    ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" data-action="replay" data-record-id="' + fields.id + '"><i class="fa fa-caret-square-o-right fa-fw"></i> 回放</a>&nbsp');
+                    ret.push('<a href="javascript:;" class="btn btn-sm btn-primary" data-action="replay" data-record-id="' + fields.id + '"><i class="fa fas fas fa-caret-square-right fa-fw"></i> 回放</a>&nbsp');
             }
             if (fields.protocol_sub_type === TP_PROTOCOL_TYPE_SSH_SHELL
                 || fields.protocol_sub_type === TP_PROTOCOL_TYPE_SSH_SFTP

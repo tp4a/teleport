@@ -35,7 +35,7 @@
                             </div>
                             <div style="float:right;" id="area-action">
                                 <button id="btn-edit-role" class="btn btn-sm btn-primary"><i class="fa fa-edit fa-fw"></i> 编辑角色</button>
-                                <button id="btn-remove-role" class="btn btn-sm btn-danger"><i class="fa fa-trash-o fa-fw"></i> 删除角色</button>
+                                <button id="btn-remove-role" class="btn btn-sm btn-danger"><i class="far fa-times-circle fa-fw"></i> 删除角色</button>
                             </div>
                             <div class="clear-float"></div>
                         </div>

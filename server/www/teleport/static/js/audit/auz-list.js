@@ -72,7 +72,7 @@ $app.create_controls = function (cb_stack) {
         column_default: {sort: false, align: 'left'},
         columns: [
             {
-                //title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                //title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 title: '',
                 key: 'chkbox',
                 sort: false,
@@ -232,7 +232,7 @@ $app.on_drag_begin = function (e, row_id) {
     // create a drag-div
     var policy = $app.table_policy.get_row(row_id);
 
-    body.after($('<div id="tp-drag-move-box" style="display:none;position:absolute;font-size:13px;cursor:move;opacity:0.7;padding:5px;background:#999;border:1px solid #666;"><i class="fa fa-reorder fa-fw"></i> ' + policy.rank + ' ' + policy.name + '</div>'));
+    body.after($('<div id="tp-drag-move-box" style="display:none;position:absolute;font-size:13px;cursor:move;opacity:0.7;padding:5px;background:#999;border:1px solid #666;"><i class="fas fa-bars fa-fw"></i> ' + policy.rank + ' ' + policy.name + '</div>'));
 
     $app.drag.dom.move_box = $('#tp-drag-move-box');
     $app.drag.move_box_height = $app.drag.dom.move_box.height();
@@ -431,7 +431,7 @@ $app.on_table_policy_render_created = function (render) {
     // };
 
     render.rank = function (row_id, fields) {
-        return '<span class="reorder"><i class="fa fa-reorder fa-fw"></i> ' + fields.rank + '</span>'
+        return '<span class="reorder"><i class="fas fa-bars fa-fw"></i> ' + fields.rank + '</span>'
     };
 
     render.make_check_box = function (row_id, fields) {
@@ -464,8 +464,8 @@ $app.on_table_policy_render_created = function (render) {
         var ret = [];
         ret.push('<div class="btn-group btn-group-sm" role="group">');
         ret.push('<btn class="btn btn-primary" data-action="edit"><i class="fa fa-edit"></i> 编辑</btn>');
-        // ret.push('<btn class="btn btn-info" data-btn-disable="' + fields.id + '"><i class="fa fa-trash-o"></i> 禁用</btn>');
-        // ret.push('<btn class="btn btn-danger" data-btn-remove="' + fields.id + '"><i class="fa fa-trash-o"></i> 删除</btn>');
+        // ret.push('<btn class="btn btn-info" data-btn-disable="' + fields.id + '"><i class="fas fa-trash-alt"></i> 禁用</btn>');
+        // ret.push('<btn class="btn btn-danger" data-btn-remove="' + fields.id + '"><i class="fas fa-trash-alt"></i> 删除</btn>');
         ret.push('</div>');
         return ret.join('');
     };

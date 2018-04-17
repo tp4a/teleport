@@ -1,5 +1,5 @@
 <%!
-    page_icon_class_ = 'fa fa-address-book-o fa-fw'
+    page_icon_class_ = 'far fa-address-book fa-fw'
     page_title_ = ['用户', '用户组管理']
     page_id_ = ['user', 'group']
 %>
@@ -48,7 +48,7 @@
         <div class="table-prefix-area">
             <div class="table-extend-cell">
                 <span class="table-name"><i class="fa fa-list fa-fw"></i> 用户组列表</span>
-                <button id="btn-refresh-groups" class="btn btn-sm btn-default"><i class="fa fa-rotate-right fa-fw"></i> 刷新列表</button>
+                <button id="btn-refresh-groups" class="btn btn-sm btn-default"><i class="fa fa-redo fa-fw"></i> 刷新列表</button>
             </div>
             <div class="table-extend-cell table-extend-cell-right group-actions">
                 <button id="btn-create-group" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 创建用户组</button>
@@ -87,7 +87,7 @@
     <div class="box">
         <p>说明：</p>
         <ul class="help-list">
-            <li>可以通过表格标题栏进行搜索或过滤，以便快速定位你需要的信息。标题栏左侧的 <i class="fa fa-rotate-left fa-fw"></i> 可以重置过滤器。</li>
+            <li>可以通过表格标题栏进行搜索或过滤，以便快速定位你需要的信息。标题栏左侧的 <i class="fa fa-undo fa-fw"></i> 可以重置过滤器。</li>
         </ul>
     </div>
 </div>
@@ -134,7 +134,7 @@
                         </div>
                         <div class="col-sm-4">
                             <button type="button" class="btn btn-sm btn-primary" id="btn-edit-group-save"><i class="fa fa-check fa-fw"></i> 确定</button>
-                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 取消</button>
+                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 取消</button>
                         </div>
                     </div>
                 </div>

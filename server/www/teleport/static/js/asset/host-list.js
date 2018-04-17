@@ -53,7 +53,7 @@ $app.create_controls = function (cb_stack) {
         columns: [
             {
                 // title: '<input type="checkbox" id="user-list-select-all" value="">',
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -486,11 +486,11 @@ $app.on_btn_do_upload_click = function () {
                 $app.dom.upload_file_message
                     .removeClass('alert-info')
                     .addClass('alert-success')
-                    .html('<i class="fa fa-check-square-o fa-fw"></i> 资产导入成功：' + ret.message);
+                    .html('<i class="far fa-check-square fa-fw"></i> 资产导入成功：' + ret.message);
 
                 $app.table_host.load_data();
             } else {
-                var err_msg = ['<i class="fa fa-times-circle-o fa-fw"></i> 资产导入失败：' + ret.message];
+                var err_msg = ['<i class="far fa-times-circle fa-fw"></i> 资产导入失败：' + ret.message];
                 if (!_.isUndefined(ret.data)) {
                     err_msg.push('<div style="max-height:280px;overflow:auto;margin-left:20px;">');
                     var err_lines = [];
@@ -928,7 +928,7 @@ $app.create_dlg_accounts = function () {
             columns: [
                 {
                     //title: '<input type="checkbox" id="user-list-select-all" value="">',
-                    // title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                    // title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                     title: '',
                     key: 'chkbox',
                     sort: false,
@@ -1251,11 +1251,11 @@ $app.create_dlg_accounts = function () {
                 case TP_PROTOCOL_TYPE_RDP:
                     return '<span class="label label-success"><i class="fa fa-desktop fa-fw"></i> RDP</span>';
                 case TP_PROTOCOL_TYPE_SSH:
-                    return '<span class="label label-primary"><i class="fa fa-keyboard-o fa-fw"></i> SSH</span>';
+                    return '<span class="label label-primary"><i class="far fa-keyboard fa-fw"></i> SSH</span>';
                 case TP_PROTOCOL_TYPE_TELNET:
-                    return '<span class="label label-info"><i class="fa fa-keyboard-o fa-fw"></i> TELNET</span>';
+                    return '<span class="label label-info"><i class="far fa-keyboard fa-fw"></i> TELNET</span>';
                 default:
-                    return '<span class="label label-ignore"><i class="fa fa-question-circle-o fa-fw"></i> 未设置</span>';
+                    return '<span class="label label-ignore"><i class="far fa-question-circle fa-fw"></i> 未设置</span>';
             }
         };
 
@@ -1320,7 +1320,7 @@ $app.create_dlg_accounts = function () {
                 ret.push('<btn class="btn btn-info" data-action="unlock" data-id="' + fields.id + '"><i class="fa fa-unlock fa-fw"></i> 解禁</btn>');
             }
 
-            ret.push('<btn class="btn btn-danger" data-action="remove" data-id="' + fields.id + '"><i class="fa fa-trash-o"></i> 删除</btn>');
+            ret.push('<btn class="btn btn-danger" data-action="remove" data-id="' + fields.id + '"><i class="fas fa-trash-alt"></i> 删除</btn>');
             ret.push('</div>');
             return ret.join('');
         };

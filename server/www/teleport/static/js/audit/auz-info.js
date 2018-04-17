@@ -49,7 +49,7 @@ $app.create_controls = function (cb_stack) {
         column_default: {sort: false, align: 'left'},
         columns: [
             {
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -131,7 +131,7 @@ $app.create_controls = function (cb_stack) {
         column_default: {sort: false, align: 'left'},
         columns: [
             {
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -213,7 +213,7 @@ $app.create_controls = function (cb_stack) {
         column_default: {sort: false, align: 'left'},
         columns: [
             {
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -292,7 +292,7 @@ $app.create_controls = function (cb_stack) {
         column_default: {sort: false, align: 'left'},
         columns: [
             {
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -371,7 +371,7 @@ $app.create_controls = function (cb_stack) {
         column_default: {sort: false, align: 'left'},
         columns: [
             {
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -429,7 +429,7 @@ $app.create_controls = function (cb_stack) {
         column_default: {sort: false, align: 'left'},
         columns: [
             {
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -487,7 +487,7 @@ $app.create_controls = function (cb_stack) {
         column_default: {sort: false, align: 'left'},
         columns: [
             {
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -573,7 +573,7 @@ $app.create_controls = function (cb_stack) {
         column_default: {sort: false, align: 'left'},
         columns: [
             {
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -738,9 +738,9 @@ $app._add_common_render = function (render) {
     render.ref_type = function (row_id, fields) {
         switch (fields.rtype) {
             case TP_USER:
-                return '<i class="fa fa-user-circle-o fa-fw"></i> 用户';
+                return '<i class="far fa-user-circle fa-fw"></i> 用户';
             case TP_GROUP_USER:
-                return '<i class="fa fa-address-book-o fa-fw"></i> 用户组';
+                return '<i class="far fa-address-book fa-fw"></i> 用户组';
             case TP_ACCOUNT:
                 return '<i class="fa fa-user-circle fa-fw"></i> 账号';
             case TP_GROUP_ACCOUNT:

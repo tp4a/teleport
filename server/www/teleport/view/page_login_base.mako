@@ -19,7 +19,7 @@
 
     <link href="${ static_url('plugins/bootstrap/css/bootstrap.min.css') }" rel="stylesheet" type="text/css"/>
 ##     <link href="${ static_url('plugins/bootstrap/css/bootstrap-theme.min.css') }" rel="stylesheet" type="text/css"/>
-    <link href="${ static_url('plugins/font-awesome/css/font-awesome.min.css') }" rel="stylesheet">
+    <link href="${ static_url('plugins/font-awesome/css/fontawesome-all.min.css') }" rel="stylesheet">
     ## 	<link href="${ static_url('css/main.css') }" rel="stylesheet" type="text/css"/>
 
     <link href="${ static_url('css/login.css') }" rel="stylesheet" type="text/css"/>

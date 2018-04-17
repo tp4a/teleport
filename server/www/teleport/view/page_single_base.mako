@@ -17,7 +17,7 @@
     <link rel="shortcut icon" href="${ static_url('favicon.png') }">
 
     <link href="${ static_url('plugins/bootstrap/css/bootstrap.min.css') }" rel="stylesheet" type="text/css"/>
-    <link href="${ static_url('plugins/font-awesome/css/font-awesome.min.css') }" rel="stylesheet">
+    <link href="${ static_url('plugins/font-awesome/css/fontawesome-all.min.css') }" rel="stylesheet">
     <link href="${ static_url('plugins/gritter/css/jquery.gritter.css') }" rel="stylesheet">
 
     <link href="${ static_url('css/single.css') }" rel="stylesheet" type="text/css"/>

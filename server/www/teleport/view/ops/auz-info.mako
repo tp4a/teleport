@@ -110,7 +110,7 @@
                                 <div class="table-extend-area">
                                     <div class="table-extend-cell">
                                         <div class="btn-group btn-group-sm">
-                                            <btn class="btn btn-default" id="btn-refresh-operator"><i class="fa fa-rotate-right"></i> 刷新列表</btn>
+                                            <btn class="btn btn-default" id="btn-refresh-operator"><i class="fa fa-redo"></i> 刷新列表</btn>
                                         </div>
                                     </div>
                                     <div class="table-extend-cell table-item-counter">
@@ -156,7 +156,7 @@
                                 <div class="table-extend-area">
                                     <div class="table-extend-cell">
                                         <div class="btn-group btn-group-sm">
-                                            <btn class="btn btn-default" id="btn-refresh-asset"><i class="fa fa-rotate-right"></i> 刷新列表</btn>
+                                            <btn class="btn btn-default" id="btn-refresh-asset"><i class="fa fa-redo"></i> 刷新列表</btn>
                                         </div>
                                     </div>
                                     <div class="table-extend-cell table-item-counter">
@@ -338,7 +338,7 @@
 
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 关闭</button>
                 </div>
             </div>
         </div>
@@ -379,7 +379,7 @@
 
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 关闭</button>
                 </div>
             </div>
         </div>
@@ -420,7 +420,7 @@
 
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 关闭</button>
                 </div>
             </div>
         </div>
@@ -461,7 +461,7 @@
 
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 关闭</button>
                 </div>
             </div>
         </div>
@@ -502,7 +502,7 @@
 
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 关闭</button>
                 </div>
             </div>
         </div>
@@ -543,7 +543,7 @@
 
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 关闭</button>
                 </div>
             </div>
         </div>

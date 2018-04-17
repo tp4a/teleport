@@ -37,7 +37,7 @@ $app.create_controls = function (cb_stack) {
         columns: [
             {
                 // title: '<input type="checkbox" id="user-list-select-all" value="">',
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -125,7 +125,7 @@ $app.create_controls = function (cb_stack) {
         columns: [
             {
                 // title: '<input type="checkbox" id="user-list-select-all" value="">',
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -313,11 +313,11 @@ $app._add_common_render = function (render) {
             case TP_PROTOCOL_TYPE_RDP:
                 return '<span class="label label-success"><i class="fa fa-desktop fa-fw"></i> RDP</span>';
             case TP_PROTOCOL_TYPE_SSH:
-                return '<span class="label label-primary"><i class="fa fa-keyboard-o fa-fw"></i> SSH</span>';
+                return '<span class="label label-primary"><i class="far fa-keyboard fa-fw"></i> SSH</span>';
             case TP_PROTOCOL_TYPE_TELNET:
-                return '<span class="label label-info"><i class="fa fa-keyboard-o fa-fw"></i> TELNET</span>';
+                return '<span class="label label-info"><i class="far fa-keyboard fa-fw"></i> TELNET</span>';
             default:
-                return '<span class="label label-ignore"><i class="fa fa-question-circle-o fa-fw"></i> 未设置</span>';
+                return '<span class="label label-ignore"><i class="far fa-question-circle fa-fw"></i> 未设置</span>';
         }
     };
 

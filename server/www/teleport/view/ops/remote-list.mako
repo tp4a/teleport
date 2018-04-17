@@ -24,7 +24,7 @@
         <div class="table-prefix-area">
             <div class="table-extend-cell">
                 <span class="table-name"><i class="fa fa-list fa-fw"></i> 主机列表</span>
-                <button id="btn-refresh-host" class="btn btn-sm btn-default"><i class="fa fa-rotate-right fa-fw"></i> 刷新列表</button>
+                <button id="btn-refresh-host" class="btn btn-sm btn-default"><i class="fa fa-redo fa-fw"></i> 刷新列表</button>
             </div>
             <div class="table-extend-cell table-extend-cell-right group-actions">
                 ##                 <button id="btn-add-host" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 添加主机</button>
@@ -65,7 +65,7 @@
     <div class="box">
         <p>说明：</p>
         <ul class="help-list">
-            <li>可以通过表格标题栏进行搜索或过滤，以便快速定位。标题栏左侧的 <i class="fa fa-rotate-left fa-fw"></i> 可以重置过滤器。</li>
+            <li>可以通过表格标题栏进行搜索或过滤，以便快速定位。标题栏左侧的 <i class="fa fa-undo fa-fw"></i> 可以重置过滤器。</li>
         </ul>
     </div>
 </div>

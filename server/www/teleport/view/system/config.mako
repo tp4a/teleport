@@ -435,7 +435,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-primary" id="btn-save-mail-config"><i class="fa fa-check fa-fw"></i> 应用并保存设置</button>
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 取消</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 取消</button>
                 </div>
             </div>
         </div>
@@ -454,7 +454,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 关闭</button>
                 </div>
             </div>
         </div>

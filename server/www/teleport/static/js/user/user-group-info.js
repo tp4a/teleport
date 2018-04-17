@@ -37,7 +37,7 @@ $app.create_controls = function (cb_stack) {
         columns: [
             {
                 // title: '<input type="checkbox" id="user-list-select-all" value="">',
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -119,7 +119,7 @@ $app.create_controls = function (cb_stack) {
         columns: [
             {
                 // title: '<input type="checkbox" id="user-list-select-all" value="">',
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,

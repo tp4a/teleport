@@ -19,7 +19,7 @@
 <%block name="breadcrumb_extra">
     <ol class="breadcrumb breadcrumb-list">
 ##         <li><i class="fa fa-clock-o"></i> 服务器时间：<span id="tp-timer">-</span></li>
-##         <li><i class="fa fa-flash"></i> 助手版本：<span id="tp-assist-ver"></span></li>
+##         <li><i class="fa fa-bolt"></i> 助手版本：<span id="tp-assist-ver"></span></li>
     </ol>
 </%block>
 
@@ -32,7 +32,7 @@
         <div class="table-prefix-area">
             <div class="table-extend-cell">
                 <span class="table-name"><i class="fa fa-list fa-fw"></i> 主机列表</span>
-                <button id="btn-refresh-host" class="btn btn-sm btn-default"><i class="fa fa-rotate-right fa-fw"></i> 刷新列表</button>
+                <button id="btn-refresh-host" class="btn btn-sm btn-default"><i class="fa fa-redo fa-fw"></i> 刷新列表</button>
             </div>
             <div class="table-extend-cell table-extend-cell-right group-actions">
                 <button id="btn-add-host" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 添加主机</button>
@@ -71,7 +71,7 @@
     <div class="box">
         <p>说明：</p>
         <ul class="help-list">
-            <li>可以通过表格标题栏进行搜索或过滤，以便快速定位你需要的信息。标题栏左侧的 <i class="fa fa-rotate-left fa-fw"></i> 可以重置过滤器。</li>
+            <li>可以通过表格标题栏进行搜索或过滤，以便快速定位你需要的信息。标题栏左侧的 <i class="fa fa-undo fa-fw"></i> 可以重置过滤器。</li>
             <li>批量导入主机和账号需要上传.csv格式的文件，您可以 <a href="/static/download/teleport-example-asset.csv"><i class="fa fa-download fa-fw"></i>下载资产信息文件模板</a> 进行编辑。</li>
         </ul>
     </div>
@@ -92,7 +92,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-primary" data-field="btn-edit"><i class="fa fa-edit fa-fw"></i> 编辑主机信息</button>
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 关闭</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 关闭</button>
                 </div>
             </div>
         </div>
@@ -200,7 +200,7 @@
                         </div>
                         <div class="col-sm-4">
                             <button type="button" class="btn btn-sm btn-primary" id="btn-edit-host-save"><i class="fa fa-check fa-fw"></i> 确定</button>
-                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 取消</button>
+                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 取消</button>
                         </div>
                     </div>
                 </div>
@@ -221,7 +221,7 @@
                     <div class="table-prefix-area">
                         <div class="table-extend-cell">
                             <span class="table-name"><i class="fa fa-list fa-fw"></i> 账号列表</span>
-                            <button id="btn-refresh-acc" class="btn btn-sm btn-default"><i class="fa fa-rotate-right fa-fw"></i> 刷新列表</button>
+                            <button id="btn-refresh-acc" class="btn btn-sm btn-default"><i class="fa fa-redo fa-fw"></i> 刷新列表</button>
                         </div>
                         <div class="table-extend-cell table-extend-cell-right group-actions">
                             <button id="btn-add-acc" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 添加账号</button>
@@ -244,7 +244,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 完成</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 完成</button>
                 </div>
             </div>
         </div>
@@ -349,9 +349,9 @@
 
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-success" id="btn-edit-account-test"><i class="fa fa-flash fa-fw"></i> 测试连接</button>
+                    <button type="button" class="btn btn-sm btn-success" id="btn-edit-account-test"><i class="fa fa-bolt fa-fw"></i> 测试连接</button>
                     <button type="button" class="btn btn-sm btn-primary" id="btn-edit-account-save"><i class="fa fa-check fa-fw"></i> 确定</button>
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-close fa-fw"></i> 取消</button>
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 取消</button>
                 </div>
             </div>
         </div>
@@ -368,10 +368,10 @@
 
                     <div style="text-align:center;margin:10px 0 20px 0;">
                         <p>请点击图标，选择要上传的文件！</p>
-                        <p><a href="/static/download/teleport-example-asset.csv"><i class="fa fa-download fa-fw"></i>下载资产信息文件模板</a>。</p>
+                        <p><a href="/static/download/teleport-example-asset.csv"><i class="fa fa-download fa-fw"></i>下载资产信息文件模板</a></p>
                     </div>
                     <div style="text-align:center;">
-                        <i id="btn-select-file" class="upload-button fa fa-file-text-o fa-fw"></i>
+                        <i id="btn-select-file" class="upload-button far fa-file-alt fa-fw"></i>
                     </div>
                     <div style="text-align:center;margin:10px;" id="upload-file-info">- 尚未选择文件 -</div>
                     <div style="text-align:center;">

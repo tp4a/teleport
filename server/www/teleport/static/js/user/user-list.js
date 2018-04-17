@@ -54,7 +54,7 @@ $app.create_controls = function (cb_stack) {
         columns: [
             {
                 // title: '<input type="checkbox" id="user-list-select-all" value="">',
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -459,11 +459,11 @@ $app.on_btn_do_upload_click = function () {
                 $app.dom.upload_file_message
                     .removeClass('alert-info')
                     .addClass('alert-success')
-                    .html('<i class="fa fa-check-square-o fa-fw"></i> 用户导入成功：' + ret.message);
+                    .html('<i class="far fa-check-square fa-fw"></i> 用户导入成功：' + ret.message);
 
                 $app.table_users.load_data();
             } else {
-                var err_msg = ['<i class="fa fa-times-circle-o fa-fw"></i> 用户导入失败：' + ret.message];
+                var err_msg = ['<i class="far fa-times-circle fa-fw"></i> 用户导入失败：' + ret.message];
                 if (!_.isUndefined(ret.data)) {
                     err_msg.push('<div style="max-height:280px;overflow:auto;margin-left:20px;">');
                     var err_lines = [];
@@ -994,7 +994,7 @@ $app.create_dlg_user_info = function () {
 
     dlg.show_info = function (user) {
         // 更新对话框中显示的信息
-        dlg.dom.dlg_title.html('<i class="fa fa-vcard-o fa-fw"></i> ' + user.surname);
+        dlg.dom.dlg_title.html('<i class="far fa-id-card fa-fw"></i> ' + user.surname);
 
         var info = [];
 

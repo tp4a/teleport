@@ -25,7 +25,7 @@
         <div class="table-prefix-area">
             <div class="table-extend-cell">
                 <span class="table-name"><i class="fa fa-list fa-fw"></i> 系统日志</span>
-                <button id="btn-refresh-log" class="btn btn-sm btn-default"><i class="fa fa-rotate-right fa-fw"></i> 刷新列表</button>
+                <button id="btn-refresh-log" class="btn btn-sm btn-default"><i class="fa fa-redo fa-fw"></i> 刷新列表</button>
             </div>
         </div>
         <!-- end filter -->

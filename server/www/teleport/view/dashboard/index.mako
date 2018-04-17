@@ -24,7 +24,7 @@
         <div class="col-sm-3">
             <div class="stats stats-box stats-id-user">
                 <div class="stats-icon">
-                    <i class="fa fa-id-card-o fa-fw"></i>
+                    <i class="far fa-id-card fa-fw"></i>
                 </div>
                 <div class="stats-content">
                     <div class="stats-name">用户</div>

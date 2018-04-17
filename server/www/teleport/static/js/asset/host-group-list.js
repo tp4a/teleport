@@ -36,7 +36,7 @@ $app.create_controls = function (cb_stack) {
         columns: [
             {
                 // title: '<input type="checkbox" id="user-list-select-all" value="">',
-                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-rotate-left fa-fw"></i></a>',
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
                 key: 'chkbox',
                 sort: false,
                 width: 36,
@@ -292,7 +292,7 @@ $app.on_table_groups_render_created = function (render) {
         var ret = [];
         ret.push('<div class="btn-group btn-group-sm" role="group">');
         ret.push('<btn class="btn btn-default" data-btn-edit="' + fields.id + '"><i class="fa fa-edit"></i> 编辑</btn>');
-        ret.push('<btn class="btn btn-danger" data-btn-remove="' + fields.id + '"><i class="fa fa-trash-o"></i> 删除</btn>');
+        ret.push('<btn class="btn btn-danger" data-btn-remove="' + fields.id + '"><i class="fas fa-trash-alt"></i> 删除</btn>');
         ret.push('</div>');
         return ret.join('');
     };
