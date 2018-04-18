@@ -69,7 +69,7 @@
                             <div class="input-group" style="margin-top:10px;">
                                 <span class="input-group-addon"><i class="far fa-check-square fa-fw"></i></span>
                                 <input data-field="input-captcha" type="text" class="form-control" placeholder="验证码" data-toggle="popover" data-trigger="manual" data-placement="top">
-                                <span class="input-group-addon captcha-box"><a href="javascript:;"><img data-field="captcha-image" src=""></a></span>
+                                <span class="input-group-addon captcha-box"><a href="javascript:;" tabindex="-1"><img data-field="captcha-image" src=""></a></span>
                             </div>
                             <p class="input-addon-desc">验证码，点击图片可更换</p>
 

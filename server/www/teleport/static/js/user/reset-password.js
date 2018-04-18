@@ -94,7 +94,7 @@ $app.on_init = function (cb_stack) {
         // show 'find-my-password' page
         $app.dom.op_message = $app.dom.find.message;
         $app.dom.title.text('重置密码');
-        $app.dom.icon_bg.addClass('fa fa-search-plus').css('color', '#286090');
+        $app.dom.icon_bg.addClass('fas fa-search-plus').css('color', '#286090');
         $app.dom.find.captcha_image.attr('src', '/auth/captcha?h=28&rnd=' + Math.random());
         $app.dom.find.area.show();
         $app.dom.find.input_username.focus();

@@ -1,5 +1,5 @@
 <%!
-    page_icon_class_ = 'fa fa-dashboard fa-fw'
+    page_icon_class_ = 'fas fa-tachometer-alt fa-fw'
     page_title_ = ['系统总览']
     page_id_ = ['dashboard']
 %>

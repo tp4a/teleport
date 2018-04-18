@@ -41,7 +41,7 @@
                                     <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
                                     <input data-field="password" type="password" class="form-control" placeholder="密码" data-toggle="popover" data-trigger="manual" data-placement="top">
                                 </div>
-                                <p class="input-addon-desc"><a href="/user/reset-password">忘记密码？</a></p>
+                                <p class="input-addon-desc"><a href="/user/reset-password" tabindex="-1">忘记密码？</a></p>
                             </div>
 
                         </div>
@@ -50,7 +50,7 @@
                             <div class="input-group input-group-lg">
                                 <span class="input-group-addon"><i class="far fa-check-square fa-fw"></i></span>
                                 <input id="captcha" type="text" class="form-control" placeholder="验证码" data-toggle="popover" data-trigger="manual" data-placement="top">
-                                <span class="input-group-addon"><a href="javascript:;"><img id="captcha-image" src=""></a></span>
+                                <span class="input-group-addon"><a href="javascript:;" tabindex="-1"><img id="captcha-image" src=""></a></span>
                             </div>
                             <p class="input-addon-desc">验证码，点击图片可更换</p>
                         </div>
@@ -60,7 +60,7 @@
                                 <span class="input-group-addon"><i class="fas fa-shield-alt fa-fw"></i></span>
                                 <input id="oath-code" type="text" class="form-control" placeholder="6位数字身份验证器动态验证码" data-toggle="popover" data-trigger="manual" data-placement="top">
                             </div>
-                            <p class="input-addon-desc"><a href="/user/bind-oath">尚未绑定身份验证器？</a></p>
+                            <p class="input-addon-desc"><a href="/user/bind-oath" tabindex="-1">尚未绑定身份验证器？</a></p>
                         </div>
 
 
