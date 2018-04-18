@@ -266,7 +266,7 @@
                                     <button type="button" class="btn btn-sm btn-primary" id="btn-send-reset-email" style="margin-top:10px;"><i class="fa fa-send fa-fw"></i> 发送邮件</button>
                                 </div>
                                 <div id="cannot-send-email" class="alert alert-warning" style="margin-top:10px;">
-                                    <i class="fa fa-warning fa-fw"></i> <span id="msg-cannot-send-email">用户未设置邮箱</span>，密码重置邮件功能无法使用，请使用手动重置方式。
+                                    <i class="fas fa-exclamation-triangle fa-fw"></i> <span id="msg-cannot-send-email">用户未设置邮箱</span>，密码重置邮件功能无法使用，请使用手动重置方式。
                                 </div>
                             </div>
                         </div>

@@ -688,7 +688,7 @@ $tp.create_table = function (options) {
             _tbl.loading_timer = null;
         }
 
-        var msg_loading = '<tr><td class="loading" colspan="' + _tbl.column_count + '" style="text-align:center;background-color:#f0d4d2;"><i class="fa fa-warning fa-fw"></i> 糟糕！加载失败了...</td></tr>';
+        var msg_loading = '<tr><td class="loading" colspan="' + _tbl.column_count + '" style="text-align:center;background-color:#f0d4d2;"><i class="fas fa-exclamation-triangle fa-fw"></i> 糟糕！加载失败了...</td></tr>';
         $('#' + _tbl.dom_id + ' tbody').empty().append($(msg_loading))
     };
 

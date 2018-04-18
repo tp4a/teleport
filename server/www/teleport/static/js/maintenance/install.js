@@ -30,7 +30,7 @@ $app.on_init = function (cb_stack, cb_args) {
 
         var _t = [];
         _t.push('<div class="alert alert-warning">');
-        _t.push('<i class="fa fa-warning"></i> 注意：请确保您在执行后续创建操作之前，已经在MySQL中使用 <span class="bold">UTF8字符集</span> 创建了库“');
+        _t.push('<i class="fas fa-exclamation-triangle"></i> 注意：请确保您在执行后续创建操作之前，已经在MySQL中使用 <span class="bold">UTF8字符集</span> 创建了库“');
         _t.push($app.options.db.mysql_db);
         _t.push('”，并且用户“');
         _t.push($app.options.db.mysql_user);

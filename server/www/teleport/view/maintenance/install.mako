@@ -38,7 +38,7 @@
         <p>TELEPORT支持 SQLite 和 MySQL 数据库，您目前使用的配置如下：</p>
         <table id="db-info" class="table"></table>
         <div class="alert alert-warning">
-            <i class="fa fa-warning"></i> 注意：如果以上配置并不是您所期望的，请修改您的配置文件，然后刷新本页面。
+            <i class="fas fa-exclamation-triangle"></i> 注意：如果以上配置并不是您所期望的，请修改您的配置文件，然后刷新本页面。
             <a href="https://github.com/eomsoft/teleport/wiki/deployment-config" target="_blank">如何设置配置文件？</a>
         </div>
     </div>

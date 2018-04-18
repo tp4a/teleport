@@ -100,7 +100,7 @@ $app.on_init = function (cb_stack) {
         $app.dom.find.input_username.focus();
     } else if ($app.options.mode === 2) {
         // show 'error' page
-        $app.dom.icon_bg.addClass('fa fa-warning').css('color', '#ff6242');
+        $app.dom.icon_bg.addClass('fas fa-exclamation-triangle').css('color', '#ff6242');
         if ($app.options.code === TPE_NOT_EXISTS) {
             $app.dom.title.text('链接无效');
             $app.dom.error.message.html('当前使用的密码重置链接无效，可能已经因过期而被清除！密码重置链接仅在24小时内有效，请及时设置您的新密码！');

@@ -1133,6 +1133,10 @@ $app.create_dlg_sel_user = function () {
 
     dlg.on_add = function () {
         var items = dlg.get_selected_items();
+        if(items.length === 0) {
+            $tp.notify_error('请先选择要添加的操作者！');
+            return;
+        }
 
         $tp.ajax_post_json('/ops/policy/add-members', {
                 policy_id: $app.options.policy_id,
@@ -1272,6 +1276,10 @@ $app.create_dlg_sel_user_group = function () {
 
     dlg.on_add = function () {
         var items = dlg.get_selected_items();
+        if(items.length === 0) {
+            $tp.notify_error('请先选择要添加的操作者！');
+            return;
+        }
 
         $tp.ajax_post_json('/ops/policy/add-members', {
                 policy_id: $app.options.policy_id,
@@ -1453,6 +1461,10 @@ $app.create_dlg_sel_acc = function () {
 
     dlg.on_add = function () {
         var items = dlg.get_selected_items();
+        if(items.length === 0) {
+            $tp.notify_error('请先选择要添加的资产！');
+            return;
+        }
 
         $tp.ajax_post_json('/ops/policy/add-members', {
                 policy_id: $app.options.policy_id,
@@ -1592,6 +1604,10 @@ $app.create_dlg_sel_acc_group = function () {
 
     dlg.on_add = function () {
         var items = dlg.get_selected_items();
+        if(items.length === 0) {
+            $tp.notify_error('请先选择要添加的资产！');
+            return;
+        }
 
         $tp.ajax_post_json('/ops/policy/add-members', {
                 policy_id: $app.options.policy_id,
@@ -1753,6 +1769,10 @@ $app.create_dlg_sel_host = function () {
 
     dlg.on_add = function () {
         var items = dlg.get_selected_items();
+        if(items.length === 0) {
+            $tp.notify_error('请先选择要添加的资产！');
+            return;
+        }
 
         $tp.ajax_post_json('/ops/policy/add-members', {
                 policy_id: $app.options.policy_id,
@@ -1893,6 +1913,10 @@ $app.create_dlg_sel_host_group = function () {
 
     dlg.on_add = function () {
         var items = dlg.get_selected_items();
+        if(items.length === 0) {
+            $tp.notify_error('请先选择要添加的资产！');
+            return;
+        }
 
         $tp.ajax_post_json('/ops/policy/add-members', {
                 policy_id: $app.options.policy_id,

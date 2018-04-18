@@ -11,7 +11,7 @@ $tp.notify_error = function (message_, title_, timeout_) {
         //sticky:true,
         class_name: 'gritter-error',
         time: _t,
-        title: '<i class="fa fa-warning fa-fw"></i> 错误：' + _title,
+        title: '<i class="fas fa-exclamation-triangle fa-fw"></i> 错误：' + _title,
         text: message_
     });
     console.error('错误', _title, message_);
@@ -58,7 +58,7 @@ $tp.disable_dom = function (dom_selector, message) {
     html.push('<div id="tp-dom-disable-overlay" class="disable-bg"></div>');
     var has_message = false;
     if (!_.isUndefined(message) && !_.isNull(message) && message.length > 0) {
-        html.push('<div id="tp-dom-disable-message" class="disable-message"><i class="fa fa-warning fa-fw"></i> ' + message + '</div>');
+        html.push('<div id="tp-dom-disable-message" class="disable-message"><i class="fas fa-exclamation-triangle fa-fw"></i> ' + message + '</div>');
         has_message = true;
     }
 
@@ -97,7 +97,7 @@ $tp.disable_dom = function (dom_selector, message) {
 $tp.dlg_confirm = function (cb_stack, cb_args) {
     var self = {};
     self._cb_stack = cb_stack;
-    self._title = cb_args.title || '<i class="fa fa-warning"></i> 操作确认';
+    self._title = cb_args.title || '<i class="fas fa-exclamation-triangle"></i> 操作确认';
     self._msg = cb_args.msg || '';
     self._btn_yes = cb_args.btn_yes || '确定';
     self._btn_no = cb_args.btn_no || '取消';
