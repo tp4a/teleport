@@ -19,90 +19,9 @@
 #include "ts_env.h"
 #include "ts_cfg.h"
 
-/*
-1.
-SecureCRT÷ß≥÷…Ë÷√±Í«©“≥µƒ±ÍÃ‚£¨√¸¡Ó––≤Œ ˝ /N "tab name"æÕø…“‘
-Example:
-To launch a new Telnet session, displaying the name "Houston, TX" on the tab, use the following:
-/T /N "Houston, TX" /TELNET 192.168.0.6
-
-2.
-∂‡¥Œ∆Ù∂ØµƒSecureCRT∑≈µΩ“ª∏ˆ¥∞ø⁄µƒ≤ªÕ¨±Í«©“≥÷–£¨ π”√≤Œ ˝£∫  /T
-  SecureCRT.exe /T /N "TP#ssh://192.168.1.3" /SSH2 /L root /PASSWORD 1234 120.26.109.25
-
-3.
-telnetøÕªß∂Àµƒ∆Ù∂Ø£∫
-  putty.exe telnet://administrator@127.0.0.1:52389
-»Áπ˚ «SecureCRT£¨‘Ú–Ë“™
-  SecureCRT.exe /T /N "TP#telnet://192.168.1.3" /SCRIPT X:\path\to\startup.vbs /TELNET 127.0.0.1 52389
-∆‰÷–£¨startup.vbsµƒƒ⁄»›Œ™£∫
----------Œƒº˛ø™ º---------
-#$language = "VBScript"
-#$interface = "1.0"
-Sub main
-  crt.Screen.Synchronous = True
-  crt.Screen.WaitForString "ogin: "
-  crt.Screen.Send "SESSION-ID" & VbCr
-  crt.Screen.Synchronous = False
-End Sub
----------Œƒº˛Ω· ¯---------
-
-4. Œ™¡À»√puttyµƒ¥∞ø⁄±Í«©œ‘ æ’˝≥£µƒIP£¨ø…“‘≥¢ ‘‘⁄¡¨Ω”≥…π¶∫Û£¨÷˜∂ØœÚ∑˛ŒÒ∂À∑¢ÀÕœ¬¡–√¸¡Ó£∫
-	PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@192.168.1.2: \w\a\]$PS1"
- ÷π§≤‚ ‘¡À£¨ubuntu∑˛ŒÒ∆˜ø…“‘£¨≤ª÷™µ¿ «∑Òƒ‹πª÷ß≥÷À˘”–µƒLinux°£SecureCRT∂‘¥À±Ì æ∫ˆ¬‘°£
-*/
-
 // #define RDP_CLIENT_SYSTEM_BUILTIN
 // #define RDP_CLIENT_SYSTEM_ACTIVE_CONTROL
 #define RDP_CLIENT_FREERDP
-
-
-#ifdef RDP_CLIENT_SYSTEM_BUILTIN
-#include <WinCrypt.h>
-#pragma comment(lib, "Crypt32.lib")
-
-std::string rdp_content = "\
-connect to console:i:%d\n\
-screen mode id:i:%d\n\
-desktopwidth:i:%d\n\
-desktopheight:i:%d\n\
-winposstr:s:0,1,%d,%d,%d,%d\n\
-full address:s:%s:%d\n\
-username:s:%s\n\
-prompt for credentials:i:0\n\
-use multimon:i:0\n\
-authentication level:i:3\n\
-session bpp:i:16\n\
-compression:i:1\n\
-keyboardhook:i:2\n\
-audiocapturemode:i:0\n\
-negotiate security layer:i:1\n\
-videoplaybackmode:i:1\n\
-connection type:i:2\n\
-prompt for credentials on client:i:0\n\
-displayconnectionbar:i:1\n\
-disable wallpaper:i:1\n\
-allow font smoothing:i:0\n\
-allow desktop composition:i:0\n\
-disable full window drag:i:1\n\
-disable menu anims:i:1\n\
-disable themes:i:1\n\
-disable cursor setting:i:0\n\
-bitmapcachepersistenable:i:1\n\
-audiomode:i:0\n\
-redirectprinters:i:0\n\
-redirectcomports:i:0\n\
-redirectsmartcards:i:0\n\
-redirectclipboard:i:1\n\
-redirectposdevices:i:0\n\
-redirectdirectx:i:0\n\
-autoreconnection enabled:i:0\n\
-drivestoredirect:s:*\n\
-password 51:b:%s\n\
-";
-
-#endif
-
 
 TsHttpRpc g_http_interface;
 
@@ -185,9 +104,9 @@ bool TsHttpRpc::init(const char* ip, int port)
 
 	char addr[128] = { 0 };
 	if (0 == strcmp(ip, "127.0.0.1") || 0 == strcmp(ip, "localhost"))
-		ex_strformat(addr, 128, "127.0.0.1:%d", port);
+		ex_strformat(addr, 128, "tcp://127.0.0.1:%d", port);
 	else
-		ex_strformat(addr, 128, "%s:%d", ip, port);
+		ex_strformat(addr, 128, "tcp://%s:%d", ip, port);
 
 	nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
 	if (nc == NULL)
@@ -375,7 +294,7 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 
 	ex_astrs strs;
 
-	size_t pos_start = 1;	// Ã¯π˝µ⁄“ª∏ˆ◊÷Ω⁄£¨“ª∂® « '/'
+	size_t pos_start = 1;	// ������һ���ֽڣ�һ���� '/'
 
 	size_t i = 0;
 	for (i = pos_start; i < req->uri.len; ++i)
@@ -388,7 +307,7 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 				tmp_uri.assign(req->uri.p + pos_start, i - pos_start);
 				strs.push_back(tmp_uri);
 			}
-			pos_start = i + 1;	// Ã¯π˝µ±«∞’“µΩµƒ∑÷∏Ù∑˚
+			pos_start = i + 1;	// ������ǰ�ҵ��ķָ���
 		}
 	}
 	if (pos_start < req->uri.len)
@@ -436,7 +355,7 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 
 	if (func_args.length() > 0)
 	{
-		// Ω´≤Œ ˝Ω¯–– url-decode Ω‚¬Î
+		// ���������� url-decode ����
 		size_t len = func_args.length() * 2;
 		ex_chars sztmp;
 		sztmp.resize(len);
@@ -487,7 +406,7 @@ void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func
 
 void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode)
 {
-	// ∑µªÿ£∫ {"code":123}
+	// ���أ� {"code":123}
 
 	Json::FastWriter jr_writer;
 	Json::Value jr_root;
@@ -504,11 +423,11 @@ void TsHttpRpc::_create_json_ret(ex_astr& buf, Json::Value& jr_root)
 
 void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 {
-	// »Î≤Œ£∫{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
+	// ��Σ�{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
 	//   authmode: 1=password, 2=private-key
 	//   protocol: 1=rdp, 2=ssh
-	// SSH∑µªÿ£∫ {"code":0, "data":{"sid":"0123abcde"}}
-	// RDP∑µªÿ£∫ {"code":0, "data":{"sid":"0123abcde0A"}}
+	// SSH���أ� {"code":0, "data":{"sid":"0123abcde"}}
+	// RDP���أ� {"code":0, "data":{"sid":"0123abcde0A"}}
 
 	Json::Reader jreader;
 	Json::Value jsRoot;
@@ -524,10 +443,11 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		return;
 	}
 
-	// ≈–∂œ≤Œ ˝ «∑Ò’˝»∑
+	// �жϲ����Ƿ���ȷ
 	if (!jsRoot["teleport_ip"].isString()
 		|| !jsRoot["teleport_port"].isNumeric() || !jsRoot["remote_host_ip"].isString()
 		|| !jsRoot["session_id"].isString() || !jsRoot["protocol_type"].isNumeric() || !jsRoot["protocol_sub_type"].isNumeric()
+		|| !jsRoot["protocol_flag"].isNumeric()
 		)
 	{
 		_create_json_ret(buf, TPE_PARAM);
@@ -536,6 +456,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 	int pro_type = jsRoot["protocol_type"].asUInt();
 	int pro_sub = jsRoot["protocol_sub_type"].asInt();
+	ex_u32 protocol_flag = jsRoot["protocol_flag"].asUInt();
 
 	ex_astr teleport_ip = jsRoot["teleport_ip"].asCString();
 	int teleport_port = jsRoot["teleport_port"].asUInt();
@@ -568,11 +489,14 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 //		_create_json_ret(buf, TPE_NOT_IMPLEMENT);
 //		return;
 
-	
+		bool flag_clipboard = (protocol_flag & TP_FLAG_RDP_CLIPBOARD);
+		bool flag_disk = (protocol_flag & TP_FLAG_RDP_DISK);
+		bool flag_console = (protocol_flag & TP_FLAG_RDP_CONSOLE);
+
 		int rdp_w = 800;
 		int rdp_h = 640;
 		bool rdp_console = false;
-		
+
 		if (!jsRoot["rdp_width"].isNull()) {
 			if (jsRoot["rdp_width"].isNumeric()) {
 				rdp_w = jsRoot["rdp_width"].asUInt();
@@ -582,7 +506,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				return;
 			}
 		}
-		
+
 		if (!jsRoot["rdp_height"].isNull()) {
 			if (jsRoot["rdp_height"].isNumeric()) {
 				rdp_h = jsRoot["rdp_height"].asUInt();
@@ -592,7 +516,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				return;
 			}
 		}
-		
+
 		if (!jsRoot["rdp_console"].isNull()) {
 			if (jsRoot["rdp_console"].isBool()) {
 				rdp_console = jsRoot["rdp_console"].asBool();
@@ -602,8 +526,11 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				return;
 			}
 		}
-		
-		
+
+		if (!flag_console)
+			rdp_console = false;
+
+
 		size_t split_pos = sid.length() - 2;
 		ex_astr real_sid = sid.substr(0, split_pos);
 		ex_astr str_pwd_len = sid.substr(split_pos, sid.length());
@@ -621,7 +548,8 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//w_exe_path = _T("\"");
 		//w_exe_path += g_cfg.rdp_app + _T("\" ");
 		//w_exe_path += g_cfg.rdp_cmdline;
-		w_exe_path = _T("xfreerdp -u {user_name} {clipboard} {drives} ");
+		//w_exe_path = _T("xfreerdp -u {user_name} {size} {console} {clipboard} {drives} ");
+		w_exe_path = _T("/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp -u {user_name} {size} {console} ");
 		
 		{
 			// 			w_exe_path += L"{size} {console} {clipboard} {drives} ";
@@ -630,29 +558,29 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			ex_wstr w_screen;
 			
 			if (rdp_w == 0 || rdp_h == 0) {
-				w_screen = _T("/f");
+				w_screen = _T("-f");
 			}
 			else {
 				char sz_size[64] = {0};
-				ex_strformat(sz_size, 63, "/size:%dx%d", rdp_w, rdp_h);
+				ex_strformat(sz_size, 63, "-g %dx%d", rdp_w, rdp_h);
 				ex_astr2wstr(sz_size, w_screen);
 			}
 			
-			const wchar_t* w_console = NULL;
+//			const wchar_t* w_console = NULL;
+//			
+//			if (rdp_console)
+//			{
+//				w_console = _T("/admin");
+//			}
+//			else
+//			{
+//				w_console = _T("");
+//			}
 			
-			if (rdp_console)
-			{
-				w_console = _T("/admin");
-			}
-			else
-			{
-				w_console = _T("");
-			}
-			
-			ex_wstr w_password;
-			ex_astr2wstr(szPwd, w_password);
-			w_exe_path += _T(" -p ");
-			w_exe_path += w_password;
+//			ex_wstr w_password;
+//			ex_astr2wstr(szPwd, w_password);
+//			w_exe_path += _T(" -p ");
+//			w_exe_path += w_password;
 			
 			w_sid = _T("02") + w_sid;
 			
@@ -660,10 +588,23 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			w_exe_path += _T(" {host_ip}:{host_port}");
 
 			ex_replace_all(w_exe_path, _T("{size}"), w_screen);
-			ex_replace_all(w_exe_path, _T("{console}"), w_console);
+
+			if (flag_console && rdp_console)
+				ex_replace_all(w_exe_path, _T("{console}"), L"/admin");
+			else
+				ex_replace_all(w_exe_path, _T("{console}"), L"");
+
 			//ex_replace_all(w_exe_path, _T("{clipboard}"), L"+clipboard");
-			ex_replace_all(w_exe_path, _T("{clipboard}"), _T("/clipboard"));
-			ex_replace_all(w_exe_path, _T("{drives}"), _T("/drives"));
+
+			if(flag_clipboard)
+				ex_replace_all(w_exe_path, _T("{clipboard}"), L"/clipboard");
+			else
+				ex_replace_all(w_exe_path, _T("{clipboard}"), L"-clipboard");
+
+			if(flag_disk)
+				ex_replace_all(w_exe_path, _T("{drives}"), L"/drives");
+			else
+				ex_replace_all(w_exe_path, _T("{drives}"), L"-drives");
 //		}
 //		else {
 //			_create_json_ret(buf, TPE_FAILED);
@@ -730,9 +671,20 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	// 	return;
 	// }
 
-	system(utf8_path.c_str());
+	//system(utf8_path.c_str());
+	//ex_astr __sid;
+	//ex_wstr2astr(w_sid, __sid);
+	//execlp("xfreerdp", "-u", __sid.c_str(), "-g", "800x600", "127.0.0.1:52089", NULL);
+	FILE *f = popen(utf8_path.c_str(), "r");
+	if(f == NULL) {
+		root_ret["code"] = TPE_FAILED;
+	} else {
+		root_ret["code"] = TPE_OK;
+		pclose(f);
+	}
+	
 
-	root_ret["code"] = TPE_OK;
+//	root_ret["code"] = TPE_OK;
 	_create_json_ret(buf, root_ret);
 }
 
