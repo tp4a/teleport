@@ -4,6 +4,7 @@
 
 //#include <commdlg.h>
 //#include <ShlObj.h>
+#include <unistd.h>
 
 #include <teleport_const.h>
 
@@ -464,21 +465,23 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	ex_astr real_host_ip = jsRoot["remote_host_ip"].asCString();
 	ex_astr sid = jsRoot["session_id"].asCString();
 
-	ex_wstr w_exe_path;
-	wchar_t w_szCommandLine[MAX_PATH] = { 0 };
+//	ex_wstr w_exe_path;
+//	wchar_t w_szCommandLine[MAX_PATH] = { 0 };
 
 
-	ex_wstr w_sid;
-	ex_astr2wstr(sid, w_sid);
-	ex_wstr w_teleport_ip;
-	ex_astr2wstr(teleport_ip, w_teleport_ip);
-	ex_wstr w_real_host_ip;
-	ex_astr2wstr(real_host_ip, w_real_host_ip);
-	wchar_t w_port[32] = { 0 };
-	ex_wcsformat(w_port, 32, L"%d", teleport_port);
+//	ex_wstr w_sid;
+//	ex_astr2wstr(sid, w_sid);
+//	ex_wstr w_teleport_ip;
+//	ex_astr2wstr(teleport_ip, w_teleport_ip);
+//	ex_wstr w_real_host_ip;
+//	ex_astr2wstr(real_host_ip, w_real_host_ip);
+//	wchar_t w_port[32] = { 0 };
+//	ex_wcsformat(w_port, 32, L"%d", teleport_port);
 
-	ex_wstr tmp_rdp_file; // for .rdp file
-
+	ex_astr s_exec;
+	ex_astrs s_argv;
+	
+	
 	if (pro_type == TP_PROTOCOL_TYPE_RDP)
 	{
 		//==============================================
@@ -543,72 +546,53 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			szPwd[i] = '*';
 		}
 		
-		ex_astr2wstr(real_sid, w_sid);
+		//ex_astr2wstr(real_sid, w_sid);
 		
 		//w_exe_path = _T("\"");
 		//w_exe_path += g_cfg.rdp_app + _T("\" ");
 		//w_exe_path += g_cfg.rdp_cmdline;
 		//w_exe_path = _T("xfreerdp -u {user_name} {size} {console} {clipboard} {drives} ");
-		w_exe_path = _T("/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp -u {user_name} {size} {console} ");
-		
+		//w_exe_path = _T("/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp -u {user_name} {size} {console} ");
+		//w_exe_path = _T("xfreerdp -u {user_name} {size} {console} ");
+		s_exec = "/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp";
+		//s_exec = "xfreerdp";
+		//s_argv.push_back("xfreerdp");
+		s_argv.push_back(s_exec.c_str());
+
 		{
-			// 			w_exe_path += L"{size} {console} {clipboard} {drives} ";
-			// 			w_exe_path += g_cfg.rdp_cmdline;
+			ex_astr username = "02" + real_sid;
 			
-			ex_wstr w_screen;
+			s_argv.push_back("-u");
+			s_argv.push_back(username.c_str());
 			
 			if (rdp_w == 0 || rdp_h == 0) {
-				w_screen = _T("-f");
+				s_argv.push_back("-f");
 			}
 			else {
 				char sz_size[64] = {0};
-				ex_strformat(sz_size, 63, "-g %dx%d", rdp_w, rdp_h);
-				ex_astr2wstr(sz_size, w_screen);
+				ex_strformat(sz_size, 63, "%dx%d", rdp_w, rdp_h);
+				s_argv.push_back("-g");
+				s_argv.push_back(sz_size);
 			}
 			
-//			const wchar_t* w_console = NULL;
-//			
-//			if (rdp_console)
-//			{
-//				w_console = _T("/admin");
-//			}
-//			else
-//			{
-//				w_console = _T("");
-//			}
-			
-//			ex_wstr w_password;
-//			ex_astr2wstr(szPwd, w_password);
-//			w_exe_path += _T(" -p ");
-//			w_exe_path += w_password;
-			
-			w_sid = _T("02") + w_sid;
-			
-			//w_exe_path += _T(" /gdi:sw");
-			w_exe_path += _T(" {host_ip}:{host_port}");
-
-			ex_replace_all(w_exe_path, _T("{size}"), w_screen);
-
 			if (flag_console && rdp_console)
-				ex_replace_all(w_exe_path, _T("{console}"), L"/admin");
-			else
-				ex_replace_all(w_exe_path, _T("{console}"), L"");
+				s_argv.push_back("/admin");
 
-			//ex_replace_all(w_exe_path, _T("{clipboard}"), L"+clipboard");
+//			if(flag_clipboard)
+//				s_argv.push_back("+clipboard");
+//			else
+//				s_argv.push_back("-clipboard");
 
-			if(flag_clipboard)
-				ex_replace_all(w_exe_path, _T("{clipboard}"), L"/clipboard");
-			else
-				ex_replace_all(w_exe_path, _T("{clipboard}"), L"-clipboard");
-
-			if(flag_disk)
-				ex_replace_all(w_exe_path, _T("{drives}"), L"/drives");
-			else
-				ex_replace_all(w_exe_path, _T("{drives}"), L"-drives");
-//		}
-//		else {
-//			_create_json_ret(buf, TPE_FAILED);
-//			return;
+//			if(flag_disk)
+//				s_argv.push_back("+drives");
+//			else
+//				s_argv.push_back("-drives");
+			
+			{
+				char sz_temp[128] = {0};
+				ex_strformat(sz_temp, 127, "%s:%d", teleport_ip.c_str(), teleport_port);
+				s_argv.push_back(sz_temp);
+			}
 		}
 
 	}
@@ -651,16 +635,23 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		return;
 	}
 
-	ex_replace_all(w_exe_path, _T("{host_port}"), w_port);
-	ex_replace_all(w_exe_path, _T("{host_ip}"), w_teleport_ip.c_str());
-	ex_replace_all(w_exe_path, _T("{user_name}"), w_sid.c_str());
-	ex_replace_all(w_exe_path, _T("{real_ip}"), w_real_host_ip.c_str());
+//	ex_replace_all(w_exe_path, _T("{host_port}"), w_port);
+//	ex_replace_all(w_exe_path, _T("{host_ip}"), w_teleport_ip.c_str());
+//	ex_replace_all(w_exe_path, _T("{user_name}"), w_sid.c_str());
+//	ex_replace_all(w_exe_path, _T("{real_ip}"), w_real_host_ip.c_str());
 	//ex_replace_all(w_exe_path, _T("{assist_tools_path}"), g_env.m_tools_path.c_str());
 
 
 	Json::Value root_ret;
-	ex_astr utf8_path;
-	ex_wstr2astr(w_exe_path, utf8_path, EX_CODEPAGE_UTF8);
+	ex_astr utf8_path = s_exec;
+	//ex_wstr2astr(w_exe_path, utf8_path, EX_CODEPAGE_UTF8);
+
+	ex_astrs::iterator it = s_argv.begin();
+	for(; it != s_argv.end(); ++it) {
+		utf8_path += " ";
+		utf8_path += (*it);
+	}
+
 	root_ret["path"] = utf8_path;
 
 	// if (!CreateProcess(NULL, (wchar_t *)w_exe_path.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
@@ -675,12 +666,67 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	//ex_astr __sid;
 	//ex_wstr2astr(w_sid, __sid);
 	//execlp("xfreerdp", "-u", __sid.c_str(), "-g", "800x600", "127.0.0.1:52089", NULL);
-	FILE *f = popen(utf8_path.c_str(), "r");
-	if(f == NULL) {
+//	FILE *f = popen(utf8_path.c_str(), "r");
+//	if(f == NULL) {
+//		root_ret["code"] = TPE_FAILED;
+//	} else {
+//		root_ret["code"] = TPE_OK;
+//		pclose(f);
+//	}
+
+//	{
+//		int i = 0;
+//		char** _argv = (char**)calloc(s_argv.size()+1, sizeof(char*));
+//		if (!_argv)
+//			return;
+//
+//		for (i = 0; i < s_argv.size(); ++i)
+//		{
+//			_argv[i] = ex_strdup(s_argv[i].c_str());
+//		}
+//		_argv[i] = NULL;
+//
+//		execv(s_exec.c_str(), _argv);
+//
+//		for(i = 0; i < s_argv.size(); ++i) {
+//			if(_argv[i] != NULL) {
+//				free(_argv[i]);
+//			}
+//		}
+//		free(_argv);
+//
+//	}
+	
+	
+	
+	// for macOS, Create Process should be fork()/exec()...
+	pid_t processId;
+	if ((processId = fork()) == 0) {
+		
+		int i = 0;
+		char** _argv = (char**)calloc(s_argv.size()+1, sizeof(char*));
+		if (!_argv)
+			return;
+		
+		for (i = 0; i < s_argv.size(); ++i)
+		{
+			_argv[i] = ex_strdup(s_argv[i].c_str());
+		}
+		_argv[i] = NULL;
+
+		execv(s_exec.c_str(), _argv);
+		
+		for(i = 0; i < s_argv.size(); ++i) {
+			if(_argv[i] != NULL) {
+				free(_argv[i]);
+			}
+		}
+		free(_argv);
+		
+	} else if (processId < 0) {
 		root_ret["code"] = TPE_FAILED;
 	} else {
 		root_ret["code"] = TPE_OK;
-		pclose(f);
 	}
 	
 
