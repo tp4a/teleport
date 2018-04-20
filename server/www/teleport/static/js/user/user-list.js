@@ -789,6 +789,7 @@ $app.create_dlg_edit_user = function () {
 
         if (_.isUndefined(user)) {
             dlg.dom.dlg_title.html('创建用户账号');
+            dlg.field_id = -1;
 
             dlg.dom.edit_username.val('');
             dlg.dom.edit_surname.val('');
