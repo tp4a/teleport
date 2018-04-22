@@ -267,7 +267,7 @@ def update_user(handler, args):
     db = get_db()
 
     # 1. 判断此账号是否已经存在
-    sql = 'SELECT `username` FROM {dbtp}user WHERE id={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+    sql = 'SELECT `username` FROM {dbtp}user WHERE `id`={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
     db_ret = db.query(sql, (args['id'], ))
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
@@ -275,7 +275,7 @@ def update_user(handler, args):
     old_username = db_ret[0][0]
     if old_username != args['username']:
         # 如果要更新用户登录名，则需要判断是否已经存在了
-        sql = 'SELECT `id` FROM {dbtp}user WHERE username={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+        sql = 'SELECT `id` FROM {dbtp}user WHERE `username`={dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
         db_ret = db.query(sql, (args['username'],))
         if db_ret is not None and len(db_ret) > 0:
             return TPE_EXISTS

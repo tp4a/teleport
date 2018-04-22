@@ -228,7 +228,7 @@ def update_host(handler, args):
         return TPE_NOT_EXISTS
 
     sql_list = []
-    sql = 'UPDATE `{}host` SET `os_type`="{os_type}", `name`="{name}", `ip`="{ip}", `router_ip`="{router_ip}", ' \
+    sql = 'UPDATE `{}host` SET `os_type`={os_type}, `name`="{name}", `ip`="{ip}", `router_ip`="{router_ip}", ' \
           '`router_port`={router_port}, `cid`="{cid}", `desc`="{desc}" WHERE `id`={host_id};' \
           ''.format(db.table_prefix,
                     os_type=args['os_type'], name=args['name'], ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'],
@@ -245,7 +245,7 @@ def update_host(handler, args):
     _name = args['ip']
     if len(args['name']) > 0:
         _name = '{} [{}]'.format(args['name'], args['ip'])
-    sql_list = []
+
     # 运维授权
     sql = 'UPDATE `{}ops_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});' \
           ''.format(db.table_prefix, name=_name, rtype=TP_HOST, rid=args['id'])
