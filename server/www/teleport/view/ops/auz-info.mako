@@ -200,12 +200,12 @@
 
             <div class="tab-pane" id="tab-config">
                 <table class="table table-config-list">
-                    <tr>
-                        <td class="key">会话选项</td>
-                        <td class="value">
-                            <div id="record-allow-replay" class="tp-checkbox tp-editable">记录会话历史</div>
-                        </td>
-                    </tr>
+##                     <tr>
+##                         <td class="key">会话选项</td>
+##                         <td class="value">
+##                             <div id="record-allow-replay" class="tp-checkbox tp-editable">记录会话历史</div>
+##                         </td>
+##                     </tr>
 ##                     <tr>
 ##                         <td class="key"></td>
 ##                         <td class="value">
@@ -213,11 +213,11 @@
 ##                         </td>
 ##                     </tr>
 
-                    <tr>
-                        <td colspan="2" class="title">
-                            <hr class="hr-sm"/>
-                        </td>
-                    </tr>
+##                     <tr>
+##                         <td colspan="2" class="title">
+##                             <hr class="hr-sm"/>
+##                         </td>
+##                     </tr>
 
                     ## <div id="rdp-allow-desktop" class="tp-checkbox tp-editable tp-selected">允许 远程桌面</div>
                     ## <div id="rdp-allow-app" class="tp-checkbox">允许 远程应用</div>

@@ -20,7 +20,7 @@ $app.on_init = function (cb_stack) {
         btn_remove_asset: $('#btn-remove-asset'),
 
         flag_checkboxes: $('#tab-config div.tp-checkbox.tp-editable'),
-        flag_record_allow_replay: $('#record-allow-replay'),
+        // flag_record_allow_replay: $('#record-allow-replay'),
         flag_rdp_allow_clipboard: $('#rdp-allow-clipboard'),
         flag_rdp_allow_disk: $('#rdp-allow-disk'),
         flag_rdp_allow_console: $('#rdp-allow-console'),
@@ -1950,8 +1950,8 @@ $app.create_dlg_sel_host_group = function () {
 $app.init_flags = function() {
     console.log($app.options);
 
-    if(($app.options.policy_flags.record & TP_FLAG_RECORD_REPLAY) !== 0)
-        $app.dom.flag_record_allow_replay.addClass('tp-selected');
+    // if(($app.options.policy_flags.record & TP_FLAG_RECORD_REPLAY) !== 0)
+    //     $app.dom.flag_record_allow_replay.addClass('tp-selected');
 
     if(($app.options.policy_flags.rdp & TP_FLAG_RDP_CLIPBOARD) !== 0)
         $app.dom.flag_rdp_allow_clipboard.addClass('tp-selected');
@@ -1977,9 +1977,10 @@ $app.on_click_flag = function (e) {
 
 $app.on_save_flags = function () {
     var flag_record = 0;
+    flag_record |= TP_FLAG_RECORD_REPLAY; // now we always need record replay.
     flag_record |= TP_FLAG_RECORD_REAL_TIME; // not implement, set this flag for default.
-    if ($app.dom.flag_record_allow_replay.hasClass('tp-selected'))
-        flag_record |= TP_FLAG_RECORD_REPLAY;
+    // if ($app.dom.flag_record_allow_replay.hasClass('tp-selected'))
+    //     flag_record |= TP_FLAG_RECORD_REPLAY;
 
     var flag_rdp = 0;
     flag_rdp |= TP_FLAG_RDP_DESKTOP; // before support remote-app, remote-desktop is the only way to access remote host.

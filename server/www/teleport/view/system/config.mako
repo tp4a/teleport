@@ -19,6 +19,7 @@
         <ul class="nav nav-tabs">
             <li class="active"><a href="#tab-info" data-toggle="tab">基本信息</a></li>
             <li><a href="#tab-security" data-toggle="tab">安全</a></li>
+            <li><a href="#tab-session" data-toggle="tab">连接控制</a></li>
             <li><a href="#tab-smtp" data-toggle="tab">邮件系统</a></li>
             <li><a href="#tab-storage" data-toggle="tab">存储</a></li>
             ##             <li><a href="#tab-backup" data-toggle="tab">备份</a></li>
@@ -138,6 +139,107 @@
                 <hr/>
 
                 <button id="btn-save-secure-config" class="btn btn-sm btn-primary"><i class="fa fa-check-circle fa-fw"></i> 保存安全设置</button>
+
+            </div>
+
+            <!-- panel for session connection config -->
+            <div class="tab-pane" id="tab-session">
+                <div class="alert alert-warning">
+                    注意：运维授权策略的连接控制选项将继承系统连接控制选项的设定。例如，在本界面设定"不允许SFTP连接"，则所有运维授权策略中的SFTP连接均被禁止。又如，在本界面设定"允许SFTP连接"，但某个运维授权策略中禁止SFTP连接，则该运维授权策略中的所有SFTP连接均被禁止。
+                </div>
+                <table class="table table-config-list">
+##                     <tr>
+##                         <td colspan="2" class="title">全局会话选项</td>
+##                     </tr>
+##                     <tr>
+##                         <td class="key"></td>
+##                         <td class="value">
+##                             <div id="sess-record-allow-replay" class="tp-checkbox tp-editable">记录会话历史</div>
+##                         </td>
+##                     </tr>
+##                     <tr>
+##                         <td class="key"></td>
+##                         <td class="value">
+##                             <div id="sess-record-allow-real-time" class="tp-checkbox tp-disabled">允许实时监控（开发中）</div>
+##                         </td>
+##                     </tr>
+
+                    <tr>
+                        <td colspan="2" class="title">
+##                             <hr class="hr-sm"/>
+                            全局RDP选项
+                        </td>
+                    </tr>
+
+                    ## <div id="rdp-allow-desktop" class="tp-checkbox tp-editable tp-selected">允许 远程桌面</div>
+                    ## <div id="rdp-allow-app" class="tp-checkbox">允许 远程应用</div>
+
+                    <tr>
+                        <td class="key"></td>
+                        <td class="value">
+                            <div id="sess-rdp-allow-clipboard" class="tp-checkbox tp-editable">允许剪贴板</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key"></td>
+                        <td class="value">
+                            <div id="sess-rdp-allow-disk" class="tp-checkbox tp-editable">允许驱动器映射</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key"></td>
+                        <td class="value">
+                            <div id="sess-rdp-allow-console" class="tp-checkbox tp-editable">允许管理员连接（Console模式）</div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="2" class="title">
+                            <hr class="hr-sm"/>
+                            全局SSH选项
+                        </td>
+                    </tr>
+
+##                     <div id="ssh-allow-x11" class="tp-checkbox">允许X11转发</div>
+##                     <div id="ssh-allow-tunnel" class="tp-checkbox">允许隧道转发</div>
+##                     <div id="ssh-allow-exec" class="tp-checkbox">允许远程执行exec</div>
+
+                    <tr>
+                        <td class="key"></td>
+                        <td class="value">
+                            <div id="sess-ssh-allow-shell" class="tp-checkbox tp-editable">允许SSH</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key"></td>
+                        <td class="value">
+                            <div id="sess-ssh-allow-sftp" class="tp-checkbox tp-editable">允许SFTP</div>
+                        </td>
+                    </tr>
+##                     <tr>
+##                         <td class="key"></td>
+##                         <td class="value">
+##                             <div id="ssh-allow-x11" class="tp-checkbox tp-disabled">允许X11转发（开发中）</div>
+##                         </td>
+##                     </tr>
+
+                    <tr>
+                        <td colspan="2" class="title">
+                            <hr class="hr-sm"/>
+                            会话超时设置
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key">会话超时</td>
+                        <td class="value">
+                            <input id="sess-noop-timeout" type="text" value="15"/><span class="unit">分钟</span><span class="desc">0~60。指定时间内远程会话没有任何数据包收发时，将此会话断开，为0则不检查。默认为15分钟。</span>
+                        </td>
+                    </tr>
+
+                </table>
+                <hr/>
+
+                <button id="btn-save-session-config" class="btn btn-sm btn-primary"><i class="fa fa-check-circle fa-fw"></i> 保存设置</button>
 
             </div>
 

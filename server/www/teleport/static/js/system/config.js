@@ -9,6 +9,9 @@ $app.on_init = function (cb_stack) {
     $app.info = $app.create_info_table();
     cb_stack.add($app.info.init);
 
+    $app.sess = $app.create_config_sess();
+    cb_stack.add($app.sess.init);
+
     $app.smtp = $app.create_config_smtp();
     cb_stack.add($app.smtp.init);
 
@@ -494,6 +497,138 @@ $app.create_config_sec = function () {
     };
 
     return _sec;
+};
+
+$app.create_config_sess = function () {
+    var _sess = {};
+
+    _sess.dom = {
+        btn_save: $('#btn-save-session-config'),
+
+        input_noop_timeout: $('#sess-noop-timeout'),
+
+        btn_sess_rdp_allow_clipboard: $('#sess-rdp-allow-clipboard'),
+        btn_sess_rdp_allow_disk: $('#sess-rdp-allow-disk'),
+        btn_sess_rdp_allow_console: $('#sess-rdp-allow-console'),
+        btn_sess_ssh_allow_shell: $('#sess-ssh-allow-shell'),
+        btn_sess_ssh_allow_sftp: $('#sess-ssh-allow-sftp')
+    };
+
+    _sess.init = function (cb_stack) {
+        _sess.update_dom_session_cfg($app.options.sys_cfg.session);
+
+        $('#tab-session').find('.tp-checkbox.tp-editable').click(function () {
+            if ($(this).hasClass('tp-selected'))
+                $(this).removeClass('tp-selected');
+            else
+                $(this).addClass('tp-selected');
+        });
+
+        _sess.dom.btn_save.click(function () {
+            _sess.on_btn_save();
+        });
+
+        cb_stack.exec();
+    };
+
+    _sess.update_dom_session_cfg = function (sess) {
+        _sess.dom.btn_sess_rdp_allow_clipboard.removeClass('tp-selected');
+        if (sess.rdp_allow_clipboard)
+            _sess.dom.btn_sess_rdp_allow_clipboard.addClass('tp-selected');
+
+        _sess.dom.btn_sess_rdp_allow_disk.removeClass('tp-selected');
+        if (sess.rdp_allow_disk)
+            _sess.dom.btn_sess_rdp_allow_disk.addClass('tp-selected');
+
+        _sess.dom.btn_sess_rdp_allow_console.removeClass('tp-selected');
+        if (sess.rdp_allow_console)
+            _sess.dom.btn_sess_rdp_allow_console.addClass('tp-selected');
+
+        _sess.dom.btn_sess_ssh_allow_shell.removeClass('tp-selected');
+        if (sess.ssh_allow_shell)
+            _sess.dom.btn_sess_ssh_allow_shell.addClass('tp-selected');
+
+        _sess.dom.btn_sess_ssh_allow_sftp.removeClass('tp-selected');
+        if (sess.ssh_allow_sftp)
+            _sess.dom.btn_sess_ssh_allow_sftp.addClass('tp-selected');
+
+        _sess.dom.input_noop_timeout.val(sess.timeout);
+    };
+
+    _sess.on_btn_save = function () {
+        var flag_record = 0;
+        flag_record |= TP_FLAG_RECORD_REPLAY; // now we always need record replay.
+        flag_record |= TP_FLAG_RECORD_REAL_TIME; // not implement, set this flag for default.
+
+        var flag_rdp = 0;
+        flag_rdp |= TP_FLAG_RDP_DESKTOP; // before support remote-app, remote-desktop is the only way to access remote host.
+        if(_sess.dom.btn_sess_rdp_allow_clipboard.hasClass('tp-selected'))
+            flag_rdp |= TP_FLAG_RDP_CLIPBOARD;
+        if(_sess.dom.btn_sess_rdp_allow_disk.hasClass('tp-selected'))
+            flag_rdp |= TP_FLAG_RDP_DISK;
+        if(_sess.dom.btn_sess_rdp_allow_console.hasClass('tp-selected'))
+            flag_rdp |= TP_FLAG_RDP_CONSOLE;
+
+        var flag_ssh = 0;
+        if(_sess.dom.btn_sess_ssh_allow_shell.hasClass('tp-selected'))
+            flag_ssh |= TP_FLAG_SSH_SHELL;
+        if(_sess.dom.btn_sess_ssh_allow_sftp.hasClass('tp-selected'))
+            flag_ssh |= TP_FLAG_SSH_SFTP;
+
+        if (flag_ssh === 0) {
+            $tp.notify_error('SSH选项都未选择，无法进行SSH连接哦！');
+            return;
+        }
+
+        var _noop_timeout = parseInt(_sess.dom.input_noop_timeout.val());
+
+
+        if (_.isNaN(_noop_timeout) || _noop_timeout < 0 || _noop_timeout > 60) {
+            $tp.notify_error('会话超时设置超出范围！');
+            _sess.dom.input_noop_timeout.focus();
+            return;
+        }
+
+        _sess.dom.btn_save.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/system/save-cfg',
+            {
+                session: {
+                    flag_record: flag_record,
+                    flag_rdp: flag_rdp,
+                    flag_ssh: flag_ssh,
+                    noop_timeout: _noop_timeout
+                }
+            },
+            function (ret) {
+                _sess.dom.btn_save.removeAttr('disabled');
+                if (ret.code === TPE_OK) {
+                    $tp.notify_success('全局连接控制设置更新成功！');
+
+                    // // 更新一下界面上显示的配置信息
+                    // $app.options.sys_cfg.password.allow_reset = _password_allow_reset;
+                    // $app.options.sys_cfg.password.force_strong = _password_force_strong;
+                    // $app.options.sys_cfg.password.timeout = _password_timeout;
+                    //
+                    // $app.options.sys_cfg.login.session_timeout = _login_session_timeout;
+                    // $app.options.sys_cfg.login.retry = _login_retry;
+                    // $app.options.sys_cfg.login.lock_timeout = _login_lock_timeout;
+                    // $app.options.sys_cfg.login.auth = _login_auth;
+                    //
+                    // _sec.update_dom_password($app.options.sys_cfg.password);
+                    // _sec.update_dom_login($app.options.sys_cfg.login);
+                } else {
+                    $tp.notify_error('全局连接控制设置更新失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                _sess.dom.btn_save.removeAttr('disabled');
+                $tp.notify_error('网路故障，全局连接控制设置更新失败！');
+            }
+        );
+
+    };
+
+    return _sess;
 };
 
 $app.create_config_storage = function () {
