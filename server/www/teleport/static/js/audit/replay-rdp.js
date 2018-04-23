@@ -113,10 +113,10 @@ $app.on_init = function (cb_stack) {
         var obj = $('#btn-skip i');
         if ($app.need_skip) {
             $app.need_skip = false;
-            obj.removeClass('fa-check-square-o').addClass('fa-square-o');
+            obj.removeClass('fa-check-square').addClass('fa-square');
         } else {
             $app.need_skip = true;
-            obj.removeClass('fa-square-o').addClass('fa-check-square-o');
+            obj.removeClass('fa-square').addClass('fa-check-square');
         }
 
         // console.log('skip:', $app.need_skip);

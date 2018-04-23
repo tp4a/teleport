@@ -590,7 +590,7 @@ def cleanup_storage(handler):
                             continue
 
                         if os.path.exists(path_remove):
-                            print('remove path', path_remove)
+                            # print('remove path', path_remove)
                             try:
                                 shutil.rmtree(path_remove)
                             except:

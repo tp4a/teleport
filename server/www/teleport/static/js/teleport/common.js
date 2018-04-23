@@ -20,7 +20,7 @@ $tp.notify_error = function (message_, title_, timeout_) {
 $tp.notify_success = function (message_, title_) {
     var _title = title_ || null;
     if (_title !== null)
-        _title = '<i class="fa fa-check-square fa-fw"></i> ' + _title;
+        _title = '<i class="far fa-check-square fa-fw"></i> ' + _title;
     $.gritter.add({
         //sticky:true,
         class_name: 'gritter-success',
