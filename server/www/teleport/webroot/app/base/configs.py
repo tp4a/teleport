@@ -495,6 +495,25 @@ class AppConfig(BaseAppConfig):
             self.sys.login.auth = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA | TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH
 
         # =====================================
+        # 连接控制相关
+        # =====================================
+        try:
+            _sess = json.loads(conf_data['session'])
+        except:
+            log.w('session config not set or invalid, use default.\n')
+            _sess = {}
+
+        self.sys.session = tp_convert_to_attr_dict(_sess)
+        if not self.sys.session.is_exists('noop_timeout'):
+            self.sys.session.noop_timeout = 15  # 15 minute
+        if not self.sys.session.is_exists('flag_record'):
+            self.sys.session.flag_record = TP_FLAG_ALL  # TP_FLAG_RECORD_REPLAY | TP_FLAG_RECORD_REAL_TIME
+        if not self.sys.session.is_exists('flag_rdp'):
+            self.sys.session.flag_rdp = TP_FLAG_ALL  # TP_FLAG_RDP_DESKTOP | TP_FLAG_RDP_CLIPBOARD | TP_FLAG_RDP_DISK | TP_FLAG_RDP_CONSOLE
+        if not self.sys.session.is_exists('flag_ssh'):
+            self.sys.session.flag_ssh = TP_FLAG_ALL  # TP_FLAG_SSH_SHELL | TP_FLAG_SSH_SFTP
+
+        # =====================================
         # SMTP相关
         # =====================================
         self.sys_smtp_password = ''

@@ -533,26 +533,26 @@ $app.create_config_sess = function () {
 
     _sess.update_dom_session_cfg = function (sess) {
         _sess.dom.btn_sess_rdp_allow_clipboard.removeClass('tp-selected');
-        if (sess.rdp_allow_clipboard)
+        if (sess.flag_rdp & TP_FLAG_RDP_CLIPBOARD)
             _sess.dom.btn_sess_rdp_allow_clipboard.addClass('tp-selected');
 
         _sess.dom.btn_sess_rdp_allow_disk.removeClass('tp-selected');
-        if (sess.rdp_allow_disk)
+        if (sess.flag_rdp & TP_FLAG_RDP_DISK)
             _sess.dom.btn_sess_rdp_allow_disk.addClass('tp-selected');
 
         _sess.dom.btn_sess_rdp_allow_console.removeClass('tp-selected');
-        if (sess.rdp_allow_console)
+        if (sess.flag_rdp & TP_FLAG_RDP_CONSOLE)
             _sess.dom.btn_sess_rdp_allow_console.addClass('tp-selected');
 
         _sess.dom.btn_sess_ssh_allow_shell.removeClass('tp-selected');
-        if (sess.ssh_allow_shell)
+        if (sess.flag_rdp & TP_FLAG_SSH_SHELL)
             _sess.dom.btn_sess_ssh_allow_shell.addClass('tp-selected');
 
         _sess.dom.btn_sess_ssh_allow_sftp.removeClass('tp-selected');
-        if (sess.ssh_allow_sftp)
+        if (sess.flag_rdp & TP_FLAG_SSH_SFTP)
             _sess.dom.btn_sess_ssh_allow_sftp.addClass('tp-selected');
 
-        _sess.dom.input_noop_timeout.val(sess.timeout);
+        _sess.dom.input_noop_timeout.val(sess.noop_timeout);
     };
 
     _sess.on_btn_save = function () {

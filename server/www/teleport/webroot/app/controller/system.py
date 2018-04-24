@@ -250,7 +250,7 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)
 
-            if 'password' in args:
+            elif 'password' in args:
                 _cfg = args['password']
                 _allow_reset = _cfg['allow_reset']
                 _force_strong = _cfg['force_strong']
@@ -263,7 +263,7 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)
 
-            if 'login' in args:
+            elif 'login' in args:
                 _cfg = args['login']
                 _session_timeout = _cfg['session_timeout']
                 _retry = _cfg['retry']
@@ -279,7 +279,23 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)
 
-            if 'storage' in args:
+            elif 'session' in args:
+                _cfg = args['session']
+                _noop_timeout = _cfg['noop_timeout']
+                _flag_record = _cfg['flag_record']
+                _flag_rdp = _cfg['flag_rdp']
+                _flag_ssh = _cfg['flag_ssh']
+                err = system_model.save_config(self, '更新连接控制设置', 'session', _cfg)
+                if err == TPE_OK:
+                    tp_cfg().sys.session.noop_timeout = _noop_timeout
+                    tp_cfg().sys.session.flag_record = _flag_record
+                    tp_cfg().sys.session.flag_rdp = _flag_rdp
+                    tp_cfg().sys.session.flag_ssh = _flag_ssh
+                    tp_session().update_default_expire()
+                else:
+                    return self.write_json(err)
+
+            elif 'storage' in args:
                 _cfg = args['storage']
                 _keep_log = _cfg['keep_log']
                 _keep_record = _cfg['keep_record']
@@ -299,6 +315,8 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                     tp_cfg().sys.storage.cleanup_minute = _cleanup_minute
                 else:
                     return self.write_json(err)
+            else:
+                return self.write_json(TPE_PARAM)
 
             return self.write_json(TPE_OK)
         except:
