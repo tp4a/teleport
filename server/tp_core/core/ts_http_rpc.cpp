@@ -4,6 +4,9 @@
 #include "ts_session.h"
 #include "ts_crypto.h"
 #include "ts_web_rpc.h"
+#include "tp_tpp_mgr.h"
+
+extern TppManager g_tpp_mgr;
 
 #include <teleport_const.h>
 
@@ -249,24 +252,22 @@ void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode, const char* message)
 
 void TsHttpRpc::_process_request(const ex_astr& func_cmd, const Json::Value& json_param, ex_astr& buf)
 {
-	if (func_cmd == "request_session")
-	{
+	if (func_cmd == "request_session") {
 		_rpc_func_request_session(json_param, buf);
 	}
-	else if (func_cmd == "get_config")
-	{
+	else if (func_cmd == "get_config") {
 		_rpc_func_get_config(json_param, buf);
 	}
-	else if (func_cmd == "enc")
-	{
+	else if (func_cmd == "set_config") {
+		_rpc_func_set_config(json_param, buf);
+	}
+	else if (func_cmd == "enc") {
 		_rpc_func_enc(json_param, buf);
 	}
-	else if (func_cmd == "exit")
-	{
+	else if (func_cmd == "exit") {
 		_rpc_func_exit(json_param, buf);
 	}
-	else
-	{
+	else {
 		EXLOGE("[core] rpc got unknown command: %s\n", func_cmd.c_str());
 		_create_json_ret(buf, TPE_UNKNOWN_CMD);
 	}
@@ -421,6 +422,46 @@ void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 	jr_data["c"] = cipher_text;
 	_create_json_ret(buf, TPE_OK, jr_data);
 }
+
+void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf)
+{
+	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#set_config
+	/*
+	{
+	  "noop-timeout": 900     # 900s = 15m
+	}
+	*/
+
+	if (json_param.isArray())
+	{
+		_create_json_ret(buf, TPE_PARAM);
+		return;
+	}
+
+	if (json_param["noop_timeout"].isNull() || !json_param["noop_timeout"].isUInt())
+	{
+		_create_json_ret(buf, TPE_PARAM);
+		return;
+	}
+
+	int noop_timeout = json_param["noop_timeout"].asUInt();
+	if (noop_timeout == 0)
+	{
+		_create_json_ret(buf, TPE_PARAM);
+		return;
+	}
+
+	//static TppManager g_tpp_mgr;
+	EXLOGV("[core] no-op timeout set to %d minutes.\n", noop_timeout);
+	g_tpp_mgr.set_config(noop_timeout);
+
+
+// 	Json::Value jr_data;
+// 	jr_data["c"] = cipher_text;
+// 	_create_json_ret(buf, TPE_OK, jr_data);
+	_create_json_ret(buf, TPE_OK);
+}
+
 
 /*
 void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)

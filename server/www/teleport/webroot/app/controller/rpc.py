@@ -103,7 +103,7 @@ class RpcHandler(TPBaseJsonHandler):
             code = param['code']
         except:
             return self.write_json(TPE_PARAM)
-        if 'rid' not in param or 'code' not in param :
+        if 'rid' not in param or 'code' not in param:
             return self.write_json(TPE_PARAM)
 
         if not record.session_update(rid, protocol_sub_type, code):
@@ -139,6 +139,13 @@ class RpcHandler(TPBaseJsonHandler):
 
         log.d('update base server config info.\n')
         tp_cfg().update_core(ret_data)
+
+        # 将运行时配置发送给核心服务
+        req = {'method': 'set_config', 'param': {'noop_timeout': tp_cfg().sys.session.noop_timeout}}
+        _yr = core_service_async_post_http(req)
+        code, ret_data = yield _yr
+        if code != TPE_OK:
+            return self.write_json(code, 'set runtime-config to core-service failed.')
 
         return self.write_json(TPE_OK)
 

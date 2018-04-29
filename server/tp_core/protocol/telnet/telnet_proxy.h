@@ -16,6 +16,8 @@ public:
 
 	bool init();
 	void timer();
+	void set_cfg(TPP_SET_CFG_ARGS* args);
+
 	uv_loop_t* get_loop() { return &m_loop; }
 
 	void clean_session();
@@ -37,6 +39,8 @@ private:
 private:
 	bool m_stop_flag;
 	int m_timer_counter;
+	// 
+	ex_u32 m_noop_timeout_sec;
 
 	uv_loop_t m_loop;
 	uv_tcp_t m_handle;

@@ -22,6 +22,7 @@ TelnetSession::TelnetSession(TelnetProxy *proxy) :
 	m_is_relay = false;
 	m_is_closed = false;
 	m_first_client_pkg = true;
+	m_last_access_timestamp = (ex_u32)time(NULL);
 
 	m_win_width = 0;
 	m_win_height = 0;
@@ -52,6 +53,13 @@ TelnetSession::~TelnetSession() {
 
 void TelnetSession::save_record() {
 	m_rec.save_record();
+}
+
+void TelnetSession::check_noop_timeout(ex_u32 t_now, ex_u32 timeout) {
+	if (t_now - m_last_access_timestamp > timeout) {
+		EXLOGW("[telnet] need close session by timeout.\n");
+		_do_close(TP_SESS_STAT_END);
+	}
 }
 
 void TelnetSession::_session_error(int err_code) {
@@ -520,6 +528,8 @@ sess_state TelnetSession::_do_server_connected() {
 }
 
 sess_state TelnetSession::_do_relay(TelnetConn *conn) {
+	m_last_access_timestamp = (ex_u32)time(NULL);
+
 	TelnetSession* _this = conn->session();
 	bool is_processed = false;
 

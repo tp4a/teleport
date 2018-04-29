@@ -216,6 +216,7 @@ class DoGetLogsHandler(TPBaseJsonHandler):
 
 
 class DoSaveCfgHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
         if ret != TPE_OK:
@@ -287,11 +288,20 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 _flag_ssh = _cfg['flag_ssh']
                 err = system_model.save_config(self, '更新连接控制设置', 'session', _cfg)
                 if err == TPE_OK:
+                    try:
+                        req = {'method': 'set_config', 'param': {'noop_timeout': _noop_timeout}}
+                        _yr = core_service_async_post_http(req)
+                        code, ret_data = yield _yr
+                        if code != TPE_OK:
+                            log.e('can not set runtime-config to core-server.\n')
+                            return self.write_json(code)
+                    except:
+                        pass
+
                     tp_cfg().sys.session.noop_timeout = _noop_timeout
                     tp_cfg().sys.session.flag_record = _flag_record
                     tp_cfg().sys.session.flag_rdp = _flag_rdp
                     tp_cfg().sys.session.flag_ssh = _flag_ssh
-                    tp_session().update_default_expire()
                 else:
                     return self.write_json(err)
 

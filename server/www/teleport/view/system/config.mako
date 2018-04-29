@@ -88,8 +88,8 @@
                     </tr>
                     <tr>
                         <td class="key">认证方式</td>
-                        <td class="value">
-                            注意：可以为每个用户指定特定的认证方式。
+                        <td class="value">设置系统启用的登录认证方式
+                            <span class="desc">还可以为每个用户指定特定的登录认证方式。</span>
                         </td>
                     </tr>
 ##                     <tr>
@@ -167,7 +167,7 @@
                     <tr>
                         <td colspan="2" class="title">
 ##                             <hr class="hr-sm"/>
-                            全局RDP选项
+                            全局RDP选项（注：尚未实现）
                         </td>
                     </tr>
 
@@ -196,7 +196,7 @@
                     <tr>
                         <td colspan="2" class="title">
                             <hr class="hr-sm"/>
-                            全局SSH选项
+                            全局SSH选项（注：尚未实现）
                         </td>
                     </tr>
 

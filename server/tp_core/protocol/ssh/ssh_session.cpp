@@ -9,6 +9,7 @@ TP_SSH_CHANNEL_PAIR::TP_SSH_CHANNEL_PAIR() {
 	type = TS_SSH_CHANNEL_TYPE_UNKNOWN;
 	cli_channel = NULL;
 	srv_channel = NULL;
+	last_access_timestamp = (ex_u32)time(NULL);
 
 	state = TP_SESS_STAT_RUNNING;
 	db_id = 0;
@@ -16,6 +17,7 @@ TP_SSH_CHANNEL_PAIR::TP_SSH_CHANNEL_PAIR() {
 
 	win_width = 0;
 	is_first_server_data = true;
+	need_close = false;
 
 	server_ready = false;
 	maybe_cmd = false;
@@ -146,76 +148,84 @@ void SshSession::_close_channels(void) {
 
 	tp_channels::iterator it = m_channels.begin();
 	for (; it != m_channels.end(); ++it) {
-		ssh_channel ch = (*it)->srv_channel;
-		if (ch != NULL) {
-			if (!ssh_channel_is_closed(ch)) {
-				ssh_channel_close(ch);
-			}
-			ssh_channel_free(ch);
-		}
+// 		ssh_channel ch = (*it)->srv_channel;
+// 		if (ch != NULL) {
+// 			if (!ssh_channel_is_closed(ch)) {
+// 				ssh_channel_close(ch);
+// 			}
+// 			ssh_channel_free(ch);
+// 		}
+// 
+// 		ch = (*it)->cli_channel;
+// 		if (ch != NULL) {
+// 			if (!ssh_channel_is_closed(ch)) {
+// 				ssh_channel_close(ch);
+// 			}
+// 			ssh_channel_free(ch);
+// 		}
+// 
+// 		//EXLOGD("[ssh] [channel:%d]  --- end by close all channel\n", (*it)->channel_id);
+// 		_record_end(*it);
+//
+//		delete (*it);
 
-		ch = (*it)->cli_channel;
-		if (ch != NULL) {
-			if (!ssh_channel_is_closed(ch)) {
-				ssh_channel_close(ch);
-			}
-			ssh_channel_free(ch);
-		}
-
-		//EXLOGD("[ssh] [channel:%d]  --- end by close all channel\n", (*it)->channel_id);
-		_record_end(*it);
-
-		delete (*it);
+		(*it)->need_close = true;
+		m_have_error = true;
 	}
 
-	m_channels.clear();
+// 	m_channels.clear();
 }
 
 void SshSession::_check_channels() {
-	//EXLOGD("[ssh] -- check channels\n");
 	ExThreadSmartLock locker(m_lock);
 
-	//EXLOGD("[ssh] -- check channels, have %d\n", m_channels.size());
 	tp_channels::iterator it = m_channels.begin();
 	for (; it != m_channels.end(); ) {
-		//EXLOGD("[ssh]  -- channel id: %d\n", (*it)->channel_id);
-		bool closed = false;
 		ssh_channel cli = (*it)->cli_channel;
 		ssh_channel srv = (*it)->srv_channel;
-		if (cli != NULL) {
-			if (ssh_channel_is_closed(cli)) {
-				//EXLOGD("[ssh] [channel:%d]   -- server channel already closed\n", (*it)->channel_id);
-				closed = true;
-			}
-		}
-		if (srv != NULL) {
-			if (ssh_channel_is_closed(srv)) {
-				//EXLOGD("[ssh] [channel:%d]   -- client channel already closed\n", (*it)->channel_id);
-				closed = true;
-			}
-		}
 
-		if (closed) {
-			//EXLOGD("[ssh] [channel:%d]   --- end by check channel\n", (*it)->channel_id);
+		// of both cli-channel and srv-channel closed, free and erase.
+		if (
+			(cli != NULL && ssh_channel_is_closed(cli) && srv != NULL && ssh_channel_is_closed(srv))
+			|| (cli == NULL && srv == NULL)
+			|| (cli == NULL && srv != NULL && ssh_channel_is_closed(srv))
+			|| (srv == NULL && cli != NULL && ssh_channel_is_closed(cli))
+			) {
+			if (cli)
+				ssh_channel_free(cli);
+			if (srv)
+				ssh_channel_free(srv);
+
 			_record_end((*it));
 
-			if (!ssh_channel_is_closed(cli)) {
+			delete(*it);
+			m_channels.erase(it++);
+
+			continue;
+		}
+
+		// check if channel need close
+		bool need_close = (*it)->need_close;
+		if (!need_close) {
+			if (cli != NULL && ssh_channel_is_closed(cli)) {
+				need_close = true;
+			}
+			if (srv != NULL && ssh_channel_is_closed(srv)) {
+				need_close = true;
+			}
+		}
+
+		if (need_close) {
+			if (cli != NULL && !ssh_channel_is_closed(cli)) {
 				ssh_channel_close(cli);
 			}
-			ssh_channel_free(cli);
 
-			if (!ssh_channel_is_closed(srv)) {
+			if (srv != NULL && !ssh_channel_is_closed(srv)) {
 				ssh_channel_close(srv);
 			}
-			ssh_channel_free(srv);
-
-			delete (*it);
-
-			m_channels.erase(it++);
 		}
-		else {
-			++it;
-		}
+
+		++it;
 	}
 }
 
@@ -285,49 +295,11 @@ void SshSession::_run(void) {
 
 	EXLOGW("[ssh] authenticated and got a channel.\n");
 
-	// 	// 现在双方的连接已经建立好了，开始转发
-	// 	err = ssh_event_add_session(event_loop, m_srv_session);
-	// 	if (err != SSH_OK) {
-	// 		EXLOGE("[ssh] can not add server-session into event loop.\n");
-	// 		ssh_event_remove_session(event_loop, m_cli_session);
-	// 		return;
-	// 	}
-	// 
-	// 	do {
-	// 		err = ssh_event_dopoll(event_loop, 5000);
-	// 		if (err == SSH_ERROR) {
-	// 			if (0 != ssh_get_error_code(m_cli_session))
-	// 			{
-	// 				EXLOGE("[ssh] ssh_event_dopoll() [cli] %s\n", ssh_get_error(m_cli_session));
-	// 			}
-	// 			else if (0 != ssh_get_error_code(m_srv_session))
-	// 			{
-	// 				EXLOGE("[ssh] ssh_event_dopoll() [srv] %s\n", ssh_get_error(m_srv_session));
-	// 			}
-	// 
-	// 			_close_channels();
-	// 		}
-	// 		else if (err == SSH_AGAIN) {
-	// 			// timeout.
-	// 			_check_channels();
-	// 		}
-	// 	} while (m_channels.size() > 0);
-	// 
-	// 	EXLOGV("[ssh] [%s:%d] all channel in this session are closed.\n", m_client_ip.c_str(), m_client_port);
-	// 
-	// 	ssh_event_remove_session(event_loop, m_cli_session);
-	// 	ssh_event_remove_session(event_loop, m_srv_session);
-	// 	ssh_event_free(event_loop);
-	// 
-
-
-
-
-
 	// 现在双方的连接已经建立好了，开始转发
 	ssh_event_add_session(event_loop, m_srv_session);
 	do {
-		err = ssh_event_dopoll(event_loop, 5000);
+		//err = ssh_event_dopoll(event_loop, 5000);
+		err = ssh_event_dopoll(event_loop, 1000);
 		if (err == SSH_ERROR) {
 			if (0 != ssh_get_error_code(m_cli_session))
 			{
@@ -338,7 +310,8 @@ void SshSession::_run(void) {
 				EXLOGE("[ssh] ssh_event_dopoll() [srv] %s\n", ssh_get_error(m_srv_session));
 			}
 
-			_close_channels();
+			//_close_channels();
+			m_have_error = true;
 		}
 
 		if (m_ssh_ver == 1) {
@@ -347,7 +320,8 @@ void SshSession::_run(void) {
 				break;
 		}
 
-		if (err == SSH_AGAIN) {
+		if (m_have_error || err == SSH_AGAIN) {
+			m_have_error = false;
 			// timeout.
 			_check_channels();
 		}
@@ -427,14 +401,26 @@ void SshSession::save_record() {
 	}
 }
 
+void SshSession::check_noop_timeout(ex_u32 t_now, ex_u32 timeout) {
+	ExThreadSmartLock locker(m_lock);
+	tp_channels::iterator it = m_channels.begin();
+	for (; it != m_channels.end(); ++it) {
+		if ((*it)->need_close)
+			continue;
+		if (t_now - (*it)->last_access_timestamp > timeout) {
+			EXLOGW("[ssh] need close channel by timeout.\n");
+			(*it)->need_close = true;
+			m_have_error = true;
+		}
+	}
+}
+
 int SshSession::_on_auth_password_request(ssh_session session, const char *user, const char *password, void *userdata) {
 	// 这里拿到的user就是我们要的session-id。
 	SshSession *_this = (SshSession *)userdata;
 	_this->m_sid = user;
 	EXLOGV("[ssh] authenticating, session-id: %s\n", _this->m_sid.c_str());
 
-	// 	int protocol = 0;
-		//TPP_CONNECT_INFO* sess_info = g_ssh_env.get_connect_info(_this->m_sid.c_str());
 	_this->m_conn_info = g_ssh_env.get_connect_info(_this->m_sid.c_str());
 
 	if (NULL == _this->m_conn_info) {
@@ -449,7 +435,6 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		_this->m_auth_type = _this->m_conn_info->auth_type;
 		_this->m_acc_name = _this->m_conn_info->acc_username;
 		_this->m_acc_secret = _this->m_conn_info->acc_secret;
-		//protocol = _this->m_conn_info->protocol_type;
 		if (_this->m_conn_info->protocol_type != TP_PROTOCOL_TYPE_SSH) {
 			EXLOGE("[ssh] session '%s' is not for SSH.\n", _this->m_sid.c_str());
 			_this->m_have_error = true;
@@ -478,8 +463,8 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	if (_this->m_auth_type != TP_AUTH_TYPE_NONE)
 		ssh_options_set(_this->m_srv_session, SSH_OPTIONS_USER, _this->m_acc_name.c_str());
 
-	// default timeout is 10 seconds.
-	int _timeout = 30; // 30 sec.
+	// default timeout is 10 seconds, it is too short for connect progress, so set it to 60 sec.
+	int _timeout = 60; // 60 sec.
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
 	int rc = 0;
@@ -491,6 +476,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		return SSH_AUTH_ERROR;
 	}
 
+	// once the server are connected, change the timeout back to default.
 	_timeout = 10; // 10 sec.
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
@@ -589,7 +575,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		}
 
 		if (_this->m_ssh_ver != 1) {
-			// 不支持交互式登录，则尝试密码方式
+			// 如果SSHv2的主机不支持交互式登录，则尝试密码方式
 			rc = ssh_userauth_password(_this->m_srv_session, _this->m_acc_name.c_str(), _this->m_acc_secret.c_str());
 			if (rc == SSH_AUTH_SUCCESS) {
 				EXLOGW("[ssh] logon with password mode.\n");
@@ -680,6 +666,7 @@ ssh_channel SshSession::_on_new_channel_request(ssh_session session, void *userd
 	cp->type = TS_SSH_CHANNEL_TYPE_UNKNOWN;
 	cp->cli_channel = cli_channel;
 	cp->srv_channel = srv_channel;
+	cp->last_access_timestamp = (ex_u32)time(NULL);
 
 	if (!_this->_record_begin(cp)) {
 		ssh_channel_close(cli_channel);
@@ -731,6 +718,7 @@ int SshSession::_on_client_pty_request(ssh_session session, ssh_channel channel,
 
 	cp->win_width = x;
 	cp->rec.record_win_size_startup(x, y);
+	cp->last_access_timestamp = (ex_u32)time(NULL);
 
 	int err = ssh_channel_request_pty_size(cp->srv_channel, term, x, y);
 	if (err != SSH_OK)
@@ -753,6 +741,7 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
 	if (_this->m_ssh_ver == 1)
 		cp->server_ready = true;
 	g_ssh_env.session_update(cp->db_id, TP_PROTOCOL_TYPE_SSH_SHELL, TP_SESS_STAT_STARTED);
+	cp->last_access_timestamp = (ex_u32)time(NULL);
 
 
 	// FIXME: sometimes it will block here. the following function will never return.
@@ -766,7 +755,7 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
 }
 
 void SshSession::_on_client_channel_close(ssh_session session, ssh_channel channel, void *userdata) {
-
+	EXLOGV("---client channel closed.\n");
 	SshSession *_this = (SshSession *)userdata;
 
 	TP_SSH_CHANNEL_PAIR* cp = _this->_get_channel_pair(TP_SSH_CLIENT_SIDE, channel);
@@ -774,16 +763,20 @@ void SshSession::_on_client_channel_close(ssh_session session, ssh_channel chann
 		EXLOGE("[ssh] when client channel close, not found channel pair.\n");
 		return;
 	}
+//	cp->need_close = true;
+	_this->m_have_error = true;
 
 	//EXLOGD("[ssh] [channel:%d]   -- end by client channel close\n", cp->channel_id);
-	_this->_record_end(cp);
+	//_this->_record_end(cp);
 
 	if (cp->srv_channel == NULL) {
 		EXLOGW("[ssh] when client channel close, server-channel not exists.\n");
 	}
 	else {
 		if (!ssh_channel_is_closed(cp->srv_channel)) {
-			ssh_channel_close(cp->srv_channel);
+			// ssh_channel_close(cp->srv_channel);
+			//cp->need_close = true;
+			//_this->m_have_error = true;
 		}
 	}
 }
@@ -805,6 +798,7 @@ int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel
 		EXLOGE("[ssh] when receive client channel data, not found channel pair.\n");
 		return SSH_ERROR;
 	}
+	cp->last_access_timestamp = (ex_u32)time(NULL);
 
 	_this->m_recving_from_cli = true;
 
@@ -844,7 +838,9 @@ int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel
 	if (ret == SSH_ERROR) {
 		EXLOGE("[ssh] send data(%dB) to server failed. [%d][cli:%s][srv:%s]\n", _len, ret, ssh_get_error(_this->m_cli_session), ssh_get_error(_this->m_srv_session));
 
-		ssh_channel_close(channel);
+		//ssh_channel_close(channel);
+		cp->need_close = true;
+		_this->m_have_error = true;
 	}
 
 	_this->m_recving_from_cli = false;
@@ -864,6 +860,7 @@ int SshSession::_on_client_pty_win_change(ssh_session session, ssh_channel chann
 
 	cp->win_width = width;
 	cp->rec.record_win_size_change(width, height);
+	cp->last_access_timestamp = (ex_u32)time(NULL);
 
 	return ssh_channel_change_pty_size(cp->srv_channel, width, height);
 }
@@ -883,6 +880,8 @@ int SshSession::_on_client_channel_subsystem_request(ssh_session session, ssh_ch
 		EXLOGE("[ssh] when request channel subsystem, not found channel pair.\n");
 		return SSH_ERROR;
 	}
+	cp->last_access_timestamp = (ex_u32)time(NULL);
+
 
 	// 目前只支持SFTP子系统
 	if (strcmp(subsystem, "sftp") != 0) {
@@ -923,6 +922,7 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 		EXLOGE("[ssh] when receive server channel data, not found channel pair.\n");
 		return SSH_ERROR;
 	}
+	cp->last_access_timestamp = (ex_u32)time(NULL);
 
 // #ifdef EX_OS_WIN32
 // 	// TODO: hard code not good... :(
@@ -1093,7 +1093,9 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 
 	if (ret == SSH_ERROR) {
 		EXLOGE("[ssh] send data(%dB) to client failed. [%d][cli:%s][srv:%s]\n", len, ret, ssh_get_error(_this->m_cli_session), ssh_get_error(_this->m_srv_session));
-		ssh_channel_close(channel);
+		//ssh_channel_close(channel);
+		cp->need_close = true;
+		_this->m_have_error = true;
 	}
 	else if (ret != len) {
 		EXLOGW("[ssh] received server data, got %dB, processed %dB.\n", len, ret);
@@ -1104,15 +1106,19 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 }
 
 void SshSession::_on_server_channel_close(ssh_session session, ssh_channel channel, void *userdata) {
+	EXLOGV("---server channel closed.\n");
 	SshSession *_this = (SshSession *)userdata;
 	TP_SSH_CHANNEL_PAIR* cp = _this->_get_channel_pair(TP_SSH_SERVER_SIDE, channel);
 	if (NULL == cp) {
 		EXLOGE("[ssh] when server channel close, not found channel pair.\n");
 		return;
 	}
+	//cp->last_access_timestamp = (ex_u32)time(NULL);
+	//cp->need_close = true;
+	_this->m_have_error = true;
 
 	//EXLOGD("[ssh] [channel:%d]  --- end by server channel close\n", cp->channel_id);
-	_this->_record_end(cp);
+	//_this->_record_end(cp);
 
 	// will the server-channel exist, the client-channel must exist too.
 	if (cp->cli_channel == NULL) {
@@ -1120,7 +1126,9 @@ void SshSession::_on_server_channel_close(ssh_session session, ssh_channel chann
 	}
 	else {
 		if (!ssh_channel_is_closed(cp->cli_channel)) {
-			ssh_channel_close(cp->cli_channel);
+			//ssh_channel_close(cp->cli_channel);
+			//cp->need_close = true;
+			//_this->m_have_error = true;
 		}
 	}
 }

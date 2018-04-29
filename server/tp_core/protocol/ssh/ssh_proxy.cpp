@@ -8,6 +8,8 @@ SshProxy::SshProxy() :
 	m_bind(NULL)
 {
 	m_timer_counter = 0;
+
+	m_noop_timeout_sec = 900; // default to 15 minutes.
 }
 
 SshProxy::~SshProxy()
@@ -71,11 +73,18 @@ void SshProxy::timer() {
 	m_timer_counter = 0;
 
 	ExThreadSmartLock locker(m_lock);
+	ex_u32 t_now = (ex_u32)time(NULL);
 
 	ts_ssh_sessions::iterator it;
 	for(it = m_sessions.begin(); it != m_sessions.end(); ++it) {
 		it->first->save_record();
+		if(0 != m_noop_timeout_sec)
+			it->first->check_noop_timeout(t_now, m_noop_timeout_sec);
 	}
+}
+
+void SshProxy::set_cfg(TPP_SET_CFG_ARGS* args) {
+	m_noop_timeout_sec = args->noop_timeout;
 }
 
 void SshProxy::_thread_loop()

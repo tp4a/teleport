@@ -184,6 +184,7 @@
     <ClCompile Include="..\..\..\external\mbedtls\library\sha1.c" />
     <ClCompile Include="..\..\..\external\mongoose\mongoose.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="tp_tpp_mgr.cpp" />
     <ClCompile Include="ts_crypto.cpp" />
     <ClCompile Include="ts_web_rpc.cpp" />
     <ClCompile Include="ts_env.cpp" />
@@ -210,6 +211,7 @@
     <ClInclude Include="..\common\protocol_interface.h" />
     <ClInclude Include="..\common\ts_const.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="tp_tpp_mgr.h" />
     <ClInclude Include="ts_crypto.h" />
     <ClInclude Include="ts_ver.h" />
     <ClInclude Include="ts_web_rpc.h" />

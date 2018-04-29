@@ -15,6 +15,7 @@ public:
 
 	bool init();
 	void timer();
+	void set_cfg(TPP_SET_CFG_ARGS* args);
 
 	void session_finished(SshSession* sess);
 
@@ -34,6 +35,9 @@ private:
 	ts_ssh_sessions m_sessions;
 
 	ExThreadManager m_thread_mgr;
+
+	// 
+	ex_u32 m_noop_timeout_sec;
 };
 
 extern SshProxy g_ssh_proxy;

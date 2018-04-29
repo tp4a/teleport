@@ -56,10 +56,13 @@ class WebApp:
             rep = urllib.request.urlopen(req, timeout=3)
             body = rep.read().decode()
             x = json.loads(body)
-            log.d('connect core server and get config info succeeded.\n')
-            cfg.update_core(x['data'])
+            if 'code' not in x or x['code'] != 0:
+                log.e('connect core-server for get config info failed.\n')
+            else:
+                cfg.update_core(x['data'])
+                log.d('get config info of core-server succeeded.\n')
         except:
-            log.w('can not connect to core server to get config, maybe it not start yet, ignore.\n')
+            log.w('can not connect to core-server to get config, maybe it not start yet, ignore.\n')
 
     def run(self):
         log.i('\n')
@@ -92,6 +95,23 @@ class WebApp:
         else:
             cfg.app_mode = APP_MODE_NORMAL
             _db.load_system_config()
+
+        try:
+            # 将运行时配置发送给核心服务
+            req = {'method': 'set_config', 'param': {'noop_timeout': tp_cfg().sys.session.noop_timeout}}
+            req_data = json.dumps(req)
+            data = urllib.parse.quote(req_data).encode('utf-8')
+            req = urllib.request.Request(url=cfg.common.core_server_rpc, data=data)
+            rep = urllib.request.urlopen(req, timeout=3)
+            body = rep.read().decode()
+            x = json.loads(body)
+            if 'code' not in x or x['code'] != 0:
+                print(x)
+                log.e('connect core-server for set runtime-config failed.\n')
+            else:
+                log.d('set runtime-config for core-server succeeded.\n')
+        except:
+            log.w('can not connect to core-server to set runtime-config, maybe it not start yet, ignore.\n')
 
         if not tp_session().init():
             log.e('can not initialize session manager.\n')

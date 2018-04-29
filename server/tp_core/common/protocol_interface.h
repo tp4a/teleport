@@ -64,7 +64,9 @@ typedef struct TPP_INIT_ARGS
 	TPP_SESSION_END_FUNC func_session_end;
 }TPP_INIT_ARGS;
 
-
+typedef struct TPP_SET_CFG_ARGS {
+	ex_u32 noop_timeout; // as second.
+}TPP_SET_CFG_ARGS;
 
 #ifdef __cplusplus
 extern "C"
@@ -75,6 +77,7 @@ extern "C"
 	TPP_API ex_rv tpp_start(void);
 	TPP_API ex_rv tpp_stop(void);
 	TPP_API void tpp_timer(void);
+	TPP_API void tpp_set_cfg(TPP_SET_CFG_ARGS* cfg_args);
 
 #ifdef __cplusplus
 }
@@ -84,5 +87,6 @@ typedef ex_rv (*TPP_INIT_FUNC)(TPP_INIT_ARGS* init_args);
 typedef ex_rv (*TPP_START_FUNC)(void);
 typedef ex_rv(*TPP_STOP_FUNC)(void);
 typedef void(*TPP_TIMER_FUNC)(void);
+typedef void(*TPP_SET_CFG_FUNC)(TPP_SET_CFG_ARGS* cfg_args);
 
 #endif // __TP_PROTOCOL_INTERFACE_H__

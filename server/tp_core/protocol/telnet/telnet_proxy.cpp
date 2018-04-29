@@ -8,6 +8,7 @@ TelnetProxy::TelnetProxy() : ExThreadBase("telnet-proxy-thread")
 {
 	memset(&m_loop, 0, sizeof(uv_loop_t));
 	m_timer_counter = 0;
+	m_noop_timeout_sec = 900;
 }
 
 TelnetProxy::~TelnetProxy()
@@ -44,11 +45,18 @@ void TelnetProxy::timer() {
 	m_timer_counter = 0;
 
 	ExThreadSmartLock locker(m_lock);
+	ex_u32 t_now = (ex_u32)time(NULL);
 	ts_telnet_sessions::iterator it = m_sessions.begin();
 	for (; it != m_sessions.end(); ++it)
 	{
 		it->first->save_record();
+		if(0 != m_noop_timeout_sec)
+			it->first->check_noop_timeout(t_now, m_noop_timeout_sec);
 	}
+}
+
+void TelnetProxy::set_cfg(TPP_SET_CFG_ARGS* args) {
+	m_noop_timeout_sec = args->noop_timeout;
 }
 
 void TelnetProxy::_thread_loop(void)

@@ -38,3 +38,7 @@ TPP_API void tpp_timer(void) {
 	// be called per one second.
 	g_ssh_proxy.timer();
 }
+
+TPP_API void tpp_set_cfg(TPP_SET_CFG_ARGS* cfg_args) {
+	g_ssh_proxy.set_cfg(cfg_args);
+}

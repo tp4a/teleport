@@ -37,6 +37,7 @@ private:
 	ssh_channel srv_channel;
 
 	TppSshRec rec;
+	ex_u32 last_access_timestamp;
 
 	int state;
 	int db_id;
@@ -45,6 +46,7 @@ private:
 	int win_width; // window width, in char count.
 
 	bool is_first_server_data;
+	bool need_close;
 
 	// for ssh command record cache.
 	bool server_ready;
@@ -74,6 +76,8 @@ public:
 
 	// save record cache into file. be called per 5 seconds.
 	void save_record();
+	// 
+	void check_noop_timeout(ex_u32 t_now, ex_u32 timeout);
 
 protected:
 	void _thread_loop(void);

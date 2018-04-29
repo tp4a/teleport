@@ -49,6 +49,8 @@ public:
 	void record(ex_u8 type, const ex_u8* data, size_t size) {
 		m_rec.record(type, data, size);
 	}
+	// 
+	void check_noop_timeout(ex_u32 t_now, ex_u32 timeout);
 
 	void client_addr(const char* addr) { m_client_addr = addr; }
 	const char* client_addr() const { return m_client_addr.c_str(); }
@@ -85,6 +87,7 @@ private:
 	bool m_first_client_pkg;
 	bool m_is_relay;	// 是否进入relay模式了（只有进入relay模式才会有录像存在）
 	bool m_is_closed;
+	ex_u32 m_last_access_timestamp;
 
 	TppTelnetRec m_rec;
 	int m_win_width;
