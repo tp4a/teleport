@@ -453,7 +453,7 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
 
 	//static TppManager g_tpp_mgr;
 	EXLOGV("[core] no-op timeout set to %d minutes.\n", noop_timeout);
-	g_tpp_mgr.set_config(noop_timeout);
+	g_tpp_mgr.set_config(noop_timeout * 60);
 
 
 // 	Json::Value jr_data;

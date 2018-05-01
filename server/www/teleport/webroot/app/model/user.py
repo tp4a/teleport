@@ -69,13 +69,13 @@ def login(handler, username, password=None, oath_code=None):
                 user_info.fail_count = 0
                 user_info.state = TP_STATE_NORMAL
         if user_info['state'] == TP_STATE_LOCKED:
-            syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_LOCKED, '用户已被临时锁定')
+            syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_LOCKED, '登录失败，用户已被临时锁定')
             return TPE_USER_LOCKED, None
     elif user_info['state'] == TP_STATE_DISABLED:
-        syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_DISABLED, '用户已被禁用')
+        syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_DISABLED, '登录失败，用户已被禁用')
         return TPE_USER_DISABLED, None
     elif user_info['state'] != TP_STATE_NORMAL:
-        syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, '用户身份验证失败，系统内部错误')
+        syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, '登录失败，用户状态异常')
         return TPE_FAILED, None
 
     err_msg = ''
@@ -87,8 +87,8 @@ def login(handler, username, password=None, oath_code=None):
         if not tp_password_verify(password, user_info['password']):
             err, is_locked = update_fail_count(handler, user_info)
             if is_locked:
-                err_msg = '用户被临时锁定！'
-            syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, '登录失败，密码错误！{}'.format(err_msg))
+                err_msg = '，用户已被临时锁定'
+            syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, '登录失败，密码错误{}'.format(err_msg))
             return TPE_USER_AUTH, None
 
     if oath_code is not None:
@@ -99,8 +99,8 @@ def login(handler, username, password=None, oath_code=None):
         if not tp_oath_verify_code(user_info['oath_secret'], oath_code):
             err, is_locked = update_fail_count(handler, user_info)
             if is_locked:
-                err_msg = '用户被临时锁定！'
-            syslog.sys_log(user_info, handler.request.remote_ip, TPE_OATH_MISMATCH, "登录失败，身份验证器动态验证码错误！{}".format(err_msg))
+                err_msg = '，用户已被临时锁定！'
+            syslog.sys_log(user_info, handler.request.remote_ip, TPE_OATH_MISMATCH, "登录失败，身份验证器动态验证码错误{}".format(err_msg))
             return TPE_OATH_MISMATCH, None
 
     del user_info['password']

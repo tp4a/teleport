@@ -15,6 +15,7 @@ class DatabaseInit:
     def do_create_and_init(self, sysadmin, email, password):
         try:
             self._create_config()
+            self._create_core_server()
             self._create_role()
             self._create_user()
             self._create_user_rpt()
@@ -79,6 +80,35 @@ class DatabaseInit:
             'CREATE TABLE `{}config` ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
+    def _create_core_server(self):
+        """ 核心服务（为分布式准备）
+        特别注意：分布式部署时，核心服务的RPC通讯端口仅允许来自web服务的IP访问
+        """
+
+        f = list()
+
+        # id: 自增主键
+        f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
+        # sn: 核心服务主机编号（4位数字构成的字符串，全0表示运行在与web服务同一台主机上）
+        f.append('`sn` varchar(5) NOT NULL')
+        # desc: 核心服务主机描述
+        f.append('`desc` varchar(255) DEFAULT ""')
+
+        # secret: 核心服务主机密钥（核心服务主机需要配置此密钥才能连接web服务）
+        f.append('`secret` varchar(64) DEFAULT ""')
+
+        # ip: 核心服务主机的RPC服务IP和端口，用于合成RPC访问地址，例如 http://127.0.0.1:52080/rpc
+        f.append('`ip` varchar(128) NOT NULL')
+        f.append('`port` int(11) DEFAULT 0')
+
+        # state: 状态，1=正常，2=禁用，3=离线，4=重启中，5=版本不匹配
+        f.append('`state` int(3) DEFAULT 1')
+
+        self._db_exec(
+            '创建核心服务器表...',
+            'CREATE TABLE `{}core_server` ({});'.format(self.db.table_prefix, ','.join(f))
+        )
+
     def _create_role(self):
         """ 角色
         """
@@ -122,6 +152,8 @@ class DatabaseInit:
         f.append('`surname` varchar(64) DEFAULT ""')
         # type 1=本地账号，2=LDAP（待扩展）
         f.append('`type` int(11) DEFAULT 1')
+        # ldap_dn: 用户的ldap全路径名称，仅用于LDAP导入的用户
+        f.append('`ldap_dn` varchar(128) DEFAULT ""')
         # avatar: 用户头像图片地址
         f.append('`avatar` varchar(64) DEFAULT ""')
         # auth_type: 0=使用全局设置，其他参考 TP_LOGIN_AUTH_XXX 系列值
@@ -192,7 +224,7 @@ class DatabaseInit:
         # id: 自增主键
         f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
         # type  2=用户组，4=远程账号组，6=资产组（主机）
-        f.append('`type` int(11) DEFAULT 1')
+        f.append('`type` int(11) DEFAULT 0')
         # name: 组名称
         f.append('`name` varchar(128) DEFAULT ""')
         # desc: 详细描述
@@ -705,8 +737,14 @@ class DatabaseInit:
         # id: 自增主键
         f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
 
-        # flag: 是否已审查/是否要永久保留
+        # core_uuid:
+        f.append('`core_sn` varchar(5) DEFAULT "0000"')
+
+        # flag: 是否已审查/是否要永久保留，异或方式设置，0=初始，1=已审查，2=要永久保留
         f.append('`flag` int(11) DEFAULT 0')
+
+        # reason: 本次运维的原因
+        f.append('`reason` varchar(255) DEFAULT ""')
 
         # sid: 会话ID
         f.append('`sid` varchar(32) DEFAULT ""')
@@ -787,6 +825,13 @@ class DatabaseInit:
         self._db_exec(
             '设定数据库版本',
             'INSERT INTO `{}config` (`name`, `value`) VALUES ("db_ver", "{}");'.format(self.db.table_prefix, self.db.DB_VERSION)
+        )
+
+        self._db_exec(
+            '设置本地核心服务',
+            'INSERT INTO `{}core_server` (`sn`, `secret`, `ip`, `port`, `state`) VALUES '
+            '("0000", "", "127.0.0.1", 52080, 1);'
+            ''.format(self.db.table_prefix)
         )
 
         privilege_admin = TP_PRIVILEGE_ALL

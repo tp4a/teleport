@@ -718,8 +718,8 @@ $tp.create_table = function (options) {
     };
 
     _tbl.paging_jump = function (page_index) {
-        console.log('jump:', page_index);
         _tbl.page_index = page_index || 0;
+        //_tbl.page_index -= 1;
         _tbl.load_data(CALLBACK_STACK.create(), {});
     };
 
@@ -1240,7 +1240,7 @@ $tp.create_table_paging = function (tbl, dom_id, options) {
                 if (_val === _tblp.page_current)
                     return;
 
-                _tblp._table_ctrl.paging_jump(_val);
+                _tblp._table_ctrl.paging_jump(_val - 1);
             }
         });
 
@@ -1295,6 +1295,8 @@ $tp.create_table_paging = function (tbl, dom_id, options) {
         $('#' + _tblp.dom_id + " [data-field='page_current']").html(_page_index);
         $('#' + _tblp.dom_id + " [data-field='page_total']").html(_page_total);
         $('#' + _tblp.dom_id + ' [data-field="jump-to-page"]').val(_page_index);
+
+        _tblp.page_current = _page_index;
 
         cb_stack.exec();
     };
@@ -1646,7 +1648,7 @@ $tp.create_table_header_filter_state = function (tbl, name, states, exclude_ids)
 
     _tblf.get_filter = function () {
         var ret = {};
-        if(_tblf.default_value === _tblf.filter_value)
+        if (_tblf.default_value === _tblf.filter_value)
             return ret;
         ret[_tblf.name] = _tblf.filter_value;
         return ret;

@@ -12,7 +12,7 @@ from app.base.configs import tp_cfg
 from app.base.utils import AttrDict, tp_make_dir
 from app.base.logger import log
 from .database.create import DatabaseInit
-#from .database.upgrade import DatabaseUpgrade
+# from .database.upgrade import DatabaseUpgrade
 from .database.export import export_database
 
 __all__ = ['get_db', 'SQL']
@@ -788,7 +788,7 @@ class SQL:
 
         if self._limit is not None:
             if self._ret_total_recorder <= self._limit['page_index'] * self._limit['per_page']:
-                self._ret_page_index = int(self._ret_total_recorder / self._limit['per_page']) - 1
+                self._ret_page_index = int(self._ret_total_recorder / self._limit['per_page'])
                 if self._ret_page_index < 0:
                     self._ret_page_index = 0
             else:

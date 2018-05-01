@@ -8,12 +8,14 @@ from app.base.utils import tp_timestamp_utc_now
 
 def get_basic_stats():
     db = get_db()
-
     ret = {'user': 0,
            'host': 0,
            'acc': 0,
            'conn': 0
            }
+
+    if db.need_create or db.need_upgrade:
+        return TPE_EXISTS, ret
 
     sql = 'SELECT COUNT(*) FROM `{tpdb}user`;'.format(tpdb=db.table_prefix)
     db_ret = db.query(sql)
@@ -53,6 +55,8 @@ def update_temp_locked_user_state():
 
     _lock_time = tp_timestamp_utc_now() - (sys_cfg.login.lock_timeout * 60)
     db = get_db()
+    if db.need_create or db.need_upgrade:
+        return
 
     sql = 'UPDATE `{}user` SET state={new_state}, lock_time=0, fail_count=0 WHERE (state={old_state} AND lock_time<{lock_time});' \
           ''.format(db.table_prefix, new_state=TP_STATE_NORMAL, old_state=TP_STATE_LOCKED, lock_time=_lock_time)
