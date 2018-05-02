@@ -8,7 +8,7 @@ from app.base.utils import tp_timestamp_utc_now
 
 def get_basic_stats():
     db = get_db()
-    ret = {'user': 0,
+    ret = {'user': 1,
            'host': 0,
            'acc': 0,
            'conn': 0

@@ -472,9 +472,16 @@ class TPMysqlPool(TPDatabasePool):
                                    autocommit=False,
                                    connect_timeout=3.0,
                                    charset='utf8')
+
+            self._do_exec(conn, 'SET SESSION sql_mode=(SELECT CONCAT(@@sql_mode,",NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO"));', args=())
+
+            # x = self._do_query(conn, 'SELECT @@sql_mode;', args=())
+            # print(x)
+            #
             err = self._do_exec(conn, 'SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,"ONLY_FULL_GROUP_BY",""));', args=())
             if err is None:
                 log.e('[mysql] can not disable ONLY_FULL_GROUP_BY flag.\n')
+
             return conn
         except pymysql.err.OperationalError as e:
             errno, _ = e.args

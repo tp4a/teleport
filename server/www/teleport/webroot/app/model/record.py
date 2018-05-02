@@ -476,6 +476,10 @@ def delete_log(log_list):
 
 def session_fix():
     db = get_db()
+
+    if db.need_create or db.need_upgrade:
+        return TPE_OK
+
     sql_list = []
 
     sql = 'UPDATE `{dbtp}record` SET state={new_state}, time_end={time_end} WHERE state={old_state};' \

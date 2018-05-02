@@ -28,7 +28,7 @@ class TPStats(object):
         self._disk_write = 0
 
         self._counter_stats = {
-            'user': 0,
+            'user': 1,
             'host': 0,
             'acc': 0,
             'conn': 0
