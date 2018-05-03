@@ -80,7 +80,7 @@ $app.create_controls = function (cb_stack) {
                 fields: {time_begin: 'time_begin'}
             },
             {
-                title: '耗时',
+                title: '时长',
                 key: 'time_cost',
                 render: 'time_cost',
                 fields: {time_begin: 'time_begin', time_end: 'time_end', state: 'state'}

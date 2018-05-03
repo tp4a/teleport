@@ -162,6 +162,8 @@ controllers = [
     (r'/ops/get-remotes', ops.DoGetRemotesHandler),
     #  - [json] 构建授权映射表
     (r'/ops/build-auz-map', ops.DoBuildAuzMapHandler),
+    #  - [json] 强行终止指定会话
+    (r'/ops/kill', ops.DoKillSessionsHandler),
 
     # ====================================================
     # 审计相关

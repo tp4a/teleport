@@ -191,11 +191,14 @@ void SshSession::_check_channels() {
 			|| (cli == NULL && srv != NULL && ssh_channel_is_closed(srv))
 			|| (srv == NULL && cli != NULL && ssh_channel_is_closed(cli))
 			) {
-			if (cli)
+			if (cli) {
 				ssh_channel_free(cli);
-			if (srv)
+				cli = NULL;
+			}
+			if (srv) {
 				ssh_channel_free(srv);
-
+				srv = NULL;
+			}
 			_record_end((*it));
 
 			delete(*it);
@@ -407,8 +410,11 @@ void SshSession::check_noop_timeout(ex_u32 t_now, ex_u32 timeout) {
 	for (; it != m_channels.end(); ++it) {
 		if ((*it)->need_close)
 			continue;
-		if (t_now - (*it)->last_access_timestamp > timeout) {
-			EXLOGW("[ssh] need close channel by timeout.\n");
+		if (t_now == 0)
+			EXLOGW("[ssh] try close channel by kill.\n");
+		else if (t_now - (*it)->last_access_timestamp > timeout)
+			EXLOGW("[ssh] try close channel by timeout.\n");
+		if (t_now == 0 || t_now - (*it)->last_access_timestamp > timeout) {
 			(*it)->need_close = true;
 			m_have_error = true;
 		}

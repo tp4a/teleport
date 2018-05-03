@@ -87,6 +87,20 @@ void SshProxy::set_cfg(TPP_SET_CFG_ARGS* args) {
 	m_noop_timeout_sec = args->noop_timeout;
 }
 
+void SshProxy::kill_sessions(const ex_astrs& sessions) {
+	ExThreadSmartLock locker(m_lock);
+	ts_ssh_sessions::iterator it;
+	for (it = m_sessions.begin(); it != m_sessions.end(); ++it) {
+		for (size_t i = 0; i < sessions.size(); ++i) {
+			if (it->first->sid() == sessions[i]) {
+				EXLOGW("[ssh] try to kill %s\n", sessions[i].c_str());
+				it->first->check_noop_timeout(0, 0); // Á¢¼´½áÊø
+			}
+		}
+	}
+}
+
+
 void SshProxy::_thread_loop()
 {
 	EXLOGI("[ssh] TeleportServer-SSH ready on %s:%d\n", m_host_ip.c_str(), m_host_port);

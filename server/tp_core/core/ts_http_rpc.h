@@ -37,6 +37,8 @@ private:
 	void _rpc_func_set_config(const Json::Value& json_param, ex_astr& buf);
 	// 请求一个会话ID
 	void _rpc_func_request_session(const Json::Value& json_param, ex_astr& buf);
+	// 强行终止会话
+	void _rpc_func_kill_sessions(const Json::Value& json_param, ex_astr& buf);
 	// 加密一个字符串（返回的是密文的BASE64编码）
 	void _rpc_func_enc(const Json::Value& json_param, ex_astr& buf);
 	// 要求整个核心服务退出

@@ -47,15 +47,17 @@ bool TppManager::load_tpp(const ex_wstr& libname)
 	lib->stop = (TPP_STOP_FUNC)GetProcAddress(lib->dylib, "tpp_stop");
 	lib->timer = (TPP_TIMER_FUNC)GetProcAddress(lib->dylib, "tpp_timer");
 	lib->set_cfg = (TPP_SET_CFG_FUNC)GetProcAddress(lib->dylib, "tpp_set_cfg");
+	lib->command = (TPP_COMMAND_FUNC)GetProcAddress(lib->dylib, "tpp_command");
 #else
     lib->init = (TPP_INIT_FUNC)dlsym(lib->dylib, "tpp_init");
     lib->start = (TPP_START_FUNC)dlsym(lib->dylib, "tpp_start");
 	lib->stop = (TPP_STOP_FUNC)dlsym(lib->dylib, "tpp_stop");
 	lib->timer = (TPP_TIMER_FUNC)dlsym(lib->dylib, "tpp_timer");
 	lib->set_cfg = (TPP_SET_CFG_FUNC)dlsym(lib->dylib, "tpp_set_cfg");
+	lib->command = (TPP_COMMAND_FUNC)dlsym(lib->dylib, "tpp_command");
 #endif
 
-	if (lib->init == NULL || lib->start == NULL || lib->stop == NULL || lib->timer == NULL || lib->set_cfg == NULL)
+	if (lib->init == NULL || lib->start == NULL || lib->stop == NULL || lib->timer == NULL || lib->set_cfg == NULL || lib->command == NULL)
 	{
 		EXLOGE(L"[core] load dylib `%ls` failed, can not locate all functions.\n", libfile.c_str());
 		delete lib;
@@ -118,3 +120,12 @@ void TppManager::set_config(int noop_timeout) {
 		(*it)->set_cfg(&args);
 	}
 }
+
+void TppManager::kill_sessions(const ex_astr& sessions) {
+	tpp_libs::iterator it = m_libs.begin();
+	for (; it != m_libs.end(); ++it)
+	{
+		(*it)->command(TPP_CMD_KILL_SESSIONS, sessions.c_str());
+	}
+}
+

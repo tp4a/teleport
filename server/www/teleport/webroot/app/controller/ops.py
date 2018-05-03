@@ -736,6 +736,32 @@ class DoGetRemotesHandler(TPBaseJsonHandler):
         self.write_json(err, data=ret)
 
 
+class DoKillSessionsHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            sessions = args['sessions']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        req = {'method': 'kill_sessions', 'param': {'sessions': sessions}}
+        _yr = core_service_async_post_http(req)
+        _err, _ = yield _yr
+        self.write_json(_err)
+
+
 class DoBuildAuzMapHandler(TPBaseJsonHandler):
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)

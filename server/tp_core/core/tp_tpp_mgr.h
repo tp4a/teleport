@@ -25,6 +25,8 @@ typedef struct TPP_LIB
 	TPP_STOP_FUNC stop;
 	TPP_TIMER_FUNC timer;
 	TPP_SET_CFG_FUNC set_cfg;
+
+	TPP_COMMAND_FUNC command;
 }TPP_LIB;
 
 typedef std::list<TPP_LIB*> tpp_libs;
@@ -51,6 +53,7 @@ public:
 	int count(void) { return m_libs.size(); }
 
 	void set_config(int noop_timeout);
+	void kill_sessions(const ex_astr& sessions);
 
 private:
 	tpp_libs m_libs;

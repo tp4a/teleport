@@ -46,6 +46,13 @@ $app.create_controls = function (cb_stack) {
                 fields: {id: 'id'}
             },
             {
+                title: '会话ID',
+                key: 'sid',
+                sort: true,
+                sort_asc: false,
+                fields: {sid: 'sid'}
+            },
+            {
                 title: '用户',
                 key: 'user',
                 //sort: true,
@@ -90,7 +97,7 @@ $app.create_controls = function (cb_stack) {
                 fields: {time_begin: 'time_begin'}
             },
             {
-                title: '耗时',
+                title: '时长',
                 key: 'time_cost',
                 render: 'time_cost',
                 fields: {time_begin: 'time_begin', time_end: 'time_end', state: 'state'}
@@ -170,30 +177,22 @@ $app.create_controls = function (cb_stack) {
 $app.on_table_session_cell_created = function (tbl, row_id, col_key, cell_obj) {
     if (col_key === 'chkbox') {
         cell_obj.find('[data-check-box]').click(function () {
+            // 同步相同会话ID的选中状态
+            var _obj = $(this);
+            var checked = _obj.is(':checked');
+            var _row_data = tbl.get_row(_obj);
+            var _objs = $('#' + $app.table_session.dom_id + ' tbody').find('[data-check-box]');
+            $.each(_objs, function (i, _o) {
+                var _rd = tbl.get_row(_o);
+                if (_row_data.sid === _rd.sid) {
+                    $(_o).prop('checked', checked);
+                }
+            });
+
+
             $app.check_host_all_selected();
         });
     }
-    // else if (col_key === 'action') {
-    //     // 绑定系统选择框事件
-    //     cell_obj.find('[data-action]').click(function () {
-    //         var action = $(this).attr('data-action');
-    //         if (action === 'edit') {
-    //             $app.dlg_edit_host.show_edit(row_id);
-    //         } else if (action === 'account') {
-    //             $app.dlg_accounts.show(row_id);
-    //         }
-    //     });
-    // } else if (col_key === 'ip') {
-    //     cell_obj.find('[data-toggle="popover"]').popover({trigger: 'hover'});
-    //     // } else if (col_key === 'account') {
-    //     //     cell_obj.find('[data-action="add-account"]').click(function () {
-    //     //         $app.dlg_accounts.show(row_id);
-    //     //     });
-    // } else if (col_key === 'account_count') {
-    //     cell_obj.find('[data-action="edit-account"]').click(function () {
-    //         $app.dlg_accounts.show(row_id);
-    //     });
-    // }
 };
 
 $app.check_host_all_selected = function (cb_stack) {
@@ -389,18 +388,48 @@ $app.on_table_session_header_created = function (header) {
     //header._table_ctrl.get_filter_ctrl('host_state').on_created();
 };
 
-$app.get_selected_session = function (tbl) {
+$app.get_selected_sessions = function (tbl) {
     var records = [];
     var _objs = $('#' + $app.table_session.dom_id + ' tbody tr td input[data-check-box]');
     $.each(_objs, function (i, _obj) {
         if ($(_obj).is(':checked')) {
             var _row_data = tbl.get_row(_obj);
-            records.push(_row_data.id);
+            records.push(_row_data.sid);
         }
     });
     return records;
 };
 
 $app.on_btn_kill_sessions_click = function () {
-    $tp.notify_error('抱歉，此功能尚未实现！');
+    var sessions = $app.get_selected_sessions($app.table_session);
+    console.log(sessions);
+    if (sessions.length === 0) {
+        $tp.notify_error('请选择要强行终止的会话！');
+        return;
+    }
+
+    var _fn_sure = function (cb_stack, cb_args) {
+        $tp.ajax_post_json('/ops/kill', {sessions: sessions},
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    $app.table_session.load_data();
+                    $tp.notify_success('强行终止会话操作成功！');
+                } else {
+                    $tp.notify_error('强行终止会话失败：' + tp_error_msg(ret.code, ret.message));
+                }
+
+                cb_stack.exec();
+            },
+            function () {
+                $tp.notify_error('网络故障，强行终止会话操作失败！');
+                cb_stack.exec();
+            }
+        );
+    };
+
+    var cb_stack = CALLBACK_STACK.create();
+    $tp.dlg_confirm(cb_stack, {
+        msg: '您确定要强行终止这些会话吗？',
+        fn_yes: _fn_sure
+    });
 };

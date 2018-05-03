@@ -255,6 +255,9 @@ void TsHttpRpc::_process_request(const ex_astr& func_cmd, const Json::Value& jso
 	if (func_cmd == "request_session") {
 		_rpc_func_request_session(json_param, buf);
 	}
+	else if (func_cmd == "kill_sessions") {
+		_rpc_func_kill_sessions(json_param, buf);
+	}
 	else if (func_cmd == "get_config") {
 		_rpc_func_get_config(json_param, buf);
 	}
@@ -378,6 +381,45 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 	_create_json_ret(buf, TPE_OK, jr_data);
 }
 
+void TsHttpRpc::_rpc_func_kill_sessions(const Json::Value& json_param, ex_astr& buf) {
+	/*
+	{
+	"sessions": ["0123456", "ABCDEF", ...]
+	}
+	*/
+
+	if (json_param.isArray())
+	{
+		_create_json_ret(buf, TPE_PARAM);
+		return;
+	}
+
+	if (json_param["sessions"].isNull() || !json_param["sessions"].isArray())
+	{
+		_create_json_ret(buf, TPE_PARAM);
+		return;
+	}
+
+	Json::Value s = json_param["sessions"];
+	int cnt = s.size();
+	for (int i = 0; i < cnt; ++i)
+	{
+		if (!s[i].isString()) {
+			_create_json_ret(buf, TPE_PARAM);
+			return;
+		}
+	}
+
+	EXLOGV("[core] kill %d sessions.\n", cnt);
+
+	ex_astr ss = s.toStyledString();
+
+	g_tpp_mgr.kill_sessions(ss);
+
+	_create_json_ret(buf, TPE_OK);
+}
+
+
 void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 {
 	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#enc
@@ -428,7 +470,7 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
 	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#set_config
 	/*
 	{
-	  "noop-timeout": 900     # 900s = 15m
+	  "noop-timeout": 15     # 按分钟计
 	}
 	*/
 
@@ -453,7 +495,7 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
 
 	//static TppManager g_tpp_mgr;
 	EXLOGV("[core] no-op timeout set to %d minutes.\n", noop_timeout);
-	g_tpp_mgr.set_config(noop_timeout * 60);
+	g_tpp_mgr.set_config(noop_timeout * 60); // 内部按秒计，因此要 *60
 
 
 // 	Json::Value jr_data;

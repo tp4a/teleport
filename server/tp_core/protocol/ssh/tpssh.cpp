@@ -2,6 +2,8 @@
 #include "tpp_env.h"
 
 #include <teleport_const.h>
+#include <json/json.h>
+
 
 TPP_API ex_rv tpp_init(TPP_INIT_ARGS* init_args)
 {
@@ -42,3 +44,45 @@ TPP_API void tpp_timer(void) {
 TPP_API void tpp_set_cfg(TPP_SET_CFG_ARGS* cfg_args) {
 	g_ssh_proxy.set_cfg(cfg_args);
 }
+
+static ex_rv _kill_sessions(const char* param) {
+	Json::Value jp;
+	Json::Reader jreader;
+
+	if (!jreader.parse(param, jp))
+		return TPE_JSON_FORMAT;
+
+	if (!jp.isArray())
+		return TPE_PARAM;
+
+	ex_astrs ss;
+	int cnt = jp.size();
+	for (int i = 0; i < cnt; ++i)
+	{
+		if (!jp[i].isString()) {
+			return TPE_PARAM;
+		}
+
+		ss.push_back(jp[i].asString());
+	}
+
+	g_ssh_proxy.kill_sessions(ss);
+
+	return TPE_PARAM;
+}
+
+TPP_API ex_rv tpp_command(ex_u32 cmd, const char* param) {
+	switch (cmd) {
+	case TPP_CMD_KILL_SESSIONS:
+		if (param == NULL || strlen(param) == 0)
+			return TPE_PARAM;
+		return _kill_sessions(param);
+	default:
+		return TPE_UNKNOWN_CMD;
+	}
+
+	return TPE_NOT_IMPLEMENT;
+}
+
+
+

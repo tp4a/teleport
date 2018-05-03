@@ -34,12 +34,12 @@
 
         <!-- begin page-nav -->
         <div class="table-extend-area">
-##             <div class="table-extend-cell checkbox-select-all"><input id="table-session-select-all" type="checkbox"/></div>
-##             <div class="table-extend-cell group-actions">
-##                 <div class="btn-group" role="group">
-##                     <button id="btn-kill-sessions" type="button" class="btn btn-danger"><i class="fa fa-times-circle fa-fw"></i> 强行中断</button>
-##                 </div>
-##             </div>
+            <div class="table-extend-cell checkbox-select-all"><input id="table-session-select-all" type="checkbox"/></div>
+            <div class="table-extend-cell group-actions">
+                <div class="btn-group" role="group">
+                    <button id="btn-kill-sessions" type="button" class="btn btn-danger"><i class="fa fa-times-circle fa-fw"></i> 强行中断</button>
+                </div>
+            </div>
             <div class="table-extend-cell table-item-counter">
                 <ol id="table-session-paging"></ol>
             </div>
@@ -59,4 +59,10 @@
     </div>
     <!-- end of box -->
 
+    <div class="box">
+        <p>说明：</p>
+        <ul class="help-list">
+            <li>注意：强制中断会话时，相同会话ID的会话（例如使用SecureCRT或者xShell客户端的“克隆会话”功能打开的会话）均会被中断。</li>
+        </ul>
+    </div>
 </div>

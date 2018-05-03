@@ -100,8 +100,8 @@ def get_records(handler, sql_filter, sql_order, sql_limit, sql_restrict, sql_exc
             s.order_by('r.id', _sort)
         elif 'time_begin' == sql_order['name']:
             s.order_by('r.time_begin', _sort)
-        # elif 'os_type' == sql_order['name']:
-        #     s.order_by('h.os_type', _sort)
+        elif 'sid' == sql_order['name']:
+            s.order_by('r.sid', _sort)
         # elif 'cid' == sql_order['name']:
         #     s.order_by('h.cid', _sort)
         # elif 'state' == sql_order['name']:

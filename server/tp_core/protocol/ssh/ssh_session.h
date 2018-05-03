@@ -79,6 +79,8 @@ public:
 	// 
 	void check_noop_timeout(ex_u32 t_now, ex_u32 timeout);
 
+	const ex_astr& sid() { return m_sid; }
+
 protected:
 	void _thread_loop(void);
 	void _set_stop_flag(void);

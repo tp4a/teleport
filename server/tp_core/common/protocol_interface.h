@@ -14,6 +14,9 @@
 #	define TPP_API
 #endif
 
+#define TPP_CMD_INIT			0x00000000
+#define TPP_CMD_KILL_SESSIONS	0x00000006
+
 typedef struct TPP_CONNECT_INFO
 {
 	char* sid;
@@ -79,6 +82,8 @@ extern "C"
 	TPP_API void tpp_timer(void);
 	TPP_API void tpp_set_cfg(TPP_SET_CFG_ARGS* cfg_args);
 
+	TPP_API ex_rv tpp_command(ex_u32 cmd, const char* param);
+
 #ifdef __cplusplus
 }
 #endif
@@ -88,5 +93,7 @@ typedef ex_rv (*TPP_START_FUNC)(void);
 typedef ex_rv(*TPP_STOP_FUNC)(void);
 typedef void(*TPP_TIMER_FUNC)(void);
 typedef void(*TPP_SET_CFG_FUNC)(TPP_SET_CFG_ARGS* cfg_args);
+
+typedef ex_rv(*TPP_COMMAND_FUNC)(ex_u32 cmd, const char* param); // param is a JSON formatted string.
 
 #endif // __TP_PROTOCOL_INTERFACE_H__
