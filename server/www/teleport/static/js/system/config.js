@@ -1,7 +1,7 @@
 "use strict";
 
 $app.on_init = function (cb_stack) {
-    console.log($app.options);
+    //console.log($app.options);
 
     $app.dlg_result = $app.create_dlg_result();
     // cb_stack.add($app.dlg_result.init);

@@ -56,10 +56,12 @@ void TelnetSession::save_record() {
 }
 
 void TelnetSession::check_noop_timeout(ex_u32 t_now, ex_u32 timeout) {
-	if (t_now - m_last_access_timestamp > timeout) {
-		EXLOGW("[telnet] need close session by timeout.\n");
+	if (t_now == 0)
+		EXLOGW("[telnet] try close session by kill.\n");
+	else if (t_now - m_last_access_timestamp > timeout)
+		EXLOGW("[telnet] try close session by timeout.\n");
+	if (t_now == 0 || t_now - m_last_access_timestamp > timeout)
 		_do_close(TP_SESS_STAT_END);
-	}
 }
 
 void TelnetSession::_session_error(int err_code) {

@@ -41,8 +41,30 @@ TPP_API void tpp_timer(void) {
 	g_ssh_proxy.timer();
 }
 
-TPP_API void tpp_set_cfg(TPP_SET_CFG_ARGS* cfg_args) {
-	g_ssh_proxy.set_cfg(cfg_args);
+// TPP_API void tpp_set_cfg(TPP_SET_CFG_ARGS* cfg_args) {
+// 	//g_ssh_proxy.set_cfg(cfg_args);
+// }
+
+static ex_rv _set_runtime_config(const char* param) {
+	Json::Value jp;
+	Json::Reader jreader;
+
+	if (!jreader.parse(param, jp))
+		return TPE_JSON_FORMAT;
+
+	if (!jp.isObject())
+		return TPE_PARAM;
+
+	if (jp["noop_timeout"].isNull() || !jp["noop_timeout"].isUInt())
+		return TPE_PARAM;
+
+	ex_u32 noop_timeout = jp["noop_timeout"].asUInt();
+	if (noop_timeout == 0)
+		return TPE_PARAM;
+
+	g_ssh_proxy.set_cfg(noop_timeout * 60);
+
+	return TPE_PARAM;
 }
 
 static ex_rv _kill_sessions(const char* param) {
@@ -73,6 +95,10 @@ static ex_rv _kill_sessions(const char* param) {
 
 TPP_API ex_rv tpp_command(ex_u32 cmd, const char* param) {
 	switch (cmd) {
+	case TPP_CMD_SET_RUNTIME_CFG:
+		if (param == NULL || strlen(param) == 0)
+			return TPE_PARAM;
+		return _set_runtime_config(param);
 	case TPP_CMD_KILL_SESSIONS:
 		if (param == NULL || strlen(param) == 0)
 			return TPE_PARAM;
@@ -83,6 +109,3 @@ TPP_API ex_rv tpp_command(ex_u32 cmd, const char* param) {
 
 	return TPE_NOT_IMPLEMENT;
 }
-
-
-

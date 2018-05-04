@@ -412,8 +412,14 @@ $app.on_btn_kill_sessions_click = function () {
         $tp.ajax_post_json('/ops/kill', {sessions: sessions},
             function (ret) {
                 if (ret.code === TPE_OK) {
-                    $app.table_session.load_data();
-                    $tp.notify_success('强行终止会话操作成功！');
+                    setTimeout(function () {
+                        var _cb = CALLBACK_STACK.create();
+                        _cb.add($app.check_host_all_selected)
+                            .add($app.table_session.load_data)
+                            .exec();
+
+                        $tp.notify_success('强行终止会话操作成功！');
+                    }, 1500);
                 } else {
                     $tp.notify_error('强行终止会话失败：' + tp_error_msg(ret.code, ret.message));
                 }

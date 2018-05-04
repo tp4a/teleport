@@ -55,8 +55,21 @@ void TelnetProxy::timer() {
 	}
 }
 
-void TelnetProxy::set_cfg(TPP_SET_CFG_ARGS* args) {
-	m_noop_timeout_sec = args->noop_timeout;
+void TelnetProxy::set_cfg(ex_u32 noop_timeout) {
+	m_noop_timeout_sec = noop_timeout;
+}
+
+void TelnetProxy::kill_sessions(const ex_astrs& sessions) {
+	ExThreadSmartLock locker(m_lock);
+	ts_telnet_sessions::iterator it = m_sessions.begin();
+	for (; it != m_sessions.end(); ++it) {
+		for (size_t i = 0; i < sessions.size(); ++i) {
+			if (it->first->sid() == sessions[i]) {
+				EXLOGW("[telnet] try to kill %s\n", sessions[i].c_str());
+				it->first->check_noop_timeout(0, 0); // Á¢¼´½áÊø
+			}
+		}
+	}
 }
 
 void TelnetProxy::_thread_loop(void)

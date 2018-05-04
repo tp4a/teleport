@@ -34,7 +34,10 @@ class RemoteHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_OPS)
         if ret != TPE_OK:
             return
-        self.render('ops/remote-list.mako')
+        param = {
+            'core_cfg': tp_cfg().core
+        }
+        self.render('ops/remote-list.mako', page_param=json.dumps(param))
 
 
 class PolicyDetailHandler(TPBaseHandler):

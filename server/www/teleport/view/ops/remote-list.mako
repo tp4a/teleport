@@ -9,6 +9,11 @@
 ##     <script type="text/javascript" src="${ static_url('js/tp-assist.js') }"></script>
     <script type="text/javascript" src="${ static_url('js/ops/remote-list.js') }"></script>
 </%block>
+<%block name="embed_js">
+    <script type="text/javascript">
+        $app.add_options(${page_param});
+    </script>
+</%block>
 
 <%block name="embed_css">
     <style>

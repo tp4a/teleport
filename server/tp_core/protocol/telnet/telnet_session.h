@@ -51,6 +51,7 @@ public:
 	}
 	// 
 	void check_noop_timeout(ex_u32 t_now, ex_u32 timeout);
+	const ex_astr& sid() { return m_sid; }
 
 	void client_addr(const char* addr) { m_client_addr = addr; }
 	const char* client_addr() const { return m_client_addr.c_str(); }

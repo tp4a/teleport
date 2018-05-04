@@ -36,6 +36,9 @@
     <Filter Include="libuv\src\win">
       <UniqueIdentifier>{89181d75-3db3-45a5-a35d-9083fb349de3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="jsoncpp">
+      <UniqueIdentifier>{fae1b562-5e3f-4b9b-9a5d-41bb15ae2223}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_const.h">
@@ -145,6 +148,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\common\teleport\teleport_const.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\jsoncpp\include\json\json.h">
+      <Filter>jsoncpp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -300,6 +306,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\external\libuv\src\win\process-stdio.c">
       <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_writer.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_reader.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_value.cpp">
+      <Filter>jsoncpp</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

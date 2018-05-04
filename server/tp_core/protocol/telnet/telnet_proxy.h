@@ -16,7 +16,8 @@ public:
 
 	bool init();
 	void timer();
-	void set_cfg(TPP_SET_CFG_ARGS* args);
+	void set_cfg(ex_u32 noop_timeout);
+	void kill_sessions(const ex_astrs& sessions);
 
 	uv_loop_t* get_loop() { return &m_loop; }
 

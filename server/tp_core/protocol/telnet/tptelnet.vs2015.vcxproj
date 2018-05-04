@@ -60,7 +60,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;TPP_EXPORTS;_WIN32_WINNT=0x0600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\..\common\teleport;..\..\..\..\common\libex\include;..\..\..\..\external\mbedtls\include;..\..\..\..\external\libuv\include;..\..\..\..\external\libuv\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../common/teleport;../../../../common/libex/include;../../../../external/jsoncpp/include;../../../../external/mbedtls/include;../../../../external/libuv/include;../../../../external/libuv/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -78,7 +78,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;TPP_EXPORTS;_WIN32_WINNT=0x0600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\..\common\teleport;..\..\..\..\common\libex\include;..\..\..\..\external\mbedtls\include;..\..\..\..\external\libuv\include;..\..\..\..\external\libuv\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../common/teleport;../../../../common/libex/include;../../../../external/jsoncpp/include;../../../../external/mbedtls/include;../../../../external/libuv/include;../../../../external/libuv/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -102,6 +102,7 @@
     <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_util.h" />
     <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_winsrv.h" />
     <ClInclude Include="..\..\..\..\common\teleport\teleport_const.h" />
+    <ClInclude Include="..\..\..\..\external\jsoncpp\include\json\json.h" />
     <ClInclude Include="..\..\..\..\external\libuv\include\tree.h" />
     <ClInclude Include="..\..\..\..\external\libuv\include\uv-errno.h" />
     <ClInclude Include="..\..\..\..\external\libuv\include\uv-threadpool.h" />
@@ -135,6 +136,9 @@
     <ClCompile Include="..\..\..\..\common\libex\src\ex_thread.cpp" />
     <ClCompile Include="..\..\..\..\common\libex\src\ex_util.cpp" />
     <ClCompile Include="..\..\..\..\common\libex\src\ex_winsrv.cpp" />
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_reader.cpp" />
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_value.cpp" />
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_writer.cpp" />
     <ClCompile Include="..\..\..\..\external\libuv\src\fs-poll.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\inet.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\threadpool.c" />

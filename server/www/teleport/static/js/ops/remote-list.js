@@ -221,28 +221,46 @@ $app.on_table_host_render_created = function (render) {
                 act_btn.push('</li>');
             } else {
                 if (acc.protocol_type === TP_PROTOCOL_TYPE_RDP) {
-                    if ((acc.policy_.flag_rdp & TP_FLAG_RDP_DESKTOP) !== 0) {
-                        act_btn.push('<div class="btn-group btn-group-sm">');
-                        act_btn.push('<button type="button" class="btn btn-primary" data-action="rdp" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_RDP_DESKTOP + '"><i class="fa fa-desktop fa-fw"></i> RDP</button>');
-                        act_btn.push('<a href="javascript:;" class="btn btn-primary dropdown-toggle" data-action="rdp-option" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_RDP_DESKTOP + '">');
-                        act_btn.push('<i class="fa fa-cog"></i>');
-                        act_btn.push('</a>');
-                        act_btn.push('</div>');
+                    if (!$app.options.core_cfg.rdp.enable) {
+                        act_btn.push('<li class="remote-action-state state-disabled">');
+                        act_btn.push('<i class="fa fa-ban fa-fw"></i> RDP协议未启用');
+                        act_btn.push('</li>');
+                    } else {
+                        if ((acc.policy_.flag_rdp & TP_FLAG_RDP_DESKTOP) !== 0) {
+                            act_btn.push('<div class="btn-group btn-group-sm">');
+                            act_btn.push('<button type="button" class="btn btn-primary" data-action="rdp" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_RDP_DESKTOP + '"><i class="fa fa-desktop fa-fw"></i> RDP</button>');
+                            act_btn.push('<a href="javascript:;" class="btn btn-primary dropdown-toggle" data-action="rdp-option" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_RDP_DESKTOP + '">');
+                            act_btn.push('<i class="fa fa-cog"></i>');
+                            act_btn.push('</a>');
+                            act_btn.push('</div>');
+                        }
                     }
                 } else if (acc.protocol_type === TP_PROTOCOL_TYPE_SSH) {
-                    act_btn.push('<div class="btn-group btn-group-sm">');
-                    if ((acc.policy_.flag_ssh & TP_FLAG_SSH_SHELL) !== 0) {
-                        act_btn.push('<button type="button" class="btn btn-success" data-action="ssh" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_SSH_SHELL + '"><i class="far fa-keyboard fa-fw"></i> SSH</button>');
-                    }
+                    if (!$app.options.core_cfg.ssh.enable) {
+                        act_btn.push('<li class="remote-action-state state-disabled">');
+                        act_btn.push('<i class="fa fa-ban fa-fw"></i> SSH协议未启用');
+                        act_btn.push('</li>');
+                    } else {
+                        act_btn.push('<div class="btn-group btn-group-sm">');
+                        if ((acc.policy_.flag_ssh & TP_FLAG_SSH_SHELL) !== 0) {
+                            act_btn.push('<button type="button" class="btn btn-success" data-action="ssh" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_SSH_SHELL + '"><i class="far fa-keyboard fa-fw"></i> SSH</button>');
+                        }
 
-                    if ((acc.policy_.flag_ssh & TP_FLAG_SSH_SFTP) !== 0) {
-                        act_btn.push('<button type="button" class="btn btn-info" data-action="ssh" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_SSH_SFTP + '"><i class="fa fa-upload fa-fw"></i> SFTP</button>');
+                        if ((acc.policy_.flag_ssh & TP_FLAG_SSH_SFTP) !== 0) {
+                            act_btn.push('<button type="button" class="btn btn-info" data-action="ssh" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_SSH_SFTP + '"><i class="fa fa-upload fa-fw"></i> SFTP</button>');
+                        }
+                        act_btn.push('</div>');
                     }
-                    act_btn.push('</div>');
                 } else if (acc.protocol_type === TP_PROTOCOL_TYPE_TELNET) {
-                    act_btn.push('<div class="btn-group btn-group-sm">');
-                    act_btn.push('<button type="button" class="btn btn-warning" data-action="telnet" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_TELNET_SHELL + '"><i class="far fa-keyboard fa-fw"></i> TELNET</button>');
-                    act_btn.push('</div>');
+                    if (!$app.options.core_cfg.telnet.enable) {
+                        act_btn.push('<li class="remote-action-state state-disabled">');
+                        act_btn.push('<i class="fa fa-ban fa-fw"></i> TELNET协议未启用');
+                        act_btn.push('</li>');
+                    } else {
+                        act_btn.push('<div class="btn-group btn-group-sm">');
+                        act_btn.push('<button type="button" class="btn btn-warning" data-action="telnet" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_TELNET_SHELL + '"><i class="far fa-keyboard fa-fw"></i> TELNET</button>');
+                        act_btn.push('</div>');
+                    }
                 }
             }
 
@@ -406,7 +424,7 @@ $app.connect_remote = function (uni_id, acc_id, host_id, protocol_type, protocol
 
     console.log('--s--', args);
 
-    if(uni_id === 'none')
+    if (uni_id === 'none')
         args.mode = 2;
 
     $assist.do_teleport(

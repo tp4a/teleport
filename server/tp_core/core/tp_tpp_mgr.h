@@ -24,7 +24,7 @@ typedef struct TPP_LIB
 	TPP_START_FUNC start;
 	TPP_STOP_FUNC stop;
 	TPP_TIMER_FUNC timer;
-	TPP_SET_CFG_FUNC set_cfg;
+// 	TPP_SET_CFG_FUNC set_cfg;
 
 	TPP_COMMAND_FUNC command;
 }TPP_LIB;

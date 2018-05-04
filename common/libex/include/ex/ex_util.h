@@ -9,6 +9,7 @@
 //#	include <io.h>
 //#	include <stdio.h>
 // #include <direct.h>
+#pragma comment(lib, "ws2_32.lib")
 #else
 // #include <dirent.h>
 #   include <dlfcn.h>

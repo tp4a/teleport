@@ -478,17 +478,15 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
 		return;
 	}
 
-// 	int noop_timeout = json_param["noop_timeout"].asUInt();
-// 	if (noop_timeout == 0) {
-// 		_create_json_ret(buf, TPE_PARAM);
-// 		return;
-// 	}
-// 
-// 	//static TppManager g_tpp_mgr;
-// 	EXLOGV("[core] no-op timeout set to %d minutes.\n", noop_timeout);
-// 	g_tpp_mgr.set_config(noop_timeout * 60); // 内部按秒计，因此要 *60
+	int noop_timeout = json_param["noop_timeout"].asUInt();
+	if (noop_timeout == 0) {
+		_create_json_ret(buf, TPE_PARAM);
+		return;
+	}
 
-	EXLOGV("[core] set run-time config.\n");
+	EXLOGV("[core] set run-time config:\n");
+	EXLOGV("[core]   noop_timeout = %dm\n", noop_timeout);
+
 	ex_astr sp = json_param.toStyledString();
 	g_tpp_mgr.set_runtime_config(sp);
 
