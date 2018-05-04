@@ -336,7 +336,7 @@ def set_password(handler, user_id, password):
     db = get_db()
 
     operator = handler.get_current_user()
-    print('----------', operator)
+    # print('----------', operator)
 
     # 1. get user info (user name)
     s = SQL(db)
