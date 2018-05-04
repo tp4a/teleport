@@ -388,37 +388,31 @@ void TsHttpRpc::_rpc_func_kill_sessions(const Json::Value& json_param, ex_astr& 
 	}
 	*/
 
-	if (json_param.isArray())
-	{
+	if (json_param.isArray()) {
 		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
-	if (json_param["sessions"].isNull() || !json_param["sessions"].isArray())
-	{
+	if (json_param["sessions"].isNull() || !json_param["sessions"].isArray()) {
 		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
 	Json::Value s = json_param["sessions"];
 	int cnt = s.size();
-	for (int i = 0; i < cnt; ++i)
-	{
+	for (int i = 0; i < cnt; ++i) {
 		if (!s[i].isString()) {
 			_create_json_ret(buf, TPE_PARAM);
 			return;
 		}
 	}
 
-	EXLOGV("[core] kill %d sessions.\n", cnt);
-
-	ex_astr ss = s.toStyledString();
-
-	g_tpp_mgr.kill_sessions(ss);
+	EXLOGV("[core] try to kill %d sessions.\n", cnt);
+	ex_astr sp = s.toStyledString();
+	g_tpp_mgr.kill_sessions(sp);
 
 	_create_json_ret(buf, TPE_OK);
 }
-
 
 void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 {
@@ -474,33 +468,30 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
 	}
 	*/
 
-	if (json_param.isArray())
-	{
+	if (json_param.isArray()) {
 		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
-	if (json_param["noop_timeout"].isNull() || !json_param["noop_timeout"].isUInt())
-	{
+	if (json_param["noop_timeout"].isNull() || !json_param["noop_timeout"].isUInt()) {
 		_create_json_ret(buf, TPE_PARAM);
 		return;
 	}
 
-	int noop_timeout = json_param["noop_timeout"].asUInt();
-	if (noop_timeout == 0)
-	{
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
+// 	int noop_timeout = json_param["noop_timeout"].asUInt();
+// 	if (noop_timeout == 0) {
+// 		_create_json_ret(buf, TPE_PARAM);
+// 		return;
+// 	}
+// 
+// 	//static TppManager g_tpp_mgr;
+// 	EXLOGV("[core] no-op timeout set to %d minutes.\n", noop_timeout);
+// 	g_tpp_mgr.set_config(noop_timeout * 60); // 内部按秒计，因此要 *60
 
-	//static TppManager g_tpp_mgr;
-	EXLOGV("[core] no-op timeout set to %d minutes.\n", noop_timeout);
-	g_tpp_mgr.set_config(noop_timeout * 60); // 内部按秒计，因此要 *60
+	EXLOGV("[core] set run-time config.\n");
+	ex_astr sp = json_param.toStyledString();
+	g_tpp_mgr.set_runtime_config(sp);
 
-
-// 	Json::Value jr_data;
-// 	jr_data["c"] = cipher_text;
-// 	_create_json_ret(buf, TPE_OK, jr_data);
 	_create_json_ret(buf, TPE_OK);
 }
 

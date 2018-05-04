@@ -121,11 +121,17 @@ void TppManager::set_config(int noop_timeout) {
 	}
 }
 
-void TppManager::kill_sessions(const ex_astr& sessions) {
+void TppManager::set_runtime_config(const ex_astr& sp) {
 	tpp_libs::iterator it = m_libs.begin();
-	for (; it != m_libs.end(); ++it)
-	{
-		(*it)->command(TPP_CMD_KILL_SESSIONS, sessions.c_str());
+	for (; it != m_libs.end(); ++it) {
+		(*it)->command(TPP_CMD_SET_RUNTIME_CFG, sp.c_str());
+	}
+}
+
+void TppManager::kill_sessions(const ex_astr& sp) {
+	tpp_libs::iterator it = m_libs.begin();
+	for (; it != m_libs.end(); ++it) {
+		(*it)->command(TPP_CMD_KILL_SESSIONS, sp.c_str());
 	}
 }
 

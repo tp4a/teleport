@@ -53,7 +53,8 @@ public:
 	int count(void) { return m_libs.size(); }
 
 	void set_config(int noop_timeout);
-	void kill_sessions(const ex_astr& sessions);
+	void set_runtime_config(const ex_astr& sp);
+	void kill_sessions(const ex_astr& sp);
 
 private:
 	tpp_libs m_libs;
