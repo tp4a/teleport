@@ -9,6 +9,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${Project_SOURCE_DIR}/../out/server/x64/bin"
 aux_source_directory(. DIR_SSH_SRCS)
 aux_source_directory(../../common DIR_SSH_SRCS)
 aux_source_directory(../../../../common/libex/src DIR_SSH_SRCS)
+aux_source_directory(../../../../external/jsoncpp/src/lib_json DIR_SRCS)
 
 list(REMOVE_ITEM DIR_SSH_SRCS "./dllmain.cpp")
 list(REMOVE_ITEM DIR_SSH_SRCS "./stdafx.cpp")
@@ -17,6 +18,7 @@ list(REMOVE_ITEM DIR_SSH_SRCS "./stdafx.cpp")
 include_directories(
 		../../../../common/libex/include
 		../../../../common/teleport
+		../../../../external/jsoncpp/include
 )
 
 IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
