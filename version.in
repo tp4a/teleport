@@ -16,4 +16,4 @@ Build ：	构建号。构建号用于表明此版本发布之前进行了多少�
 TP_SERVER 3.0.1.6          # 整个服务端打包的版本
 TP_TPCORE 3.0.1.6          # 核心服务 tp_core 的版本
 TP_TPWEB 3.0.0.1           # web服务 tp_web 的版本（一般除非升级Python，否则不会变化）
-TP_ASSIST 3.0.0.5          # 助手版本
+TP_ASSIST 3.0.1.6          # 助手版本
