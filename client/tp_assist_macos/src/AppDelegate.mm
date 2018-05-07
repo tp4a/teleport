@@ -74,9 +74,29 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 	NSString *resPath = [[NSBundle mainBundle] resourcePath];
 	std::string cpp_res_path = [resPath cStringUsingEncoding:NSUTF8StringEncoding];
 	std::string cpp_cfg_file = [cfgFile cStringUsingEncoding:NSUTF8StringEncoding];
-	if(!cpp_main((__bridge void*)self, cpp_cfg_file.c_str(), cpp_res_path.c_str())) {
+	
+	int ret = cpp_main((__bridge void*)self, cpp_cfg_file.c_str(), cpp_res_path.c_str());
+	if(ret != 0) {
 		// TODO: show error message and exit.
-	}
+		NSString *msg = Nil;
+		if(ret == -1)
+			msg = @"初始化运行环境失败！";
+		else if(ret == -2)
+			msg = @"加载配置文件失败！";
+		else if(ret == -3)
+			msg = @"启动本地通讯端口失败！请检查本地50022端口是否被占用！";
+		
+		NSAlert *alert = [NSAlert alertWithMessageText:@"无法启动Teleport助手"
+										 defaultButton:@"确定"
+									   alternateButton:Nil
+										   otherButton:Nil
+							 informativeTextWithFormat:msg];
+		[alert runModal];
+
+		http_rpc_stop();
+		
+		[[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
+		[NSApp terminate:NSApp];	}
 }
 
 - (int) start_ssh_client:(NSString*)cmd_line termType:(NSString*)term_type termTheme:(NSString*)term_theme termTitle:(NSString*)term_title {
@@ -147,7 +167,7 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 
 - (IBAction)visitWebsite:(id)sender {
 	
-	NSURL *url = [NSURL URLWithString:@"http://teleport.eomsoft.net/"];
+	NSURL *url = [NSURL URLWithString:@"http://www.tp4a.com/"];
 	[[NSWorkspace sharedWorkspace] openURL:url];
 }
 

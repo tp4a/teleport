@@ -28,7 +28,7 @@ TsHttpRpc g_http_interface;
 
 void* g_app = NULL;
 
-void http_rpc_start(void* app) {
+int http_rpc_start(void* app) {
 	g_app = app;
 	
 //	if(!g_env.init())
@@ -37,13 +37,16 @@ void http_rpc_start(void* app) {
 	if (!g_http_interface.init(TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT))
 	{
 		EXLOGE("[ERROR] can not start HTTP-RPC listener, maybe port %d is already in use.\n", TS_HTTP_RPC_PORT);
-		return;
+		return -1;
 	}
 	
 	EXLOGW("======================================================\n");
 	EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on %s:%d\n", TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT);
 	
-	g_http_interface.start();
+	if(!g_http_interface.start())
+		return -2;
+
+	return 0;
 }
 
 void http_rpc_stop(void)
@@ -465,19 +468,6 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	ex_astr real_host_ip = jsRoot["remote_host_ip"].asCString();
 	ex_astr sid = jsRoot["session_id"].asCString();
 
-//	ex_wstr w_exe_path;
-//	wchar_t w_szCommandLine[MAX_PATH] = { 0 };
-
-
-//	ex_wstr w_sid;
-//	ex_astr2wstr(sid, w_sid);
-//	ex_wstr w_teleport_ip;
-//	ex_astr2wstr(teleport_ip, w_teleport_ip);
-//	ex_wstr w_real_host_ip;
-//	ex_astr2wstr(real_host_ip, w_real_host_ip);
-//	wchar_t w_port[32] = { 0 };
-//	ex_wcsformat(w_port, 32, L"%d", teleport_port);
-
 	ex_astr s_exec;
 	ex_astrs s_argv;
 	
@@ -487,11 +477,12 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//==============================================
 		// RDP
 		//==============================================
-		
-		// sorry, RDP not supported yet for macOS.
-//		_create_json_ret(buf, TPE_NOT_IMPLEMENT);
-//		return;
 
+		if(g_cfg.rdp_app.length() == 0) {
+			_create_json_ret(buf, TPE_NOT_EXISTS);
+			return;
+		}
+		
 		bool flag_clipboard = (protocol_flag & TP_FLAG_RDP_CLIPBOARD);
 		bool flag_disk = (protocol_flag & TP_FLAG_RDP_DISK);
 		bool flag_console = (protocol_flag & TP_FLAG_RDP_CONSOLE);
@@ -554,9 +545,8 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//w_exe_path = _T("xfreerdp -u {user_name} {size} {console} {clipboard} {drives} ");
 		//w_exe_path = _T("/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp -u {user_name} {size} {console} ");
 		//w_exe_path = _T("xfreerdp -u {user_name} {size} {console} ");
-		s_exec = "/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp";
-		//s_exec = "xfreerdp";
-		//s_argv.push_back("xfreerdp");
+		//s_exec = "/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp";
+		s_exec = g_cfg.rdp_app;
 		s_argv.push_back(s_exec.c_str());
 
 		{

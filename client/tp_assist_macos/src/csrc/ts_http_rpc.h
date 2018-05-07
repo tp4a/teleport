@@ -39,7 +39,7 @@ json_param		此任务方法的附加参数，如果没有附加参数，这部分可以省略。
 
 */
 
-void http_rpc_start(void* app);
+int http_rpc_start(void* app);
 void http_rpc_stop(void);
 
 typedef std::map<ex_astr, ex_astr> content_type_map;

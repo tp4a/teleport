@@ -7,6 +7,8 @@ var g_cfg = null;
 var dom = {
     term_type: $('#term-type'),
     term_profile: $('#term-profile'),
+    rdp_type: $('#rdp-type'),
+    rdp_app: $('#rdp-app'),
 
     btn_save: $('#btn-save')
 };
@@ -35,7 +37,7 @@ var get_config = function () {
 }
 
 function update_dom() {
-    console.log('---', g_cfg, g_cfg.term, g_cfg.term.available);
+    console.log('---', g_cfg);
 
     dom.term_type.html('');
 
@@ -66,6 +68,34 @@ function update_dom() {
             dom.term_profile.val(profile);
         }
     }
+
+    if (!_.isUndefined(g_cfg.rdp)) {
+        if (_.isUndefined(g_cfg.rdp.selected)) {
+            g_cfg.rdp.selected = '';
+        }
+
+        if (!_.isUndefined(g_cfg.rdp.available) && g_cfg.rdp.available.length > 0) {
+            var selected = '';
+            var app = '';
+
+            var html = [];
+            for (var i = 0; i < g_cfg.rdp.available.length; i++) {
+                var item = g_cfg.rdp.available[i];
+
+                if (selected === '' || item.name === g_cfg.rdp.selected) {
+                    selected = item.name;
+                    app = item.app;
+                }
+
+                html.push('<option id="rdp-' + item.name + '" value="' + item.name + '">' + item.display + '</option>');
+            }
+
+            dom.rdp_type.html(html.join(''));
+
+            dom.rdp_type.val(selected);
+            dom.rdp_app.val(app);
+        }
+    }
 }
 
 function on_term_change() {
@@ -78,8 +108,20 @@ function on_term_change() {
             return;
         }
     }
-
     notify_error('所选的终端配置项并不存在！');
+}
+
+function on_rdp_change() {
+    g_cfg.rdp.selected = dom.rdp_type.val();
+
+    for (var i = 0; i < g_cfg.rdp.available.length; i++) {
+        var item = g_cfg.rdp.available[i];
+        if (item.name === g_cfg.rdp.selected) {
+            dom.rdp_app.val(item.app);
+            return;
+        }
+    }
+    notify_error('所选的RDP配置项并不存在！');
 }
 
 function on_save() {
@@ -90,6 +132,13 @@ function on_save() {
         var item = g_cfg.term.available[i];
         if (item.name === g_cfg.term.selected) {
             item.profile = dom.term_profile.val();
+            break;
+        }
+    }
+    for (var i = 0; i < g_cfg.rdp.available.length; i++) {
+        var item = g_cfg.rdp.available[i];
+        if (item.name === g_cfg.rdp.selected) {
+            item.app = dom.rdp_app.val();
             break;
         }
     }
@@ -145,6 +194,9 @@ $(document).ready(function () {
 
     dom.term_type.change(function () {
         on_term_change();
+    });
+    dom.rdp_type.change(function () {
+        on_rdp_change();
     });
 
     dom.btn_save.click(function () {

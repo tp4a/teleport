@@ -15,5 +15,16 @@
 				"profile": "Default"
 			}
 		]
+	},
+	
+	"rdp": {
+		"selected": "FreeRDP",
+		"available": [
+			{
+				"name": "FreeRDP",
+				"display": "FreeRDP",
+				"app": ""
+			}
+		]
 	}
 }

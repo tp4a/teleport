@@ -46,6 +46,8 @@ bool TsCfg::_load(const ex_astr& str_json) {
 		return false;
 	}
 
+	// ------------ term ---------------------
+	
 	if (!m_root["term"].isObject()) {
 		EXLOGE("invalid config, error 1.\n");
 		return false;
@@ -98,6 +100,60 @@ bool TsCfg::_load(const ex_astr& str_json) {
 		EXLOGE("invalid config, error 6.\n");
 		return false;
 	}
+
+	// ------------ RDP ---------------------
+
+	if (!m_root["rdp"].isObject()) {
+		EXLOGE("invalid config, error 1.\n");
+		return false;
+	}
 	
+	if(	!m_root["rdp"]["selected"].isString()) {
+		EXLOGE("invalid config, error 2.\n");
+		return false;
+	}
+	
+	rdp_name = m_root["rdp"]["selected"].asCString();
+	
+	if(!m_root["rdp"]["available"].isArray() || m_root["rdp"]["available"].size() == 0) {
+		EXLOGE("invalid config, error 3.\n");
+		return false;
+	}
+
+	for (i = 0; i < m_root["rdp"]["available"].size(); ++i) {
+		
+		if(
+		   !m_root["rdp"]["available"][i]["name"].isString()
+		   || !m_root["rdp"]["available"][i]["app"].isString()
+		   //|| !m_root["rdp"]["available"][i]["profile"].isString()
+		   ) {
+			EXLOGE("invalid config, error 4.\n");
+			return false;
+		}
+		
+		if(m_root["rdp"]["available"][i]["name"].asCString() != rdp_name)
+			continue;
+		
+		if(m_root["rdp"]["available"][i]["disp"].isString()) {
+			rdp_display = m_root["term"]["available"][i]["display"].asCString();
+		} else if(m_root["rdp"]["available"][i]["disp"].isNull()) {
+			m_root["rdp"]["available"][i]["disp"] = rdp_name;
+			rdp_display = rdp_name;
+		} else {
+			EXLOGE("invalid config, error 5.\n");
+			return false;
+		}
+		
+		rdp_app = m_root["rdp"]["available"][i]["app"].asCString();
+		//rdp_profile = m_root["rdp"]["available"][i]["profile"].asCString();
+		
+		break;
+	}
+	
+	if(rdp_name.length() == 0) {
+		EXLOGE("invalid config, error 6.\n");
+		return false;
+	}
+
 	return true;
 }

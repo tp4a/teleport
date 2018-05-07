@@ -11,13 +11,14 @@
 #include "csrc/ts_cfg.h"
 #include "csrc/ts_http_rpc.h"
 
-bool cpp_main(void* _self, const char* cfg_file, const char* res_path) {
+int cpp_main(void* _self, const char* cfg_file, const char* res_path) {
 	if(!g_env.init(cfg_file, res_path))
-		return false;
+		return -1;
 	if(!g_cfg.init())
-		return false;
+		return -2;
 
-	http_rpc_start(_self);
+	if(0 != http_rpc_start(_self))
+		return -3;
 	
-	return true;
+	return 0;
 }

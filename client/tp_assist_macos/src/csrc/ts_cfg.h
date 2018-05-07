@@ -22,6 +22,11 @@ public:
 	ex_astr term_app;
 	ex_astr term_profile;
 	
+	ex_astr rdp_name;
+	ex_astr rdp_display;
+	ex_astr rdp_app;
+	//ex_astr rdp_cmdline;
+	
 protected:
 	bool _load(const ex_astr& str_json);
 

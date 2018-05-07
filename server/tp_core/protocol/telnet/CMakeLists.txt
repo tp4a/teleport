@@ -9,7 +9,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${Project_SOURCE_DIR}/../out/server/x64/bin"
 aux_source_directory(. DIR_TELNET_SRCS)
 aux_source_directory(../../common DIR_TELNET_SRCS)
 aux_source_directory(../../../../common/libex/src DIR_TELNET_SRCS)
-aux_source_directory(../../../../external/jsoncpp/src/lib_json DIR_SRCS)
+aux_source_directory(../../../../external/jsoncpp/src/lib_json DIR_TELNET_SRCS)
 
 list(REMOVE_ITEM DIR_TELNET_SRCS "./dllmain.cpp")
 list(REMOVE_ITEM DIR_TELNET_SRCS "./stdafx.cpp")

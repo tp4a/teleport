@@ -42,7 +42,7 @@ public:
 
 	int Count(void) const
 	{
-		return m_kvs.size();
+		return (int)m_kvs.size();
 	}
 	void Save(FILE* file, int codepage);
 #ifdef EX_DEBUG
