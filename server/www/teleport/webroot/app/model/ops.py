@@ -18,8 +18,8 @@ def get_by_id(pid):
     if err != TPE_OK:
         return err, {}
 
-    if len(s.recorder) == 0:
-        return TPE_NOT_EXISTS, {}
+    # if len(s.recorder) == 0:
+    #     return TPE_NOT_EXISTS, {}
 
     return TPE_OK, s.recorder[0]
 
@@ -475,8 +475,8 @@ def get_auth(auth_id):
     if len(s.recorder) == 0:
         return None, TPE_NOT_EXISTS
 
-    if len(s.recorder) != 1:
-        return None, TPE_FAILED
+    # if len(s.recorder) != 1:
+    #     return None, TPE_FAILED
 
     # log.v(s.recorder[0])
     return s.recorder[0], TPE_OK
