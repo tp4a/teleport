@@ -12,7 +12,7 @@ from app.base.utils import AttrDict, tp_timestamp_utc_now
 
 def get_by_id(pid):
     s = SQL(get_db())
-    s.select_from('ops_policy', ['id', 'name', 'desc', 'flag_record', 'flag_rdp', 'flag_ssh'], alt_name='p')
+    s.select_from('ops_policy', ['id', 'name', 'desc', 'flag_record', 'flag_rdp', 'flag_ssh', 'flag_telnet'], alt_name='p')
     s.where('p.id={}'.format(pid))
     err = s.query()
     if err != TPE_OK:
