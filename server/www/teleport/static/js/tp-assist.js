@@ -3,7 +3,8 @@
 $tp.assist = {
     running: false,
     version: '',
-    api_url: 'http://localhost:50022/api',
+    // api_url: 'http://localhost:50022/api',
+    api_url: 'http://127.0.0.1:50022/api',
     teleport_ip: window.location.hostname
 };
 
