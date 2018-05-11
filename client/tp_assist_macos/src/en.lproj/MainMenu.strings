@@ -1,0 +1,33 @@
+
+/* Class = "NSMenu"; title = "AMainMenu"; ObjectID = "29"; */
+"29.title" = "AMainMenu";
+
+/* Class = "NSMenuItem"; title = "TPAssist"; ObjectID = "56"; */
+"56.title" = "TPAssist";
+
+/* Class = "NSMenu"; title = "TPAssist"; ObjectID = "57"; */
+"57.title" = "TPAssist";
+
+/* Class = "NSMenuItem"; title = "About TPAssist"; ObjectID = "58"; */
+"58.title" = "About TPAssist";
+
+/* Class = "NSMenuItem"; title = "Quit TPAssist"; ObjectID = "136"; */
+"136.title" = "Quit TPAssist";
+
+/* Class = "NSMenuItem"; title = "About"; ObjectID = "638"; */
+"638.title" = "About";
+
+/* Class = "NSMenuItem"; title = "Quit"; ObjectID = "644"; */
+"644.title" = "Quit";
+
+/* Class = "NSMenuItem"; title = "Settings"; ObjectID = "646"; */
+"646.title" = "Settings";
+
+/* Class = "NSMenu"; title = "Settings"; ObjectID = "647"; */
+"647.title" = "Settings";
+
+/* Class = "NSMenuItem"; title = "Edit"; ObjectID = "648"; */
+"648.title" = "Edit";
+
+/* Class = "NSMenuItem"; title = "Quit"; ObjectID = "649"; */
+"649.title" = "Quit";

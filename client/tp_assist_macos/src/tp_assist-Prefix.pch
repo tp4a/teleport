@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'TPAssist' target in the 'TPAssist' project
+//
+
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+#endif

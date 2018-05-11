@@ -1,0 +1,6 @@
+﻿#用户账号示例文件，使用CSV格式，每行一个用户，用英文逗号分隔，共8个字段，需要7个英文逗号,,,,,,,
+#用户账号,用户姓名,EMail,Mobile,QQ,微信,所属组,描述
+zhangsan,张三,zhangsan@domain.tld,,12345678,112233,运维人员|审计员,
+lisi,李四,lisi@domain.tld,,,,审计员,
+wangwu,,,,,,,
+bai.lee,李白,bai.lee@domain.tld,,10086,bai.lee,审计管理员,著名诗人

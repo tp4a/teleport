@@ -1,0 +1,15 @@
+/* 
+  Localizable.strings
+  TPAssist
+
+  Created by ApexLiu at 2017-09-13.
+*/
+
+/* NSLocalizedString(@"",nil)*/
+
+"About " = "关于 ";
+//"Version: " = "版本：";
+"Teleport Assist" = "Teleport 助手 - macOS";
+
+"Quit" = "退出";
+//"Continue" = "继续";

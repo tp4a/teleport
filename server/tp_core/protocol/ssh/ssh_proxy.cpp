@@ -7,6 +7,9 @@ SshProxy::SshProxy() :
 	ExThreadBase("ssh-proxy-thread"),
 	m_bind(NULL)
 {
+	m_timer_counter = 0;
+
+	m_noop_timeout_sec = 900; // default to 15 minutes.
 }
 
 SshProxy::~SshProxy()
@@ -15,16 +18,9 @@ SshProxy::~SshProxy()
 		ssh_bind_free(m_bind);
 
 	ssh_finalize();
-
-	ts_sftp_sessions::iterator it = m_sftp_sessions.begin();
-	for (; it != m_sftp_sessions.end(); ++it)
-	{
-		delete it->second;
-	}
-	m_sftp_sessions.clear();
 }
 
-bool SshProxy::init(void)
+bool SshProxy::init()
 {
 	m_host_ip = g_ssh_env.bind_ip;
 	m_host_port = g_ssh_env.bind_port;
@@ -68,43 +64,55 @@ bool SshProxy::init(void)
 	return true;
 }
 
-void SshProxy::_thread_loop(void)
-{
-	EXLOGV("[ssh] TeleportServer-SSH ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
-	_run();
-	EXLOGV("[ssh] main-loop end.\n");
-}
+void SshProxy::timer() {
+	// timer() will be called per one second, and I will do my job per 5 seconds.
+	m_timer_counter++;
+	if(m_timer_counter < 5)
+		return;
 
-void SshProxy::_set_stop_flag(void)
-{
-	m_stop_flag = true;
+	m_timer_counter = 0;
 
-	if (m_is_running)
-	{
-		// 用一个变通的方式来结束阻塞中的监听，就是连接一下它。
-		ex_astr host_ip = m_host_ip;
-		if (host_ip == "0.0.0.0")
-			host_ip = "127.0.0.1";
+	ExThreadSmartLock locker(m_lock);
+	ex_u32 t_now = (ex_u32)time(NULL);
 
-		ssh_session _session = ssh_new();
-		ssh_options_set(_session, SSH_OPTIONS_HOST, host_ip.c_str());
-		ssh_options_set(_session, SSH_OPTIONS_PORT, &m_host_port);
-
-		int _timeout_us = 100000;
-		ssh_options_set(_session, SSH_OPTIONS_TIMEOUT_USEC, &_timeout_us);
-		ssh_connect(_session);
-		ssh_free(_session);
+	ts_ssh_sessions::iterator it;
+	for(it = m_sessions.begin(); it != m_sessions.end(); ++it) {
+		it->first->save_record();
+		if(0 != m_noop_timeout_sec)
+			it->first->check_noop_timeout(t_now, m_noop_timeout_sec);
 	}
-
-	m_thread_mgr.stop_all();
 }
 
-void SshProxy::_run(void)
+void SshProxy::set_cfg(ex_u32 noop_timeout) {
+	m_noop_timeout_sec = noop_timeout;
+}
+
+void SshProxy::kill_sessions(const ex_astrs& sessions) {
+	ExThreadSmartLock locker(m_lock);
+	ts_ssh_sessions::iterator it = m_sessions.begin();
+	for (; it != m_sessions.end(); ++it) {
+		for (size_t i = 0; i < sessions.size(); ++i) {
+			if (it->first->sid() == sessions[i]) {
+				EXLOGW("[ssh] try to kill %s\n", sessions[i].c_str());
+				it->first->check_noop_timeout(0, 0); // 立即结束
+			}
+		}
+	}
+}
+
+
+void SshProxy::_thread_loop()
 {
+	EXLOGI("[ssh] TeleportServer-SSH ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
+
 	for (;;)
 	{
 		// 注意，ssh_new()出来的指针，如果遇到停止标志，本函数内部就释放了，否则这个指针交给了SshSession类实例管理，其析构时会释放。
 		ssh_session sess_to_client = ssh_new();
+// 		int verbosity = 4;
+// 		ssh_options_set(sess_to_client, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+
+		ssh_set_blocking(sess_to_client, 1);
 
 		struct sockaddr_storage sock_client;
 		char ip[32] = { 0 };
@@ -152,92 +160,38 @@ void SshProxy::_run(void)
 
 	// 等待所有工作线程退出
 	m_thread_mgr.stop_all();
+
+	EXLOGV("[ssh] main-loop end.\n");
 }
 
-void SshProxy::_dump_sftp_sessions(void)
+void SshProxy::_set_stop_flag()
 {
-	ts_sftp_sessions::iterator it = m_sftp_sessions.begin();
-	for (; it != m_sftp_sessions.end(); ++it)
-	{
-		EXLOGD("ssh-proxy session: sid: %s\n", it->first.c_str());
-	}
-}
+	m_stop_flag = true;
 
-void SshProxy::add_sftp_session_info(const ex_astr& sid, const ex_astr& host_ip, int host_port, const ex_astr& user_name, const ex_astr& user_auth, int auth_mode)
-{
-	ExThreadSmartLock locker(m_lock);
-	EXLOGD("[ssh] add sftp session-id: %s\n", sid.c_str());
-	ts_sftp_sessions::iterator it = m_sftp_sessions.find(sid);
-	if (it != m_sftp_sessions.end())
+	if (m_is_running)
 	{
-		EXLOGD("[ssh] sftp-session-id '%s' already exists.\n", sid.c_str());
-		it->second->ref_count++;
-		return;
-	}
+		// 用一个变通的方式来结束阻塞中的监听，就是连接一下它。
+		ex_astr host_ip = m_host_ip;
+		if (host_ip == "0.0.0.0")
+			host_ip = "127.0.0.1";
 
-	TS_SFTP_SESSION_INFO* info = new TS_SFTP_SESSION_INFO;
-	info->host_ip = host_ip;
-	info->host_port = host_port;
-	info->user_name = user_name;
-	info->user_auth = user_auth;
-	info->auth_mode = auth_mode;
-	info->ref_count = 1;
+		ssh_session _session = ssh_new();
+		ssh_options_set(_session, SSH_OPTIONS_HOST, host_ip.c_str());
+		ssh_options_set(_session, SSH_OPTIONS_PORT, &m_host_port);
 
-	if (!m_sftp_sessions.insert(std::make_pair(sid, info)).second)
-	{
-		EXLOGE("[ssh] ssh-proxy can not insert a sftp-session-id.\n");
+		int _timeout_us = 10;
+		ssh_options_set(_session, SSH_OPTIONS_TIMEOUT, &_timeout_us);
+		ssh_connect(_session);
+		ssh_free(_session);
 	}
 
-	_dump_sftp_sessions();
-}
-
-bool SshProxy::get_sftp_session_info(const ex_astr& sid, TS_SFTP_SESSION_INFO& info)
-{
-	ExThreadSmartLock locker(m_lock);
-	EXLOGD("[ssh] try to get info by sftp session-id: %s\n", sid.c_str());
-
-	_dump_sftp_sessions();
-
-	ts_sftp_sessions::iterator it = m_sftp_sessions.find(sid);
-	if (it == m_sftp_sessions.end())
-	{
-		EXLOGD("[ssh] sftp-session '%s' not exists.\n", sid.c_str());
-		return false;
-	}
-
-	info.host_ip = it->second->host_ip;
-	info.host_port = it->second->host_port;
-	info.user_name = it->second->user_name;
-	info.user_auth = it->second->user_auth;
-	info.auth_mode = it->second->auth_mode;
-	info.ref_count = it->second->ref_count;
-
-	return true;
-}
-
-void SshProxy::remove_sftp_sid(const ex_astr& sid)
-{
-	EXLOGD("[ssh] try to remove sftp session-id: %s\n", sid.c_str());
-
-	ExThreadSmartLock locker(m_lock);
-	ts_sftp_sessions::iterator it = m_sftp_sessions.find(sid);
-	if (it == m_sftp_sessions.end())
-	{
-		EXLOGE("[ssh] ssh-proxy when remove sftp sid, it not in charge.\n");
-		return;
-	}
-
-	it->second->ref_count--;
-	if (it->second->ref_count <= 0)
-	{
-		delete it->second;
-		m_sftp_sessions.erase(it);
-		EXLOGD("[ssh] sftp session-id '%s' removed.\n", sid.c_str());
-	}
+	m_thread_mgr.stop_all();
 }
 
 void SshProxy::session_finished(SshSession* sess)
 {
+	// TODO: 向核心模块汇报此会话终止，以减少对应连接信息的引用计数
+
 	ExThreadSmartLock locker(m_lock);
 	ts_ssh_sessions::iterator it = m_sessions.find(sess);
 	if (it != m_sessions.end())

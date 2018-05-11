@@ -293,22 +293,6 @@ class BuilderLinux(BuilderBase):
     def _build_openssl(self, file_name):
         pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
 
-        # if not os.path.exists(self.OPENSSL_PATH_SRC):
-        #     os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-        #
-        # cc.n('build openssl static...')
-        # if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
-        #     cc.w('already exists, skip.')
-        #     return
-        #
-        # old_p = os.getcwd()
-        # os.chdir(self.OPENSSL_PATH_SRC)
-        # #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        # os.system('./config --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        # os.system('make')
-        # os.system('make install')
-        # os.chdir(old_p)
-
     def _build_libuv(self, file_name):
         if not os.path.exists(self.LIBUV_PATH_SRC):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
@@ -463,9 +447,12 @@ class BuilderLinux(BuilderBase):
                        ' -D_OPENSSL_VERSION={}' \
                        ' -DOPENSSL_INCLUDE_DIR={}/include' \
                        ' -DOPENSSL_LIBRARIES={}/lib' \
+                       ' -DWITH_SSH1=ON' \
+                       ' -DWITH_SFTP=ON' \
+                       ' -DWITH_SERVER=ON' \
+                       ' -DWITH_STATIC_LIB=ON' \
                        ' -DWITH_GSSAPI=OFF' \
                        ' -DWITH_ZLIB=OFF' \
-                       ' -DWITH_STATIC_LIB=ON' \
                        ' -DWITH_PCAP=OFF' \
                        ' -DWITH_TESTING=OFF' \
                        ' -DWITH_CLIENT_TESTING=OFF' \
@@ -521,7 +508,7 @@ class BuilderMacOS(BuilderBase):
     def _init_path(self):
         self.PATH_TMP = os.path.join(PATH_EXTERNAL, 'macos', 'tmp')
         self.PATH_RELEASE = os.path.join(PATH_EXTERNAL, 'macos', 'release')
-        self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-{}'.format(env.ver_openssl))
+        self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-OpenSSL_{}'.format(env.ver_openssl.replace('.', '_')))
         self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(env.ver_libuv))
         self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls))
         self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(env.ver_libssh))
@@ -552,27 +539,28 @@ class BuilderMacOS(BuilderBase):
             cc.w('already exists, skip.')
 
     def _build_openssl(self, file_name):
-        pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
+        # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
 
-        # if not os.path.exists(self.OPENSSL_PATH_SRC):
-        #     os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-        #
-        # cc.n('build openssl static...')
-        # if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
-        #     cc.w('already exists, skip.')
-        #     return
-        #
-        # old_p = os.getcwd()
-        # os.chdir(self.OPENSSL_PATH_SRC)
-        # #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        # os.system('./config --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        # os.system('make')
-        # os.system('make install')
-        # os.chdir(old_p)
+        if not os.path.exists(self.OPENSSL_PATH_SRC):
+            os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+
+        cc.n('build openssl static...', end='')
+        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
+            cc.w('already exists, skip.')
+            return
+
+        old_p = os.getcwd()
+        os.chdir(self.OPENSSL_PATH_SRC)
+        #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        # os.system('./Configure darwin64-x86_64-cc')
+        os.system('./Configure darwin64-x86_64-cc --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        os.system('make')
+        os.system('make install')
+        os.chdir(old_p)
 
     def _build_libuv(self, file_name):
-        cc.w('build libuv...skip')
-        return
+        cc.n('prepare libuv source code...', end='')
+        # return
         if not os.path.exists(self.LIBUV_PATH_SRC):
             # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
@@ -584,7 +572,7 @@ class BuilderMacOS(BuilderBase):
         cc.v('')
 
         # we need following...
-        # apt-get install autoconf aptitude libtool gcc-c++
+        # brew install automake libtool
 
         old_p = os.getcwd()
         os.chdir(self.LIBUV_PATH_SRC)
@@ -626,45 +614,6 @@ class BuilderMacOS(BuilderBase):
         f = open(mkfile, 'w')
         f.writelines(fl)
         f.close()
-
-        # # fix config.h
-        # mkfile = os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls', 'config.h')
-        # f = open(mkfile)
-        # fl = f.readlines()
-        # f.close()
-        #
-        # for i in range(len(fl)):
-        #     if fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED') >= 0:
-        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED\n'
-        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED') >= 0:
-        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED\n'
-        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED') >= 0:
-        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED\n'
-        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED') >= 0:
-        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED\n'
-        #     elif fl[i].find('#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED') >= 0:
-        #         fl[i] = '//#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED\n'
-        #     elif fl[i].find('#define MBEDTLS_SELF_TEST') >= 0:
-        #         fl[i] = '//#define MBEDTLS_SELF_TEST\n'
-        #     elif fl[i].find('#define MBEDTLS_SSL_RENEGOTIATION') >= 0:
-        #         fl[i] = '//#define MBEDTLS_SSL_RENEGOTIATION\n'
-        #     elif fl[i].find('#define MBEDTLS_ECDH_C') >= 0:
-        #         fl[i] = '//#define MBEDTLS_ECDH_C\n'
-        #     elif fl[i].find('#define MBEDTLS_ECDSA_C') >= 0:
-        #         fl[i] = '//#define MBEDTLS_ECDSA_C\n'
-        #     elif fl[i].find('#define MBEDTLS_ECP_C') >= 0:
-        #         fl[i] = '//#define MBEDTLS_ECP_C\n'
-        #     elif fl[i].find('#define MBEDTLS_NET_C') >= 0:
-        #         fl[i] = '//#define MBEDTLS_NET_C\n'
-        #
-        #     elif fl[i].find('#define MBEDTLS_RSA_NO_CRT') >= 0:
-        #         fl[i] = '#define MBEDTLS_RSA_NO_CRT\n'
-        #     elif fl[i].find('#define MBEDTLS_SSL_PROTO_SSL3') >= 0:
-        #         fl[i] = '#define MBEDTLS_SSL_PROTO_SSL3\n'
-        #
-        # f = open(mkfile, 'w')
-        # f.writelines(fl)
-        # f.close()
 
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
@@ -735,7 +684,7 @@ class BuilderMacOS(BuilderBase):
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
                        ' -DWITH_NACL=OFF' \
-                       ' ..'.format(self.PATH_RELEASE, env.ver_openssl_number, self.PATH_RELEASE, self.PATH_RELEASE)
+                       ''.format(self.PATH_RELEASE, env.ver_openssl_number, self.PATH_RELEASE, self.PATH_RELEASE)
 
         try:
             utils.cmake(build_path, 'Release', False, cmake_define)

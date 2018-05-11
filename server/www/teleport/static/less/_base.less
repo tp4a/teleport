@@ -1,13 +1,25 @@
-// YWL-Base-Settings
+@charset "utf-8";
+
+@header-height: 48px;
+@sidebar-width: 180px;
+@text-size-normal: 13px;
+@text-size-small: 12px;
+//@text-size-small: 0.9rem;
+
+//@font-family-normal: "Open Sans", "Helvetica Neue", "Microsoft YaHei", "微软雅黑", Helvetica, Arial, sans-serif;
+//@font-family-normal: "Microsoft YaHei", "微软雅黑", Helvetica, Arial, sans-serif;
+@font-family-normal: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+@font-family-mono: Monaco, Lucida Console, Consolas, Courier, 'Courier New', monospace;
+
 @import "_color";
 
-@font-family-normal: "Open Sans", "Helvetica Neue", "Microsoft YaHei", "微软雅黑", Helvetica, Arial, sans-serif;
-@font-family-mono: Consolas, Lucida Console, Monaco, Courier, 'Courier New', monospace;
+html {
+  font-size: @text-size-normal;
+}
 
 body {
   font-family: @font-family-normal;
-  //font-family: "微软雅黑", "Microsoft YaHei", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 13px;
+  //font-size: @text-size-normal;
   background-color: @page-bg;
   color: @page-color;
 }
@@ -65,209 +77,38 @@ label {
   font-family: @font-family-mono;
 }
 
+.important {
+  //font-weight:bold;
+  color: #d45f1c;
+  //font-style: italic;
+}
+
+.error {
+  color: @color-text-danger;
+}
+
+.bold {
+  font-weight: bold;
+}
+
 hr.hr-sm {
-  margin-top: 5px;
-  margin-bottom: 5px;
+  //margin-top: 5px;
+  //margin-bottom: 5px;
+  padding: 1px 0;
+  margin: 5px 0;
+  border-top: 1px dashed #c4c4c4;
 }
 
-//==============================================
-// 重载bootstrap的样式
-//==============================================
-.btn-group-sm > .btn, .btn-sm {
-  padding: 2px 5px;
-  //margin-bottom: 2px;
+ul {
+  list-style: none;
 }
 
-.btn.btn-sm {
-  padding: 3px 8px;
-}
-
-.btn.btn-icon {
-  padding: 3px 6px;
-  &.btn-sm {
-    //padding:1px 3px;
-    padding: 0;
-    font-size: 14px;
-    height: 24px;
-    width: 24px;
-    line-height: 24px;
-    border-radius: 0;
-  }
-}
-
-.form-group-sm .input-group .input-group-btn > .btn {
-  height: 30px;
-  padding: 0 8px;
-}
-
-.pop-menu-backdrop {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1040;
-}
-
-//.modal {
-.form-group {
-  margin-bottom: 5px;
-}
-
-//}
-
-.badge {
-  display: inline-block;
-
-  min-width: 8px;
-  padding: 5px 10px;
-  border-radius: 10px;
-
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1em;
-
-  background-color: @color-bg-default;
-  color: @color-text-on-dark-bg;
-  text-shadow: 1px 1px 0 @color-text-shadow-on-dark-bg;
-
-  &.badge-plain {
-    text-shadow: none;
-  }
-
-  &.badge-sm {
-    font-size: 11px;
-    padding: 3px 6px;
-    margin-top: 0;
-    border-radius: 8px;
-    text-shadow: none;
-  }
-
-  &.badge-sup {
-    margin-left: -6px;
-    margin-top: -16px;
-  }
-
-  &.badge-ignore {
-    background-color: @color-bg-ignore;
-    color: @color-text-ignore;
-    text-shadow: none;
-  }
-  &.badge-info {
-    background-color: @color-bg-info;
-  }
-  &.badge-primary {
-    background-color: @color-bg-primary;
-  }
-
-  &.badge-success {
-    background-color: @color-bg-success;
-  }
-  &.badge-warning {
-    background-color: @color-bg-warning;
-  }
-  &.badge-danger {
-    background-color: @color-bg-danger;
-  }
-}
-
-.label {
-  display: inline-block;
-
-  min-width: 8px;
-  padding: 5px 10px;
-  border-radius: 5px;
-
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1em;
-
-  background-color: @color-bg-default;
-  color: @color-text-on-dark-bg;
-  text-shadow: 1px 1px 0 @color-text-shadow-on-dark-bg;
-
-  &.label-plain {
-    text-shadow: none;
-  }
-
-  &.label-sm {
-    font-size: 11px;
-    padding: 3px 8px;
-    margin-top: 0;
-    border-radius: 5px;
-    text-shadow: none;
-  }
-
-  &.label-ignore {
-    background-color: @color-bg-ignore;
-    color: @color-text-ignore;
-    text-shadow: none;
-  }
-  &.label-info {
-    background-color: @color-bg-info;
-  }
-  &.label-primary {
-    background-color: @color-bg-primary;
-  }
-
-  &.label-success {
-    background-color: @color-bg-success;
-  }
-  &.label-warning {
-    background-color: @color-bg-warning;
-  }
-  &.label-danger {
-    background-color: @color-bg-danger;
-  }
-}
-
-// 表格页面中的一些小部件
-.progress.progress-sm {
-  height: 18px;
-  margin-bottom: 2px;
-  background-color: #aaa;
-  &.button {
-    cursor: pointer;
-  }
-
-  .progress-bar {
-    display: block;
-    font-size: 11px;
-    float: none;
-  }
-}
-
-.alert-sm {
-  padding: 5px;
-  margin-bottom: 10px;
-}
-
-.modal-dialog-sm {
-  .modal-header {
-    padding: 10px;
-  }
-  .modal-body {
-    padding: 10px;
-  }
-  .modal-footer {
-    padding: 10px;
-  }
-
-  .form-horizontal .form-group {
-    margin-right: -5px;
-    margin-left: -5px;
-  }
-  .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11 {
-    padding-right: 5px;
-    padding-left: 5px;
+ul.list {
+  //list-style: none;
+  margin: 0;
+  padding: 3px 0 5px 0;
+  li {
+    margin: 3px 3px 5px 10px;
   }
 }
 
@@ -281,132 +122,6 @@ hr.hr-sm {
     &:last-child {
       border-top-right-radius: 3px;
       border-bottom-right-radius: 3px;
-    }
-  }
-}
-
-.remote-action-group {
-  margin-bottom: 3px;
-  height: 28px;
-  min-width: 390px;
-
-  ul {
-    display: block;
-    height: 28px;
-    margin: 0;
-    padding: 0;
-
-    li {
-      float: left;
-      position: relative;
-      display: block;
-      height: 28px;
-      padding: 4px 5px;
-
-      background-color: #eee;
-      border-top: 1px solid #ccc;
-      border-right: 1px solid #ccc;
-      border-bottom: 1px solid #ccc;
-
-      &.remote-action-btn {
-        background: none;
-        padding: 0;
-        border: none;
-      }
-
-      &.remote-action-input {
-        background: none;
-        padding: 4px 0;
-
-        select {
-          border: none;
-        }
-      }
-
-      &.remote-action-chk-protocol {
-        width: 86px;
-      }
-
-      &.remote-action-username, &.remote-action-name, &.remote-action-protocol {
-        width: 96px;
-        text-align: center;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      &.remote-action-username {
-        font-size: 90%;
-        color: #999;
-      }
-      &.remote-action-name, &.remote-action-protocol, &.remote-action-chk-protocol {
-        color: #000;
-      }
-      &.remote-action-name, &.remote-action-chk-protocol {
-        font-weight: bold;
-      }
-
-      &.remote-action-password, &.remote-action-sshkey, &.remote-action-noauth {
-        text-align: center;
-        padding: 4px 8px;
-        width: 45px;
-      }
-      &.remote-action-password {
-        background-color: #e3ffe3;
-        color: #999;
-      }
-      &.remote-action-sshkey {
-        background-color: #fbe9c8;
-        color: #666;
-      }
-      &.remote-action-noauth {
-        background-color: #e0e0e0;
-        color: #666;
-      }
-
-      .btn {
-        line-height: 1.5;
-        margin: 0;
-        padding: 4px 8px;
-        font-size: 12px;
-        border-radius: 0;
-      }
-
-      label {
-        padding: 0;
-        display: block;
-        float: left;
-        margin-top: 1px;
-        cursor: pointer;
-      }
-      input[type=checkbox] {
-        display: block;
-        float: left;
-        margin: 3px 5px 0 0;
-      }
-      select {
-        margin-top: -3px;
-      }
-
-      &:first-child {
-        border-left: 1px solid #ccc;
-        border-top-left-radius: 4px;
-        border-bottom-left-radius: 4px;
-
-        .btn {
-          border-top-left-radius: 4px;
-          border-bottom-left-radius: 4px;
-        }
-      }
-
-      &:last-child {
-        border-top-right-radius: 4px;
-        border-bottom-right-radius: 4px;
-
-        .btn {
-          border-top-right-radius: 4px;
-          border-bottom-right-radius: 4px;
-        }
-      }
     }
   }
 }
@@ -509,31 +224,95 @@ hr.small {
   }
 }
 
-.col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12 {
-  padding-right: 5px;
-  padding-left: 5px;
+//=============================================
+// icons.
+//=============================================
+.os-icon-windows:after {
+  color: #00bcf6;
+  content: "\f17a";
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  display: inline-block;
+  font-family: 'Font Awesome 5 Brands';
+  font-weight: 400;
 }
 
-.form-group-sm .form-control-static {
-  padding: 6px 0;
+.os-icon-linux:after {
+  color: #fff;
+  content: "\f17c";
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  background-color: #333;
+  border-radius: 50%;
+  display: inline-block;
+  font-family: 'Font Awesome 5 Brands';
+  font-weight: 400;
 }
 
-.input-group {
+.os-icon-macos:after {
+  color: #a7a7a7;
+  content: "\f179";
+  font-size: 20px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  display: inline-block;
+  font-family: 'Font Awesome 5 Brands';
+  font-weight: 400;
+}
 
-  :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-    color: @color-placeholder;
-  }
+.os-icon-ubuntu:after, .os-icon-debian:after, .os-icon-centos:after, .os-icon-redhat:after {
+  content: " ";
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  display: inline-block;
+}
 
-  ::-moz-placeholder { /* Mozilla Firefox 19+ */
-    color: @color-placeholder;
-  }
+.os-icon-ubuntu:after {
+  background: url(../img/os-icon/ubuntu-24x24.png) no-repeat;
+}
 
-  input:-ms-input-placeholder,
-  textarea:-ms-input-placeholder {
-    color: @color-placeholder;
-  }
+.os-icon-debian:after {
+  background: url(../img/os-icon/debian-24x24.png) no-repeat;
+}
 
-  input::-webkit-input-placeholder, textarea::-webkit-input-placeholder {
-    color: @color-placeholder;
-  }
+.os-icon-centos:after {
+  background: url(../img/os-icon/centos-24x24.png) no-repeat;
+}
+
+.os-icon-redhat:after {
+  background: url(../img/os-icon/redhat-24x24.png) no-repeat;
+}
+
+.disable-bg {
+  position: absolute;
+  background: url(../img/css/disable-bg.png) repeat;
+  opacity: 0.45;
+  z-index: 990;
+}
+
+.disable-message {
+  display: inline-block;
+  //left:50%;
+  //top:50%;
+  font-size: 160%;
+  position: absolute;
+  padding: 20px 40px;
+
+  //border: 3px solid #d4acac;
+  //background-color: #fff;
+  //color: #494949;
+
+  border: 1px solid #2b0002;
+  //border-radius: 3px;
+  background-color: #65181a;
+  color: #fff;
+  opacity: 0.85;
+
+  z-index: 991;
 }

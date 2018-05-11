@@ -1,29 +1,35 @@
 ; codec: utf-8
 
 [common]
-; 'log-file' define the log file location. if not set, default location
-; to $INSTDIR%/log/tpcore.log
+; 'log-file' define the log file location. if not set, default locate
+; to $INSTDIR%/data/log/tpcore.log
 ;log-file=/var/log/teleport/tpcore.log
 
-# log-level can be 0 ~ 4, default value is 2.
-# LOG_LEVEL_DEBUG     0   log every-thing.
-# LOG_LEVEL_VERBOSE   1   log every-thing but without debug message.
-# LOG_LEVEL_INFO      2   log infomation/warning/error message.
-# LOG_LEVEL_WARN      3   log warning and error message.
-# LOG_LEVEL_ERROR     4   log error message only.
+; log-level can be 0 ~ 4, default value is 2.
+; LOG_LEVEL_DEBUG     0   log every-thing.
+; LOG_LEVEL_VERBOSE   1   log every-thing but without debug message.
+; LOG_LEVEL_INFO      2   log infomation/warning/error message.
+; LOG_LEVEL_WARN      3   log warning and error message.
+; LOG_LEVEL_ERROR     4   log error message only.
 log-level=2
 
+; 0/1. default to 0.
+; in debug mode, `log-level` force to 0 and display more message for debug purpose.
 debug-mode=0
 
-; 'replay-path' define the replay file location. if not set, default location
-; to $INSTDIR%/data/replay/
+; 'replay-path' define the replay file location. if not set, default locate
+; to `$INSTDIR%/data/replay`
 ;replay-path=/var/lib/teleport/replay
 
+; `web-server-rpc` is the rpc interface of web server.
+; default to `http://127.0.0.1:7190/rpc`.
+; DO NOT FORGET update this setting if you modified common::port in web.ini.
 web-server-rpc=http://127.0.0.1:7190/rpc
 
 [rpc]
 ; Request by web server. `bind-ip` should be the ip of core server. If web server and
-; core server running at the same machine, it should be 127.0.0.1.
+; core server running at the same machine, it should be `127.0.0.1`.
+; DO NOT FORGET update `common::core-server-rpc` in web.ini if you modified this setting. 
 bind-ip=127.0.0.1
 bind-port=52080
 
@@ -40,7 +46,7 @@ bind-ip=0.0.0.0
 bind-port=52089
 
 [protocol-telnet]
-enabled=false
+enabled=true
 lib=tptelnet
 bind-ip=0.0.0.0
 bind-port=52389

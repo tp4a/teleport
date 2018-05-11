@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
-# import codecs
-# import shutil
-# import time
 from core import colorconsole as cc
 from core import utils
 from core.context import *
 from core.env import env
 
 ctx = BuildContext()
+with_rdp = os.path.exists(os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'rdp'))
 
 
 class BuilderBase:
@@ -52,7 +50,15 @@ class BuilderWin(BuilderBase):
         utils.msvc_build(sln_file, 'tpssh', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
 
-        if os.path.exists(os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'ssh', 'tpssh.vs2015.sln')):
+        cc.n('build TELNET protocol ...')
+        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'telnet', 'tptelnet.vs2015.sln')
+        out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tptelnet.dll')
+        if os.path.exists(out_file):
+            utils.remove(out_file)
+        utils.msvc_build(sln_file, 'tptelnet', ctx.target_path, ctx.bits_path, False)
+        utils.ensure_file_exists(out_file)
+
+        if with_rdp:
             cc.n('build RDP protocol ...')
             sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'rdp', 'tprdp.vs2015.sln')
             out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tprdp.dll')
@@ -67,11 +73,46 @@ class BuilderLinux(BuilderBase):
         super().__init__()
 
     def build_server(self):
-        cc.n('build server app (tp_core/libtpssh/tp_web)...')
+        cc.n('build server app (tp_core/libtpssh/libtelnet/librdp/tp_web)...')
 
         out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
-        out_files = [os.path.join(out_path, 'tp_core'), os.path.join(out_path, 'libtpssh.so'),
-                     os.path.join(out_path, 'tp_web')]
+        out_files = list()
+        out_files.append(os.path.join(out_path, 'tp_core'))
+        out_files.append(os.path.join(out_path, 'tp_web'))
+        out_files.append(os.path.join(out_path, 'libtpssh.so'))
+        out_files.append(os.path.join(out_path, 'libtptelnet.so'))
+        if with_rdp:
+            out_files.append(os.path.join(out_path, 'libtprdp.so'))
+
+        for f in out_files:
+            if os.path.exists(f):
+                utils.remove(f)
+
+        utils.makedirs(out_path)
+
+        utils.cmake(os.path.join(env.root_path, 'server', 'cmake-build'), ctx.target_path, False)
+        # utils.strip(out_file)
+
+        for f in out_files:
+            if os.path.exists(f):
+                utils.ensure_file_exists(f)
+
+
+class BuilderMacOS(BuilderBase):
+    def __init__(self):
+        super().__init__()
+
+    def build_server(self):
+        cc.n('build server app (tp_core/libtpssh/libtelnet/librdp/tp_web)...')
+
+        out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
+        out_files = list()
+        out_files.append(os.path.join(out_path, 'tp_core'))
+        out_files.append(os.path.join(out_path, 'tp_web'))
+        out_files.append(os.path.join(out_path, 'libtpssh.so'))
+        out_files.append(os.path.join(out_path, 'libtptelnet.so'))
+        if with_rdp:
+            out_files.append(os.path.join(out_path, 'libtprdp.so'))
 
         for f in out_files:
             if os.path.exists(f):
@@ -92,6 +133,8 @@ def gen_builder(dist):
         builder = BuilderWin()
     elif dist == 'linux':
         builder = BuilderLinux()
+    elif dist == 'macos':
+        builder = BuilderMacOS()
     else:
         raise RuntimeError('unsupported platform.')
 
@@ -122,15 +165,6 @@ def main():
 
     if 'server' in argv:
         builder.build_server()
-
-        # if 'app' in argv:
-        #     builder.build_app()
-
-        # if 'installer' in argv:
-        #     builder.build_installer()
-
-        # if 'runtime' in argv:
-        #     builder.build_runtime()
 
 
 if __name__ == '__main__':

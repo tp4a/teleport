@@ -2,6 +2,7 @@
 #include "ts_env.h"
 
 #include <mbedtls/sha1.h>
+#include <teleport_const.h>
 
 TsSessionManager g_session_mgr;
 
@@ -12,12 +13,12 @@ TsSessionManager::TsSessionManager() :
 
 TsSessionManager::~TsSessionManager()
 {
-	ts_sessiones::iterator it = m_sessions.begin();
-	for (; it != m_sessions.end(); ++it)
+	ts_connections::iterator it_conn = m_connections.begin();
+	for (; it_conn != m_connections.end(); ++it_conn)
 	{
-		delete it->second;
+		delete it_conn->second;
 	}
-	m_sessions.clear();
+	m_connections.clear();
 }
 
 void TsSessionManager::_thread_loop(void)
@@ -27,7 +28,7 @@ void TsSessionManager::_thread_loop(void)
 		ex_sleep_ms(1000);
 		if (m_stop_flag)
 			return;
-		_check_sessions();
+		_remove_expired_connect_info();
 	}
 }
 
@@ -37,25 +38,23 @@ void TsSessionManager::_set_stop_flag(void)
 }
 
 
-void TsSessionManager::_check_sessions(void)
+void TsSessionManager::_remove_expired_connect_info(void)
 {
-	// 超过10秒未进行连接的session-id会被移除
+	// 超过15秒未进行连接的connect-info会被移除
 
 	ExThreadSmartLock locker(m_lock);
 
 	ex_u64 _now = ex_get_tick_count();
-	ts_sessiones::iterator it = m_sessions.begin();
-	for (; it != m_sessions.end(); )
+	ts_connections::iterator it = m_connections.begin();
+	for (; it != m_connections.end(); )
 	{
-#ifdef EX_DEBUG
-		if (_now - it->second->ticket_start >= 60*1000*60)
-#else
-		if (_now - it->second->ticket_start >= 10000)
-#endif
+		//EXLOGD("[core] check expired connect info: [%s] %d, %d %d %d\n", it->first.c_str(), it->second->ref_count, int(_now), int(it->second->ticket_start), int(_now - it->second->ticket_start));
+		if (it->second->ref_count == 0 && _now - 15000 > it->second->ticket_start)
 		{
-			EXLOGV("[core] remove session: %s\n", it->first.c_str());
+			EXLOGD("[core] remove connection info, because timeout: %s\n", it->first.c_str());
 			delete it->second;
-			m_sessions.erase(it++);
+			m_connections.erase(it++);
+			EXLOGD("[core] there are %d connection info exists.\n", m_connections.size());
 		}
 		else
 		{
@@ -64,92 +63,81 @@ void TsSessionManager::_check_sessions(void)
 	}
 }
 
-ex_rv TsSessionManager::request_session(
-	ex_astr& sid,	// 返回的session-id
-	ex_astr account_name,
-	int auth_id,
-	const ex_astr& host_ip, // 要连接的主机IP
-	int host_port,  // 要连接的主机端口
-	int sys_type,
-	int protocol,  // 要使用的协议，1=rdp, 2=ssh
-	const ex_astr& user_name, // 认证信息中的用户名
-	const ex_astr& user_auth, // 认证信息，密码或私钥
-	const ex_astr& user_param, //
-	int auth_mode // 认证方式，1=password，2=private-key
-	)
-{
-	TS_SESSION_INFO* info = new TS_SESSION_INFO;
-	info->account_name = account_name;
-	info->auth_id = auth_id;
-	info->host_ip = host_ip;
-	info->host_port = host_port;
-	info->sys_type = sys_type;
-	info->protocol = protocol;
-	info->user_name = user_name;
-	info->user_auth = user_auth;
-	info->auth_mode = auth_mode;
-	info->user_param = user_param;
-	if (protocol == TS_PROXY_PROTOCOL_RDP)
-		info->ref_count = 2;
-	else
-		info->ref_count = 1;
-	info->ticket_start = ex_get_tick_count();
-
-	EXLOGD("[core] request session: user-name: [%s], protocol: [%d], auth-mode: [%d]\n", info->user_name.c_str(), info->protocol, info->auth_mode);
-
-	if (_add_session(sid, info))
-		return EXRV_OK;
-
-	delete info;
-	return EXRV_FAILED;
-}
-
-bool TsSessionManager::take_session(const ex_astr& sid, TS_SESSION_INFO& info)
+bool TsSessionManager::get_connect_info(const ex_astr& sid, TS_CONNECT_INFO& info)
 {
 	ExThreadSmartLock locker(m_lock);
 
-	ts_sessiones::iterator it = m_sessions.find(sid);
-	if (it == m_sessions.end())
+	ts_connections::iterator it = m_connections.find(sid);
+	if (it == m_connections.end())
 		return false;
 
 	info.sid = it->second->sid;
-	info.account_name = it->second->account_name;
-	info.auth_id = it->second->auth_id;
+	info.user_id = it->second->user_id;
+	info.host_id = it->second->host_id;
+	info.acc_id = it->second->acc_id;
+	info.user_username = it->second->user_username;
 	info.host_ip = it->second->host_ip;
-	info.host_port = it->second->host_port;
-	info.protocol = it->second->protocol;
-	info.user_name = it->second->user_name;
+	info.conn_ip = it->second->conn_ip;
+	info.conn_port = it->second->conn_port;
+	info.client_ip = it->second->client_ip;
+	info.acc_username = it->second->acc_username;
+	info.acc_secret = it->second->acc_secret;
+	info.username_prompt = it->second->username_prompt;
+	info.password_prompt = it->second->password_prompt;
+	info.protocol_type = it->second->protocol_type;
+	info.protocol_sub_type = it->second->protocol_sub_type;
+	info.protocol_flag = it->second->protocol_flag;
+	info.record_flag = it->second->record_flag;
+	info.auth_type = it->second->auth_type;
 
-	info.user_auth = it->second->user_auth;
-
-	info.user_param = it->second->user_param;
-	info.auth_mode = it->second->auth_mode;
-	info.sys_type = it->second->sys_type;
-	info.ref_count = it->second->ref_count;
-	info.ticket_start = it->second->ticket_start;
-
-	it->second->ref_count--;
-	if (it->second->ref_count <= 0)
-	{
-		delete it->second;
-		m_sessions.erase(it);
-	}
+	it->second->ref_count++;
 
 	return true;
 }
 
-bool TsSessionManager::_add_session(ex_astr& sid, TS_SESSION_INFO* info)
+bool TsSessionManager::free_connect_info(const ex_astr& sid) {
+	ExThreadSmartLock locker(m_lock);
+
+	ts_connections::iterator it = m_connections.find(sid);
+	if (it == m_connections.end())
+		return false;
+
+	it->second->ref_count--;
+
+	// 对于RDP来说，此时不要移除连接信息，系统自带RDP客户端在第一次连接时进行协议协商，然后马上会断开，之后立即重新连接一次（第二次连接之前可能会提示证书信息，如果用户长时间不操作，可能会导致超时）。
+	// 因此，我们将其引用计数减低，并更新一下最后访问时间，让定时器来移除它。
+	if (it->second->protocol_type != TP_PROTOCOL_TYPE_RDP) {
+		if (it->second->ref_count <= 0) {
+			EXLOGD("[core] remove connection info, because all connections closed: %s\n", it->first.c_str());
+			delete it->second;
+			m_connections.erase(it);
+			EXLOGD("[core] there are %d connection info exists.\n", m_connections.size());
+		}
+	}
+	else {
+		if (it->second->ref_count == 1)
+			it->second->ref_count = 0;
+		it->second->ticket_start = ex_get_tick_count() + 45000; // 我们将时间向后移动45秒，这样如果没有发生RDP的第二次连接，这个连接信息就会在一分钟后被清除。
+	}
+
+
+	return true;
+}
+
+bool TsSessionManager::request_session(ex_astr& sid, TS_CONNECT_INFO* info)
 {
 	ExThreadSmartLock locker(m_lock);
 
+	EXLOGD("[core] request session: account: [%s], protocol: [%d], auth-mode: [%d]\n", info->acc_username.c_str(), info->protocol_type, info->auth_type);
+
 	ex_astr _sid;
 	int retried = 0;
-	ts_sessiones::iterator it;
+	ts_connections::iterator it;
 	for (;;)
 	{
 		_gen_session_id(_sid, info, 6);
-		it = m_sessions.find(_sid);
-		if (it == m_sessions.end())
+		it = m_connections.find(_sid);
+		if (it == m_connections.end())
 			break;
 
 		retried++;
@@ -158,20 +146,23 @@ bool TsSessionManager::_add_session(ex_astr& sid, TS_SESSION_INFO* info)
 	}
 
 	info->sid = _sid;
-	m_sessions.insert(std::make_pair(_sid, info));
+	info->ref_count = 0;
+	info->ticket_start = ex_get_tick_count();
+	m_connections.insert(std::make_pair(_sid, info));
 
 	sid = _sid;
-	if (info->protocol == 1)
+	if (info->protocol_type == TP_PROTOCOL_TYPE_RDP)
 	{
+		info->ref_count = 1; // 因为RDP连接之前可能会有很长时间用于确认是否连接、是否信任证书，所以很容易超时，我们认为将引用计数+1，防止因超时被清除。
 		char szTmp[8] = { 0 };
-		snprintf(szTmp, 8, "%02X", (unsigned char)(info->user_name.length() + info->user_auth.length()));
+		snprintf(szTmp, 8, "%02X", (unsigned char)(info->acc_username.length() + info->acc_secret.length()));
 		sid += szTmp;
 	}
 
 	return true;
 }
 
-void TsSessionManager::_gen_session_id(ex_astr& sid, const TS_SESSION_INFO* info, int len)
+void TsSessionManager::_gen_session_id(ex_astr& sid, const TS_CONNECT_INFO* info, int len)
 {
 	mbedtls_sha1_context sha;
 	ex_u8 sha_digist[20] = { 0 };
@@ -183,8 +174,9 @@ void TsSessionManager::_gen_session_id(ex_astr& sid, const TS_SESSION_INFO* info
 	mbedtls_sha1_starts(&sha);
 	mbedtls_sha1_update(&sha, (const unsigned char*)&_tick, sizeof(ex_u64));
 	mbedtls_sha1_update(&sha, (const unsigned char*)&_tid, sizeof(ex_u64));
-	mbedtls_sha1_update(&sha, (const unsigned char*)info->host_ip.c_str(), info->host_ip.length());
-	mbedtls_sha1_update(&sha, (const unsigned char*)info->user_name.c_str(), info->user_name.length());
+	mbedtls_sha1_update(&sha, (const unsigned char*)info->conn_ip.c_str(), info->conn_ip.length());
+	mbedtls_sha1_update(&sha, (const unsigned char*)info->client_ip.c_str(), info->client_ip.length());
+	mbedtls_sha1_update(&sha, (const unsigned char*)info->acc_username.c_str(), info->acc_username.length());
 	mbedtls_sha1_finish(&sha, sha_digist);
 	mbedtls_sha1_free(&sha);
 

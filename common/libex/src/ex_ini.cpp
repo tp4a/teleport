@@ -267,32 +267,65 @@ bool ExIniFile::LoadFromMemory(const ex_wstr& strData, bool bClearOld)
 		ex_wstr strValue(L"");
 
 		ex_wstr strLine(L"");
-		ex_wstr::size_type pos = ex_wstr::npos;
+		ex_wstr::size_type posCR = ex_wstr::npos;
+		ex_wstr::size_type posLF = ex_wstr::npos;
 		for (;;)
 		{
-			pos = strAll.find(L"\r\n");
-			if (ex_wstr::npos == pos)
-			{
-				pos = strAll.find(L'\n');
-				if (ex_wstr::npos == pos)
-				{
-					if (strAll.empty())
-						break;
+			posCR = ex_wstr::npos;
+			posLF = ex_wstr::npos;
+			posCR = strAll.find(L"\r");
+			posLF = strAll.find(L"\n");
 
-					strLine = strAll;
-					strAll.clear();
+			if(posCR == ex_wstr::npos && posLF == ex_wstr::npos) {
+				if (strAll.empty())
+					break;
+				strLine = strAll;
+				strAll.clear();
+			} else if(posCR != ex_wstr::npos && posLF != ex_wstr::npos) {
+				if(posLF != posCR + 1) {
+					if(posLF < posCR) {
+						strLine.assign(strAll, 0, posLF);
+						strAll.erase(0, posLF + 1);
+					} else {
+						strLine.assign(strAll, 0, posCR);
+						strAll.erase(0, posCR + 1);
+					}
+				} else {
+					strLine.assign(strAll, 0, posCR);
+					strAll.erase(0, posCR + 2);
 				}
-				else
-				{
-					strLine.assign(strAll, 0, pos);
-					strAll.erase(0, pos + 1);
+			} else {
+				if(posCR != ex_wstr::npos) {
+					strLine.assign(strAll, 0, posCR);
+					strAll.erase(0, posCR + 1);
+				} else {
+					strLine.assign(strAll, 0, posLF);
+					strAll.erase(0, posLF + 1);
 				}
 			}
-			else
-			{
-				strLine.assign(strAll, 0, pos);
-				strAll.erase(0, pos + 2);
-			}
+
+//			if (ex_wstr::npos == pos)
+//			{
+//				pos = strAll.find(L'\n');
+//				if (ex_wstr::npos == pos)
+//				{
+//					if (strAll.empty())
+//						break;
+//
+//					strLine = strAll;
+//					strAll.clear();
+//				}
+//				else
+//				{
+//					strLine.assign(strAll, 0, pos);
+//					strAll.erase(0, pos + 1);
+//				}
+//			}
+//			else
+//			{
+//				strLine.assign(strAll, 0, pos);
+//				strAll.erase(0, pos + 2);
+//			}
 
 			if (ex_only_white_space(strLine))
 				continue;

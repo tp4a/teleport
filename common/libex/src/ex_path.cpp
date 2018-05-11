@@ -111,9 +111,9 @@ bool ex_dirname(ex_wstr& inout_filename)
 		inout_filename = EX_CURRENT_DIR_STR;
 		return true;
 	}
-
-	ex_free(ret);
-	return false;
+//
+//	ex_free(ret);
+//	return false;
 }
 
 
@@ -156,6 +156,69 @@ EX_BOOL ex_is_file_exists(const wchar_t* in_file)
 }
 
 
+EX_BOOL ex_copy_file(const wchar_t* from_file, const wchar_t* to_file) {
+#ifdef EX_OS_WIN32
+	if (CopyFile(from_file, to_file, TRUE))
+		return EX_TRUE;
+	else
+		return EX_FALSE;
+#else
+	ex_astr source;
+	ex_astr target;
+	ex_wstr2astr(from_file, source);
+	ex_wstr2astr(to_file, target);
+
+	struct stat src_stat;
+	if (lstat(source.c_str(), &src_stat) == -1)
+		return EX_FALSE;
+
+	if (S_ISLNK(src_stat.st_mode)) {
+		char lnk[1024] = {0};
+		int lnk_size;
+		if ((lnk_size = readlink(source.c_str(), lnk, 1023)) == -1)
+			return EX_FALSE;
+		lnk[lnk_size] = '\0';
+		if (symlink(lnk, target.c_str()) == -1)
+			return EX_FALSE;
+	}
+	else if (S_ISREG(src_stat.st_mode)) {
+		int src, dst;
+		int rsize;
+		char buf[1024];
+		if ((src = open(source.c_str(), O_RDONLY)) == -1) {
+			close(dst);
+			return EX_FALSE;
+		}
+		if ((dst = creat(target.c_str(), src_stat.st_mode)) == -1)
+			return EX_FALSE;
+
+		while ((rsize = read(src, buf, 1024))) {
+			if (rsize == -1 && errno == EINTR)
+				continue;
+			if (rsize == -1) {
+				close(src);
+				close(dst);
+				return EX_FALSE;
+			}
+			while (write(dst, buf, rsize) == -1) {
+				if (errno != EINTR) {
+					close(src);
+					close(dst);
+					return EX_FALSE;
+				}
+			}
+		}
+		close(src);
+		close(dst);
+	}
+	else {
+		return EX_FALSE;
+	}
+	return EX_TRUE;
+#endif
+}
+
+
 //=====================================================
 
 bool ex_exec_file(ex_wstr& out_filename)
@@ -174,7 +237,7 @@ bool ex_exec_file(ex_wstr& out_filename)
 	uint32_t length = EX_PATH_MAX;
 
 	memset(buffer, 0, EX_PATH_MAX);
-	memset(out_path, 0, EX_PATH_MAX);
+	//memset(out_filename, 0, EX_PATH_MAX);
 
 	/* Mac OS X has special function to obtain path to executable.
 	* This may return a symlink.
@@ -182,10 +245,11 @@ bool ex_exec_file(ex_wstr& out_filename)
 	if (_NSGetExecutablePath(buffer, &length) != 0)
 		return false;
 
-	if (!ex_astr2wstr(out_filename, buffer))
+	if (!ex_astr2wstr(buffer, out_filename))
 		return false;
 
-	return ex_abspath(out_filename);
+	//return ex_abspath(out_filename);
+	return true;
 
 #else
 	char buffer[EX_PATH_MAX];

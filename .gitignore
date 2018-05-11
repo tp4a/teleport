@@ -15,6 +15,7 @@ cmake_install.cmake
 Makefile
 cmake-build
 cmake-build-debug
+client/tp_assist_macos/build
 
 # for Python
 __pycache__
@@ -31,10 +32,13 @@ __pycache__
 **/.idea/inspectionProfiles
 **/.idea/vcs.xml
 
+*.css.map
+
 # for tmp folder or files.
 /out
 /external/_download_
 /external/linux
+/external/macos
 /external/jsoncpp
 /external/mongoose
 /external/openssl
@@ -47,7 +51,7 @@ __pycache__
 /external/libuv
 /client/tools/putty
 /client/tools/winscp
-
+/client/tp_assist_macos/DerivedData
 
 # for dist folder
 **/_tmp_
@@ -60,6 +64,7 @@ __pycache__
 /server/share/db
 /server/share/log
 /server/share/replay
+/server/testssh
 
 
 # for generated files.
@@ -71,3 +76,26 @@ __pycache__
 /client/tp_rdp
 /server/tp_core/protocol/rdp
 /client/tools/tprdp
+/server/tp_core/testssh
+/client/tp_assist_win_it_doctor
+/dist/client/windows/assist-it-doctor
+
+# for MacOS.
+.DS_Store
+
+# Xcode
+build/*
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+*.xcworkspace
+!default.xcworkspace
+xcuserdata
+profile
+*.moved-aside
+/server/share/tmp

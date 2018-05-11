@@ -13,6 +13,6 @@ PATH_TARGET=/usr/local/eom
 
 "${PATH_ROOT}/data/bin/tp_web" --py "${PATH_ROOT}/script/main.py"
 
-echo ""
-echo -e "\e[32mInstallation done.\033[0m"
-echo ""
+# echo ""
+# echo -e "\e[32mInstallation done.\033[0m"
+# echo ""

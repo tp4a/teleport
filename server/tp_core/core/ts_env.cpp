@@ -76,8 +76,10 @@ bool TsEnv::init(bool load_config)
 	{
 		m_replay_path = replay_path;
 	}
+    ex_mkdirs(m_replay_path);
 
-	ex_wstr log_file;
+
+    ex_wstr log_file;
 	if (!ps->GetStr(L"log-file", log_file))
 	{
 		EXLOG_FILE(L"tpcore.log", log_path.c_str());
@@ -99,21 +101,21 @@ bool TsEnv::init(bool load_config)
 	}
 
 	int log_level = EX_LOG_LEVEL_INFO;
-	if (ps->GetInt(L"log-level", log_level))
-	{
-		EXLOG_LEVEL(log_level);
-	}
+	ps->GetInt(L"log-level", log_level, EX_LOG_LEVEL_INFO);
+	EXLOG_LEVEL(log_level);
 
 	int debug_mode = 0;
 	ps->GetInt(L"debug-mode", debug_mode, 0);
-	if (debug_mode == 1)
+	if (debug_mode == 1) {
+		EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
 		EXLOG_DEBUG(true);
+	}
 
 	ex_wstr tmp;
 
 	if (!ps->GetStr(L"web-server-rpc", tmp))
 	{
-		web_server_rpc = "http://127.0.0.1:7190/rpc";
+		web_server_rpc = "http://localhost:7190/rpc";
 	}
 	else
 	{
@@ -128,8 +130,8 @@ bool TsEnv::init(bool load_config)
 	else
 	{
 		ex_wstr2astr(tmp, rpc_bind_ip);
-		if (rpc_bind_ip == "localhost")
-			rpc_bind_ip = "127.0.0.1";
+		//if (rpc_bind_ip == "localhost")
+		//	rpc_bind_ip = "127.0.0.1";
 	}
 
 	if (!ps->GetInt(L"bind-port", rpc_bind_port))

@@ -184,7 +184,7 @@ static int _main_loop(void)
 	{
 		sf_path = g_env.m_www_path;
 
-		if (!ex_path_join(sf_path, false, L"teleport", L"app", L"eom_main.py", NULL))
+		if (!ex_path_join(sf_path, false, L"teleport", L"app_bootstrap.py", NULL))
 		{
 			EXLOGE(L"[tpweb] invalid path [%ls].\n", sf_path.c_str());
 			return 1;

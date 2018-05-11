@@ -63,9 +63,10 @@ def download_file(desc, url, target_path, file_name):
     if env.is_win:
         cmd = '""{}" --no-check-certificate {} -O "{}""'.format(env.wget, url, local_file_name)
         os.system(cmd)
-    elif env.is_linux:
+    elif env.is_linux or env.is_macos:
         os.system('wget --no-check-certificate {} -O "{}"'.format(url, local_file_name))
     else:
+        cc.e('can not download, no download tool.')
         return False
 
     if not os.path.exists(local_file_name) or not _check_download_file(local_file_name):
@@ -106,7 +107,7 @@ def extension_suffixes():
 
 
 def remove(*args):
-    path = os.path.join(*args)
+    path = os.path.abspath(os.path.join(*args))
 
     cc.v('remove [%s] ...' % path, end='')
     if not os.path.exists(path):
@@ -117,6 +118,8 @@ def remove(*args):
         cc.v('.', end='')
         try:
             if os.path.isdir(path):
+                if path == '/':
+                    raise RuntimeError('### What are you doing?!! ###')
                 shutil.rmtree(path, ignore_errors=True)
                 time.sleep(0.5)
             else:
@@ -278,7 +281,7 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
         line = line.rstrip('\r\n')
 
         if direct_output:
-            cc.o((cc.CR_GRAY, line), end='\n')
+            cc.o((cc.CR_CYAN, line), end='\n')
 
         output.append(line)
 
@@ -302,6 +305,21 @@ def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
     ret, _ = sys_exec(cmd, direct_output=True)
     if ret != 0:
         raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
+
+
+def xcode_build(proj_file, proj_name, target, force_rebuild):
+    # if env.msbuild is None:
+    #     raise RuntimeError('where is `msbuild`?')
+
+    if force_rebuild:
+        cmd = 'xcodebuild -project "{}" -target {} -configuration {} clean'.format(proj_file, proj_name, target)
+        ret, _ = sys_exec(cmd, direct_output=True)
+        cc.v('ret:', ret)
+
+    cmd = 'xcodebuild -project "{}" -target {} -configuration {}'.format(proj_file, proj_name, target)
+    ret, _ = sys_exec(cmd, direct_output=True)
+    if ret != 0:
+        raise RuntimeError('build XCode project `{}` failed.'.format(proj_name))
 
 
 def nsis_build(nsi_file, _define=''):
@@ -334,6 +352,7 @@ def cmake(work_path, target, force_rebuild, cmake_define=''):
     else:
         target = 'Release'
     cmd = '"{}" -DCMAKE_BUILD_TYPE={} {} ..;make'.format(env.cmake, target, cmake_define)
+    cc.o(cmd)
     ret, _ = sys_exec(cmd, direct_output=True)
     os.chdir(old_p)
     if ret != 0:
@@ -348,6 +367,17 @@ def strip(filename):
     ret, _ = sys_exec(cmd, direct_output=True)
     if ret != 0:
         raise RuntimeError('failed to strip binary file [{}], ret={}.'.format(filename, ret))
+    return True
+
+
+def fix_new_line_flag(filename):
+    cc.n('fix new line flag to CR for text file', filename)
+    if not os.path.exists(filename):
+        return False
+    cmd = 'dos2unix {}'.format(filename)
+    ret, _ = sys_exec(cmd, direct_output=True)
+    if ret != 0:
+        raise RuntimeError('failed to dos2unix file [{}], ret={}.'.format(filename, ret))
     return True
 
 

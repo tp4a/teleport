@@ -1,0 +1,82 @@
+{
+    "ssh": {
+        "selected": "putty",
+        "available": [
+            {
+                "name":"putty",
+                "display": "PuTTY（内置）",
+                "app": "{assist_tools_path}\\putty\\putty.exe",
+                "cmdline": "-ssh -pw **** -P {host_port} -l {user_name} {host_ip}"
+            },
+            {
+                "name": "crt",
+                "display": "SecureCRT",
+                "app": "",
+                "cmdline": "/T /N \"TP#ssh://{real_ip}\" /SSH2 /P {host_port} /PASSWORD **** {user_name}@{host_ip}"
+            },
+            {
+                "name": "xshell",
+                "display": "Xshell",
+                "app": "",
+                "cmdline": "-newtab \"TP#ssh://{real_ip}\" -url ssh://{user_name}:****@{host_ip}:{host_port}"
+            },
+            {
+                "name": "other",
+                "display": "自定义",
+                "app": "",
+                "cmdline": ""
+            }
+        ]
+    },
+    "scp": {
+        "selected": "winscp",
+        "available": [
+            {
+                "name":"winscp",
+                "display": "WinSCP（内置）",
+                "app": "{assist_tools_path}\\winscp\\winscp.exe",
+                "cmdline": "/sessionname=\"TP#{real_ip}\" {user_name}:****@{host_ip}:{host_port}"
+            },
+            {
+                "name": "other",
+                "display": "自定义",
+                "app": "",
+                "cmdline": ""
+            }
+        ]
+    },
+    "telnet": {
+        "selected": "putty",
+        "available": [
+            {
+                "name":"putty",
+                "display": "PuTTY（内置）",
+                "app": "{assist_tools_path}\\putty\\putty.exe",
+                "cmdline": "telnet://{user_name}@{host_ip}:{host_port}"
+            },
+            {
+                "name": "crt",
+                "display": "SecureCRT",
+                "app": "",
+                "cmdline": "/T /N \"TP#telnet://{real_ip}\" /ARG {user_name} /SCRIPT \"{assist_tools_path}\\securecrt-telnet.vbs\" /TELNET {host_ip} {host_port}"
+            },
+            {
+                "name": "other",
+                "display": "自定义",
+                "app": "",
+                "cmdline": ""
+            }
+        ]
+    },
+   "rdp" : {
+      "available" : [
+         {
+            "app" : "{assist_tools_path}\\tprdp\\tprdp-client.exe",
+            "cmdline" : "/v:{host_ip}:{host_port} /u:{user_name} /t:\"TP#{real_ip}\"",
+            "display" : "FreeRDP（内置）",
+            "name" : "freerdp"
+         }
+      ],
+      "selected" : "freerdp"
+   }
+}

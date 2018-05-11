@@ -1,0 +1,122 @@
+@charset "utf-8";
+
+//@privilege-bg-color: #ededed;
+@privilege-bg-color: #4091dd;
+
+.table.table-role {
+  .header {
+    font-size: 120%;
+    margin-top: 8px;
+  }
+  td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0;
+    &.role-name {
+      min-width: 160px;
+      //border-left: 1px solid #ddd;
+      //border-right: 1px solid #ddd;
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        li {
+          padding: 8px 30px 8px 6px;
+          white-space: nowrap;
+          //border-bottom: 1px solid #ddd;
+          //&.role-new {
+          //  padding: 10px 30px 10px 6px;
+          //}
+          &:first-child {
+            margin-top: 10px;
+          }
+          &.active {
+            //padding: 3px;
+            //color: #1b2f53;
+            color: #fff;
+            //font-weight: bold;
+            //border: 1px solid @privilege-bg-color;
+            background-color: @privilege-bg-color;
+            //background-color: #4091dd;
+            &:hover {
+              background-color: @privilege-bg-color;
+              cursor: auto;
+            }
+          }
+          &:hover {
+            background-color: lighten(@privilege-bg-color, 15%);
+            //background-color: #4091dd;
+            cursor: pointer;
+          }
+        }
+      }
+    }
+    &.role-privilege {
+      padding: 0 0 10px 10px;
+      //background-color: @privilege-bg-color;
+      //border: 1px solid @privilege-bg-color;
+      border-left: 3px solid @privilege-bg-color;
+      hr {
+        margin: 8px 0;
+        //border-bottom: 1px solid lighten(@privilege-bg-color, 5%);
+        //border-top: 1px solid darken(@privilege-bg-color, 5%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .title {
+        font-size: 110%;
+        margin: 5px 0;
+      }
+
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        li {
+          display: inline-block;
+          width: 180px;
+          margin-bottom: 5px;
+          margin-left: 10px;
+
+          span {
+            //cursor:text;
+            color: #8e8e8e;
+            &:before {
+              display: inline-block;
+              width: 16px;
+              content: "\f0c8";
+              font-family: 'Font Awesome 5 Free';
+              font-weight: 400;
+            }
+            &.enabled {
+              color: #3374b0;
+              &:before {
+                content: "\f14a";
+                font-family: 'Font Awesome 5 Free';
+                font-weight: 400;
+              }
+            }
+          }
+        }
+
+      }
+      &.editable {
+        li span {
+          cursor: pointer;
+        }
+      }
+    }
+  }
+
+  tr:first-child td {
+    border-top: none;
+  }
+  tr:last-child td {
+    //border-bottom: 1px solid #ddd;
+  }
+}
+
+#btn-create-role {
+  margin-top: 15px;
+  //color: #3970d6;
+}
