@@ -1,134 +1,246 @@
-// YWL-Table
-
+@charset "utf-8";
 
 // 表格
 .table {
-	margin-bottom: 10px;
+  margin-bottom: 10px;
+
+  // overwrite bootstrap.
+  & > thead > tr > th {
+    vertical-align: middle;
+    border-bottom: 2px solid #ddd;
+  }
+
+  &.table-info-list {
+    width: auto;
+    //margin-left: 15px;
+
+    td {
+      border-top: 1px dotted #ddd;
+      padding: 5px 5px;
+      vertical-align: top;
+      &.key {
+        text-align: right;
+        width: 1px;
+        white-space: nowrap;
+      }
+      &.value {
+        text-align: left;
+        //padding-left:10px;
+        font-weight: bold;
+        font-family: @font-family-mono;
+        color: #3e3e3e;
+      }
+      .error {
+        color: #cc3632;
+        font-weight: bold;
+      }
+      .disabled {
+        color: #848484;
+        //font-weight: bold;
+      }
+    }
+
+    &.table-info-list-lite {
+      width: 100%;
+      td {
+        padding: 5px 5px;
+        &.value {
+          font-weight: normal;
+        }
+      }
+    }
+
+    tr:first-child {
+      td {
+        border-top: none;
+      }
+    }
+  }
+
+  &.table-config-list {
+    width: 100%;
+
+    td {
+      border: none;
+      padding: 5px;
+      //vertical-align: top;
+
+      &.title {
+        text-align: left;
+        font-size: 110%;
+        font-weight: bolder;
+      }
+
+      &.key {
+        width: 1px;
+        white-space: nowrap;
+        text-align: right;
+        padding-right: 15px;
+      }
+      &.value {
+        text-align: left;
+
+        input {
+          width: 4em;
+          padding: 0 5px;
+          text-align: right;
+        }
+
+        .unit {
+          //margin-right:10px;
+          margin-left: 5px;
+        }
+
+        .desc {
+          color: #999;
+          margin-left: 15px;
+          display: inline-block;
+        }
+      }
+    }
+  }
 }
 
 .table > thead > tr > th {
-	padding: 5px 5px;
-	outline: none;
-	white-space: nowrap;
-	font-weight: normal;
-	text-align: center;
-	background-color: #ededed;
+  padding: 5px 5px;
+  outline: none;
+  white-space: nowrap;
+  font-weight: normal;
+  text-align: center;
+  background-color: #ededed;
 }
 
 .table > tbody > tr > td {
-	padding: 5px;
-	text-align: center;
-	vertical-align: middle;
+  padding: 5px;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .table > tbody > tr > td .nowrap {
-	white-space: nowrap;
+  white-space: nowrap;
+}
+
+.table-data {
+  td.loading {
+    text-align: left;
+    padding: 20px;
+  }
+
+  .btn-group.open .dropdown-toggle {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+  }
 }
 
 .table.table-data thead .sorting, .table.table-data thead .sorting_asc, .table.table-data thead .sorting_desc {
-	cursor: pointer;
-	position: relative;
+  cursor: pointer;
+  //position: relative;
 }
 
-.table.table-data thead .sorting > span:after, .table.table-data thead .sorting_asc > span:after, .table.table-data thead .sorting_desc > span:after {
-	bottom: 4px;
-	padding-left: 5px;
-	display: inline-block;
-	font-family: 'FontAwesome';
-	opacity: .8;
+.table.table-data thead .sorting:after, .table.table-data thead .sorting_asc:after, .table.table-data thead .sorting_desc:after {
+  bottom: 4px;
+  padding-left: 5px;
+  display: inline-block;
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  opacity: .8;
 }
 
-.table.table-data thead .sorting > span:after {
-	opacity: .2;
-	content: "\f0dc";
+.table.table-data thead .sorting:after {
+  opacity: .2;
+  content: "\f0dc";
 }
 
-.table.table-data thead .sorting_asc > span:after {
-	content: "\f0de";
+.table.table-data thead .sorting_asc:after {
+  content: "\f0de";
 }
 
-.table.table-data thead .sorting_desc > span:after {
-	content: "\f0dd";
+.table.table-data thead .sorting_desc:after {
+  content: "\f0dd";
 }
 
+.host-name {
+  //display: block;
+  // line-height: 14px;
+  font-size: 16px;
+  //font-family: @font-family-mono;
+  //font-weight: bold;
+  //color: #333;
 
-
-
-.host-id {
-	display: block;
-	// line-height: 14px;
-	font-size: 16px;
-	font-family: @font-family-mono;
-	//font-weight: bold;
-	color:#333;
-
-	&.not-active {
-		font-size: 14px;
-		font-weight: 400;
-		//.text-color-ignore;
-		color: @color-text-ignore;
-	}
+  //&.not-active {
+  //  font-size: 14px;
+  //  font-weight: 400;
+  //  //.text-color-ignore;
+  //  color: @color-text-ignore;
+  //}
 }
 
-.host-desc {
-	font-size: 12px;
-	color: #999;
-	display: inline-block;
-	white-space: nowrap;
-	//width: 9em;
-	//width:200px;
-	width:160px;
-	overflow: hidden;
-	text-overflow: ellipsis;
+.host-name-desc {
+  //font-size: 16px;
+  //margin-left:8px;
+  cursor: pointer;
 }
 
-a.host-desc:hover:before {
-	display: inline-block;
-	padding-right: 3px;
-	line-height: 12px;
-	content: "\f040";
-	font-family: 'FontAwesome';
+.host-ip {
+  font-size: 12px;
+  color: #999;
+  display: inline-block;
+  white-space: nowrap;
+  //width: 9em;
+  //width:200px;
+  //width: 160px;
+  font-family: @font-family-mono;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+//a.host-desc:hover:before {
+//  display: inline-block;
+//  padding-right: 3px;
+//  line-height: 12px;
+//  content: "\f040";
+//  font-family: 'FontAwesome';
+//}
 
 .td-ip-list {
-	padding-right: 20px;
-	padding-left: 5px;
+  padding-right: 20px;
+  padding-left: 5px;
 }
 
 .td-ip-show-more {
-	font-size: 14px;
-	width: 12px;
-	float: right;
-	display: block;
+  font-size: 14px;
+  width: 12px;
+  float: right;
+  display: block;
 }
 
 .td-ip-item {
-	min-width: 12em;
-	width: 12em;
-	height: 18px;
-	padding: 2px 4px;
-	margin: 1px 0;
+  min-width: 12em;
+  width: 12em;
+  height: 18px;
+  padding: 2px 4px;
+  margin: 1px 0;
 
-	color: #333;
-	text-align: center;
-	white-space: nowrap;
-	border-radius: 9px;
-	line-height: 11px;
-	font-size: 11px;
-	background: #dfdfdf !important;
+  color: #333;
+  text-align: center;
+  white-space: nowrap;
+  border-radius: 9px;
+  line-height: 11px;
+  font-size: 11px;
+  background: #dfdfdf !important;
 }
 
 .td-ip-item span {
-	display: inline-block;
-	font-family: @font-family-mono;
-	font-size: 11px;
-	font-weight: 400;
+  display: inline-block;
+  font-family: @font-family-mono;
+  font-size: 11px;
+  font-weight: 400;
 
 }
 
 .td-ip-item a {
-	display: inline-block;
-	width: 14px;
-	float: right;
-	font-size: 14px;
+  display: inline-block;
+  width: 14px;
+  float: right;
+  font-size: 14px;
 }

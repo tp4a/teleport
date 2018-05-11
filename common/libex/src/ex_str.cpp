@@ -99,7 +99,7 @@ wchar_t* ex_str2wcs_alloc(const char* in_buffer, int code_page)
 #else
 	size_t wlen = 0;
 	wlen = mbstowcs(NULL, in_buffer, 0);
-	if (wlen < 0)
+	if (wlen <= 0)
 		return NULL;
 
 	out_buffer = (wchar_t*)calloc(wlen + 1, sizeof(wchar_t));
@@ -107,7 +107,7 @@ wchar_t* ex_str2wcs_alloc(const char* in_buffer, int code_page)
 		return NULL;
 
 	wlen = mbstowcs(out_buffer, in_buffer, wlen);
-	if (wlen < 0)
+	if (wlen <= 0)
 	{
 		free(out_buffer);
 		return NULL;
@@ -152,7 +152,7 @@ char* ex_wcs2str_alloc(const wchar_t* in_buffer, int code_page)
 #else
 	size_t len = 0;
 	len = wcstombs(NULL, in_buffer, 0);
-	if (len < 0)
+	if (len <= 0)
 		return NULL;
 
 	out_buffer = (char*)calloc(len + 1, sizeof(char));
@@ -160,7 +160,7 @@ char* ex_wcs2str_alloc(const wchar_t* in_buffer, int code_page)
 		return NULL;
 
 	len = wcstombs(out_buffer, in_buffer, len);
-	if (len < 0)
+	if (len <= 0)
 	{
 		free(out_buffer);
 		return NULL;

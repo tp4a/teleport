@@ -4,24 +4,20 @@
 import codecs
 
 from core import colorconsole as cc
-from core import utils
-from core.env import env
 from core.context import *
+from core.env import env
 
 ctx = BuildContext()
-
-
-# ROOT_PATH = utils.cfg.ROOT_PATH
 
 
 class Builder:
     def __init__(self):
         self.ver_in = os.path.join(env.root_path, 'version.in')
 
-        self.VER_TELEPORT_SERVER = ''
-        self.VER_TELEPORT_ASSIST = ''
-        self.VER_TELEPORT_ASSIST_REQUIRE = ''
-        # self.VER_TELEPORT_MAKECERT = ''
+        self.VER_TP_SERVER = ''
+        self.VER_TP_TPCORE = ''
+        self.VER_TP_TPWEB = ''
+        self.VER_TP_ASSIST = ''
 
     def build(self):
         cc.n('update version...')
@@ -31,43 +27,41 @@ class Builder:
         with codecs.open(self.ver_in, 'r', 'utf-8') as f:
             lines = f.readlines()
             for l in lines:
-                if l.startswith('TELEPORT_SERVER '):
+                if l.startswith('TP_SERVER '):
                     x = l.split(' ')
-                    self.VER_TELEPORT_SERVER = x[1].strip()
-                elif l.startswith('TELEPORT_ASSIST '):
+                    self.VER_TP_SERVER = x[1].strip()
+                elif l.startswith('TP_TPCORE '):
                     x = l.split(' ')
-                    self.VER_TELEPORT_ASSIST = x[1].strip()
-                elif l.startswith('TELEPORT_ASSIST_REQUIRE '):
+                    self.VER_TP_TPCORE = x[1].strip()
+                elif l.startswith('TP_TPWEB '):
                     x = l.split(' ')
-                    self.VER_TELEPORT_ASSIST_REQUIRE = x[1].strip()
-                    # elif l.startswith('TELEPORT_MAKECERT '):
-                    #     x = l.split(' ')
-                    #     self.VER_TELEPORT_MAKECERT = x[1].strip()
+                    self.VER_TP_TPWEB = x[1].strip()
+                elif l.startswith('TP_ASSIST '):
+                    x = l.split(' ')
+                    self.VER_TP_ASSIST = x[1].strip()
 
-        #
         cc.v('new version:')
-        cc.v('  TELEPORT-Server         : ', self.VER_TELEPORT_SERVER)
-        cc.v('  TELEPORT-Assist         : ', self.VER_TELEPORT_ASSIST)
-        cc.v('  TELEPORT-Assist-require : ', self.VER_TELEPORT_ASSIST_REQUIRE)
-        # cc.v('  TELEPORT-MakeCert       : ', self.VER_TELEPORT_MAKECERT)
+        cc.v('  Server             : ', self.VER_TP_SERVER)
+        cc.v('    - tp_core        : ', self.VER_TP_TPCORE)
+        cc.v('    - tp_web         : ', self.VER_TP_TPWEB)
+        cc.v('  Assist             : ', self.VER_TP_ASSIST)
         cc.v('')
 
-        self.make_build_ver()
-        self.make_assist_ver()
-        self.make_tp_core_ver()
-        self.make_tp_web_ver()
-        self.make_web_ver()
+        self.make_builder_ver()
+        self.make_server_ver()
+        self.make_tpcore_ver()
+        self.make_tpweb_ver()
+        self.make_assist_win_ver()
+        self.make_assist_macos_ver()
 
-    def make_build_ver(self):
+    def make_builder_ver(self):
         ver_file = os.path.join(env.root_path, 'build', 'builder', 'core', 'ver.py')
-        # ver_content = '# -*- coding: utf8 -*-\nVER_TELEPORT_SERVER = "{}"\nVER_TELEPORT_ASSIST = "{}"\nVER_TELEPORT_MAKECERT = "{}"\n'.format(self.VER_TELEPORT_SERVER, self.VER_TELEPORT_ASSIST, self.VER_TELEPORT_MAKECERT)
-        ver_content = '# -*- coding: utf8 -*-\nVER_TELEPORT_SERVER = "{}"\nVER_TELEPORT_ASSIST = "{}"\n'.format(self.VER_TELEPORT_SERVER, self.VER_TELEPORT_ASSIST)
+        ver_content = '# -*- coding: utf8 -*-\nVER_TP_SERVER = "{}"\nVER_TP_ASSIST = "{}"\n'.format(self.VER_TP_SERVER, self.VER_TP_ASSIST)
 
         rewrite = False
         if not os.path.exists(ver_file):
             rewrite = True
         else:
-            old_content = ''
             with open(ver_file, 'r') as f:
                 old_content = f.read()
             if old_content != ver_content:
@@ -78,60 +72,14 @@ class Builder:
             with open(ver_file, 'w') as f:
                 f.write(ver_content)
 
-    def make_web_ver(self):
-        ver_file = os.path.join(env.root_path, 'server', 'www', 'teleport', 'app', 'eom_ver.py')
-        # ver_content = '# -*- coding: utf8 -*-\n\nTS_VER = "{}"\n'.format(self.VER_TELEPORT_SERVER)
-        ver_content = '# -*- coding: utf8 -*-\nTS_VER = "{}"\nTP_ASSIST_LAST_VER = "{}"\nTP_ASSIST_REQUIRE = "{}"\n'.format(self.VER_TELEPORT_SERVER, self.VER_TELEPORT_ASSIST, self.VER_TELEPORT_ASSIST_REQUIRE)
-
-        rewrite = False
-        if not os.path.exists(ver_file):
-            rewrite = True
-        else:
-            old_content = ''
-            with open(ver_file, 'r') as f:
-                old_content = f.read()
-            if old_content != ver_content:
-                rewrite = True
-
-        if rewrite:
-            cc.v('  update {}...'.format(ver_file))
-            with open(ver_file, 'w') as f:
-                f.write(ver_content)
-
-    def make_assist_ver(self):
-        ver_file = os.path.join(env.root_path, 'client', 'tp_assist', 'ts_ver.h')
-        ver_content = '#ifndef __TS_ASSIST_VER_H__\n#define __TS_ASSIST_VER_H__\n\n#define TP_ASSIST_VER\tL"{}"\n\n#endif // __TS_ASSIST_VER_H__\n'.format(self.VER_TELEPORT_ASSIST)
-
-        rewrite = False
-        if not os.path.exists(ver_file):
-            rewrite = True
-        else:
-            old_content = ''
-            with open(ver_file, 'r') as f:
-                old_content = f.read()
-            if old_content != ver_content:
-                rewrite = True
-
-        if rewrite:
-            cc.v('  update {}...'.format(ver_file))
-            with open(ver_file, 'w') as f:
-                f.write(ver_content)
-
-        rc_file = os.path.join(env.root_path, 'client', 'tp_assist', 'tp_assist.rc')
-        self._update_vs_rc(rc_file, self.VER_TELEPORT_ASSIST)
-
-        nsi_file = os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist', 'installer.nsi')
-        self._update_nsi_rc(nsi_file, self.VER_TELEPORT_ASSIST)
-
-    def make_tp_core_ver(self):
+    def make_tpcore_ver(self):
         ver_file = os.path.join(env.root_path, 'server', 'tp_core', 'core', 'ts_ver.h')
-        ver_content = '#ifndef __TS_SERVER_VER_H__\n#define __TS_SERVER_VER_H__\n\n#define TP_SERVER_VER\tL"{}"\n\n#endif // __TS_SERVER_VER_H__\n'.format(self.VER_TELEPORT_SERVER)
+        ver_content = '#ifndef __TS_SERVER_VER_H__\n#define __TS_SERVER_VER_H__\n\n#define TP_SERVER_VER\tL"{}"\n\n#endif // __TS_SERVER_VER_H__\n'.format(self.VER_TP_TPCORE)
 
         rewrite = False
         if not os.path.exists(ver_file):
             rewrite = True
         else:
-            old_content = ''
             with open(ver_file, 'r') as f:
                 old_content = f.read()
             if old_content != ver_content:
@@ -143,17 +91,80 @@ class Builder:
                 f.write(ver_content)
 
         rc_file = os.path.join(env.root_path, 'server', 'tp_core', 'core', 'tp_core.rc')
-        self._update_vs_rc(rc_file, self.VER_TELEPORT_SERVER)
+        self._update_ver_rc(rc_file, self.VER_TP_TPCORE)
 
-    def make_tp_web_ver(self):
-        ver_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'ts_ver.h')
-        ver_content = '#ifndef __TS_SERVER_VER_H__\n#define __TS_SERVER_VER_H__\n\n#define TP_SERVER_VER\tL"{}"\n\n#endif // __TS_SERVER_VER_H__\n'.format(self.VER_TELEPORT_SERVER)
+    def make_server_ver(self):
+        ver_file = os.path.join(env.root_path, 'server', 'www', 'teleport', 'webroot', 'app', 'app_ver.py')
+        # ver_content = '# -*- coding: utf8 -*-\n\nTS_VER = "{}"\n'.format(self.VER_TELEPORT_SERVER)
+        ver_content = '# -*- coding: utf8 -*-\nTP_SERVER_VER = "{}"\n'.format(self.VER_TP_SERVER)
 
         rewrite = False
         if not os.path.exists(ver_file):
             rewrite = True
         else:
-            old_content = ''
+            with open(ver_file, 'r') as f:
+                old_content = f.read()
+            if old_content != ver_content:
+                rewrite = True
+
+        if rewrite:
+            cc.v('  update {}...'.format(ver_file))
+            with open(ver_file, 'w') as f:
+                f.write(ver_content)
+
+    def make_assist_win_ver(self):
+        ver_file = os.path.join(env.root_path, 'client', 'tp_assist_win', 'ts_ver.h')
+        ver_content = '#ifndef __TS_ASSIST_VER_H__\n#define __TS_ASSIST_VER_H__\n\n#define TP_ASSIST_VER\tL"{}"\n\n#endif // __TS_ASSIST_VER_H__\n'.format(self.VER_TP_ASSIST)
+
+        rewrite = False
+        if not os.path.exists(ver_file):
+            rewrite = True
+        else:
+            with open(ver_file, 'r') as f:
+                old_content = f.read()
+            if old_content != ver_content:
+                rewrite = True
+
+        if rewrite:
+            cc.v('  update {}...'.format(ver_file))
+            with open(ver_file, 'w') as f:
+                f.write(ver_content)
+
+        rc_file = os.path.join(env.root_path, 'client', 'tp_assist_win', 'tp_assist.rc')
+        self._update_ver_rc(rc_file, self.VER_TP_ASSIST)
+
+        nsi_file = os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist', 'installer.nsi')
+        self._update_ver_nsi(nsi_file, self.VER_TP_ASSIST)
+
+    def make_assist_macos_ver(self):
+        plist_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'src', 'tp_assist-Info.plist')
+        self._update_ver_plist(plist_file, self.VER_TP_ASSIST)
+
+        ver_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'src', 'csrc', 'ts_ver.h')
+        ver_content = '#ifndef __TS_ASSIST_VER_H__\n#define __TS_ASSIST_VER_H__\n\n#define TP_ASSIST_VER\tL"{}"\n\n#endif // __TS_ASSIST_VER_H__\n'.format(self.VER_TP_ASSIST)
+
+        rewrite = False
+        if not os.path.exists(ver_file):
+            rewrite = True
+        else:
+            with open(ver_file, 'r') as f:
+                old_content = f.read()
+            if old_content != ver_content:
+                rewrite = True
+
+        if rewrite:
+            cc.v('  update {}...'.format(ver_file))
+            with open(ver_file, 'w') as f:
+                f.write(ver_content)
+
+    def make_tpweb_ver(self):
+        ver_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'ts_ver.h')
+        ver_content = '#ifndef __TS_SERVER_VER_H__\n#define __TS_SERVER_VER_H__\n\n#define TP_SERVER_VER\tL"{}"\n\n#endif // __TS_SERVER_VER_H__\n'.format(self.VER_TP_TPWEB)
+
+        rewrite = False
+        if not os.path.exists(ver_file):
+            rewrite = True
+        else:
             with open(ver_file, 'r') as f:
                 old_content = f.read()
             if old_content != ver_content:
@@ -165,14 +176,14 @@ class Builder:
                 f.write(ver_content)
 
         rc_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'tp_web.rc')
-        self._update_vs_rc(rc_file, self.VER_TELEPORT_SERVER)
+        self._update_ver_rc(rc_file, self.VER_TP_TPWEB)
 
-    def _update_vs_rc(self, rcFilePath, ver):
+    def _update_ver_rc(self, rcFilePath, ver):
         """ update rc file version info """
 
         t_ver = ver.split('.')
         if len(t_ver) != 4:
-            raise RuntimeError('Invalid version for assist.')
+            raise RuntimeError('Invalid version for .rc file.')
 
         bOK = False
         try:
@@ -276,14 +287,13 @@ class Builder:
                 wrcFile.close()
 
         except IOError:
-            raise RuntimeError('can not open rc file.')
+            raise RuntimeError('can not process rc file.')
 
-    def _update_nsi_rc(self, nsiFilePath, ver):
+    def _update_ver_nsi(self, nsiFilePath, ver):
         """ update nsis file version info """
-        # nver = ver.split('.')
         t_ver = ver.split('.')
         if len(t_ver) != 4:
-            raise RuntimeError('Invalid version for assist.')
+            raise RuntimeError('Invalid version for nsis file.')
 
         bOK = False
         try:
@@ -350,7 +360,77 @@ class Builder:
             return bOK
 
         except IOError:
-            raise RuntimeError('can not open nsi file.')
+            raise RuntimeError('can not process nsi file.')
+
+    def _update_ver_plist(self, plist_file, ver):
+        """ update plist file version info for MacOS app."""
+        t_ver = ver.split('.')
+        if len(t_ver) != 4:
+            raise RuntimeError('Invalid version for plist file.')
+
+        bOK = False
+        try:
+            # open rc file
+            f = codecs.open(plist_file, 'r', 'utf8')
+            # read out all lines of rc file
+            lines = f.readlines()
+            f.close()
+
+            is_ver = False
+            for x in range(len(lines)):
+                l = lines[x]
+
+                if l.find('<key>CFBundleShortVersionString</key>') != -1:
+                    is_ver = True
+                    continue
+                if l.find('<key>CFBundleVersion</key>') != -1:
+                    is_ver = True
+                    continue
+                    # pos1 = rcline.find(' FILEVERSION ')
+                    # pos2 = rcline.rfind('\\0"')
+                    # _ver = rcline[pos1 + 13: pos2].strip()
+                    #
+                    # rcSplitList = _ver.split(",")
+                    # if (len(rcSplitList) < 4):
+                    #     rcSplitList = _ver.split(".")
+                    # if (len(rcSplitList) < 4):
+                    #     raise RuntimeError('Invalid .rc file.')
+                    # if '.'.join(rcSplitList) == ver:
+                    #     continue
+                    #
+                    # rcline = '%s%s,%s,%s,%s\n' % (rcline[0:pos1 + 13], t_ver[0], t_ver[1], t_ver[2], t_ver[3])
+                    #
+                    # rcLines[x] = ""
+                    # rcLines[x] = rcline
+                    # # cc.v('[ver] new ver:  %s' % rcLines[x])
+                    # bOK = True
+
+                if is_ver:
+                    is_ver = False
+
+                    pos1 = l.find('<string>')
+                    pos2 = l.rfind('</string>')
+                    if pos1 == -1 or pos2 == -2:
+                        continue
+                    _ver = l[pos1 + 8: pos2].strip()
+
+                    v = _ver.split(".")
+                    if len(v) < 4:
+                        raise RuntimeError('Invalid .plist file.')
+                    old_ver = '.'.join(v)
+                    if old_ver == ver:
+                        continue
+                    lines[x] = '\t<string>{ver}</string>\n'.format(ver=ver)
+                    bOK = True
+
+            if bOK:
+                cc.v('  update {}...'.format(plist_file))
+                wrcFile = codecs.open(plist_file, 'w', 'utf8')
+                wrcFile.writelines(lines)
+                wrcFile.close()
+
+        except IOError:
+            raise RuntimeError('can not process plist file.')
 
 
 def main():

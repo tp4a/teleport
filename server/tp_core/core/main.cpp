@@ -1,6 +1,7 @@
 #include "ts_env.h"
 #include "ts_ver.h"
 #include "ts_main.h"
+#include "ts_http_client.h"
 
 #include <ex.h>
 
@@ -11,17 +12,19 @@
 //   -u          卸载服务然后退出（仅限Win平台）
 //   --version  打印版本号然后退出
 //   start       以服务方式运行
+//   stop        停止运行中的程序
 //
 ExLogger g_ex_logger;
 
 bool g_is_debug = false;
+extern bool g_exit_flag;
 
 #define RUN_UNKNOWN			0
-#define RUN_CORE				1
+#define RUN_CORE			1
 #define RUN_INSTALL_SRV		2
 #define RUN_UNINST_SRV		3
+#define RUN_STOP			4
 static ex_u8 g_run_type = RUN_UNKNOWN;
-
 
 #define EOM_CORE_SERVICE_NAME	L"Teleport Core Service"
 
@@ -82,6 +85,10 @@ static bool _process_cmd_line(int argc, wchar_t** argv)
 			if (0 == wcscmp(argv[i], L"start"))
 			{
 				g_run_type = RUN_CORE;
+				continue;
+			}
+			else if (0 == wcscmp(argv[i], L"stop")) {
+				g_run_type = RUN_STOP;
 				continue;
 			}
 
@@ -152,6 +159,15 @@ int _app_main(int argc, wchar_t** argv)
 	{
 		EXLOGE("[core] env init failed.\n");
 		return 1;
+	}
+
+	if (g_run_type == RUN_STOP) {
+		char url[1024] = {0};
+		ex_strformat(url, 1023, "http://%s:%d/rpc?{\"method\":\"exit\"}", g_env.rpc_bind_ip.c_str(), g_env.rpc_bind_port);
+		ex_astr body;
+		ts_http_get(url, body);
+		ex_printf("%s\n", body.c_str());
+		return 0;
 	}
 
 	if (!g_is_debug)
@@ -245,14 +261,21 @@ static void WINAPI service_handler(DWORD fdwControl)
 	{
 		if (g_hWorkerThread)
 		{
-			TerminateThread(g_hWorkerThread, 1);
-			g_hWorkerThread = NULL;
-		}
+			// TerminateThread(g_hWorkerThread, 1);
+			// g_hWorkerThread = NULL;
+			g_exit_flag = true;
 
-		g_ServiceStatus.dwWin32ExitCode = 0;
-		g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-		g_ServiceStatus.dwCheckPoint = 0;
-		g_ServiceStatus.dwWaitHint = 0;
+			g_ServiceStatus.dwWin32ExitCode = 0;
+			g_ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+			g_ServiceStatus.dwCheckPoint = 0;
+			g_ServiceStatus.dwWaitHint = 0;
+		}
+		else {
+			g_ServiceStatus.dwWin32ExitCode = 0;
+			g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+			g_ServiceStatus.dwCheckPoint = 0;
+			g_ServiceStatus.dwWaitHint = 0;
+		}
 
 	}break;
 
@@ -287,7 +310,7 @@ VOID WINAPI service_main(DWORD argc, wchar_t** argv)
 	g_hWorkerThread = CreateThread(NULL, 0, service_thread_func, NULL, 0, &tid);
 	if (NULL == g_hWorkerThread)
 	{
-		EXLOGE_WIN("CreateThread(python)");
+		EXLOGE_WIN("CreateThread()");
 
 		g_ServiceStatus.dwWin32ExitCode = 0;
 		g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
@@ -337,7 +360,8 @@ void _sig_handler(int signum, siginfo_t* info, void* ptr)
 	if (signum == SIGINT || signum == SIGTERM)
 	{
 		EXLOGW("[core] received signal SIGINT, exit now.\n");
-		exit(1);
+		g_exit_flag = true;
+		// exit(1);
 	}
 }
 

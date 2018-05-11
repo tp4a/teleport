@@ -113,6 +113,7 @@ def clean_everything():
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libmbedx509.a'))
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libsqlite3.a'))
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libssh.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libssh_threads.a'))
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libuv.a'))
 
 
@@ -199,7 +200,7 @@ def make_options():
     # options = list()
     # options_idx = 0
 
-    if ctx.host_os == 'windows':
+    if ctx.host_os in ['windows', 'macos']:
         add_option('x86', 'ver', 'Update version setting')
         add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % env.py_ver_str)
         add_option('x64', 'external', 'Build external dependency')

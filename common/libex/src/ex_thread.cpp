@@ -69,6 +69,9 @@ bool ExThreadBase::stop(void)
 
 	EXLOGV("[thread] wait thread [%s] end.\n", m_thread_name.c_str());
 
+	if(m_handle == 0)
+		return true;
+
 #ifdef EX_OS_WIN32
 	if (WaitForSingleObject(m_handle, INFINITE) != WAIT_OBJECT_0)
 	{
@@ -236,6 +239,6 @@ ex_u64 ex_get_thread_id(void)
 #ifdef EX_OS_WIN32
 	return GetCurrentThreadId();
 #else
-	return pthread_self();
+	return (ex_u64)pthread_self();
 #endif
 }

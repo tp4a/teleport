@@ -421,18 +421,12 @@ bool ExLogger::_rotate_file(void)
 		m_file = NULL;
 	}
 
-	//if (!_backup_file())
-	//	return false;
-
 	// make a name for backup file.
 	wchar_t _tmpname[64] = { 0 };
 #ifdef EX_OS_WIN32
 	SYSTEMTIME st;
 	GetLocalTime(&st);
-	//StringCbPrintf(_tmpname, 64, L"%s.%04d%02d%02d%02d%02d%02d.bak", m_filename.c_str(), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 	swprintf_s(_tmpname, 64, L"%s.%04d%02d%02d%02d%02d%02d.bak", m_filename.c_str(), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-	// 	sprintf_s(szBaseNewFileLogName, EX_LOG_PATH_MAX_LEN, "%04d%02d%02d%02d%02d%02d",
-	// 		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 #else
 	time_t timep;
 	time(&timep);
@@ -440,10 +434,7 @@ bool ExLogger::_rotate_file(void)
 	if (p == NULL)
 		return false;
 
-	//swprintf(_tmpname, L"%ls.%04d%02d%02d%02d%02d%02d.bak", m_filename.c_str(), p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
 	ex_wcsformat(_tmpname, 64, L"%ls.%04d%02d%02d%02d%02d%02d.bak", m_filename.c_str(), p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
-	// 	sprintf(szBaseNewFileLogName, "%04d%02d%02d%02d%02d%02d",
-	// 		p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
 #endif
 
 	ex_wstr _new_fullname(m_path);
@@ -473,93 +464,6 @@ bool ExLogger::_rotate_file(void)
 
 	return _open_file();
 }
-
-#if 0
-bool ExLogFile::_backup_file()
-{
-	char szNewFileLogName[EX_LOG_PATH_MAX_LEN] = { 0 };
-	char szBaseNewFileLogName[EX_LOG_PATH_MAX_LEN] = { 0 };
-#ifdef EX_OS_WIN32
-	SYSTEMTIME st;
-	GetLocalTime(&st);
-	sprintf_s(szNewFileLogName, EX_LOG_PATH_MAX_LEN, "%s\\%04d%02d%02d%02d%02d%02d.log",
-		m_log_file_dir.c_str(), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-
-	sprintf_s(szBaseNewFileLogName, EX_LOG_PATH_MAX_LEN, "%04d%02d%02d%02d%02d%02d",
-		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-#else
-	time_t timep;
-	struct tm *p;
-	time(&timep);
-	p = localtime(&timep);   //get server's time
-	if (p == NULL)
-	{
-		return NULL;
-	}
-	sprintf(szNewFileLogName, "%s/%04d%02d%02d%02d%02d%02d.log",
-		m_log_file_dir.c_str(), p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
-	sprintf(szBaseNewFileLogName, "%04d%02d%02d%02d%02d%02d",
-		p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
-#endif
-	if (m_hFile)
-	{
-		fclose(m_hFile);
-		m_hFile = 0;
-	}
-#ifdef EX_OS_WIN32
-	if (!MoveFileA(m_path.c_str(), szNewFileLogName))
-	{
-		DWORD dwError = GetLastError();
-
-		DeleteFileA(szNewFileLogName);
-
-		MoveFileA(m_path.c_str(), szNewFileLogName);
-	}
-#else
-	if (rename(m_path.c_str(), szNewFileLogName) != 0)
-	{
-		remove(szNewFileLogName);
-
-		rename(m_path.c_str(), szNewFileLogName);
-	}
-#endif
-	unsigned long long value = atoll(szBaseNewFileLogName);
-	if (value != 0)
-	{
-		m_log_file_list.push_back(value);
-	}
-	int try_count = 0;
-	while ((m_log_file_list.size() > m_max_count))
-	{
-		unsigned long long value = m_log_file_list.front();
-		char szDeleteFile[256] = { 0 };
-#ifdef EX_OS_WIN32
-		sprintf_s(szDeleteFile, 256, "%s\\%llu.log", m_log_file_dir.c_str(), value);
-		if (DeleteFileA(szDeleteFile))
-		{
-			m_log_file_list.pop_front();
-		}
-#else
-		sprintf(szDeleteFile, "%s/%llu.log", m_log_file_dir.c_str(), value);
-		if (remove(szDeleteFile) == 0)
-		{
-			m_log_file_list.pop_front();
-		}
-#endif
-		else
-		{
-			if (try_count > 5)
-			{
-				break;
-			}
-			try_count++;
-		}
-
-	}
-
-	return true;
-}
-#endif // if 0
 
 bool ExLogger::write_a(const char* buf)
 {
@@ -611,96 +515,3 @@ bool ExLogger::write_w(const wchar_t* buf)
 	ex_wstr2astr(buf, _buf, EX_CODEPAGE_UTF8);
 	return write_a(_buf.c_str());
 }
-
-
-#if 0
-bool ExLogFile::_load_file_list()
-{
-#ifdef EX_OS_WIN32
-	struct _finddata_t data;
-	ex_astr log_match = m_log_file_dir;
-	log_match += "\\*.log";
-	//log_match += "*.log";
-	long hnd = _findfirst(log_match.c_str(), &data);    // find the first file match `*.log`
-	if (hnd < 0)
-	{
-		return false;
-	}
-	int  nRet = (hnd < 0) ? -1 : 1;
-	int count = 0;
-	while (nRet > 0)
-	{
-		if (data.attrib == _A_SUBDIR)
-		{
-			// do nothing to a folder.
-		}
-		else
-		{
-			if (m_filename.compare(data.name) == 0)
-			{
-			}
-			else
-			{
-				char* match = strrchr(data.name, '.');
-				if (match != NULL)
-				{
-					*match = '\0';
-				}
-				unsigned long long value = atoll(data.name);
-				if (value == 0)
-				{
-					continue;
-				}
-				m_log_file_list.push_back(value);
-			}
-		}
-
-		nRet = _findnext(hnd, &data);
-		count++;
-		if (count > 100)
-		{
-			break;
-		}
-	}
-	_findclose(hnd);
-#else
-	DIR *dir;
-
-	struct dirent *ptr;
-
-	dir = opendir(m_log_file_dir.c_str());
-
-	while ((ptr = readdir(dir)) != NULL)
-	{
-		if (ptr->d_type == 8)
-		{
-			char temp_file_name[PATH_MAX] = { 0 };
-			strcpy(temp_file_name, ptr->d_name);
-			if (m_filename.compare(temp_file_name) == 0)
-			{
-
-			}
-			else
-			{
-				char* match = strrchr(temp_file_name, '.');
-				if (match != NULL)
-				{
-					*match = '\0';
-				}
-				unsigned long long value = atoll(temp_file_name);
-				if (value == 0)
-				{
-					continue;
-				}
-				m_log_file_list.push_back(value);
-			}
-		}
-	}
-
-	closedir(dir);
-#endif // EX_OS_WIN32
-
-	std::sort(m_log_file_list.begin(), m_log_file_list.end(), std::less<unsigned long long>());
-	return true;
-}
-#endif // if 0

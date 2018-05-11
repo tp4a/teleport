@@ -27,6 +27,9 @@
     <Filter Include="libssh">
       <UniqueIdentifier>{f1fea9ae-123c-4aa8-a152-e88d1d0a29fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="jsoncpp">
+      <UniqueIdentifier>{022b0a3d-47c2-40d8-96d9-dceea02e7eef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_const.h">
@@ -107,6 +110,9 @@
     <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\server.h">
       <Filter>libssh</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\external\jsoncpp\include\json\json.h">
+      <Filter>jsoncpp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tpssh.cpp">
@@ -159,6 +165,15 @@
     </ClCompile>
     <ClCompile Include="ssh_recorder.cpp">
       <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_reader.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_value.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_writer.cpp">
+      <Filter>jsoncpp</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

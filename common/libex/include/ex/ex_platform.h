@@ -34,6 +34,12 @@
 #	endif
 #endif
 
+#ifdef EX_OS_MACOS
+#	ifdef DEBUG
+#		define EX_DEBUG
+#	endif
+#endif
+
 
 #ifdef EX_OS_WIN32
 #	ifndef _WIN32_WINNT
@@ -58,11 +64,20 @@
 #	include <stdlib.h>	// free()
 #	include <stdarg.h>	// va_start()
 #	include <unistd.h>	// readlink()
+#	include <fcntl.h>   // O_RDONLY, etc.
+#	include <errno.h>
 #	include <wchar.h>
 #	include <sys/stat.h>
 #	include <sys/types.h>
 #	include <sys/socket.h>
 #	include <netinet/in.h>
+#endif
+
+#ifdef EX_OS_MACOS
+#   include <mach-o/dyld.h> // for _NSGetExecutablePath
+#   ifndef _T
+#       define _T(x) L##x
+#   endif
 #endif
 
 

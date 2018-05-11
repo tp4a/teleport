@@ -1,108 +1,108 @@
 @charset "utf-8";
+
 @import "_color";
+@import "_base";
+@import "_overwrite_bootstrap";
+@import "_overwrite_gritter";
 
-//@bg-color: #2c2c2c;
-//
-//body {
-//  background-color: @bg-color;
-//    color: #dfdfdf;
-//}
-//
-//.sidebar .nav-menu>li>a.active:after {
-//    color: @bg-color;
-//}
-//
-//.navbar-default {
-//  background: @bg-color;
-//
-//  .breadcrumb {
-//    color:#fff;
-//  }
-//}
+.page-content-dashboard {
+  padding: 20px 25px;
+}
 
-.page-content {
-  padding: 15px 30px 15px 30px;
+.sys-msg {
+  border: 1px solid #ff8987;
+  border-radius: 5px;
+  background-color: #ffbdb7;
+  padding:10px;
+  margin-bottom: 10px;
+  text-align: center;
+  display: none;
+}
 
-  //.col-sm-3, .col-sm-4, .col-sm-6 {
-  //  //padding: 0;
-  //}
+.col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12 {
+  padding-right: 10px;
+  padding-left: 10px;
 }
 
 .stats {
   overflow: hidden;
-  padding: 15px;
+  //padding: 15px;
   color: #686868;
   background-color: #fff;
-  border-radius: 3px;
+  //border-radius: 3px;
   margin-bottom: 10px;
 
   //border-left: 1px solid lighten(@toolbar-bg, 20%);
   //border-bottom: 1px solid lighten(@toolbar-bg, 20%);
 
-  span.sub-name {
-    font-size: 11px;
-    font-weight: 300;
-    //color: #fff;
-    //color: rgba(255, 255, 255, .4);
-  }
+  //span.sub-name {
+  //  font-size: 11px;
+  //  font-weight: 300;
+  //  //color: #fff;
+  //  //color: rgba(255, 255, 255, .4);
+  //}
+  //
+  //&.stats-warning {
+  //  position: relative;
+  //  background-color: #c86124;
+  //
+  //  .stats-content {
+  //    //padding-left: 86px;
+  //    text-align: center;
+  //    font-size: 24px;
+  //    //color: #eee;
+  //  }
+  //}
 
-  &.stats-warning {
-    position: relative;
-    background-color: #c86124;
-
-    .stats-content {
-      //padding-left: 86px;
-      text-align: center;
-      font-size: 24px;
-      //color: #eee;
-    }
-  }
-
-  .loading {
-    color: lighten(@page-bg, 60%);
-    font-size: 14px;
-  }
+  //.loading {
+  //  color: lighten(@page-bg, 60%);
+  //  font-size: 14px;
+  //}
 
   &.stats-id-host {
-    border-top: 5px solid #407deb;
+    border-top: 5px solid @color-bg-primary;
+    background-color: lighten(@color-bg-primary, 40%);
   }
   &.stats-id-user {
-    border-top: 5px solid #eba61e;
+    border-top: 5px solid @color-bg-warning;
+    background-color: lighten(@color-bg-warning, 40%);
+  }
+  &.stats-id-account {
+    border-top: 5px solid @color-bg-danger;
+    background-color: lighten(@color-bg-danger, 40%);
   }
   &.stats-id-connect {
-    border-top: 5px solid #14c13c;
+    border-top: 5px solid @color-bg-success;
+    //background-color: #A8E3B0;
+    background-color: lighten(@color-bg-success, 55%);
   }
 
   &.stats-box {
     position: relative;
-    height: 116px;
+    height: 98px;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 
     .stats-content {
-      padding-left: 100px;
+      padding-left: 20px;
     }
 
     .stats-icon {
       font-size: 130px;
       line-height: 130px;
-      left: 20px;
-      text-align: center;
-      //color: #000000;
+      top:5px;
+      right:-40px;
       position: absolute;
-      //opacity: .05;
-      color: rgba(0, 0, 0, 0.05);
+      color: rgba(0, 0, 0, 0.07);
     }
     .stats-name {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 500;
-      //color: #1f1f1f;
+      padding-top:10px;
       color: rgba(0, 0, 0, 0.6);
     }
     .stats-value {
-      margin-top: 5px;
-      //color: #000000;
       color: rgba(0, 0, 0, 0.6);
-      font-size: 48px;
-      line-height: 52px;
+      font-size: 42px;
       font-weight: 300;
       white-space: nowrap;
       padding-left: 20px;
@@ -143,27 +143,30 @@
 
   &.stats-bar {
     position: relative;
-    height: 320px;
+    height: 200px;
+    padding:8px;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 
     .stats-content {
       //padding-left: 100px;
     }
 
-    .stats-name {
-      font-size: 16px;
-      font-weight: 500;
-      //color: #1f1f1f;
-      color: rgba(0, 0, 0, 0.6);
-    }
+    //.stats-name {
+    //  font-size: 14px;
+    //  font-weight: 500;
+    //  //color: #1f1f1f;
+    //  color: rgba(0, 0, 0, 0.6);
+    //}
     .stats-value {
       margin-top: 5px;
+      height: 180px;
       //color: #000000;
-      color: rgba(0, 0, 0, 0.6);
-      font-size: 48px;
-      line-height: 52px;
-      font-weight: 300;
-      white-space: nowrap;
-      padding-left: 20px;
+      //color: rgba(0, 0, 0, 0.6);
+      //font-size: 48px;
+      //line-height: 52px;
+      //font-weight: 300;
+      //white-space: nowrap;
+      //padding-left: 20px;
     }
   }
 
@@ -364,4 +367,3 @@
     }
   }
 }
-

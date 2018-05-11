@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13196" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13196"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
+            <connections>
+                <outlet property="delegate" destination="494" id="495"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <menu title="AMainMenu" systemMenu="main" id="29">
+            <items>
+                <menuItem title="TPAssist" id="56">
+                    <menu key="submenu" title="TPAssist" systemMenu="apple" id="57">
+                        <items>
+                            <menuItem title="About TPAssist" id="58">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showAbout:" target="494" id="3cL-aP-7Oh"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="143">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Quit TPAssist" keyEquivalent="q" id="136">
+                                <connections>
+                                    <action selector="quit:" target="494" id="eU6-ZU-57n"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
+            </items>
+        </menu>
+        <customObject id="494" customClass="AppDelegate">
+            <connections>
+                <outlet property="arrayController" destination="620" id="621"/>
+                <outlet property="menu" destination="542" id="558"/>
+            </connections>
+        </customObject>
+        <customObject id="420" customClass="NSFontManager"/>
+        <menu autoenablesItems="NO" id="542">
+            <items>
+                <menuItem title="About" id="638">
+                    <attributedString key="attributedTitle"/>
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="showAbout:" target="494" id="lj3-p9-1cy"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Settings" id="646">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="configure:" target="494" id="DVo-fI-7Ae"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="Lga-cg-zB5">
+                    <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                </menuItem>
+                <menuItem title="Visit TELEPORT Website" id="pkv-BD-W9b">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="visitWebsite:" target="494" id="BBn-Sm-LOn"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="8Pg-XX-l39">
+                    <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                </menuItem>
+                <menuItem title="Quit" id="644">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="quit:" target="494" id="645"/>
+                    </connections>
+                </menuItem>
+            </items>
+            <point key="canvasLocation" x="121" y="-20"/>
+        </menu>
+        <arrayController id="620"/>
+    </objects>
+</document>

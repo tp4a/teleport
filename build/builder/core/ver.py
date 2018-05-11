@@ -1,3 +1,3 @@
 # -*- coding: utf8 -*-
-VER_TELEPORT_SERVER = "2.2.10.1"
-VER_TELEPORT_ASSIST = "2.2.6.1"
+VER_TP_SERVER = "3.0.1.6"
+VER_TP_ASSIST = "3.0.1.6"

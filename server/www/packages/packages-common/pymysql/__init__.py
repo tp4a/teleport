@@ -1,7 +1,7 @@
-'''
+"""
 PyMySQL: A pure-Python MySQL client library.
 
-Copyright (c) 2010, 2013 PyMySQL contributors
+Copyright (c) 2010-2016 PyMySQL contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,29 +20,28 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-'''
-
-VERSION = (0, 6, 7, None)
-
-from ._compat import text_type, JYTHON, IRONPYTHON
-from .constants import FIELD_TYPE
-from .converters import escape_dict, escape_sequence, escape_string
-from .err import Warning, Error, InterfaceError, DataError, \
-     DatabaseError, OperationalError, IntegrityError, InternalError, \
-     NotSupportedError, ProgrammingError, MySQLError
-from .times import Date, Time, Timestamp, \
-    DateFromTicks, TimeFromTicks, TimestampFromTicks
-
+"""
 import sys
 
+from ._compat import PY2
+from .constants import FIELD_TYPE
+from .converters import escape_dict, escape_sequence, escape_string
+from .err import (
+    Warning, Error, InterfaceError, DataError,
+    DatabaseError, OperationalError, IntegrityError, InternalError,
+    NotSupportedError, ProgrammingError, MySQLError)
+from .times import (
+    Date, Time, Timestamp,
+    DateFromTicks, TimeFromTicks, TimestampFromTicks)
 
+
+VERSION = (0, 7, 11, None)
 threadsafety = 1
 apilevel = "2.0"
-paramstyle = "format"
+paramstyle = "pyformat"
+
 
 class DBAPISet(frozenset):
-
 
     def __ne__(self, other):
         if isinstance(other, set):
@@ -73,11 +72,14 @@ TIMESTAMP = DBAPISet([FIELD_TYPE.TIMESTAMP, FIELD_TYPE.DATETIME])
 DATETIME  = TIMESTAMP
 ROWID     = DBAPISet()
 
+
 def Binary(x):
     """Return x as a binary type."""
-    if isinstance(x, text_type) and not (JYTHON or IRONPYTHON):
-        return x.encode()
-    return bytes(x)
+    if PY2:
+        return bytearray(x)
+    else:
+        return bytes(x)
+
 
 def Connect(*args, **kwargs):
     """
@@ -87,12 +89,11 @@ def Connect(*args, **kwargs):
     from .connections import Connection
     return Connection(*args, **kwargs)
 
-from pymysql import connections as _orig_conn
+from . import connections as _orig_conn
 if _orig_conn.Connection.__init__.__doc__ is not None:
-    Connect.__doc__ = _orig_conn.Connection.__init__.__doc__ + ("""
-See connections.Connection.__init__() for information about defaults.
-""")
+    Connect.__doc__ = _orig_conn.Connection.__init__.__doc__
 del _orig_conn
+
 
 def get_client_info():  # for MySQLdb compatibility
     return '.'.join(map(str, VERSION))
@@ -100,14 +101,14 @@ def get_client_info():  # for MySQLdb compatibility
 connect = Connection = Connect
 
 # we include a doctored version_info here for MySQLdb compatibility
-version_info = (1,2,2,"final",0)
+version_info = (1,2,6,"final",0)
 
 NULL = "NULL"
 
 __version__ = get_client_info()
 
 def thread_safe():
-    return True # match MySQLdb.thread_safe()
+    return True  # match MySQLdb.thread_safe()
 
 def install_as_MySQLdb():
     """
@@ -115,6 +116,7 @@ def install_as_MySQLdb():
     _mysql will unwittingly actually use
     """
     sys.modules["MySQLdb"] = sys.modules["_mysql"] = sys.modules["pymysql"]
+
 
 __all__ = [
     'BINARY', 'Binary', 'Connect', 'Connection', 'DATE', 'Date',
@@ -128,6 +130,5 @@ __all__ = [
     'paramstyle', 'threadsafety', 'version_info',
 
     "install_as_MySQLdb",
-
-    "NULL","__version__",
-    ]
+    "NULL", "__version__",
+]

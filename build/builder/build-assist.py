@@ -2,8 +2,8 @@
 
 from core import colorconsole as cc
 from core import utils
-from core.context import *
 from core.ver import *
+from core.context import *
 from core.env import env
 
 ctx = BuildContext()
@@ -29,7 +29,7 @@ class BuilderWin(BuilderBase):
 
     def build_exe(self):
         cc.i('build tp_assist...')
-        sln_file = os.path.join(env.root_path, 'client', 'tp_assist', 'tp_assist.vs2015.sln')
+        sln_file = os.path.join(env.root_path, 'client', 'tp_assist_win', 'tp_assist.vs2015.sln')
         out_file = os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path, 'tp_assist.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
@@ -46,9 +46,9 @@ class BuilderWin(BuilderBase):
     #     utils.ensure_file_exists(out_file)
 
     def build_installer(self):
-        cc.i('build assist package for website...')
+        cc.i('build assist installer...')
 
-        name = 'teleport-assist-{}'.format(VER_TELEPORT_ASSIST)
+        name = 'teleport-assist-{}-{}'.format(ctx.dist, VER_TP_ASSIST)
 
         out_path = os.path.join(env.root_path, 'out', 'installer')
         utils.makedirs(out_path)
@@ -69,21 +69,14 @@ class BuilderWin(BuilderBase):
 
         if os.path.exists(tmp_app_path):
             utils.remove(tmp_app_path)
-        # if os.path.exists(tmp_cfg_path):
-        #     utils.remove(tmp_cfg_path)
 
         utils.makedirs(tmp_app_path)
         utils.makedirs(tmp_cfg_path)
 
         utils.copy_file(os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_app_path, 'tp_assist.exe')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'ssh.ini')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'scp.ini')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'telnet.ini')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'ssh.ini')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'scp.ini')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist', 'cfg'), tmp_cfg_path, 'telnet.ini')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'cfg'), tmp_cfg_path, ('tp-assist.default.json', 'tp-assist.json'))
 
-        utils.copy_ex(os.path.join(env.root_path, 'client', 'tp_assist'), tmp_app_path, 'site')
+        utils.copy_ex(os.path.join(env.root_path, 'client', 'tp_assist_win'), tmp_app_path, 'site')
 
         utils.makedirs(os.path.join(tmp_app_path, 'tools', 'putty'))
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'putty'), os.path.join(tmp_app_path, 'tools', 'putty'), 'putty.exe')
@@ -104,6 +97,75 @@ class BuilderWin(BuilderBase):
         utils.nsis_build(os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist', 'installer.nsi'))
 
 
+class BuilderMacOS(BuilderBase):
+    def __init__(self):
+        super().__init__()
+
+    def build_exe(self):
+        cc.i('build tp_assist...')
+
+        configuration = ctx.target_path.capitalize()
+
+        proj_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'tp_assist.xcodeproj')
+        out_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'build', ctx.target_path, 'tp_assist.app')
+        if os.path.exists(out_file):
+            utils.remove(out_file)
+        utils.xcode_build(proj_file, 'tp_assist', configuration, False)
+        utils.ensure_file_exists(os.path.join(out_file, 'Contents', 'Info.plist'))
+
+    def build_installer(self):
+        cc.e('assist for macOS does not need an installer, you should make an .DMG file for release...')
+
+        # name = 'teleport-assist-{}-{}'.format(ctx.dist, VER_TP_ASSIST)
+        #
+        # out_path = os.path.join(env.root_path, 'out', 'installer')
+        # utils.makedirs(out_path)
+        #
+        # out_file = os.path.join(out_path, '{}.exe'.format(name))
+        # utils.remove(out_file)
+        #
+        # self._build_installer()
+        #
+        # utils.ensure_file_exists(out_file)
+
+
+    @staticmethod
+    def _build_installer():
+        return
+        # tmp_path = os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist')
+        # tmp_app_path = os.path.join(tmp_path, 'apps')
+        # tmp_cfg_path = os.path.join(tmp_app_path, 'cfg')
+        #
+        # if os.path.exists(tmp_app_path):
+        #     utils.remove(tmp_app_path)
+        #
+        # utils.makedirs(tmp_app_path)
+        # utils.makedirs(tmp_cfg_path)
+        #
+        # utils.copy_file(os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_app_path, 'tp_assist.exe')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'cfg'), tmp_cfg_path, ('tp-assist.default.json', 'tp-assist.json'))
+        #
+        # utils.copy_ex(os.path.join(env.root_path, 'client', 'tp_assist_win'), tmp_app_path, 'site')
+        #
+        # utils.makedirs(os.path.join(tmp_app_path, 'tools', 'putty'))
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'putty'), os.path.join(tmp_app_path, 'tools', 'putty'), 'putty.exe')
+        #
+        # utils.makedirs(os.path.join(tmp_app_path, 'tools', 'winscp'))
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'winscp'), os.path.join(tmp_app_path, 'tools', 'winscp'), 'WinSCP.exe')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'winscp'), os.path.join(tmp_app_path, 'tools', 'winscp'), 'license.txt')
+        #
+        # utils.makedirs(os.path.join(tmp_app_path, 'tools', 'tprdp'))
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'tprdp-client.exe')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'tprdp-replay.exe')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'libeay32.dll')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'ssleay32.dll')
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'msvcr120.dll')
+        #
+        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools'), os.path.join(tmp_app_path, 'tools'), 'securecrt-telnet.vbs')
+        #
+        # utils.nsis_build(os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist', 'installer.nsi'))
+
+
 class BuilderLinux(BuilderBase):
     def __init__(self):
         super().__init__()
@@ -121,6 +183,8 @@ class BuilderLinux(BuilderBase):
 def gen_builder(dist):
     if dist == 'windows':
         builder = BuilderWin()
+    elif dist == 'macos':
+        builder = BuilderMacOS()
     elif dist == 'linux':
         builder = BuilderLinux()
     else:

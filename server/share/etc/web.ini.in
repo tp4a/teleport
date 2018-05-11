@@ -5,8 +5,7 @@
 ; ip=0.0.0.0
 
 ; port listen by web server, default to 7190.
-; DO NOT FORGET update common::web-server-rpc in core.ini if you modified this setting.
-; port=7190
+; DO NOT FORGET update `common::web-server-rpc` in core.ini if you modified this setting.
 port=7190
 
 ; log file of web server, default to /var/log/teleport/tpweb.log
@@ -18,16 +17,15 @@ port=7190
 ; LOG_LEVEL_INFO      2   log information/warning/error message.
 ; LOG_LEVEL_WARN      3   log warning and error message.
 ; LOG_LEVEL_ERROR     4   log error message only.
-; log-level=2
+log-level=2
 
 ; 0/1. default to 0.
-; in debug mode, `log-level` force to 0 and trace call stack when exception raised.
-; debug-mode=0
+; in debug mode, `log-level` force to 0 and display more message for debug purpose.
 debug-mode=0
 
 ; `core-server-rpc` is the rpc interface of core server.
+; default to `http://127.0.0.1:52080/rpc`.
 ; DO NOT FORGET update this setting if you modified rpc::bind-port in core.ini.
-; core-server-rpc=http://127.0.0.1:52080/rpc
 core-server-rpc=http://127.0.0.1:52080/rpc
 
 
@@ -36,7 +34,7 @@ core-server-rpc=http://127.0.0.1:52080/rpc
 ; database in use, should be sqlite/mysql, default to sqlite.
 ; type=sqlite
 
-; sqlite-file=/var/lib/teleport/data/ts_db.db
+; sqlite-file=/usr/local/teleport/data/db/teleport.db
 
 ; mysql-host=127.0.0.1
 
