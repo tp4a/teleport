@@ -359,3 +359,13 @@ def get_groups(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
 
     err = s.query()
     return err, s.total_count, s.page_index, s.recorder
+
+
+def get_host_groups_for_user(handler):
+    # 获取当前用户能查看的主机分组列表
+    pass
+
+
+def get_acc_groups_for_user(handler):
+    # 获取当前用户能查看的远程账号分组列表
+    pass

@@ -278,7 +278,7 @@ void SshSession::_run(void) {
 	}
 
 	// 认证，并打开一个通道
-	while (!(m_is_logon && m_channels.size() > 0)) {
+	while (!(m_is_logon && !m_channels.empty())) {
 		if (m_have_error)
 			break;
 		err = ssh_event_dopoll(event_loop, -1);
@@ -454,7 +454,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	_this->m_srv_session = ssh_new();
 	// 	int verbosity = 4;
 	// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-	ssh_set_blocking(_this->m_srv_session, 1);
+	//ssh_set_blocking(_this->m_srv_session, 1);
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_HOST, _this->m_conn_ip.c_str());
 	int port = (int)_this->m_conn_port;
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_PORT, &port);
@@ -486,15 +486,15 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 	_timeout = 10; // 10 sec.
 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
-	// 获取服务端ssh版本，是v1还是v2
+	// get ssh version of host, v1 or v2
 	_this->m_ssh_ver = ssh_get_version(_this->m_srv_session);
 	EXLOGW("[ssh] real host is SSHv%d\n", _this->m_ssh_ver);
 
-	// 	// 检查服务端支持的认证协议
+	// check supported auth type by host
 	//ssh_userauth_none(_this->m_srv_session, _this->m_acc_name.c_str());
 	// 	rc = ssh_userauth_none(_this->m_srv_session, NULL);
 	// 	if (rc == SSH_AUTH_ERROR) {
-	// 			EXLOGE("[ssh] invalid password for password mode to login to real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
+	// 			EXLOGE("[ssh] can not got auth type supported by real SSH server %s:%d.\n", _this->m_server_ip.c_str(), _this->m_server_port);
 	// 			_this->m_have_error = true;
 	// 			_this->m_retcode = SESS_STAT_ERR_AUTH_DENIED;
 	// 			return SSH_AUTH_ERROR;
@@ -510,7 +510,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		int retry_count = 0;
 
 		if (_this->m_ssh_ver == 1) {
-			// 远程主机是SSHv1，则优先尝试密码登录
+			// first try password for SSHv1
 			rc = ssh_userauth_password(_this->m_srv_session, _this->m_acc_name.c_str(), _this->m_acc_secret.c_str());
 			for (;;) {
 				if (rc == SSH_AUTH_AGAIN) {
@@ -532,7 +532,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 			}
 		}
 
-		// SSHv2则优先尝试交互式登录（SSHv2推荐）
+		// first try interactive login mode for SSHv2.
 		retry_count = 0;
 		rc = ssh_userauth_kbdint(_this->m_srv_session, NULL, NULL);
 		for (;;) {
@@ -581,7 +581,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 		}
 
 		if (_this->m_ssh_ver != 1) {
-			// 如果SSHv2的主机不支持交互式登录，则尝试密码方式
+			// then try password mode if interactive mode does not supported by host with SSHv2.
 			rc = ssh_userauth_password(_this->m_srv_session, _this->m_acc_name.c_str(), _this->m_acc_secret.c_str());
 			if (rc == SSH_AUTH_SUCCESS) {
 				EXLOGW("[ssh] logon with password mode.\n");
@@ -769,7 +769,7 @@ void SshSession::_on_client_channel_close(ssh_session session, ssh_channel chann
 		EXLOGE("[ssh] when client channel close, not found channel pair.\n");
 		return;
 	}
-//	cp->need_close = true;
+
 	_this->m_have_error = true;
 
 	//EXLOGD("[ssh] [channel:%d]   -- end by client channel close\n", cp->channel_id);
@@ -930,18 +930,6 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 	}
 	cp->last_access_timestamp = (ex_u32)time(NULL);
 
-// #ifdef EX_OS_WIN32
-// 	// TODO: hard code not good... :(
-// 	// 偶尔，某次操作会导致ssh_session->session_state为SSH_SESSION_STATE_ERROR
-// 	// 但是将其强制改为SSH_SESSION_STATE_AUTHENTICATED，后续操作仍然能成功（主要在向客户端发送第一包数据时）
-// 	ex_u8* _t = (ex_u8*)(ssh_channel_get_session(cp->cli_channel));
-// 	if (_t[1116] == 9) // SSH_SESSION_STATE_AUTHENTICATED = 8, SSH_SESSION_STATE_ERROR = 9
-// 	{
-// 		EXLOGW(" --- [ssh] hard code to fix client connect session error state.\n");
-// 		_t[1116] = 8;
-// 	}
-// #endif
-
 	_this->m_recving_from_srv = true;
 
 	if (cp->type == TS_SSH_CHANNEL_TYPE_SHELL && !is_stderr)
@@ -1099,7 +1087,6 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 
 	if (ret == SSH_ERROR) {
 		EXLOGE("[ssh] send data(%dB) to client failed. [%d][cli:%s][srv:%s]\n", len, ret, ssh_get_error(_this->m_cli_session), ssh_get_error(_this->m_srv_session));
-		//ssh_channel_close(channel);
 		cp->need_close = true;
 		_this->m_have_error = true;
 	}
