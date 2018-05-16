@@ -24,7 +24,13 @@ class HostListHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_ASSET_CREATE | TP_PRIVILEGE_ASSET_DELETE | TP_PRIVILEGE_ASSET_GROUP)
         if ret != TPE_OK:
             return
-        self.render('asset/host-list.mako')
+
+        err, groups = group.get_host_groups_for_user(self.current_user['id'], self.current_user['privilege'])
+        param = {
+            'host_groups': groups
+        }
+
+        self.render('asset/host-list.mako', page_param=json.dumps(param))
 
 
 class DoGetHostsHandler(TPBaseJsonHandler):

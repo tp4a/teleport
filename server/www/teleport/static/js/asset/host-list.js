@@ -3,6 +3,9 @@
 $app.on_init = function (cb_stack) {
     $app.dom = {
         // assist_ver: $('#tp-assist-ver'),
+        btn_sel_group: $('#btn-sel-group button'),
+        group_list_for_sel: $('#btn-sel-group ul'),
+
         btn_refresh_host: $('#btn-refresh-host'),
         btn_add_host: $('#btn-add-host'),
         chkbox_host_select_all: $('#table-host-select-all'),
@@ -18,6 +21,27 @@ $app.on_init = function (cb_stack) {
         upload_file_info: $('#upload-file-info'),
         upload_file_message: $('#upload-file-message')
     };
+
+    console.log($app.options.host_groups);
+    // var i = 0;
+    // var html = [];
+    // html.push('<optioin value="0">所有分组</optioin>');
+    // html.push('<optioin value="-1">----------</optioin>');
+    // for(i = 0; i < $app.options.host_groups.length; ++i) {
+    //     html.push('<optioin value="'+$app.options.host_groups[i].id+'">'+$app.options.host_groups[i].name+'</optioin>');
+    // }
+    // $app.dom.sel_host_group.ap
+
+    var html = [];
+    $.each($app.options.host_groups, function (i, item) {
+        html.push('<li><a href="javascript:;" data-tp-selector="' + item.id + '" data-name="' + item.name + '"><i class="fa fa-caret-right fa-fw"></i> ' + item.name + '</a></li>');
+    });
+    $app.dom.group_list_for_sel.append($(html.join('')));
+    $app.dom.group_list_for_sel.find('a[data-tp-selector]').click(function () {
+        var obj = $(this);
+        //$app.set_selected_to_role(parseInt(obj.attr('data-tp-selector')), obj.attr('data-name'));
+    });
+
 
     // $tp.assist_checked = function () {
     //     console.log("---------");
@@ -1537,9 +1561,9 @@ $app.create_dlg_edit_account = function () {
             dlg.dom.block_sshkey.hide();
             if (dlg.field_protocol === TP_PROTOCOL_TYPE_TELNET) {
                 dlg.dom.block_prompt.show();
-                if(dlg.dom.prompt_username.val().length === 0 && dlg.account.username_prompt.length === 0)
+                if (dlg.dom.prompt_username.val().length === 0 && dlg.account.username_prompt.length === 0)
                     dlg.dom.prompt_username.val('ogin:');
-                if(dlg.dom.prompt_password.val().length === 0 && dlg.account.password_prompt.length === 0)
+                if (dlg.dom.prompt_password.val().length === 0 && dlg.account.password_prompt.length === 0)
                     dlg.dom.prompt_password.val('assword:');
             }
         } else if (dlg.field_auth === TP_AUTH_TYPE_PRIVATE_KEY) {
