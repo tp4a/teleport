@@ -54,7 +54,7 @@ def get_hosts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
             if k == 'state':
                 _where.append('h.state={}'.format(sql_filter[k]))
             elif k == 'search':
-                _where.append('(h.name LIKE "%{}%" OR h.ip LIKE "%{}%" OR h.router_ip LIKE "%{}%" OR h.desc LIKE "%{}%" OR h.cid LIKE "%{}%")'.format(sql_filter[k], sql_filter[k], sql_filter[k], sql_filter[k], sql_filter[k]))
+                _where.append('(h.name LIKE "%{filter}%" OR h.ip LIKE "%{filter}%" OR h.router_ip LIKE "%{filter}%" OR h.desc LIKE "%{filter}%" OR h.cid LIKE "%{filter}%")'.format(filter=sql_filter[k]))
 
     if len(_where) > 0:
         str_where = '( {} )'.format(' AND '.join(_where))
