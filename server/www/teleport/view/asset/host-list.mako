@@ -6,9 +6,14 @@
 <%inherit file="../page_base.mako"/>
 
 <%block name="extend_js_file">
-##     <script type="text/javascript" src="${ static_url('js/tp-assist.js') }"></script>
     <script type="text/javascript" src="${ static_url('js/asset/host-list.js') }"></script>
     <script type="text/javascript" src="${ static_url('plugins/jquery/ajaxfileupload.js') }"></script>
+</%block>
+
+<%block name="embed_js">
+    <script type="text/javascript">
+        $app.add_options(${page_param});
+    </script>
 </%block>
 
 <%block name="embed_css">
@@ -18,7 +23,7 @@
 
 <%block name="breadcrumb_extra">
     <ol class="breadcrumb breadcrumb-list">
-##         <li><i class="fa fa-clock-o"></i> 服务器时间：<span id="tp-timer">-</span></li>
+        ##         <li><i class="fa fa-clock-o"></i> 服务器时间：<span id="tp-timer">-</span></li>
 ##         <li><i class="fa fa-bolt"></i> 助手版本：<span id="tp-assist-ver"></span></li>
     </ol>
 </%block>
@@ -29,9 +34,20 @@
 
     <!-- begin box -->
     <div class="box">
+
+        <p>filter goes here...</p>
+        <div class="btn-group dropdown" id="btn-sel-group">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-edit fa-fw"></i> 所有分组 <i class="fa fa-caret-right"></i></button>
+            <ul class="dropdown-menu  dropdown-menu-sm"></ul>
+        </div>
+
+
+        <hr/>
+
         <div class="table-prefix-area">
             <div class="table-extend-cell">
                 <span class="table-name"><i class="fa fa-list fa-fw"></i> 主机列表</span>
+
                 <button id="btn-refresh-host" class="btn btn-sm btn-default"><i class="fa fa-redo fa-fw"></i> 刷新列表</button>
             </div>
             <div class="table-extend-cell table-extend-cell-right group-actions">
