@@ -231,7 +231,9 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
             return self.write_json(TPE_JSON_FORMAT)
 
         try:
+            processed = False
             if 'smtp' in args:
+                processed = True
                 _cfg = args['smtp']
                 _server = _cfg['server']
                 _port = _cfg['port']
@@ -251,7 +253,8 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)
 
-            elif 'password' in args:
+            if 'password' in args:
+                processed = True
                 _cfg = args['password']
                 _allow_reset = _cfg['allow_reset']
                 _force_strong = _cfg['force_strong']
@@ -264,7 +267,8 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)
 
-            elif 'login' in args:
+            if 'login' in args:
+                processed = True
                 _cfg = args['login']
                 _session_timeout = _cfg['session_timeout']
                 _retry = _cfg['retry']
@@ -280,7 +284,8 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)
 
-            elif 'session' in args:
+            if 'session' in args:
+                processed = True
                 _cfg = args['session']
                 _noop_timeout = _cfg['noop_timeout']
                 _flag_record = _cfg['flag_record']
@@ -305,7 +310,8 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)
 
-            elif 'storage' in args:
+            if 'storage' in args:
+                processed = True
                 _cfg = args['storage']
                 _keep_log = _cfg['keep_log']
                 _keep_record = _cfg['keep_record']
@@ -325,7 +331,8 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                     tp_cfg().sys.storage.cleanup_minute = _cleanup_minute
                 else:
                     return self.write_json(err)
-            else:
+
+            if not processed:
                 return self.write_json(TPE_PARAM)
 
             return self.write_json(TPE_OK)
