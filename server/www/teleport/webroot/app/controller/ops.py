@@ -4,7 +4,6 @@ import json
 import threading
 import time
 
-import tornado.gen
 import tornado.httpclient
 from app.base.logger import log
 from app.base.configs import tp_cfg
@@ -15,6 +14,7 @@ from app.const import *
 from app.model import account
 from app.model import host
 from app.model import ops
+from app.model import group
 
 # 连接信息ID的基数，每次使用时均递增
 tmp_conn_id_base = int(time.time())
@@ -34,9 +34,17 @@ class RemoteHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_OPS)
         if ret != TPE_OK:
             return
+
+        err, groups = group.get_host_groups_for_user(self.current_user['id'], self.current_user['privilege'])
         param = {
+            'host_groups': groups,
             'core_cfg': tp_cfg().core
         }
+
+        # param = {
+        #     'core_cfg': tp_cfg().core
+        # }
+
         self.render('ops/remote-list.mako', page_param=json.dumps(param))
 
 

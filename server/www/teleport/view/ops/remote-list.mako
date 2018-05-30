@@ -26,6 +26,16 @@
 
     <!-- begin box -->
     <div class="box">
+
+        <p>filter goes here...</p>
+        <div class="btn-group dropdown" id="btn-sel-group">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-edit fa-fw"></i> 所有分组 <i class="fa fa-caret-right"></i></button>
+            <ul class="dropdown-menu  dropdown-menu-sm"></ul>
+        </div>
+
+
+        <hr/>
+
         <div class="table-prefix-area">
             <div class="table-extend-cell">
                 <span class="table-name"><i class="fa fa-list fa-fw"></i> 主机列表</span>

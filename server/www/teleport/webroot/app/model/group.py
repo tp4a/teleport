@@ -386,9 +386,13 @@ def get_host_groups_for_user(user_id, user_privilege):
     for db_item in db_ret:
         hosts.append(str(db_item[0]))
 
+    if len(hosts) == 0:
+        return TPE_NOT_EXISTS, None
+
     # step 2. get groups which include those hosts.
-    sql = 'SELECT `gid` FROM `{dbtp}group_map` WHERE (`type`={dbph} AND `mid` IN ({dbph})) GROUP BY `gid`;'.format(dbtp=db.table_prefix, dbph=db.place_holder, hosts=','.join(hosts))
-    db_ret = db.query(sql, (TP_GROUP_HOST, ','.join(hosts)))
+    sql = 'SELECT `gid` FROM `{dbtp}group_map` WHERE (`type`={gtype} AND `mid` IN ({hids})) GROUP BY `gid`;'.format(dbtp=db.table_prefix, gtype=TP_GROUP_HOST, hids=','.join(hosts))
+    db_ret = db.query(sql)
+
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS, None
 

@@ -19,7 +19,7 @@
 <div class="page-content">
     <div class="info-box">
         <div class="info-icon-box">
-            <i id="icon" class="fa" style="color:#ff7545;"></i>
+            <i id="icon" class="fas" style="color:#ff7545;"></i>
         </div>
         <div class="info-message-box">
             <div id="title" class="title"></div>

@@ -2,9 +2,26 @@
 
 $app.on_init = function (cb_stack) {
     $app.dom = {
+        // assist_ver: $('#tp-assist-ver'),
+        btn_sel_group: $('#btn-sel-group button'),
+        group_list_for_sel: $('#btn-sel-group ul'),
+
         btn_refresh_host: $('#btn-refresh-host')
         // box_rdp_option: $('#rdp-options')
     };
+
+    console.log($app.options);
+
+    var html = [];
+    $.each($app.options.host_groups, function (i, item) {
+        html.push('<li><a href="javascript:;" data-tp-selector="' + item.id + '" data-name="' + item.name + '"><i class="fa fa-caret-right fa-fw"></i> ' + item.name + '</a></li>');
+    });
+    $app.dom.group_list_for_sel.append($(html.join('')));
+    $app.dom.group_list_for_sel.find('a[data-tp-selector]').click(function () {
+        var obj = $(this);
+        //$app.set_selected_to_role(parseInt(obj.attr('data-tp-selector')), obj.attr('data-name'));
+    });
+
 
     cb_stack
         .add($app.create_controls)
