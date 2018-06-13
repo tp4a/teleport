@@ -536,7 +536,7 @@ class DoUpdateUserHandler(TPBaseJsonHandler):
             args['id'] = int(args['id'])
             args['role'] = int(args['role'])
             args['auth_type'] = int(args['auth_type'])
-            args['username'] = args['username'].strip()
+            args['username'] = args['username'].strip().lower()
             args['surname'] = args['surname'].strip()
             args['email'] = args['email'].strip()
             args['mobile'] = args['mobile'].strip()
