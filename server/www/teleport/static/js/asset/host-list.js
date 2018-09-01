@@ -2,10 +2,6 @@
 
 $app.on_init = function (cb_stack) {
     $app.dom = {
-        // assist_ver: $('#tp-assist-ver'),
-        btn_sel_group: $('#btn-sel-group button'),
-        group_list_for_sel: $('#btn-sel-group ul'),
-
         btn_refresh_host: $('#btn-refresh-host'),
         btn_add_host: $('#btn-add-host'),
         chkbox_host_select_all: $('#table-host-select-all'),
@@ -21,36 +17,6 @@ $app.on_init = function (cb_stack) {
         upload_file_info: $('#upload-file-info'),
         upload_file_message: $('#upload-file-message')
     };
-
-    console.log($app.options.host_groups);
-    // var i = 0;
-    // var html = [];
-    // html.push('<optioin value="0">所有分组</optioin>');
-    // html.push('<optioin value="-1">----------</optioin>');
-    // for(i = 0; i < $app.options.host_groups.length; ++i) {
-    //     html.push('<optioin value="'+$app.options.host_groups[i].id+'">'+$app.options.host_groups[i].name+'</optioin>');
-    // }
-    // $app.dom.sel_host_group.ap
-
-    var html = [];
-    $.each($app.options.host_groups, function (i, item) {
-        html.push('<li><a href="javascript:;" data-tp-selector="' + item.id + '" data-name="' + item.name + '"><i class="fa fa-caret-right fa-fw"></i> ' + item.name + '</a></li>');
-    });
-    $app.dom.group_list_for_sel.append($(html.join('')));
-    $app.dom.group_list_for_sel.find('a[data-tp-selector]').click(function () {
-        var obj = $(this);
-        //$app.set_selected_to_role(parseInt(obj.attr('data-tp-selector')), obj.attr('data-name'));
-    });
-
-
-    // $tp.assist_checked = function () {
-    //     console.log("---------");
-    //     if ($tp.assist.running) {
-    //         $app.dom.assist_ver.html($tp.assist.version);
-    //     } else {
-    //         $app.dom.assist_ver.html('<a href="http://teleport.eomsoft.net/download" target="_blank" class="error">未能检测到</a>');
-    //     }
-    // };
 
     cb_stack
         .add($app.create_controls)
@@ -161,6 +127,8 @@ $app.create_controls = function (cb_stack) {
     // $app.table_host_role_filter = $tp.create_table_filter_role($app.table_host, $app.role_list);
     // 主机没有“临时锁定”状态，因此要排除掉
     $tp.create_table_header_filter_state($app.table_host, 'state', $app.obj_states, [TP_STATE_LOCKED]);
+
+    $tp.create_table_filter_group($app.table_host, 'host_group', '#filter-host-group', $app.options.host_groups);
 
     // 从cookie中读取用户分页限制的选择
     $tp.create_table_paging($app.table_host, 'table-host-paging',

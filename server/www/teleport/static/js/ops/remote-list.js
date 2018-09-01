@@ -2,26 +2,13 @@
 
 $app.on_init = function (cb_stack) {
     $app.dom = {
-        // assist_ver: $('#tp-assist-ver'),
-        btn_sel_group: $('#btn-sel-group button'),
-        group_list_for_sel: $('#btn-sel-group ul'),
-
-        btn_refresh_host: $('#btn-refresh-host')
-        // box_rdp_option: $('#rdp-options')
+        btn_sel_group: $('#btn-sel-group button')
+        , btn_refresh_host: $('#btn-refresh-host')
+        // , group_list_for_sel: $('#btn-sel-group ul')
+        // , group_selected: $('#group-selected')
     };
 
     console.log($app.options);
-
-    var html = [];
-    $.each($app.options.host_groups, function (i, item) {
-        html.push('<li><a href="javascript:;" data-tp-selector="' + item.id + '" data-name="' + item.name + '"><i class="fa fa-caret-right fa-fw"></i> ' + item.name + '</a></li>');
-    });
-    $app.dom.group_list_for_sel.append($(html.join('')));
-    $app.dom.group_list_for_sel.find('a[data-tp-selector]').click(function () {
-        var obj = $(this);
-        //$app.set_selected_to_role(parseInt(obj.attr('data-tp-selector')), obj.attr('data-name'));
-    });
-
 
     cb_stack
         .add($app.create_controls)
@@ -34,6 +21,13 @@ $app.on_init = function (cb_stack) {
 // 创建页面控件对象
 //===================================
 $app.create_controls = function (cb_stack) {
+
+    // var html = [];
+    // $.each($app.options.host_groups, function (i, item) {
+    //     html.push('<li><a href="javascript:;" data-tp-selector="' + item.id + '" data-name="' + item.name + '"><i class="fa fa-caret-right fa-fw"></i> ' + item.name + '</a></li>');
+    // });
+    // $app.dom.group_list_for_sel.append($(html.join('')));
+    //
 
     //-------------------------------
     // 资产列表表格
@@ -84,14 +78,16 @@ $app.create_controls = function (cb_stack) {
         .add($app.table_host.init);
 
     //-------------------------------
-    // 用户列表相关过滤器
+    // 过滤器
     //-------------------------------
     $tp.create_table_header_filter_search($app.table_host, {
         name: 'search',
         place_holder: '搜索：主机IP/名称/描述/资产编号/等等...'
     });
 
-    // 从cookie中读取用户分页限制的选择
+    $tp.create_table_filter_group($app.table_host, 'host_group', '#filter-host-group', $app.options.host_groups);
+
+    // 分页设置
     $tp.create_table_paging($app.table_host, 'table-host-paging',
         {
             per_page: Cookies.get($app.page_id('asset_host') + '_per_page'),
@@ -100,6 +96,24 @@ $app.create_controls = function (cb_stack) {
             }
         });
     $tp.create_table_pagination($app.table_host, 'table-host-pagination');
+
+
+    // $app.dom.group_list_for_sel.find('a[data-tp-selector]').click(function () {
+    //     var obj = $(this);
+    //     //console.log(parseInt(obj.attr('data-tp-selector')));
+    //     //$app.set_selected_to_role(parseInt(obj.attr('data-tp-selector')), obj.attr('data-name'));
+    //     //$app.dom.group_selected.text(obj.attr('data-name'));
+    //
+    //     CALLBACK_STACK.create()
+    //         .add(function (cb) {
+    //             $app.dom.group_selected.text(obj.attr('data-name'));
+    //             cb.exec();
+    //         })
+    //         .add($app.table_host.load_data)
+    //         //.add($app.table_host.reset_filters)
+    //         .exec();
+    // });
+
 
     //-------------------------------
     // 对话框

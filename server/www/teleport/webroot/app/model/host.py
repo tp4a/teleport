@@ -55,6 +55,17 @@ def get_hosts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
                 _where.append('h.state={}'.format(sql_filter[k]))
             elif k == 'search':
                 _where.append('(h.name LIKE "%{filter}%" OR h.ip LIKE "%{filter}%" OR h.router_ip LIKE "%{filter}%" OR h.desc LIKE "%{filter}%" OR h.cid LIKE "%{filter}%")'.format(filter=sql_filter[k]))
+            elif k == 'host_group':
+                shg = SQL(get_db())
+                shg.select_from('group_map', ['mid'], alt_name='g')
+                shg.where('g.type={} AND g.gid={}'.format(TP_GROUP_HOST, sql_filter[k]))
+                err = shg.query()
+                if err != TPE_OK:
+                    return err, 0, 1, []
+                if len(shg.recorder) == 0:
+                    return TPE_OK, 0, 1, []
+                h_list = ','.join([str(i['mid']) for i in shg.recorder])
+                _where.append('h.id IN ({})'.format(h_list))
 
     if len(_where) > 0:
         str_where = '( {} )'.format(' AND '.join(_where))

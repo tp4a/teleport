@@ -495,6 +495,17 @@ def get_all_remotes(handler, sql_filter, sql_order, sql_limit):
                 _where.append('h.state={}'.format(sql_filter[k]))
             elif k == 'search':
                 _where.append('(h.name LIKE "%{k}%" OR h.ip LIKE "%{k}%" OR h.router_ip LIKE "%{k}%")'.format(k=sql_filter[k]))
+            elif k == 'host_group':
+                shg = SQL(get_db())
+                shg.select_from('group_map', ['mid'], alt_name='g')
+                shg.where('g.type={} AND g.gid={}'.format(TP_GROUP_HOST, sql_filter[k]))
+                err = shg.query()
+                if err != TPE_OK:
+                    return err, 0, 1, []
+                if len(shg.recorder) == 0:
+                    return TPE_OK, 0, 1, []
+                h_list = ','.join([str(i['mid']) for i in shg.recorder])
+                _where.append('h.id IN ({})'.format(h_list))
 
     if len(_where) > 0:
         str_where = '( {} )'.format(' AND '.join(_where))
@@ -599,10 +610,35 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
     ######################################################
     # step 3.
     ######################################################
+    _where = list()
+    if len(sql_filter) > 0:
+        for k in sql_filter:
+            # if k == 'state':
+            #     _where.append('h.state={}'.format(sql_filter[k]))
+            # elif k == 'search':
+            #     _where.append('(h.name LIKE "%{k}%" OR h.ip LIKE "%{k}%" OR h.router_ip LIKE "%{k}%")'.format(k=sql_filter[k]))
+            # el
+            if k == 'host_group':
+                shg = SQL(get_db())
+                shg.select_from('group_map', ['mid'], alt_name='g')
+                shg.where('g.type={} AND g.gid={}'.format(TP_GROUP_HOST, sql_filter[k]))
+                err = shg.query()
+                if err != TPE_OK:
+                    return err, 0, 1, []
+                if len(shg.recorder) == 0:
+                    return TPE_NOT_EXISTS, 0, 1, []
+                h_list = ','.join([str(i['mid']) for i in shg.recorder])
+                _where.append('h_id IN ({})'.format(h_list))
+
+    str_where = ''
+    if len(_where) > 0:
+        str_where = 'WHERE ( {} )'.format(' AND '.join(_where))
+
     sql = []
     sql.append('SELECT {}'.format(','.join(_f)))
     sql.append('FROM')
     sql.append('({}) AS s2'.format(sql_2))
+    sql.append(str_where)
     sql.append('GROUP BY h_id')
     sql.append('ORDER BY ip')
     sql.append('LIMIT {},{}'.format(sql_limit['page_index'] * sql_limit['per_page'], sql_limit['per_page']))
@@ -612,6 +648,7 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
     sql_counter.append('SELECT COUNT(*)')
     sql_counter.append('FROM')
     sql_counter.append('({}) AS s3'.format(sql_2))
+    sql_counter.append(str_where)
     sql_counter.append('GROUP BY h_id')
     sql_counter.append(';')
 

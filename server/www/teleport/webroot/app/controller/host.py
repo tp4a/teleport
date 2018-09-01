@@ -72,6 +72,10 @@ class DoGetHostsHandler(TPBaseJsonHandler):
                     if len(_x) == 0:
                         tmp.append(i)
                     continue
+                elif i == 'host_group':
+                    if _filter[i] == -1:
+                        tmp.append(i)
+                    continue
 
             for i in tmp:
                 del _filter[i]

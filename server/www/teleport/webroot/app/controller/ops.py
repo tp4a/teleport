@@ -715,6 +715,11 @@ class DoGetRemotesHandler(TPBaseJsonHandler):
                 if i == '_name':
                     if len(_filter[i].strip()) == 0:
                         tmp.append(i)
+                    continue
+                elif i == 'host_group':
+                    if _filter[i] == -1:
+                        tmp.append(i)
+                    continue
 
             for i in tmp:
                 del _filter[i]
