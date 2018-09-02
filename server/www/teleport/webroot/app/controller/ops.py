@@ -712,7 +712,7 @@ class DoGetRemotesHandler(TPBaseJsonHandler):
                 # if i == 'user_id' and _filter[i] == 0:
                 #     tmp.append(i)
                 #     continue
-                if i == '_name':
+                if i == 'search':
                     if len(_filter[i].strip()) == 0:
                         tmp.append(i)
                     continue
