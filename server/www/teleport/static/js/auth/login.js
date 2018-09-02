@@ -107,9 +107,9 @@ $app.on_init = function (cb_stack) {
         }
     });
 
-    if($app.options.default_auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA) {
+    if ($app.options.default_auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA) {
         $app.dom.btn_login_type_password.click();
-    } else if($app.options.default_auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH) {
+    } else if ($app.options.default_auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH) {
         $app.dom.btn_login_type_oath.click();
     }
 
@@ -156,7 +156,17 @@ $app.login_account = function () {
             return;
         }
     } else if ($app.login_type === TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH) {
-        if (str_oath.length !== 6 || ('' + parseInt(str_oath)) !== str_oath) {
+        var test_oath = '' + parseInt(str_oath);
+        if(str_oath.length === 6) {
+            for (; ;) {
+                if (test_oath.length < 6)
+                    test_oath = '0' + test_oath;
+                else
+                    break;
+            }
+        }
+
+        if (str_oath.length !== 6 || test_oath !== str_oath) {
             $app.show_op_box('error', '身份验证器动态验证码错误！');
             setTimeout(function () {
                 $app.dom.input_oath.attr('data-content', "身份验证器动态验证码为6位数字，请重新填写！").focus().select().popover('show');
@@ -235,12 +245,12 @@ $app.init_blur_bg = function () {
 
     setInterval($app._update_blur_bg, 20500);
 
-    setTimeout(function(){
+    setTimeout(function () {
         $app.init_slogan();
     }, 2000);
 
-    setTimeout(function(){
-        $app.dom.auth_box.fadeIn(800, function(){
+    setTimeout(function () {
+        $app.dom.auth_box.fadeIn(800, function () {
             $app.dom.input_username.focus();
         });
     }, 300);
