@@ -4,7 +4,7 @@
 <div id="page-footer">
     <nav class="navbar navbar-fixed-bottom">
         <div class="container">
-            <p>触维软件旗下产品 | TELEPORT v${app_ver.TP_SERVER_VER} | &copy;2015 - 2017 <a href="http://teleport.eomsoft.net/" target="_blank">触维软件</a>，保留所有权利。</p>
+            <p>TELEPORT v${app_ver.TP_SERVER_VER} | &copy;2015 - 2018 <a href="http://www.tp4a.com/" target="_blank">TP4A</a>，保留所有权利。</p>
         </div>
     </nav>
 </div>

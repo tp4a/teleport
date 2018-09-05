@@ -160,24 +160,31 @@ class DoImportHandler(TPBaseHandler):
     def post(self):
         """
         csv导入规则：
-        每一行的数据格式：  操作系统类型,IP,名称,路由IP,路由端口,资产编号,协议类型,账号,认证类型,密码或私钥,账号提示,密码提示,分组,描述
+        每一行的数据格式：  主机IP,操作系统类型,名称,路由IP,路由端口,资产编号,账号,协议类型,协议端口,认证类型,密码或私钥,账号提示,密码提示,分组,描述
         在导入时：
           0. 以“#”作为行注释。
           1. 首先必须是主机数据，随后可以跟多个账号数据（直到遇到下一个主机数据行之前，账号会与上一个主机关联）。
           2. 一个主机或账号属于多个组，可以用“|”将组分隔，如果某个组并不存在，则会创建这个组。
           3. 空行跳过，数据格式不正确的跳过。
         """
-        ret = self.check_privilege(TP_PRIVILEGE_ASSET_CREATE | TP_PRIVILEGE_ASSET_GROUP | TP_PRIVILEGE_USER_CREATE | TP_PRIVILEGE_USER_GROUP)
-        if ret != TPE_OK:
-            return
+        ret = dict()
+        ret['code'] = TPE_OK
+        ret['message'] = ''
+
+        rv = self.check_privilege(TP_PRIVILEGE_ASSET_CREATE | TP_PRIVILEGE_ASSET_GROUP | TP_PRIVILEGE_USER_CREATE | TP_PRIVILEGE_USER_GROUP, need_process=False)
+        if rv != TPE_OK:
+            ret['code'] = rv
+            if rv == TPE_NEED_LOGIN:
+                ret['message'] = '需要登录！'
+            elif rv == TPE_PRIVILEGE:
+                ret['message'] = '权限不足！'
+            else:
+                ret['message'] = '未知错误！'
+            return self.write(json.dumps(ret).encode('utf8'))
 
         # success = list()
         failed = list()
         group_failed = list()
-
-        ret = dict()
-        ret['code'] = TPE_OK
-        ret['message'] = ''
         csv_filename = ''
 
         try:

@@ -310,17 +310,26 @@ class DoImportHandler(TPBaseHandler):
           2. 一个用户属于多个组，可以用“|”将组分隔，如果某个组并不存在，则会创建这个组。
           3. 空行跳过，数据格式不正确的跳过。
         """
-        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE | TP_PRIVILEGE_USER_GROUP)
-        if ret != TPE_OK:
-            return
-
-        success = list()
-        failed = list()
-        group_failed = list()
 
         ret = dict()
         ret['code'] = TPE_OK
         ret['message'] = ''
+
+        rv = self.check_privilege(TP_PRIVILEGE_USER_CREATE | TP_PRIVILEGE_USER_GROUP, need_process=False)
+        if rv != TPE_OK:
+            ret['code'] = rv
+            ret['code'] = rv
+            if rv == TPE_NEED_LOGIN:
+                ret['message'] = '需要登录！'
+            elif rv == TPE_PRIVILEGE:
+                ret['message'] = '权限不足！'
+            else:
+                ret['message'] = '未知错误！'
+            return self.write(json.dumps(ret).encode('utf8'))
+
+        success = list()
+        failed = list()
+        group_failed = list()
         csv_filename = ''
 
         try:
