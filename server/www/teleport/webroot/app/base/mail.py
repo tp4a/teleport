@@ -113,6 +113,11 @@ def tp_send_mail(recipient, message, subject=None, sender=None, cc=None, bcc=Non
             if dbg_mode:
                 _smtp.set_debuglevel(1)
             _smtp.ehlo()
+            if _smtp.has_extn("starttls"):
+                try:
+                    _smtp.starttls()
+                except:
+                    pass
 
         _smtp.login(_username, _password)
 
