@@ -36,7 +36,7 @@
             <nav class="navbar navbar-fixed-top">
                 <div class="container">
                     <ul>
-                        <li><a href="/" class="logo"><img src="${ static_url('img/site-logo.png') }" alt="TELEPORT，触维软件旗下产品。"/></a></li>
+                        <li><a href="/" class="logo"><img src="${ static_url('img/site-logo.png') }" alt="TELEPORT"/></a></li>
                         <li>
                             <div class="desc">连接 &middot; 尽在指掌中</div>
                         </li>

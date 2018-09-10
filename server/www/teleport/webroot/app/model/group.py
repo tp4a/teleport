@@ -236,8 +236,9 @@ def remove_members(gtype, gid, members):
     sql_list.append(sql)
     sql = 'DELETE FROM `{}ops_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
     sql_list.append(sql)
-    sql = 'DELETE FROM `{}audit_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
-    sql_list.append(sql)
+    if gtype != TP_GROUP_ACCOUNT:
+        sql = 'DELETE FROM `{}audit_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
+        sql_list.append(sql)
 
     if db.transaction(sql_list):
         return TPE_OK

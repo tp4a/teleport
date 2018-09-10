@@ -34,7 +34,7 @@ $assist.init = function (cb_stack) {
             // if (version_compare()) {
             //     error_process(ret, func_success, func_error);
             // } else {
-            //     func_error(ret, TPE_OLD_ASSIST, '助手版本太低，请<a style="color:#aaaaff;" target="_blank" href="http://teleport.eomsoft.net/download">下载最新版本</a>！');
+            //     func_error(ret, TPE_OLD_ASSIST, '助手版本太低，请<a style="color:#aaaaff;" target="_blank" href="http://tp4a.com/download">下载最新版本</a>！');
             // }
         },
         error: function () {
@@ -68,7 +68,7 @@ $assist._make_message_box = function () {
         '<div class="alert alert-info" role="alert">',
         '<p>需要TELEPORT助手来辅助远程连接，请确认本机运行了TELEPORT助手！</p>',
         '</div>',
-        '<p>如果您尚未运行TELEPORT助手，请 <a href="http://teleport.eomsoft.net/download" target="_blank"><strong>下载最新版TELEPORT助手</strong></a> 并安装。一旦运行了TELEPORT助手，即可重新进行远程连接。</p>',
+        '<p>如果您尚未运行TELEPORT助手，请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手</strong></a> 并安装。一旦运行了TELEPORT助手，即可重新进行远程连接。</p>',
         '</div>',
         '<div class="modal-footer">',
         '<button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 我知道了</button>',
