@@ -154,21 +154,21 @@
   <ItemGroup>
     <ClCompile Include="src\agent.c" />
     <ClCompile Include="src\auth.c" />
-    <ClCompile Include="src\auth1.c" />
     <ClCompile Include="src\base64.c" />
     <ClCompile Include="src\bignum.c" />
     <ClCompile Include="src\bind.c" />
     <ClCompile Include="src\buffer.c" />
     <ClCompile Include="src\callbacks.c" />
+    <ClCompile Include="src\chachapoly.c" />
     <ClCompile Include="src\channels.c" />
-    <ClCompile Include="src\channels1.c" />
     <ClCompile Include="src\client.c" />
     <ClCompile Include="src\config.c" />
     <ClCompile Include="src\connect.c" />
-    <ClCompile Include="src\crc32.c" />
+    <ClCompile Include="src\connector.c" />
     <ClCompile Include="src\curve25519.c" />
     <ClCompile Include="src\dh.c" />
     <ClCompile Include="src\ecdh.c" />
+    <ClCompile Include="src\ecdh_crypto.c" />
     <ClCompile Include="src\error.c" />
     <ClCompile Include="src\external\bcrypt_pbkdf.c" />
     <ClCompile Include="src\external\blowfish.c" />
@@ -177,22 +177,22 @@
     <ClCompile Include="src\external\fe25519.c" />
     <ClCompile Include="src\external\ge25519.c" />
     <ClCompile Include="src\external\sc25519.c" />
-    <ClCompile Include="src\gcrypt_missing.c" />
     <ClCompile Include="src\getpass.c" />
     <ClCompile Include="src\init.c" />
     <ClCompile Include="src\kex.c" />
-    <ClCompile Include="src\kex1.c" />
+    <ClCompile Include="src\knownhosts.c" />
     <ClCompile Include="src\known_hosts.c" />
     <ClCompile Include="src\legacy.c" />
+    <ClCompile Include="src\libcrypto-compat.c" />
     <ClCompile Include="src\libcrypto.c" />
     <ClCompile Include="src\libgcrypt.c" />
+    <ClCompile Include="src\libmbedcrypto.c" />
     <ClCompile Include="src\log.c" />
     <ClCompile Include="src\match.c" />
     <ClCompile Include="src\messages.c" />
     <ClCompile Include="src\misc.c" />
     <ClCompile Include="src\options.c" />
     <ClCompile Include="src\packet.c" />
-    <ClCompile Include="src\packet1.c" />
     <ClCompile Include="src\packet_cb.c" />
     <ClCompile Include="src\packet_crypt.c" />
     <ClCompile Include="src\pcap.c" />
@@ -201,6 +201,7 @@
     <ClCompile Include="src\pki_crypto.c" />
     <ClCompile Include="src\pki_ed25519.c" />
     <ClCompile Include="src\pki_gcrypt.c" />
+    <ClCompile Include="src\pki_mbedcrypto.c" />
     <ClCompile Include="src\poll.c" />
     <ClCompile Include="src\scp.c" />
     <ClCompile Include="src\server.c" />
@@ -210,11 +211,12 @@
     <ClCompile Include="src\socket.c" />
     <ClCompile Include="src\string.c" />
     <ClCompile Include="src\threads.c" />
-    <ClCompile Include="src\threads\pthread.c" />
+    <ClCompile Include="src\threads\winlocks.c" />
     <ClCompile Include="src\wrapper.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\config.h" />
+    <ClInclude Include="src\libcrypto-compat.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

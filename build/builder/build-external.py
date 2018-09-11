@@ -78,15 +78,6 @@ class BuilderBase:
     def _build_libssh(self, file_name):
         cc.e("this is a pure-virtual function.")
 
-    def build_sqlite(self):
-        file_name = 'sqlite-autoconf-{}.tar.gz'.format(env.ver_sqlite)
-        if not utils.download_file('sqlite source tarball', 'http://sqlite.org/2017/{}'.format(file_name), PATH_DOWNLOAD, file_name):
-            return
-        self._build_sqlite(file_name)
-
-    def _build_sqlite(self, file_name):
-        cc.e("this is a pure-virtual function.")
-
     def fix_output(self):
         pass
 
@@ -196,6 +187,10 @@ class BuilderWin(BuilderBase):
         else:
             cc.w('already exists, skip.')
 
+        # fix source file
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', 'src', 'session.c'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'session.c')
+
         cc.i('build libssh...')
         sln_file = os.path.join(self.LIBSSH_PATH_SRC, 'libssh.vs2015.sln')
         utils.msvc_build(sln_file, 'libssh', ctx.target_path, ctx.bits_path, False)
@@ -233,8 +228,8 @@ class BuilderWin(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
     def _build_libuv(self, file_name):
         cc.n('prepare libuv source code... ', end='')
@@ -244,10 +239,6 @@ class BuilderWin(BuilderBase):
             os.rename(os.path.join(PATH_EXTERNAL, 'libuv-{}'.format(env.ver_libuv)), self.LIBUV_PATH_SRC)
         else:
             cc.w('already exists, skip.')
-
-    def build_sqlite(self):
-        cc.w('sqlite not need for Windows, skip.')
-        pass
 
     def fix_output(self):
         pass
@@ -390,8 +381,8 @@ class BuilderLinux(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
         old_p = os.getcwd()
         os.chdir(self.MBEDTLS_PATH_SRC)
@@ -474,23 +465,6 @@ class BuilderLinux(BuilderBase):
         utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh_threads.a')
         utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
 
-    def _build_sqlite(self, file_name):
-        if not os.path.exists(self.SQLITE_PATH_SRC):
-            os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-
-        cc.n('build sqlite static...', end='')
-        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libsqlite3.a')):
-            cc.w('already exists, skip.')
-            return
-        cc.v('')
-
-        old_p = os.getcwd()
-        os.chdir(self.SQLITE_PATH_SRC)
-        os.system('./configure --prefix={}'.format(self.PATH_RELEASE))
-        os.system('make')
-        os.system('make install')
-        os.chdir(old_p)
-
     def fix_output(self):
         # remove .so files, otherwise will link to .so but not .a in default.
         # rm = ['libsqlite3.la', 'libsqlite3.so.0', 'libsqlite3.so', 'libsqlite3.so.0.8.6', 'libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
@@ -551,7 +525,7 @@ class BuilderMacOS(BuilderBase):
 
         old_p = os.getcwd()
         os.chdir(self.OPENSSL_PATH_SRC)
-        #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        # os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
         # os.system('./Configure darwin64-x86_64-cc')
         os.system('./Configure darwin64-x86_64-cc --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
         os.system('make')
@@ -618,8 +592,8 @@ class BuilderMacOS(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
         old_p = os.getcwd()
         os.chdir(self.MBEDTLS_PATH_SRC)
@@ -699,23 +673,6 @@ class BuilderMacOS(BuilderBase):
         utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh_threads.a')
         utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
 
-    def _build_sqlite(self, file_name):
-        if not os.path.exists(self.SQLITE_PATH_SRC):
-            os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-
-        cc.n('build sqlite static...', end='')
-        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libsqlite3.a')):
-            cc.w('already exists, skip.')
-            return
-        cc.v('')
-
-        old_p = os.getcwd()
-        os.chdir(self.SQLITE_PATH_SRC)
-        os.system('./configure --prefix={}'.format(self.PATH_RELEASE))
-        os.system('make')
-        os.system('make install')
-        os.chdir(old_p)
-
     def fix_output(self):
         # remove .so files, otherwise will link to .so but not .a in default.
         # rm = ['libsqlite3.la', 'libsqlite3.so.0', 'libsqlite3.so', 'libsqlite3.so.0.8.6', 'libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
@@ -767,9 +724,6 @@ def main():
     builder.build_libuv()
     builder.build_mbedtls()
     builder.build_libssh()
-
-    # do not need sqlite any more.
-    # builder.build_sqlite()
 
     builder.fix_output()
 

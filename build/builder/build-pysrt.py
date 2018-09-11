@@ -152,21 +152,22 @@ class PYSBaseWin(PYSBase):
         utils.makedirs(self.base_path)
 
         cc.v('copy python core dll...')
-        _win_system_path = os.path.join(os.getenv('SystemRoot'), 'system32')
-        if ctx.bits == BITS_32 and ctx.host_os_is_win_x64:
-            _win_system_path = os.path.join(os.getenv('SystemRoot'), 'SysWOW64')
-
-        if not os.path.exists(_win_system_path):
-            raise RuntimeError('can not locate windows system folder at:', _win_system_path)
+        # _win_system_path = os.path.join(os.getenv('SystemRoot'), 'system32')
+        # if ctx.bits == BITS_32 and ctx.host_os_is_win_x64:
+        #     _win_system_path = os.path.join(os.getenv('SystemRoot'), 'SysWOW64')
+        #
+        # if not os.path.exists(_win_system_path):
+        #     raise RuntimeError('can not locate windows system folder at:', _win_system_path)
+        _exec_path = os.path.dirname(sys.executable)
 
         pydll = self._get_py_dll_name()
-        shutil.copy(os.path.join(_win_system_path, pydll), os.path.join(self.base_path, pydll))
+        shutil.copy(os.path.join(_exec_path, pydll), os.path.join(self.base_path, pydll))
 
-        if ctx.py_ver == '34':
-            msvcrdll = 'msvcr100.dll'
+        if ctx.py_ver == '37':
+            msvcrdll = 'vcruntime140.dll'
         else:
             raise RuntimeError('unknown msvc runtime for this python version.')
-        shutil.copy(os.path.join(_win_system_path, msvcrdll), os.path.join(self.base_path, msvcrdll))
+        shutil.copy(os.path.join(_exec_path, msvcrdll), os.path.join(self.base_path, msvcrdll))
 
         super()._copy_modules()
 
