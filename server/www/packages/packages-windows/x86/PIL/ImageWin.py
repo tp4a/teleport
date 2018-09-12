@@ -17,7 +17,7 @@
 # See the README file for information on usage and redistribution.
 #
 
-from PIL import Image
+from . import Image
 
 
 class HDC(object):
@@ -154,8 +154,9 @@ class Dib(object):
                    If the mode does not match, the image is converted to the
                    mode of the bitmap image.
         :param box: A 4-tuple defining the left, upper, right, and
-                    lower pixel coordinate.  If None is given instead of a
-                    tuple, all of the image is assumed.
+                    lower pixel coordinate.  See :ref:`coordinate-system`. If
+                    None is given instead of a tuple, all of the image is
+                    assumed.
         """
         im.load()
         if self.mode != im.mode:
@@ -181,14 +182,6 @@ class Dib(object):
         :return: A bytes object containing display data.
         """
         return self.image.tobytes()
-
-    def fromstring(self, *args, **kw):
-        raise NotImplementedError("fromstring() has been removed. " +
-                                  "Please use frombytes() instead.")
-
-    def tostring(self, *args, **kw):
-        raise NotImplementedError("tostring() has been removed. " +
-                                  "Please use tobytes() instead.")
 
 
 class Window(object):
@@ -233,5 +226,3 @@ class ImageWindow(Window):
 
     def ui_handle_repair(self, dc, x0, y0, x1, y1):
         self.image.draw(dc, (x0, y0, x1, y1))
-
-# End of file

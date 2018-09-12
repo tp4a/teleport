@@ -18,7 +18,8 @@
 
 __version__ = "0.4"
 
-from PIL import Image, ImageFile, ImagePalette, _binary
+from . import Image, ImageFile, ImagePalette
+from ._binary import i8, i16be as i16, i32be as i32
 
 MODES = {
     # (photoshop mode, bits) -> (pil mode, required channels)
@@ -32,13 +33,6 @@ MODES = {
     (8, 8): ("L", 1),  # duotone
     (9, 8): ("LAB", 3)
 }
-
-#
-# helpers
-
-i8 = _binary.i8
-i16 = _binary.i16be
-i32 = _binary.i32be
 
 
 # --------------------------------------------------------------------.
@@ -130,7 +124,8 @@ class PsdImageFile(ImageFile.ImageFile):
 
         # keep the file open
         self._fp = self.fp
-        self.frame = 0
+        self.frame = 1
+        self._min_frame = 1
 
     @property
     def n_frames(self):
@@ -141,12 +136,11 @@ class PsdImageFile(ImageFile.ImageFile):
         return len(self.layers) > 1
 
     def seek(self, layer):
-        # seek to given layer (1..max)
-        if layer == self.frame:
+        if not self._seek_check(layer):
             return
+
+        # seek to given layer (1..max)
         try:
-            if layer <= 0:
-                raise IndexError
             name, mode, bbox, tile = self.layers[layer-1]
             self.mode = mode
             self.tile = tile
@@ -306,6 +300,7 @@ def _maketile(file, mode, bbox, channels):
 
 # --------------------------------------------------------------------
 # registry
+
 
 Image.register_open(PsdImageFile.format, PsdImageFile, _accept)
 
