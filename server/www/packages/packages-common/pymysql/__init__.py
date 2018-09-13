@@ -35,7 +35,11 @@ from .times import (
     DateFromTicks, TimeFromTicks, TimestampFromTicks)
 
 
-VERSION = (0, 7, 11, None)
+VERSION = (0, 9, 2, None)
+if VERSION[3] is not None:
+    VERSION_STRING = "%d.%d.%d_%s" % VERSION
+else:
+    VERSION_STRING = "%d.%d.%d" % VERSION[:3]
 threadsafety = 1
 apilevel = "2.0"
 paramstyle = "pyformat"
@@ -96,12 +100,15 @@ del _orig_conn
 
 
 def get_client_info():  # for MySQLdb compatibility
-    return '.'.join(map(str, VERSION))
+    version = VERSION
+    if VERSION[3] is None:
+        version = VERSION[:3]
+    return '.'.join(map(str, version))
 
 connect = Connection = Connect
 
 # we include a doctored version_info here for MySQLdb compatibility
-version_info = (1,2,6,"final",0)
+version_info = (1, 3, 12, "final", 0)
 
 NULL = "NULL"
 
@@ -113,7 +120,7 @@ def thread_safe():
 def install_as_MySQLdb():
     """
     After this function is called, any application that imports MySQLdb or
-    _mysql will unwittingly actually use
+    _mysql will unwittingly actually use pymysql.
     """
     sys.modules["MySQLdb"] = sys.modules["_mysql"] = sys.modules["pymysql"]
 

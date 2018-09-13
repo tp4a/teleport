@@ -12,7 +12,7 @@ from . import err
 #: executemany only suports simple bulk insert.
 #: You can use it to load large dataset.
 RE_INSERT_VALUES = re.compile(
-    r"\s*((?:INSERT|REPLACE)\s.+\sVALUES?\s+)" +
+    r"\s*((?:INSERT|REPLACE)\b.+\bVALUES?\s*)" +
     r"(\(\s*(?:%s|%\(.+\)s)\s*(?:,\s*(?:%s|%\(.+\)s)\s*)*\))" +
     r"(\s*(?:ON DUPLICATE.*)?);?\s*\Z",
     re.IGNORECASE | re.DOTALL)
@@ -21,6 +21,12 @@ RE_INSERT_VALUES = re.compile(
 class Cursor(object):
     """
     This is the object you use to interact with the database.
+
+    Do not create an instance of a Cursor yourself. Call
+    connections.Connection.cursor().
+
+    See `Cursor <https://www.python.org/dev/peps/pep-0249/#cursor-objects>`_ in
+    the specification.
     """
 
     #: Max statement size which :meth:`executemany` generates.
@@ -32,10 +38,6 @@ class Cursor(object):
     _defer_warnings = False
 
     def __init__(self, connection):
-        """
-        Do not create an instance of a Cursor yourself. Call
-        connections.Connection.cursor().
-        """
         self.connection = connection
         self.description = None
         self.rownumber = 0
@@ -95,6 +97,8 @@ class Cursor(object):
             return None
         if not current_result.has_next:
             return None
+        self._result = None
+        self._clear_result()
         conn.next_result(unbuffered=unbuffered)
         self._do_get_result()
         return True
@@ -260,9 +264,10 @@ class Cursor(object):
         disconnected.
         """
         conn = self._get_db()
-        for index, arg in enumerate(args):
-            q = "SET @_%s_%d=%s" % (procname, index, conn.escape(arg))
-            self._query(q)
+        if args:
+            fmt = '@_{0}_%d=%s'.format(procname)
+            self._query('SET %s' % ','.join(fmt % (index, conn.escape(arg))
+                                            for index, arg in enumerate(args)))
             self.nextset()
 
         q = "CALL %s(%s)" % (procname,
@@ -319,14 +324,23 @@ class Cursor(object):
     def _query(self, q):
         conn = self._get_db()
         self._last_executed = q
+        self._clear_result()
         conn.query(q)
         self._do_get_result()
         return self.rowcount
 
+    def _clear_result(self):
+        self.rownumber = 0
+        self._result = None
+
+        self.rowcount = 0
+        self.description = None
+        self.lastrowid = None
+        self._rows = None
+
     def _do_get_result(self):
         conn = self._get_db()
 
-        self.rownumber = 0
         self._result = result = conn._result
 
         self.rowcount = result.affected_rows
@@ -432,9 +446,12 @@ class SSCursor(Cursor):
         finally:
             self.connection = None
 
+    __del__ = close
+
     def _query(self, q):
         conn = self._get_db()
         self._last_executed = q
+        self._clear_result()
         conn.query(q, unbuffered=True)
         self._do_get_result()
         return self.rowcount
