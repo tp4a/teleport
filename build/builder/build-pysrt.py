@@ -2,7 +2,6 @@
 
 import shutil
 import struct
-
 import sys
 
 from core import colorconsole as cc
@@ -11,7 +10,6 @@ from core import utils
 from core.context import *
 from core.env import env
 
-
 ctx = BuildContext()
 
 MODULES_WIN = ['_bz2', '_ctypes', '_hashlib', '_lzma', '_overlapped', '_socket', '_sqlite3', '_ssl', 'select', 'sqlite3', 'unicodedata']
@@ -19,7 +17,7 @@ PY_LIB_REMOVE_WIN = ['ctypes/test', 'curses', 'dbm', 'distutils', 'email/test', 
                      'lib-dynload', 'pydoc_data', 'site-packages', 'sqlite3/test', 'test', 'tkinter', 'turtledemo',
                      'unittest', 'venv', 'wsgiref', 'dis.py', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc.py',
                      'this.py', 'wave.py', 'webbrowser.py', 'zipapp.py']
-PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'config-3.4m-x86_64-linux-gnu', 'dbm', 'distutils', 'ensurepip', 'idlelib', 'lib2to3',
+PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'config-3.7m-x86_64-linux-gnu', 'dbm', 'distutils', 'ensurepip', 'idlelib', 'lib2to3',
                        'lib-dynload', 'pydoc_data', 'site-packages', 'sqlite3/test', 'test', 'tkinter', 'turtledemo', 'unittest', 'venv',
                        'wsgiref', 'dis.py', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc_data', 'pydoc.py', 'this.py', 'wave.py',
                        'webbrowser.py', 'zipapp.py']
@@ -110,7 +108,7 @@ class PYSBase:
         return ''
 
 
-class PYSBaseWin(PYSBase):
+class PYSWin(PYSBase):
     def __init__(self):
         super().__init__()
         self.modules = MODULES_WIN
@@ -164,6 +162,8 @@ class PYSBaseWin(PYSBase):
 
         if ctx.py_ver == '34':
             msvcrdll = 'msvcr100.dll'
+        elif ctx.py_ver == '37':
+            msvcrdll = 'msvcr140.dll'
         else:
             raise RuntimeError('unknown msvc runtime for this python version.')
         shutil.copy(os.path.join(_win_system_path, msvcrdll), os.path.join(self.base_path, msvcrdll))
@@ -182,18 +182,19 @@ class PYSBaseWin(PYSBase):
         return 'python{}.dll'.format(env.py_ver_str)
 
 
-class PYSBaseLinux(PYSBase):
+class PYSLinux(PYSBase):
     def __init__(self):
         super().__init__()
 
-        self.PY_STATIC_PATH = os.path.join(os.path.join(env.root_path, 'external', 'linux', 'release'))
-        if not os.path.exists(self.PY_STATIC_PATH):
+        self.PATH_PYTHON_ROOT = env.path_miniconda  # os.path.abspath(os.path.join(os.path.dirname(sys.executable), '..'))
+        if not os.path.exists(self.PATH_PYTHON_ROOT):
             raise RuntimeError('can not locate py-static release folder.')
 
         self.py_lib_remove = PY_LIB_REMOVE_LINUX
+        self.py_lib_remove.append('config-{}m-x86_64-linux-gnu'.format(ctx.py_dot_ver))
 
     def _locate_dll_path(self):
-        _path = os.path.join(self.PY_STATIC_PATH, 'lib', 'python3.4', 'lib-dynload')
+        _path = os.path.join(self.PATH_PYTHON_ROOT, 'lib', 'python{}'.format(ctx.py_dot_ver), 'lib-dynload')
         if os.path.exists(_path):
             return _path
 
@@ -201,7 +202,7 @@ class PYSBaseLinux(PYSBase):
         raise RuntimeError()
 
     def _locate_lib_path(self):
-        _path = os.path.join(self.PY_STATIC_PATH, 'lib', 'python3.4')
+        _path = os.path.join(self.PATH_PYTHON_ROOT, 'lib', 'python{}'.format(ctx.py_dot_ver))
         if os.path.exists(os.path.join(_path, 'ctypes', 'wintypes.py')):
             return _path
 
@@ -229,9 +230,9 @@ def main():
         return
 
     if ctx.host_os == 'windows':
-        x = PYSBaseWin()
+        x = PYSWin()
     elif ctx.host_os == 'linux':
-        x = PYSBaseLinux()
+        x = PYSLinux()
     else:
         raise RuntimeError('unsupported platform:', ctx.host_os)
 

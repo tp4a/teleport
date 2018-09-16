@@ -31,6 +31,7 @@ class Env(object):
 
         self.py_ver = platform.python_version_tuple()
         self.py_ver_str = '%s%s' % (self.py_ver[0], self.py_ver[1])
+        self.py_ver_dot = '%s.%s' % (self.py_ver[0], self.py_ver[1])
         self.py_exec = sys.executable
 
         self.bits = self.BITS_32
@@ -52,9 +53,19 @@ class Env(object):
             self.is_win = True
             self.plat = 'windows'
             self.is_win_x64 = 'PROGRAMFILES(X86)' in os.environ
+            self.path_miniconda = os.path.abspath(os.path.dirname(self.py_exec))
+            self.path_ossl_inc = os.path.join(self.path_miniconda, 'Library', 'include')
+            self.path_ossl_lib = os.path.join(self.path_miniconda, 'Library', 'lib')
+            self.path_py_inc = os.path.join(self.path_miniconda, 'include')
+            self.path_py_lib = os.path.join(self.path_miniconda, 'libs')
         elif _os == 'linux':
             self.is_linux = True
             self.plat = 'linux'
+            self.path_miniconda = os.path.abspath(os.path.join(os.path.dirname(self.py_exec), '..'))
+            self.path_ossl_inc = os.path.join(self.path_miniconda, 'include')
+            self.path_ossl_lib = os.path.join(self.path_miniconda, 'lib')
+            self.path_py_inc = os.path.join(self.path_miniconda, 'include', 'python{}m'.format(self.py_ver_dot))
+            self.path_py_lib = os.path.join(self.path_miniconda, 'lib')
         elif _os == 'darwin':
             self.is_macos = True
             self.plat = 'macos'
@@ -64,6 +75,10 @@ class Env(object):
             return False
 
         if not self._load_version():
+            return False
+
+        if not os.path.exists(os.path.join(self.path_miniconda, 'conda-meta')):
+            cc.e('can not find conda, please install miniconda from https://conda.io/miniconda.html and try again.')
             return False
 
         return True
@@ -170,12 +185,12 @@ class Env(object):
         _tmp = _cfg['external_ver']
         try:
             _v_openssl = _tmp['openssl'].split(',')
-            self.ver_openssl = _v_openssl[0].strip()
-            self.ver_openssl_number = _v_openssl[1].strip()
+            self.ver_ossl = _v_openssl[0].strip()
+            self.ver_ossl_number = _v_openssl[1].strip()
 
             self.ver_libuv = _tmp['libuv']
             self.ver_mbedtls = _tmp['mbedtls']
-            self.ver_sqlite = _tmp['sqlite']
+            # self.ver_sqlite = _tmp['sqlite']
             self.ver_libssh = _tmp['libssh']
             self.ver_jsoncpp = _tmp['jsoncpp']
             self.ver_mongoose = _tmp['mongoose']

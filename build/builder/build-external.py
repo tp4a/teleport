@@ -41,15 +41,15 @@ class BuilderBase:
     def _build_mongoose(self, file_name):
         cc.e("this is a pure-virtual function.")
 
-    def build_openssl(self):
-        file_name = 'openssl-{}.zip'.format(env.ver_openssl)
-        _alt_ver = '_'.join(env.ver_openssl.split('.'))
-        if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
-            return
-        self._build_openssl(file_name)
-
-    def _build_openssl(self, file_name):
-        cc.e("this is a pure-virtual function.")
+    # def build_openssl(self):
+    #     file_name = 'openssl-{}.zip'.format(env.ver_openssl)
+    #     _alt_ver = '_'.join(env.ver_openssl.split('.'))
+    #     if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
+    #         return
+    #     self._build_openssl(file_name)
+    #
+    # def _build_openssl(self, file_name):
+    #     cc.e("this is a pure-virtual function.")
 
     def build_libuv(self):
         file_name = 'libuv-{}.zip'.format(env.ver_libuv)
@@ -78,14 +78,20 @@ class BuilderBase:
     def _build_libssh(self, file_name):
         cc.e("this is a pure-virtual function.")
 
-    def build_sqlite(self):
-        file_name = 'sqlite-autoconf-{}.tar.gz'.format(env.ver_sqlite)
-        if not utils.download_file('sqlite source tarball', 'http://sqlite.org/2017/{}'.format(file_name), PATH_DOWNLOAD, file_name):
-            return
-        self._build_sqlite(file_name)
+    def prepare_python(self):
+        self._prepare_python()
 
-    def _build_sqlite(self, file_name):
+    def _prepare_python(self):
         cc.e("this is a pure-virtual function.")
+
+    # def build_sqlite(self):
+    #     file_name = 'sqlite-autoconf-{}.tar.gz'.format(env.ver_sqlite)
+    #     if not utils.download_file('sqlite source tarball', 'http://sqlite.org/2017/{}'.format(file_name), PATH_DOWNLOAD, file_name):
+    #         return
+    #     self._build_sqlite(file_name)
+    #
+    # def _build_sqlite(self, file_name):
+    #     cc.e("this is a pure-virtual function.")
 
     def fix_output(self):
         pass
@@ -96,72 +102,78 @@ class BuilderWin(BuilderBase):
         super().__init__()
 
     def _init_path(self):
-        self.OPENSSL_PATH_SRC = os.path.join(PATH_EXTERNAL, 'openssl')
+        # self.OPENSSL_PATH_SRC = os.path.join(PATH_EXTERNAL, 'openssl')
         self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
         self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
         self.MBEDTLS_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mbedtls')
         self.LIBUV_PATH_SRC = os.path.join(PATH_EXTERNAL, 'libuv')
         self.LIBSSH_PATH_SRC = os.path.join(PATH_EXTERNAL, 'libssh-win-static')
 
-        self._prepare_python_header()
+        # self._prepare_python_header()
 
-    def _prepare_python_header(self):
+    def _prepare_python(self):
         cc.n('prepare python header files ...', end='')
 
-        if os.path.exists(os.path.join(PATH_EXTERNAL, 'python', 'include', 'pyctype.h')):
+        if os.path.exists(os.path.join(PATH_EXTERNAL, 'python', 'include', 'Python.h')):
             cc.w('already exists, skip.')
             return
         cc.v('')
 
-        _header_path = None
-        for p in sys.path:
-            if os.path.exists(os.path.join(p, 'include', 'pyctype.h')):
-                _header_path = os.path.join(p, 'include')
-        if _header_path is None:
-            cc.e('\ncan not locate python development include path in:')
-            for p in sys.path:
-                cc.e('  ', p)
-            raise RuntimeError()
-
-        utils.copy_ex(_header_path, os.path.join(PATH_EXTERNAL, 'python', 'include'))
-
-    def _build_openssl(self, file_name):
-        cc.n('build openssl static library from source code... ', end='')
-        _chk_output = [
-            os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'libeay32.lib'),
-            os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'ssleay32.lib'),
-            os.path.join(self.OPENSSL_PATH_SRC, 'inc32', 'openssl', 'opensslconf.h'),
-            ]
-
-        need_build = False
-        for f in _chk_output:
-            if not os.path.exists(f):
-                need_build = True
-                break
-
-        if not need_build:
-            cc.w('already exists, skip.')
+        if os.path.exists(os.path.join(env.path_py_inc, 'Python.h')):
+            cc.e('can not locate python development include path, make sure miniconda installed.')
             return
         cc.v('')
 
-        cc.n('prepare openssl source code...')
-        _alt_ver = '_'.join(env.ver_openssl.split('.'))
-        if not os.path.exists(self.OPENSSL_PATH_SRC):
-            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
-            os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
-            if not os.path.exists(self.OPENSSL_PATH_SRC):
-                raise RuntimeError('can not prepare openssl source code.')
-        else:
-            cc.w('already exists, skip.')
+        # _header_path = None
+        # for p in sys.path:
+        #     if os.path.exists(os.path.join(p, 'include', 'pyctype.h')):
+        #         _header_path = os.path.join(p, 'include')
+        # if _header_path is None:
+        #     cc.e('\ncan not locate python development include path in:')
+        #     for p in sys.path:
+        #         cc.e('  ', p)
+        #     raise RuntimeError()
 
-        os.chdir(self.OPENSSL_PATH_SRC)
-        os.system('""{}" Configure VC-WIN32"'.format(env.perl))
-        os.system(r'ms\do_nasm')
-        os.system(r'"{}\VC\bin\vcvars32.bat" && nmake -f ms\nt.mak'.format(env.visual_studio_path))
+        # utils.copy_ex(_header_path, os.path.join(PATH_EXTERNAL, 'python', 'include'))
+        utils.copy_ex(env.path_py_inc, os.path.join(PATH_EXTERNAL, 'python', 'include'))
 
-        for f in _chk_output:
-            if not os.path.exists(f):
-                raise RuntimeError('build openssl static library from source code failed.')
+    # def _build_openssl(self, file_name):
+    #     cc.n('build openssl static library from source code... ', end='')
+    #     _chk_output = [
+    #         os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'libeay32.lib'),
+    #         os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'ssleay32.lib'),
+    #         os.path.join(self.OPENSSL_PATH_SRC, 'inc32', 'openssl', 'opensslconf.h'),
+    #         ]
+    #
+    #     need_build = False
+    #     for f in _chk_output:
+    #         if not os.path.exists(f):
+    #             need_build = True
+    #             break
+    #
+    #     if not need_build:
+    #         cc.w('already exists, skip.')
+    #         return
+    #     cc.v('')
+    #
+    #     cc.n('prepare openssl source code...')
+    #     _alt_ver = '_'.join(env.ver_openssl.split('.'))
+    #     if not os.path.exists(self.OPENSSL_PATH_SRC):
+    #         utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+    #         os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
+    #         if not os.path.exists(self.OPENSSL_PATH_SRC):
+    #             raise RuntimeError('can not prepare openssl source code.')
+    #     else:
+    #         cc.w('already exists, skip.')
+    #
+    #     os.chdir(self.OPENSSL_PATH_SRC)
+    #     os.system('""{}" Configure VC-WIN32"'.format(env.perl))
+    #     os.system(r'ms\do_nasm')
+    #     os.system(r'"{}\VC\bin\vcvars32.bat" && nmake -f ms\nt.mak'.format(env.visual_studio_path))
+    #
+    #     for f in _chk_output:
+    #         if not os.path.exists(f):
+    #             raise RuntimeError('build openssl static library from source code failed.')
 
     def _build_libssh(self, file_name):
         cc.n('build libssh static library from source code... ', end='')
@@ -245,9 +257,9 @@ class BuilderWin(BuilderBase):
         else:
             cc.w('already exists, skip.')
 
-    def build_sqlite(self):
-        cc.w('sqlite not need for Windows, skip.')
-        pass
+    # def build_sqlite(self):
+    #     cc.w('sqlite not need for Windows, skip.')
+    #     pass
 
     def fix_output(self):
         pass
@@ -260,17 +272,37 @@ class BuilderLinux(BuilderBase):
     def _init_path(self):
         self.PATH_TMP = os.path.join(PATH_EXTERNAL, 'linux', 'tmp')
         self.PATH_RELEASE = os.path.join(PATH_EXTERNAL, 'linux', 'release')
-        self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-{}'.format(env.ver_openssl))
+        # self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-{}'.format(env.ver_openssl))
         self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(env.ver_libuv))
         self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls))
         self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(env.ver_libssh))
-        self.SQLITE_PATH_SRC = os.path.join(self.PATH_TMP, 'sqlite-autoconf-{}'.format(env.ver_sqlite))
+        # self.SQLITE_PATH_SRC = os.path.join(self.PATH_TMP, 'sqlite-autoconf-{}'.format(env.ver_sqlite))
 
         self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
         self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
 
         if not os.path.exists(self.PATH_TMP):
             utils.makedirs(self.PATH_TMP)
+
+    def _prepare_python(self):
+        cc.n('prepare python header and lib files ...')
+
+        if os.path.exists(os.path.join(self.PATH_RELEASE, 'include', 'python', 'Python.h')):
+            cc.w(' - header file already exists, skip.')
+        else:
+            utils.ensure_file_exists(os.path.join(env.path_py_inc, 'Python.h'))
+            utils.makedirs(os.path.join(self.PATH_RELEASE, 'include'))
+            utils.copy_ex(env.path_py_inc, os.path.join(self.PATH_RELEASE, 'include', 'python'))
+
+        lib_file = 'libpython{}m.a'.format(env.py_ver_dot)
+        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', lib_file)):
+            cc.w(' - lib file already exists, skip.')
+        else:
+            utils.ensure_file_exists(os.path.join(env.path_py_lib, lib_file))
+            utils.makedirs(os.path.join(self.PATH_RELEASE, 'lib'))
+            utils.copy_file(env.path_py_lib, os.path.join(self.PATH_RELEASE, 'lib'), lib_file)
+            utils.copy_file(env.path_py_lib, os.path.join(self.PATH_RELEASE, 'lib'), 'libcrypto.a')
+            utils.copy_file(env.path_py_lib, os.path.join(self.PATH_RELEASE, 'lib'), 'libssl.a')
 
     def _build_jsoncpp(self, file_name):
         cc.n('prepare jsoncpp source code...', end='')
@@ -290,8 +322,8 @@ class BuilderLinux(BuilderBase):
         else:
             cc.w('already exists, skip.')
 
-    def _build_openssl(self, file_name):
-        pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
+    # def _build_openssl(self, file_name):
+    #     pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
 
     def _build_libuv(self, file_name):
         if not os.path.exists(self.LIBUV_PATH_SRC):
@@ -390,8 +422,8 @@ class BuilderLinux(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
         old_p = os.getcwd()
         os.chdir(self.MBEDTLS_PATH_SRC)
@@ -443,10 +475,10 @@ class BuilderLinux(BuilderBase):
         # # os.system('make install')
         # os.chdir(old_p)
 
-        cmake_define = ' -DCMAKE_INSTALL_PREFIX={}' \
-                       ' -D_OPENSSL_VERSION={}' \
-                       ' -DOPENSSL_INCLUDE_DIR={}/include' \
-                       ' -DOPENSSL_LIBRARIES={}/lib' \
+        cmake_define = ' -DCMAKE_INSTALL_PREFIX={prefix}' \
+                       ' -D_OPENSSL_VERSION={ossl_ver}' \
+                       ' -DOPENSSL_INCLUDE_DIR={ossl_inc}' \
+                       ' -DOPENSSL_LIBRARIES={ossl_lib}' \
                        ' -DWITH_SSH1=ON' \
                        ' -DWITH_SFTP=ON' \
                        ' -DWITH_SERVER=ON' \
@@ -459,7 +491,7 @@ class BuilderLinux(BuilderBase):
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
                        ' -DWITH_NACL=OFF' \
-                       ' ..'.format(self.PATH_RELEASE, env.ver_openssl_number, self.PATH_RELEASE, self.PATH_RELEASE)
+                       ' ..'.format(prefix=self.PATH_RELEASE, ossl_ver=env.ver_ossl_number, ossl_inc=env.path_ossl_inc, ossl_lib=env.path_ossl_lib)
 
         try:
             utils.cmake(build_path, 'Release', False, cmake_define)
@@ -474,22 +506,22 @@ class BuilderLinux(BuilderBase):
         utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh_threads.a')
         utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
 
-    def _build_sqlite(self, file_name):
-        if not os.path.exists(self.SQLITE_PATH_SRC):
-            os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-
-        cc.n('build sqlite static...', end='')
-        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libsqlite3.a')):
-            cc.w('already exists, skip.')
-            return
-        cc.v('')
-
-        old_p = os.getcwd()
-        os.chdir(self.SQLITE_PATH_SRC)
-        os.system('./configure --prefix={}'.format(self.PATH_RELEASE))
-        os.system('make')
-        os.system('make install')
-        os.chdir(old_p)
+    # def _build_sqlite(self, file_name):
+    #     if not os.path.exists(self.SQLITE_PATH_SRC):
+    #         os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+    #
+    #     cc.n('build sqlite static...', end='')
+    #     if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libsqlite3.a')):
+    #         cc.w('already exists, skip.')
+    #         return
+    #     cc.v('')
+    #
+    #     old_p = os.getcwd()
+    #     os.chdir(self.SQLITE_PATH_SRC)
+    #     os.system('./configure --prefix={}'.format(self.PATH_RELEASE))
+    #     os.system('make')
+    #     os.system('make install')
+    #     os.chdir(old_p)
 
     def fix_output(self):
         # remove .so files, otherwise will link to .so but not .a in default.
@@ -508,11 +540,11 @@ class BuilderMacOS(BuilderBase):
     def _init_path(self):
         self.PATH_TMP = os.path.join(PATH_EXTERNAL, 'macos', 'tmp')
         self.PATH_RELEASE = os.path.join(PATH_EXTERNAL, 'macos', 'release')
-        self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-OpenSSL_{}'.format(env.ver_openssl.replace('.', '_')))
+        # self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-OpenSSL_{}'.format(env.ver_openssl.replace('.', '_')))
         self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(env.ver_libuv))
         self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls))
         self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(env.ver_libssh))
-        self.SQLITE_PATH_SRC = os.path.join(self.PATH_TMP, 'sqlite-autoconf-{}'.format(env.ver_sqlite))
+        # self.SQLITE_PATH_SRC = os.path.join(self.PATH_TMP, 'sqlite-autoconf-{}'.format(env.ver_sqlite))
 
         self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
         self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
@@ -538,25 +570,25 @@ class BuilderMacOS(BuilderBase):
         else:
             cc.w('already exists, skip.')
 
-    def _build_openssl(self, file_name):
-        # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
-
-        if not os.path.exists(self.OPENSSL_PATH_SRC):
-            os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-
-        cc.n('build openssl static...', end='')
-        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
-            cc.w('already exists, skip.')
-            return
-
-        old_p = os.getcwd()
-        os.chdir(self.OPENSSL_PATH_SRC)
-        #os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        # os.system('./Configure darwin64-x86_64-cc')
-        os.system('./Configure darwin64-x86_64-cc --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-        os.system('make')
-        os.system('make install')
-        os.chdir(old_p)
+    # def _build_openssl(self, file_name):
+    #     # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
+    #
+    #     if not os.path.exists(self.OPENSSL_PATH_SRC):
+    #         os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+    #
+    #     cc.n('build openssl static...', end='')
+    #     if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
+    #         cc.w('already exists, skip.')
+    #         return
+    #
+    #     old_p = os.getcwd()
+    #     os.chdir(self.OPENSSL_PATH_SRC)
+    #     # os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+    #     # os.system('./Configure darwin64-x86_64-cc')
+    #     os.system('./Configure darwin64-x86_64-cc --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+    #     os.system('make')
+    #     os.system('make install')
+    #     os.chdir(old_p)
 
     def _build_libuv(self, file_name):
         cc.n('prepare libuv source code...', end='')
@@ -618,8 +650,8 @@ class BuilderMacOS(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
         old_p = os.getcwd()
         os.chdir(self.MBEDTLS_PATH_SRC)
@@ -671,10 +703,10 @@ class BuilderMacOS(BuilderBase):
         # # os.system('make install')
         # os.chdir(old_p)
 
-        cmake_define = ' -DCMAKE_INSTALL_PREFIX={}' \
-                       ' -D_OPENSSL_VERSION={}' \
-                       ' -DOPENSSL_INCLUDE_DIR={}/include' \
-                       ' -DOPENSSL_LIBRARIES={}/lib' \
+        cmake_define = ' -DCMAKE_INSTALL_PREFIX={prefix}' \
+                       ' -D_OPENSSL_VERSION={oss_ver}' \
+                       ' -DOPENSSL_INCLUDE_DIR={ossl_inc}' \
+                       ' -DOPENSSL_LIBRARIES={ossl_lib}' \
                        ' -DWITH_GSSAPI=OFF' \
                        ' -DWITH_ZLIB=OFF' \
                        ' -DWITH_STATIC_LIB=ON' \
@@ -684,7 +716,7 @@ class BuilderMacOS(BuilderBase):
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
                        ' -DWITH_NACL=OFF' \
-                       ''.format(self.PATH_RELEASE, env.ver_openssl_number, self.PATH_RELEASE, self.PATH_RELEASE)
+                       ''.format(prefix=self.PATH_RELEASE, oss_ver=env.ver_ossl_number, ossl_inc=env.path_ossl_inc, ossl_lib=env.path_ossl_lib)
 
         try:
             utils.cmake(build_path, 'Release', False, cmake_define)
@@ -699,22 +731,22 @@ class BuilderMacOS(BuilderBase):
         utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh_threads.a')
         utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
 
-    def _build_sqlite(self, file_name):
-        if not os.path.exists(self.SQLITE_PATH_SRC):
-            os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-
-        cc.n('build sqlite static...', end='')
-        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libsqlite3.a')):
-            cc.w('already exists, skip.')
-            return
-        cc.v('')
-
-        old_p = os.getcwd()
-        os.chdir(self.SQLITE_PATH_SRC)
-        os.system('./configure --prefix={}'.format(self.PATH_RELEASE))
-        os.system('make')
-        os.system('make install')
-        os.chdir(old_p)
+    # def _build_sqlite(self, file_name):
+    #     if not os.path.exists(self.SQLITE_PATH_SRC):
+    #         os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+    #
+    #     cc.n('build sqlite static...', end='')
+    #     if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libsqlite3.a')):
+    #         cc.w('already exists, skip.')
+    #         return
+    #     cc.v('')
+    #
+    #     old_p = os.getcwd()
+    #     os.chdir(self.SQLITE_PATH_SRC)
+    #     os.system('./configure --prefix={}'.format(self.PATH_RELEASE))
+    #     os.system('make')
+    #     os.system('make install')
+    #     os.chdir(old_p)
 
     def fix_output(self):
         # remove .so files, otherwise will link to .so but not .a in default.
@@ -761,9 +793,11 @@ def main():
     if builder is None:
         builder = gen_builder(ctx.host_os)
 
+    builder.prepare_python()
+
     builder.build_jsoncpp()
     builder.build_mongoose()
-    builder.build_openssl()
+    # builder.build_openssl()
     builder.build_libuv()
     builder.build_mbedtls()
     builder.build_libssh()
