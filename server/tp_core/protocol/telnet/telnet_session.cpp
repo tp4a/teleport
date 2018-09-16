@@ -542,7 +542,7 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 		{
 			if (_this->_putty_replace_username(m_conn_client, m_conn_server))
 			{
-				_this->m_username_sent = true;
+				//_this->m_username_sent = true;
 				is_processed = true;
 			}
 		}
@@ -582,7 +582,8 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 		{
 			if (_this->_parse_find_and_send(m_conn_server, m_conn_client, _this->m_password_prompt.c_str(), _this->m_acc_secret.c_str()))
 			{
-				_this->m_password_sent = true;
+                _this->m_username_sent = true;
+                _this->m_password_sent = true;
 				is_processed = true;
 			}
 		}

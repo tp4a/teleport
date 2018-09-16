@@ -181,6 +181,7 @@
     <ClCompile Include="..\..\..\external\jsoncpp\src\lib_json\json_writer.cpp" />
     <ClCompile Include="..\..\..\external\mbedtls\library\aes.c" />
     <ClCompile Include="..\..\..\external\mbedtls\library\base64.c" />
+    <ClCompile Include="..\..\..\external\mbedtls\library\platform_util.c" />
     <ClCompile Include="..\..\..\external\mbedtls\library\sha1.c" />
     <ClCompile Include="..\..\..\external\mongoose\mongoose.c" />
     <ClCompile Include="main.cpp" />
