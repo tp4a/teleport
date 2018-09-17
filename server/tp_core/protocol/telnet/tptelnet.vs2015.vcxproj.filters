@@ -244,9 +244,6 @@
     <ClCompile Include="..\..\..\..\external\libuv\src\win\thread.c">
       <Filter>libuv\src\win</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\external\libuv\src\win\timer.c">
-      <Filter>libuv\src\win</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\external\libuv\src\win\tty.c">
       <Filter>libuv\src\win</Filter>
     </ClCompile>
@@ -315,6 +312,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_value.cpp">
       <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\timer.c">
+      <Filter>libuv\src\win</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
