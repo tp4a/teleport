@@ -29,6 +29,7 @@ class BuildContext(object):
 
         _py_ver = platform.python_version_tuple()
         self.py_ver = '%s%s' % (_py_ver[0], _py_ver[1])
+        self.py_dot_ver = '%s.%s' % (_py_ver[0], _py_ver[1])
 
         self.bits = BITS_32
         self.bits_path = 'x86'
@@ -57,7 +58,6 @@ class BuildContext(object):
         self.host_os = self.dist
         if self.host_os == 'windows':
             self.host_os_is_win_x64 = 'PROGRAMFILES(X86)' in os.environ
-
 
         self.make_dist_path()
 

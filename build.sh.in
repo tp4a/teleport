@@ -10,8 +10,8 @@
 #   https://conda.io/miniconda.html
 # and install it, root priviledge is not necessary.
 #---------------------------------------------------------------
-PATH_PYTHON_LINUX=/home/apex/miniconda3
-PATH_PYTHON_MACOS=/path/of/your/python/installation
+PATH_PYTHON_LINUX=/path/of/your/miniconda/installation
+PATH_PYTHON_MACOS=/path/of/your/miniconda/installation
 
 ################################################################
 # DO NOT TOUCH FOLLOWING CODE
