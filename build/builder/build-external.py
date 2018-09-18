@@ -43,13 +43,15 @@ class BuilderBase:
 
     def build_openssl(self):
         file_name = 'openssl-{}.zip'.format(env.ver_openssl)
-        _alt_ver = '_'.join(env.ver_openssl.split('.'))
-        if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
-            return
         self._build_openssl(file_name)
 
     def _build_openssl(self, file_name):
-        cc.e("this is a pure-virtual function.")
+        _alt_ver = '_'.join(env.ver_openssl.split('.'))
+        if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
+            return False
+        else:
+            return True
+        # cc.e("this is a pure-virtual function.")
 
     def build_libuv(self):
         file_name = 'libuv-{}.zip'.format(env.ver_libuv)
@@ -127,6 +129,10 @@ class BuilderWin(BuilderBase):
 
     def _build_openssl(self, file_name):
         cc.n('build openssl static library from source code... ', end='')
+
+        if not super()._build_openssl(file_name):
+            return
+
         _chk_output = [
             os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'libeay32.lib'),
             os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'ssleay32.lib'),
@@ -233,8 +239,8 @@ class BuilderWin(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
     def _build_libuv(self, file_name):
         cc.n('prepare libuv source code... ', end='')
@@ -390,8 +396,8 @@ class BuilderLinux(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
         old_p = os.getcwd()
         os.chdir(self.MBEDTLS_PATH_SRC)
@@ -618,8 +624,8 @@ class BuilderMacOS(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
         old_p = os.getcwd()
         os.chdir(self.MBEDTLS_PATH_SRC)
