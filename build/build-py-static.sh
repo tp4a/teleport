@@ -5,9 +5,9 @@
 ################################################################
 VER_PYTHON="3.4.4"
 VER_PYTHON_SHORT="3.4"
-VER_OPENSSL="1.0.2h"
-VER_SQLITE="3170000"
-VER_PSUTIL="4.2.0"
+VER_OPENSSL="1.0.2p"
+VER_SQLITE="3250000"
+# VER_PSUTIL="4.2.0"
 VER_PYTHON_LIB="${VER_PYTHON_SHORT}m"
 
 ################################################################
@@ -78,7 +78,7 @@ function step_download_files()
 
 	dlfile "python source tarball"  "https://www.python.org/ftp/python/${VER_PYTHON}/" "Python-${VER_PYTHON}.tgz" ${PATH_DOWNLOAD}
 	dlfile "openssl source tarball" "https://www.openssl.org/source/" "openssl-${VER_OPENSSL}.tar.gz" ${PATH_DOWNLOAD}
-	dlfile "sqlite source tarball"  "http://sqlite.org/2017/" "sqlite-autoconf-${VER_SQLITE}.tar.gz" ${PATH_DOWNLOAD}
+	dlfile "sqlite source tarball"  "http://sqlite.org/2018/" "sqlite-autoconf-${VER_SQLITE}.tar.gz" ${PATH_DOWNLOAD}
 
 	# dlfile "psutil source tarball"  "https://pypi.python.org/packages/source/p/psutil/" "psutil-${VER_PSUTIL}.tar.gz" ${PATH_DOWNLOAD}
 	# https://pypi.python.org/pypi?:action=display&name=psutil#downloads
