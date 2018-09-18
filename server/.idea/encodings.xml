@@ -30,6 +30,7 @@
     <file url="file://$PROJECT_DIR$/tp_core/core/ts_web_rpc.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/protocol/rdp/rdp_conn.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/protocol/rdp/rdp_conn.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/tp_core/protocol/rdp/rdp_keys.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/protocol/rdp/rdp_package.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/protocol/rdp/rdp_package.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/protocol/rdp/rdp_proxy.cpp" charset="GBK" />
@@ -41,6 +42,7 @@
     <file url="file://$PROJECT_DIR$/tp_core/protocol/ssh/ssh_session.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/protocol/ssh/ssh_session.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_core/protocol/telnet/telnet_conn.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/tp_core/protocol/telnet/telnet_session.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_web/src/main.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/tp_web/src/ts_env.cpp" charset="GBK" />
   </component>
