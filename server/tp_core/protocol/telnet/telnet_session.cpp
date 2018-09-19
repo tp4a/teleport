@@ -537,6 +537,8 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 
 	if (conn->is_server_side())
 	{
+//         EXLOG_BIN(m_conn_client->data().data(), m_conn_client->data().size(), "<-- client:");
+
 		// 收到了客户端发来的数据
 		if (_this->m_is_putty_mode && !_this->m_username_sent)
 		{
@@ -566,7 +568,9 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 	}
 	else
 	{
-		// 收到了服务端返回的数据
+//         EXLOG_BIN(m_conn_server->data().data(), m_conn_server->data().size(), "--> server:");
+        
+        // 收到了服务端返回的数据
 		if (m_conn_server->data().data()[0] != TELNET_IAC)
 			m_rec.record(TS_RECORD_TYPE_TELNET_DATA, m_conn_server->data().data(), m_conn_server->data().size());
 
@@ -603,11 +607,34 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 
 bool TelnetSession::_parse_find_and_send(TelnetConn* conn_recv, TelnetConn* conn_remote, const char* find, const char* send)
 {
+//     EXLOGV("find prompt and send: [%s] => [%s]\n", find, send);
+//     EXLOG_BIN(conn_recv->data().data(), conn_recv->data().size(), "find prompt in data:");
+
 	size_t find_len = strlen(find);
 	size_t send_len = strlen(send);
-	if (0 == find_len || 0 == send_len)
-		return false;
+    if (0 == find_len || 0 == send_len || conn_recv->data().size() < find_len) {
+        return false;
+    }
 
+    int find_range = conn_recv->data().size() - find_len;
+    for (int i = 0; i <= find_range; ++i)
+    {
+        if (0 == memcmp(conn_recv->data().data() + i, find, find_len))
+        {
+            conn_remote->send(conn_recv->data().data(), conn_recv->data().size());
+            conn_recv->data().empty();
+
+            MemBuffer mbuf_msg;
+            mbuf_msg.reserve(128);
+            mbuf_msg.append((ex_u8*)send, send_len);
+            mbuf_msg.append((ex_u8*)"\x0d\x0a", 2);
+//             EXLOG_BIN(mbuf_msg.data(), mbuf_msg.size(), "find prompt and send:");
+            conn_recv->send(mbuf_msg.data(), mbuf_msg.size());
+            return true;
+        }
+    }
+
+#if 0
 	MemBuffer mbuf_msg;
 	mbuf_msg.reserve(128);
 	MemStream ms_msg(mbuf_msg);
@@ -679,6 +706,7 @@ bool TelnetSession::_parse_find_and_send(TelnetConn* conn_recv, TelnetConn* conn
 			return true;
 		}
 	}
+#endif
 
 	return false;
 }
