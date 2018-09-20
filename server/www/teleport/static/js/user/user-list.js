@@ -203,6 +203,8 @@ $app.on_table_users_cell_created = function (tbl, row_id, col_key, cell_obj) {
                 $app.dlg_edit_user.show_edit(row_id);
             } else if (action === 'reset-password') {
                 $app.dlg_reset_password.show_edit(row_id);
+            } else if (action === 'reset-oath-bind') {
+                $app._reset_oath_bind(user.id);
             } else if (action === 'lock') {
                 $app._lock_users([user.id]);
             } else if (action === 'unlock') {
@@ -349,6 +351,7 @@ $app.on_table_users_render_created = function (render) {
 
         h.push('<li role="separator" class="divider"></li>');
         h.push('<li><a href="javascript:;" data-action="reset-password"><i class="fa fa-street-view fa-fw"></i> 重置密码</a></li>');
+        h.push('<li><a href="javascript:;" data-action="reset-oath-bind"><i class="fa fa-street-view fa-fw"></i> 重置身份验证器</a></li>');
         h.push('<li role="separator" class="divider"></li>');
         h.push('<li><a href="javascript:;" data-action="remove"><i class="fa fa-times-circle fa-fw"></i> 删除</a></li>');
         h.push('</ul>');
@@ -545,6 +548,21 @@ $app.set_selected_to_role = function (role_id, role_name) {
         fn_yes: _fn_sure
     });
 
+};
+
+$app._reset_oath_bind = function (users) {
+    $tp.ajax_post_json('/user/do-unbind-oath', {users: users},
+        function (ret) {
+            if (ret.code === TPE_OK) {
+                $tp.notify_success('重置身份验证器操作成功！');
+            } else {
+                $tp.notify_error('重置身份验证器操作失败：' + tp_error_msg(ret.code, ret.message));
+            }
+        },
+        function () {
+            $tp.notify_error('网络故障，重置身份验证器操作失败！');
+        }
+    );
 };
 
 $app._lock_users = function (users) {
