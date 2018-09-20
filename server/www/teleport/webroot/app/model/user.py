@@ -49,7 +49,7 @@ def get_by_username(username):
     return TPE_OK, s.recorder[0]
 
 
-def login(handler, username, password=None, oath_code=None):
+def login(handler, username, password=None, oath_code=None, check_bind_oath=False):
     sys_cfg = tp_cfg().sys
 
     err, user_info = get_by_username(username)
@@ -61,6 +61,10 @@ def login(handler, username, password=None, oath_code=None):
     if user_info.privilege == 0:
         # 尚未为此用户设置角色
         return TPE_PRIVILEGE, None
+
+    if  check_bind_oath == True and len(user_info['oath_secret']) != 0:
+        return TPE_OATH_ALREADY_BIND, None
+
 
     if user_info['state'] == TP_STATE_LOCKED:
         # 用户已经被锁定，如果系统配置为一定时间后自动解锁，则更新一下用户信息

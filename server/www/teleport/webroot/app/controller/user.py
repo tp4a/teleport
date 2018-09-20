@@ -144,7 +144,12 @@ class DoVerifyUserHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
-        err, user_info = user.login(self, username, password=password)
+        try:
+            check_bind_oath = args['check_bind_oath']
+        except:
+            check_bind_oath = False
+
+        err, user_info = user.login(self, username, password=password, check_bind_oath=check_bind_oath)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH
@@ -190,6 +195,28 @@ class DoBindOathHandler(TPBaseJsonHandler):
 
         return self.write_json(TPE_OK)
 
+class DoUnBindOathHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_DELETE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            users = args['users']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        # 把oath设置为空就是去掉oath验证
+        err = user.update_oath_secret(self, users, '')
+        self.write_json(err)
 
 class OathSecretQrCodeHandler(TPBaseHandler):
     def get(self):
@@ -751,6 +778,11 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
 
             if mode == 4 and err == TPE_OK:
                 user.remove_reset_token(token)
+
+            # 非用户自行修改密码的情况，都默认重置身份认证
+            if mode != 5 and err == TPE_OK:
+                print("reset oath secret")
+                user.update_oath_secret(self, user_id, '')
 
             self.write_json(err)
 
