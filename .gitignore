@@ -43,6 +43,7 @@ __pycache__
 /external/mongoose
 /external/openssl
 /external/python
+/external/libssh
 /external/libssh-win-static/include/libssh
 /external/libssh-win-static/src
 /external/libssh-win-static/lib
@@ -99,3 +100,4 @@ xcuserdata
 profile
 *.moved-aside
 /server/share/tmp
+/build.sh

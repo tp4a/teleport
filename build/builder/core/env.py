@@ -24,10 +24,14 @@ class Env(object):
         self.root_path = os.path.abspath(os.path.join(_this_path, '..', '..', '..'))
         self.build_path = os.path.abspath(os.path.join(_this_path, '..', '..'))
         self.builder_path = os.path.join(self.build_path, 'builder')
-        self.win32_tools_path = os.path.join(self.build_path, 'tools', 'win32')
 
         self.is_py2 = sys.version_info[0] == 2
         self.is_py3 = sys.version_info[0] == 3
+
+        if self.is_py2:
+            self.input = raw_input
+        else:
+            self.input = input
 
         self.py_ver = platform.python_version_tuple()
         self.py_ver_str = '%s%s' % (self.py_ver[0], self.py_ver[1])
@@ -53,19 +57,9 @@ class Env(object):
             self.is_win = True
             self.plat = 'windows'
             self.is_win_x64 = 'PROGRAMFILES(X86)' in os.environ
-            self.path_miniconda = os.path.abspath(os.path.dirname(self.py_exec))
-            self.path_ossl_inc = os.path.join(self.path_miniconda, 'Library', 'include')
-            self.path_ossl_lib = os.path.join(self.path_miniconda, 'Library', 'lib')
-            self.path_py_inc = os.path.join(self.path_miniconda, 'include')
-            self.path_py_lib = os.path.join(self.path_miniconda, 'libs')
         elif _os == 'linux':
             self.is_linux = True
             self.plat = 'linux'
-            self.path_miniconda = os.path.abspath(os.path.join(os.path.dirname(self.py_exec), '..'))
-            self.path_ossl_inc = os.path.join(self.path_miniconda, 'include')
-            self.path_ossl_lib = os.path.join(self.path_miniconda, 'lib')
-            self.path_py_inc = os.path.join(self.path_miniconda, 'include', 'python{}m'.format(self.py_ver_dot))
-            self.path_py_lib = os.path.join(self.path_miniconda, 'lib')
         elif _os == 'darwin':
             self.is_macos = True
             self.plat = 'macos'
@@ -77,16 +71,12 @@ class Env(object):
         if not self._load_version():
             return False
 
-        if not os.path.exists(os.path.join(self.path_miniconda, 'conda-meta')):
-            cc.e('can not find conda, please install miniconda from https://conda.io/miniconda.html and try again.')
-            return False
-
         return True
 
     def _load_config(self, warn_miss_tool):
         _cfg_file = os.path.join(self.root_path, 'config.ini')
         if not os.path.exists(_cfg_file):
-            cc.e('can not load configuration.\n\nplease copy `config.ini.in` into `config.ini` and modify it to fit your condition and try again.')
+            cc.e('can not load configuration.\n\nplease copy `config.ini.in` to `config.ini` and modify it to fit your condition and try again.')
             return False
 
         _cfg = configparser.ConfigParser()

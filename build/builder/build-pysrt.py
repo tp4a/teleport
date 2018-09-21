@@ -12,12 +12,13 @@ from core.env import env
 
 ctx = BuildContext()
 
-MODULES_WIN = ['_bz2', '_ctypes', '_hashlib', '_lzma', '_overlapped', '_socket', '_sqlite3', '_ssl', 'select', 'sqlite3', 'unicodedata']
+MODULES_WIN = ['_asyncio', '_bz2', '_ctypes', '_hashlib', '_lzma', '_overlapped', '_socket', '_sqlite3', '_ssl', 'select', 'sqlite3',
+               'libcrypto-1_1', 'libssl-1_1', 'unicodedata']
 PY_LIB_REMOVE_WIN = ['ctypes/test', 'curses', 'dbm', 'distutils', 'email/test', 'ensurepip', 'idlelib', 'lib2to3',
                      'lib-dynload', 'pydoc_data', 'site-packages', 'sqlite3/test', 'test', 'tkinter', 'turtledemo',
                      'unittest', 'venv', 'wsgiref', 'dis.py', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc.py',
                      'this.py', 'wave.py', 'webbrowser.py', 'zipapp.py']
-PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'config-3.7m-x86_64-linux-gnu', 'dbm', 'distutils', 'ensurepip', 'idlelib', 'lib2to3',
+PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'dbm', 'distutils', 'ensurepip', 'idlelib', 'lib2to3',
                        'lib-dynload', 'pydoc_data', 'site-packages', 'sqlite3/test', 'test', 'tkinter', 'turtledemo', 'unittest', 'venv',
                        'wsgiref', 'dis.py', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc_data', 'pydoc.py', 'this.py', 'wave.py',
                        'webbrowser.py', 'zipapp.py']
@@ -150,23 +151,24 @@ class PYSWin(PYSBase):
         utils.makedirs(self.base_path)
 
         cc.v('copy python core dll...')
-        _win_system_path = os.path.join(os.getenv('SystemRoot'), 'system32')
-        if ctx.bits == BITS_32 and ctx.host_os_is_win_x64:
-            _win_system_path = os.path.join(os.getenv('SystemRoot'), 'SysWOW64')
+        _exec_path = os.path.dirname(env.py_exec)
+        # _win_system_path = os.path.join(os.getenv('SystemRoot'), 'system32')
+        # if ctx.bits == BITS_32 and ctx.host_os_is_win_x64:
+        #     _win_system_path = os.path.join(os.getenv('SystemRoot'), 'SysWOW64')
 
-        if not os.path.exists(_win_system_path):
-            raise RuntimeError('can not locate windows system folder at:', _win_system_path)
+        if not os.path.exists(_exec_path):
+            raise RuntimeError('can not locate python folder at:', _exec_path)
 
         pydll = self._get_py_dll_name()
-        shutil.copy(os.path.join(_win_system_path, pydll), os.path.join(self.base_path, pydll))
+        shutil.copy(os.path.join(_exec_path, pydll), os.path.join(self.base_path, pydll))
 
         if ctx.py_ver == '34':
             msvcrdll = 'msvcr100.dll'
         elif ctx.py_ver == '37':
-            msvcrdll = 'msvcr140.dll'
+            msvcrdll = 'vcruntime140.dll'
         else:
             raise RuntimeError('unknown msvc runtime for this python version.')
-        shutil.copy(os.path.join(_win_system_path, msvcrdll), os.path.join(self.base_path, msvcrdll))
+        shutil.copy(os.path.join(_exec_path, msvcrdll), os.path.join(self.base_path, msvcrdll))
 
         super()._copy_modules()
 

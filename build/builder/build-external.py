@@ -41,15 +41,12 @@ class BuilderBase:
     def _build_mongoose(self, file_name):
         cc.e("this is a pure-virtual function.")
 
-    # def build_openssl(self):
-    #     file_name = 'openssl-{}.zip'.format(env.ver_openssl)
-    #     _alt_ver = '_'.join(env.ver_openssl.split('.'))
-    #     if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
-    #         return
-    #     self._build_openssl(file_name)
-    #
-    # def _build_openssl(self, file_name):
-    #     cc.e("this is a pure-virtual function.")
+    def build_openssl(self):
+        file_name = 'openssl-{}.zip'.format(env.ver_ossl)
+        self._build_openssl(file_name)
+
+    def _build_openssl(self, file_name):
+        cc.e("this is a pure-virtual function.")
 
     def build_libuv(self):
         file_name = 'libuv-{}.zip'.format(env.ver_libuv)
@@ -102,12 +99,13 @@ class BuilderWin(BuilderBase):
         super().__init__()
 
     def _init_path(self):
-        # self.OPENSSL_PATH_SRC = os.path.join(PATH_EXTERNAL, 'openssl')
+        self.OPENSSL_PATH_SRC = os.path.join(PATH_EXTERNAL, 'openssl')
         self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
         self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
         self.MBEDTLS_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mbedtls')
         self.LIBUV_PATH_SRC = os.path.join(PATH_EXTERNAL, 'libuv')
-        self.LIBSSH_PATH_SRC = os.path.join(PATH_EXTERNAL, 'libssh-win-static')
+        # self.LIBSSH_PATH_SRC = os.path.join(PATH_EXTERNAL, 'libssh-win-static')
+        self.LIBSSH_PATH_SRC = os.path.join(PATH_EXTERNAL, 'libssh')
 
         # self._prepare_python_header()
 
@@ -119,68 +117,84 @@ class BuilderWin(BuilderBase):
             return
         cc.v('')
 
-        if os.path.exists(os.path.join(env.path_py_inc, 'Python.h')):
-            cc.e('can not locate python development include path, make sure miniconda installed.')
+        # if os.path.exists(os.path.join(env.path_py_inc, 'Python.h')):
+        #     cc.e('can not locate python development include path, make sure miniconda installed.')
+        #     return
+        # cc.v('')
+        # utils.copy_ex(env.path_py_inc, os.path.join(PATH_EXTERNAL, 'python', 'include'))
+
+        _header_path = None
+        for p in sys.path:
+            if os.path.exists(os.path.join(p, 'include', 'Python.h')):
+                _header_path = os.path.join(p, 'include')
+        if _header_path is None:
+            cc.e('\ncan not locate python development include path in:')
+            for p in sys.path:
+                cc.e('  ', p)
+            raise RuntimeError()
+
+        utils.copy_ex(_header_path, os.path.join(PATH_EXTERNAL, 'python', 'include'))
+
+    def _build_openssl(self, file_name):
+        cc.n('build openssl static library from source code... ', end='')
+
+        _alt_ver = '_'.join(env.ver_ossl.split('.'))
+        if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
+            return
+
+        _chk_output = [
+            os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'libeay32.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'ssleay32.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'inc32', 'openssl', 'opensslconf.h'),
+            ]
+
+        need_build = False
+        for f in _chk_output:
+            if not os.path.exists(f):
+                need_build = True
+                break
+
+        if not need_build:
+            cc.w('already exists, skip.')
             return
         cc.v('')
 
-        # _header_path = None
-        # for p in sys.path:
-        #     if os.path.exists(os.path.join(p, 'include', 'pyctype.h')):
-        #         _header_path = os.path.join(p, 'include')
-        # if _header_path is None:
-        #     cc.e('\ncan not locate python development include path in:')
-        #     for p in sys.path:
-        #         cc.e('  ', p)
-        #     raise RuntimeError()
+        cc.n('prepare openssl source code...')
+        _alt_ver = '_'.join(env.ver_ossl.split('.'))
+        if not os.path.exists(self.OPENSSL_PATH_SRC):
+            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
+            if not os.path.exists(self.OPENSSL_PATH_SRC):
+                raise RuntimeError('can not prepare openssl source code.')
+        else:
+            cc.w('already exists, skip.')
 
-        # utils.copy_ex(_header_path, os.path.join(PATH_EXTERNAL, 'python', 'include'))
-        utils.copy_ex(env.path_py_inc, os.path.join(PATH_EXTERNAL, 'python', 'include'))
+        os.chdir(self.OPENSSL_PATH_SRC)
+        os.system('""{}" Configure VC-WIN32"'.format(env.perl))
+        os.system(r'ms\do_nasm')
+        os.system(r'"{}\VC\bin\vcvars32.bat" && nmake -f ms\nt.mak'.format(env.visual_studio_path))
 
-    # def _build_openssl(self, file_name):
-    #     cc.n('build openssl static library from source code... ', end='')
-    #     _chk_output = [
-    #         os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'libeay32.lib'),
-    #         os.path.join(self.OPENSSL_PATH_SRC, 'out32', 'ssleay32.lib'),
-    #         os.path.join(self.OPENSSL_PATH_SRC, 'inc32', 'openssl', 'opensslconf.h'),
-    #         ]
-    #
-    #     need_build = False
-    #     for f in _chk_output:
-    #         if not os.path.exists(f):
-    #             need_build = True
-    #             break
-    #
-    #     if not need_build:
-    #         cc.w('already exists, skip.')
-    #         return
-    #     cc.v('')
-    #
-    #     cc.n('prepare openssl source code...')
-    #     _alt_ver = '_'.join(env.ver_openssl.split('.'))
-    #     if not os.path.exists(self.OPENSSL_PATH_SRC):
-    #         utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
-    #         os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
-    #         if not os.path.exists(self.OPENSSL_PATH_SRC):
-    #             raise RuntimeError('can not prepare openssl source code.')
-    #     else:
-    #         cc.w('already exists, skip.')
-    #
-    #     os.chdir(self.OPENSSL_PATH_SRC)
-    #     os.system('""{}" Configure VC-WIN32"'.format(env.perl))
-    #     os.system(r'ms\do_nasm')
-    #     os.system(r'"{}\VC\bin\vcvars32.bat" && nmake -f ms\nt.mak'.format(env.visual_studio_path))
-    #
-    #     for f in _chk_output:
-    #         if not os.path.exists(f):
-    #             raise RuntimeError('build openssl static library from source code failed.')
+        for f in _chk_output:
+            if not os.path.exists(f):
+                raise RuntimeError('build openssl static library from source code failed.')
 
     def _build_libssh(self, file_name):
         cc.n('build libssh static library from source code... ', end='')
-        out_file = os.path.join(self.LIBSSH_PATH_SRC, 'lib', 'libsshMT.lib')
+
+        if not os.path.exists(self.LIBSSH_PATH_SRC):
+            cc.v('')
+            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            os.rename(os.path.join(PATH_EXTERNAL, 'libssh-{}'.format(env.ver_libssh)), self.LIBSSH_PATH_SRC)
+
+            cc.n('fix libssh source code... ', end='')
+            utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', 'src', 'sftp.c'))
+            utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'sftp.c')
+
+        out_file_lib = os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path, 'ssh.lib')
+        out_file_dll = os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path, 'ssh.dll')
 
         need_build = False
-        if not os.path.exists(out_file):
+        if not (os.path.exists(out_file_lib) and (os.path.exists(out_file_dll))):
             need_build = True
 
         if not need_build:
@@ -188,30 +202,43 @@ class BuilderWin(BuilderBase):
             return
         cc.v('')
 
-        cc.n('prepare libssh source code... ', end='')
-        _include = os.path.join(self.LIBSSH_PATH_SRC, 'include', 'libssh')
-        _src = os.path.join(self.LIBSSH_PATH_SRC, 'src')
+        # cc.n('prepare libssh source code... ', end='')
+        # _include = os.path.join(self.LIBSSH_PATH_SRC, 'include', 'libssh')
+        # _src = os.path.join(self.LIBSSH_PATH_SRC, 'src')
+        #
+        # if not os.path.exists(_include) or not os.path.exists(_src):
+        #     utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+        #     # os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
+        #
+        #     _unzipped_path = os.path.join(PATH_EXTERNAL, 'libssh-{}'.format(env.ver_libssh))
+        #
+        #     utils.copy_ex(os.path.join(_unzipped_path, 'include', 'libssh'), _include)
+        #     utils.copy_ex(os.path.join(_unzipped_path, 'src'), _src)
+        #
+        #     utils.remove(_unzipped_path)
+        #
+        #     if not os.path.exists(_include) or not os.path.exists(_src):
+        #         raise RuntimeError('\ncan not prepare libssh source code.')
+        # else:
+        #     cc.w('already exists, skip.')
 
-        if not os.path.exists(_include) or not os.path.exists(_src):
-            utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
-            # os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
-
-            _unzipped_path = os.path.join(PATH_EXTERNAL, 'libssh-{}'.format(env.ver_libssh))
-
-            utils.copy_ex(os.path.join(_unzipped_path, 'include', 'libssh'), _include)
-            utils.copy_ex(os.path.join(_unzipped_path, 'src'), _src)
-
-            utils.remove(_unzipped_path)
-
-            if not os.path.exists(_include) or not os.path.exists(_src):
-                raise RuntimeError('\ncan not prepare libssh source code.')
-        else:
-            cc.w('already exists, skip.')
+        cc.w('\nOnce the libssh.sln generated, press Enter to continue or Q to quit...', end='')
+        try:
+            x = env.input()
+        except EOFError:
+            x = 'q'
+        if x == 'q':
+            return
 
         cc.i('build libssh...')
-        sln_file = os.path.join(self.LIBSSH_PATH_SRC, 'libssh.vs2015.sln')
-        utils.msvc_build(sln_file, 'libssh', ctx.target_path, ctx.bits_path, False)
-        utils.ensure_file_exists(out_file)
+        sln_file = os.path.join(self.LIBSSH_PATH_SRC, 'build', 'libssh.sln')
+        utils.msvc_build(sln_file, 'ssh_shared', ctx.target_path, 'win32', False)
+        utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', ctx.target_path, 'ssh.lib'))
+        utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', ctx.target_path, 'ssh.dll'))
+        utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', ctx.target_path), os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path), 'ssh.lib')
+        utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', ctx.target_path), os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path), 'ssh.dll')
+        utils.ensure_file_exists(out_file_lib)
+        utils.ensure_file_exists(out_file_dll)
 
     def _build_jsoncpp(self, file_name):
         cc.n('prepare jsoncpp source code... ', end='')
@@ -245,8 +272,8 @@ class BuilderWin(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
+        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
+        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
     def _build_libuv(self, file_name):
         cc.n('prepare libuv source code... ', end='')
@@ -272,7 +299,7 @@ class BuilderLinux(BuilderBase):
     def _init_path(self):
         self.PATH_TMP = os.path.join(PATH_EXTERNAL, 'linux', 'tmp')
         self.PATH_RELEASE = os.path.join(PATH_EXTERNAL, 'linux', 'release')
-        # self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-{}'.format(env.ver_openssl))
+        # self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-{}'.format(env.ver_ossl))
         self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(env.ver_libuv))
         self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls))
         self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(env.ver_libssh))
@@ -322,8 +349,8 @@ class BuilderLinux(BuilderBase):
         else:
             cc.w('already exists, skip.')
 
-    # def _build_openssl(self, file_name):
-    #     pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
+    def _build_openssl(self, file_name):
+        pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
 
     def _build_libuv(self, file_name):
         if not os.path.exists(self.LIBUV_PATH_SRC):
@@ -570,8 +597,8 @@ class BuilderMacOS(BuilderBase):
         else:
             cc.w('already exists, skip.')
 
-    # def _build_openssl(self, file_name):
-    #     # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
+    def _build_openssl(self, file_name):
+        pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
     #
     #     if not os.path.exists(self.OPENSSL_PATH_SRC):
     #         os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
@@ -797,7 +824,7 @@ def main():
 
     builder.build_jsoncpp()
     builder.build_mongoose()
-    # builder.build_openssl()
+    builder.build_openssl()
     builder.build_libuv()
     builder.build_mbedtls()
     builder.build_libssh()

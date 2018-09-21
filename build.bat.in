@@ -2,10 +2,12 @@
 
 rem ============================================
 rem 请调整以下路径，以适配您自己的的系统环境。
-rem 注意：必须使用Pyhont 3.4，32位版本！！
+rem 注意：必须使用Pyhont 3.7，32位版本！！
+rem 可以从这里下载：
+rem https://www.python.org/ftp/python/3.7.0/python-3.7.0.exe
 rem ============================================
-SET PYEXEC=C:\Program Files\Python\python.exe
 
+SET PYEXEC=C:\Program Files\Python\python.exe
 
 
 "%PYEXEC%" -B build/build.py %1 %2 %3 %4 %5

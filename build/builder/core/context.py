@@ -59,6 +59,7 @@ class BuildContext(object):
         if self.host_os == 'windows':
             self.host_os_is_win_x64 = 'PROGRAMFILES(X86)' in os.environ
 
+        self.dist_path = ''
         self.make_dist_path()
 
     def make_dist_path(self):
