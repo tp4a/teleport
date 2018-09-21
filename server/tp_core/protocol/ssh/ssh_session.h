@@ -132,6 +132,7 @@ private:
 	ex_u16 m_conn_port;
 	ex_astr m_acc_name;
 	ex_astr m_acc_secret;
+    ex_u32 m_flags;
 	int m_auth_type;
 
 	bool m_is_logon;
