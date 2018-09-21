@@ -328,6 +328,9 @@ $app.on_table_host_render_created = function (render) {
             case TP_SESS_STAT_ERR_SESSION:
                 msg = '无效会话';
                 break;
+            case TP_SESS_STAT_ERR_AUTH_TYPE:
+                msg = '无效认证方式';
+                break;
             default:
                 msg = '未知状态 [' + fields.state + ']';
         }

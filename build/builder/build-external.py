@@ -46,7 +46,12 @@ class BuilderBase:
         self._build_openssl(file_name)
 
     def _build_openssl(self, file_name):
-        cc.e("this is a pure-virtual function.")
+        _alt_ver = '_'.join(env.ver_openssl.split('.'))
+        if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
+            return False
+        else:
+            return True
+        # cc.e("this is a pure-virtual function.")
 
     def build_libuv(self):
         file_name = 'libuv-{}.zip'.format(env.ver_libuv)

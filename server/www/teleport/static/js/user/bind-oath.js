@@ -182,7 +182,7 @@ $app.on_auth_user = function () {
     }
 
     $app.dom.auth.btn_submit.attr('disabled', 'disabled');
-    $tp.ajax_post_json('/user/verify-user', {username: str_username, password: str_password},
+    $tp.ajax_post_json('/user/verify-user', {username: str_username, password: str_password, check_bind_oath: true},
         function (ret) {
             $app.dom.auth.btn_submit.removeAttr('disabled');
             if (ret.code === TPE_OK) {

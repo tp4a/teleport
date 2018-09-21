@@ -859,7 +859,6 @@ $app.create_dlg_edit_host = function () {
             cid: dlg.field_cid,
             desc: dlg.field_desc
         };
-        console.log(args);
 
         // 如果id为-1表示创建，否则表示更新
         $tp.ajax_post_json('/asset/update-host', args,
@@ -1148,7 +1147,6 @@ $app.create_dlg_accounts = function () {
         $tp.ajax_post_json('/asset/get-accounts', {host_id: dlg.host.id},
             function (ret) {
                 if (ret.code === TPE_OK) {
-                    console.log('account:', ret.data);
                     $app.table_acc.set_data(cb_stack, {}, {total: ret.data.length, page_index: 1, data: ret.data});
                 } else {
                     $app.table_acc.set_data(cb_stack, {}, {total: 0, page_index: 1, data: {}});
@@ -1519,6 +1517,10 @@ $app.create_dlg_edit_account = function () {
         }
 
         dlg.dom.auth_type.empty().append($(html.join('')));
+
+        if(!_.isNull(dlg.account))
+            dlg.dom.auth_type.val(dlg.account.auth_type);
+
         dlg.on_auth_change();
     };
 

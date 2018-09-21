@@ -113,6 +113,9 @@
     <ClInclude Include="..\..\..\..\external\jsoncpp\include\json\json.h">
       <Filter>jsoncpp</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\common\teleport\teleport_const.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tpssh.cpp">

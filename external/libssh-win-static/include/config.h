@@ -6,15 +6,15 @@
 #define PACKAGE "libssh"
 
 /* Version number of package */
-#define VERSION "0.7.4"
+#define VERSION "0.7.5"
 
 /* #undef LOCALEDIR */
 /* #undef DATADIR */
 //#define LIBDIR "lib"
 //#define PLUGINDIR "plugins-4"
 /* #undef SYSCONFDIR */
-//#define BINARYDIR "E:/work/eomsoft/tmp/libssh/build"
-//#define SOURCEDIR "E:/work/eomsoft/tmp/libssh"
+//#define BINARYDIR "E:/work/tp4a/teleport/external/_download_/libssh-0.7.5/build"
+//#define SOURCEDIR "E:/work/tp4a/teleport/external/_download_/libssh-0.7.5"
 
 /************************** HEADER FILES *************************/
 
@@ -81,28 +81,28 @@
 /*************************** FUNCTIONS ***************************/
 
 /* Define to 1 if you have the `EVP_aes128_ctr' function. */
-#define HAVE_OPENSSL_EVP_AES_CTR 1
+//#define HAVE_OPENSSL_EVP_AES_CTR 1
 
 /* Define to 1 if you have the `EVP_aes128_cbc' function. */
-#define HAVE_OPENSSL_EVP_AES_CBC 1
+//#define HAVE_OPENSSL_EVP_AES_CBC 1
 
 /* Define to 1 if you have the `snprintf' function. */
 #define HAVE_SNPRINTF 1
 
 /* Define to 1 if you have the `_snprintf' function. */
-/* #undef HAVE__SNPRINTF */
+#define HAVE__SNPRINTF 1
 
 /* Define to 1 if you have the `_snprintf_s' function. */
-/* #undef HAVE__SNPRINTF_S */
+#define HAVE__SNPRINTF_S 1
 
 /* Define to 1 if you have the `vsnprintf' function. */
 #define HAVE_VSNPRINTF 1
 
 /* Define to 1 if you have the `_vsnprintf' function. */
-/* #undef HAVE__VSNPRINTF */
+#define HAVE__VSNPRINTF 1
 
 /* Define to 1 if you have the `_vsnprintf_s' function. */
-/* #undef HAVE__VSNPRINTF_S */
+#define HAVE__VSNPRINTF_S 1
 
 /* Define to 1 if you have the `isblank' function. */
 #define HAVE_ISBLANK 1
@@ -172,8 +172,7 @@
 #define WITH_SFTP 1
 
 /* Define to 1 if you want to enable SSH1 */
-/* #undef WITH_SSH1 */
-#define WITH_SSH1
+#define WITH_SSH1 1
 
 /* Define to 1 if you want to enable server support */
 #define WITH_SERVER 1

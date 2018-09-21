@@ -49,6 +49,7 @@ var TP_SESS_STAT_ERR_BAD_PKG = 6; // 会话结束，因为收到错误的报文
 var TP_SESS_STAT_ERR_RESET = 7; // 会话结束，因为teleport核心服务重置了
 var TP_SESS_STAT_ERR_IO = 8; // 会话结束，因为网络中断
 var TP_SESS_STAT_ERR_SESSION = 9; // 会话结束，因为无效的会话ID
+var TP_SESS_STAT_ERR_AUTH_TYPE = 10; // // 会话结束，因为服务端不支持此认证方式
 var TP_SESS_STAT_STARTED = 100; // 已经连接成功了，开始记录录像了
 var TP_SESS_STAT_ERR_START_INTERNAL = 104; // 会话结束，因为内部错误
 var TP_SESS_STAT_ERR_START_BAD_PKG = 106; // 会话结束，因为收到错误的报文
@@ -212,6 +213,7 @@ var TPE_CAPTCHA_EXPIRED = 10000;
 var TPE_CAPTCHA_MISMATCH = 10001;
 var TPE_OATH_MISMATCH = 10002;
 var TPE_SYS_MAINTENANCE = 10003;
+var TPE_OATH_ALREADY_BIND = 10004;
 
 var TPE_USER_LOCKED = 10100;
 var TPE_USER_DISABLED = 10101;
@@ -313,6 +315,10 @@ function tp_error_msg(error_code, message) {
             break;
         case  TPE_SYS_MAINTENANCE:
             msg = '系统维护中';
+            break;
+        
+        case TPE_OATH_ALREADY_BIND:
+            msg = '该账号已经绑定了身份验证器，如无法使用，请联系管理员重置密码或更换登陆方式';
             break;
 
         case TPE_USER_LOCKED:

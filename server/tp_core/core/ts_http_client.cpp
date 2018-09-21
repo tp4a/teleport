@@ -53,7 +53,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 		break;
 	case MG_EV_HTTP_REPLY:
 		nc->flags |= MG_F_CLOSE_IMMEDIATELY;
-		hdata->exit_flag = true;
+		//hdata->exit_flag = true;
 		hdata->body.assign(hm->body.p, hm->body.len);
 		break;
 	case MG_EV_CLOSE:
@@ -68,35 +68,41 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 	}
 }
 
+static struct mg_mgr g_mg_mgr;
+static bool is_mg_mgr_initialized = false;
+
 bool ts_http_get(const ex_astr& url, ex_astr& body)
 {
-	struct mg_mgr mgr;
-	mg_mgr_init(&mgr, NULL);
+    if(!is_mg_mgr_initialized) {
+        mg_mgr_init(&g_mg_mgr, NULL);
+        is_mg_mgr_initialized = true;
+    }
 
-	mg_connection* nc = mg_connect_http(&mgr, ev_handler, url.c_str(), NULL, NULL);
+	mg_connection* nc = mg_connect_http(&g_mg_mgr, ev_handler, url.c_str(), NULL, NULL);
 	if (NULL == nc)
 		return false;
 
-	HTTP_DATA* hdata = new HTTP_DATA;
-	hdata->exit_flag = false;
-	hdata->have_error = false;
+	//HTTP_DATA* hdata = new HTTP_DATA;
+	HTTP_DATA hdata;
+	hdata.exit_flag = false;
+	hdata.have_error = false;
 
-	nc->user_data = hdata;
+	nc->user_data = &hdata;
 
 //	int count = 0;
-	while (!hdata->exit_flag)
+	while (!hdata.exit_flag)
 	{
-		mg_mgr_poll(&mgr, 100);
+		mg_mgr_poll(&g_mg_mgr, 100);
 // 		count++;
 // 		if (count > 2)
 // 			break;
 	}
 
-	bool ret = !hdata->have_error;
+	bool ret = !hdata.have_error;
 	if (ret)
-		body = hdata->body;
+		body = hdata.body;
 
-	delete hdata;
-	mg_mgr_free(&mgr);
+//	mg_mgr_free(&mgr);
+//	delete hdata;
 	return ret;
 }

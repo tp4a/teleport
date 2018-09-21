@@ -28,9 +28,9 @@ __pycache__
 **/.idea/modules.xml
 **/.idea/dictionaries
 **/.idea/watcherTasks.xml
-**/.idea/codeStyles
 **/.idea/inspectionProfiles
 **/.idea/vcs.xml
+**/.idea/codeStyles
 
 *.css.map
 
