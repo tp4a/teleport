@@ -3,11 +3,10 @@
 ################################################################
 # Basic settings.
 ################################################################
-VER_PYTHON="3.4.4"
-VER_PYTHON_SHORT="3.4"
+VER_PYTHON="3.7.0"
+VER_PYTHON_SHORT="3.7"
 VER_OPENSSL="1.0.2p"
-VER_SQLITE="3250000"
-# VER_PSUTIL="4.2.0"
+# VER_SQLITE="3250000"
 VER_PYTHON_LIB="${VER_PYTHON_SHORT}m"
 
 ################################################################
@@ -53,7 +52,7 @@ function dlfile()
 	echo -n "Downloading $1 ..."
 	if [ ! -f "$4/$3" ]; then
 		echo ""
-		# curl --insecure https://www.python.org/ftp/python/3.4.3/${VER_PYTHON}.tgz -o "${PATH_PYTHON}/${VER_PYTHON}.tgz"
+		# curl --insecure https://www.python.org/ftp/python/3.7.0/${VER_PYTHON}.tgz -o "${PATH_PYTHON}/${VER_PYTHON}.tgz"
 		echo wget $2$3 -O "$4/$3"
 		wget --no-check-certificate $2$3 -O "$4/$3"
 
@@ -78,23 +77,7 @@ function step_download_files()
 
 	dlfile "python source tarball"  "https://www.python.org/ftp/python/${VER_PYTHON}/" "Python-${VER_PYTHON}.tgz" ${PATH_DOWNLOAD}
 	dlfile "openssl source tarball" "https://www.openssl.org/source/" "openssl-${VER_OPENSSL}.tar.gz" ${PATH_DOWNLOAD}
-	dlfile "sqlite source tarball"  "http://sqlite.org/2018/" "sqlite-autoconf-${VER_SQLITE}.tar.gz" ${PATH_DOWNLOAD}
-
-	# dlfile "psutil source tarball"  "https://pypi.python.org/packages/source/p/psutil/" "psutil-${VER_PSUTIL}.tar.gz" ${PATH_DOWNLOAD}
-	# https://pypi.python.org/pypi?:action=display&name=psutil#downloads
-
-	# echo -n "Downloading psutil source tarball ..."
-	# if [ ! -f "${PATH_DOWNLOAD}/psutil-${VER_PSUTIL}.tar.gz" ]; then
-	# 	echo ""
-	# 	echo "Because pypi.python.org limit, can not auto-download psutil, please visit following url:"
-	# 	echo "  https://pypi.python.org/pypi?:action=display&name=psutil#downloads"
-	# 	echo "and download psutil-${VER_PSUTIL}.tar.gz and put it into folder:"
-	# 	echo "  ${PATH_DOWNLOAD}"
-	# 	echo "after download, try again."
-	# 	on_error "psutil source tarball not exists."
-	# else
-	# 	echo " already exists, skip."
-	# fi
+	# dlfile "sqlite source tarball"  "http://sqlite.org/2018/" "sqlite-autoconf-${VER_SQLITE}.tar.gz" ${PATH_DOWNLOAD}
 }
 
 
@@ -118,17 +101,12 @@ function step_prepare_source()
 	fi
 
 
-	if [ ! -d "${PATH_TMP}/sqlite-autoconf-${VER_SQLITE}" ]; then
-		tar -zxvf "${PATH_DOWNLOAD}/sqlite-autoconf-${VER_SQLITE}.tar.gz" -C "${PATH_TMP}"
-	fi
-
-	# if [ ! -d "${PATH_TMP}/psutil-${VER_PSUTIL}" ]; then
-	# 	tar -zxvf "${PATH_DOWNLOAD}/psutil-${VER_PSUTIL}.tar.gz" -C "${PATH_TMP}"
+	# if [ ! -d "${PATH_TMP}/sqlite-autoconf-${VER_SQLITE}" ]; then
+	# 	tar -zxvf "${PATH_DOWNLOAD}/sqlite-autoconf-${VER_SQLITE}.tar.gz" -C "${PATH_TMP}"
 	# fi
 
-	# cp -r "${PATH_TMP}/psutil-${VER_PSUTIL}/psutil" "${PATH_TMP}/Python-${VER_PYTHON}/Modules/."
-	cp -r "${PATH_TMP}/sqlite-autoconf-${VER_SQLITE}" "${PATH_TMP}/Python-${VER_PYTHON}/Modules/_sqlite/sqlite3"
-	cp -r "${PATH_FIX}/Python-${VER_PYTHON}" "${PATH_TMP}"
+	# cp -r "${PATH_TMP}/sqlite-autoconf-${VER_SQLITE}" "${PATH_TMP}/Python-${VER_PYTHON}/Modules/_sqlite/sqlite3"
+	# cp -r "${PATH_FIX}/Python-${VER_PYTHON}" "${PATH_TMP}"
 }
 
 function step_build_openssl()
@@ -159,7 +137,7 @@ function step_build_python()
 
 	if [ ! -f "${PATH_RELEASE}/lib/${FILE_PYTHON_STATIC_LIB}" ]; then
 		cd "${PY_PATH_SRC}"
-		cp "${PY_PATH_SRC}/Modules/Setup.dist" "${PY_PATH_SRC}/Modules/Setup"
+		# cp "${PY_PATH_SRC}/Modules/Setup.dist" "${PY_PATH_SRC}/Modules/Setup"
 		LDFLAGS=-lrt ./configure --disable-shared  --prefix=${PATH_RELEASE}
 		make
 		make altinstall
@@ -176,15 +154,11 @@ function step_build_python()
 
 function step_finalize()
 {
-	# copy psutil *.py for release.
 	echo "finalize ..."
 
 	if [ ! -d "${PATH_RELEASE}/lib/python${VER_PYTHON_SHORT}/site-packages" ]; then
 		on_error "something goes wrong."
 	fi
-
-
-	# cp -r "${PATH_FIX}/psutil-${VER_PSUTIL}/psutil" "${PATH_RELEASE}/lib/python${VER_PYTHON_SHORT}/site-packages/psutil"
 }
 
 
