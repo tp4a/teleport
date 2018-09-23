@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import time
+
 from core import colorconsole as cc
 from core import utils
 from core.context import *
@@ -141,7 +143,7 @@ class BuilderWin(BuilderBase):
         utils.copy_ex(_header_path, os.path.join(PATH_EXTERNAL, 'python', 'include'))
 
     def _build_openssl(self, file_name):
-        cc.n('build openssl static library from source code... ', end='')
+        cc.n('build openssl static library from source code... ')
 
         _alt_ver = '_'.join(env.ver_ossl.split('.'))
         if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
@@ -160,6 +162,7 @@ class BuilderWin(BuilderBase):
                 break
 
         if not need_build:
+			cc.n('build openssl static library from source code... ', end='')
             cc.w('already exists, skip.')
             return
         cc.v('')
@@ -207,26 +210,8 @@ class BuilderWin(BuilderBase):
             return
         cc.v('')
 
-        # cc.n('prepare libssh source code... ', end='')
-        # _include = os.path.join(self.LIBSSH_PATH_SRC, 'include', 'libssh')
-        # _src = os.path.join(self.LIBSSH_PATH_SRC, 'src')
-        #
-        # if not os.path.exists(_include) or not os.path.exists(_src):
-        #     utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
-        #     # os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
-        #
-        #     _unzipped_path = os.path.join(PATH_EXTERNAL, 'libssh-{}'.format(env.ver_libssh))
-        #
-        #     utils.copy_ex(os.path.join(_unzipped_path, 'include', 'libssh'), _include)
-        #     utils.copy_ex(os.path.join(_unzipped_path, 'src'), _src)
-        #
-        #     utils.remove(_unzipped_path)
-        #
-        #     if not os.path.exists(_include) or not os.path.exists(_src):
-        #         raise RuntimeError('\ncan not prepare libssh source code.')
-        # else:
-        #     cc.w('already exists, skip.')
-
+        cc.w('On Windows, when build libssh, need you use cmake-gui.exe to generate solution file')
+        cc.w('for Visual Studio 2015. Visit https://docs.tp4a.com for more details.')
         cc.w('\nOnce the libssh.sln generated, press Enter to continue or Q to quit...', end='')
         try:
             x = env.input()
@@ -285,6 +270,7 @@ class BuilderWin(BuilderBase):
         if not os.path.exists(self.LIBUV_PATH_SRC):
             cc.v('')
             utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            time.sleep(1)   # wait for a while, otherwise rename may fail.
             os.rename(os.path.join(PATH_EXTERNAL, 'libuv-{}'.format(env.ver_libuv)), self.LIBUV_PATH_SRC)
         else:
             cc.w('already exists, skip.')
