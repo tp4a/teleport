@@ -162,7 +162,7 @@ class BuilderWin(BuilderBase):
                 break
 
         if not need_build:
-			cc.n('build openssl static library from source code... ', end='')
+            cc.n('build openssl static library from source code... ', end='')
             cc.w('already exists, skip.')
             return
         cc.v('')

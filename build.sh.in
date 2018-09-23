@@ -1,22 +1,5 @@
 #!/bin/bash
 
-#---------------------------------------------------------------
-# README
-#
-# pleas copy build.sh.in to build.sh and change the following
-# two lines to fit your env.
-#
-# Recommend to download miniconda from
-#   https://conda.io/miniconda.html
-# and install it, root priviledge is not necessary.
-#---------------------------------------------------------------
-PATH_PYTHON_LINUX=/path/of/your/miniconda/installation
-PATH_PYTHON_MACOS=/path/of/your/miniconda/installation
-
-################################################################
-# DO NOT TOUCH FOLLOWING CODE
-################################################################
-
 PATH_ROOT=$(cd "$(dirname "$0")"; pwd)
 
 function on_error()
@@ -31,33 +14,27 @@ function on_error()
 	exit 1
 }
 
-function check_python
-{
-	if [ ! -f "${PYSTATIC}" ]; then
-    	on_error "python not found."
-	fi
-}
-
 function build_linux
 {
-    PATH_PYTHON=${PATH_PYTHON_LINUX}
-	PYEXEC=${PATH_PYTHON}/bin/python3.7
-	PYSTATIC=${PATH_PYTHON}/lib/libpython3.7m.a
+	PYEXEC=${PATH_ROOT}/external/linux/release/bin/python3.7
+	PYSTATIC=${PATH_ROOT}/external/linux/release/lib/libpython3.7m.a
 
-    check_python
+	if [ ! -f "${PYSTATIC}" ]; then
+		echo "python static not found, now build it..."
+		"${PATH_ROOT}/build/build-py-static.sh"
+
+		if [ ! -f "${PYSTATIC}" ]; then
+			on_error "can not build python static."
+		fi
+	fi
+
 
 	${PYEXEC} -B "${PATH_ROOT}/build/build.py" $@
 }
 
 function build_macos
 {
-    PATH_PYTHON=${PATH_PYTHON_LINUX}
-	PYEXEC=${PATH_PYTHON}/bin/python3.7
-	PYSTATIC=${PATH_PYTHON}/lib/libpython3.7m.a
-
-    check_python
-
-	${PYEXEC} -B "${PATH_ROOT}/build/build.py" $@
+	python3 -B "${PATH_ROOT}/build/build.py" $@
 }
 
 SYSTEM=`uname -s`
