@@ -30,15 +30,19 @@ class Builder:
                 if l.startswith('TP_SERVER '):
                     x = l.split(' ')
                     self.VER_TP_SERVER = x[1].strip()
+                    # self.VER_TP_SERVER += '.0'
                 elif l.startswith('TP_TPCORE '):
                     x = l.split(' ')
                     self.VER_TP_TPCORE = x[1].strip()
+                    # self.VER_TP_TPCORE += '.0'
                 elif l.startswith('TP_TPWEB '):
                     x = l.split(' ')
                     self.VER_TP_TPWEB = x[1].strip()
+                    # self.VER_TP_TPWEB += '.0'
                 elif l.startswith('TP_ASSIST '):
                     x = l.split(' ')
                     self.VER_TP_ASSIST = x[1].strip()
+                    # self.VER_TP_ASSIST += '.0'
 
         cc.v('new version:')
         cc.v('  Server             : ', self.VER_TP_SERVER)
@@ -182,7 +186,10 @@ class Builder:
         """ update rc file version info """
 
         t_ver = ver.split('.')
-        if len(t_ver) != 4:
+        while len(t_ver) < 4:
+            t_ver.append('0')
+
+        if len(t_ver) > 4:
             raise RuntimeError('Invalid version for .rc file.')
 
         bOK = False
@@ -292,7 +299,10 @@ class Builder:
     def _update_ver_nsi(self, nsiFilePath, ver):
         """ update nsis file version info """
         t_ver = ver.split('.')
-        if len(t_ver) != 4:
+        while len(t_ver) < 4:
+            t_ver.append('0')
+
+        if len(t_ver) > 4:
             raise RuntimeError('Invalid version for nsis file.')
 
         bOK = False
@@ -365,7 +375,7 @@ class Builder:
     def _update_ver_plist(self, plist_file, ver):
         """ update plist file version info for MacOS app."""
         t_ver = ver.split('.')
-        if len(t_ver) != 4:
+        if len(t_ver) < 3:
             raise RuntimeError('Invalid version for plist file.')
 
         bOK = False

@@ -6,7 +6,8 @@
 VER_PYTHON="3.7.0"
 VER_PYTHON_SHORT="3.7"
 VER_OPENSSL="1.0.2p"
-# VER_SQLITE="3250000"
+VER_SQLITE="3250000"
+VER_ZLIB="1.2.11"
 VER_PYTHON_LIB="${VER_PYTHON_SHORT}m"
 
 ################################################################
@@ -24,9 +25,8 @@ PATH_RELEASE=${PATH_EXT}/linux/release
 
 
 PY_PATH_SRC=${PATH_TMP}/Python-${VER_PYTHON}
-#PATH_SRC=${PATH_TMP}/${VER_PYTHON}
-#PATH_INST=${PATH_RELEASE}/python
 OSSL_PATH_SRC=${PATH_TMP}/openssl-${VER_OPENSSL}
+PATH_SRC_SQLITE=${PATH_TMP}/sqlite-autoconf-${VER_SQLITE}
 
 function on_error()
 {
@@ -77,7 +77,8 @@ function step_download_files()
 
 	dlfile "python source tarball"  "https://www.python.org/ftp/python/${VER_PYTHON}/" "Python-${VER_PYTHON}.tgz" ${PATH_DOWNLOAD}
 	dlfile "openssl source tarball" "https://www.openssl.org/source/" "openssl-${VER_OPENSSL}.tar.gz" ${PATH_DOWNLOAD}
-	# dlfile "sqlite source tarball"  "http://sqlite.org/2018/" "sqlite-autoconf-${VER_SQLITE}.tar.gz" ${PATH_DOWNLOAD}
+	dlfile "sqlite source tarball"  "http://sqlite.org/2018/" "sqlite-autoconf-${VER_SQLITE}.tar.gz" ${PATH_DOWNLOAD}
+	dlfile "zlib source tarball"    "https://www.zlib.net/" "zlib-${VER_ZLIB}.tar.gz" ${PATH_DOWNLOAD}
 }
 
 
@@ -100,13 +101,32 @@ function step_prepare_source()
 		tar -zxvf "${PATH_DOWNLOAD}/openssl-${VER_OPENSSL}.tar.gz" -C "${PATH_TMP}"
 	fi
 
+	if [ ! -d "${PATH_TMP}/Python-${VER_PYTHON}/Modules/_sqlite/sqlite3" ]; then
+		tar -zxvf "${PATH_DOWNLOAD}/sqlite-autoconf-${VER_SQLITE}.tar.gz" -C "${PATH_TMP}"
+		mv "${PATH_TMP}/sqlite-autoconf-${VER_SQLITE}" "${PATH_TMP}/Python-${VER_PYTHON}/Modules/_sqlite/sqlite3"
+	fi
 
-	# if [ ! -d "${PATH_TMP}/sqlite-autoconf-${VER_SQLITE}" ]; then
-	# 	tar -zxvf "${PATH_DOWNLOAD}/sqlite-autoconf-${VER_SQLITE}.tar.gz" -C "${PATH_TMP}"
-	# fi
+	if [ ! -d "${PATH_TMP}/Python-${VER_PYTHON}/Modules/zlib" ]; then
+		tar -zxvf "${PATH_DOWNLOAD}/zlib-${VER_ZLIB}.tar.gz" -C "${PATH_TMP}"
+		mv "${PATH_TMP}/zlib-${VER_ZLIB}" "${PATH_TMP}/Python-${VER_PYTHON}/Modules/zlib"
+	fi
 
-	# cp -r "${PATH_TMP}/sqlite-autoconf-${VER_SQLITE}" "${PATH_TMP}/Python-${VER_PYTHON}/Modules/_sqlite/sqlite3"
-	# cp -r "${PATH_FIX}/Python-${VER_PYTHON}" "${PATH_TMP}"
+	if [ ! -d "${PATH_TMP}/Python-${VER_PYTHON}" ]; then
+		on_error "Can not prepare source code for build Python."
+	fi
+	if [ ! -d "${PATH_TMP}/openssl-${VER_OPENSSL}" ]; then
+		on_error "Can not prepare source code for build OpenSSL."
+	fi
+	if [ ! -d "${PATH_TMP}/Python-${VER_PYTHON}/Modules/_sqlite/sqlite3" ]; then
+		on_error "Can not prepare source code for build sqlite3 module for Python."
+	fi
+
+	cp "${PATH_FIX}/Python-${VER_PYTHON}/Modules/Setup.dist" "${PY_PATH_SRC}/Modules/Setup.dist"
+	cp "${PATH_FIX}/Python-${VER_PYTHON}/Modules/Setup.dist" "${PY_PATH_SRC}/Modules/Setup"
+	cp "${PATH_FIX}/Python-${VER_PYTHON}/Modules/_sqlite/cache.h" "${PY_PATH_SRC}/Modules/_sqlite/cache.h"
+	cp "${PATH_FIX}/Python-${VER_PYTHON}/Modules/_sqlite/prepare_protocol.h" "${PY_PATH_SRC}/Modules/_sqlite/prepare_protocol.h"
+
+	echo "prepare source done"
 }
 
 function step_build_openssl()
@@ -130,16 +150,25 @@ function step_build_openssl()
 	fi
 }
 
-
 function step_build_python()
 {
 	echo -n "build python static library ..."
 
 	if [ ! -f "${PATH_RELEASE}/lib/${FILE_PYTHON_STATIC_LIB}" ]; then
+	    echo ""
+
+        echo " ... configure zlib..."
+		cd "${PY_PATH_SRC}/Modules/zlib"
+		./configure --prefix=${PATH_RELEASE}
+
 		cd "${PY_PATH_SRC}"
-		# cp "${PY_PATH_SRC}/Modules/Setup.dist" "${PY_PATH_SRC}/Modules/Setup"
-		LDFLAGS=-lrt ./configure --disable-shared  --prefix=${PATH_RELEASE}
+        echo " ... configure python..."
+		LDFLAGS=-lrt ./configure --prefix=${PATH_RELEASE} --disable-shared --enable-optimizations --with-openssl=${PATH_RELEASE}
+
+        echo " ... build python..."
 		make
+
+        echo " ... install python..."
 		make altinstall
 		cd "${PATH_ROOT}"
 

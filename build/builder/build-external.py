@@ -322,19 +322,23 @@ class BuilderLinux(BuilderBase):
         if os.path.exists(os.path.join(self.PATH_RELEASE, 'include', 'python', 'Python.h')):
             cc.w(' - header file already exists, skip.')
         else:
-            utils.ensure_file_exists(os.path.join(env.path_py_inc, 'Python.h'))
-            utils.makedirs(os.path.join(self.PATH_RELEASE, 'include'))
-            utils.copy_ex(env.path_py_inc, os.path.join(self.PATH_RELEASE, 'include', 'python'))
+            utils.ensure_file_exists(os.path.join(self.PATH_RELEASE, 'include', 'python{}m'.format(ctx.py_dot_ver), 'Python.h'))
+            # utils.makedirs(os.path.join(self.PATH_RELEASE, 'include'))
+            # utils.copy_ex(env.path_py_inc, os.path.join(self.PATH_RELEASE, 'include', 'python'))
+            utils.sys_exec('ln -s "{}" "{}"'.format(
+                os.path.join(self.PATH_RELEASE, 'include', 'python{}m'.format(ctx.py_dot_ver)),
+                os.path.join(self.PATH_RELEASE, 'include', 'python')
+            ))
 
         lib_file = 'libpython{}m.a'.format(env.py_ver_dot)
-        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', lib_file)):
-            cc.w(' - lib file already exists, skip.')
-        else:
-            utils.ensure_file_exists(os.path.join(env.path_py_lib, lib_file))
-            utils.makedirs(os.path.join(self.PATH_RELEASE, 'lib'))
-            utils.copy_file(env.path_py_lib, os.path.join(self.PATH_RELEASE, 'lib'), lib_file)
-            utils.copy_file(env.path_py_lib, os.path.join(self.PATH_RELEASE, 'lib'), 'libcrypto.a')
-            utils.copy_file(env.path_py_lib, os.path.join(self.PATH_RELEASE, 'lib'), 'libssl.a')
+        utils.ensure_file_exists(os.path.join(self.PATH_RELEASE, 'lib', lib_file))
+        # if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', lib_file)):
+        #     cc.w(' - lib file already exists, skip.')
+        # else:
+        #     utils.makedirs(os.path.join(self.PATH_RELEASE, 'lib'))
+        #     utils.copy_file(env.path_py_lib, os.path.join(self.PATH_RELEASE, 'lib'), lib_file)
+        #     utils.copy_file(env.path_py_lib, os.path.join(self.PATH_RELEASE, 'lib'), 'libcrypto.a')
+        #     utils.copy_file(env.path_py_lib, os.path.join(self.PATH_RELEASE, 'lib'), 'libssl.a')
 
     def _build_jsoncpp(self, file_name):
         cc.n('prepare jsoncpp source code...', end='')
@@ -378,6 +382,12 @@ class BuilderLinux(BuilderBase):
         os.system('make')
         os.system('make install')
         os.chdir(old_p)
+
+        files = os.listdir(os.path.join(self.PATH_RELEASE, 'lib'))
+        for i in files:
+            if i.startswith('libuv.so') or i.startswith('libuv.la'):
+                # use os.unlink() because some file should be a link.
+                os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
 
     def _build_mbedtls(self, file_name):
         if not os.path.exists(self.MBEDTLS_PATH_SRC):
@@ -465,78 +475,50 @@ class BuilderLinux(BuilderBase):
 
     def _build_libssh(self, file_name):
         if not os.path.exists(self.LIBSSH_PATH_SRC):
-            # os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, PATH_TMP))
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-            # os.rename(os.path.join(self.PATH_TMP, 'master'), os.path.join(self.PATH_TMP, 'libssh-{}'.format(LIBSSH_VER)))
 
         cc.n('build libssh...', end='')
-        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a')) and os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh_threads.a')):
+        if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a')):
             cc.w('already exists, skip.')
             return
         cc.v('')
 
         build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
-        # utils.makedirs(build_path)
 
-        # here is a bug in cmake v2.8.11 (default on ubuntu14), in FindOpenSSL.cmake,
-        # it parse opensslv.h, use regex like this:
-        #   REGEX "^#define[\t ]+OPENSSL_VERSION_NUMBER[\t ]+0x([0-9a-fA-F])+.*")
-        # but in openssl-1.0.2h, the version define line is:
-        #   # define OPENSSL_VERSION_NUMBER  0x1000208fL
-        # notice there is a space char between # and define, so find openssl always fail.
-
-        # old_p = os.getcwd()
-        # os.chdir(build_path)
-        # cmd = 'cmake' \
-        #       ' -DCMAKE_INSTALL_PREFIX={}' \
-        #       ' -D_OPENSSL_VERSION={}' \
-        #       ' -DOPENSSL_INCLUDE_DIR={}/include' \
-        #       ' -DOPENSSL_LIBRARIES={}/lib' \
-        #       ' -DCMAKE_BUILD_TYPE=Release' \
-        #       ' -DWITH_GSSAPI=OFF' \
-        #       ' -DWITH_ZLIB=OFF' \
-        #       ' -DWITH_STATIC_LIB=ON' \
-        #       ' -DWITH_PCAP=OFF' \
-        #       ' -DWITH_EXAMPLES=OFF' \
-        #       ' -DWITH_NACL=OFF' \
-        #       ' ..'.format(self.PATH_RELEASE, OPENSSL_VER, self.PATH_RELEASE, self.PATH_RELEASE)
-        # cc.n(cmd)
-        # os.system(cmd)
-        # # os.system('make ssh_static ssh_threads_static')
-        # os.system('make ssh_static')
-        # # os.system('make install')
-        # os.chdir(old_p)
-
-        cmake_define = ' -DCMAKE_INSTALL_PREFIX={prefix}' \
-                       ' -D_OPENSSL_VERSION={ossl_ver}' \
-                       ' -DOPENSSL_INCLUDE_DIR={ossl_inc}' \
-                       ' -DOPENSSL_LIBRARIES={ossl_lib}' \
-                       ' -DWITH_SSH1=ON' \
+        cmake_define = ' -DCMAKE_INSTALL_PREFIX={path_release}' \
+                       ' -DOPENSSL_INCLUDE_DIR={path_release}/include' \
+                       ' -DOPENSSL_LIBRARIES={path_release}/lib' \
                        ' -DWITH_SFTP=ON' \
                        ' -DWITH_SERVER=ON' \
                        ' -DWITH_STATIC_LIB=ON' \
                        ' -DWITH_GSSAPI=OFF' \
                        ' -DWITH_ZLIB=OFF' \
                        ' -DWITH_PCAP=OFF' \
-                       ' -DWITH_TESTING=OFF' \
-                       ' -DWITH_CLIENT_TESTING=OFF' \
+                       ' -DUNIT_TESTING=OFF' \
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
                        ' -DWITH_NACL=OFF' \
-                       ' ..'.format(prefix=self.PATH_RELEASE, ossl_ver=env.ver_ossl_number, ossl_inc=env.path_ossl_inc, ossl_lib=env.path_ossl_lib)
+                       ' ..'.format(path_release=self.PATH_RELEASE)
 
+        old_p = os.getcwd()
         try:
             utils.cmake(build_path, 'Release', False, cmake_define)
+            os.chdir(build_path)
+            utils.sys_exec('make install')
         except:
             pass
+        os.chdir(old_p)
 
-        # because make install will fail because we can not disable ssh_shared target,
-        # so we copy necessary files ourselves.
-        utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'libssh.a'))
-        utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads', 'libssh_threads.a'))
-        utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh.a')
-        utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh_threads.a')
-        utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
+        # utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'libssh.a'))
+        # utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh.a')
+        # utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
+
+        utils.ensure_file_exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a'))
+        files = os.listdir(os.path.join(self.PATH_RELEASE, 'lib'))
+        for i in files:
+            if i.startswith('libssh.so'):
+                # use os.unlink() because some file should be a link.
+                os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
 
     # def _build_sqlite(self, file_name):
     #     if not os.path.exists(self.SQLITE_PATH_SRC):
@@ -556,13 +538,14 @@ class BuilderLinux(BuilderBase):
     #     os.chdir(old_p)
 
     def fix_output(self):
+        pass
         # remove .so files, otherwise will link to .so but not .a in default.
         # rm = ['libsqlite3.la', 'libsqlite3.so.0', 'libsqlite3.so', 'libsqlite3.so.0.8.6', 'libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
-        rm = ['libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
-        for i in rm:
-            _path = os.path.join(self.PATH_RELEASE, 'lib', i)
-            if os.path.exists(_path):
-                utils.remove(_path)
+        # rm = ['libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
+        # for i in rm:
+        #     _path = os.path.join(self.PATH_RELEASE, 'lib', i)
+        #     if os.path.exists(_path):
+        #         utils.remove(_path)
 
 
 class BuilderMacOS(BuilderBase):

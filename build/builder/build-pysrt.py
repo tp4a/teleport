@@ -20,13 +20,14 @@ PY_LIB_REMOVE_WIN = ['ctypes/test', 'curses', 'dbm', 'distutils', 'email/test', 
                      'this.py', 'wave.py', 'webbrowser.py', 'zipapp.py']
 PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'dbm', 'distutils', 'ensurepip', 'idlelib', 'lib2to3',
                        'lib-dynload', 'pydoc_data', 'site-packages', 'sqlite3/test', 'test', 'tkinter', 'turtledemo', 'unittest', 'venv',
-                       'wsgiref', 'dis.py', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc_data', 'pydoc.py', 'this.py', 'wave.py',
-                       'webbrowser.py', 'zipapp.py']
+                       'wsgiref', 'dis.py', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc.py', 'this.py', 'wave.py', 'webbrowser.py', 'zipapp.py']
+PY_MODULE_REMOVE_LINUX = ['_ctypes_test', '_testbuffer', '_testcapi', '_testimportmultiple', '_testmultiphase', '_xxtestfuzz']
 
 
 class PYSBase:
     def __init__(self):
         self.base_path = os.path.join(env.root_path, 'out', 'pysrt', ctx.dist_path)
+        self.modules_path = os.path.join(self.base_path, 'modules')
 
         self.py_dll_path = ''
         self.py_lib_path = ''
@@ -60,8 +61,7 @@ class PYSBase:
 
     def _copy_modules(self):
         cc.n('copy python extension dll...')
-        mod_path = os.path.join(self.base_path, 'modules')
-        utils.makedirs(mod_path)
+        utils.makedirs(self.modules_path)
 
         ext = utils.extension_suffixes()
         cc.v('extension ext:', ext)
@@ -70,8 +70,8 @@ class PYSBase:
                 s = os.path.join(self.py_dll_path, m) + n
                 if os.path.exists(s):
                     cc.v('copy %s' % s)
-                    cc.v('  -> %s' % os.path.join(mod_path, m) + n)
-                    shutil.copy(s, os.path.join(mod_path, m) + n)
+                    cc.v('  -> %s' % os.path.join(self.modules_path, m) + n)
+                    shutil.copy(s, os.path.join(self.modules_path, m) + n)
 
     def _make_python_zip(self):
         cc.n('make python.zip...')
@@ -188,7 +188,7 @@ class PYSLinux(PYSBase):
     def __init__(self):
         super().__init__()
 
-        self.PATH_PYTHON_ROOT = env.path_miniconda  # os.path.abspath(os.path.join(os.path.dirname(sys.executable), '..'))
+        self.PATH_PYTHON_ROOT = os.path.abspath(os.path.join(os.path.dirname(sys.executable), '..'))
         if not os.path.exists(self.PATH_PYTHON_ROOT):
             raise RuntimeError('can not locate py-static release folder.')
 
@@ -220,7 +220,18 @@ class PYSLinux(PYSBase):
         utils.makedirs(self.base_path)
 
         cc.n('copy python extension dll...')
-        utils.copy_ex(self.py_dll_path, os.path.join(self.base_path, 'modules'))
+        utils.copy_ex(self.py_dll_path, self.modules_path)
+
+        cc.v('remove useless modules...')
+        for i in PY_MODULE_REMOVE_LINUX:
+            utils.remove(self.modules_path, '{}.cpython-{}m-x86_64-linux-gnu.so'.format(i, ctx.py_ver))
+
+        ext = utils.extension_suffixes()
+        files = os.listdir(self.modules_path)
+        for i in files:
+            for n in ext:
+                if i.find('_failed{}'.format(n)) != -1:
+                    utils.remove(self.modules_path, i)
 
     def _make_py_ver_file(self):
         # do nothing.

@@ -179,7 +179,7 @@ _struct _struct.c	# binary structure packing/unpacking
 _weakref _weakref.c	# basic weak reference support
 #_testcapi _testcapimodule.c    # Python C API test module
 _random _randommodule.c	# Random number generator
-#_elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI _elementtree.c	# elementtree accelerator
+_elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI _elementtree.c	# elementtree accelerator
 _pickle _pickle.c	# pickle accelerator
 _datetime _datetimemodule.c	# datetime accelerator
 _bisect _bisectmodule.c	# Bisection algorithms
@@ -373,15 +373,12 @@ _codecs_tw cjkcodecs/_codecs_tw.c
 
 
 ########################################################################
-# add extra-module by apex.
+# add extra-builtin-module by Apex Liu.
 ########################################################################
 
 zlib zlibmodule.c -I$(srcdir)/Modules/zlib \
 	zlib/adler32.c zlib/crc32.c zlib/deflate.c zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c zlib/trees.c zlib/zutil.c \
 	zlib/compress.c zlib/uncompr.c zlib/gzclose.c zlib/gzlib.c zlib/gzread.c zlib/gzwrite.c
-
-#_psutil_linux psutil/_psutil_linux.c
-#_psutil_posix psutil/_psutil_posix.c
 
 _json _json.c
 
@@ -390,11 +387,6 @@ _sqlite3 -I$(srcdir)/Modules/_sqlite/sqlite3 -I$(srcdir)/Modules/_sqlite \
 	_sqlite/cache.c _sqlite/connection.c _sqlite/cursor.c _sqlite/microprotocols.c _sqlite/module.c \
 	_sqlite/prepare_protocol.c _sqlite/row.c _sqlite/statement.c _sqlite/util.c
 
-# EXTRA_CFLAGS=-DMODULE_NAME='"sqlite3"' -DPSUTIL_VERSION=420
-#EXTRA_CFLAGS=-DPSUTIL_VERSION=420
-
-
-
 # Uncommenting the following line tells makesetup that all following modules
 # are not built (see above for more detail).
 #
@@ -402,3 +394,7 @@ _sqlite3 -I$(srcdir)/Modules/_sqlite/sqlite3 -I$(srcdir)/Modules/_sqlite \
 #
 #_sqlite3 _tkinter _curses pyexpat
 #_codecs_jp _codecs_kr _codecs_tw unicodedata
+
+*disabled*
+_tkinter _curses
+
