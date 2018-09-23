@@ -406,7 +406,7 @@ class DoRemoveMembersHandler(TPBaseJsonHandler):
 
 class RecordHandler(TPBaseHandler):
     def get(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
         if ret != TPE_OK:
             return
 
@@ -426,7 +426,7 @@ class RecordHandler(TPBaseHandler):
 
 class DoGetRecordsHandler(TPBaseJsonHandler):
     def post(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
         if ret != TPE_OK:
             return
 
@@ -525,7 +525,7 @@ class ReplayHandler(TPBaseHandler):
 class ComandLogHandler(TPBaseHandler):
     @tornado.gen.coroutine
     def get(self, protocol, record_id):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
         if ret != TPE_OK:
             return
 
@@ -595,7 +595,7 @@ class ComandLogHandler(TPBaseHandler):
 class DoGetRecordHeaderHandler(TPBaseJsonHandler):
     @tornado.gen.coroutine
     def post(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT)
         if ret != TPE_OK:
             return
 
@@ -657,7 +657,7 @@ class DoGetFileHandler(TPBaseHandler):
 
         # log.v('--{}\n'.format(self.request.uri))
 
-        require_privilege = TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT
+        require_privilege = TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT
 
         # sid = self.get_argument('sid', None)
         # if sid is None:

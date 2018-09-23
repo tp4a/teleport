@@ -88,7 +88,20 @@ BOOT_TIME = None  # set later
 # speedup, see: https://github.com/giampaolo/psutil/issues/708
 BIGFILE_BUFFERING = -1 if PY3 else 8192
 LITTLE_ENDIAN = sys.byteorder == 'little'
-SECTOR_SIZE_FALLBACK = 512
+
+# "man iostat" states that sectors are equivalent with blocks and have
+# a size of 512 bytes. Despite this value can be queried at runtime
+# via /sys/block/{DISK}/queue/hw_sector_size and results may vary
+# between 1k, 2k, or 4k... 512 appears to be a magic constant used
+# throughout Linux source code:
+# * https://stackoverflow.com/a/38136179/376587
+# * https://lists.gt.net/linux/kernel/2241060
+# * https://github.com/giampaolo/psutil/issues/1305
+# * https://github.com/torvalds/linux/blob/
+#     4f671fe2f9523a1ea206f63fe60a7c7b3a56d5c7/include/linux/bio.h#L99
+# * https://lkml.org/lkml/2015/8/17/234
+DISK_SECTOR_SIZE = 512
+
 if enum is None:
     AF_LINK = socket.AF_PACKET
 else:
@@ -111,7 +124,10 @@ else:
 
     globals().update(IOPriority.__members__)
 
-# taken from /fs/proc/array.c
+# See:
+# https://github.com/torvalds/linux/blame/master/fs/proc/array.c
+# ...and (TASK_* constants):
+# https://github.com/torvalds/linux/blob/master/include/linux/sched.h
 PROC_STATUSES = {
     "R": _common.STATUS_RUNNING,
     "S": _common.STATUS_SLEEPING,
@@ -122,7 +138,9 @@ PROC_STATUSES = {
     "X": _common.STATUS_DEAD,
     "x": _common.STATUS_DEAD,
     "K": _common.STATUS_WAKE_KILL,
-    "W": _common.STATUS_WAKING
+    "W": _common.STATUS_WAKING,
+    "I": _common.STATUS_IDLE,
+    "P": _common.STATUS_PARKED,
 }
 
 # https://github.com/torvalds/linux/blob/master/include/net/tcp_states.h
@@ -149,7 +167,7 @@ TCP_STATUSES = {
 # psutil.virtual_memory()
 svmem = namedtuple(
     'svmem', ['total', 'available', 'percent', 'used', 'free',
-              'active', 'inactive', 'buffers', 'cached', 'shared'])
+              'active', 'inactive', 'buffers', 'cached', 'shared', 'slab'])
 # psutil.disk_io_counters()
 sdiskio = namedtuple(
     'sdiskio', ['read_count', 'write_count',
@@ -247,17 +265,23 @@ def file_flags_to_mode(flags):
     return mode
 
 
-def get_sector_size(partition):
-    """Return the sector size of a partition.
-    Used by disk_io_counters().
+def is_storage_device(name):
+    """Return True if the given name refers to a root device (e.g.
+    "sda", "nvme0n1") as opposed to a logical partition (e.g.  "sda1",
+    "nvme0n1p1"). If name is a virtual device (e.g. "loop1", "ram")
+    return True.
     """
-    try:
-        with open("/sys/block/%s/queue/hw_sector_size" % partition, "rt") as f:
-            return int(f.read())
-    except (IOError, ValueError):
-        # man iostat states that sectors are equivalent with blocks and
-        # have a size of 512 bytes since 2.4 kernels.
-        return SECTOR_SIZE_FALLBACK
+    # Readapted from iostat source code, see:
+    # https://github.com/sysstat/sysstat/blob/
+    #     97912938cd476645b267280069e83b1c8dc0e1c7/common.c#L208
+    # Some devices may have a slash in their name (e.g. cciss/c0d0...).
+    name = name.replace('/', '!')
+    including_virtual = True
+    if including_virtual:
+        path = "/sys/block/%s" % name
+    else:
+        path = "/sys/block/%s/device" % name
+    return os.access(path, os.F_OK)
 
 
 @memoize
@@ -294,7 +318,7 @@ def cat(fname, fallback=_DEFAULT, binary=True):
     try:
         with open_binary(fname) if binary else open_text(fname) as f:
             return f.read().strip()
-    except IOError:
+    except (IOError, OSError):
         if fallback is not _DEFAULT:
             return fallback
         else:
@@ -441,6 +465,11 @@ def virtual_memory():
             inactive = 0
             missing_fields.append('inactive')
 
+    try:
+        slab = mems[b"Slab:"]
+    except KeyError:
+        slab = 0
+
     used = total - free - cached - buffers
     if used < 0:
         # May be symptomatic of running within a LCX container where such
@@ -471,7 +500,7 @@ def virtual_memory():
     if avail > total:
         avail = free
 
-    percent = usage_percent((total - avail), total, _round=1)
+    percent = usage_percent((total - avail), total, round_=1)
 
     # Warn about missing metrics which are set to 0.
     if missing_fields:
@@ -481,7 +510,7 @@ def virtual_memory():
         warnings.warn(msg, RuntimeWarning)
 
     return svmem(total, avail, percent, used, free,
-                 active, inactive, buffers, cached, shared)
+                 active, inactive, buffers, cached, shared, slab)
 
 
 def swap_memory():
@@ -504,7 +533,7 @@ def swap_memory():
         free *= unit_multiplier
 
     used = total - free
-    percent = usage_percent(used, total, _round=1)
+    percent = usage_percent(used, total, round_=1)
     # get pgin/pgouts
     try:
         f = open_binary("%s/vmstat" % get_procfs_path())
@@ -997,10 +1026,16 @@ def net_if_stats():
     names = net_io_counters().keys()
     ret = {}
     for name in names:
-        mtu = cext_posix.net_if_mtu(name)
-        isup = cext_posix.net_if_flags(name)
-        duplex, speed = cext.net_if_duplex_speed(name)
-        ret[name] = _common.snicstats(isup, duplex_map[duplex], speed, mtu)
+        try:
+            mtu = cext_posix.net_if_mtu(name)
+            isup = cext_posix.net_if_flags(name)
+            duplex, speed = cext.net_if_duplex_speed(name)
+        except OSError as err:
+            # https://github.com/giampaolo/psutil/issues/1279
+            if err.errno != errno.ENODEV:
+                raise
+        else:
+            ret[name] = _common.snicstats(isup, duplex_map[duplex], speed, mtu)
     return ret
 
 
@@ -1012,35 +1047,11 @@ def net_if_stats():
 disk_usage = _psposix.disk_usage
 
 
-def disk_io_counters():
+def disk_io_counters(perdisk=False):
     """Return disk I/O statistics for every disk installed on the
     system as a dict of raw tuples.
     """
-    # determine partitions we want to look for
-    def get_partitions():
-        partitions = []
-        with open_text("%s/partitions" % get_procfs_path()) as f:
-            lines = f.readlines()[2:]
-        for line in reversed(lines):
-            _, _, _, name = line.split()
-            if name[-1].isdigit():
-                # we're dealing with a partition (e.g. 'sda1'); 'sda' will
-                # also be around but we want to omit it
-                partitions.append(name)
-            else:
-                if not partitions or not partitions[-1].startswith(name):
-                    # we're dealing with a disk entity for which no
-                    # partitions have been defined (e.g. 'sda' but
-                    # 'sda1' was not around), see:
-                    # https://github.com/giampaolo/psutil/issues/338
-                    partitions.append(name)
-        return partitions
-
-    retdict = {}
-    partitions = get_partitions()
-    with open_text("%s/diskstats" % get_procfs_path()) as f:
-        lines = f.readlines()
-    for line in lines:
+    def read_procfs():
         # OK, this is a bit confusing. The format of /proc/diskstats can
         # have 3 variations.
         # On Linux 2.4 each line has always 15 fields, e.g.:
@@ -1054,33 +1065,77 @@ def disk_io_counters():
         # See:
         # https://www.kernel.org/doc/Documentation/iostats.txt
         # https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats
-        fields = line.split()
-        fields_len = len(fields)
-        if fields_len == 15:
-            # Linux 2.4
-            name = fields[3]
-            reads = int(fields[2])
-            (reads_merged, rbytes, rtime, writes, writes_merged,
-                wbytes, wtime, _, busy_time, _) = map(int, fields[4:14])
-        elif fields_len == 14:
-            # Linux 2.6+, line referring to a disk
-            name = fields[2]
-            (reads, reads_merged, rbytes, rtime, writes, writes_merged,
-                wbytes, wtime, _, busy_time, _) = map(int, fields[3:14])
-        elif fields_len == 7:
-            # Linux 2.6+, line referring to a partition
-            name = fields[2]
-            reads, rbytes, writes, wbytes = map(int, fields[3:])
-            rtime = wtime = reads_merged = writes_merged = busy_time = 0
-        else:
-            raise ValueError("not sure how to interpret line %r" % line)
+        with open_text("%s/diskstats" % get_procfs_path()) as f:
+            lines = f.readlines()
+        for line in lines:
+            fields = line.split()
+            flen = len(fields)
+            if flen == 15:
+                # Linux 2.4
+                name = fields[3]
+                reads = int(fields[2])
+                (reads_merged, rbytes, rtime, writes, writes_merged,
+                    wbytes, wtime, _, busy_time, _) = map(int, fields[4:14])
+            elif flen == 14:
+                # Linux 2.6+, line referring to a disk
+                name = fields[2]
+                (reads, reads_merged, rbytes, rtime, writes, writes_merged,
+                    wbytes, wtime, _, busy_time, _) = map(int, fields[3:14])
+            elif flen == 7:
+                # Linux 2.6+, line referring to a partition
+                name = fields[2]
+                reads, rbytes, writes, wbytes = map(int, fields[3:])
+                rtime = wtime = reads_merged = writes_merged = busy_time = 0
+            else:
+                raise ValueError("not sure how to interpret line %r" % line)
+            yield (name, reads, writes, rbytes, wbytes, rtime, wtime,
+                   reads_merged, writes_merged, busy_time)
 
-        if name in partitions:
-            ssize = get_sector_size(name)
-            rbytes *= ssize
-            wbytes *= ssize
-            retdict[name] = (reads, writes, rbytes, wbytes, rtime, wtime,
-                             reads_merged, writes_merged, busy_time)
+    def read_sysfs():
+        for block in os.listdir('/sys/block'):
+            for root, _, files in os.walk(os.path.join('/sys/block', block)):
+                if 'stat' not in files:
+                    continue
+                with open_text(os.path.join(root, 'stat')) as f:
+                    fields = f.read().strip().split()
+                name = os.path.basename(root)
+                (reads, reads_merged, rbytes, rtime, writes, writes_merged,
+                    wbytes, wtime, _, busy_time, _) = map(int, fields)
+                yield (name, reads, writes, rbytes, wbytes, rtime,
+                       wtime, reads_merged, writes_merged, busy_time)
+
+    if os.path.exists('%s/diskstats' % get_procfs_path()):
+        gen = read_procfs()
+    elif os.path.exists('/sys/block'):
+        gen = read_sysfs()
+    else:
+        raise NotImplementedError(
+            "%s/diskstats nor /sys/block filesystem are available on this "
+            "system" % get_procfs_path())
+
+    retdict = {}
+    for entry in gen:
+        (name, reads, writes, rbytes, wbytes, rtime, wtime, reads_merged,
+            writes_merged, busy_time) = entry
+        if not perdisk and not is_storage_device(name):
+            # perdisk=False means we want to calculate totals so we skip
+            # partitions (e.g. 'sda1', 'nvme0n1p1') and only include
+            # base disk devices (e.g. 'sda', 'nvme0n1'). Base disks
+            # include a total of all their partitions + some extra size
+            # of their own:
+            #     $ cat /proc/diskstats
+            #     259       0 sda 10485760 ...
+            #     259       1 sda1 5186039 ...
+            #     259       1 sda2 5082039 ...
+            # See:
+            # https://github.com/giampaolo/psutil/pull/1313
+            continue
+
+        rbytes *= DISK_SECTOR_SIZE
+        wbytes *= DISK_SECTOR_SIZE
+        retdict[name] = (reads, writes, rbytes, wbytes, rtime, wtime,
+                         reads_merged, writes_merged, busy_time)
+
     return retdict
 
 
@@ -1140,26 +1195,37 @@ def sensors_temperatures():
 
     for base in basenames:
         try:
-            current = float(cat(base + '_input')) / 1000.0
-        except (IOError, OSError) as err:
+            path = base + '_input'
+            current = float(cat(path)) / 1000.0
+            path = os.path.join(os.path.dirname(base), 'name')
+            unit_name = cat(path, binary=False)
+        except (IOError, OSError, ValueError) as err:
             # A lot of things can go wrong here, so let's just skip the
-            # whole entry.
+            # whole entry. Sure thing is Linux's /sys/class/hwmon really
+            # is a stinky broken mess.
             # https://github.com/giampaolo/psutil/issues/1009
             # https://github.com/giampaolo/psutil/issues/1101
             # https://github.com/giampaolo/psutil/issues/1129
-            warnings.warn("ignoring %r" % err, RuntimeWarning)
+            # https://github.com/giampaolo/psutil/issues/1245
+            # https://github.com/giampaolo/psutil/issues/1323
+            warnings.warn("ignoring %r for file %r" % (err, path),
+                          RuntimeWarning)
             continue
 
-        unit_name = cat(os.path.join(os.path.dirname(base), 'name'),
-                        binary=False)
         high = cat(base + '_max', fallback=None)
         critical = cat(base + '_crit', fallback=None)
         label = cat(base + '_label', fallback='', binary=False)
 
         if high is not None:
-            high = float(high) / 1000.0
+            try:
+                high = float(high) / 1000.0
+            except ValueError:
+                high = None
         if critical is not None:
-            critical = float(critical) / 1000.0
+            try:
+                critical = float(critical) / 1000.0
+            except ValueError:
+                critical = None
 
         ret[unit_name].append((label, current, high, critical))
 
@@ -1217,9 +1283,13 @@ def sensors_battery():
                 return int(ret) if ret.isdigit() else ret
         return None
 
-    root = os.path.join(POWER_SUPPLY_PATH, "BAT0")
-    if not os.path.exists(root):
+    bats = [x for x in os.listdir(POWER_SUPPLY_PATH) if x.startswith('BAT')]
+    if not bats:
         return None
+    # Get the first available battery. Usually this is "BAT0", except
+    # some rare exceptions:
+    # https://github.com/giampaolo/psutil/issues/1238
+    root = os.path.join(POWER_SUPPLY_PATH, sorted(bats)[0])
 
     # Base metrics.
     energy_now = multi_cat(
@@ -1368,9 +1438,8 @@ def ppid_map():
                 data = f.read()
         except EnvironmentError as err:
             # Note: we should be able to access /stat for all processes
-            # so we won't bump into EPERM, which is good.
-            if err.errno not in (errno.ENOENT, errno.ESRCH,
-                                 errno.EPERM, errno.EACCES):
+            # aka it's unlikely we'll bump into EPERM, which is good.
+            if err.errno not in (errno.ENOENT, errno.ESRCH):
                 raise
         else:
             rpar = data.rfind(b')')
@@ -1603,9 +1672,10 @@ class Process(object):
         @wrap_exceptions
         def memory_full_info(
                 self,
-                _private_re=re.compile(br"Private.*:\s+(\d+)"),
-                _pss_re=re.compile(br"Pss.*:\s+(\d+)"),
-                _swap_re=re.compile(br"Swap.*:\s+(\d+)")):
+                # Gets Private_Clean, Private_Dirty, Private_Hugetlb.
+                _private_re=re.compile(br"\nPrivate.*:\s+(\d+)"),
+                _pss_re=re.compile(br"\nPss\:\s+(\d+)"),
+                _swap_re=re.compile(br"\nSwap\:\s+(\d+)")):
             basic_mem = self.memory_info()
             # Note: using 3 regexes is faster than reading the file
             # line by line.

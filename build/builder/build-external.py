@@ -502,7 +502,7 @@ class BuilderLinux(BuilderBase):
 
         old_p = os.getcwd()
         try:
-            utils.cmake(build_path, 'Release', False, cmake_define)
+            utils.cmake(build_path, 'Release', False, cmake_define=cmake_define, cmake_pre_define='CFLAGS="-fPIC"')
             os.chdir(build_path)
             utils.sys_exec('make install')
         except:

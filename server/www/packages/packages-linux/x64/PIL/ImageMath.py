@@ -15,8 +15,8 @@
 # See the README file for information on usage and redistribution.
 #
 
-from PIL import Image
-from PIL import _imagingmath
+from . import Image, _imagingmath
+from ._util import py3
 
 try:
     import builtins
@@ -101,7 +101,7 @@ class _Operand(object):
         # an image is "true" if it contains at least one non-zero pixel
         return self.im.getbbox() is not None
 
-    if bytes is str:
+    if not py3:
         # Provide __nonzero__ for pre-Py3k
         __nonzero__ = __bool__
         del __bool__
@@ -152,7 +152,7 @@ class _Operand(object):
     def __rpow__(self, other):
         return self.apply("pow", other, self)
 
-    if bytes is str:
+    if not py3:
         # Provide __div__ and __rdiv__ for pre-Py3k
         __div__ = __truediv__
         __rdiv__ = __rtruediv__
@@ -236,6 +236,7 @@ def imagemath_max(self, other):
 def imagemath_convert(self, mode):
     return _Operand(self.im.convert(mode))
 
+
 ops = {}
 for k, v in list(globals().items()):
     if k[:10] == "imagemath_":
@@ -268,5 +269,3 @@ def eval(expression, _dict={}, **kw):
         return out.im
     except AttributeError:
         return out
-
-# End of file

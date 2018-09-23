@@ -2,7 +2,6 @@
 
 import shutil
 import struct
-import sys
 
 from core import colorconsole as cc
 from core import makepyo
@@ -16,11 +15,11 @@ MODULES_WIN = ['_asyncio', '_bz2', '_ctypes', '_hashlib', '_lzma', '_overlapped'
                'libcrypto-1_1', 'libssl-1_1', 'unicodedata']
 PY_LIB_REMOVE_WIN = ['ctypes/test', 'curses', 'dbm', 'distutils', 'email/test', 'ensurepip', 'idlelib', 'lib2to3',
                      'lib-dynload', 'pydoc_data', 'site-packages', 'sqlite3/test', 'test', 'tkinter', 'turtledemo',
-                     'unittest', 'venv', 'wsgiref', 'dis.py', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc.py',
+                     'unittest', 'venv', 'wsgiref', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc.py',
                      'this.py', 'wave.py', 'webbrowser.py', 'zipapp.py']
 PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'dbm', 'distutils', 'ensurepip', 'idlelib', 'lib2to3',
                        'lib-dynload', 'pydoc_data', 'site-packages', 'sqlite3/test', 'test', 'tkinter', 'turtledemo', 'unittest', 'venv',
-                       'wsgiref', 'dis.py', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc.py', 'this.py', 'wave.py', 'webbrowser.py', 'zipapp.py']
+                       'wsgiref', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc.py', 'this.py', 'wave.py', 'webbrowser.py', 'zipapp.py']
 PY_MODULE_REMOVE_LINUX = ['_ctypes_test', '_testbuffer', '_testcapi', '_testimportmultiple', '_testmultiphase', '_xxtestfuzz']
 
 
@@ -43,6 +42,15 @@ class PYSBase:
         cc.v('python dll path     :', self.py_dll_path)
         cc.v('python lib path     :', self.py_lib_path)
 
+        cc.n('upgrade pip ...')
+        utils.sys_exec('{} -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pip --upgrade'.format(env.py_exec))
+
+        pip = self._get_pip()
+        pypi_modules = ['mako', 'pymysql', 'qrcode', 'tornado', 'wheezy.captcha', 'Pillow', 'psutil']
+        for p in pypi_modules:
+            cc.n('install {} ...'.format(p))
+            utils.sys_exec('{} install -i https://pypi.tuna.tsinghua.edu.cn/simple {}'.format(pip, p), direct_output=True)
+
         self._make_base()
         self._make_python_zip()
         self._make_py_ver_file()
@@ -57,6 +65,9 @@ class PYSBase:
         return ''
 
     def _make_base(self):
+        pass
+
+    def _get_pip(self):
         pass
 
     def _copy_modules(self):
@@ -92,7 +103,7 @@ class PYSBase:
         for i in self.py_lib_remove:
             utils.remove(_tmp_, i)
 
-        cc.v('generate *.pyo...')
+        cc.v('compile .py to .pyc...')
         makepyo.make(_tmp_)
 
         cc.v('compress into python.zip...')
@@ -172,6 +183,10 @@ class PYSWin(PYSBase):
 
         super()._copy_modules()
 
+    def _get_pip(self):
+        _exec_path = os.path.dirname(env.py_exec)
+        return os.path.join(_exec_path, 'Scripts', 'pip.exe')
+
     def _make_py_ver_file(self):
         # 指明python动态库的文件名，这样壳在加载时才知道如何加载python动态库
         out_file = os.path.join(self.base_path, 'python.ver')
@@ -232,6 +247,10 @@ class PYSLinux(PYSBase):
             for n in ext:
                 if i.find('_failed{}'.format(n)) != -1:
                     utils.remove(self.modules_path, i)
+
+    def _get_pip(self):
+        _exec_path = os.path.dirname(env.py_exec)
+        return os.path.join(_exec_path, 'pip')
 
     def _make_py_ver_file(self):
         # do nothing.

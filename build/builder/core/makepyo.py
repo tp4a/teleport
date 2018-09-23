@@ -38,8 +38,6 @@ def clean_folder(path):
 
         for filename in file_list:
             _, ext = os.path.splitext(filename)
-            # fileNameSplitList = filename.split(".")
-            # ext = fileNameSplitList[len(fileNameSplitList) - 1].lower()
             if ext in rm_file_every_level:
                 os.remove(os.path.join(parent, filename))
 
@@ -49,7 +47,6 @@ def remove_cache(path):
         for d in dir_list:
             d = d.lower()
             if d == '__pycache__':
-                # shutil.rmtree(os.path.join(parent, d))
                 utils.remove(os.path.join(parent, d))
                 continue
             remove_cache(os.path.join(parent, d))
@@ -65,7 +62,8 @@ def compile_files(path):
             # fileNameSplitList = filename.split(".")
             # ext = fileNameSplitList[len(fileNameSplitList) - 1].lower()
             if ext == '.py':
-                py_compile.compile(os.path.join(parent, filename), os.path.join(parent, n)+'.pyo', optimize=2)
+                py_compile.compile(os.path.join(parent, filename), os.path.join(parent, n)+'.pyc', optimize=2)
+                # py_compile.compile(os.path.join(parent, filename), optimize=2)
 
 
 def fix_pyo(path):
@@ -74,18 +72,21 @@ def fix_pyo(path):
             fix_pyo(os.path.join(parent, d))
 
         for filename in file_list:
-            # fileNameSplitList = filename.split(".")
-            # ext = fileNameSplitList[len(fileNameSplitList) - 1].lower()
             _, ext = os.path.splitext(filename)
             if ext.lower() == '.py':
                 os.remove(os.path.join(parent, filename))
+
+            # names = filename.split(".")
+            # ext = names[len(names) - 1].lower()
+            # if ext.lower() == '.py':
+            #     os.remove(os.path.join(parent, filename))
             # elif ext == 'pyo':
-            #     cpython = fileNameSplitList[len(fileNameSplitList) - 2].lower()
+            #     cpython = names[len(names) - 2].lower()
             #     if cpython == cpython_mid_name:
-            #         del fileNameSplitList[len(fileNameSplitList) - 2]
+            #         del names[len(names) - 2]
             #     else:
             #         continue
-            #     t_name = os.path.abspath(os.path.join(parent, '..', '.'.join(fileNameSplitList)))
+            #     t_name = os.path.abspath(os.path.join(parent, '..', '.'.join(names)))
             #     f_name = os.path.join(parent, filename)
             #     shutil.copy(f_name, t_name)
 

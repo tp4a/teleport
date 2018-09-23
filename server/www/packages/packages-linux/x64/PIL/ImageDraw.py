@@ -31,10 +31,9 @@
 #
 
 import numbers
-import warnings
 
-from PIL import Image, ImageColor
-from PIL._util import isStringType
+from . import Image, ImageColor
+from ._util import isStringType
 
 """
 A simple 2D drawing interface for PIL images.
@@ -50,8 +49,8 @@ class ImageDraw(object):
         """
         Create a drawing instance.
 
-        @param im The image to draw in.
-        @param mode Optional mode to use for color values.  For RGB
+        :param im: The image to draw in.
+        :param mode: Optional mode to use for color values.  For RGB
            images, this argument can be RGB or RGBA (to blend the
            drawing into the image).  For all other modes, this argument
            must be the same as the image mode.  If omitted, the mode
@@ -87,25 +86,14 @@ class ImageDraw(object):
         self.fill = 0
         self.font = None
 
-    def setink(self, ink):
-        raise NotImplementedError("setink() has been removed. " +
-                                  "Please use keyword arguments instead.")
-
-    def setfill(self, onoff):
-        raise NotImplementedError("setfill() has been removed. " +
-                                  "Please use keyword arguments instead.")
-
-    def setfont(self, font):
-        warnings.warn("setfont() is deprecated. " +
-                      "Please set the attribute directly instead.")
-        # compatibility
-        self.font = font
-
     def getfont(self):
-        """Get the current default font."""
+        """
+        Get the current default font.
+
+        :returns: An image font."""
         if not self.font:
             # FIXME: should add a font repository
-            from PIL import ImageFont
+            from . import ImageFont
             self.font = ImageFont.load_default()
         return self.font
 
@@ -208,12 +196,12 @@ class ImageDraw(object):
 
     def _multiline_check(self, text):
         """Draw text."""
-        split_character = "\n" if isinstance(text, type("")) else b"\n"
+        split_character = "\n" if isinstance(text, str) else b"\n"
 
         return split_character in text
 
     def _multiline_split(self, text):
-        split_character = "\n" if isinstance(text, type("")) else b"\n"
+        split_character = "\n" if isinstance(text, str) else b"\n"
 
         return text.split(split_character)
 
@@ -222,7 +210,6 @@ class ImageDraw(object):
         if self._multiline_check(text):
             return self.multiline_text(xy, text, fill, font, anchor,
                                        *args, **kwargs)
-
         ink, fill = self._getink(fill)
         if font is None:
             font = self.getfont()
@@ -230,17 +217,17 @@ class ImageDraw(object):
             ink = fill
         if ink is not None:
             try:
-                mask, offset = font.getmask2(text, self.fontmode)
+                mask, offset = font.getmask2(text, self.fontmode, *args, **kwargs)
                 xy = xy[0] + offset[0], xy[1] + offset[1]
             except AttributeError:
                 try:
-                    mask = font.getmask(text, self.fontmode)
+                    mask = font.getmask(text, self.fontmode, *args, **kwargs)
                 except TypeError:
                     mask = font.getmask(text)
             self.draw.draw_bitmap(xy, mask, ink)
 
     def multiline_text(self, xy, text, fill=None, font=None, anchor=None,
-                       spacing=4, align="left"):
+                       spacing=4, align="left", direction=None, features=None):
         widths = []
         max_width = 0
         lines = self._multiline_split(text)
@@ -259,35 +246,40 @@ class ImageDraw(object):
                 left += (max_width - widths[idx])
             else:
                 assert False, 'align must be "left", "center" or "right"'
-            self.text((left, top), line, fill, font, anchor)
+            self.text((left, top), line, fill, font, anchor,
+                      direction=direction, features=features)
             top += line_spacing
             left = xy[0]
 
-    def textsize(self, text, font=None, *args, **kwargs):
+    def textsize(self, text, font=None, spacing=4, direction=None,
+                 features=None):
         """Get the size of a given string, in pixels."""
         if self._multiline_check(text):
-            return self.multiline_textsize(text, font, *args, **kwargs)
+            return self.multiline_textsize(text, font, spacing,
+                                           direction, features)
 
         if font is None:
             font = self.getfont()
-        return font.getsize(text)
+        return font.getsize(text, direction, features)
 
-    def multiline_textsize(self, text, font=None, spacing=4):
+    def multiline_textsize(self, text, font=None, spacing=4, direction=None,
+                           features=None):
         max_width = 0
         lines = self._multiline_split(text)
         line_spacing = self.textsize('A', font=font)[1] + spacing
         for line in lines:
-            line_width, line_height = self.textsize(line, font)
+            line_width, line_height = self.textsize(line, font, spacing,
+                                                    direction, features)
             max_width = max(max_width, line_width)
-        return max_width, len(lines)*line_spacing
+        return max_width, len(lines)*line_spacing - spacing
 
 
 def Draw(im, mode=None):
     """
     A simple 2D drawing interface for PIL images.
 
-    @param im The image to draw in.
-    @param mode Optional mode to use for color values.  For RGB
+    :param im: The image to draw in.
+    :param mode: Optional mode to use for color values.  For RGB
        images, this argument can be RGB or RGBA (to blend the
        drawing into the image).  For all other modes, this argument
        must be the same as the image mode.  If omitted, the mode
@@ -297,6 +289,7 @@ def Draw(im, mode=None):
         return im.getdraw(mode)
     except AttributeError:
         return ImageDraw(im, mode)
+
 
 # experimental access to the outline API
 try:
@@ -310,46 +303,51 @@ def getdraw(im=None, hints=None):
     (Experimental) A more advanced 2D drawing interface for PIL images,
     based on the WCK interface.
 
-    @param im The image to draw in.
-    @param hints An optional list of hints.
-    @return A (drawing context, drawing resource factory) tuple.
+    :param im: The image to draw in.
+    :param hints: An optional list of hints.
+    :returns: A (drawing context, drawing resource factory) tuple.
     """
     # FIXME: this needs more work!
     # FIXME: come up with a better 'hints' scheme.
     handler = None
     if not hints or "nicest" in hints:
         try:
-            from PIL import _imagingagg as handler
+            from . import _imagingagg as handler
         except ImportError:
             pass
     if handler is None:
-        from PIL import ImageDraw2 as handler
+        from . import ImageDraw2 as handler
     if im:
         im = handler.Draw(im)
     return im, handler
 
 
-def floodfill(image, xy, value, border=None):
+def floodfill(image, xy, value, border=None, thresh=0):
     """
     (experimental) Fills a bounded region with a given color.
 
-    @param image Target image.
-    @param xy Seed position (a 2-item coordinate tuple).
-    @param value Fill color.
-    @param border Optional border value.  If given, the region consists of
+    :param image: Target image.
+    :param xy: Seed position (a 2-item coordinate tuple). See
+        :ref:`coordinate-system`.
+    :param value: Fill color.
+    :param border: Optional border value.  If given, the region consists of
         pixels with a color different from the border color.  If not given,
         the region consists of pixels having the same color as the seed
         pixel.
+    :param thresh: Optional threshold value which specifies a maximum
+        tolerable difference of a pixel value from the 'background' in
+        order for it to be replaced. Useful for filling regions of non-
+        homogeneous, but similar, colors.
     """
     # based on an implementation by Eric S. Raymond
     pixel = image.load()
     x, y = xy
     try:
         background = pixel[x, y]
-        if background == value:
+        if _color_diff(value, background) <= thresh:
             return  # seed point already has fill color
         pixel[x, y] = value
-    except IndexError:
+    except (ValueError, IndexError):
         return  # seed point outside image
     edge = [(x, y)]
     if border is None:
@@ -362,7 +360,7 @@ def floodfill(image, xy, value, border=None):
                     except IndexError:
                         pass
                     else:
-                        if p == background:
+                        if _color_diff(p, background) <= thresh:
                             pixel[s, t] = value
                             newedge.append((s, t))
             edge = newedge
@@ -381,4 +379,9 @@ def floodfill(image, xy, value, border=None):
                             newedge.append((s, t))
             edge = newedge
 
-# End of file
+
+def _color_diff(rgb1, rgb2):
+    """
+    Uses 1-norm distance to calculate difference between two rgb values.
+    """
+    return abs(rgb1[0]-rgb2[0]) +  abs(rgb1[1]-rgb2[1]) +  abs(rgb1[2]-rgb2[2])

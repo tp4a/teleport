@@ -23,7 +23,7 @@ tmp_conn_id_lock = threading.RLock()
 
 class AuzListHandler(TPBaseHandler):
     def get(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)
         if ret != TPE_OK:
             return
         self.render('ops/auz-list.mako')
@@ -82,7 +82,7 @@ class PolicyDetailHandler(TPBaseHandler):
 
 class SessionListsHandler(TPBaseHandler):
     def get(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)
         if ret != TPE_OK:
             return
         self.render('ops/sessions.mako')
@@ -685,7 +685,7 @@ class DoRankReorderHandler(TPBaseJsonHandler):
 
 class DoGetRemotesHandler(TPBaseJsonHandler):
     def post(self):
-        ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_OPS)
+        ret = self.check_privilege(TP_PRIVILEGE_OPS | TP_PRIVILEGE_OPS_AUZ)
         if ret != TPE_OK:
             return
 

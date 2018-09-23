@@ -24,9 +24,8 @@
 # Version 3 files have a format specifier of 18 for 16bit floats in
 #   the color depth field. This is currently unsupported by Pillow.
 
-from PIL import Image, ImageFile, _binary
-
-i32 = _binary.i32be
+from . import Image, ImageFile
+from ._binary import i32be as i32
 
 
 def _accept(prefix):
@@ -89,6 +88,7 @@ class GbrImageFile(ImageFile.ImageFile):
 
 #
 # registry
+
 
 Image.register_open(GbrImageFile.format, GbrImageFile, _accept)
 Image.register_extension(GbrImageFile.format, ".gbr")

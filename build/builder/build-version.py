@@ -425,7 +425,7 @@ class Builder:
                     _ver = l[pos1 + 8: pos2].strip()
 
                     v = _ver.split(".")
-                    if len(v) < 4:
+                    if len(v) < 3:
                         raise RuntimeError('Invalid .plist file.')
                     old_ver = '.'.join(v)
                     if old_ver == ver:

@@ -33,7 +33,7 @@ include_directories(
 )
 
 IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
-#        set(CMAKE_EXE_LINKER_FLAGS "-export-dynamic")
+        set(CMAKE_EXE_LINKER_FLAGS "-export-dynamic")
         include_directories(
                 ../../../external/linux/release/include
         )

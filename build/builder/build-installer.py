@@ -34,13 +34,23 @@ class BuilderBase:
         utils.remove(os.path.join(tmp_path, 'teleport', '.idea'))
 
         cc.n(' - copy packages...')
-        utils.copy_ex(pkg_path, os.path.join(tmp_path, 'packages'), 'packages-common')
+        # utils.copy_ex(pkg_path, os.path.join(tmp_path, 'packages'), 'packages-common')
         utils.copy_ex(os.path.join(pkg_path, 'packages-{}'.format(dist)), os.path.join(tmp_path, 'packages', 'packages-{}'.format(dist)), ctx.bits_path)
+        self._remove_py_cache(os.path.join(tmp_path, 'packages'))
 
         makepyo.remove_cache(tmp_path)
 
         shutil.copytree(tmp_path, os.path.join(target_path, 'www'))
         utils.remove(tmp_path)
+
+    def _remove_py_cache(self, path):
+        for parent, dir_list, _ in os.walk(path):
+            for d in dir_list:
+                d = d.lower()
+                if d == '__pycache__':
+                    utils.remove(os.path.join(parent, d))
+                    continue
+                self._remove_py_cache(os.path.join(parent, d))
 
 
 class BuilderWin(BuilderBase):
