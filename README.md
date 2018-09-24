@@ -28,7 +28,7 @@ Teleport支持部署到Linux系统中，目前支持的系统版本如下：
 
 ## 延伸阅读
 
-[安装部署Teleport](https://github.com/eomsoft/teleport/wiki/deployment-install)
+[Telport在线文档](https://docs.tp4a.com/)
 
 ## 提供帮助
 
