@@ -2,9 +2,13 @@
 
 $app.on_init = function (cb_stack) {
     $app.dom = {
-        btn_refresh_host: $('#btn-refresh-host')
-        // box_rdp_option: $('#rdp-options')
+        btn_sel_group: $('#btn-sel-group button')
+        , btn_refresh_host: $('#btn-refresh-host')
+        // , group_list_for_sel: $('#btn-sel-group ul')
+        // , group_selected: $('#group-selected')
     };
+
+    console.log($app.options);
 
     cb_stack
         .add($app.create_controls)
@@ -18,6 +22,13 @@ $app.on_init = function (cb_stack) {
 //===================================
 $app.create_controls = function (cb_stack) {
 
+    // var html = [];
+    // $.each($app.options.host_groups, function (i, item) {
+    //     html.push('<li><a href="javascript:;" data-tp-selector="' + item.id + '" data-name="' + item.name + '"><i class="fa fa-caret-right fa-fw"></i> ' + item.name + '</a></li>');
+    // });
+    // $app.dom.group_list_for_sel.append($(html.join('')));
+    //
+
     //-------------------------------
     // 资产列表表格
     //-------------------------------
@@ -30,11 +41,20 @@ $app.create_controls = function (cb_stack) {
         column_default: {sort: false, align: 'left'},
         columns: [
             {
+                title: '<a href="javascript:;" data-reset-filter><i class="fa fa-undo fa-fw"></i></a>',
+                key: 'chkbox',
+                sort: false,
+                width: 36,
+                align: 'center',
+                render: 'make_check_box',
+                fields: {id: 'id'}
+            },
+            {
                 title: '主机',
                 key: 'host',
                 // sort: true,
-                // header_render: 'filter_search',
-                width: 300,
+                header_render: 'filter_search',
+                width: 320,
                 render: 'host_info',
                 fields: {ip: 'ip', router_ip: 'router_ip', router_port: 'router_port', h_name: 'h_name'}
             },
@@ -67,14 +87,16 @@ $app.create_controls = function (cb_stack) {
         .add($app.table_host.init);
 
     //-------------------------------
-    // 用户列表相关过滤器
+    // 过滤器
     //-------------------------------
     $tp.create_table_header_filter_search($app.table_host, {
         name: 'search',
         place_holder: '搜索：主机IP/名称/描述/资产编号/等等...'
     });
 
-    // 从cookie中读取用户分页限制的选择
+    $tp.create_table_filter_group($app.table_host, 'host_group', '#filter-host-group', $app.options.host_groups);
+
+    // 分页设置
     $tp.create_table_paging($app.table_host, 'table-host-paging',
         {
             per_page: Cookies.get($app.page_id('asset_host') + '_per_page'),
@@ -110,9 +132,6 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
             var uni_id = $(this).attr('data-id');
             var acc_id = parseInt($(this).attr('data-acc-id'));
             var host_id = parseInt($(this).attr('data-host-id'));
-
-            // var policy = $app.table_policy.get_row(row_id);
-
 
             if (action === 'rdp') {
                 $app.connect_remote(uni_id, acc_id, host_id, TP_PROTOCOL_TYPE_RDP, TP_PROTOCOL_TYPE_RDP_DESKTOP);

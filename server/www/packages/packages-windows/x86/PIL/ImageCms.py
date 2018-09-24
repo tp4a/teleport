@@ -162,8 +162,10 @@ class ImageCmsProfile(object):
             self._set(core.profile_open(profile), profile)
         elif hasattr(profile, "read"):
             self._set(core.profile_frombytes(profile.read()))
+        elif isinstance(profile, _imagingcms.CmsProfile):
+            self._set(profile)
         else:
-            self._set(profile)  # assume it's already a profile
+            raise TypeError("Invalid type for Profile")
 
     def _set(self, profile, filename=None):
         self.profile = profile
@@ -361,7 +363,7 @@ def getOpenProfile(profileFilename):
     The PyCMSProfile object can be passed back into pyCMS for use in creating
     transforms and such (as in ImageCms.buildTransformFromOpenProfiles()).
 
-    If profileFilename is not a vaild filename for an ICC profile, a PyCMSError
+    If profileFilename is not a valid filename for an ICC profile, a PyCMSError
     will be raised.
 
     :param profileFilename: String, as a valid filename path to the ICC profile
@@ -551,6 +553,7 @@ def buildProofTransform(
             proofProfile, proofRenderingIntent, flags)
     except (IOError, TypeError, ValueError) as v:
         raise PyCMSError(v)
+
 
 buildTransformFromOpenProfiles = buildTransform
 buildProofTransformFromOpenProfiles = buildProofTransform
@@ -950,24 +953,3 @@ def versions():
         VERSION, core.littlecms_version,
         sys.version.split()[0], Image.VERSION
     )
-
-# --------------------------------------------------------------------
-
-if __name__ == "__main__":
-    # create a cheap manual from the __doc__ strings for the functions above
-
-    print(__doc__)
-
-    for f in dir(sys.modules[__name__]):
-        doc = None
-        try:
-            exec("doc = %s.__doc__" % (f))
-            if "pyCMS" in doc:
-                # so we don't get the __doc__ string for imported modules
-                print("=" * 80)
-                print("%s" % f)
-                print(doc)
-        except (AttributeError, TypeError):
-            pass
-
-# End of file

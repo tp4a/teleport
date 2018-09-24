@@ -30,7 +30,7 @@
             </ol>
         </div>
     </div>
-##     <a href="http://teleport.eomsoft.net" target="_blank"><span class="logo"></span></a>
+##     <a href="http://tp4a.com/" target="_blank"><span class="logo"></span></a>
 </%block>
 
 <div class="page-content">

@@ -7,7 +7,7 @@
     <content url="file://$MODULE_DIR$/webroot">
       <sourceFolder url="file://$MODULE_DIR$/webroot" isTestSource="false" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="py37" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TemplatesService">

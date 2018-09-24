@@ -109,6 +109,9 @@
     <ClCompile Include="tp_tpp_mgr.cpp">
       <Filter>main app</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\external\mbedtls\library\platform_util.c">
+      <Filter>mbedtls\library</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ts_main.h">

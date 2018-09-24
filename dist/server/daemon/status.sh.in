@@ -3,19 +3,19 @@
 DAEMON_PATH={daemon_path}
 shell_ret=0
 
-result=$( ps ax | grep "$DAEMON_PATH/bin/tp_core start" | grep -v grep | wc -l )
-if [ $result -gt 0 ]; then
-	echo -e "teleport core server is \e[32mrunning\033[0m."
-else
-	echo -e "teleport core server is \e[31mnot running\033[0m."
-	shell_ret=1
-fi
-
 result=$( ps ax | grep "$DAEMON_PATH/bin/tp_web start" | grep -v grep | wc -l )
 if [ $result -gt 0 ]; then
 	echo -e "teleport web server is \e[32mrunning\033[0m."
 else
 	echo -e "teleport web server is \e[31mnot running\033[0m."
+	shell_ret=1
+fi
+
+result=$( ps ax | grep "$DAEMON_PATH/bin/tp_core start" | grep -v grep | wc -l )
+if [ $result -gt 0 ]; then
+	echo -e "teleport core server is \e[32mrunning\033[0m."
+else
+	echo -e "teleport core server is \e[31mnot running\033[0m."
 	shell_ret=1
 fi
 

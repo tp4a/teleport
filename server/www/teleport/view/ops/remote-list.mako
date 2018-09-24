@@ -6,7 +6,8 @@
 <%inherit file="../page_base.mako"/>
 
 <%block name="extend_js_file">
-##     <script type="text/javascript" src="${ static_url('js/tp-assist.js') }"></script>
+    ##     <script type="text/javascript" src="${ static_url('js/tp-assist.js') }"></script>
+
     <script type="text/javascript" src="${ static_url('js/ops/remote-list.js') }"></script>
 </%block>
 <%block name="embed_js">
@@ -29,27 +30,19 @@
         <div class="table-prefix-area">
             <div class="table-extend-cell">
                 <span class="table-name"><i class="fa fa-list fa-fw"></i> 主机列表</span>
+                <div class="btn-group btn-group-sm dropdown" id="filter-host-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-filter fa-fw"></i>主机分组：<span data-tp-select-result>所有</span> <i class="fa fa-caret-right"></i></button>
+                    <ul class="dropdown-menu  dropdown-menu-sm"></ul>
+                </div>
                 <button id="btn-refresh-host" class="btn btn-sm btn-default"><i class="fa fa-redo fa-fw"></i> 刷新列表</button>
             </div>
             <div class="table-extend-cell table-extend-cell-right group-actions">
-                ##                 <button id="btn-add-host" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 添加主机</button>
             </div>
         </div>
 
         <table id="table-host" class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
 
         <div class="table-extend-area">
-            ##             <div class="table-extend-cell checkbox-select-all"><input id="table-host-select-all" type="checkbox"/></div>
-            ##             <div class="table-extend-cell group-actions">
-            ##                 <div class="btn-group" role="group">
-            ##                     ##                     <button id="btn-edit-host" type="button" class="btn btn-default"><i class="fa fa-edit fa-fw"></i> 编辑</button>
-            ##
-            ##                     <button id="btn-lock-host" type="button" class="btn btn-default"><i class="fa fa-lock fa-fw"></i> 禁用</button>
-            ##                     <button id="btn-unlock-host" type="button" class="btn btn-default"><i class="fa fa-unlock fa-fw"></i> 解禁</button>
-            ##                     <button id="btn-remove-host" type="button" class="btn btn-default"><i class="fa fa-times-circle fa-fw"></i> 删除</button>
-            ##                 </div>
-            ##             </div>
-
             <div class="table-extend-cell table-item-counter">
                 <ol id="table-host-paging"></ol>
             </div>

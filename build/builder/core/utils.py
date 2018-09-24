@@ -332,7 +332,7 @@ def nsis_build(nsi_file, _define=''):
         raise RuntimeError('make installer with nsis failed. [{}]'.format(nsi_file))
 
 
-def cmake(work_path, target, force_rebuild, cmake_define=''):
+def cmake(work_path, target, force_rebuild, cmake_define='', cmake_pre_define=''):
     # I use cmake v3.5 which shipped with CLion.
     if env.cmake is None:
         raise RuntimeError('where is `cmake`?')
@@ -351,7 +351,7 @@ def cmake(work_path, target, force_rebuild, cmake_define=''):
         target = 'Debug'
     else:
         target = 'Release'
-    cmd = '"{}" -DCMAKE_BUILD_TYPE={} {} ..;make'.format(env.cmake, target, cmake_define)
+    cmd = '{} "{}" -DCMAKE_BUILD_TYPE={} {} ..;make'.format(cmake_pre_define, env.cmake, target, cmake_define)
     cc.o(cmd)
     ret, _ = sys_exec(cmd, direct_output=True)
     os.chdir(old_p)

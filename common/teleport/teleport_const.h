@@ -51,6 +51,7 @@
 #define TP_SESS_STAT_ERR_RESET				7		// 会话结束，因为teleport核心服务重置了
 #define TP_SESS_STAT_ERR_IO					8		// 会话结束，因为网络中断
 #define TP_SESS_STAT_ERR_SESSION			9		// 会话结束，因为无效的会话ID
+#define TP_SESS_STAT_ERR_AUTH_TYPE			10		// 会话结束，因为不被允许的认证方式
 #define TP_SESS_STAT_STARTED                100     // 已经连接成功了，开始记录录像了
 #define TP_SESS_STAT_ERR_START_INTERNAL     104     // 会话结束，因为内部错误
 #define TP_SESS_STAT_ERR_START_BAD_PKG      106     // 会话结束，因为收到错误的报文

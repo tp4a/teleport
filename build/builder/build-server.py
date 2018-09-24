@@ -49,6 +49,7 @@ class BuilderWin(BuilderBase):
             utils.remove(out_file)
         utils.msvc_build(sln_file, 'tpssh', ctx.target_path, ctx.bits_path, False)
         utils.ensure_file_exists(out_file)
+        utils.copy_file(os.path.join(env.root_path, 'external', 'libssh', 'lib', ctx.target_path), os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path), 'ssh.dll')
 
         cc.n('build TELNET protocol ...')
         sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'telnet', 'tptelnet.vs2015.sln')

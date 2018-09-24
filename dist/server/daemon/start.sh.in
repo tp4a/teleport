@@ -10,15 +10,16 @@ shell_ret=0
 
 cd "$DAEMON_PATH"
 
-if [ $SRV == all ] || [ $SRV == core ] ; then
-	echo -n "starting teleport core server ... "
-	result=$( ps ax | grep "$DAEMON_PATH/bin/tp_core start" | grep -v grep | wc -l )
+if [ $SRV == all ] || [ $SRV == web ] ; then
+	echo -n "starting teleport web ... "
+	result=$( ps ax | grep "$DAEMON_PATH/bin/tp_web start" | grep -v grep | wc -l )
 	if [ $result -gt 0 ]; then
 		echo "already running, skip."
 	else
-		$DAEMON_PATH/bin/tp_core start
+		$DAEMON_PATH/bin/tp_web start
+		sleep 5s
 
-		result=$( ps ax | grep "$DAEMON_PATH/bin/tp_core start" | grep -v grep | wc -l )
+		result=$( ps ax | grep "$DAEMON_PATH/bin/tp_web start" | grep -v grep | wc -l )
 		if [ ! $result -gt 0 ]; then
 			echo -e "\e[31m[FAILED]\033[0m"
 			shell_ret=1
@@ -28,15 +29,15 @@ if [ $SRV == all ] || [ $SRV == core ] ; then
 	fi
 fi
 
-if [ $SRV == all ] || [ $SRV == web ] ; then
-	echo -n "starting teleport web ... "
-	result=$( ps ax | grep "$DAEMON_PATH/bin/tp_web start" | grep -v grep | wc -l )
+if [ $SRV == all ] || [ $SRV == core ] ; then
+	echo -n "starting teleport core server ... "
+	result=$( ps ax | grep "$DAEMON_PATH/bin/tp_core start" | grep -v grep | wc -l )
 	if [ $result -gt 0 ]; then
 		echo "already running, skip."
 	else
-		$DAEMON_PATH/bin/tp_web start
+		$DAEMON_PATH/bin/tp_core start
 
-		result=$( ps ax | grep "$DAEMON_PATH/bin/tp_web start" | grep -v grep | wc -l )
+		result=$( ps ax | grep "$DAEMON_PATH/bin/tp_core start" | grep -v grep | wc -l )
 		if [ ! $result -gt 0 ]; then
 			echo -e "\e[31m[FAILED]\033[0m"
 			shell_ret=1

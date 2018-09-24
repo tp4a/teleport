@@ -236,8 +236,9 @@ def remove_members(gtype, gid, members):
     sql_list.append(sql)
     sql = 'DELETE FROM `{}ops_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
     sql_list.append(sql)
-    sql = 'DELETE FROM `{}audit_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
-    sql_list.append(sql)
+    if gtype != TP_GROUP_ACCOUNT:
+        sql = 'DELETE FROM `{}audit_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
+        sql_list.append(sql)
 
     if db.transaction(sql_list):
         return TPE_OK
@@ -359,3 +360,57 @@ def get_groups(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
 
     err = s.query()
     return err, s.total_count, s.page_index, s.recorder
+
+
+def get_host_groups_for_user(user_id, user_privilege):
+    # get all host-groups for current logged in user.
+
+    db = get_db()
+
+    # step 0. return all host-groups if user have all host-group access privilege
+    if (user_privilege & (TP_PRIVILEGE_ASSET_CREATE | TP_PRIVILEGE_ASSET_DELETE | TP_PRIVILEGE_ASSET_GROUP)) != 0:
+        s = SQL(get_db())
+        s.select_from('group', ['id', 'name'], alt_name='g')
+        s.where('g.type={}'.format(TP_GROUP_HOST))
+        s.order_by('g.name')
+        err = s.query()
+
+        return err, s.recorder
+
+    # step 1. get all hosts which could be access by this user.
+    sql = 'SELECT `h_id` FROM `{dbtp}ops_map` WHERE `u_id`={dbph} GROUP BY `h_id`;'.format(dbtp=db.table_prefix, dbph=db.place_holder)
+    db_ret = db.query(sql, (user_id, ))
+    if db_ret is None or len(db_ret) == 0:
+        return TPE_NOT_EXISTS, None
+
+    hosts = []
+    for db_item in db_ret:
+        hosts.append(str(db_item[0]))
+
+    if len(hosts) == 0:
+        return TPE_NOT_EXISTS, None
+
+    # step 2. get groups which include those hosts.
+    sql = 'SELECT `gid` FROM `{dbtp}group_map` WHERE (`type`={gtype} AND `mid` IN ({hids})) GROUP BY `gid`;'.format(dbtp=db.table_prefix, gtype=TP_GROUP_HOST, hids=','.join(hosts))
+    db_ret = db.query(sql)
+
+    if db_ret is None or len(db_ret) == 0:
+        return TPE_NOT_EXISTS, None
+
+    groups = []
+    for db_item in db_ret:
+        groups.append(str(db_item[0]))
+
+    # step 3. get those groups id and name.
+    s = SQL(get_db())
+    s.select_from('group', ['id', 'name'], alt_name='g')
+    s.where('g.id IN ({})'.format(','.join(groups)))
+    s.order_by('g.name')
+    err = s.query()
+
+    return err, s.recorder
+
+
+def get_acc_groups_for_user(handler):
+    # 获取当前用户能查看的远程账号分组列表
+    pass

@@ -78,6 +78,7 @@ static bool _process_cmd_line(int argc, wchar_t** argv)
 
 	g_run_type = RUN_UNKNOWN;
 	bool is_py_arg = false;
+	bool is_py_func = false;
 
 	if (0 == wcscmp(argv[1], L"--version"))
 	{
@@ -96,9 +97,16 @@ static bool _process_cmd_line(int argc, wchar_t** argv)
 				continue;
 			}
 
+			if(is_py_func)
+            {
+                g_py_main_func = argv[i];
+                is_py_func = false;
+			    continue;
+            }
+
 			if (0 == wcscmp(argv[i], L"-f"))
 			{
-				g_py_main_func = argv[i];
+			    is_py_func = true;
 				continue;
 			}
 
@@ -216,13 +224,23 @@ static int _main_loop(void)
 		}
 		else
 		{
-			ex_astr file_name;
+//			ex_astr file_name;
 			ex_astr func_name;
-			ex_wstr2astr(g_py_script_file, file_name);
+//			ex_wstr2astr(g_py_script_file, file_name);
 			ex_wstr2astr(g_py_main_func, func_name);
+//
+//			pys_set_bootstrap_module(pysh, file_name.c_str(), func_name.c_str());
 
-			pys_set_bootstrap_module(pysh, file_name.c_str(), func_name.c_str());
+			pys_set_bootstrap_module(pysh, NULL, func_name.c_str());
+            pys_set_startup_file(pysh, g_py_script_file.c_str());
 		}
+
+//        ex_astr add_path("/home/apex/work/tp-py37/server/www/teleport");
+//        ex_wstr add_path_w;
+//        ex_astr2wstr(add_path, add_path_w);
+//
+//        pys_add_search_path(pysh, add_path_w.c_str());
+
 	}
 
 	ex_wstrs::const_iterator it = g_py_args.begin();

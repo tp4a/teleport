@@ -15,25 +15,14 @@
 #
 
 
-import string
-
-from PIL import Image, ImageFile
+from . import Image, ImageFile
 
 __version__ = "0.2"
 
 #
 # --------------------------------------------------------------------
 
-b_whitespace = string.whitespace
-try:
-    import locale
-    locale_lang, locale_enc = locale.getlocale()
-    if locale_enc is None:
-        locale_lang, locale_enc = locale.getdefaultlocale()
-    b_whitespace = b_whitespace.decode(locale_enc)
-except:
-    pass
-b_whitespace = b_whitespace.encode('ascii', 'ignore')
+b_whitespace = b'\x20\x09\x0a\x0b\x0c\x0d'
 
 MODES = {
     # standard
@@ -123,11 +112,6 @@ class PpmImageFile(ImageFile.ImageFile):
                      self.fp.tell(),
                      (rawmode, 0, 1))]
 
-        # ALTERNATIVE: load via builtin debug function
-        # self.im = Image.core.open_ppm(self.filename)
-        # self.mode = self.im.mode
-        # self.size = self.im.size
-
 
 #
 # --------------------------------------------------------------------
@@ -166,9 +150,8 @@ def _save(im, fp, filename):
 #
 # --------------------------------------------------------------------
 
+
 Image.register_open(PpmImageFile.format, PpmImageFile, _accept)
 Image.register_save(PpmImageFile.format, _save)
 
-Image.register_extension(PpmImageFile.format, ".pbm")
-Image.register_extension(PpmImageFile.format, ".pgm")
-Image.register_extension(PpmImageFile.format, ".ppm")
+Image.register_extensions(PpmImageFile.format, [".pbm", ".pgm", ".ppm"])

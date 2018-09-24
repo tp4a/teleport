@@ -4,7 +4,7 @@
     <content url="file://$MODULE_DIR$/builder">
       <sourceFolder url="file://$MODULE_DIR$/builder" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="py34" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="py37" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TestRunnerService">

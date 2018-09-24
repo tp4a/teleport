@@ -25,16 +25,11 @@
 # See the README file for information on usage and redistribution.
 #
 
-from __future__ import print_function
-
 import logging
-from PIL import Image, ImageFile, ImagePalette, _binary
+from . import Image, ImageFile, ImagePalette
+from ._binary import i8, i16le as i16, o8, o16le as o16
 
 logger = logging.getLogger(__name__)
-
-i8 = _binary.i8
-i16 = _binary.i16le
-o8 = _binary.o8
 
 __version__ = "0.6"
 
@@ -115,6 +110,7 @@ class PcxImageFile(ImageFile.ImageFile):
 # --------------------------------------------------------------------
 # save PCX files
 
+
 SAVE = {
     # mode: (version, bits, planes, raw mode)
     "1": (2, 1, 1, "1"),
@@ -123,18 +119,13 @@ SAVE = {
     "RGB": (5, 8, 3, "RGB;L"),
 }
 
-o16 = _binary.o16le
 
-
-def _save(im, fp, filename, check=0):
+def _save(im, fp, filename):
 
     try:
         version, bits, planes, rawmode = SAVE[im.mode]
     except KeyError:
         raise ValueError("Cannot save %s images as PCX" % im.mode)
-
-    if check:
-        return check
 
     # bytes per plane
     stride = (im.size[0] * bits + 7) // 8
@@ -180,6 +171,7 @@ def _save(im, fp, filename, check=0):
 
 # --------------------------------------------------------------------
 # registry
+
 
 Image.register_open(PcxImageFile.format, PcxImageFile, _accept)
 Image.register_save(PcxImageFile.format, _save)

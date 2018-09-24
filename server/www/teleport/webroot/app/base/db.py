@@ -200,9 +200,12 @@ class TPDatabase:
             log.e('Unknown database type.\n')
             return None
 
-    def query(self, sql, args=()):
+    def query(self, sql, args=None):
         if self.need_create:
             return None
+        if self.db_type == self.DB_TYPE_SQLITE and args is None:
+            args = ()
+
         # log.d('[db] {}, {}\n'.format(sql, args))
         # _start = datetime.datetime.utcnow().timestamp()
         ret = self._conn_pool.query(sql, args)
@@ -210,7 +213,9 @@ class TPDatabase:
         # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
         return ret
 
-    def exec(self, sql, args=()):
+    def exec(self, sql, args=None):
+        if self.db_type == self.DB_TYPE_SQLITE and args is None:
+            args = ()
         # log.d('[db] {}\n'.format(sql, args))
         # print('[db]', sql, args)
         # _start = datetime.datetime.utcnow().timestamp()

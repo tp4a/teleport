@@ -15,10 +15,11 @@ include_directories(
         ../../../common/libex/include
         ../../../common/pyshell/include
         ../../../external/linux/release/include
-        ../../../external/linux/release/include/python3.4m
+        ../../../external/linux/release/include/python
 )
 
 link_directories(../../../external/linux/release/lib)
 
 add_executable(tp_web ${DIR_SRCS})
-target_link_libraries(tp_web python3.4m ssl crypto dl pthread rt util)
+#target_link_libraries(tp_web python3.7m ssl crypto dl pthread rt util)
+target_link_libraries(tp_web python3.7m ssl crypto dl pthread rt util)

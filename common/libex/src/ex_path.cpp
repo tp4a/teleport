@@ -305,7 +305,38 @@ bool ex_exec_file(ex_wstr& out_filename)
 
 bool ex_abspath(ex_wstr& inout_path)
 {
-	wchar_t* _path = ex_fix_path(inout_path.c_str());
+    wchar_t* _path = NULL;
+#ifdef EX_OS_UNIX
+    if(ex_is_abspath(inout_path.c_str()))
+    {
+        _path = ex_fix_path(inout_path.c_str());
+    }
+    else
+    {
+        char sz_cwd[PATH_MAX] = {0};
+        if(NULL == getcwd(sz_cwd, PATH_MAX)) {
+            return false;
+        }
+        ex_wstr str_cwd;
+        if(!ex_astr2wstr(sz_cwd, str_cwd))
+            return false;
+
+        ex_wstr str_abs_path;
+        if(!ex_abspath_to(str_cwd, inout_path, str_abs_path))
+            return false;
+
+        _path = ex_wcsdup(str_abs_path.c_str());
+    }
+
+#else
+    // TODO: fixed ex_abspath() for Windows.
+
+    _path = ex_fix_path(inout_path.c_str());
+#endif
+
+    if(_path == NULL)
+        return false;
+
 	ex_wstrs paths;
 	wchar_t* _str = _path;
 	wchar_t* _tmp = NULL;
@@ -320,14 +351,8 @@ bool ex_abspath(ex_wstr& inout_path)
 		}
 		else
 		{
-#ifndef EX_OS_WIN32
-//            if(_tmp == _str)
-//                paths.push_back(L"/");
-#endif
-
 			_tmp[0] = EX_NULL_END;
-//            if(wcslen(_str) > 0)
-    			paths.push_back(_str);
+   			paths.push_back(_str);
 			_str = _tmp + 1;
 		}
 	}

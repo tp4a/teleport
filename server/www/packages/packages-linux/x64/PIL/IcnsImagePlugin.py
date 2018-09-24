@@ -2,7 +2,7 @@
 # The Python Imaging Library.
 # $Id$
 #
-# Mac OS X icns file decoder, based on icns.py by Bob Ippolito.
+# macOS icns file decoder, based on icns.py by Bob Ippolito.
 #
 # history:
 # 2004-10-09 fl   Turned into a PIL plugin; removed 2.3 dependencies.
@@ -15,7 +15,8 @@
 # See the README file for information on usage and redistribution.
 #
 
-from PIL import Image, ImageFile, PngImagePlugin, _binary
+from PIL import Image, ImageFile, PngImagePlugin
+from PIL._binary import i8
 import io
 import os
 import shutil
@@ -26,8 +27,6 @@ import tempfile
 enable_jpeg2k = hasattr(Image.core, 'jp2klib_version')
 if enable_jpeg2k:
     from PIL import Jpeg2KImagePlugin
-
-i8 = _binary.i8
 
 HEADERSIZE = 8
 
@@ -302,36 +301,39 @@ def _save(im, fp, filename):
     """
     Saves the image as a series of PNG files,
     that are then converted to a .icns file
-    using the OS X command line utility 'iconutil'.
+    using the macOS command line utility 'iconutil'.
 
-    OS X only.
+    macOS only.
     """
     if hasattr(fp, "flush"):
         fp.flush()
 
     # create the temporary set of pngs
     iconset = tempfile.mkdtemp('.iconset')
+    provided_images = {im.width: im
+                       for im in im.encoderinfo.get("append_images", [])}
     last_w = None
-    last_im = None
     for w in [16, 32, 128, 256, 512]:
         prefix = 'icon_{}x{}'.format(w, w)
 
+        first_path = os.path.join(iconset, prefix+'.png')
         if last_w == w:
-            im_scaled = last_im
+            shutil.copyfile(second_path, first_path)
         else:
-            im_scaled = im.resize((w, w), Image.LANCZOS)
-        im_scaled.save(os.path.join(iconset, prefix+'.png'))
+            im_w = provided_images.get(w, im.resize((w, w), Image.LANCZOS))
+            im_w.save(first_path)
 
-        im_scaled = im.resize((w*2, w*2), Image.LANCZOS)
-        im_scaled.save(os.path.join(iconset, prefix+'@2x.png'))
-        last_im = im_scaled
+        second_path = os.path.join(iconset, prefix+'@2x.png')
+        im_w2 = provided_images.get(w*2, im.resize((w*2, w*2), Image.LANCZOS))
+        im_w2.save(second_path)
+        last_w = w*2
 
     # iconutil -c icns -o {} {}
     from subprocess import Popen, PIPE, CalledProcessError
 
     convert_cmd = ["iconutil", "-c", "icns", "-o", filename, iconset]
-    stderr = tempfile.TemporaryFile()
-    convert_proc = Popen(convert_cmd, stdout=PIPE, stderr=stderr)
+    with open(os.devnull, 'wb') as devnull:
+        convert_proc = Popen(convert_cmd, stdout=PIPE, stderr=devnull)
 
     convert_proc.stdout.close()
 
@@ -342,6 +344,7 @@ def _save(im, fp, filename):
 
     if retcode:
         raise CalledProcessError(retcode, convert_cmd)
+
 
 Image.register_open(IcnsImageFile.format, IcnsImageFile,
                     lambda x: x[:4] == b'icns')
@@ -354,13 +357,18 @@ if sys.platform == 'darwin':
 
 
 if __name__ == '__main__':
+
+    if len(sys.argv) < 2:
+        print("Syntax: python IcnsImagePlugin.py [file]")
+        sys.exit()
+
     imf = IcnsImageFile(open(sys.argv[1], 'rb'))
     for size in imf.info['sizes']:
         imf.size = size
         imf.load()
         im = imf.im
         im.save('out-%s-%s-%s.png' % size)
-    im = Image.open(open(sys.argv[1], "rb"))
+    im = Image.open(sys.argv[1])
     im.save("out.png")
     if sys.platform == 'windows':
         os.startfile("out.png")

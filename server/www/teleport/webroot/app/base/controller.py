@@ -122,25 +122,36 @@ class TPBaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         return self._user
 
-    def check_privilege(self, require_privilege):
+    def check_privilege(self, require_privilege, need_process=True):
         if not self._user['_is_login']:
             if self._mode == self.MODE_HTTP:
-                self.redirect('/auth/login?ref={}'.format(quote(self.request.uri)))
+                if need_process:
+                    self.redirect('/auth/login?ref={}'.format(quote(self.request.uri)))
             elif self._mode == self.MODE_JSON:
-                self.write_json(TPE_NEED_LOGIN)
+                if need_process:
+                    self.write_json(TPE_NEED_LOGIN)
             else:
-                raise RuntimeError("invalid request mode.")
+                if need_process:
+                    raise RuntimeError("invalid request mode.")
+                else:
+                    return TPE_HTTP_METHOD
             return TPE_NEED_LOGIN
+
         else:
             if (self._user['privilege'] & require_privilege) != 0:
                 return TPE_OK
 
         if self._mode == self.MODE_HTTP:
-            self.show_error_page(TPE_PRIVILEGE)
+            if need_process:
+                self.show_error_page(TPE_PRIVILEGE)
         elif self._mode == self.MODE_JSON:
-            self.write_json(TPE_PRIVILEGE)
+            if need_process:
+                self.write_json(TPE_PRIVILEGE)
         else:
-            raise RuntimeError("invalid request mode.")
+            if need_process:
+                raise RuntimeError("invalid request mode.")
+            else:
+                return TPE_HTTP_METHOD
 
         return TPE_PRIVILEGE
 

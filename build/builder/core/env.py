@@ -24,13 +24,18 @@ class Env(object):
         self.root_path = os.path.abspath(os.path.join(_this_path, '..', '..', '..'))
         self.build_path = os.path.abspath(os.path.join(_this_path, '..', '..'))
         self.builder_path = os.path.join(self.build_path, 'builder')
-        self.win32_tools_path = os.path.join(self.build_path, 'tools', 'win32')
 
         self.is_py2 = sys.version_info[0] == 2
         self.is_py3 = sys.version_info[0] == 3
 
+        if self.is_py2:
+            self.input = raw_input
+        else:
+            self.input = input
+
         self.py_ver = platform.python_version_tuple()
         self.py_ver_str = '%s%s' % (self.py_ver[0], self.py_ver[1])
+        self.py_ver_dot = '%s.%s' % (self.py_ver[0], self.py_ver[1])
         self.py_exec = sys.executable
 
         self.bits = self.BITS_32
@@ -71,7 +76,7 @@ class Env(object):
     def _load_config(self, warn_miss_tool):
         _cfg_file = os.path.join(self.root_path, 'config.ini')
         if not os.path.exists(_cfg_file):
-            cc.e('can not load configuration.\n\nplease copy `config.ini.in` into `config.ini` and modify it to fit your condition and try again.')
+            cc.e('can not load configuration.\n\nplease copy `config.ini.in` to `config.ini` and modify it to fit your condition and try again.')
             return False
 
         _cfg = configparser.ConfigParser()
@@ -170,12 +175,12 @@ class Env(object):
         _tmp = _cfg['external_ver']
         try:
             _v_openssl = _tmp['openssl'].split(',')
-            self.ver_openssl = _v_openssl[0].strip()
-            self.ver_openssl_number = _v_openssl[1].strip()
+            self.ver_ossl = _v_openssl[0].strip()
+            self.ver_ossl_number = _v_openssl[1].strip()
 
             self.ver_libuv = _tmp['libuv']
             self.ver_mbedtls = _tmp['mbedtls']
-            self.ver_sqlite = _tmp['sqlite']
+            # self.ver_sqlite = _tmp['sqlite']
             self.ver_libssh = _tmp['libssh']
             self.ver_jsoncpp = _tmp['jsoncpp']
             self.ver_mongoose = _tmp['mongoose']

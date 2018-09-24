@@ -5,12 +5,14 @@ import os
 import time
 import urllib.parse
 import urllib.request
+import asyncio
 
 import tornado.httpserver
 import tornado.ioloop
 import tornado.netutil
 import tornado.process
 import tornado.web
+import tornado.platform.asyncio
 from app.const import *
 from app.base.configs import tp_cfg
 from app.base.db import get_db
@@ -29,6 +31,8 @@ class WebApp:
 
     def init(self, path_app_root, path_data):
         log.initialize()
+
+        asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
 
         cfg = tp_cfg()
         cfg.app_path = path_app_root

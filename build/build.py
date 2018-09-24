@@ -128,6 +128,7 @@ def do_opt(opt):
 
     elif 'external' == opt['name']:
         script = 'build-external.py'
+        arg = '%s %s' % (ctx.target_path, opt['bits'])
 
     elif 'server' == opt['name']:
         script = 'build-server.py'

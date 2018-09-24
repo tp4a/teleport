@@ -71,7 +71,7 @@
 
 
             <div class="table-extend-cell group-actions">
-                <div class="btn-group" role="group">
+                <div class="btn-group">
                     <div class="btn-group dropup" id="btn-set-role" role="group">
                         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-edit fa-fw"></i> 设置角色 <i class="fa fa-caret-right"></i></button>
                         <ul class="dropdown-menu  dropdown-menu-sm"></ul>

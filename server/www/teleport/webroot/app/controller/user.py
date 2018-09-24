@@ -144,7 +144,12 @@ class DoVerifyUserHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
-        err, user_info = user.login(self, username, password=password)
+        try:
+            check_bind_oath = args['check_bind_oath']
+        except:
+            check_bind_oath = False
+
+        err, user_info = user.login(self, username, password=password, check_bind_oath=check_bind_oath)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH
@@ -190,6 +195,28 @@ class DoBindOathHandler(TPBaseJsonHandler):
 
         return self.write_json(TPE_OK)
 
+class DoUnBindOathHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_DELETE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            users = args['users']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        # 把oath设置为空就是去掉oath验证
+        err = user.update_oath_secret(self, users, '')
+        self.write_json(err)
 
 class OathSecretQrCodeHandler(TPBaseHandler):
     def get(self):
@@ -310,17 +337,26 @@ class DoImportHandler(TPBaseHandler):
           2. 一个用户属于多个组，可以用“|”将组分隔，如果某个组并不存在，则会创建这个组。
           3. 空行跳过，数据格式不正确的跳过。
         """
-        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE | TP_PRIVILEGE_USER_GROUP)
-        if ret != TPE_OK:
-            return
-
-        success = list()
-        failed = list()
-        group_failed = list()
 
         ret = dict()
         ret['code'] = TPE_OK
         ret['message'] = ''
+
+        rv = self.check_privilege(TP_PRIVILEGE_USER_CREATE | TP_PRIVILEGE_USER_GROUP, need_process=False)
+        if rv != TPE_OK:
+            ret['code'] = rv
+            ret['code'] = rv
+            if rv == TPE_NEED_LOGIN:
+                ret['message'] = '需要登录！'
+            elif rv == TPE_PRIVILEGE:
+                ret['message'] = '权限不足！'
+            else:
+                ret['message'] = '未知错误！'
+            return self.write(json.dumps(ret).encode('utf8'))
+
+        success = list()
+        failed = list()
+        group_failed = list()
         csv_filename = ''
 
         try:
@@ -536,7 +572,7 @@ class DoUpdateUserHandler(TPBaseJsonHandler):
             args['id'] = int(args['id'])
             args['role'] = int(args['role'])
             args['auth_type'] = int(args['auth_type'])
-            args['username'] = args['username'].strip()
+            args['username'] = args['username'].strip().lower()
             args['surname'] = args['surname'].strip()
             args['email'] = args['email'].strip()
             args['mobile'] = args['mobile'].strip()
@@ -711,10 +747,8 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
         if mode == 1 or mode == 3:
             err, email, token = user.generate_reset_password_token(self, user_id)
 
-            # 生成一个密码重置链接，24小时有效
-            # token = tp_generate_random(16)
+            # generate an URL for reset password, valid in 24hr.
             reset_url = '{}://{}/user/reset-password?token={}'.format(self.request.protocol, self.request.host, token)
-            # reset_url = 'http://127.0.0.1/user/validate-password-reset-token?token=G66LXH0EOJ47OXTH7O5KBQ0PHXRSBXBVVFALI6JBJ8HNWUALWI35QECPJ8UV8DEQ'
 
             err, msg = yield mail.tp_send_mail(
                 email,
@@ -744,6 +778,11 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
 
             if mode == 4 and err == TPE_OK:
                 user.remove_reset_token(token)
+
+            # 非用户自行修改密码的情况，都默认重置身份认证
+            if mode != 5 and err == TPE_OK:
+                print("reset oath secret")
+                user.update_oath_secret(self, user_id, '')
 
             self.write_json(err)
 
@@ -792,159 +831,6 @@ class DoUpdateUsersHandler(TPBaseJsonHandler):
 
         self.write_json(err)
 
-
-# class DoRemoveGroupHandler(TPBaseJsonHandler):
-#     def post(self):
-#         ret = self.check_privilege(TP_PRIVILEGE_USER_GROUP)
-#         if ret != TPE_OK:
-#             return
-#
-#         args = self.get_argument('args', None)
-#         if args is None:
-#             return self.write_json(TPE_PARAM)
-#         try:
-#             args = json.loads(args)
-#         except:
-#             return self.write_json(TPE_JSON_FORMAT)
-#
-#         try:
-#             group_list = args['group_list']
-#         except:
-#             return self.write_json(TPE_PARAM)
-#
-#         err = user.remove_group(self, group_list)
-#         self.write_json(err)
-
-
-# class AuthHandler(TPBaseAdminAuthHandler):
-#     def get(self, user_name):
-#         group_list = host.get_group_list()
-#         cert_list = host.get_cert_list()
-#         self.render('user/auth.mako',
-#                     group_list=group_list,
-#                     cert_list=cert_list, user_name=user_name)
-#
-#
-# class GetListHandler(TPBaseAdminAuthJsonHandler):
-#     def post(self):
-#         user_list = user.get_user_list(with_admin=False)
-#         ret = dict()
-#         ret['page_index'] = 10
-#         ret['total'] = len(user_list)
-#         ret['data'] = user_list
-#         self.write_json(0, data=ret)
-#
-#
-# class DeleteUser(TPBaseUserAuthJsonHandler):
-#     def post(self):
-#         args = self.get_argument('args', None)
-#         if args is not None:
-#             args = json.loads(args)
-#         else:
-#             return self.write_json(-1, 'invalid param')
-#
-#         user_id = args['user_id']
-#         try:
-#             ret = user.delete_user(user_id)
-#             if ret:
-#                 return self.write_json(0)
-#             else:
-#                 return self.write_json(-2, 'database op failed.')
-#         except:
-#             log.e('delete user failed.\n')
-#             return self.write_json(-3, 'got exception.')
-#
-#
-# class ModifyUser(TPBaseUserAuthJsonHandler):
-#     def post(self):
-#         args = self.get_argument('args', None)
-#         if args is not None:
-#             args = json.loads(args)
-#         else:
-#             return self.write_json(-1, 'invalid param.')
-#
-#         user_id = args['user_id']
-#         user_desc = args['user_desc']
-#
-#         try:
-#             ret = user.modify_user(user_id, user_desc)
-#             if ret:
-#                 self.write_json(0)
-#             else:
-#                 self.write_json(-2, 'database op failed.')
-#             return
-#         except:
-#             log.e('modify user failed.\n')
-#             self.write_json(-3, 'got exception.')
-#
-#
-# class AddUser(TPBaseUserAuthJsonHandler):
-#     def post(self):
-#         args = self.get_argument('args', None)
-#         if args is not None:
-#             args = json.loads(args)
-#         else:
-#             return self.write_json(-1, 'invalid param.')
-#
-#         user_name = args['user_name']
-#         user_pwd = '123456'
-#         user_desc = args['user_desc']
-#         if user_desc is None:
-#             user_desc = ''
-#         try:
-#             ret = user.add_user(user_name, user_pwd, user_desc)
-#             if 0 == ret:
-#                 return self.write_json(0)
-#             else:
-#                 return self.write_json(ret, 'database op failed. errcode={}'.format(ret))
-#         except:
-#             log.e('add user failed.\n')
-#             return self.write_json(-3, 'got exception.')
-#
-#
-# class LockUser(TPBaseUserAuthJsonHandler):
-#     def post(self):
-#         args = self.get_argument('args', None)
-#         if args is not None:
-#             args = json.loads(args)
-#         else:
-#             return self.write_json(-1, 'invalid param.')
-#
-#         user_id = args['user_id']
-#         lock_status = args['lock_status']
-#
-#         try:
-#             ret = user.lock_user(user_id, lock_status)
-#             if ret:
-#                 return self.write_json(0)
-#             else:
-#                 return self.write_json(-2, 'database op failed.')
-#         except:
-#             log.e('lock user failed.\m')
-#             return self.write_json(-3, 'got exception.')
-#
-#
-# class ResetUser(TPBaseUserAuthJsonHandler):
-#     def post(self):
-#         args = self.get_argument('args', None)
-#         if args is not None:
-#             args = json.loads(args)
-#         else:
-#             return self.write_json(-1, 'invalid param.')
-#
-#         user_id = args['user_id']
-#         # lock_status = args['lock_status']
-#
-#         try:
-#             ret = user.reset_user(user_id)
-#             if ret:
-#                 return self.write_json(0)
-#             else:
-#                 return self.write_json(-2, 'database op failed.')
-#         except:
-#             log.e('reset user failed.\n')
-#             return self.write_json(-3, 'got exception.')
-#
 
 class DoGetGroupWithMemberHandler(TPBaseJsonHandler):
     def post(self):

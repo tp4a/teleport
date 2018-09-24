@@ -2,7 +2,6 @@
 
 $app.on_init = function (cb_stack) {
     $app.dom = {
-        // assist_ver: $('#tp-assist-ver'),
         btn_refresh_host: $('#btn-refresh-host'),
         btn_add_host: $('#btn-add-host'),
         chkbox_host_select_all: $('#table-host-select-all'),
@@ -18,15 +17,6 @@ $app.on_init = function (cb_stack) {
         upload_file_info: $('#upload-file-info'),
         upload_file_message: $('#upload-file-message')
     };
-
-    // $tp.assist_checked = function () {
-    //     console.log("---------");
-    //     if ($tp.assist.running) {
-    //         $app.dom.assist_ver.html($tp.assist.version);
-    //     } else {
-    //         $app.dom.assist_ver.html('<a href="http://teleport.eomsoft.net/download" target="_blank" class="error">未能检测到</a>');
-    //     }
-    // };
 
     cb_stack
         .add($app.create_controls)
@@ -137,6 +127,8 @@ $app.create_controls = function (cb_stack) {
     // $app.table_host_role_filter = $tp.create_table_filter_role($app.table_host, $app.role_list);
     // 主机没有“临时锁定”状态，因此要排除掉
     $tp.create_table_header_filter_state($app.table_host, 'state', $app.obj_states, [TP_STATE_LOCKED]);
+
+    $tp.create_table_filter_group($app.table_host, 'host_group', '#filter-host-group', $app.options.host_groups);
 
     // 从cookie中读取用户分页限制的选择
     $tp.create_table_paging($app.table_host, 'table-host-paging',
@@ -867,7 +859,6 @@ $app.create_dlg_edit_host = function () {
             cid: dlg.field_cid,
             desc: dlg.field_desc
         };
-        console.log(args);
 
         // 如果id为-1表示创建，否则表示更新
         $tp.ajax_post_json('/asset/update-host', args,
@@ -1156,7 +1147,6 @@ $app.create_dlg_accounts = function () {
         $tp.ajax_post_json('/asset/get-accounts', {host_id: dlg.host.id},
             function (ret) {
                 if (ret.code === TPE_OK) {
-                    console.log('account:', ret.data);
                     $app.table_acc.set_data(cb_stack, {}, {total: ret.data.length, page_index: 1, data: ret.data});
                 } else {
                     $app.table_acc.set_data(cb_stack, {}, {total: 0, page_index: 1, data: {}});
@@ -1527,6 +1517,10 @@ $app.create_dlg_edit_account = function () {
         }
 
         dlg.dom.auth_type.empty().append($(html.join('')));
+
+        if(!_.isNull(dlg.account))
+            dlg.dom.auth_type.val(dlg.account.auth_type);
+
         dlg.on_auth_change();
     };
 
@@ -1537,9 +1531,9 @@ $app.create_dlg_edit_account = function () {
             dlg.dom.block_sshkey.hide();
             if (dlg.field_protocol === TP_PROTOCOL_TYPE_TELNET) {
                 dlg.dom.block_prompt.show();
-                if(dlg.dom.prompt_username.val().length === 0 && dlg.account.username_prompt.length === 0)
+                if (dlg.dom.prompt_username.val().length === 0 && dlg.account.username_prompt.length === 0)
                     dlg.dom.prompt_username.val('ogin:');
-                if(dlg.dom.prompt_password.val().length === 0 && dlg.account.password_prompt.length === 0)
+                if (dlg.dom.prompt_password.val().length === 0 && dlg.account.password_prompt.length === 0)
                     dlg.dom.prompt_password.val('assword:');
             }
         } else if (dlg.field_auth === TP_AUTH_TYPE_PRIVATE_KEY) {
