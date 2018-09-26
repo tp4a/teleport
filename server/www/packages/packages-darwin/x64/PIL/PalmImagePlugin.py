@@ -7,7 +7,8 @@
 # Image plugin for Palm pixmap images (output only).
 ##
 
-from PIL import Image, ImageFile, _binary
+from . import Image, ImageFile
+from ._binary import o8, o16be as o16b
 
 __version__ = "1.0"
 
@@ -80,15 +81,15 @@ _Palm8BitColormapValues = (
 
 # so build a prototype image to be used for palette resampling
 def build_prototype_image():
-    image = Image.new("L", (1, len(_Palm8BitColormapValues),))
+    image = Image.new("L", (1, len(_Palm8BitColormapValues)))
     image.putdata(list(range(len(_Palm8BitColormapValues))))
     palettedata = ()
-    for i in range(len(_Palm8BitColormapValues)):
-        palettedata = palettedata + _Palm8BitColormapValues[i]
-    for i in range(256 - len(_Palm8BitColormapValues)):
-        palettedata = palettedata + (0, 0, 0)
+    for colormapValue in _Palm8BitColormapValues:
+        palettedata += colormapValue
+    palettedata += (0, 0, 0)*(256 - len(_Palm8BitColormapValues))
     image.putpalette(palettedata)
     return image
+
 
 Palm8BitColormapImage = build_prototype_image()
 
@@ -109,9 +110,6 @@ _COMPRESSION_TYPES = {
     "scanline": 0x00,
     }
 
-o8 = _binary.o8
-o16b = _binary.o16be
-
 
 #
 # --------------------------------------------------------------------
@@ -119,7 +117,7 @@ o16b = _binary.o16be
 ##
 # (Internal) Image save plugin for the Palm format.
 
-def _save(im, fp, filename, check=0):
+def _save(im, fp, filename):
 
     if im.mode == "P":
 
@@ -167,9 +165,6 @@ def _save(im, fp, filename, check=0):
     else:
 
         raise IOError("cannot write mode %s as Palm" % im.mode)
-
-    if check:
-        return check
 
     #
     # make sure image data is available

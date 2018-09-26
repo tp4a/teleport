@@ -25,14 +25,22 @@
 # See the README file for information on usage and redistribution.
 #
 
-try:
-    import tkinter
-except ImportError:
-    import Tkinter
-    tkinter = Tkinter
-    del Tkinter
+import sys
 
-from PIL import Image
+if sys.version_info.major > 2:
+    import tkinter
+else:
+    import Tkinter as tkinter
+
+# required for pypy, which always has cffi installed
+try:
+    from cffi import FFI
+    ffi = FFI()
+except ImportError:
+    pass
+
+from . import Image
+from io import BytesIO
 
 
 # --------------------------------------------------------------------
@@ -51,6 +59,16 @@ def _pilbitmap_check():
         except tkinter.TclError:
             _pilbitmap_ok = 0
     return _pilbitmap_ok
+
+
+def _get_image_from_kw(kw):
+    source = None
+    if "file" in kw:
+        source = kw.pop("file")
+    elif "data" in kw:
+        source = BytesIO(kw.pop("data"))
+    if source:
+        return Image.open(source)
 
 
 # --------------------------------------------------------------------
@@ -80,13 +98,7 @@ class PhotoImage(object):
 
         # Tk compatibility: file or data
         if image is None:
-            if "file" in kw:
-                image = Image.open(kw["file"])
-                del kw["file"]
-            elif "data" in kw:
-                from io import BytesIO
-                image = Image.open(BytesIO(kw["data"]))
-                del kw["data"]
+            image = _get_image_from_kw(kw)
 
         if hasattr(image, "mode") and hasattr(image, "size"):
             # got an image instead of a mode
@@ -157,8 +169,8 @@ class PhotoImage(object):
                    mode does not match, the image is converted to the mode of
                    the bitmap image.
         :param box: A 4-tuple defining the left, upper, right, and lower pixel
-                    coordinate.  If None is given instead of a tuple, all of
-                    the image is assumed.
+                    coordinate. See :ref:`coordinate-system`. If None is given
+                    instead of a tuple, all of the image is assumed.
         """
 
         # convert to blittable
@@ -177,9 +189,15 @@ class PhotoImage(object):
         except tkinter.TclError:
             # activate Tkinter hook
             try:
-                from PIL import _imagingtk
+                from . import _imagingtk
                 try:
-                    _imagingtk.tkinit(tk.interpaddr(), 1)
+                    if hasattr(tk, 'interp'):
+                        # Pypy is using a ffi cdata element
+                        # (Pdb) self.tk.interp
+                        #  <cdata 'Tcl_Interp *' 0x3061b50>
+                        _imagingtk.tkinit(int(ffi.cast("uintptr_t", tk.interp)), 1)
+                    else:
+                        _imagingtk.tkinit(tk.interpaddr(), 1)
                 except AttributeError:
                     _imagingtk.tkinit(id(tk), 0)
                 tk.call("PyImagingPhoto", self.__photo, block.id)
@@ -192,7 +210,6 @@ class PhotoImage(object):
 
 class BitmapImage(object):
     """
-
     A Tkinter-compatible bitmap image.  This can be used everywhere Tkinter
     expects an image object.
 
@@ -209,13 +226,7 @@ class BitmapImage(object):
 
         # Tk compatibility: file or data
         if image is None:
-            if "file" in kw:
-                image = Image.open(kw["file"])
-                del kw["file"]
-            elif "data" in kw:
-                from io import BytesIO
-                image = Image.open(BytesIO(kw["data"]))
-                del kw["data"]
+            image = _get_image_from_kw(kw)
 
         self.__mode = image.mode
         self.__size = image.size
@@ -266,14 +277,14 @@ class BitmapImage(object):
 
 
 def getimage(photo):
+    """ This function is unimplemented """
+
     """Copies the contents of a PhotoImage to a PIL image memory."""
     photo.tk.call("PyImagingPhotoGet", photo)
 
 
-# --------------------------------------------------------------------
-# Helper for the Image.show method.
-
 def _show(image, title):
+    """Helper for the Image.show method."""
 
     class UI(tkinter.Label):
         def __init__(self, master, im):

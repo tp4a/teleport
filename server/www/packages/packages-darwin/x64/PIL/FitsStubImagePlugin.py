@@ -9,17 +9,17 @@
 # See the README file for information on usage and redistribution.
 #
 
-from PIL import Image, ImageFile
+from . import Image, ImageFile
 
 _handler = None
 
-##
-# Install application-specific FITS image handler.
-#
-# @param handler Handler object.
-
 
 def register_handler(handler):
+    """
+    Install application-specific FITS image handler.
+
+    :param handler: Handler object.
+    """
     global _handler
     _handler = handler
 
@@ -72,5 +72,4 @@ def _save(im, fp, filename):
 Image.register_open(FITSStubImageFile.format, FITSStubImageFile, _accept)
 Image.register_save(FITSStubImageFile.format, _save)
 
-Image.register_extension(FITSStubImageFile.format, ".fit")
-Image.register_extension(FITSStubImageFile.format, ".fits")
+Image.register_extensions(FITSStubImageFile.format, [".fit", ".fits"])

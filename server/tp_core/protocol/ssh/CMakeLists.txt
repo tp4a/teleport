@@ -43,6 +43,6 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 #	target_link_libraries(tpssh ssh ssh_threads ssl crypto mbedx509 mbedtls mbedcrypto dl pthread rt util)
 	target_link_libraries(tpssh ssh ssl crypto mbedx509 mbedtls mbedcrypto dl pthread rt util)
 ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-	target_link_libraries(tpssh ssh ssh_threads ssl crypto mbedx509 mbedtls mbedcrypto dl pthread util)
+	target_link_libraries(tpssh ssh ssl crypto mbedx509 mbedtls mbedcrypto dl pthread util)
 ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 

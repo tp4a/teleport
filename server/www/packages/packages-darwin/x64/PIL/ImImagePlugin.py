@@ -27,8 +27,8 @@
 
 
 import re
-from PIL import Image, ImageFile, ImagePalette
-from PIL._binary import i8
+from . import Image, ImageFile, ImagePalette
+from ._binary import i8
 
 __version__ = "0.7"
 
@@ -109,6 +109,7 @@ class ImImageFile(ImageFile.ImageFile):
 
     format = "IM"
     format_description = "IFUNC Image Memory"
+    _close_exclusive_fp_after_loading = False
 
     def _open(self):
 
@@ -269,11 +270,7 @@ class ImImageFile(ImageFile.ImageFile):
         return self.info[FRAMES] > 1
 
     def seek(self, frame):
-
-        if frame < 0 or frame >= self.info[FRAMES]:
-            raise EOFError("seek outside sequence")
-
-        if self.frame == frame:
+        if not self._seek_check(frame):
             return
 
         self.frame = frame
@@ -291,12 +288,12 @@ class ImImageFile(ImageFile.ImageFile):
         self.tile = [("raw", (0, 0)+self.size, offs, (self.rawmode, 0, -1))]
 
     def tell(self):
-
         return self.frame
 
 #
 # --------------------------------------------------------------------
 # Save IM files
+
 
 SAVE = {
     # mode: (im type, raw mode)
@@ -318,20 +315,14 @@ SAVE = {
 }
 
 
-def _save(im, fp, filename, check=0):
+def _save(im, fp, filename):
 
     try:
         image_type, rawmode = SAVE[im.mode]
     except KeyError:
         raise ValueError("Cannot save %s images as IM" % im.mode)
 
-    try:
-        frames = im.encoderinfo["frames"]
-    except KeyError:
-        frames = 1
-
-    if check:
-        return check
+    frames = im.encoderinfo.get("frames", 1)
 
     fp.write(("Image type: %s image\r\n" % image_type).encode('ascii'))
     if filename:
@@ -348,6 +339,7 @@ def _save(im, fp, filename, check=0):
 #
 # --------------------------------------------------------------------
 # Registry
+
 
 Image.register_open(ImImageFile.format, ImImageFile)
 Image.register_save(ImImageFile.format, _save)

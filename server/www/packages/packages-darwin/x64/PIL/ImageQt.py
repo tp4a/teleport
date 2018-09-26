@@ -16,28 +16,36 @@
 # See the README file for information on usage and redistribution.
 #
 
-from PIL import Image
-from PIL._util import isPath
+from . import Image
+from ._util import isPath, py3
 from io import BytesIO
+import sys
 
-qt_is_installed = True
-qt_version = None
-try:
-    from PyQt5.QtGui import QImage, qRgba, QPixmap
-    from PyQt5.QtCore import QBuffer, QIODevice
-    qt_version = '5'
-except ImportError:
+qt_versions = [
+    ['5', 'PyQt5'],
+    ['4', 'PyQt4'],
+    ['side', 'PySide']
+]
+# If a version has already been imported, attempt it first
+qt_versions.sort(key=lambda qt_version: qt_version[1] in sys.modules, reverse=True)
+for qt_version, qt_module in qt_versions:
     try:
-        from PyQt4.QtGui import QImage, qRgba, QPixmap
-        from PyQt4.QtCore import QBuffer, QIODevice
-        qt_version = '4'
-    except ImportError:
-        try:
+        if qt_module == 'PyQt5':
+            from PyQt5.QtGui import QImage, qRgba, QPixmap
+            from PyQt5.QtCore import QBuffer, QIODevice
+        elif qt_module == 'PyQt4':
+            from PyQt4.QtGui import QImage, qRgba, QPixmap
+            from PyQt4.QtCore import QBuffer, QIODevice
+        elif qt_module == 'PySide':
             from PySide.QtGui import QImage, qRgba, QPixmap
             from PySide.QtCore import QBuffer, QIODevice
-            qt_version = 'side'
-        except ImportError:
-            qt_is_installed = False
+    except (ImportError, RuntimeError):
+        continue
+    qt_is_installed = True
+    break
+else:
+    qt_is_installed = False
+    qt_version = None
 
 
 def rgb(r, g, b, a=255):
@@ -47,10 +55,11 @@ def rgb(r, g, b, a=255):
     return (qRgba(r, g, b, a) & 0xffffffff)
 
 
-# :param im A PIL Image object, or a file name
-# (given either as Python string or a PyQt string object)
-
 def fromqimage(im):
+    """
+    :param im: A PIL Image object, or a file name
+    (given either as Python string or a PyQt string object)
+    """
     buffer = QBuffer()
     buffer.open(QIODevice.ReadWrite)
     # preserve alha channel with png
@@ -122,10 +131,10 @@ def _toqclass_helper(im):
     # handle filename, if given instead of image name
     if hasattr(im, "toUtf8"):
         # FIXME - is this really the best way to do this?
-        if str is bytes:
-            im = unicode(im.toUtf8(), "utf-8")
-        else:
+        if py3:
             im = str(im.toUtf8(), "utf-8")
+        else:
+            im = unicode(im.toUtf8(), "utf-8")
     if isPath(im):
         im = Image.open(im)
 
@@ -156,26 +165,31 @@ def _toqclass_helper(im):
     else:
         raise ValueError("unsupported image mode %r" % im.mode)
 
-    # must keep a reference, or Qt will crash!
     __data = data or align8to32(im.tobytes(), im.size[0], im.mode)
     return {
         'data': __data, 'im': im, 'format': format, 'colortable': colortable
     }
 
-##
-# An PIL image wrapper for Qt.  This is a subclass of PyQt's QImage
-# class.
-#
-# @param im A PIL Image object, or a file name (given either as Python
-#     string or a PyQt string object).
 
 if qt_is_installed:
     class ImageQt(QImage):
 
         def __init__(self, im):
+            """
+            An PIL image wrapper for Qt.  This is a subclass of PyQt's QImage
+            class.
+
+            :param im: A PIL Image object, or a file name (given either as Python
+                string or a PyQt string object).
+            """
             im_data = _toqclass_helper(im)
+            # must keep a reference, or Qt will crash!
+            # All QImage constructors that take data operate on an existing
+            # buffer, so this buffer has to hang on for the life of the image.
+            # Fixes https://github.com/python-pillow/Pillow/issues/1370
+            self.__data = im_data['data']
             QImage.__init__(self,
-                            im_data['data'], im_data['im'].size[0],
+                            self.__data, im_data['im'].size[0],
                             im_data['im'].size[1], im_data['format'])
             if im_data['colortable']:
                 self.setColorTable(im_data['colortable'])

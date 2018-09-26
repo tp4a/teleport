@@ -22,16 +22,16 @@
 
 import re
 import io
+import os
 import sys
-from PIL import Image, ImageFile, _binary
+from . import Image, ImageFile
+from ._binary import i32le as i32
+from ._util import py3
 
 __version__ = "0.5"
 
 #
 # --------------------------------------------------------------------
-
-i32 = _binary.i32le
-o32 = _binary.o32le
 
 split = re.compile(r"^%%([^:]*):[ \t]*(.*)[ \t]*$")
 field = re.compile(r"^%[%!\w]([^:]*)[ \t]*$")
@@ -59,8 +59,8 @@ def has_ghostscript():
     if not sys.platform.startswith('win'):
         import subprocess
         try:
-            gs = subprocess.Popen(['gs', '--version'], stdout=subprocess.PIPE)
-            gs.stdout.read()
+            with open(os.devnull, 'wb') as devnull:
+                subprocess.check_call(['gs', '--version'], stdout=devnull)
             return True
         except OSError:
             # no ghostscript
@@ -85,7 +85,6 @@ def Ghostscript(tile, size, fp, scale=1):
            float((72.0 * size[1]) / (bbox[3]-bbox[1])))
     # print("Ghostscript", scale, size, orig_size, bbox, orig_bbox, res)
 
-    import os
     import subprocess
     import tempfile
 
@@ -123,6 +122,7 @@ def Ghostscript(tile, size, fp, scale=1):
                "-q",                         # quiet mode
                "-g%dx%d" % size,             # set output geometry (pixels)
                "-r%fx%f" % res,              # set input DPI (dots per inch)
+               "-dBATCH",                    # exit after processing
                "-dNOPAUSE",                  # don't pause between pages,
                "-dSAFER",                    # safe mode
                "-sDEVICE=ppmraw",            # ppm driver
@@ -130,6 +130,7 @@ def Ghostscript(tile, size, fp, scale=1):
                "-c", "%d %d translate" % (-bbox[0], -bbox[1]),
                                              # adjust for image origin
                "-f", infile,                 # input file
+               "-c", "showpage",             # showpage (see: https://bugs.ghostscript.com/show_bug.cgi?id=698272)
                ]
 
     if gs_windows_binary is not None:
@@ -139,13 +140,10 @@ def Ghostscript(tile, size, fp, scale=1):
 
     # push data through ghostscript
     try:
-        gs = subprocess.Popen(command, stdin=subprocess.PIPE,
-                              stdout=subprocess.PIPE)
-        gs.stdin.close()
-        status = gs.wait()
-        if status:
-            raise IOError("gs failed (status %d)" % status)
-        im = Image.core.open_ppm(outfile)
+        with open(os.devnull, 'w+b') as devnull:
+            subprocess.check_call(command, stdin=devnull, stdout=devnull)
+        im = Image.open(outfile)
+        im.load()
     finally:
         try:
             os.unlink(outfile)
@@ -154,7 +152,7 @@ def Ghostscript(tile, size, fp, scale=1):
         except OSError:
             pass
 
-    return im
+    return im.im.copy()
 
 
 class PSFile(object):
@@ -201,7 +199,7 @@ class EpsImageFile(ImageFile.ImageFile):
     format = "EPS"
     format_description = "Encapsulated Postscript"
 
-    mode_map = {1: "L", 2: "LAB", 3: "RGB"}
+    mode_map = {1: "L", 2: "LAB", 3: "RGB", 4: "CMYK"}
 
     def _open(self):
         (length, offset) = self._find_offset(self.fp)
@@ -209,12 +207,12 @@ class EpsImageFile(ImageFile.ImageFile):
         # Rewrap the open file pointer in something that will
         # convert line endings and decode to latin-1.
         try:
-            if bytes is str:
-                # Python2, no encoding conversion necessary
-                fp = open(self.fp.name, "Ur")
-            else:
+            if py3:
                 # Python3, can use bare open command.
                 fp = open(self.fp.name, "Ur", encoding='latin-1')
+            else:
+                # Python2, no encoding conversion necessary
+                fp = open(self.fp.name, "Ur")
         except:
             # Expect this for bytesio/stringio
             fp = PSFile(self.fp)
@@ -230,53 +228,56 @@ class EpsImageFile(ImageFile.ImageFile):
         #
         # Load EPS header
 
-        s = fp.readline().strip('\r\n')
+        s_raw = fp.readline()
+        s = s_raw.strip('\r\n')
 
-        while s:
-            if len(s) > 255:
-                raise SyntaxError("not an EPS file")
+        while s_raw:
+            if s:
+                if len(s) > 255:
+                    raise SyntaxError("not an EPS file")
 
-            try:
-                m = split.match(s)
-            except re.error as v:
-                raise SyntaxError("not an EPS file")
+                try:
+                    m = split.match(s)
+                except re.error as v:
+                    raise SyntaxError("not an EPS file")
 
-            if m:
-                k, v = m.group(1, 2)
-                self.info[k] = v
-                if k == "BoundingBox":
-                    try:
-                        # Note: The DSC spec says that BoundingBox
-                        # fields should be integers, but some drivers
-                        # put floating point values there anyway.
-                        box = [int(float(i)) for i in v.split()]
-                        self.size = box[2] - box[0], box[3] - box[1]
-                        self.tile = [("eps", (0, 0) + self.size, offset,
-                                      (length, box))]
-                    except:
-                        pass
-
-            else:
-                m = field.match(s)
                 if m:
-                    k = m.group(1)
+                    k, v = m.group(1, 2)
+                    self.info[k] = v
+                    if k == "BoundingBox":
+                        try:
+                            # Note: The DSC spec says that BoundingBox
+                            # fields should be integers, but some drivers
+                            # put floating point values there anyway.
+                            box = [int(float(i)) for i in v.split()]
+                            self.size = box[2] - box[0], box[3] - box[1]
+                            self.tile = [("eps", (0, 0) + self.size, offset,
+                                          (length, box))]
+                        except:
+                            pass
 
-                    if k == "EndComments":
-                        break
-                    if k[:8] == "PS-Adobe":
-                        self.info[k[:8]] = k[9:]
-                    else:
-                        self.info[k] = ""
-                elif s[0] == '%':
-                    # handle non-DSC Postscript comments that some
-                    # tools mistakenly put in the Comments section
-                    pass
                 else:
-                    raise IOError("bad EPS header")
+                    m = field.match(s)
+                    if m:
+                        k = m.group(1)
 
-            s = fp.readline().strip('\r\n')
+                        if k == "EndComments":
+                            break
+                        if k[:8] == "PS-Adobe":
+                            self.info[k[:8]] = k[9:]
+                        else:
+                            self.info[k] = ""
+                    elif s[0] == '%':
+                        # handle non-DSC Postscript comments that some
+                        # tools mistakenly put in the Comments section
+                        pass
+                    else:
+                        raise IOError("bad EPS header")
 
-            if s[:1] != "%":
+            s_raw = fp.readline()
+            s = s_raw.strip('\r\n')
+
+            if s and s[:1] != "%":
                 break
 
         #
@@ -322,7 +323,7 @@ class EpsImageFile(ImageFile.ImageFile):
             # EPS can contain binary data
             # or start directly with latin coding
             # more info see:
-            # http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
+            # https://web.archive.org/web/20160528181353/http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
             offset = i32(s[4:8])
             length = i32(s[8:12])
         else:
@@ -379,7 +380,7 @@ def _save(im, fp, filename, eps=1):
     base_fp = fp
     if fp != sys.stdout:
         fp = NoCloseStream(fp)
-        if sys.version_info[0] > 2:
+        if sys.version_info.major > 2:
             fp = io.TextIOWrapper(fp, encoding='latin-1')
 
     if eps:
@@ -418,11 +419,11 @@ def _save(im, fp, filename, eps=1):
 #
 # --------------------------------------------------------------------
 
+
 Image.register_open(EpsImageFile.format, EpsImageFile, _accept)
 
 Image.register_save(EpsImageFile.format, _save)
 
-Image.register_extension(EpsImageFile.format, ".ps")
-Image.register_extension(EpsImageFile.format, ".eps")
+Image.register_extensions(EpsImageFile.format, [".ps", ".eps"])
 
 Image.register_mime(EpsImageFile.format, "application/postscript")
