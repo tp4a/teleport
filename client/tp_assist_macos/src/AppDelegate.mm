@@ -167,7 +167,7 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 
 - (IBAction)visitWebsite:(id)sender {
 	
-	NSURL *url = [NSURL URLWithString:@"http://www.tp4a.com/"];
+	NSURL *url = [NSURL URLWithString:@"https://www.tp4a.com/"];
 	[[NSWorkspace sharedWorkspace] openURL:url];
 }
 
