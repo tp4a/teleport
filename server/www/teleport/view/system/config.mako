@@ -22,6 +22,7 @@
             <li><a href="#tab-session" data-toggle="tab">连接控制</a></li>
             <li><a href="#tab-smtp" data-toggle="tab">邮件系统</a></li>
             <li><a href="#tab-storage" data-toggle="tab">存储</a></li>
+            <li><a href="#tab-systime" data-toggle="tab">时间</a></li>
             ##             <li><a href="#tab-backup" data-toggle="tab">备份</a></li>
         </ul>
 
@@ -359,6 +360,24 @@
                 <button id="btn-save-storage-config" class="btn btn-sm btn-primary"><i class="fa fa-check-circle fa-fw"></i> 保存存储设置</button>
                 ##                 <button id="btn-clear-storage" class="btn btn-sm btn-danger"><i class="fa fa-edit fa-fw"></i> 立即清理</button>
             </div>
+
+            <!-- panel for system time config -->
+            <div class="tab-pane" id="tab-systime">
+                <div class="alert alert-warning">
+                    注意：当系统时间偏离过多时，动态身份认证器将失效，可以在这里设置系统时间。请谨慎设置！
+                </div>
+                <div class="alert alert-info">
+                    当前服务器系统时间：<span id="system-time">-</span>
+                </div>
+
+                <div>
+                    <input type="date" id="system-data-set" />
+                    <input type="time" id="system-time-set" step="1" />
+                    <input type="button" id="btn-system-time-save"  value="保存系统时间" />
+                </div>
+                <hr/>
+            </div>
+
 
             <!-- panel for backup config -->
             ##             <div class="tab-pane" id="tab-backup">

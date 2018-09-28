@@ -387,3 +387,15 @@ function tp_check_strong_password(p) {
 
     return !!((s & 1) && (s & 2) && (s & 4));
 }
+
+//检查日期合法性
+function check_date_valid(date) {
+    var reg = /^(\d{1,4})(-|\/)(\d{1,2})\2(\d{1,2}) (\d{1,2}):(\d{1,2}):(\d{1,2})$/;
+    var r = date.match(reg);
+    if(r == null) {
+        $tp.notify_error("输入格式不正确！" + date);
+        return false;
+    } else {
+        return true;
+    }
+}

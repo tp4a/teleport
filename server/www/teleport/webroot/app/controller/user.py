@@ -608,9 +608,12 @@ class DoUpdateUserHandler(TPBaseJsonHandler):
                         subject='用户密码函'
                     )
                     if err != TPE_OK:
-                        return self.write_json(TPE_OK, '用户账号创建成功，但发送密码函失败：{}'.format(msg))
+                        return self.write_json(TPE_OK, '<font color="#e33b3b">用户账号创建成功，但发送密码函失败：{}</font>'.format(msg))
                     else:
                         return self.write_json(TPE_OK)
+                #在没配置邮箱得情况下给出错误提示
+                else:
+                    return self.write_json(TPE_OK, '<font color="#e33b3b">用户账号创建成功，但发送密码函失败。请检查邮件配置。</font>')
             else:
                 return self.write_json(err)
         else:
