@@ -21,6 +21,7 @@ $app.on_init = function (cb_stack) {
     $app.storage = $app.create_config_storage();
     cb_stack.add($app.storage.init);
 
+    $app.systime = $app.create_config_systime();
     cb_stack.exec();
 };
 
@@ -768,4 +769,77 @@ $app.create_config_storage = function () {
     };
 
     return _sto;
+};
+
+$app.create_config_systime = function () {
+    var _st = {};
+
+    _st.dom = {
+        tp_time: $('#system-time'),
+        sys_data_set: $("#system-data-set"),
+        sys_time_set: $("#system-time-set"),
+        btn_sys_time_save: $('#btn-system-time-save')
+    };
+
+    $app.sys_time = 0;
+
+    _st.init = function (cb_stack) {
+        cb_stack.exec();
+    };
+
+    // 获取服务器时间
+    _st.sync_tp_time = function () {
+        var data_str;
+        $tp.ajax_post_json('/system/get-time', {},
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    _st.tp_time = tp_utc2local(ret.data);
+                    _st.show_tp_time();
+                    // 引用一下当前系统时间，因为一般只是微调
+                    data_str = tp_format_datetime(_st.tp_time).split(" ");
+                    _st.dom.sys_data_set.val(data_str[0]);
+                    _st.dom.sys_time_set.val(data_str[1]);
+                }
+            },
+            function () {
+            }
+        );
+    };
+
+    _st.sync_tp_time();
+
+    _st.show_tp_time = function () {
+        if (_st.tp_time === 0)
+            return;
+        _st.dom.tp_time.text(tp_format_datetime(_st.tp_time));
+        _st.tp_time += 1;
+    };
+
+    setInterval(_st.show_tp_time, 1000);
+    // 每五分钟同步一次服务器时间，避免长时间误差积累导致显示不正确
+    setInterval(_st.sync_tp_time, 1000 * 60 * 5);
+
+    _st.dom.btn_sys_time_save.click(function () {
+        var nDate = _st.dom.sys_data_set.val();
+        var nTime = _st.dom.sys_time_set.val();
+        var full_time = nDate + " " + nTime;
+        if (check_date_valid(full_time) == true) {
+            $tp.ajax_post_json('/system/set-time', {settime: full_time},
+                function (ret) {
+                    if (ret.code === TPE_OK) {
+                        //立即更新页面显示的时间
+                        _st.sync_tp_time();
+                        $tp.notify_success('系统时间更新成功！');
+                    } else {
+                        $tp.notify_error('系统时间更新失败：' + tp_error_msg(ret.code, ret.message));
+                    }
+                },
+                function () {
+                    $tp.notify_error('网络故障，系统时间更新失败！');
+                }
+            );
+        }
+    });
+
+    return _st;
 };

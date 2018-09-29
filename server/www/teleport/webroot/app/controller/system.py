@@ -3,6 +3,8 @@
 import datetime
 import json
 import shutil
+import time
+import os
 
 import app.model.system as system_model
 import tornado.gen
@@ -26,6 +28,39 @@ class DoGetTimeHandler(TPBaseJsonHandler):
         time_now = int(datetime.datetime.utcnow().timestamp())
         self.write_json(TPE_OK, data=time_now)
 
+class DoSetTimeHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            set_time = args['settime']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        try:
+            #这里在文件头必须import time,不然tornado会报错
+            time.strptime(set_time, "%Y-%m-%d %H:%M:%S")
+        except:
+            return False
+
+        cmd = 'date -s \"{}\" > /dev/null'.format(set_time)
+        cmd_ret = os.system(cmd)
+        if cmd_ret != 0:
+            syslog.sys_log(self.get_current_user(), self.request.remote_ip, TPE_FAILED, "系统时间修改失败，错误码{}".format(cmd_ret))
+            return self.write_json(TPE_FAILED, "修改系统时间出错!")
+
+        syslog.sys_log(self.get_current_user(), self.request.remote_ip, TPE_OK, "系统时间修改成功,当前时间为[{}]".format(set_time))
+        return self.write_json(TPE_OK)
 
 class ConfigHandler(TPBaseHandler):
     @tornado.gen.coroutine

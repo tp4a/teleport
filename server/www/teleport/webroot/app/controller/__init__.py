@@ -255,6 +255,8 @@ controllers = [
     #
     #  - [json] 获取服务器时间
     (r'/system/get-time', system.DoGetTimeHandler),
+    #  - [json] 设置服务器时间
+    (r'/system/set-time', system.DoSetTimeHandler),
     #  - [json] 重建授权映射
     (r'/system/rebuild-ops-auz-map', system.DoRebuildOpsAuzMapHandler),
     (r'/system/rebuild-audit-auz-map', system.DoRebuildAuditAuzMapHandler),
