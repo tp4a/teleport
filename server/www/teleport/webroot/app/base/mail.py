@@ -106,7 +106,7 @@ def tp_send_mail(recipient, message, subject=None, sender=None, cc=None, bcc=Non
             if dbg_mode:
                 _smtp.set_debuglevel(1)
             _smtp.ehlo()
-            if _smtp.has_extn("starttls"):
+            if (_port == 25 or _port == 587) and _smtp.has_extn("starttls"):
                 _smtp.starttls()
         else:
             _smtp = smtplib.SMTP(_server, _port, timeout=10.0)
