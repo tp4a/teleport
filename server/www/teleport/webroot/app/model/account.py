@@ -221,6 +221,8 @@ def get_accounts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
     for _acc in s.recorder:
         if _acc.host_id not in host_ids:
             host_ids.append(_acc.host_id)
+    if len(host_ids) == 0:
+        return TPE_OK, 0, 1, None
     s_host = SQL(db)
     s_host.select_from('host', ['id', 'name', 'ip', 'router_ip', 'router_port', 'state'], alt_name='h')
     str_host_ids = ','.join([str(i) for i in host_ids])
