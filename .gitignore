@@ -24,11 +24,10 @@ __pycache__
 
 # for JetBrains IDEs.
 **/.idea/workspace.xml
-**/.idea/watcherTasks.xml
-**/.idea/dictionaries
-**/.idea/vcs.xml
 **/.idea/misc.xml
-**/.idea/modules.xml
+**/.idea/dictionaries
+**/.idea/watcherTasks.xml
+**/.idea/inspectionProfiles
 **/.idea/codeStyles
 **/.idea/inspectionProfiles
 
