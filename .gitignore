@@ -25,11 +25,9 @@ __pycache__
 # for pyCharm
 **/.idea/workspace.xml
 **/.idea/misc.xml
-**/.idea/modules.xml
 **/.idea/dictionaries
 **/.idea/watcherTasks.xml
 **/.idea/inspectionProfiles
-**/.idea/vcs.xml
 **/.idea/codeStyles
 
 *.css.map
