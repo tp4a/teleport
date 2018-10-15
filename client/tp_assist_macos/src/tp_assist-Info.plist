@@ -29,12 +29,12 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2017~2018 EOMSOFT. All rights reserved.</string>
+	<string>Copyright © 2017~2018 TP4A. All rights reserved.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>Product Homepage</key>
-	<string>http://teleport.eomsoft.net/</string>
+	<string>https://www.tp4a.com/</string>
 </dict>
 </plist>

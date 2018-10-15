@@ -10,7 +10,7 @@ on CommandRun(theCmd, theProfile, theTitle)
 		if it is not running then
 			tell application "iTerm"
 				activate
-				delay 0.2
+				delay 0.5
 				try
 					close first window
 				end try
@@ -24,9 +24,12 @@ on CommandRun(theCmd, theProfile, theTitle)
 				end try
 				tell the current window
 					tell the current session
+						delay 0.5
 						set name to theTitle
 						set profile to theProfile
 						write text theCmd
+						delay 0.5
+						write text "useless"
 					end tell
 				end tell
 			end tell
@@ -43,14 +46,18 @@ on CommandRun(theCmd, theProfile, theTitle)
 						end try
 						tell the current tab
 							tell the current session
+								delay 0.5
 								set name to theTitle
 								write text theCmd
+								delay 0.5
+								write text "useless"
 							end tell
 						end tell
 					end tell
 				end tell
 			on error msg
-				--if all iTerm windows are closed the app stays open. In this scenario iTerm has no "current window" and will give an error when trying to create the new tab.  
+				-- if all iTerm windows are closed the app stays open. In this scenario iTerm has
+				-- no "current window" and will give an error when trying to create the new tab.  
 				tell application "iTerm"
 					try
 						create window with profile theProfile
@@ -59,8 +66,11 @@ on CommandRun(theCmd, theProfile, theTitle)
 					end try
 					tell the current window
 						tell the current session
+							delay 0.5
 							set name to theTitle
 							write text theCmd
+							delay 0.5
+							write text "useless"
 						end tell
 					end tell
 				end tell

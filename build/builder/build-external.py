@@ -48,8 +48,9 @@ class BuilderBase:
         self._build_openssl(file_name)
 
     def _build_openssl(self, file_name):
-        _alt_ver = '_'.join(env.ver_openssl.split('.'))
+        _alt_ver = '_'.join(env.ver_ossl.split('.'))
         if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
+            cc.e("can not download openssl source tarball.")
             return False
         else:
             return True
@@ -145,8 +146,9 @@ class BuilderWin(BuilderBase):
     def _build_openssl(self, file_name):
         cc.n('build openssl static library from source code... ')
 
-        _alt_ver = '_'.join(env.ver_ossl.split('.'))
-        if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
+        if not super()._build_openssl(file_name):
+            # _alt_ver = '_'.join(env.ver_ossl.split('.'))
+            # if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
             return
 
         _chk_output = [
@@ -201,11 +203,7 @@ class BuilderWin(BuilderBase):
         out_file_lib = os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path, 'ssh.lib')
         out_file_dll = os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path, 'ssh.dll')
 
-        need_build = False
-        if not (os.path.exists(out_file_lib) and (os.path.exists(out_file_dll))):
-            need_build = True
-
-        if not need_build:
+        if os.path.exists(out_file_lib) and os.path.exists(out_file_dll):
             cc.w('already exists, skip.')
             return
         cc.v('')
@@ -495,33 +493,12 @@ class BuilderLinux(BuilderBase):
             pass
         os.chdir(old_p)
 
-        # utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'libssh.a'))
-        # utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh.a')
-        # utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
-
         utils.ensure_file_exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a'))
         files = os.listdir(os.path.join(self.PATH_RELEASE, 'lib'))
         for i in files:
             if i.startswith('libssh.so'):
                 # use os.unlink() because some file should be a link.
                 os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
-
-    # def _build_sqlite(self, file_name):
-    #     if not os.path.exists(self.SQLITE_PATH_SRC):
-    #         os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-    #
-    #     cc.n('build sqlite static...', end='')
-    #     if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libsqlite3.a')):
-    #         cc.w('already exists, skip.')
-    #         return
-    #     cc.v('')
-    #
-    #     old_p = os.getcwd()
-    #     os.chdir(self.SQLITE_PATH_SRC)
-    #     os.system('./configure --prefix={}'.format(self.PATH_RELEASE))
-    #     os.system('make')
-    #     os.system('make install')
-    #     os.chdir(old_p)
 
     def fix_output(self):
         pass
@@ -541,7 +518,7 @@ class BuilderMacOS(BuilderBase):
     def _init_path(self):
         self.PATH_TMP = os.path.join(PATH_EXTERNAL, 'macos', 'tmp')
         self.PATH_RELEASE = os.path.join(PATH_EXTERNAL, 'macos', 'release')
-        # self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-OpenSSL_{}'.format(env.ver_openssl.replace('.', '_')))
+        self.OPENSSL_PATH_SRC = os.path.join(self.PATH_TMP, 'openssl-OpenSSL_{}'.format(env.ver_ossl.replace('.', '_')))
         self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(env.ver_libuv))
         self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls))
         self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(env.ver_libssh))
@@ -572,24 +549,35 @@ class BuilderMacOS(BuilderBase):
             cc.w('already exists, skip.')
 
     def _build_openssl(self, file_name):
-        pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
-    #
-    #     if not os.path.exists(self.OPENSSL_PATH_SRC):
-    #         os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-    #
-    #     cc.n('build openssl static...', end='')
-    #     if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')):
-    #         cc.w('already exists, skip.')
-    #         return
-    #
-    #     old_p = os.getcwd()
-    #     os.chdir(self.OPENSSL_PATH_SRC)
-    #     # os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-    #     # os.system('./Configure darwin64-x86_64-cc')
-    #     os.system('./Configure darwin64-x86_64-cc --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
-    #     os.system('make')
-    #     os.system('make install')
-    #     os.chdir(old_p)
+        if not super()._build_openssl(file_name):
+            return
+
+        cc.n('prepare openssl source code...')
+        _alt_ver = '_'.join(env.ver_ossl.split('.'))
+        if not os.path.exists(self.OPENSSL_PATH_SRC):
+            # utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
+            os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+            # os.rename(os.path.join(PATH_EXTERNAL, 'openssl-OpenSSL_{}'.format(_alt_ver)), self.OPENSSL_PATH_SRC)
+            if not os.path.exists(self.OPENSSL_PATH_SRC):
+                raise RuntimeError('can not prepare openssl source code.')
+        else:
+            cc.w('already exists, skip.')
+
+        cc.n('build openssl static...', end='')
+        out_file_lib = os.path.join(self.PATH_RELEASE, 'lib', 'libssl.a')
+        if os.path.exists(out_file_lib):
+            cc.w('already exists, skip.')
+            return
+        cc.v('')
+
+        old_p = os.getcwd()
+        os.chdir(self.OPENSSL_PATH_SRC)
+        # os.system('./config --prefix={} --openssldir={}/openssl no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        # os.system('./Configure darwin64-x86_64-cc')
+        os.system('./Configure darwin64-x86_64-cc --prefix={} --openssldir={}/openssl -fPIC no-zlib no-shared'.format(self.PATH_RELEASE, self.PATH_RELEASE))
+        os.system('make')
+        os.system('make install')
+        os.chdir(old_p)
 
     def _build_libuv(self, file_name):
         cc.n('prepare libuv source code...', end='')
@@ -673,51 +661,21 @@ class BuilderMacOS(BuilderBase):
         cc.v('')
 
         build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
-        # utils.makedirs(build_path)
 
-        # here is a bug in cmake v2.8.11 (default on ubuntu14), in FindOpenSSL.cmake,
-        # it parse opensslv.h, use regex like this:
-        #   REGEX "^#define[\t ]+OPENSSL_VERSION_NUMBER[\t ]+0x([0-9a-fA-F])+.*")
-        # but in openssl-1.0.2h, the version define line is:
-        #   # define OPENSSL_VERSION_NUMBER  0x1000208fL
-        # notice there is a space char between # and define, so find openssl always fail.
-
-        # old_p = os.getcwd()
-        # os.chdir(build_path)
-        # cmd = 'cmake' \
-        #       ' -DCMAKE_INSTALL_PREFIX={}' \
-        #       ' -D_OPENSSL_VERSION={}' \
-        #       ' -DOPENSSL_INCLUDE_DIR={}/include' \
-        #       ' -DOPENSSL_LIBRARIES={}/lib' \
-        #       ' -DCMAKE_BUILD_TYPE=Release' \
-        #       ' -DWITH_GSSAPI=OFF' \
-        #       ' -DWITH_ZLIB=OFF' \
-        #       ' -DWITH_STATIC_LIB=ON' \
-        #       ' -DWITH_PCAP=OFF' \
-        #       ' -DWITH_EXAMPLES=OFF' \
-        #       ' -DWITH_NACL=OFF' \
-        #       ' ..'.format(self.PATH_RELEASE, OPENSSL_VER, self.PATH_RELEASE, self.PATH_RELEASE)
-        # cc.n(cmd)
-        # os.system(cmd)
-        # # os.system('make ssh_static ssh_threads_static')
-        # os.system('make ssh_static')
-        # # os.system('make install')
-        # os.chdir(old_p)
-
-        cmake_define = ' -DCMAKE_INSTALL_PREFIX={prefix}' \
-                       ' -D_OPENSSL_VERSION={oss_ver}' \
-                       ' -DOPENSSL_INCLUDE_DIR={ossl_inc}' \
-                       ' -DOPENSSL_LIBRARIES={ossl_lib}' \
+        cmake_define = ' -DCMAKE_INSTALL_PREFIX={path_release}' \
+                       ' -DOPENSSL_INCLUDE_DIR={path_release}/include' \
+                       ' -DOPENSSL_LIBRARIES={path_release}/lib' \
+                       ' -DWITH_SFTP=ON' \
+                       ' -DWITH_SERVER=ON' \
+                       ' -DWITH_STATIC_LIB=ON' \
                        ' -DWITH_GSSAPI=OFF' \
                        ' -DWITH_ZLIB=OFF' \
-                       ' -DWITH_STATIC_LIB=ON' \
                        ' -DWITH_PCAP=OFF' \
-                       ' -DWITH_TESTING=OFF' \
-                       ' -DWITH_CLIENT_TESTING=OFF' \
+                       ' -DUNIT_TESTING=OFF' \
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
                        ' -DWITH_NACL=OFF' \
-                       ''.format(prefix=self.PATH_RELEASE, oss_ver=env.ver_ossl_number, ossl_inc=env.path_ossl_inc, ossl_lib=env.path_ossl_lib)
+                       ''.format(path_release=self.PATH_RELEASE)
 
         try:
             utils.cmake(build_path, 'Release', False, cmake_define)
@@ -727,32 +685,18 @@ class BuilderMacOS(BuilderBase):
         # because make install will fail because we can not disable ssh_shared target,
         # so we copy necessary files ourselves.
         utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'libssh.a'))
-        utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads', 'libssh_threads.a'))
+        # utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads', 'libssh_threads.a'))
         utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh.a')
-        utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh_threads.a')
+        # utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh_threads.a')
         utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
 
-    # def _build_sqlite(self, file_name):
-    #     if not os.path.exists(self.SQLITE_PATH_SRC):
-    #         os.system('tar -zxvf "{}/{}" -C "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
-    #
-    #     cc.n('build sqlite static...', end='')
-    #     if os.path.exists(os.path.join(self.PATH_RELEASE, 'lib', 'libsqlite3.a')):
-    #         cc.w('already exists, skip.')
-    #         return
-    #     cc.v('')
-    #
-    #     old_p = os.getcwd()
-    #     os.chdir(self.SQLITE_PATH_SRC)
-    #     os.system('./configure --prefix={}'.format(self.PATH_RELEASE))
-    #     os.system('make')
-    #     os.system('make install')
-    #     os.chdir(old_p)
+    def _prepare_python(self):
+        pass
 
     def fix_output(self):
         # remove .so files, otherwise will link to .so but not .a in default.
         # rm = ['libsqlite3.la', 'libsqlite3.so.0', 'libsqlite3.so', 'libsqlite3.so.0.8.6', 'libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
-        rm = ['libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
+        rm = ['libuv.la', 'libuv.dylib', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
         for i in rm:
             _path = os.path.join(self.PATH_RELEASE, 'lib', i)
             if os.path.exists(_path):

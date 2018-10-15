@@ -409,7 +409,7 @@ bool ex_abspath(ex_wstr& inout_path)
 	return true;
 }
 
-bool ex_path_join(ex_wstr& inout_path, bool auto_abspath, ...)
+bool ex_path_join(ex_wstr& inout_path, EX_BOOL auto_abspath, ...)
 {
 	wchar_t* tmp;
 

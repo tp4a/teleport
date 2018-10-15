@@ -17,7 +17,7 @@
 #
 
 import array
-from PIL import ImageColor
+from . import ImageColor, GimpPaletteFile, GimpGradientFile, PaletteFile
 
 
 class ImagePalette(object):
@@ -38,7 +38,7 @@ class ImagePalette(object):
     def __init__(self, mode="RGB", palette=None, size=0):
         self.mode = mode
         self.rawmode = None  # if set, palette contains raw data
-        self.palette = palette or list(range(256))*len(self.mode)
+        self.palette = palette or bytearray(range(256))*len(self.mode)
         self.colors = {}
         self.dirty = None
         if ((size == 0 and len(self.mode)*256 != len(self.palette)) or
@@ -98,7 +98,7 @@ class ImagePalette(object):
             except KeyError:
                 # allocate new color slot
                 if isinstance(self.palette, bytes):
-                    self.palette = [int(x) for x in self.palette]
+                    self.palette = bytearray(self.palette)
                 index = len(self.colors)
                 if index >= 256:
                     raise ValueError("cannot allocate more than 256 colors")
@@ -194,44 +194,23 @@ def load(filename):
 
     # FIXME: supports GIMP gradients only
 
-    fp = open(filename, "rb")
+    with open(filename, "rb") as fp:
 
-    lut = None
-
-    if not lut:
-        try:
-            from PIL import GimpPaletteFile
-            fp.seek(0)
-            p = GimpPaletteFile.GimpPaletteFile(fp)
-            lut = p.getpalette()
-        except (SyntaxError, ValueError):
-            # import traceback
-            # traceback.print_exc()
-            pass
-
-    if not lut:
-        try:
-            from PIL import GimpGradientFile
-            fp.seek(0)
-            p = GimpGradientFile.GimpGradientFile(fp)
-            lut = p.getpalette()
-        except (SyntaxError, ValueError):
-            # import traceback
-            # traceback.print_exc()
-            pass
-
-    if not lut:
-        try:
-            from PIL import PaletteFile
-            fp.seek(0)
-            p = PaletteFile.PaletteFile(fp)
-            lut = p.getpalette()
-        except (SyntaxError, ValueError):
-            # import traceback
-            # traceback.print_exc()
-            pass
-
-    if not lut:
-        raise IOError("cannot load palette")
+        for paletteHandler in [
+            GimpPaletteFile.GimpPaletteFile,
+            GimpGradientFile.GimpGradientFile,
+            PaletteFile.PaletteFile
+        ]:
+            try:
+                fp.seek(0)
+                lut = paletteHandler(fp).getpalette()
+                if lut:
+                    break
+            except (SyntaxError, ValueError):
+                # import traceback
+                # traceback.print_exc()
+                pass
+        else:
+            raise IOError("cannot load palette")
 
     return lut  # data, rawmode

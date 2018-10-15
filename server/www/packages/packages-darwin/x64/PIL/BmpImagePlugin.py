@@ -24,17 +24,12 @@
 #
 
 
-from PIL import Image, ImageFile, ImagePalette, _binary
+from . import Image, ImageFile, ImagePalette
+from ._binary import i8, i16le as i16, i32le as i32, \
+                     o8, o16le as o16, o32le as o32
 import math
 
 __version__ = "0.7"
-
-i8 = _binary.i8
-i16 = _binary.i16le
-i32 = _binary.i32le
-o8 = _binary.o8
-o16 = _binary.o16le
-o32 = _binary.o32le
 
 #
 # --------------------------------------------------------------------
@@ -73,7 +68,7 @@ class BmpImageFile(ImageFile.ImageFile):
         read, seek = self.fp.read, self.fp.seek
         if header:
             seek(header)
-        file_info = dict()
+        file_info = {}
         file_info['header_size'] = i32(read(4))  # read bmp header size @offset 14 (this is part of the header size)
         file_info['direction'] = -1
         # --------------------- If requested, read header at a specific position
@@ -109,7 +104,13 @@ class BmpImageFile(ImageFile.ImageFile):
                         for idx, mask in enumerate(['r_mask', 'g_mask', 'b_mask', 'a_mask']):
                             file_info[mask] = i32(header_data[36+idx*4:40+idx*4])
                     else:
-                        for mask in ['r_mask', 'g_mask', 'b_mask', 'a_mask']:
+                        # 40 byte headers only have the three components in the bitfields masks,
+                        # ref: https://msdn.microsoft.com/en-us/library/windows/desktop/dd183376(v=vs.85).aspx
+                        # See also https://github.com/python-pillow/Pillow/issues/1293
+                        # There is a 4th component in the RGBQuad, in the alpha location, but it
+                        # is listed as a reserved component, and it is not generally an alpha channel
+                        file_info['a_mask'] = 0x0
+                        for mask in ['r_mask', 'g_mask', 'b_mask']:
                             file_info[mask] = i32(read(4))
                     file_info['rgb_mask'] = (file_info['r_mask'], file_info['g_mask'], file_info['b_mask'])
                     file_info['rgba_mask'] = (file_info['r_mask'], file_info['g_mask'], file_info['b_mask'], file_info['a_mask'])
@@ -130,12 +131,13 @@ class BmpImageFile(ImageFile.ImageFile):
         # ----------------- Process BMP with Bitfields compression (not palette)
         if file_info['compression'] == self.BITFIELDS:
             SUPPORTED = {
-                32: [(0xff0000, 0xff00, 0xff, 0x0), (0xff0000, 0xff00, 0xff, 0xff000000), (0x0, 0x0, 0x0, 0x0)],
+                32: [(0xff0000, 0xff00, 0xff, 0x0), (0xff0000, 0xff00, 0xff, 0xff000000), (0x0, 0x0, 0x0, 0x0), (0xff000000, 0xff0000, 0xff00, 0x0)],
                 24: [(0xff0000, 0xff00, 0xff)],
                 16: [(0xf800, 0x7e0, 0x1f), (0x7c00, 0x3e0, 0x1f)]
             }
             MASK_MODES = {
                 (32, (0xff0000, 0xff00, 0xff, 0x0)): "BGRX",
+                (32, (0xff000000, 0xff0000, 0xff00, 0x0)): "XBGR",
                 (32, (0xff0000, 0xff00, 0xff, 0xff000000)): "BGRA",
                 (32, (0x0, 0x0, 0x0, 0x0)): "BGRA",
                 (24, (0xff0000, 0xff00, 0xff)): "BGR",
@@ -214,6 +216,7 @@ class DibImageFile(BmpImageFile):
 # --------------------------------------------------------------------
 # Write BMP file
 
+
 SAVE = {
     "1": ("1", 1, 2),
     "L": ("L", 8, 256),
@@ -223,14 +226,11 @@ SAVE = {
 }
 
 
-def _save(im, fp, filename, check=0):
+def _save(im, fp, filename):
     try:
         rawmode, bits, colors = SAVE[im.mode]
     except KeyError:
         raise IOError("cannot write mode %s as BMP" % im.mode)
-
-    if check:
-        return check
 
     info = im.encoderinfo
 
@@ -279,6 +279,7 @@ def _save(im, fp, filename, check=0):
 #
 # --------------------------------------------------------------------
 # Registry
+
 
 Image.register_open(BmpImageFile.format, BmpImageFile, _accept)
 Image.register_save(BmpImageFile.format, _save)

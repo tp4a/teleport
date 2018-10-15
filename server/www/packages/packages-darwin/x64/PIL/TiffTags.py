@@ -23,12 +23,13 @@ from collections import namedtuple
 class TagInfo(namedtuple("_TagInfo", "value name type length enum")):
     __slots__ = []
 
-    def __new__(cls, value=None, name="unknown", type=None, length=0, enum=None):
+    def __new__(cls, value=None, name="unknown", type=None, length=None, enum=None):
         return super(TagInfo, cls).__new__(
             cls, value, name, type, length, enum or {})
 
     def cvt_enum(self, value):
         return self.enum.get(value, value)
+
 
 def lookup(tag):
     """
@@ -36,9 +37,9 @@ def lookup(tag):
     :returns: Taginfo namedtuple, From the TAGS_V2 info if possible,
         otherwise just populating the value and name from TAGS.
         If the tag is not recognized, "unknown" is returned for the name
-        
+
     """
-    
+
     return TAGS_V2.get(tag, TagInfo(tag, TAGS.get(tag, 'unknown')))
 
 
@@ -47,11 +48,21 @@ def lookup(tag):
 #
 #  id: (Name, Type, Length, enum_values)
 #
+# The length here differs from the length in the tiff spec.  For
+# numbers, the tiff spec is for the number of fields returned. We
+# agree here.  For string-like types, the tiff spec uses the length of
+# field in bytes.  In Pillow, we are using the number of expected
+# fields, in general 1 for string-like types.
 
+
+BYTE = 1
 ASCII = 2
 SHORT = 3
 LONG = 4
 RATIONAL = 5
+UNDEFINED = 7
+SIGNED_RATIONAL = 10
+DOUBLE = 12
 
 TAGS_V2 = {
 
@@ -65,13 +76,13 @@ TAGS_V2 = {
            "LZW": 5, "JPEG": 6, "PackBits": 32773}),
 
     262: ("PhotometricInterpretation", SHORT, 1,
-          {"WhiteIsZero": 0, "BlackIsZero": 1, "RGB": 2, "RBG Palette": 3,
+          {"WhiteIsZero": 0, "BlackIsZero": 1, "RGB": 2, "RGB Palette": 3,
            "Transparency Mask": 4, "CMYK": 5, "YCbCr": 6, "CieLAB": 8,
            "CFA": 32803,  # TIFF/EP, Adobe DNG
            "LinearRaw": 32892}),  # Adobe DNG
-    263: ("Thresholding", SHORT, 1),
+    263: ("Threshholding", SHORT, 1),
     264: ("CellWidth", SHORT, 1),
-    265: ("CellHeight", SHORT, 1),
+    265: ("CellLength", SHORT, 1),
     266: ("FillOrder", SHORT, 1),
     269: ("DocumentName", ASCII, 1),
 
@@ -88,7 +99,7 @@ TAGS_V2 = {
     281: ("MaxSampleValue", SHORT, 0),
     282: ("XResolution", RATIONAL, 1),
     283: ("YResolution", RATIONAL, 1),
-    284: ("PlanarConfiguration", SHORT, 1, {"Contigous": 1, "Separate": 2}),
+    284: ("PlanarConfiguration", SHORT, 1, {"Contiguous": 1, "Separate": 2}),
     285: ("PageName", ASCII, 1),
     286: ("XPosition", RATIONAL, 1),
     287: ("YPosition", RATIONAL, 1),
@@ -99,7 +110,7 @@ TAGS_V2 = {
     291: ("GrayResponseCurve", SHORT, 0),
     292: ("T4Options", LONG, 1),
     293: ("T6Options", LONG, 1),
-    296: ("ResolutionUnit", SHORT, 1, {"inch": 1, "cm": 2}),
+    296: ("ResolutionUnit", SHORT, 1, {"none": 1, "inch": 2, "cm": 3}),
     297: ("PageNumber", SHORT, 2),
 
     301: ("TransferFunction", SHORT, 0),
@@ -108,9 +119,9 @@ TAGS_V2 = {
 
     315: ("Artist", ASCII, 1),
     316: ("HostComputer", ASCII, 1),
-    317: ("Predictor", SHORT, 1),
+    317: ("Predictor", SHORT, 1, {"none": 1, "Horizontal Differencing": 2}),
     318: ("WhitePoint", RATIONAL, 2),
-    319: ("PrimaryChromaticies", SHORT, 6),
+    319: ("PrimaryChromaticities", SHORT, 6),
 
     320: ("ColorMap", SHORT, 0),
     321: ("HalftoneHints", SHORT, 2),
@@ -127,9 +138,11 @@ TAGS_V2 = {
     338: ("ExtraSamples", SHORT, 0),
     339: ("SampleFormat", SHORT, 0),
 
-    340: ("SMinSampleValue", 12, 0),
-    341: ("SMaxSampleValue", 12, 0),
+    340: ("SMinSampleValue", DOUBLE, 0),
+    341: ("SMaxSampleValue", DOUBLE, 0),
     342: ("TransferRange", SHORT, 6),
+
+    347: ("JPEGTables", UNDEFINED, 1),
 
     # obsolete JPEG tags
     512: ("JPEGProc", SHORT, 1),
@@ -147,38 +160,41 @@ TAGS_V2 = {
     531: ("YCbCrPositioning", SHORT, 1),
     532: ("ReferenceBlackWhite", LONG, 0),
 
+    700: ('XMP', BYTE, 1),
+
     33432: ("Copyright", ASCII, 1),
+    34377: ('PhotoshopInfo', BYTE, 1),
 
     # FIXME add more tags here
     34665: ("ExifIFD", SHORT, 1),
-    34675: ('ICCProfile', 7, 0),
-    34853: ('GPSInfoIFD', 1, 1),
+    34675: ('ICCProfile', UNDEFINED, 1),
+    34853: ('GPSInfoIFD', BYTE, 1),
 
     # MPInfo
-    45056: ("MPFVersion", 7, 1),
+    45056: ("MPFVersion", UNDEFINED, 1),
     45057: ("NumberOfImages", LONG, 1),
-    45058: ("MPEntry", 7, 1),
-    45059: ("ImageUIDList", 7, 0),
+    45058: ("MPEntry", UNDEFINED, 1),
+    45059: ("ImageUIDList", UNDEFINED, 0),  # UNDONE, check
     45060: ("TotalFrames", LONG, 1),
     45313: ("MPIndividualNum", LONG, 1),
     45569: ("PanOrientation", LONG, 1),
     45570: ("PanOverlap_H", RATIONAL, 1),
     45571: ("PanOverlap_V", RATIONAL, 1),
     45572: ("BaseViewpointNum", LONG, 1),
-    45573: ("ConvergenceAngle", 10, 1),
+    45573: ("ConvergenceAngle", SIGNED_RATIONAL, 1),
     45574: ("BaselineLength", RATIONAL, 1),
-    45575: ("VerticalDivergence", 10, 1),
-    45576: ("AxisDistance_X", 10, 1),
-    45577: ("AxisDistance_Y", 10, 1),
-    45578: ("AxisDistance_Z", 10, 1),
-    45579: ("YawAngle", 10, 1),
-    45580: ("PitchAngle", 10, 1),
-    45581: ("RollAngle", 10, 1),
+    45575: ("VerticalDivergence", SIGNED_RATIONAL, 1),
+    45576: ("AxisDistance_X", SIGNED_RATIONAL, 1),
+    45577: ("AxisDistance_Y", SIGNED_RATIONAL, 1),
+    45578: ("AxisDistance_Z", SIGNED_RATIONAL, 1),
+    45579: ("YawAngle", SIGNED_RATIONAL, 1),
+    45580: ("PitchAngle", SIGNED_RATIONAL, 1),
+    45581: ("RollAngle", SIGNED_RATIONAL, 1),
 
     50741: ("MakerNoteSafety", SHORT, 1, {"Unsafe": 0, "Safe": 1}),
     50780: ("BestQualityScale", RATIONAL, 1),
-    50838: ("ImageJMetaDataByteCounts", LONG, 1),
-    50839: ("ImageJMetaData", 7, 1)
+    50838: ("ImageJMetaDataByteCounts", LONG, 0),  # Can be more than one
+    50839: ("ImageJMetaData", UNDEFINED, 1)        # see Issue #2006
 }
 
 # Legacy Tags structure
@@ -187,10 +203,28 @@ TAGS = {347: 'JPEGTables',
         700: 'XMP',
 
         # Additional Exif Info
+        32932: 'Wang Annotation',
         33434: 'ExposureTime',
         33437: 'FNumber',
+        33445: 'MD FileTag',
+        33446: 'MD ScalePixel',
+        33447: 'MD ColorTable',
+        33448: 'MD LabName',
+        33449: 'MD SampleInfo',
+        33450: 'MD PrepDate',
+        33451: 'MD PrepTime',
+        33452: 'MD FileUnits',
+        33550: 'ModelPixelScaleTag',
         33723: 'IptcNaaInfo',
+        33918: 'INGR Packet Data Tag',
+        33919: 'INGR Flag Registers',
+        33920: 'IrasB Transformation Matrix',
+        33922: 'ModelTiepointTag',
+        34264: 'ModelTransformationTag',
         34377: 'PhotoshopInfo',
+        34735: 'GeoKeyDirectoryTag',
+        34736: 'GeoDoubleParamsTag',
+        34737: 'GeoAsciiParamsTag',
         34850: 'ExposureProgram',
         34852: 'SpectralSensitivity',
         34855: 'ISOSpeedRatings',
@@ -201,11 +235,15 @@ TAGS = {347: 'JPEGTables',
         34867: 'ISOSpeed',
         34868: 'ISOSpeedLatitudeyyy',
         34869: 'ISOSpeedLatitudezzz',
+        34908: 'HylaFAX FaxRecvParams',
+        34909: 'HylaFAX FaxSubAddress',
+        34910: 'HylaFAX FaxRecvTime',
         36864: 'ExifVersion',
         36867: 'DateTimeOriginal',
         36868: 'DateTImeDigitized',
         37121: 'ComponentsConfiguration',
         37122: 'CompressedBitsPerPixel',
+        37724: 'ImageSourceData',
         37377: 'ShutterSpeedValue',
         37378: 'ApertureValue',
         37379: 'BrightnessValue',
@@ -258,7 +296,13 @@ TAGS = {347: 'JPEGTables',
         42035: 'LensMake',
         42036: 'LensModel',
         42037: 'LensSerialNumber',
+        42112: 'GDAL_METADATA',
+        42113: 'GDAL_NODATA',
         42240: 'Gamma',
+        50215: 'Oce Scanjob Description',
+        50216: 'Oce Application Selector',
+        50217: 'Oce Identification Number',
+        50218: 'Oce ImageLogic Characteristics',
 
         # Adobe DNG
         50706: 'DNGVersion',
@@ -297,6 +341,7 @@ TAGS = {347: 'JPEGTables',
         50740: 'DNGPrivateData',
         50778: 'CalibrationIlluminant1',
         50779: 'CalibrationIlluminant2',
+        50784: 'Alias Layer Metadata'
         }
 
 
@@ -309,6 +354,7 @@ def _populate():
                 TAGS[(k, sv)] = sk
 
         TAGS_V2[k] = TagInfo(k, *v)
+
 
 _populate()
 ##
@@ -336,64 +382,64 @@ TYPES = {}
 # These tags are handled by default in libtiff, without
 # adding to the custom dictionary. From tif_dir.c, searching for
 # case TIFFTAG in the _TIFFVSetField function:
-# Line: item. 
-# 148:	case TIFFTAG_SUBFILETYPE:
-# 151:	case TIFFTAG_IMAGEWIDTH:
-# 154:	case TIFFTAG_IMAGELENGTH:
-# 157:	case TIFFTAG_BITSPERSAMPLE:
-# 181:	case TIFFTAG_COMPRESSION:
-# 202:	case TIFFTAG_PHOTOMETRIC:
-# 205:	case TIFFTAG_THRESHHOLDING:
-# 208:	case TIFFTAG_FILLORDER:
-# 214:	case TIFFTAG_ORIENTATION:
-# 221:	case TIFFTAG_SAMPLESPERPIXEL:
-# 228:	case TIFFTAG_ROWSPERSTRIP:
-# 238:	case TIFFTAG_MINSAMPLEVALUE:
-# 241:	case TIFFTAG_MAXSAMPLEVALUE:
-# 244:	case TIFFTAG_SMINSAMPLEVALUE:
-# 247:	case TIFFTAG_SMAXSAMPLEVALUE:
-# 250:	case TIFFTAG_XRESOLUTION:
-# 256:	case TIFFTAG_YRESOLUTION:
-# 262:	case TIFFTAG_PLANARCONFIG:
-# 268:	case TIFFTAG_XPOSITION:
-# 271:	case TIFFTAG_YPOSITION:
-# 274:	case TIFFTAG_RESOLUTIONUNIT:
-# 280:	case TIFFTAG_PAGENUMBER:
-# 284:	case TIFFTAG_HALFTONEHINTS:
-# 288:	case TIFFTAG_COLORMAP:
-# 294:	case TIFFTAG_EXTRASAMPLES:
-# 298:	case TIFFTAG_MATTEING:
-# 305:	case TIFFTAG_TILEWIDTH:
-# 316:	case TIFFTAG_TILELENGTH:
-# 327:	case TIFFTAG_TILEDEPTH:
-# 333:	case TIFFTAG_DATATYPE:
-# 344:	case TIFFTAG_SAMPLEFORMAT:
-# 361:	case TIFFTAG_IMAGEDEPTH:
-# 364:	case TIFFTAG_SUBIFD:
-# 376:	case TIFFTAG_YCBCRPOSITIONING:
-# 379:	case TIFFTAG_YCBCRSUBSAMPLING:
-# 383:	case TIFFTAG_TRANSFERFUNCTION:
-# 389:	case TIFFTAG_REFERENCEBLACKWHITE:
-# 393:	case TIFFTAG_INKNAMES:
+# Line: item.
+# 148: case TIFFTAG_SUBFILETYPE:
+# 151: case TIFFTAG_IMAGEWIDTH:
+# 154: case TIFFTAG_IMAGELENGTH:
+# 157: case TIFFTAG_BITSPERSAMPLE:
+# 181: case TIFFTAG_COMPRESSION:
+# 202: case TIFFTAG_PHOTOMETRIC:
+# 205: case TIFFTAG_THRESHHOLDING:
+# 208: case TIFFTAG_FILLORDER:
+# 214: case TIFFTAG_ORIENTATION:
+# 221: case TIFFTAG_SAMPLESPERPIXEL:
+# 228: case TIFFTAG_ROWSPERSTRIP:
+# 238: case TIFFTAG_MINSAMPLEVALUE:
+# 241: case TIFFTAG_MAXSAMPLEVALUE:
+# 244: case TIFFTAG_SMINSAMPLEVALUE:
+# 247: case TIFFTAG_SMAXSAMPLEVALUE:
+# 250: case TIFFTAG_XRESOLUTION:
+# 256: case TIFFTAG_YRESOLUTION:
+# 262: case TIFFTAG_PLANARCONFIG:
+# 268: case TIFFTAG_XPOSITION:
+# 271: case TIFFTAG_YPOSITION:
+# 274: case TIFFTAG_RESOLUTIONUNIT:
+# 280: case TIFFTAG_PAGENUMBER:
+# 284: case TIFFTAG_HALFTONEHINTS:
+# 288: case TIFFTAG_COLORMAP:
+# 294: case TIFFTAG_EXTRASAMPLES:
+# 298: case TIFFTAG_MATTEING:
+# 305: case TIFFTAG_TILEWIDTH:
+# 316: case TIFFTAG_TILELENGTH:
+# 327: case TIFFTAG_TILEDEPTH:
+# 333: case TIFFTAG_DATATYPE:
+# 344: case TIFFTAG_SAMPLEFORMAT:
+# 361: case TIFFTAG_IMAGEDEPTH:
+# 364: case TIFFTAG_SUBIFD:
+# 376: case TIFFTAG_YCBCRPOSITIONING:
+# 379: case TIFFTAG_YCBCRSUBSAMPLING:
+# 383: case TIFFTAG_TRANSFERFUNCTION:
+# 389: case TIFFTAG_REFERENCEBLACKWHITE:
+# 393: case TIFFTAG_INKNAMES:
 
 # some of these are not in our TAGS_V2 dict and were included from tiff.h
 
-LIBTIFF_CORE = set ([255, 256, 257, 258, 259, 262, 263, 266, 274, 277,
-                     278, 280, 281, 340, 341, 282, 283, 284, 286, 287,
-                     296, 297, 321, 320, 338, 32995, 322, 323, 32998,
-                     32996, 339, 32997, 330, 531, 530, 301, 532, 333,
-                     # as above
-                     269 # this has been in our tests forever, and works
-                     ])
+LIBTIFF_CORE = {255, 256, 257, 258, 259, 262, 263, 266, 274, 277,
+                278, 280, 281, 340, 341, 282, 283, 284, 286, 287,
+                296, 297, 321, 320, 338, 32995, 322, 323, 32998,
+                32996, 339, 32997, 330, 531, 530, 301, 532, 333,
+                # as above
+                269  # this has been in our tests forever, and works
+                }
 
-LIBTIFF_CORE.remove(320) # Array of short, crashes
-LIBTIFF_CORE.remove(301) # Array of short, crashes
-LIBTIFF_CORE.remove(532) # Array of long, crashes
+LIBTIFF_CORE.remove(320)  # Array of short, crashes
+LIBTIFF_CORE.remove(301)  # Array of short, crashes
+LIBTIFF_CORE.remove(532)  # Array of long, crashes
 
-LIBTIFF_CORE.remove(255) # We don't have support for subfiletypes
-LIBTIFF_CORE.remove(322) # We don't have support for tiled images in libtiff
-LIBTIFF_CORE.remove(323) # Tiled images
-LIBTIFF_CORE.remove(333) # Ink Names either
+LIBTIFF_CORE.remove(255)  # We don't have support for subfiletypes
+LIBTIFF_CORE.remove(322)  # We don't have support for tiled images in libtiff
+LIBTIFF_CORE.remove(323)  # Tiled images
+LIBTIFF_CORE.remove(333)  # Ink Names either
 
 # Note to advanced users: There may be combinations of these
 # parameters and values that when added properly, will work and

@@ -3,7 +3,6 @@
 //  tp_assist
 //
 //  Created by ApexLiu on 2017/9/29.
-//  Copyright © 2017年 eomsoft. All rights reserved.
 //
 
 #include "AppDelegate-C-Interface.h"

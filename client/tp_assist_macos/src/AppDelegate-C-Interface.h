@@ -3,7 +3,6 @@
 //  tp_assist
 //
 //  Created by ApexLiu on 2017/9/27.
-//  Copyright © 2017年 eomsoft. All rights reserved.
 //
 
 #ifndef wrap_c_objc_h
