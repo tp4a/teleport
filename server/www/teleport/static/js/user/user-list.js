@@ -71,6 +71,15 @@ $app.create_controls = function (cb_stack) {
                 fields: {id: 'id', username: 'username', surname: 'surname', email: 'email'}
             },
             {
+                title: "类型",
+                key: "type",
+                width: 120,
+                sort: true,
+                header_render: 'filter_type',
+                render: 'user_type',
+                fields: {user_type: 'type'}
+            },
+            {
                 title: "角色",
                 key: "role_id",
                 width: 120,
@@ -118,8 +127,9 @@ $app.create_controls = function (cb_stack) {
         name: 'search',
         place_holder: '搜索：用户账号/姓名/邮箱/描述/等等...'
     });
+    $tp.create_table_header_filter_dropdown($app.table_users, 'type', $app.user_type);
     $tp.create_table_filter_role($app.table_users, $app.role_list);
-    $tp.create_table_header_filter_state($app.table_users, 'state', $app.obj_states);
+    $tp.create_table_header_filter_dropdown($app.table_users, 'state', $app.obj_states);
     // 从cookie中读取用户分页限制的选择
     $tp.create_table_paging($app.table_users, 'table-user-list-paging',
         {
@@ -255,6 +265,20 @@ $app.on_table_users_render_created = function (render) {
         return _ret.join('');
     };
 
+    render.filter_type = function (header, title, col) {
+        var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+        _ret.push('<div class="tp-table-filter-inner">');
+        _ret.push('<div class="search-title">' + title + '</div>');
+
+        // 表格内嵌过滤器的DOM实体在这时生成
+        var filter_ctrl = header._table_ctrl.get_filter_ctrl('type');
+        _ret.push(filter_ctrl.render());
+
+        _ret.push('</div></div>');
+
+        return _ret.join('');
+    };
+
     render.filter_state = function (header, title, col) {
         var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
         _ret.push('<div class="tp-table-filter-inner">');
@@ -300,6 +324,16 @@ $app.on_table_users_render_created = function (render) {
             ret.push(' <span class="user-email">&lt;' + fields.email + '&gt;</span>');
 
         return ret.join('');
+    };
+
+    render.user_type = function (row_id, fields) {
+        if(fields.user_type === 1) {
+            return '本地用户';
+        } else if(fields.user_type === 2) {
+            return 'LDAP';
+        } else{
+            return '-未知-'
+        }
     };
 
     render.role = function (row_id, fields) {
@@ -379,8 +413,9 @@ $app.on_table_users_header_created = function (header) {
 
     // 表格内嵌过滤器的事件绑定在这时进行（也可以延期到整个表格创建完成时进行）
     header._table_ctrl.get_filter_ctrl('search').on_created();
-    header._table_ctrl.get_filter_ctrl('role').on_created();
+    header._table_ctrl.get_filter_ctrl('type').on_created();
     header._table_ctrl.get_filter_ctrl('state').on_created();
+    header._table_ctrl.get_filter_ctrl('role').on_created();
 };
 
 $app.on_btn_select_file_click = function () {

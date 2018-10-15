@@ -147,6 +147,8 @@ def get_users(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
         for k in sql_filter:
             if k == 'role':
                 _where.append('u.role_id={filter}'.format(filter=sql_filter[k]))
+            elif k == 'type':
+                _where.append('u.type={filter}'.format(filter=sql_filter[k]))
             elif k == 'state':
                 _where.append('u.state={filter}'.format(filter=sql_filter[k]))
             elif k == 'search':
@@ -165,6 +167,8 @@ def get_users(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
             s.order_by('u.role_id', _sort)
         elif 'state' == sql_order['name']:
             s.order_by('u.state', _sort)
+        elif 'type' == sql_order['name']:
+            s.order_by('u.type', _sort)
         else:
             log.e('unknown order field: {}\n'.format(sql_order['name']))
             return TPE_PARAM, 0, 0, {}

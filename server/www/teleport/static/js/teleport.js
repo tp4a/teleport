@@ -77,6 +77,11 @@ $tp.init = function () {
         {id: TP_STATE_LOCKED, name: '临时锁定', style: 'warning'}
     ];
 
+    $app.user_type = [
+        {id: TP_USER_TYPE_LOCAL, name: '本地用户', style: 'success'},
+        {id: TP_USER_TYPE_LDAP, name: 'LDAP', style: 'warning'}
+    ];
+
     $app.host_types = [
         {id: 1, name: '物理主机', style: 'success'},
         {id: 2, name: '虚拟主机', style: 'info'},

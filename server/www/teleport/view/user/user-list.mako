@@ -49,6 +49,10 @@
             <div class="table-extend-cell table-extend-cell-right group-actions">
                 <button id="btn-create-user" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 创建用户</button>
                 <button id="btn-import-user" class="btn btn-sm btn-default"><i class="fa fa-plus-square fa-fw"></i> 导入用户</button>
+                <div class="btn-group btn-group-sm dropdown" id="filter-host-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">LDAP管理 <i class="fa fa-caret-right"></i></button>
+                    <ul class="dropdown-menu  dropdown-menu-sm"></ul>
+                </div>
             </div>
         </div>
 
@@ -212,12 +216,22 @@
                             <div class="col-sm-10">
                                 <div class="control-desc">当前使用系统默认设置</div>
                                 <ul class="list">
-                                    <li><div id="sec-auth-use-sys-config" class="tp-checkbox tp-editable">使用系统默认设置</div></li>
-                                    <li><hr class="hr-sm"/></li>
-##                                     <li><div id="sec-auth-username-password" class="tp-checkbox">用户名 + 密码</div></li>
-                                    <li><div id="sec-auth-username-password-captcha" class="tp-checkbox">用户名 + 密码 + 验证码</div></li>
-##                                     <li><div id="sec-auth-username-oath" class="tp-checkbox">用户名 + 身份认证器动态密码</div></li>
-                                    <li><div id="sec-auth-username-password-oath" class="tp-checkbox">用户名 + 密码 + 身份认证器动态密码</div></li>
+                                    <li>
+                                        <div id="sec-auth-use-sys-config" class="tp-checkbox tp-editable">使用系统默认设置</div>
+                                    </li>
+                                    <li>
+                                        <hr class="hr-sm"/>
+                                    </li>
+                                    ##                                     <li><div id="sec-auth-username-password" class="tp-checkbox">用户名 + 密码</div></li>
+
+                                    <li>
+                                        <div id="sec-auth-username-password-captcha" class="tp-checkbox">用户名 + 密码 + 验证码</div>
+                                    </li>
+                                    ##                                     <li><div id="sec-auth-username-oath" class="tp-checkbox">用户名 + 身份认证器动态密码</div></li>
+
+                                    <li>
+                                        <div id="sec-auth-username-password-oath" class="tp-checkbox">用户名 + 密码 + 身份认证器动态密码</div>
+                                    </li>
                                 </ul>
                             </div>
                         </div>

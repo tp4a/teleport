@@ -73,6 +73,9 @@ var TP_STATE_NORMAL = 1; // 正常
 var TP_STATE_DISABLED = 2; // 禁用
 var TP_STATE_LOCKED = 3; // 临时禁用（用于用户登录连续错误n次）
 
+var TP_USER_TYPE_LOCAL = 1;
+var TP_USER_TYPE_LDAP = 2;
+
 // =======================================================
 // 授权策略对象
 // =======================================================
