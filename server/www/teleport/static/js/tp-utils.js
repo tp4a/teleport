@@ -41,15 +41,34 @@ if (!String.prototype.realLength) {
 // input field validation check
 //===================================================
 // http://jsfiddle.net/ghvj4gy9/embedded/result,js/
-function tp_check_email(email) {
+function tp_is_email(email) {
     //var re = /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/;
     var re = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
     return re.test(email);
 }
 
-function tp_check_ip(ip) {
+function tp_is_ip(ip) {
     var re = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
     return re.test(ip);
+}
+
+function tp_is_domain(domain) {
+    var re = /^[a-zA-Z0-9\-]+\.[a-zA-Z]+$/
+    return re.test(domain);
+}
+
+function tp_is_host(host) {
+    return tp_is_ip(host) || tp_is_domain(host);
+}
+
+function tp_is_empty_str(str) {
+    if (_.isEmpty(str))
+        return true;
+    var regu = "^[ \t]+$";
+    var re = new RegExp(regu);
+    return re.test(str);
+
+//     return (str.replace(/(^\s*)|(\s*$)/g, "").length !== 0);
 }
 
 //===================================================

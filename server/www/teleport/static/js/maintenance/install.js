@@ -69,7 +69,7 @@ $app.on_init = function (cb_stack, cb_args) {
             $app.dom.email.focus();
             return;
         }
-        if (!tp_check_email(str_email)) {
+        if (!tp_is_email(str_email)) {
             $app.show_op_box('error', '电子邮件地址格式错啦，你会收不到邮件的！');
             $app.dom.email.focus();
             return;

@@ -15,6 +15,10 @@ $app.on_init = function (cb_stack) {
         btn_unlock_user: $('#btn-unlock-user'),
         btn_remove_user: $('#btn-remove-user'),
 
+        btn_ldap_import: $('a[data-action="ldap-import"]'),
+        btn_ldap_config: $('a[data-action="ldap-config"]'),
+        btn_ldap_sync: $('a[data-action="ldap-sync"]'),
+
         dlg_import_user: $('#dlg-import-user'),
         btn_import_user: $('#btn-import-user'),
         btn_select_file: $('#btn-select-file'),
@@ -180,6 +184,18 @@ $app.create_controls = function (cb_stack) {
         }
     });
 
+    $app.dlg_ldap_config = $app.create_dlg_ldap_config();
+    cb_stack.add($app.dlg_ldap_config.init);
+    $app.dom.btn_ldap_import.click(function () {
+    });
+    $app.dom.btn_ldap_config.click(function () {
+        $app.dlg_ldap_config.show();
+    });
+
+    $app.dlg_ldap_test_result = $app.create_dlg_ldap_test_result();
+    cb_stack.add($app.dlg_ldap_test_result.init);
+
+
     $app.dom.btn_set_role.click($app.on_btn_set_role_click);
     $app.dom.btn_lock_user.click($app.on_btn_lock_user_click);
     $app.dom.btn_unlock_user.click($app.on_btn_unlock_user_click);
@@ -327,11 +343,11 @@ $app.on_table_users_render_created = function (render) {
     };
 
     render.user_type = function (row_id, fields) {
-        if(fields.user_type === 1) {
+        if (fields.user_type === 1) {
             return '本地用户';
-        } else if(fields.user_type === 2) {
+        } else if (fields.user_type === 2) {
             return 'LDAP';
-        } else{
+        } else {
             return '-未知-'
         }
     };
@@ -921,7 +937,7 @@ $app.create_dlg_edit_user = function () {
         }
 
         if (dlg.field_email.length > 0) {
-            if (!tp_check_email(dlg.field_email)) {
+            if (!tp_is_email(dlg.field_email)) {
                 dlg.dom.edit_email.focus();
                 $tp.notify_error('邮箱地址格式有误哦！');
                 return false;
@@ -1196,6 +1212,260 @@ $app.create_dlg_reset_password = function () {
             }
         );
 
+    };
+
+    return dlg;
+};
+
+$app.create_dlg_ldap_config = function () {
+    var dlg = {};
+    dlg.dom_id = 'dlg-ldap-config';
+    dlg.mode = 'set'; // edit or set
+    dlg.ldap_config = {
+        host: '',
+        port: '',
+        domain: '',
+        base_dn: '',
+        filter: '',
+        attr_map: ''
+    };
+    dlg.ldap_config_password = '';
+
+    dlg.dom = {
+        dialog: $('#' + dlg.dom_id),
+        host: $('#edit-ldap-host'),
+        port: $('#edit-ldap-port'),
+        domain: $('#edit-ldap-domain'),
+        admin: $('#edit-ldap-admin'),
+        password: $('#edit-ldap-password'),
+        base_dn: $('#edit-ldap-base-dn'),
+        filter: $('#edit-ldap-filter'),
+        attr_map: $('#edit-ldap-attr-map'),
+
+        btn_switch_password: $('#btn-switch-ldap-password'),
+        btn_switch_password_icon: $('#btn-switch-ldap-password i'),
+
+        btn_test: $('#btn-ldap-config-test'),
+        btn_save: $('#btn-ldap-config-save')
+    };
+
+    dlg.init = function (cb_stack) {
+        dlg.dom.btn_test.click(dlg.do_test);
+        dlg.dom.btn_save.click(dlg.do_save);
+
+        // dlg.dom.btn_gen_random_password.click(function () {
+        //     dlg.dom.password.val(tp_gen_password(8));
+        //     dlg.dom.password.attr('type', 'text');
+        //     dlg.dom.btn_switch_password_icon.removeClass('fa-eye').addClass('fa-eye-slash')
+        // });
+
+        dlg.dom.btn_switch_password.click(function () {
+            if ('password' === dlg.dom.password.attr('type')) {
+                dlg.dom.password.attr('type', 'text');
+                dlg.dom.btn_switch_password_icon.removeClass('fa-eye').addClass('fa-eye-slash')
+            } else {
+                dlg.dom.password.attr('type', 'password');
+                dlg.dom.btn_switch_password_icon.removeClass('fa-eye-slash').addClass('fa-eye')
+            }
+        });
+        //
+        // if (!$app.options.sys_smtp)
+        //     dlg.dom.msg_cannot_send_email.text('未配置邮件发送服务');
+        dlg.dom.dialog.modal({backdrop: 'static'});
+
+        cb_stack.exec();
+    };
+
+    dlg.init_fields = function (ldap_config) {
+        // dlg.field_id = user.id;
+        // dlg.field_email = user.email;
+        // dlg.dom.dlg_title.html('密码重置：' + user.surname);
+        //
+        // dlg.dom.password.val('');
+        //
+        // if (!$app.options.sys_smtp || user.email.length === 0) {
+        //     dlg.dom.email.text('');
+        //     dlg.dom.can_send_email.hide();
+        //     dlg.dom.cannot_send_email.show();
+        // } else {
+        //     dlg.dom.email.text(user.email);
+        //     dlg.dom.can_send_email.show();
+        //     dlg.dom.cannot_send_email.hide();
+        // }
+    };
+
+    dlg.show = function () {
+        // var user = $app.table_users.get_row(row_id);
+        // dlg.init_fields(user);
+        dlg.dom.dialog.modal({backdrop: 'static'});
+    };
+
+    dlg.check_fields = function () {
+        dlg.ldap_config_password = dlg.dom.password.val();
+        dlg.ldap_config.host = dlg.dom.host.val();
+        dlg.ldap_config.domain = dlg.dom.domain.val();
+        dlg.ldap_config.port = parseInt(dlg.dom.port.val());
+        dlg.ldap_config.admin = dlg.dom.admin.val();
+        dlg.ldap_config.base_dn = dlg.dom.base_dn.val();
+        dlg.ldap_config.filter = dlg.dom.filter.val();
+        dlg.ldap_config.attr_map = dlg.dom.attr_map.val();
+
+        if (!tp_is_host(dlg.ldap_config.host)) {
+            dlg.dom.host.focus();
+            $tp.notify_error('请填写LDAP主机地址！');
+            return false;
+        }
+        if (!tp_is_empty_str(dlg.ldap_config.port)) {
+            dlg.dom.port.focus();
+            $tp.notify_error('请正确填写LDAP主机端口！');
+            return false;
+        } else {
+            var _port = parseInt(dlg.ldap_config.port);
+            if (_port <= 0 || _port >= 65535) {
+                dlg.dom.port.focus();
+                $tp.notify_error('请正确填写LDAP主机端口！');
+                return false;
+            }
+        }
+        if (tp_is_empty_str(dlg.ldap_config.domain)) {
+            dlg.dom.domain.focus();
+            $tp.notify_error('请填写LDAP的域！');
+            return false;
+        }
+        if (tp_is_empty_str(dlg.ldap_config.admin)) {
+            dlg.dom.admin.focus();
+            $tp.notify_error('请填写LDAP的管理员用户名！');
+            return false;
+        }
+        if (tp_is_empty_str(dlg.ldap_config_password)) {
+            dlg.dom.password.focus();
+            $tp.notify_error('请填写LDAP的管理员密码！');
+            return false;
+        }
+        if (tp_is_empty_str(dlg.ldap_config.base_dn)) {
+            dlg.dom.base_dn.focus();
+            $tp.notify_error('请填写LDAP的用户基准DN！');
+            return false;
+        }
+        if (tp_is_empty_str(dlg.ldap_config.filter)) {
+            dlg.dom.filter.focus();
+            $tp.notify_error('请填写LDAP的用户过滤器！');
+            return false;
+        }
+        if (tp_is_empty_str(dlg.ldap_config.attr_map)) {
+            dlg.dom.attr_map.focus();
+            $tp.notify_error('请填写LDAP的用户属性与teleport用户属性的映射关系！');
+            return false;
+        }
+
+        return true;
+    };
+
+    dlg.do_test = function () {
+        if (!dlg.check_fields())
+            return;
+        dlg.dom.btn_test.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/user/do-ldap-config-test', {
+                c: dlg.ldap_config,
+                p: dlg.ldap_config_password
+            },
+            function (ret) {
+                dlg.dom.btn_test.removeAttr('disabled');
+                if (ret.code === TPE_OK) {
+                    $tp.notify_success('LDAP连接测试成功！');
+                    $app.dlg_ldap_test_result.show(ret.data);
+                } else {
+                    $tp.notify_error('LDAP连接测试失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                dlg.dom.btn_test.removeAttr('disabled');
+                $tp.notify_error('网络故障，LDAP连接测试失败！');
+            },
+            15000
+        );
+
+    };
+
+    dlg.do_save = function () {
+        if (!dlg.check_fields())
+            return;
+        //     dlg.field_password = dlg.dom.password.val();
+        //     if (dlg.field_password.length === 0) {
+        //         dlg.dom.field_password.focus();
+        //         $tp.notify_error('请先填写用户的新密码！');
+        //         return;
+        //     }
+        //
+        //     $tp.ajax_post_json('/user/do-reset-password', {
+        //             mode: 2,
+        //             id: dlg.field_id,
+        //             password: dlg.field_password
+        //         },
+        //         function (ret) {
+        //             if (ret.code === TPE_OK) {
+        //                 $tp.notify_success('用户密码重置成功！');
+        //                 dlg.dom.dialog.modal('hide');
+        //             } else {
+        //                 $tp.notify_error('用户密码重置失败：' + tp_error_msg(ret.code, ret.message));
+        //             }
+        //         },
+        //         function () {
+        //             $tp.notify_error('网络故障，用户密码重置失败！');
+        //         }
+        //     );
+        //
+    };
+
+    return dlg;
+};
+
+$app.create_dlg_ldap_test_result = function () {
+    var dlg = {};
+    dlg.dom_id = 'dlg-ldap-test-result';
+
+    dlg.dom = {
+        dialog: $('#' + dlg.dom_id),
+        msg: $('#ldap-test-result-msg'),
+        table: $('#table-ldap-test-ret')
+    };
+
+    dlg.init = function (cb_stack) {
+        cb_stack.exec();
+    };
+
+    dlg.show = function (data) {
+        dlg.dom.table.empty();
+
+        var h = [];
+        var i, x;
+        var th_created = false;
+        for (i = 0; i < data.length; ++i) {
+            if (!th_created) {
+                h.push('<thead>');
+                for (x in data[i]) {
+                    h.push('<th style="text-align:left;" class="mono">');
+                    h.push(x);
+                    h.push('</th>');
+                }
+                h.push('</thead>');
+                th_created = true;
+            }
+
+            h.push('<tr>');
+            for (x in data[i]) {
+                h.push('<td style="text-align:left;" class="mono">');
+                if (!_.isEmpty(data[i][x]))
+                    h.push(data[i][x]);
+                else
+                    h.push('');
+                h.push('</td>');
+            }
+            h.push('</tr>');
+        }
+
+        dlg.dom.table.append($(h.join('')));
+        dlg.dom.dialog.modal();
     };
 
     return dlg;

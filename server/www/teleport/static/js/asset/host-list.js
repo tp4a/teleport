@@ -797,7 +797,7 @@ $app.create_dlg_edit_host = function () {
             return false;
         }
 
-        if (!tp_check_ip(dlg.field_ip)) {
+        if (!tp_is_ip(dlg.field_ip)) {
             dlg.dom.edit_ip.focus();
             $tp.notify_error('远程主机IP地址格式有误！');
             return false;
@@ -811,7 +811,7 @@ $app.create_dlg_edit_host = function () {
                 return false;
             }
 
-            if (!tp_check_ip(dlg.field_router_ip)) {
+            if (!tp_is_ip(dlg.field_router_ip)) {
                 dlg.dom.edit_router_ip.focus();
                 $tp.notify_error('路由主机IP地址格式有误！');
                 return false;

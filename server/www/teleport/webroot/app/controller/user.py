@@ -17,6 +17,7 @@ from app.logic.auth.oath import tp_oath_verify_code
 from app.const import *
 from app.logic.auth.oath import tp_oath_generate_secret, tp_oath_generate_qrcode
 from app.logic.auth.password import tp_password_generate_secret, tp_password_verify
+from app.logic.auth.ldap import Ldap
 from app.model import group
 # from app.model import syslog
 from app.model import user
@@ -195,6 +196,7 @@ class DoBindOathHandler(TPBaseJsonHandler):
 
         return self.write_json(TPE_OK)
 
+
 class DoUnBindOathHandler(TPBaseJsonHandler):
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_USER_DELETE)
@@ -217,6 +219,7 @@ class DoUnBindOathHandler(TPBaseJsonHandler):
         # 把oath设置为空就是去掉oath验证
         err = user.update_oath_secret(self, users, '')
         self.write_json(err)
+
 
 class OathSecretQrCodeHandler(TPBaseHandler):
     def get(self):
@@ -902,3 +905,37 @@ class DoGetRoleListHandler(TPBaseJsonHandler):
             self.write_json(err)
         else:
             self.write_json(TPE_OK, data=role_list)
+
+
+class DoLdapConfigTestHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            cfg = args['c']
+            cfg['port'] = int(cfg['port'])
+            password = args['p']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        try:
+            ldap = Ldap(cfg['host'], cfg['port'], cfg['base_dn'], cfg['domain'])
+            ret, data, err_msg = ldap.list_users(cfg['admin'], password, cfg['filter'], cfg['attr_map'], size_limit=10)
+            if ret != TPE_OK:
+                return self.write_json(ret, message=err_msg)
+            else:
+                return self.write_json(ret, data=data)
+        except:
+            return self.write_json(TPE_PARAM)
+
+

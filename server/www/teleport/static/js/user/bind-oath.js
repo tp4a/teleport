@@ -281,7 +281,7 @@ $app.on_save = function () {
 //         return;
 //     }
 //
-//     if (!tp_check_email(str_email)) {
+//     if (!tp_is_email(str_email)) {
 //         $app.show_op_box('error', '无效的电子邮件地址！');
 //         $app.dom.find.input_email.attr('data-content', "请检查输入的电子邮件地址！").focus().popover('show');
 //         return;

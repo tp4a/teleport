@@ -783,7 +783,7 @@ $tp.create_table_header = function (tbl, on_created) {
         _tbl_header.order_asc = _sort_asc;
 
         // 创建表格头
-        var _dom = ['<thead></tr>'];
+        var _dom = ['<thead><tr>'];
         $.each(_tbl_header._columns, function (i, col) {
             _dom.push('<th');
             var _style = '';

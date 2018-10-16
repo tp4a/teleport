@@ -50,8 +50,19 @@
                 <button id="btn-create-user" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 创建用户</button>
                 <button id="btn-import-user" class="btn btn-sm btn-default"><i class="fa fa-plus-square fa-fw"></i> 导入用户</button>
                 <div class="btn-group btn-group-sm dropdown" id="filter-host-group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">LDAP管理 <i class="fa fa-caret-right"></i></button>
-                    <ul class="dropdown-menu  dropdown-menu-sm"></ul>
+                    <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown"><i class="fas fa-address-book fa-fw"></i> LDAP管理 <i class="fa fa-caret-right"></i></button>
+                    <ul class="dropdown-menu dropdown-menu-right dropdown-menu-sm">
+                        <li>
+                        <li><a href="javascript:;" data-action="ldap-import"><i class="fas fa-arrow-alt-circle-left fa-fw"></i> 导入LDAP用户</a></li>
+                        </li>
+                        <li role="separator" class="divider"></li>
+                        <li>
+                        <li><a href="javascript:;" data-action="ldap-config"><i class="fas fa-cog fa-fw"></i> 设置LDAP</a></li>
+                        </li>
+                        <li>
+                        <li><a href="javascript:;" data-action="ldap-sync"><i class="fas fa-link fa-fw"></i> 同步LDAP</a></li>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -77,7 +88,7 @@
             <div class="table-extend-cell group-actions">
                 <div class="btn-group">
                     <div class="btn-group dropup" id="btn-set-role" role="group">
-                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-edit fa-fw"></i> 设置角色 <i class="fa fa-caret-right"></i></button>
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="fas fa-user fa-fw"></i> 设置角色 <i class="fa fa-caret-right"></i></button>
                         <ul class="dropdown-menu  dropdown-menu-sm"></ul>
                     </div>
                     ##                     <button id="btn-set-role" type="button" class="btn btn-default"><i class="fa fa-edit fa-fw"></i> 设置角色</button>
@@ -150,55 +161,55 @@
 
                         <div class="form-group form-group-sm">
                             <label for="edit-user-role" class="col-sm-2 control-label require">角色：</label>
-                            <div class="col-sm-6">
+                            <div class="col-sm-5">
                                 <div id="edit-user-role" class="btn-group btn-group-sm"></div>
                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
                             <label for="edit-user-username" class="col-sm-2 control-label require">账号：</label>
-                            <div class="col-sm-6">
+                            <div class="col-sm-5">
                                 <input id="edit-user-username" type="text" class="form-control" placeholder="用户账号，也就是用户登录名"/>
                             </div>
-                            <div class="col-sm-4">
+                            <div class="col-sm-5">
                                 <div class="control-desc">英文字符和数字，最大32字符</div>
                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
                             <label for="edit-user-surname" class="col-sm-2 control-label">姓名：</label>
-                            <div class="col-sm-6">
+                            <div class="col-sm-5">
                                 <input id="edit-user-surname" type="text" class="form-control" placeholder="用户的真实姓名"/>
                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
                             <label for="edit-user-email" class="col-sm-2 control-label">email：</label>
-                            <div class="col-sm-6">
+                            <div class="col-sm-5">
                                 <input id="edit-user-email" type="text" class="form-control" placeholder="电子邮箱地址"/>
                             </div>
-                            <div class="col-sm-4">
+                            <div class="col-sm-5">
                                 <div class="control-desc">用于激活账号、重置密码。</div>
                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
                             <label for="edit-user-mobile" class="col-sm-2 control-label">电话：</label>
-                            <div class="col-sm-6">
+                            <div class="col-sm-5">
                                 <input id="edit-user-mobile" type="text" class="form-control" placeholder=""/>
                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
                             <label for="edit-user-qq" class="col-sm-2 control-label">QQ：</label>
-                            <div class="col-sm-6">
+                            <div class="col-sm-5">
                                 <input id="edit-user-qq" type="text" class="form-control"/>
                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
                             <label for="edit-user-wechat" class="col-sm-2 control-label">微信：</label>
-                            <div class="col-sm-6">
+                            <div class="col-sm-5">
                                 <input id="edit-user-wechat" type="text" class="form-control"/>
                             </div>
                         </div>
@@ -360,6 +371,151 @@
                             <i class="fa fa-cog fa-spin fa-fw"></i> 正在导入，请稍候...
                         </div>
                         <button type="button" class="btn btn-sm btn-primary" id="btn-do-upload-file" style="display:none;margin:10px;"><i class="fa fa-upload fa-fw"></i> 开始导入</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="dlg-ldap-config" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
+                    <h3 class="modal-title">LDAP设置</h3>
+                </div>
+                <div class="modal-body">
+
+                    <div class="form-horizontal">
+
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-host" class="col-sm-2 control-label require">主机：</label>
+                            <div class="col-sm-4">
+                                <input id="edit-ldap-host" type="text" class="form-control" placeholder="LDAP服务器IP或域名" value="192.168.0.68"/>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-port" class="col-sm-2 control-label require">端口：</label>
+                            <div class="col-sm-4">
+                                <input id="edit-ldap-port" type="text" class="form-control" placeholder="LDAP端口，默认为389" value="389"/>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-domain" class="col-sm-2 control-label require">域：</label>
+                            <div class="col-sm-4">
+                                <input id="edit-ldap-domain" type="text" class="form-control" placeholder="" value="ops"/>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="control-desc">teleport将会用 <span class="important">用户名@域</span> 来访问此LDAP服务器。</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-admin" class="col-sm-2 control-label require">管理员：</label>
+                            <div class="col-sm-4">
+                                <input id="edit-ldap-admin" type="text" class="form-control" placeholder="" value="Administrator"/>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="control-desc">LDAP服务的管理员账号，用于列举用户、同步账号。</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-password" class="col-sm-2 control-label require">密码：</label>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input id="edit-ldap-password" type="password" class="form-control mono" placeholder="" value="Abcd1234"/>
+                                    <span class="input-group-btn"><button class="btn btn-sm btn-default" type="button" id="btn-switch-ldap-password"><i class="fa fa-eye fa-fw"></i></button></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <hr class="sm"/>
+
+                    <div class="form-horizontal">
+
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-base-dn" class="col-sm-2 control-label require">用户基准DN：</label>
+                            <div class="col-sm-9">
+                                <input id="edit-ldap-base-dn" type="text" class="form-control" placeholder="" value="CN=Users,DC=ops,DC=tp4a,DC=com"/>
+                                <div class="control-desc-sm">限制用户DN的范围，例如 <span class="important">ou=dev,ou=company,ou=com</span>。用户的完整DN为 <span class="important">cn=用户登录名,用户基准DN</span>。</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-filter" class="col-sm-2 control-label require">过滤器：</label>
+                            <div class="col-sm-9">
+                                <input id="edit-ldap-filter" type="text" class="form-control" placeholder="" value="(&(objectClass=person))"/>
+                                <div class="control-desc-sm">列举用户时的过滤器，例如 <span class="important">(&(objectClass=person))</span>。</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-attr-map" class="col-sm-2 control-label require">属性映射：</label>
+                            <div class="col-sm-9">
+                                <textarea id="edit-ldap-attr-map" class="form-control" style="resize:vertical;height:8em;" placeholder="">tp.username = sAMAccountName
+tp.surname = cn
+tp.email = mail</textarea>
+                                <div class="control-desc-sm">将LDAP的属性映射到 teleport 的用户属性，例如 <span class="important">LDAP中的用户sAMAccountName 映射到teleport的登录账号</span>。</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div id="edit-user-message" class="alert alert-danger" style="text-align:left;display:none;"></div>
+                        </div>
+                        <div class="col-sm-6" style="text-align:right;">
+                            <button type="button" class="btn btn-sm btn-success" id="btn-ldap-config-test"><i class="fa fa-bolt fa-fw"></i> 测试连接</button>
+                            <button type="button" class="btn btn-sm btn-primary" id="btn-ldap-config-save"><i class="fa fa-check fa-fw"></i> 保存设置</button>
+                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="dlg-ldap-test-result" tabindex="-1" role="dialog">
+        <div class="modal-dialog" style="margin-top:50px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
+                    <h3 class="modal-title">LDAP连接测试结果</h3>
+                </div>
+                <div class="modal-body">
+
+                    <div class="form-horizontal">
+                        <div style="margin-bottom:8px;">
+                            列出找到的前10个用户：
+                        </div>
+
+                        <div class="form-group form-group-sm">
+
+                            <div class="col-sm-12">
+                                <table id="table-ldap-test-ret" class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
+
+                                <div id="ldap-test-result-msg"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-sm-12" style="text-align:right;">
+                            <button type="button" class="btn btn-sm btn-primary" data-dismiss="modal"><i class="fa fa-check fa-fw"></i> 确定</button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -78,8 +78,10 @@ controllers = [
     (r'/user/verify-user', user.DoVerifyUserHandler),
     #  - [json] 绑定身份认证器
     (r'/user/do-bind-oath', user.DoBindOathHandler),
-    #  - 取消绑定身份认证器
-    (r'/user/do-unbind-oath', user.DoUnBindOathHandler),  
+    #  - [json] 取消绑定身份认证器
+    (r'/user/do-unbind-oath', user.DoUnBindOathHandler),
+    #  - [json] 测试LDAP的配置
+    (r'/user/do-ldap-config-test', user.DoLdapConfigTestHandler),
     #
     #  - 用户组管理页面
     (r'/user/group', user.GroupListHandler),
