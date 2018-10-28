@@ -17,11 +17,11 @@
 
 <body>
 
-    <div class="header">
-        <div class="container">
-            <span class="title"><i class="fa fa-cog fa-fw"></i> Teleport助手本地配置</span>
-            <span class="sub-title">此处配置保存到本地计算机上，如果更换计算机，需要重新配置！</span>
-        </div>
+<div class="header">
+    <div class="container">
+        <span class="title"><i class="fa fa-cog fa-fw"></i> Teleport助手本地配置</span>
+        <span class="sub-title" id="version"></span>
+        <span class="sub-title">此处配置保存到本地计算机上，如果更换计算机，需要重新配置！</span>
     </div>
     <div class="header-fix"></div>
 
@@ -34,11 +34,20 @@
 
     <div class="container">
 
-        <div class="content">
+    <div class="content">
+        <div class="arg-detail arg-detail-common">
+            <p><strong>此处配置保存到本地计算机上，如果更换计算机，需要重新配置！</strong></p>
+            <span><strong>注意：</strong>命令行参数设置中，可以用以下变量替换（注意大小写！）：</span>
+            <ul>
+                <li><span class="arg-varb">{host_ip}</span> 替换主机IP地址</li>
+                <li><span class="arg-varb">{host_port}</span> 替换主机端口号</li>
+                <li><span class="arg-varb">{user_name}</span> 替换用户名</li>
+                <li><span class="arg-varb">{real_ip}</span> 替换为远程主机真实IP（仅用于显示，例如客户端的窗口标题或标签页标题等）</li>
+            </ul>
+        </div>
 
-            <hr/>
-            <p class="cfg-title">本地终端配置（用于SSH）</p>
-
+        <hr/>
+        <p class="cfg-title">本地 SSH 客户端配置</p>
             <div class="form-horizontal">
                 <div class="form-group form-group-sm">
                     <label for="term-type" class="col-sm-1 control-label"><strong>终端：</strong></label>
@@ -55,9 +64,69 @@
                 </div>
             </div>
 
+        <hr/>
+        <p class="cfg-title">本地 SFTP 客户端配置</p>
 
-            <hr/>
-            <p class="cfg-title">本地RDP配置</p>
+
+        <div class="form-horizontal">
+            <div class="form-group form-group-sm">
+                <label for="scp-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
+                <div class="col-sm-4">
+                    <select id="scp-type" class="form-control"></select>
+                </div>
+            </div>
+
+            <div class="form-group form-group-sm">
+                <label for="scp-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
+                <div class="col-sm-9">
+                    <div class="input-group">
+                        <input id="scp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
+                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="scp-select-app">选择...</button></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group form-group-sm">
+                <label for="scp-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
+                <div class="col-sm-9">
+                    <input id="scp-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
+                </div>
+            </div>
+
+        </div>
+
+        <hr/>
+        <p class="cfg-title">本地 TELNET 客户端配置</p>
+
+        <div class="form-horizontal">
+            <div class="form-group form-group-sm">
+                <label for="telnet-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
+                <div class="col-sm-4">
+                    <select id="telnet-type" class="form-control"></select>
+                </div>
+            </div>
+
+            <div class="form-group form-group-sm">
+                <label for="telnet-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
+                <div class="col-sm-9">
+                    <div class="input-group">
+                        <input id="telnet-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
+                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="telnet-select-app">选择...</button></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group form-group-sm">
+                <label for="telnet-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
+                <div class="col-sm-9">
+                    <input id="telnet-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
+                </div>
+            </div>
+
+        </div>
+
+        <hr/>
+        <p class="cfg-title">本地RDP配置</p>
 
             <div class="form-horizontal">
                 <div class="form-group form-group-sm">
