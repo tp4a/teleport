@@ -53,6 +53,7 @@ __pycache__
 /client/tools/putty
 /client/tools/winscp
 /client/tp_assist_macos/DerivedData
+**/xcode_build
 
 # for dist folder
 **/_tmp_

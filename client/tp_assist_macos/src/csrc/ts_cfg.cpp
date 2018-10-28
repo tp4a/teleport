@@ -47,7 +47,7 @@ bool TsCfg::_load(const ex_astr& str_json) {
 	}
 
 	ex_astr sel_name;
-	size_t i = 0;
+	int i = 0;
 	ex_astr tmp;
 	
 	//===================================
@@ -140,11 +140,13 @@ bool TsCfg::_load(const ex_astr& str_json) {
 		if (m_root["scp"]["available"][i]["name"].asCString() != sel_name)
 			continue;
 		
-		tmp = m_root["scp"]["available"][i]["app"].asCString();
-		ex_astr2wstr(tmp, scp_app, EX_CODEPAGE_UTF8);
-		tmp = m_root["scp"]["available"][i]["cmdline"].asCString();
-		ex_astr2wstr(tmp, scp_cmdline, EX_CODEPAGE_UTF8);
-		
+//        tmp = m_root["scp"]["available"][i]["app"].asCString();
+//        ex_astr2wstr(tmp, scp_app, EX_CODEPAGE_UTF8);
+        scp_app = m_root["scp"]["available"][i]["app"].asCString();
+//        tmp = m_root["scp"]["available"][i]["cmdline"].asCString();
+//        ex_astr2wstr(tmp, scp_cmdline, EX_CODEPAGE_UTF8);
+        scp_cmdline = m_root["scp"]["available"][i]["cmdline"].asCString();
+
 		break;
 	}
 	
@@ -192,11 +194,13 @@ bool TsCfg::_load(const ex_astr& str_json) {
 		if (m_root["telnet"]["available"][i]["name"].asCString() != sel_name)
 			continue;
 		
-		tmp = m_root["telnet"]["available"][i]["app"].asCString();
-		ex_astr2wstr(tmp, telnet_app, EX_CODEPAGE_UTF8);
-		tmp = m_root["telnet"]["available"][i]["cmdline"].asCString();
-		ex_astr2wstr(tmp, telnet_cmdline, EX_CODEPAGE_UTF8);
-		
+//        tmp = m_root["telnet"]["available"][i]["app"].asCString();
+//        ex_astr2wstr(tmp, telnet_app, EX_CODEPAGE_UTF8);
+//        tmp = m_root["telnet"]["available"][i]["cmdline"].asCString();
+//        ex_astr2wstr(tmp, telnet_cmdline, EX_CODEPAGE_UTF8);
+        telnet_app = m_root["telnet"]["available"][i]["app"].asCString();
+        telnet_cmdline = m_root["telnet"]["available"][i]["cmdline"].asCString();
+
 		break;
 	}
 	
@@ -244,13 +248,16 @@ bool TsCfg::_load(const ex_astr& str_json) {
 		if (m_root["rdp"]["available"][i]["name"].asCString() != sel_name)
 			continue;
 		
-		tmp = m_root["rdp"]["available"][i]["app"].asCString();
-		ex_astr2wstr(tmp, rdp_app, EX_CODEPAGE_UTF8);
-		tmp = m_root["rdp"]["available"][i]["cmdline"].asCString();
-		ex_astr2wstr(tmp, rdp_cmdline, EX_CODEPAGE_UTF8);
-		tmp = m_root["rdp"]["available"][i]["name"].asCString();
-		ex_astr2wstr(tmp, rdp_name, EX_CODEPAGE_UTF8);
-		
+//        tmp = m_root["rdp"]["available"][i]["app"].asCString();
+//        ex_astr2wstr(tmp, rdp_app, EX_CODEPAGE_UTF8);
+//        tmp = m_root["rdp"]["available"][i]["cmdline"].asCString();
+//        ex_astr2wstr(tmp, rdp_cmdline, EX_CODEPAGE_UTF8);
+//        tmp = m_root["rdp"]["available"][i]["name"].asCString();
+//        ex_astr2wstr(tmp, rdp_name, EX_CODEPAGE_UTF8);
+        rdp_app = m_root["rdp"]["available"][i]["app"].asCString();
+        rdp_cmdline = m_root["rdp"]["available"][i]["cmdline"].asCString();
+        rdp_name = m_root["rdp"]["available"][i]["name"].asCString();
+
 		break;
 	}
 	
