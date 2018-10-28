@@ -182,9 +182,9 @@ EX_BOOL ex_copy_file(const wchar_t* from_file, const wchar_t* to_file) {
 			return EX_FALSE;
 	}
 	else if (S_ISREG(src_stat.st_mode)) {
-		int src, dst;
-		int rsize;
-		char buf[1024];
+		int src = -1, dst = -1;
+		int rsize = 0;
+		char buf[1024] = {0};
 		if ((src = open(source.c_str(), O_RDONLY)) == -1) {
 			close(dst);
 			return EX_FALSE;

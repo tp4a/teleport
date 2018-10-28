@@ -77,7 +77,6 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 	
 	int ret = cpp_main((__bridge void*)self, cpp_cfg_file.c_str(), cpp_res_path.c_str());
 	if(ret != 0) {
-		// TODO: show error message and exit.
 		NSString *msg = Nil;
 		if(ret == -1)
 			msg = @"初始化运行环境失败！";
@@ -85,6 +84,8 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 			msg = @"加载配置文件失败！";
 		else if(ret == -3)
 			msg = @"启动本地通讯端口失败！请检查本地50022端口是否被占用！";
+		else
+			msg = @"发生未知错误！";
 		
 		NSAlert *alert = [NSAlert alertWithMessageText:@"无法启动Teleport助手"
 										 defaultButton:@"确定"

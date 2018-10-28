@@ -17,14 +17,25 @@ public:
 	
 	Json::Value& get_root() {return m_root;}
 	
-	ex_astr term_name;
-	ex_astr term_display;
-	ex_astr term_app;
-	ex_astr term_profile;
+//	ex_astr term_name;
+//	ex_astr term_display;
+//	ex_astr term_app;
+//	ex_astr term_profile;
 	
+	ex_astr ssh_app;
+	ex_astr ssh_cmdline;
+	ex_astr scp_app;
+	ex_astr scp_cmdline;
+	ex_astr telnet_app;
+	ex_astr telnet_cmdline;
 	ex_astr rdp_name;
-	ex_astr rdp_display;
 	ex_astr rdp_app;
+	ex_astr rdp_cmdline;
+
+	
+//	ex_astr rdp_name;
+//	ex_astr rdp_display;
+//	ex_astr rdp_app;
 	//ex_astr rdp_cmdline;
 	
 protected:
