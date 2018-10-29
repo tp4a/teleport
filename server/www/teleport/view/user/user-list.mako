@@ -391,7 +391,7 @@
                         <div class="form-group form-group-sm">
                             <label for="edit-ldap-host" class="col-sm-2 control-label require">主机：</label>
                             <div class="col-sm-4">
-                                <input id="edit-ldap-host" type="text" class="form-control" placeholder="LDAP服务器IP或域名" value="192.168.0.68"/>
+                                <input id="edit-ldap-host" type="text" class="form-control" placeholder="LDAP服务器IP或域名" value="192.168.0.10"/>
                             </div>
                         </div>
 
@@ -405,7 +405,7 @@
                         <div class="form-group form-group-sm">
                             <label for="edit-ldap-domain" class="col-sm-2 control-label require">域：</label>
                             <div class="col-sm-4">
-                                <input id="edit-ldap-domain" type="text" class="form-control" placeholder="" value="ops"/>
+                                <input id="edit-ldap-domain" type="text" class="form-control" placeholder="" value="apexnas.com"/>
                             </div>
                             <div class="col-sm-6">
                                 <div class="control-desc">teleport将会用 <span class="important">用户名@域</span> 来访问此LDAP服务器。</div>
@@ -415,7 +415,7 @@
                         <div class="form-group form-group-sm">
                             <label for="edit-ldap-admin" class="col-sm-2 control-label require">管理员：</label>
                             <div class="col-sm-4">
-                                <input id="edit-ldap-admin" type="text" class="form-control" placeholder="" value="Administrator"/>
+                                <input id="edit-ldap-admin" type="text" class="form-control" placeholder="" value="cn=admin,dc=apexnas,dc=com"/>
                             </div>
                             <div class="col-sm-6">
                                 <div class="control-desc">LDAP服务的管理员账号，用于列举用户、同步账号。</div>
@@ -441,7 +441,7 @@
                         <div class="form-group form-group-sm">
                             <label for="edit-ldap-base-dn" class="col-sm-2 control-label require">用户基准DN：</label>
                             <div class="col-sm-9">
-                                <input id="edit-ldap-base-dn" type="text" class="form-control" placeholder="" value="CN=Users,DC=ops,DC=tp4a,DC=com"/>
+                                <input id="edit-ldap-base-dn" type="text" class="form-control" placeholder="" value="ou=people,dc=apexnas,dc=com"/>
                                 <div class="control-desc-sm">限制用户DN的范围，例如 <span class="important">ou=dev,ou=company,ou=com</span>。用户的完整DN为 <span class="important">cn=用户登录名,用户基准DN</span>。</div>
                             </div>
                         </div>

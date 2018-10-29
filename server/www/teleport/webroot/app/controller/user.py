@@ -936,6 +936,7 @@ class DoLdapConfigTestHandler(TPBaseJsonHandler):
             else:
                 return self.write_json(ret, data=data)
         except:
+            log.e('')
             return self.write_json(TPE_PARAM)
 
 

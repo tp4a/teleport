@@ -38,7 +38,8 @@ class Ldap(object):
         if attrs_ldap is None:
             return TPE_PARAM, None, '属性映射格式错误: {}'.format(msg)
 
-        user = '{}@{}'.format(admin, self._domain)
+        # user = '{}@{}'.format(admin, self._domain)
+        user = admin
         conn = ldap3.Connection(self._server, user=user, password=password, check_names=True, lazy=False, raise_exceptions=False)
         try:
             conn.open()
@@ -50,6 +51,25 @@ class Ldap(object):
         if not ('result' in conn.result and 0 == conn.result['result'] and 'description' in conn.result and 'success' == conn.result['description']):
             return TPE_FAILED, None, 'LDAP管理员认证失败'
 
+        # for test, list all attributes.
+        ret_a = conn.search(
+            search_base=self._base_dn,
+            size_limit=size_limit,
+
+            # search_filter='(&(sAMAccountName={}*)(&(objectClass=person)))'.format(username),
+            # search_filter=filter,  # (&(objectClass=person))
+            search_filter='(cn=*)',
+            search_scope=ldap3.SUBTREE,
+
+            # attributes=['cn', 'mail', 'sAMAccountName', 'objectGUID']
+            attributes=['*']
+        )
+        if len(conn.response) == 0:
+            return TPE_FAILED, [], ''
+        u = conn.response[0]
+        log.v(u['attributes'])
+
+        # ...
         ret = conn.search(
             search_base=self._base_dn,
             size_limit=size_limit,
