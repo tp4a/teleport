@@ -257,7 +257,7 @@ function tp_error_msg(error_code, message) {
     var msg = '';
     switch (error_code) {
         case TPE_NEED_LOGIN:
-            msg = '需要登录';
+            msg = '需要刷新页面，重新登录';
             break;
         case TPE_PRIVILEGE:
             msg = '没有此操作权限';

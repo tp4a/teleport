@@ -192,6 +192,9 @@ $app.create_controls = function (cb_stack) {
         $app.dlg_ldap_config.show();
     });
 
+    $app.dlg_ldap_list_attr_result = $app.create_dlg_ldap_list_attr_result();
+    cb_stack.add($app.dlg_ldap_list_attr_result.init);
+
     $app.dlg_ldap_test_result = $app.create_dlg_ldap_test_result();
     cb_stack.add($app.dlg_ldap_test_result.init);
 
@@ -1245,11 +1248,13 @@ $app.create_dlg_ldap_config = function () {
         btn_switch_password: $('#btn-switch-ldap-password'),
         btn_switch_password_icon: $('#btn-switch-ldap-password i'),
 
+        btn_list_attr: $('#btn-ldap-config-list-attr'),
         btn_test: $('#btn-ldap-config-test'),
         btn_save: $('#btn-ldap-config-save')
     };
 
     dlg.init = function (cb_stack) {
+        dlg.dom.btn_list_attr.click(dlg.do_list_attr);
         dlg.dom.btn_test.click(dlg.do_test);
         dlg.dom.btn_save.click(dlg.do_save);
 
@@ -1361,6 +1366,32 @@ $app.create_dlg_ldap_config = function () {
         return true;
     };
 
+    dlg.do_list_attr = function () {
+        if (!dlg.check_fields())
+            return;
+        dlg.dom.btn_test.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/user/do-ldap-config-list-attr', {
+                c: dlg.ldap_config,
+                p: dlg.ldap_config_password
+            },
+            function (ret) {
+                dlg.dom.btn_test.removeAttr('disabled');
+                if (ret.code === TPE_OK) {
+                    $tp.notify_success('列举LDAP用户属性成功！');
+                    console.log(ret.data);
+                    $app.dlg_ldap_list_attr_result.show(ret.data.attributes);
+                } else {
+                    $tp.notify_error('列举LDAP用户属性失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                dlg.dom.btn_test.removeAttr('disabled');
+                $tp.notify_error('网络故障，列举LDAP用户属性失败！');
+            },
+            15000
+        );
+    };
+
     dlg.do_test = function () {
         if (!dlg.check_fields())
             return;
@@ -1372,6 +1403,7 @@ $app.create_dlg_ldap_config = function () {
             function (ret) {
                 dlg.dom.btn_test.removeAttr('disabled');
                 if (ret.code === TPE_OK) {
+                    console.log(ret.data);
                     $tp.notify_success('LDAP连接测试成功！');
                     $app.dlg_ldap_test_result.show(ret.data);
                 } else {
@@ -1420,6 +1452,41 @@ $app.create_dlg_ldap_config = function () {
     return dlg;
 };
 
+$app.create_dlg_ldap_list_attr_result = function () {
+    var dlg = {};
+    dlg.dom_id = 'dlg-ldap-list-attr-result';
+
+    dlg.dom = {
+        dialog: $('#' + dlg.dom_id),
+        msg_ret: $('#msg-ldap-list-attr-ret')
+    };
+
+    dlg.init = function (cb_stack) {
+        cb_stack.exec();
+    };
+
+    dlg.show = function (data) {
+        dlg.dom.msg_ret.html('');
+
+        var h = [];
+
+        var attr_name;
+        for (attr_name in data) {
+            h.push('<div style="white-space:nowrap;"><span class="mono important">' + attr_name + '</span>: ');
+            // h.push('<span>'+data[attr_name]+'</span></div>');
+            h.push('<span>');
+            h.push(data[attr_name].join(', '));
+            h.push('</span></div>');
+        }
+
+        dlg.dom.msg_ret.html($(h.join('')));
+
+        dlg.dom.dialog.modal();
+    };
+
+    return dlg;
+};
+
 $app.create_dlg_ldap_test_result = function () {
     var dlg = {};
     dlg.dom_id = 'dlg-ldap-test-result';
@@ -1437,13 +1504,40 @@ $app.create_dlg_ldap_test_result = function () {
     dlg.show = function (data) {
         dlg.dom.table.empty();
 
+        // var h = [];
+        // var i, x;
+        // var th_created = false;
+        // for (i = 0; i < data.length; ++i) {
+        //     if (!th_created) {
+        //         h.push('<thead>');
+        //         for (x in data[i]) {
+        //             h.push('<th style="text-align:left;" class="mono">');
+        //             h.push(x);
+        //             h.push('</th>');
+        //         }
+        //         h.push('</thead>');
+        //         th_created = true;
+        //     }
+        //
+        //     h.push('<tr>');
+        //     for (x in data[i]) {
+        //         h.push('<td style="text-align:left;" class="mono">');
+        //         if (!_.isEmpty(data[i][x]))
+        //             h.push(data[i][x]);
+        //         else
+        //             h.push('');
+        //         h.push('</td>');
+        //     }
+        //     h.push('</tr>');
+        // }
+
         var h = [];
-        var i, x;
+        var dn, x;
         var th_created = false;
-        for (i = 0; i < data.length; ++i) {
+        for (dn in data) {
             if (!th_created) {
                 h.push('<thead>');
-                for (x in data[i]) {
+                for (x in data[dn]) {
                     h.push('<th style="text-align:left;" class="mono">');
                     h.push(x);
                     h.push('</th>');
@@ -1453,16 +1547,17 @@ $app.create_dlg_ldap_test_result = function () {
             }
 
             h.push('<tr>');
-            for (x in data[i]) {
+            for (x in data[dn]) {
                 h.push('<td style="text-align:left;" class="mono">');
-                if (!_.isEmpty(data[i][x]))
-                    h.push(data[i][x]);
+                if (!_.isEmpty(data[dn][x]))
+                    h.push(data[dn][x]);
                 else
                     h.push('');
                 h.push('</td>');
             }
             h.push('</tr>');
         }
+
 
         dlg.dom.table.append($(h.join('')));
         dlg.dom.dialog.modal();

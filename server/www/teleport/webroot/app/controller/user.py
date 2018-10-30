@@ -929,7 +929,8 @@ class DoLdapConfigTestHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         try:
-            ldap = Ldap(cfg['host'], cfg['port'], cfg['base_dn'], cfg['domain'])
+            # ldap = Ldap(cfg['host'], cfg['port'], cfg['base_dn'], cfg['domain'])
+            ldap = Ldap(cfg['host'], cfg['port'], cfg['base_dn'])
             ret, data, err_msg = ldap.list_users(cfg['admin'], password, cfg['filter'], cfg['attr_map'], size_limit=10)
             if ret != TPE_OK:
                 return self.write_json(ret, message=err_msg)
@@ -939,4 +940,36 @@ class DoLdapConfigTestHandler(TPBaseJsonHandler):
             log.e('')
             return self.write_json(TPE_PARAM)
 
+
+class DoLdapListUserAttrHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            cfg = args['c']
+            cfg['port'] = int(cfg['port'])
+            password = args['p']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        try:
+            ldap = Ldap(cfg['host'], cfg['port'], cfg['base_dn'])
+            ret, data, err_msg = ldap.get_all_attr(cfg['admin'], password, cfg['filter'])
+            if ret != TPE_OK:
+                return self.write_json(ret, message=err_msg)
+            else:
+                return self.write_json(ret, data=data)
+        except:
+            log.e('')
+            return self.write_json(TPE_PARAM)
 

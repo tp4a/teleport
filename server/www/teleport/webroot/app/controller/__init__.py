@@ -82,6 +82,8 @@ controllers = [
     (r'/user/do-unbind-oath', user.DoUnBindOathHandler),
     #  - [json] 测试LDAP的配置
     (r'/user/do-ldap-config-test', user.DoLdapConfigTestHandler),
+    #  - [json] 列出LDAP服务器的用户的属性，便于管理员做属性映射
+    (r'/user/do-ldap-config-list-attr', user.DoLdapListUserAttrHandler),
     #
     #  - 用户组管理页面
     (r'/user/group', user.GroupListHandler),

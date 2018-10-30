@@ -389,7 +389,7 @@
                     <div class="form-horizontal">
 
                         <div class="form-group form-group-sm">
-                            <label for="edit-ldap-host" class="col-sm-2 control-label require">主机：</label>
+                            <label for="edit-ldap-host" class="col-sm-2 control-label require">LDAP主机：</label>
                             <div class="col-sm-4">
                                 <input id="edit-ldap-host" type="text" class="form-control" placeholder="LDAP服务器IP或域名" value="192.168.0.10"/>
                             </div>
@@ -408,17 +408,17 @@
                                 <input id="edit-ldap-domain" type="text" class="form-control" placeholder="" value="apexnas.com"/>
                             </div>
                             <div class="col-sm-6">
-                                <div class="control-desc">teleport将会用 <span class="important">用户名@域</span> 来访问此LDAP服务器。</div>
+                                <div class="control-desc-sm">LDAP的账号使用 <span class="important">用户名@域</span> 来登录teleport。</div>
                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
-                            <label for="edit-ldap-admin" class="col-sm-2 control-label require">管理员：</label>
+                            <label for="edit-ldap-admin" class="col-sm-2 control-label require">管理员DN：</label>
                             <div class="col-sm-4">
                                 <input id="edit-ldap-admin" type="text" class="form-control" placeholder="" value="cn=admin,dc=apexnas,dc=com"/>
                             </div>
                             <div class="col-sm-6">
-                                <div class="control-desc">LDAP服务的管理员账号，用于列举用户、同步账号。</div>
+                                <div class="control-desc-sm">LDAP服务的管理员账号，用于列举用户、同步账号。</div>
                             </div>
                         </div>
 
@@ -429,6 +429,9 @@
                                     <input id="edit-ldap-password" type="password" class="form-control mono" placeholder="" value="Abcd1234"/>
                                     <span class="input-group-btn"><button class="btn btn-sm btn-default" type="button" id="btn-switch-ldap-password"><i class="fa fa-eye fa-fw"></i></button></span>
                                 </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="control-desc-sm">LDAP服务的管理员密码。</div>
                             </div>
                         </div>
 
@@ -457,10 +460,10 @@
                         <div class="form-group form-group-sm">
                             <label for="edit-ldap-attr-map" class="col-sm-2 control-label require">属性映射：</label>
                             <div class="col-sm-9">
-                                <textarea id="edit-ldap-attr-map" class="form-control" style="resize:vertical;height:8em;" placeholder="">tp.username = sAMAccountName
+                                <textarea id="edit-ldap-attr-map" class="form-control" style="resize:vertical;height:8em;" placeholder="">tp.username = uid
 tp.surname = cn
 tp.email = mail</textarea>
-                                <div class="control-desc-sm">将LDAP的属性映射到 teleport 的用户属性，例如 <span class="important">LDAP中的用户sAMAccountName 映射到teleport的登录账号</span>。</div>
+                                <div class="control-desc-sm">将LDAP的属性映射到 teleport 的用户属性，例如 <span class="important">LDAP中的用户属性 sAMAccountName 映射为teleport的登录账号</span>。如果不清楚此LDAP服务的用户属性，可使用下方的“列举属性”按钮进行查询。</div>
                             </div>
                         </div>
 
@@ -474,9 +477,46 @@ tp.email = mail</textarea>
                             <div id="edit-user-message" class="alert alert-danger" style="text-align:left;display:none;"></div>
                         </div>
                         <div class="col-sm-6" style="text-align:right;">
-                            <button type="button" class="btn btn-sm btn-success" id="btn-ldap-config-test"><i class="fa fa-bolt fa-fw"></i> 测试连接</button>
+                            <button type="button" class="btn btn-sm btn-success" id="btn-ldap-config-list-attr"><i class="fa fa-list-alt fa-fw"></i> 列举属性</button>
+                            <button type="button" class="btn btn-sm btn-success" id="btn-ldap-config-test"><i class="fa fa-bolt fa-fw"></i> 测试获取用户</button>
                             <button type="button" class="btn btn-sm btn-primary" id="btn-ldap-config-save"><i class="fa fa-check fa-fw"></i> 保存设置</button>
                             <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="dlg-ldap-list-attr-result" tabindex="-1" role="dialog">
+        <div class="modal-dialog" style="margin-top:50px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
+                    <h3 class="modal-title">LDAP用户属性一览</h3>
+                </div>
+                <div class="modal-body">
+
+                    <div class="form-horizontal">
+                        <div style="margin-bottom:8px;">
+                            用户属性列表
+                        </div>
+
+                        <div class="form-group form-group-sm">
+
+                            <div class="col-sm-12">
+                                <div id="msg-ldap-list-attr-ret" style="height:20em;overflow:scroll;padding:5px;border: 1px solid #747474;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-sm-12" style="text-align:right;">
+                            <button type="button" class="btn btn-sm btn-primary" data-dismiss="modal"><i class="fa fa-check fa-fw"></i> 确定</button>
                         </div>
                     </div>
                 </div>
