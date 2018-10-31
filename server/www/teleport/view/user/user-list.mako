@@ -389,23 +389,23 @@
                     <div class="form-horizontal">
 
                         <div class="form-group form-group-sm">
-                            <label for="edit-ldap-host" class="col-sm-2 control-label require">LDAP主机：</label>
+                            <label for="edit-ldap-server" class="col-sm-2 control-label require">LDAP主机：</label>
                             <div class="col-sm-4">
-                                <input id="edit-ldap-host" type="text" class="form-control" placeholder="LDAP服务器IP或域名" value="192.168.0.10"/>
+                                <input id="edit-ldap-server" type="text" class="form-control" placeholder="LDAP服务器IP或域名" />
                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
                             <label for="edit-ldap-port" class="col-sm-2 control-label require">端口：</label>
                             <div class="col-sm-4">
-                                <input id="edit-ldap-port" type="text" class="form-control" placeholder="LDAP端口，默认为389" value="389"/>
+                                <input id="edit-ldap-port" type="text" class="form-control" placeholder="LDAP端口，默认为389" />
                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
                             <label for="edit-ldap-domain" class="col-sm-2 control-label require">域：</label>
                             <div class="col-sm-4">
-                                <input id="edit-ldap-domain" type="text" class="form-control" placeholder="" value="apexnas.com"/>
+                                <input id="edit-ldap-domain" type="text" class="form-control" placeholder="" />
                             </div>
                             <div class="col-sm-6">
                                 <div class="control-desc-sm">LDAP的账号使用 <span class="important">用户名@域</span> 来登录teleport。</div>
@@ -415,7 +415,7 @@
                         <div class="form-group form-group-sm">
                             <label for="edit-ldap-admin" class="col-sm-2 control-label require">管理员DN：</label>
                             <div class="col-sm-4">
-                                <input id="edit-ldap-admin" type="text" class="form-control" placeholder="" value="cn=admin,dc=apexnas,dc=com"/>
+                                <input id="edit-ldap-admin" type="text" class="form-control" placeholder="" />
                             </div>
                             <div class="col-sm-6">
                                 <div class="control-desc-sm">LDAP服务的管理员账号，用于列举用户、同步账号。</div>
@@ -426,7 +426,7 @@
                             <label for="edit-ldap-password" class="col-sm-2 control-label require">密码：</label>
                             <div class="col-sm-4">
                                 <div class="input-group">
-                                    <input id="edit-ldap-password" type="password" class="form-control mono" placeholder="" value="Abcd1234"/>
+                                    <input id="edit-ldap-password" type="password" class="form-control mono" placeholder="" />
                                     <span class="input-group-btn"><button class="btn btn-sm btn-default" type="button" id="btn-switch-ldap-password"><i class="fa fa-eye fa-fw"></i></button></span>
                                 </div>
                             </div>
@@ -444,7 +444,7 @@
                         <div class="form-group form-group-sm">
                             <label for="edit-ldap-base-dn" class="col-sm-2 control-label require">用户基准DN：</label>
                             <div class="col-sm-9">
-                                <input id="edit-ldap-base-dn" type="text" class="form-control" placeholder="" value="ou=people,dc=apexnas,dc=com"/>
+                                <input id="edit-ldap-base-dn" type="text" class="form-control" placeholder="" />
                                 <div class="control-desc-sm">限制用户DN的范围，例如 <span class="important">ou=dev,ou=company,ou=com</span>。用户的完整DN为 <span class="important">cn=用户登录名,用户基准DN</span>。</div>
                             </div>
                         </div>
@@ -460,9 +460,7 @@
                         <div class="form-group form-group-sm">
                             <label for="edit-ldap-attr-map" class="col-sm-2 control-label require">属性映射：</label>
                             <div class="col-sm-9">
-                                <textarea id="edit-ldap-attr-map" class="form-control" style="resize:vertical;height:8em;" placeholder="">tp.username = uid
-tp.surname = cn
-tp.email = mail</textarea>
+                                <textarea id="edit-ldap-attr-map" class="form-control" style="resize:vertical;height:8em;" placeholder="">t</textarea>
                                 <div class="control-desc-sm">将LDAP的属性映射到 teleport 的用户属性，例如 <span class="important">LDAP中的用户属性 sAMAccountName 映射为teleport的登录账号</span>。如果不清楚此LDAP服务的用户属性，可使用下方的“列举属性”按钮进行查询。</div>
                             </div>
                         </div>

@@ -28,7 +28,7 @@ $app.on_init = function (cb_stack) {
     };
 
     cb_stack
-    // .add($app.test)
+        .add($app.test)
         .add($app.create_controls)
         .add($app.load_role_list);
 
@@ -36,7 +36,7 @@ $app.on_init = function (cb_stack) {
 };
 
 $app.test = function (cb) {
-    cb.add($app.dlg_reset_password.show_edit);
+    cb.add($app.dlg_ldap_config.show);
     cb.exec();
 };
 
@@ -1225,18 +1225,20 @@ $app.create_dlg_ldap_config = function () {
     dlg.dom_id = 'dlg-ldap-config';
     dlg.mode = 'set'; // edit or set
     dlg.ldap_config = {
-        host: '',
+        server: '',
         port: '',
         domain: '',
+        admin: '',
+        password: '',
         base_dn: '',
         filter: '',
         attr_map: ''
     };
-    dlg.ldap_config_password = '';
+    // {"server":"192.168.0.101","port":3892,"domain":"apexnas.com","admin":"cn=admin,dc=apexnas,dc=com","password":"Abcd1234","base_dn":"ou=people,dc=apexnas,dc=com","filter":"(&(objectClass=person))","attr_map":"tp.username = uid\ntp.surname = cn111\ntp.email = mail"}
 
     dlg.dom = {
         dialog: $('#' + dlg.dom_id),
-        host: $('#edit-ldap-host'),
+        server: $('#edit-ldap-server'),
         port: $('#edit-ldap-port'),
         domain: $('#edit-ldap-domain'),
         admin: $('#edit-ldap-admin'),
@@ -1273,41 +1275,36 @@ $app.create_dlg_ldap_config = function () {
                 dlg.dom.btn_switch_password_icon.removeClass('fa-eye-slash').addClass('fa-eye')
             }
         });
-        //
-        // if (!$app.options.sys_smtp)
-        //     dlg.dom.msg_cannot_send_email.text('未配置邮件发送服务');
-        dlg.dom.dialog.modal({backdrop: 'static'});
 
         cb_stack.exec();
     };
 
-    dlg.init_fields = function (ldap_config) {
-        // dlg.field_id = user.id;
-        // dlg.field_email = user.email;
-        // dlg.dom.dlg_title.html('密码重置：' + user.surname);
-        //
-        // dlg.dom.password.val('');
-        //
-        // if (!$app.options.sys_smtp || user.email.length === 0) {
-        //     dlg.dom.email.text('');
-        //     dlg.dom.can_send_email.hide();
-        //     dlg.dom.cannot_send_email.show();
-        // } else {
-        //     dlg.dom.email.text(user.email);
-        //     dlg.dom.can_send_email.show();
-        //     dlg.dom.cannot_send_email.hide();
-        // }
+    dlg.init_fields = function () {
+        if(0 === $app.options.sys_cfg.ldap.server.length) {
+            dlg.mode = 'set';
+        } else {
+            dlg.ldap_config = $app.options.sys_cfg.ldap;
+
+            dlg.mode = 'edit';
+            // dlg.dom.password.val();
+            dlg.dom.server.val(dlg.ldap_config.server);
+            dlg.dom.port.val(dlg.ldap_config.port);
+            dlg.dom.domain.val(dlg.ldap_config.domain);
+            dlg.dom.admin.val(dlg.ldap_config.admin);
+            dlg.dom.base_dn.val(dlg.ldap_config.base_dn);
+            dlg.dom.filter.val(dlg.ldap_config.filter);
+            dlg.dom.attr_map.text(dlg.ldap_config.attr_map);
+        }
     };
 
     dlg.show = function () {
-        // var user = $app.table_users.get_row(row_id);
-        // dlg.init_fields(user);
+        dlg.init_fields();
         dlg.dom.dialog.modal({backdrop: 'static'});
     };
 
     dlg.check_fields = function () {
-        dlg.ldap_config_password = dlg.dom.password.val();
-        dlg.ldap_config.host = dlg.dom.host.val();
+        dlg.ldap_config.password = dlg.dom.password.val();
+        dlg.ldap_config.server = dlg.dom.server.val();
         dlg.ldap_config.domain = dlg.dom.domain.val();
         dlg.ldap_config.port = parseInt(dlg.dom.port.val());
         dlg.ldap_config.admin = dlg.dom.admin.val();
@@ -1315,8 +1312,8 @@ $app.create_dlg_ldap_config = function () {
         dlg.ldap_config.filter = dlg.dom.filter.val();
         dlg.ldap_config.attr_map = dlg.dom.attr_map.val();
 
-        if (!tp_is_host(dlg.ldap_config.host)) {
-            dlg.dom.host.focus();
+        if (!tp_is_host(dlg.ldap_config.server)) {
+            dlg.dom.server.focus();
             $tp.notify_error('请填写LDAP主机地址！');
             return false;
         }
@@ -1342,11 +1339,15 @@ $app.create_dlg_ldap_config = function () {
             $tp.notify_error('请填写LDAP的管理员用户名！');
             return false;
         }
-        if (tp_is_empty_str(dlg.ldap_config_password)) {
-            dlg.dom.password.focus();
-            $tp.notify_error('请填写LDAP的管理员密码！');
-            return false;
+
+        if(dlg.mode === 'set') {
+            if (tp_is_empty_str(dlg.ldap_config.password)) {
+                dlg.dom.password.focus();
+                $tp.notify_error('请填写LDAP的管理员密码！');
+                return false;
+            }
         }
+
         if (tp_is_empty_str(dlg.ldap_config.base_dn)) {
             dlg.dom.base_dn.focus();
             $tp.notify_error('请填写LDAP的用户基准DN！');
@@ -1369,13 +1370,12 @@ $app.create_dlg_ldap_config = function () {
     dlg.do_list_attr = function () {
         if (!dlg.check_fields())
             return;
-        dlg.dom.btn_test.attr('disabled', 'disabled');
+        dlg.dom.btn_list_attr.attr('disabled', 'disabled');
         $tp.ajax_post_json('/user/do-ldap-config-list-attr', {
-                c: dlg.ldap_config,
-                p: dlg.ldap_config_password
+                ldap: dlg.ldap_config
             },
             function (ret) {
-                dlg.dom.btn_test.removeAttr('disabled');
+                dlg.dom.btn_list_attr.removeAttr('disabled');
                 if (ret.code === TPE_OK) {
                     $tp.notify_success('列举LDAP用户属性成功！');
                     console.log(ret.data);
@@ -1385,7 +1385,7 @@ $app.create_dlg_ldap_config = function () {
                 }
             },
             function () {
-                dlg.dom.btn_test.removeAttr('disabled');
+                dlg.dom.btn_list_attr.removeAttr('disabled');
                 $tp.notify_error('网络故障，列举LDAP用户属性失败！');
             },
             15000
@@ -1397,8 +1397,7 @@ $app.create_dlg_ldap_config = function () {
             return;
         dlg.dom.btn_test.attr('disabled', 'disabled');
         $tp.ajax_post_json('/user/do-ldap-config-test', {
-                c: dlg.ldap_config,
-                p: dlg.ldap_config_password
+                ldap: dlg.ldap_config
             },
             function (ret) {
                 dlg.dom.btn_test.removeAttr('disabled');
@@ -1416,37 +1415,31 @@ $app.create_dlg_ldap_config = function () {
             },
             15000
         );
-
     };
 
     dlg.do_save = function () {
         if (!dlg.check_fields())
             return;
-        //     dlg.field_password = dlg.dom.password.val();
-        //     if (dlg.field_password.length === 0) {
-        //         dlg.dom.field_password.focus();
-        //         $tp.notify_error('请先填写用户的新密码！');
-        //         return;
-        //     }
-        //
-        //     $tp.ajax_post_json('/user/do-reset-password', {
-        //             mode: 2,
-        //             id: dlg.field_id,
-        //             password: dlg.field_password
-        //         },
-        //         function (ret) {
-        //             if (ret.code === TPE_OK) {
-        //                 $tp.notify_success('用户密码重置成功！');
-        //                 dlg.dom.dialog.modal('hide');
-        //             } else {
-        //                 $tp.notify_error('用户密码重置失败：' + tp_error_msg(ret.code, ret.message));
-        //             }
-        //         },
-        //         function () {
-        //             $tp.notify_error('网络故障，用户密码重置失败！');
-        //         }
-        //     );
-        //
+        dlg.dom.btn_save.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/system/save-cfg', {
+                ldap: dlg.ldap_config
+            },
+            function (ret) {
+                dlg.dom.btn_save.removeAttr('disabled');
+                if (ret.code === TPE_OK) {
+                    $app.options.sys_cfg.ldap = dlg.ldap_config;
+                    $tp.notify_success('保存LDAP设置成功！');
+                } else {
+                    $tp.notify_error('保存LDAP设置失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                dlg.dom.btn_save.removeAttr('disabled');
+                $tp.notify_error('网络故障，保存LDAP设置失败！');
+            },
+            15000
+        );
+
     };
 
     return dlg;

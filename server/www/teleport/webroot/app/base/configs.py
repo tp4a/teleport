@@ -146,7 +146,8 @@ class BaseAppConfig(dict):
                 for k in sections[sec_name]:
                     _k = k.replace('-', '_')
                     have_comment = False
-                    if sec_name in self['_cfg_default'] and _k in self['_cfg_default'][sec_name] and 'comment' in self['_cfg_default'][sec_name][_k]:
+                    if sec_name in self['_cfg_default'] and _k in self['_cfg_default'][sec_name] and 'comment' in \
+                            self['_cfg_default'][sec_name][_k]:
                         comments = self['_cfg_default'][sec_name][_k]['comment']
                         if comments is not None:
                             comments = self['_cfg_default'][sec_name][_k]['comment'].split('\n')
@@ -266,6 +267,7 @@ class AppConfig(BaseAppConfig):
         self.sys = AttrDict()
         self.sys.loaded = False
         self.sys_smtp_password = ''  # 密码单独处理，避免无意中传递给前端页面了
+        self.sys_ldap_password = ''
 
     def _on_init(self):
         self.set_default('common::ip', '0.0.0.0', 'ip=0.0.0.0')
@@ -313,7 +315,8 @@ class AppConfig(BaseAppConfig):
     def _on_get_save_info(self):
         return [
             {'common': ['ip', 'port', 'log-file', 'log-level', 'debug-mode', 'core-server-rpc']},
-            {'database': ['type', 'sqlite-file', 'mysql-host', 'mysql-port', 'mysql-db', 'mysql-prefix', 'mysql-user', 'mysql-password']}
+            {'database': ['type', 'sqlite-file', 'mysql-host', 'mysql-port', 'mysql-db', 'mysql-prefix', 'mysql-user',
+                          'mysql-password']}
         ]
 
     def _on_load(self, cfg_parser):
@@ -554,6 +557,35 @@ class AppConfig(BaseAppConfig):
             self.sys.storage.cleanup_hour = 4
         if not self.sys.storage.is_exists('cleanup_minute'):
             self.sys.storage.cleanup_minute = 30
+
+        # =====================================
+        # LDAP相关
+        # =====================================
+        self.sys_ldap_password = ''
+        try:
+            _ldap = json.loads(conf_data['ldap'])
+        except:
+            log.w('ldap config not set or invalid, use default.\n')
+            _ldap = {}
+
+        self.sys.ldap = tp_convert_to_attr_dict(_ldap)
+        if not self.sys.ldap.is_exists('server'):
+            self.sys.ldap.server = ''
+        if not self.sys.ldap.is_exists('port'):
+            self.sys.ldap.port = 389
+        if not self.sys.ldap.is_exists('domain'):
+            self.sys.ldap.domain = ''
+        if not self.sys.ldap.is_exists('admin'):
+            self.sys.ldap.admin = ''
+        if not self.sys.ldap.is_exists('base_dn'):
+            self.sys.ldap.base_dn = ''
+        if not self.sys.ldap.is_exists('filter'):
+            self.sys.ldap.filter = ''
+        if not self.sys.ldap.is_exists('attr_map'):
+            self.sys.ldap.attr_map = ''
+        if self.sys.ldap.is_exists('password'):
+            self.sys_ldap_password = self.sys.ldap.password
+            self.sys.ldap.password = '********'
 
         self.sys.loaded = True
 

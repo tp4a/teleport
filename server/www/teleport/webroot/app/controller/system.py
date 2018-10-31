@@ -241,6 +241,9 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 _sender = _cfg['sender']
                 _password = _cfg['password']
 
+                # TODO: encrypt the password before save by core-service.
+                # TODO: if not send password, use pre-saved password.
+
                 err = system_model.save_config(self, '更新SMTP设置', 'smtp', _cfg)
                 if err == TPE_OK:
                     # 同时更新内存缓存
@@ -329,6 +332,35 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                     tp_cfg().sys.storage.keep_record = _keep_record
                     tp_cfg().sys.storage.cleanup_hour = _cleanup_hour
                     tp_cfg().sys.storage.cleanup_minute = _cleanup_minute
+                else:
+                    return self.write_json(err)
+
+            if 'ldap' in args:
+                processed = True
+                _cfg = args['ldap']
+                _password = _cfg['password']
+                _server = _cfg['server']
+                _port = _cfg['port']
+                _domain = _cfg['domain']
+                _admin = _cfg['admin']
+                _base_dn = _cfg['base_dn']
+                _filter = _cfg['filter']
+                _attr_map = _cfg['attr_map']
+
+                # TODO: encrypt the password before save by core-service.
+                # TODO: if not send password, use pre-saved password.
+
+                err = system_model.save_config(self, '更新LDAP设置', 'ldap', _cfg)
+                if err == TPE_OK:
+                    tp_cfg().sys.ldap.server = _server
+                    tp_cfg().sys.ldap.port = _port
+                    tp_cfg().sys.ldap.domain = _domain
+                    tp_cfg().sys.ldap.admin = _admin
+                    tp_cfg().sys.ldap.base_dn = _base_dn
+                    tp_cfg().sys.ldap.filter = _filter
+                    tp_cfg().sys.ldap.attr_map = _attr_map
+                    # 特殊处理，防止前端拿到密码
+                    tp_cfg().sys_ldap_password = _password
                 else:
                     return self.write_json(err)
 
