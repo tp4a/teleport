@@ -62,7 +62,7 @@ void TsHttpRpc::_thread_loop(void)
 {
 	EXLOGI("[core] TeleportServer-RPC ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 
-	while (!m_stop_flag)
+	while (!m_need_stop)
 	{
 		mg_mgr_poll(&m_mg_mgr, 500);
 	}
@@ -70,10 +70,6 @@ void TsHttpRpc::_thread_loop(void)
 	EXLOGV("[core] rpc main loop end.\n");
 }
 
-void TsHttpRpc::_set_stop_flag(void)
-{
-	m_stop_flag = true;
-}
 
 bool TsHttpRpc::init(void)
 {

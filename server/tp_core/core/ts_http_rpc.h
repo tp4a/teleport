@@ -20,7 +20,6 @@ public:
 
 protected:
 	void _thread_loop(void);
-	void _set_stop_flag(void);
 
 private:
 	ex_rv _parse_request(struct http_message* req, ex_astr& func_cmd, Json::Value& json_param);

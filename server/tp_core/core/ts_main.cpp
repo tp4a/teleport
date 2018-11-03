@@ -10,96 +10,93 @@
 
 bool g_exit_flag = false;
 
-TPP_CONNECT_INFO* tpp_get_connect_info(const char* sid)
-{
-	TS_CONNECT_INFO sinfo;
-	bool ret = g_session_mgr.get_connect_info(sid, sinfo);
-	if (!ret)
-		return NULL;
+TPP_CONNECT_INFO *tpp_get_connect_info(const char *sid) {
+    TS_CONNECT_INFO sinfo;
+    bool ret = g_session_mgr.get_connect_info(sid, sinfo);
+    if (!ret)
+        return NULL;
 
-	TPP_CONNECT_INFO* info = (TPP_CONNECT_INFO*)calloc(1, sizeof(TPP_CONNECT_INFO));
-	
-	info->sid = (char*)calloc(1, sinfo.sid.length() + 1);
-	ex_strcpy(info->sid, sinfo.sid.length() + 1, sinfo.sid.c_str());
-	info->user_username = (char*)calloc(1, sinfo.user_username.length() + 1);
-	ex_strcpy(info->user_username, sinfo.user_username.length() + 1, sinfo.user_username.c_str());
-	info->host_ip = (char*)calloc(1, sinfo.host_ip.length() + 1);
-	ex_strcpy(info->host_ip, sinfo.host_ip.length() + 1, sinfo.host_ip.c_str());
-	info->conn_ip = (char*)calloc(1, sinfo.conn_ip.length() + 1);
-	ex_strcpy(info->conn_ip, sinfo.conn_ip.length() + 1, sinfo.conn_ip.c_str());
-	info->client_ip = (char*)calloc(1, sinfo.client_ip.length() + 1);
-	ex_strcpy(info->client_ip, sinfo.client_ip.length() + 1, sinfo.client_ip.c_str());
-	info->acc_username = (char*)calloc(1, sinfo.acc_username.length() + 1);
-	ex_strcpy(info->acc_username, sinfo.acc_username.length() + 1, sinfo.acc_username.c_str());
-	info->acc_secret = (char*)calloc(1, sinfo.acc_secret.length() + 1);
-	ex_strcpy(info->acc_secret, sinfo.acc_secret.length() + 1, sinfo.acc_secret.c_str());
-	info->username_prompt = (char*)calloc(1, sinfo.username_prompt.length() + 1);
-	ex_strcpy(info->username_prompt, sinfo.username_prompt.length() + 1, sinfo.username_prompt.c_str());
-	info->password_prompt = (char*)calloc(1, sinfo.password_prompt.length() + 1);
-	ex_strcpy(info->password_prompt, sinfo.password_prompt.length() + 1, sinfo.password_prompt.c_str());
+    TPP_CONNECT_INFO *info = (TPP_CONNECT_INFO *) calloc(1, sizeof(TPP_CONNECT_INFO));
 
-	info->user_id = sinfo.user_id;
-	info->host_id = sinfo.host_id;
-	info->acc_id = sinfo.acc_id;
-	info->conn_port = sinfo.conn_port;
-	info->protocol_type = sinfo.protocol_type;
-	info->protocol_sub_type = sinfo.protocol_sub_type;
-	info->protocol_flag = sinfo.protocol_flag;
-	info->record_flag = sinfo.record_flag;
-	info->auth_type= sinfo.auth_type;
+    info->sid = (char *) calloc(1, sinfo.sid.length() + 1);
+    ex_strcpy(info->sid, sinfo.sid.length() + 1, sinfo.sid.c_str());
+    info->user_username = (char *) calloc(1, sinfo.user_username.length() + 1);
+    ex_strcpy(info->user_username, sinfo.user_username.length() + 1, sinfo.user_username.c_str());
+    info->host_ip = (char *) calloc(1, sinfo.host_ip.length() + 1);
+    ex_strcpy(info->host_ip, sinfo.host_ip.length() + 1, sinfo.host_ip.c_str());
+    info->conn_ip = (char *) calloc(1, sinfo.conn_ip.length() + 1);
+    ex_strcpy(info->conn_ip, sinfo.conn_ip.length() + 1, sinfo.conn_ip.c_str());
+    info->client_ip = (char *) calloc(1, sinfo.client_ip.length() + 1);
+    ex_strcpy(info->client_ip, sinfo.client_ip.length() + 1, sinfo.client_ip.c_str());
+    info->acc_username = (char *) calloc(1, sinfo.acc_username.length() + 1);
+    ex_strcpy(info->acc_username, sinfo.acc_username.length() + 1, sinfo.acc_username.c_str());
+    info->acc_secret = (char *) calloc(1, sinfo.acc_secret.length() + 1);
+    ex_strcpy(info->acc_secret, sinfo.acc_secret.length() + 1, sinfo.acc_secret.c_str());
+    info->username_prompt = (char *) calloc(1, sinfo.username_prompt.length() + 1);
+    ex_strcpy(info->username_prompt, sinfo.username_prompt.length() + 1, sinfo.username_prompt.c_str());
+    info->password_prompt = (char *) calloc(1, sinfo.password_prompt.length() + 1);
+    ex_strcpy(info->password_prompt, sinfo.password_prompt.length() + 1, sinfo.password_prompt.c_str());
 
-	return info;
+    info->user_id = sinfo.user_id;
+    info->host_id = sinfo.host_id;
+    info->acc_id = sinfo.acc_id;
+    info->conn_port = sinfo.conn_port;
+    info->protocol_type = sinfo.protocol_type;
+    info->protocol_sub_type = sinfo.protocol_sub_type;
+    info->protocol_flag = sinfo.protocol_flag;
+    info->record_flag = sinfo.record_flag;
+    info->auth_type = sinfo.auth_type;
+
+    return info;
 }
 
-void tpp_free_connect_info(TPP_CONNECT_INFO* info)
-{
-	if (NULL == info)
-		return;
+void tpp_free_connect_info(TPP_CONNECT_INFO *info) {
+    if (NULL == info)
+        return;
 
-	g_session_mgr.free_connect_info(info->sid);
+    g_session_mgr.free_connect_info(info->sid);
 
-	free(info->sid);
-	free(info->user_username);
-	free(info->host_ip);
-	free(info->conn_ip);
-	free(info->client_ip);
-	free(info->acc_username);
-	free(info->acc_secret);
-	free(info->username_prompt);
-	free(info->password_prompt);
-	free(info);
+    free(info->sid);
+    free(info->user_username);
+    free(info->host_ip);
+    free(info->conn_ip);
+    free(info->client_ip);
+    free(info->acc_username);
+    free(info->acc_secret);
+    free(info->username_prompt);
+    free(info->password_prompt);
+    free(info);
 }
 
-bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id)
-{
-	if (NULL == info || NULL == db_id)
-		return false;
+bool tpp_session_begin(const TPP_CONNECT_INFO *info, int *db_id) {
+    if (NULL == info || NULL == db_id)
+        return false;
 
-	TS_CONNECT_INFO sinfo;
-	sinfo.sid = info->sid;
-	sinfo.user_id = info->user_id;
-	sinfo.host_id = info->host_id;
-	sinfo.acc_id = info->acc_id;
-	sinfo.user_username = info->user_username;
-	sinfo.host_ip = info->host_ip;
-	sinfo.conn_ip = info->conn_ip;
-	sinfo.client_ip = info->client_ip;
-	sinfo.acc_username = info->acc_username;
+    TS_CONNECT_INFO sinfo;
+    sinfo.sid = info->sid;
+    sinfo.user_id = info->user_id;
+    sinfo.host_id = info->host_id;
+    sinfo.acc_id = info->acc_id;
+    sinfo.user_username = info->user_username;
+    sinfo.host_ip = info->host_ip;
+    sinfo.conn_ip = info->conn_ip;
+    sinfo.client_ip = info->client_ip;
+    sinfo.acc_username = info->acc_username;
 
-	sinfo.conn_port = info->conn_port;
-	sinfo.protocol_type = info->protocol_type;
-	sinfo.protocol_sub_type = info->protocol_sub_type;
-	sinfo.auth_type = info->auth_type;
+    sinfo.conn_port = info->conn_port;
+    sinfo.protocol_type = info->protocol_type;
+    sinfo.protocol_sub_type = info->protocol_sub_type;
+    sinfo.auth_type = info->auth_type;
 
-	return ts_web_rpc_session_begin(sinfo, *db_id);
+    return ts_web_rpc_session_begin(sinfo, *db_id);
 }
 
 bool tpp_session_update(int db_id, int protocol_sub_type, int state) {
-	return ts_web_rpc_session_update(db_id, protocol_sub_type, state);
+    return ts_web_rpc_session_update(db_id, protocol_sub_type, state);
 }
 
-bool tpp_session_end(const char* sid, int db_id, int ret) {
-	return ts_web_rpc_session_end(sid, db_id, ret);
+bool tpp_session_end(const char *sid, int db_id, int ret) {
+    return ts_web_rpc_session_end(sid, db_id, ret);
 }
 
 // typedef struct TPP_LIB
@@ -246,87 +243,78 @@ bool tpp_session_end(const char* sid, int db_id, int ret) {
 // 	}
 // }
 
-int ts_main(void)
-{
-	ExIniFile& ini = g_env.get_ini();
+int ts_main(void) {
+    ExIniFile &ini = g_env.get_ini();
 
-	EXLOGI(L"\n");
-	EXLOGI(L"###############################################################\n");
-	EXLOGI(L"Load config file: %ls.\n", ini.get_filename().c_str());
-	EXLOGI(L"Teleport Core Server starting ...\n");
+    EXLOGI(L"\n");
+    EXLOGI(L"###############################################################\n");
+    EXLOGI(L"Load config file: %ls.\n", ini.get_filename().c_str());
+    EXLOGI(L"Teleport Core Server starting ...\n");
 
-	ex_ini_sections& secs = ini.GetAllSections();
-	TsHttpRpc rpc;
+    ex_ini_sections &secs = ini.GetAllSections();
+    TsHttpRpc rpc;
 
-	// 枚举配置文件中的[protocol-xxx]小节，加载对应的协议动态库
-	bool all_ok = true;
+    // 枚举配置文件中的[protocol-xxx]小节，加载对应的协议动态库
+    bool all_ok = true;
 
-	do {
-		if (!g_session_mgr.start())
-		{
-			EXLOGE(L"[core] failed to start session-id manager.\n");
-			all_ok = false;
-			break;
-		}
+    do {
+        if (!g_session_mgr.start()) {
+            EXLOGE(L"[core] failed to start session-id manager.\n");
+            all_ok = false;
+            break;
+        }
 
-		if (!rpc.init() || !rpc.start())
-		{
-			EXLOGE(L"[core] rpc init/start failed.\n");
-			all_ok = false;
-			break;
-		}
+        if (!rpc.init() || !rpc.start()) {
+            EXLOGE(L"[core] rpc init/start failed.\n");
+            all_ok = false;
+            break;
+        }
 
-		ex_ini_sections::iterator it = secs.begin();
-		for (; it != secs.end(); ++it)
-		{
-			if (it->first.length() > 9 && 0 == wcsncmp(it->first.c_str(), L"protocol-", 9))
-			{
-				ex_wstr libname;
-				if (!it->second->GetStr(L"lib", libname))
-					continue;
+        ex_ini_sections::iterator it = secs.begin();
+        for (; it != secs.end(); ++it) {
+            if (it->first.length() > 9 && 0 == wcsncmp(it->first.c_str(), L"protocol-", 9)) {
+                ex_wstr libname;
+                if (!it->second->GetStr(L"lib", libname))
+                    continue;
 
-				bool enabled = false;
-				it->second->GetBool(L"enabled", enabled, false);
-				if (!enabled)
-				{
-					EXLOGV(L"[core] `%ls` not enabled.\n", libname.c_str());
-					continue;
-				}
+                bool enabled = false;
+                it->second->GetBool(L"enabled", enabled, false);
+                if (!enabled) {
+                    EXLOGV(L"[core] `%ls` not enabled.\n", libname.c_str());
+                    continue;
+                }
 
-				if (!g_tpp_mgr.load_tpp(libname))
-				{
-					all_ok = false;
-					break;
-				}
-			}
-		}
+                if (!g_tpp_mgr.load_tpp(libname)) {
+                    all_ok = false;
+                    break;
+                }
+            }
+        }
 
-	} while (0);
+    } while (0);
 
-	if (0 == g_tpp_mgr.count())
-	{
-		all_ok = false;
-	}
+    if (0 == g_tpp_mgr.count()) {
+        all_ok = false;
+    }
 
-	if (!all_ok)
-	{
-		g_exit_flag = true;
-	}
+    if (!all_ok) {
+        g_exit_flag = true;
+    }
 
-	if (!g_exit_flag) {
-		ts_web_rpc_register_core();
+    if (!g_exit_flag) {
+        ts_web_rpc_register_core();
 
-		EXLOGV("[core] ---- initialized, ready for service ----\n");
-		while (!g_exit_flag)
-		{
-			ex_sleep_ms(1000);
-			g_tpp_mgr.timer();
-		}
-	}
+        EXLOGV("[core] ---- initialized, ready for service ----\n");
+        while (!g_exit_flag) {
+            ex_sleep_ms(1000);
+            g_tpp_mgr.timer();
+        }
+    }
 
-	g_tpp_mgr.stop_all();
-	rpc.stop();
-	g_session_mgr.stop();
+    EXLOGW("[core] try to stop all thread and exit.\n");
+    g_tpp_mgr.stop_all();
+    rpc.stop();
+    g_session_mgr.stop();
 
-	return 0;
+    return 0;
 }

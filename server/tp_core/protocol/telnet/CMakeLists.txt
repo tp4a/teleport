@@ -19,19 +19,19 @@ list(REMOVE_ITEM DIR_TELNET_SRCS "./stdafx.cpp")
 
 include_directories(
         ../../../../common/libex/include
-		../../../../common/teleport
-		../../../../external/jsoncpp/include
+        ../../../../common/teleport
+        ../../../../external/jsoncpp/include
 )
 
 include_directories(
-		${TP_EXTERNAL_RELEASE_DIR}/include
+        ${TP_EXTERNAL_RELEASE_DIR}/include
 )
 link_directories(${TP_EXTERNAL_RELEASE_DIR}/lib)
 
 add_library(tptelnet SHARED ${DIR_TELNET_SRCS})
 
 if (OS_LINUX)
-	target_link_libraries(tptelnet uv dl pthread rt util)
+    target_link_libraries(tptelnet uv dl pthread rt util)
 elseif (OS_MACOS)
-	target_link_libraries(tptelnet uv dl pthread util)
-endif()
+    target_link_libraries(tptelnet uv dl pthread util)
+endif ()

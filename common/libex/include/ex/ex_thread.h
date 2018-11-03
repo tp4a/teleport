@@ -31,10 +31,12 @@ public:
 	bool terminate(void);
 
 protected:
-	// 线程循环
+	// main loop of this thread.
 	virtual void _thread_loop(void) = 0;
-	// 设置停止标志，让线程能够正常结束
-	virtual void _set_stop_flag(void) = 0;
+	// called by another thread when thread ready to stop.
+    virtual void _on_stop(void) {};
+    // called inside thread when thread fully stopped.
+    virtual void _on_stopped(void) {};
 
 #ifdef EX_OS_WIN32
 	static unsigned int WINAPI _thread_func(LPVOID lpParam);
@@ -46,7 +48,7 @@ protected:
 	ex_astr m_thread_name;
 	EX_THREAD_HANDLE m_handle;
 	bool m_is_running;
-	bool m_stop_flag;
+	bool m_need_stop;
 };
 
 
