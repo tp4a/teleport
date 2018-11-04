@@ -22,7 +22,7 @@ public:
 
 protected:
 	void _thread_loop();
-	void _set_stop_flag();
+	void _on_stop();
 
 private:
 	ssh_bind m_bind;
@@ -35,7 +35,7 @@ private:
 
 	ts_ssh_sessions m_sessions;
 
-	ExThreadManager m_thread_mgr;
+// 	ExThreadManager m_thread_mgr;
 
 	// 
 	ex_u32 m_noop_timeout_sec;

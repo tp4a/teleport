@@ -20,9 +20,8 @@ void *ExThreadBase::_thread_func(void *pParam)
     _this->m_is_running = false;
     _this->m_handle = 0;
 
-    _this->_on_stopped();
-
     EXLOGV("  # thread [%s] exit.\n", _this->m_thread_name.c_str());
+    _this->_on_stopped();
     return 0;
 }
 
@@ -49,7 +48,7 @@ bool ExThreadBase::start(void) {
     {
         return false;
     }
-    m_listener_handle = h;
+    m_handle = h;
 #else
     pthread_t ptid = 0;
     int ret = pthread_create(&ptid, NULL, _thread_func, (void *) this);
@@ -76,7 +75,7 @@ bool ExThreadBase::stop(void) {
     EXLOGV("[thread] wait thread [%s] exit.\n", m_thread_name.c_str());
 
 #ifdef EX_OS_WIN32
-    if (WaitForSingleObject(m_listener_handle, INFINITE) != WAIT_OBJECT_0)
+    if (WaitForSingleObject(m_handle, INFINITE) != WAIT_OBJECT_0)
     {
         return false;
     }
@@ -91,7 +90,7 @@ bool ExThreadBase::stop(void) {
 
 bool ExThreadBase::terminate(void) {
 #ifdef EX_OS_WIN32
-    return (TerminateThread(m_listener_handle, 1) == TRUE);
+    return (TerminateThread(m_handle, 1) == TRUE);
 #else
     return (pthread_cancel(m_handle) == 0);
 #endif

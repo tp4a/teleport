@@ -82,8 +82,9 @@ public:
 	const ex_astr& sid() { return m_sid; }
 
 protected:
-	void _thread_loop(void);
-	void _set_stop_flag(void);
+	void _thread_loop();
+	void _on_stop();
+    void _on_stopped();
 
 	// record an error when session connecting or auth-ing.
 	void _session_error(int err_code);

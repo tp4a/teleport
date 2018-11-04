@@ -11,9 +11,9 @@
 
 #ifdef EX_OS_WIN32
 #	ifdef EX_DEBUG
-#		pragma comment(lib, "..\\..\\..\\..\\external\\libssh\\lib\\debug\\ssh.lib")
+#		pragma comment(lib, "..\\..\\..\\..\\external\\libssh\\build\\src\\Debug\\ssh.lib")
 #	else
-#		pragma comment(lib, "..\\..\\..\\..\\external\\libssh\\lib\\release\\ssh.lib")
+#		pragma comment(lib, "..\\..\\..\\..\\external\\libssh\\build\\src\\Release\\ssh.lib")
 #	endif
 #	pragma comment(lib, "libeay32.lib")
 #	pragma comment(lib, "ws2_32.lib")
