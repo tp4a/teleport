@@ -470,9 +470,11 @@ $app.on_btn_do_upload_click = function () {
         dataType: 'text',
         data: param,
         success: function (data) {
+            console.log(data);
             $('#file-selector').remove();
 
             var ret = JSON.parse(data);
+            console.log(ret);
 
             if (ret.code === TPE_OK) {
                 $app.dom.upload_file_message

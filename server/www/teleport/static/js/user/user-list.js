@@ -36,7 +36,7 @@ $app.on_init = function (cb_stack) {
 };
 
 $app.test = function (cb) {
-    cb.add($app.dlg_ldap_config.show);
+    cb.add($app.dlg_ldap_import.show);
     cb.exec();
 };
 
@@ -186,7 +186,15 @@ $app.create_controls = function (cb_stack) {
 
     $app.dlg_ldap_config = $app.create_dlg_ldap_config();
     cb_stack.add($app.dlg_ldap_config.init);
+
+    $app.dlg_ldap_import = $app.create_dlg_ldap_import();
+    cb_stack.add($app.dlg_ldap_import.init);
     $app.dom.btn_ldap_import.click(function () {
+        if(0 === $app.options.sys_cfg.ldap.server.length) {
+            $tp.notify_error('LDAP服务尚未设置，请先设置！');
+            return;
+        }
+        $app.dlg_ldap_import.show();
     });
     $app.dom.btn_ldap_config.click(function () {
         $app.dlg_ldap_config.show();
@@ -1371,7 +1379,7 @@ $app.create_dlg_ldap_config = function () {
         if (!dlg.check_fields())
             return;
         dlg.dom.btn_list_attr.attr('disabled', 'disabled');
-        $tp.ajax_post_json('/user/do-ldap-config-list-attr', {
+        $tp.ajax_post_json('/system/do-ldap-config-list-attr', {
                 ldap: dlg.ldap_config
             },
             function (ret) {
@@ -1396,7 +1404,7 @@ $app.create_dlg_ldap_config = function () {
         if (!dlg.check_fields())
             return;
         dlg.dom.btn_test.attr('disabled', 'disabled');
-        $tp.ajax_post_json('/user/do-ldap-config-test', {
+        $tp.ajax_post_json('/system/do-ldap-config-test', {
                 ldap: dlg.ldap_config
             },
             function (ret) {
@@ -1486,7 +1494,6 @@ $app.create_dlg_ldap_test_result = function () {
 
     dlg.dom = {
         dialog: $('#' + dlg.dom_id),
-        msg: $('#ldap-test-result-msg'),
         table: $('#table-ldap-test-ret')
     };
 
@@ -1496,33 +1503,6 @@ $app.create_dlg_ldap_test_result = function () {
 
     dlg.show = function (data) {
         dlg.dom.table.empty();
-
-        // var h = [];
-        // var i, x;
-        // var th_created = false;
-        // for (i = 0; i < data.length; ++i) {
-        //     if (!th_created) {
-        //         h.push('<thead>');
-        //         for (x in data[i]) {
-        //             h.push('<th style="text-align:left;" class="mono">');
-        //             h.push(x);
-        //             h.push('</th>');
-        //         }
-        //         h.push('</thead>');
-        //         th_created = true;
-        //     }
-        //
-        //     h.push('<tr>');
-        //     for (x in data[i]) {
-        //         h.push('<td style="text-align:left;" class="mono">');
-        //         if (!_.isEmpty(data[i][x]))
-        //             h.push(data[i][x]);
-        //         else
-        //             h.push('');
-        //         h.push('</td>');
-        //     }
-        //     h.push('</tr>');
-        // }
 
         var h = [];
         var dn, x;
@@ -1551,9 +1531,116 @@ $app.create_dlg_ldap_test_result = function () {
             h.push('</tr>');
         }
 
+        dlg.dom.table.append($(h.join('')));
+        dlg.dom.dialog.modal();
+    };
+
+    return dlg;
+};
+
+$app.create_dlg_ldap_import = function () {
+    var dlg = {};
+    dlg.dom_id = 'dlg-ldap-import';
+
+    dlg.dom = {
+        dialog: $('#' + dlg.dom_id),
+        table: $('#table-ldap-import'),
+
+        btn_refresh: $('#btn-ldap-import-refresh'),
+        btn_import: $('#btn-ldap-import-import')
+    };
+
+    dlg.init = function (cb_stack) {
+        dlg.dom.btn_refresh.click(dlg.do_refresh);
+        dlg.dom.btn_import.click(dlg.do_import);
+        cb_stack.exec();
+    };
+
+    dlg.show = function () {
+        dlg.dom.dialog.modal({backdrop: 'static'});
+        dlg.do_refresh();
+    };
+
+    dlg.do_refresh = function () {
+        dlg.dom.btn_refresh.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/system/do-ldap-get-users', {
+            },
+            function (ret) {
+                dlg.dom.btn_refresh.removeAttr('disabled');
+                if (ret.code === TPE_OK) {
+                    // $tp.notify_success('列举LDAP用户成功！');
+                    console.log(ret.data);
+                    //$app.dlg_ldap_test_result.show(ret.data);
+                    dlg._show_users(ret.data);
+                } else {
+                    $tp.notify_error('获取LDAP用户列表失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                dlg.dom.btn_refresh.removeAttr('disabled');
+                $tp.notify_error('网络故障，获取LDAP用户列表失败！');
+            },
+            15000
+        );
+    };
+
+    dlg._show_users = function(data) {
+        dlg.dom.table.empty();
+
+        var attr_names = ['username', 'surname', 'email'];
+
+        var h = [];
+        var dn, x;
+        var th_created = false;
+        for (dn in data) {
+            if (!th_created) {
+                h.push('<thead>');
+                for (x in attr_names) {
+                    h.push('<th style="text-align:left;" class="mono">');
+                    h.push(attr_names[x]);
+                    h.push('</th>');
+                }
+                h.push('</thead>');
+                th_created = true;
+            }
+
+            h.push('<tr>');
+            for (x in attr_names) {
+                h.push('<td style="text-align:left;" class="mono">');
+                if (!_.isEmpty(data[dn][attr_names[x]]))
+                    h.push(data[dn][attr_names[x]]);
+                else
+                    h.push('');
+                h.push('</td>');
+            }
+            h.push('</tr>');
+        }
 
         dlg.dom.table.append($(h.join('')));
         dlg.dom.dialog.modal();
+    };
+
+    dlg.do_import = function () {
+        if (!dlg.check_fields())
+            return;
+        dlg.dom.btn_save.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/system/do-ldap-import', {
+            },
+            function (ret) {
+                dlg.dom.btn_save.removeAttr('disabled');
+                if (ret.code === TPE_OK) {
+                    $app.options.sys_cfg.ldap = dlg.ldap_config;
+                    $tp.notify_success('保存LDAP设置成功！');
+                } else {
+                    $tp.notify_error('保存LDAP设置失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                dlg.dom.btn_save.removeAttr('disabled');
+                $tp.notify_error('网络故障，保存LDAP设置失败！');
+            },
+            15000
+        );
     };
 
     return dlg;

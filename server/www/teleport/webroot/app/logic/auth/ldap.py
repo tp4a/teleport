@@ -11,8 +11,6 @@ class Ldap(object):
     def __init__(self, ldap_host, ldap_port, base_dn):
         self._server = ldap3.Server(ldap_host, ldap_port, connect_timeout=5, use_ssl=False)
         self._base_dn = base_dn
-        # self._domain = domain
-        pass
 
     def _parse_attr_map(self, attr_map):
         attrs_ldap = []
@@ -36,9 +34,10 @@ class Ldap(object):
         return attrs_ldap, attrs_tp, ''
 
     def get_all_attr(self, admin, password, filter):
-        # user = '{}@{}'.format(admin, self._domain)
-        user = admin
-        conn = ldap3.Connection(self._server, user=user, password=password, check_names=True, lazy=False, raise_exceptions=False)
+        conn = ldap3.Connection(
+            self._server, user=admin, password=password, check_names=True, lazy=False, raise_exceptions=False
+        )
+
         try:
             conn.open()
         except Exception as e:
@@ -46,7 +45,11 @@ class Ldap(object):
             return TPE_FAILED, None, '无法连接到LDAP服务器'
 
         conn.bind()
-        if not ('result' in conn.result and 0 == conn.result['result'] and 'description' in conn.result and 'success' == conn.result['description']):
+        if not (
+                ('result' in conn.result and 0 == conn.result['result'])
+                and
+                ('description' in conn.result and 'success' == conn.result['description'])
+        ):
             return TPE_FAILED, None, 'LDAP管理员认证失败'
 
         ret = conn.search(
@@ -62,27 +65,15 @@ class Ldap(object):
         if len(conn.response) == 0:
             return TPE_FAILED, None, '未能找到任何用户'
 
-        # print(conn.entries[0].entry_to_json())
         result = json.loads(conn.entries[0].entry_to_json())
-
-        # attrs = conn.response[0]['attributes']
-        #
-        # result = {}
-        # for a in attrs:
-        #     if isinstance(attrs[a], list):
-        #         val = []
-        #         for i in attrs[a]:
-        #             if isinstance(i, bytes):
-        #                 val.append(i.decode())
-        #             else:
-        #                 val.append(i)
-        #         result[a] = ', '.join(val)
-        #     else:
-        #         if isinstance(attrs[a], bytes):
-        #             result[a] = attrs[a].decode()
-        #         else:
-        #             result[a] = attrs[a].__str__()
-
+        for attr_name in result:
+            attr_val = result[attr_name]
+            if isinstance(result[attr_name], list):
+                if len(attr_val) >= 1:
+                    attr_val = attr_val[0]
+                else:
+                    attr_val = ''
+            result[attr_name] = attr_val
         return TPE_OK, result, ''
 
     def list_users(self, admin, password, filter, attr_map, size_limit=0):
@@ -90,9 +81,10 @@ class Ldap(object):
         if attrs_ldap is None:
             return TPE_PARAM, None, '属性映射格式错误: {}'.format(msg)
 
-        # user = '{}@{}'.format(admin, self._domain)
         user = admin
-        conn = ldap3.Connection(self._server, user=user, password=password, check_names=True, lazy=False, raise_exceptions=False)
+        conn = ldap3.Connection(
+            self._server, user=user, password=password, check_names=True, lazy=False, raise_exceptions=False
+        )
         try:
             conn.open()
         except Exception as e:
@@ -100,7 +92,11 @@ class Ldap(object):
             return TPE_FAILED, None, '无法连接到LDAP服务器'
 
         conn.bind()
-        if not ('result' in conn.result and 0 == conn.result['result'] and 'description' in conn.result and 'success' == conn.result['description']):
+        if not (
+                ('result' in conn.result and 0 == conn.result['result'])
+                and
+                ('description' in conn.result and 'success' == conn.result['description'])
+        ):
             return TPE_FAILED, None, 'LDAP管理员认证失败'
 
         try:
@@ -109,7 +105,6 @@ class Ldap(object):
                 size_limit=size_limit,
                 search_filter=filter,  # (&(objectClass=person))
                 search_scope=ldap3.SUBTREE,
-
                 attributes=attrs_ldap
             )
 
@@ -123,27 +118,19 @@ class Ldap(object):
         result = {}
 
         for i in range(0, len(conn.entries)):
-            u = json.loads(conn.entries[0].entry_to_json())
-            # result.append(u)
-            a = {}
+            attrs = json.loads(conn.entries[i].entry_to_json())
+            user = {}
             for m in range(0, len(attrs_ldap)):
-                a[attrs_tp[m]] = u['attributes'][attrs_ldap[m]]
-            # result.append(a)
-            result[u['dn']] = a
-
-        # print(conn.entries[0].entry_to_json())
-        #
-        # if ret:
-        #     for u in conn.response:
-        #         # if u['attributes']['cn'].lower() in ['guest', 'krbtgt']:
-        #         #     continue
-        #         # print(u)
-        #         # print(u['attributes']['cn'])
-        #         # result.append(u['attributes'])
-        #         a = {}
-        #         for i in range(0, len(attrs_ldap)):
-        #             a[attrs_tp[i]] = u['attributes'][attrs_ldap[i]]
-        #         result.append(a)
+                ldap_name = attrs_ldap[m]
+                tp_name = attrs_tp[m]
+                attr_val = attrs['attributes'][ldap_name]
+                if isinstance(attr_val, list):
+                    if len(attr_val) >= 1:
+                        attr_val = attr_val[0]
+                    else:
+                        attr_val = ''
+                user[tp_name] = attr_val
+            result[attrs['dn']] = user
 
         return TPE_OK, result, ''
 

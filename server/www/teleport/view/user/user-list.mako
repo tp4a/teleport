@@ -50,7 +50,7 @@
                 <button id="btn-create-user" class="btn btn-sm btn-primary"><i class="fa fa-plus-circle fa-fw"></i> 创建用户</button>
                 <button id="btn-import-user" class="btn btn-sm btn-default"><i class="fa fa-plus-square fa-fw"></i> 导入用户</button>
                 <div class="btn-group btn-group-sm dropdown" id="filter-host-group">
-                    <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown"><i class="fas fa-address-book fa-fw"></i> LDAP管理 <i class="fa fa-caret-right"></i></button>
+                    <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown"><i class="fas fa-address-book fa-fw"></i> LDAP管理(试验) <i class="fa fa-caret-right"></i></button>
                     <ul class="dropdown-menu dropdown-menu-right dropdown-menu-sm">
                         <li>
                         <li><a href="javascript:;" data-action="ldap-import"><i class="fas fa-arrow-alt-circle-left fa-fw"></i> 导入LDAP用户</a></li>
@@ -382,7 +382,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
-                    <h3 class="modal-title">LDAP设置</h3>
+                    <h3 class="modal-title">LDAP设置 (实验性)</h3>
                 </div>
                 <div class="modal-body">
 
@@ -540,8 +540,6 @@
 
                             <div class="col-sm-12">
                                 <table id="table-ldap-test-ret" class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
-
-                                <div id="ldap-test-result-msg"></div>
                             </div>
                         </div>
 
@@ -553,6 +551,44 @@
                     <div class="row">
                         <div class="col-sm-12" style="text-align:right;">
                             <button type="button" class="btn btn-sm btn-primary" data-dismiss="modal"><i class="fa fa-check fa-fw"></i> 确定</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="dlg-ldap-import" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" style="margin-top:50px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
+                    <h3 class="modal-title">导入LDAP用户(试验)</h3>
+                </div>
+                <div class="modal-body">
+
+                    <div class="form-horizontal">
+                        <div style="margin-bottom:8px;">
+                            LDAP用户列表：
+                        </div>
+
+                        <div class="form-group form-group-sm">
+
+                            <div class="col-sm-12">
+                                <table id="table-ldap-import" class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-sm-12" style="text-align:right;">
+                            <button type="button" class="btn btn-sm btn-success" id="btn-ldap-import-refresh"><i class="fa fa-redo fa-fw"></i> 刷新列表</button>
+                            <button type="button" class="btn btn-sm btn-primary" id="btn-ldap-import-import"><i class="fa fa-check fa-fw"></i> 导入选中用户</button>
+                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 取消</button>
                         </div>
                     </div>
                 </div>

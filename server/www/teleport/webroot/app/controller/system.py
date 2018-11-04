@@ -19,6 +19,7 @@ from app.model import ops
 from app.model import audit
 from app.base.core_server import core_service_async_post_http
 from app.base.session import tp_session
+from app.logic.auth.ldap import Ldap
 
 
 class DoGetTimeHandler(TPBaseJsonHandler):
@@ -338,7 +339,7 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
             if 'ldap' in args:
                 processed = True
                 _cfg = args['ldap']
-                _password = _cfg['password']
+                # _password = _cfg['password']
                 _server = _cfg['server']
                 _port = _cfg['port']
                 _domain = _cfg['domain']
@@ -346,6 +347,12 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 _base_dn = _cfg['base_dn']
                 _filter = _cfg['filter']
                 _attr_map = _cfg['attr_map']
+
+                if len(_cfg['password']) == 0:
+                    _cfg['password'] = tp_cfg().sys_ldap_password
+
+                if len(_cfg['password']) == 0:
+                    return self.write_json(TPE_PARAM, '请设置LDAP管理员密码')
 
                 # TODO: encrypt the password before save by core-service.
                 # TODO: if not send password, use pre-saved password.
@@ -360,7 +367,7 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                     tp_cfg().sys.ldap.filter = _filter
                     tp_cfg().sys.ldap.attr_map = _attr_map
                     # 特殊处理，防止前端拿到密码
-                    tp_cfg().sys_ldap_password = _password
+                    tp_cfg().sys_ldap_password = _cfg['password']
                 else:
                     return self.write_json(err)
 
@@ -411,6 +418,129 @@ class DoSendTestMailHandler(TPBaseJsonHandler):
         )
 
         self.write_json(code, message=msg)
+
+
+class DoLdapListUserAttrHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            cfg = args['ldap']
+            cfg['port'] = int(cfg['port'])
+            if len(cfg['password']) == 0:
+                if len(tp_cfg().sys_ldap_password) == 0:
+                    return self.write_json(TPE_PARAM, message='需要设置LDAP管理员密码')
+                else:
+                    cfg['password'] = tp_cfg().sys_ldap_password
+        except:
+            return self.write_json(TPE_PARAM)
+
+        try:
+            ldap = Ldap(cfg['server'], cfg['port'], cfg['base_dn'])
+            ret, data, err_msg = ldap.get_all_attr(cfg['admin'], cfg['password'], cfg['filter'])
+            if ret != TPE_OK:
+                return self.write_json(ret, message=err_msg)
+            else:
+                return self.write_json(ret, data=data)
+        except:
+            log.e('')
+            return self.write_json(TPE_PARAM)
+
+
+class DoLdapConfigTestHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            cfg = args['ldap']
+            cfg['port'] = int(cfg['port'])
+            if len(cfg['password']) == 0:
+                if len(tp_cfg().sys_ldap_password) == 0:
+                    return self.write_json(TPE_PARAM, message='需要设置LDAP管理员密码')
+                else:
+                    cfg['password'] = tp_cfg().sys_ldap_password
+        except:
+            return self.write_json(TPE_PARAM)
+
+        try:
+            ldap = Ldap(cfg['server'], cfg['port'], cfg['base_dn'])
+            ret, data, err_msg = ldap.list_users(
+                cfg['admin'], cfg['password'], cfg['filter'], cfg['attr_map'], size_limit=10
+            )
+
+            if ret != TPE_OK:
+                return self.write_json(ret, message=err_msg)
+            else:
+                return self.write_json(ret, data=data)
+        except:
+            log.e('')
+            return self.write_json(TPE_PARAM)
+
+
+class DoLdapGetUsersHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            if len(tp_cfg().sys_ldap_password) == 0:
+                return self.write_json(TPE_PARAM, message='需要设置LDAP管理员密码')
+            else:
+                _password = tp_cfg().sys_ldap_password
+            _server = tp_cfg().sys.ldap.server
+            _port = tp_cfg().sys.ldap.port
+            _admin = tp_cfg().sys.ldap.admin
+            _base_dn = tp_cfg().sys.ldap.base_dn
+            _filter = tp_cfg().sys.ldap.filter
+            _attr_map = tp_cfg().sys.ldap.attr_map
+        except:
+            return self.write_json(TPE_PARAM)
+
+        try:
+            ldap = Ldap(_server, _port, _base_dn)
+            ret, data, err_msg = ldap.list_users(_admin, _password, _filter, _attr_map)
+
+            if ret != TPE_OK:
+                return self.write_json(ret, message=err_msg)
+            else:
+                # TODO: search all user in database to check if the LDAP user have already bind.
+                for u in data:
+                    data[u]['bind'] = False
+                return self.write_json(ret, data=data)
+        except:
+            log.e('')
+            return self.write_json(TPE_PARAM)
 
 
 class DoCleanupStorageHandler(TPBaseJsonHandler):
