@@ -194,6 +194,10 @@ def create_users(handler, user_list, success, failed):
 
     for i in range(len(user_list)):
         user = user_list[i]
+        if 'type' not in user:
+            user['type'] = TP_USER_TYPE_LOCAL
+        if 'ldap_dn' not in user:
+            user['ldap_dn'] = ''
 
         err = s.reset().select_from('user', ['id']).where('user.username="{}"'.format(user['username'])).query()
         if err != TPE_OK:
@@ -202,11 +206,14 @@ def create_users(handler, user_list, success, failed):
             failed.append({'line': user['_line'], 'error': '账号 `{}` 已经存在'.format(user['username'])})
             continue
 
-        _password = tp_password_generate_secret(user['password'])
+        if user['type'] == TP_USER_TYPE_LOCAL:
+            _password = tp_password_generate_secret(user['password'])
+        else:
+            _password = ''
 
         sql = 'INSERT INTO `{}user` (`type`, `auth_type`, `password`, `username`, `surname`, `role_id`, `state`, `email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `desc`) VALUES ' \
-              '(1, 0, "{password}", "{username}", "{surname}", 0, {state}, "{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
-              ''.format(db.table_prefix,
+              '({user_type}, 0, "{password}", "{username}", "{surname}", 0, {state}, "{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
+              ''.format(db.table_prefix, user_type=user['type'],
                         username=user['username'], surname=user['surname'], password=_password, state=TP_STATE_NORMAL, email=user['email'],
                         creator_id=operator['id'], create_time=_time_now, last_login=0, last_chpass=0, desc=user['desc'])
         db_ret = db.exec(sql)

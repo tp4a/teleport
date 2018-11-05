@@ -258,6 +258,9 @@ controllers = [
     (r'/system/do-ldap-config-test', system.DoLdapConfigTestHandler),
     #  - [json] 获取LDAP用户列表
     (r'/system/do-ldap-get-users', system.DoLdapGetUsersHandler),
+    #  - [json] 导入LDAP用户
+    (r'/system/do-ldap-import', system.DoLdapImportHandler),
+
     #
     #  - [json] 获取服务器时间
     (r'/system/get-time', system.DoGetTimeHandler),

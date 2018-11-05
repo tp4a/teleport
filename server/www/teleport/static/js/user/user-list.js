@@ -28,7 +28,7 @@ $app.on_init = function (cb_stack) {
     };
 
     cb_stack
-        .add($app.test)
+        // .add($app.test)
         .add($app.create_controls)
         .add($app.load_role_list);
 
@@ -109,7 +109,7 @@ $app.create_controls = function (cb_stack) {
                 align: 'center',
                 width: 70,
                 render: 'make_action_btn',
-                fields: {id: 'id', state: 'state'}
+                fields: {id: 'id', state: 'state', user_type: 'type'}
             }
         ],
 
@@ -143,6 +143,7 @@ $app.create_controls = function (cb_stack) {
             }
         });
     $tp.create_table_pagination($app.table_users, 'table-user-list-pagination');
+
 
     //-------------------------------
     // 对话框
@@ -190,7 +191,7 @@ $app.create_controls = function (cb_stack) {
     $app.dlg_ldap_import = $app.create_dlg_ldap_import();
     cb_stack.add($app.dlg_ldap_import.init);
     $app.dom.btn_ldap_import.click(function () {
-        if(0 === $app.options.sys_cfg.ldap.server.length) {
+        if (0 === $app.options.sys_cfg.ldap.server.length) {
             $tp.notify_error('LDAP服务尚未设置，请先设置！');
             return;
         }
@@ -239,12 +240,19 @@ $app.on_table_users_cell_created = function (tbl, row_id, col_key, cell_obj) {
             if (action === 'edit') {
                 $app.dlg_edit_user.show_edit(row_id);
             } else if (action === 'reset-password') {
+                console.log(user);
+                if(user.type === TP_USER_TYPE_LDAP)
+                    return;
                 $app.dlg_reset_password.show_edit(row_id);
             } else if (action === 'reset-oath-bind') {
                 $app._reset_oath_bind(user.id);
             } else if (action === 'lock') {
+                if (user.state !== TP_STATE_NORMAL)
+                    return;
                 $app._lock_users([user.id]);
             } else if (action === 'unlock') {
+                if (user.state === TP_STATE_NORMAL)
+                    return;
                 $app._unlock_users([user.id]);
             } else if (action === 'remove') {
                 $app._remove_users([user.id]);
@@ -411,7 +419,15 @@ $app.on_table_users_render_created = function (render) {
         h.push('<li' + class_unlock + '><a href="javascript:;" data-action="unlock"><i class="fa fa-unlock fa-fw"></i> 解禁</a></li>');
 
         h.push('<li role="separator" class="divider"></li>');
-        h.push('<li><a href="javascript:;" data-action="reset-password"><i class="fa fa-street-view fa-fw"></i> 重置密码</a></li>');
+
+        var class_user_type = '';
+        if (fields.user_type === TP_USER_TYPE_LDAP) {
+            class_user_type = ' class="disabled"';
+        } else {
+            class_user_type = '';
+        }
+        h.push('<li' + class_user_type +'><a href="javascript:;" data-action="reset-password"><i class="fa fa-street-view fa-fw"></i> 重置密码</a></li>');
+
         h.push('<li><a href="javascript:;" data-action="reset-oath-bind"><i class="fa fa-street-view fa-fw"></i> 重置身份验证器</a></li>');
         h.push('<li role="separator" class="divider"></li>');
         h.push('<li><a href="javascript:;" data-action="remove"><i class="fa fa-times-circle fa-fw"></i> 删除</a></li>');
@@ -1288,7 +1304,7 @@ $app.create_dlg_ldap_config = function () {
     };
 
     dlg.init_fields = function () {
-        if(0 === $app.options.sys_cfg.ldap.server.length) {
+        if (0 === $app.options.sys_cfg.ldap.server.length) {
             dlg.mode = 'set';
         } else {
             dlg.ldap_config = $app.options.sys_cfg.ldap;
@@ -1348,7 +1364,7 @@ $app.create_dlg_ldap_config = function () {
             return false;
         }
 
-        if(dlg.mode === 'set') {
+        if (dlg.mode === 'set') {
             if (tp_is_empty_str(dlg.ldap_config.password)) {
                 dlg.dom.password.focus();
                 $tp.notify_error('请填写LDAP的管理员密码！');
@@ -1436,6 +1452,7 @@ $app.create_dlg_ldap_config = function () {
                 dlg.dom.btn_save.removeAttr('disabled');
                 if (ret.code === TPE_OK) {
                     $app.options.sys_cfg.ldap = dlg.ldap_config;
+                    dlg.dom.dialog.modal('hide');
                     $tp.notify_success('保存LDAP设置成功！');
                 } else {
                     $tp.notify_error('保存LDAP设置失败：' + tp_error_msg(ret.code, ret.message));
@@ -1546,32 +1563,172 @@ $app.create_dlg_ldap_import = function () {
         dialog: $('#' + dlg.dom_id),
         table: $('#table-ldap-import'),
 
+        chkbox_user_list_select_all: $('#table-ldap-user-select-all'),
+
         btn_refresh: $('#btn-ldap-import-refresh'),
         btn_import: $('#btn-ldap-import-import')
     };
 
     dlg.init = function (cb_stack) {
-        dlg.dom.btn_refresh.click(dlg.do_refresh);
+
+        //-------------------------------
+        // LDAP用户列表表格
+        //-------------------------------
+        var table_ldap_users_options = {
+            dom_id: 'table-ldap-user-list',
+            data_source: {
+                type: 'none'
+            },
+            column_default: {sort: false, align: 'left'},
+            columns: [
+                {
+                    // title: '<input type="checkbox" id="user-list-select-all" value="">',
+                    title: '',
+                    key: 'chkbox',
+                    sort: false,
+                    width: 36,
+                    align: 'center',
+                    render: 'make_check_box',
+                    fields: {id: 'id'}
+                },
+                {
+                    title: "用户名",
+                    key: "username",
+                    sort: false
+                },
+                {
+                    title: "姓名",
+                    key: "surname",
+                    // width: 120,
+                    sort: false
+                },
+                {
+                    title: "邮箱",
+                    key: "email",
+                    // width: 120,
+                    sort: false
+                },
+                {
+                    title: "状态",
+                    key: "bind",
+                    sort: false,
+                    width: 80,
+                    align: 'center',
+                    render: 'ldap_user_state',
+                    fields: {bind: 'bind'}
+                }
+            ],
+
+            // 重载回调函数
+            on_render_created: dlg.on_table_users_render_created,
+            on_cell_created: dlg.on_table_users_cell_created
+        };
+
+        $app.table_ldap_users = $tp.create_table(table_ldap_users_options);
+        cb_stack
+            .add($app.table_ldap_users.init);
+
+        dlg.dom.btn_refresh.click(function () {
+            dlg.load_users();
+        });
+
+        dlg.dom.chkbox_user_list_select_all.click(function () {
+            var _objects = $('#' + $app.table_ldap_users.dom_id + ' tbody').find('[data-check-box]');
+            if ($(this).is(':checked')) {
+                $.each(_objects, function (i, _obj) {
+                    $(_obj).prop('checked', true);
+                });
+            } else {
+                $.each(_objects, function (i, _obj) {
+                    $(_obj).prop('checked', false);
+                });
+            }
+        });
+
+        // dlg.dom.btn_refresh.click(dlg.load_users);
         dlg.dom.btn_import.click(dlg.do_import);
         cb_stack.exec();
     };
 
-    dlg.show = function () {
-        dlg.dom.dialog.modal({backdrop: 'static'});
-        dlg.do_refresh();
+    dlg.get_selected_user = function (tbl) {
+        var items = [];
+        var _objs = $('#' + tbl.dom_id + ' tbody tr td input[data-check-box]');
+        $.each(_objs, function (i, _obj) {
+            if ($(_obj).is(':checked')) {
+                var _row_data = tbl.get_row(_obj);
+                items.push(_row_data.id);
+            }
+        });
+        return items;
     };
 
-    dlg.do_refresh = function () {
+    dlg.on_table_users_cell_created = function (tbl, row_id, col_key, cell_obj) {
+        if (col_key === 'chkbox') {
+            cell_obj.find('[data-check-box]').click(function () {
+                dlg.check_user_list_all_selected();
+            });
+        }
+    };
+
+    dlg.on_table_users_render_created = function (render) {
+
+        render.make_check_box = function (row_id, fields) {
+            return '<span><input type="checkbox" data-check-box="' + fields.id + '" data-row-id="' + row_id + '"></span>';
+        };
+
+        render.user_state = function (row_id, fields) {
+            if (fields.bind) {
+                return '已导入';
+            }
+        };
+    };
+
+    dlg.check_user_list_all_selected = function (cb_stack) {
+        var _all_checked = true;
+        var _objs = $('#' + $app.table_ldap_users.dom_id + ' tbody').find('[data-check-box]');
+        if (_objs.length === 0) {
+            _all_checked = false;
+        } else {
+            $.each(_objs, function (i, _obj) {
+                if (!$(_obj).is(':checked')) {
+                    _all_checked = false;
+                    return false;
+                }
+            });
+        }
+
+        if (_all_checked) {
+            dlg.dom.chkbox_user_list_select_all.prop('checked', true);
+        } else {
+            dlg.dom.chkbox_user_list_select_all.prop('checked', false);
+        }
+
+        if (cb_stack)
+            cb_stack.exec();
+    };
+
+    dlg.show = function () {
+        dlg.load_users();
+        dlg.dom.dialog.modal({backdrop: 'static'});
+    };
+
+    dlg.load_users = function (cb_stack) {
+        cb_stack = cb_stack || CALLBACK_STACK.create();
+
         dlg.dom.btn_refresh.attr('disabled', 'disabled');
-        $tp.ajax_post_json('/system/do-ldap-get-users', {
-            },
+        $tp.ajax_post_json('/system/do-ldap-get-users', {},
             function (ret) {
                 dlg.dom.btn_refresh.removeAttr('disabled');
                 if (ret.code === TPE_OK) {
-                    // $tp.notify_success('列举LDAP用户成功！');
                     console.log(ret.data);
-                    //$app.dlg_ldap_test_result.show(ret.data);
-                    dlg._show_users(ret.data);
+
+                    var _d = [];
+                    for (var i = 0; i < ret.data.length; ++i) {
+                        _d.push(ret.data[i]);
+                    }
+
+                    cb_stack.add(dlg.check_user_list_all_selected);
+                    $app.table_ldap_users.set_data(cb_stack, {}, {total: ret.data.length, page_index: 1, data: _d});
                 } else {
                     $tp.notify_error('获取LDAP用户列表失败：' + tp_error_msg(ret.code, ret.message));
                 }
@@ -1584,60 +1741,34 @@ $app.create_dlg_ldap_import = function () {
         );
     };
 
-    dlg._show_users = function(data) {
-        dlg.dom.table.empty();
-
-        var attr_names = ['username', 'surname', 'email'];
-
-        var h = [];
-        var dn, x;
-        var th_created = false;
-        for (dn in data) {
-            if (!th_created) {
-                h.push('<thead>');
-                for (x in attr_names) {
-                    h.push('<th style="text-align:left;" class="mono">');
-                    h.push(attr_names[x]);
-                    h.push('</th>');
-                }
-                h.push('</thead>');
-                th_created = true;
-            }
-
-            h.push('<tr>');
-            for (x in attr_names) {
-                h.push('<td style="text-align:left;" class="mono">');
-                if (!_.isEmpty(data[dn][attr_names[x]]))
-                    h.push(data[dn][attr_names[x]]);
-                else
-                    h.push('');
-                h.push('</td>');
-            }
-            h.push('</tr>');
+    dlg.do_import = function () {
+        var items = dlg.get_selected_user($app.table_ldap_users);
+        if (items.length === 0) {
+            $tp.notify_error('请选择要导入的账号！');
+            return;
         }
 
-        dlg.dom.table.append($(h.join('')));
-        dlg.dom.dialog.modal();
-    };
+        console.log(items);
 
-    dlg.do_import = function () {
-        if (!dlg.check_fields())
-            return;
-        dlg.dom.btn_save.attr('disabled', 'disabled');
-        $tp.ajax_post_json('/system/do-ldap-import', {
-            },
+        dlg.dom.btn_import.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/system/do-ldap-import', {ldap_users: items},
             function (ret) {
-                dlg.dom.btn_save.removeAttr('disabled');
+                dlg.dom.btn_import.removeAttr('disabled');
                 if (ret.code === TPE_OK) {
-                    $app.options.sys_cfg.ldap = dlg.ldap_config;
-                    $tp.notify_success('保存LDAP设置成功！');
+                    CALLBACK_STACK.create()
+                        .add($app.table_users.load_data)
+                        .add(dlg.check_user_list_all_selected)
+                        .add(dlg.load_users)
+                        .exec();
+
+                    $tp.notify_success('导入LDAP用户成功！');
                 } else {
-                    $tp.notify_error('保存LDAP设置失败：' + tp_error_msg(ret.code, ret.message));
+                    $tp.notify_error('导入LDAP用户失败：' + tp_error_msg(ret.code, ret.message));
                 }
             },
             function () {
-                dlg.dom.btn_save.removeAttr('disabled');
-                $tp.notify_error('网络故障，保存LDAP设置失败！');
+                dlg.dom.btn_import.removeAttr('disabled');
+                $tp.notify_error('网络故障，导入LDAP用户失败！');
             },
             15000
         );
