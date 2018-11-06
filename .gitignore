@@ -50,7 +50,6 @@ __pycache__
 /client/tools/putty
 /client/tools/winscp
 
-
 # for dist folder
 **/_tmp_
 /dist/server/data
