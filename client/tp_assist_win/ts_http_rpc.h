@@ -45,6 +45,9 @@ void http_rpc_stop(void);
 
 typedef std::map<ex_astr, ex_astr> content_type_map;
 
+// for https server, see
+// http://www.xiaovdiy.cn/?post=284
+
 class TsHttpRpc
 {
 public:
