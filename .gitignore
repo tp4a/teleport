@@ -30,6 +30,8 @@ __pycache__
 **/.idea/inspectionProfiles
 **/.idea/codeStyles
 **/.idea/inspectionProfiles
+**/.idea/vcs.xml
+**/.idea/modules.xml
 
 *.css.map
 
@@ -96,3 +98,4 @@ xcuserdata
 profile
 *.moved-aside
 /server/share/tmp
+
