@@ -10,7 +10,7 @@ import time
 import hashlib
 import struct
 
-__all__ = ['verify_oath_code', 'gen_oath_qrcode']
+__all__ = ['tp_oath_generate_secret', 'tp_oath_verify_code', 'tp_oath_generate_qrcode']
 
 
 def tp_oath_generate_secret():

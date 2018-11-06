@@ -12,7 +12,8 @@ class Ldap(object):
         self._server = ldap3.Server(ldap_host, ldap_port, connect_timeout=5, use_ssl=False)
         self._base_dn = base_dn
 
-    def _parse_attr_map(self, attr_map):
+    @staticmethod
+    def _parse_attr_map(attr_map):
         attrs_ldap = []
         attrs_tp = []
 
@@ -33,7 +34,7 @@ class Ldap(object):
 
         return attrs_ldap, attrs_tp, ''
 
-    def get_all_attr(self, admin, password, filter):
+    def get_all_attr(self, admin, password, search_filter):
         conn = ldap3.Connection(
             self._server, user=admin, password=password, check_names=True, lazy=False, raise_exceptions=False
         )
@@ -55,7 +56,7 @@ class Ldap(object):
         ret = conn.search(
             search_base=self._base_dn,
             size_limit=1,
-            search_filter=filter,  # (&(objectClass=person))
+            search_filter=search_filter,  # (&(objectClass=person))
             search_scope=ldap3.SUBTREE,
             attributes=['*']
         )
@@ -76,7 +77,7 @@ class Ldap(object):
             result[attr_name] = attr_val
         return TPE_OK, result, ''
 
-    def list_users(self, admin, password, filter, attr_map, size_limit=0):
+    def list_users(self, admin, password, search_filter, attr_map, size_limit=0):
         attrs_ldap, attrs_tp, msg = self._parse_attr_map(attr_map)
         if attrs_ldap is None:
             return TPE_PARAM, None, '属性映射格式错误: {}'.format(msg)
@@ -103,7 +104,7 @@ class Ldap(object):
             ret = conn.search(
                 search_base=self._base_dn,
                 size_limit=size_limit,
-                search_filter=filter,  # (&(objectClass=person))
+                search_filter=search_filter,  # (&(objectClass=person))
                 search_scope=ldap3.SUBTREE,
                 attributes=attrs_ldap
             )
@@ -135,4 +136,22 @@ class Ldap(object):
         return TPE_OK, result, ''
 
     def valid_user(self, user_dn, password):
-        return False
+        conn = ldap3.Connection(
+            self._server, user=user_dn, password=password, check_names=True, lazy=False, raise_exceptions=False
+        )
+
+        try:
+            conn.open()
+        except Exception as e:
+            log.e(str(e))
+            return TPE_FAILED, '无法连接到LDAP服务器'
+
+        conn.bind()
+        if not (
+                ('result' in conn.result and 0 == conn.result['result'])
+                and
+                ('description' in conn.result and 'success' == conn.result['description'])
+        ):
+            return TPE_USER_AUTH, '认证失败'
+
+        return TPE_OK, ''
