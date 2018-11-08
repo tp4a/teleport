@@ -3,15 +3,21 @@
 $tp.assist = {
     running: false,
     version: '',
-    // api_url: 'http://localhost:50022/api',
-    api_url: 'http://127.0.0.1:50022/api',
+    api_url: '',
     teleport_ip: window.location.hostname
 };
+
+console.log(window.location.protocol);
 
 // $assist 是 $tp.assist 的别名，方便使用。
 var $assist = $tp.assist;
 
 $assist.init = function (cb_stack) {
+    if(location.protocol === 'http:') {
+        $assist.api_url = 'http://localhost:50022/api';
+    } else {
+        $assist.api_url = 'https://localhost:50023/api';
+    }
 
     $assist._make_message_box();
 

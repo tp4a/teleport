@@ -13,6 +13,7 @@
 #include "ts_http_rpc.h"
 #include "dlg_main.h"
 #include "ts_ver.h"
+#include "ts_env.h"
 
 /*
 1.
@@ -118,23 +119,41 @@ password 51:b:%s\n\
 
 
 TsHttpRpc g_http_interface;
+TsHttpRpc g_https_interface;
 
-void http_rpc_main_loop(void) {
-    if (!g_http_interface.init(TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT)) {
-        EXLOGE("[ERROR] can not start HTTP-RPC listener, maybe port %d is already in use.\n", TS_HTTP_RPC_PORT);
-        return;
+void http_rpc_main_loop(bool is_https) {
+    if (is_https) {
+        if (!g_https_interface.init_https()) {
+            EXLOGE("[ERROR] can not start HTTPS-RPC listener, maybe port %d is already in use.\n", TS_HTTPS_RPC_PORT);
+            return;
+        }
+
+        EXLOGW("======================================================\n");
+        EXLOGW("[rpc] TeleportAssist-HTTPS-RPC ready on 127.0.0.1:%d\n", TS_HTTPS_RPC_PORT);
+
+        g_https_interface.run();
+
+        EXLOGW("[rpc] HTTPS-Server main loop end.\n");
+    } else {
+        if (!g_http_interface.init_http()) {
+            EXLOGE("[ERROR] can not start HTTP-RPC listener, maybe port %d is already in use.\n", TS_HTTP_RPC_PORT);
+            return;
+        }
+
+        EXLOGW("======================================================\n");
+        EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on 127.0.0.1:%d\n", TS_HTTP_RPC_PORT);
+
+        g_http_interface.run();
+
+        EXLOGW("[rpc] HTTP-Server main loop end.\n");
     }
-
-    EXLOGW("======================================================\n");
-    EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on %s:%d\n", TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT);
-
-    g_http_interface.run();
-
-    EXLOGW("[rpc] main loop end.\n");
 }
 
-void http_rpc_stop(void) {
-    g_http_interface.stop();
+void http_rpc_stop(bool is_https) {
+    if (is_https)
+        g_https_interface.stop();
+    else
+        g_http_interface.stop();
 }
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
@@ -198,7 +217,60 @@ TsHttpRpc::~TsHttpRpc() {
     mg_mgr_free(&m_mg_mgr);
 }
 
-bool TsHttpRpc::init(const char* ip, int port) {
+bool TsHttpRpc::init_http() {
+    struct mg_connection* nc = nullptr;
+
+    char addr[128] = { 0 };
+    ex_strformat(addr, 128, "tcp://127.0.0.1:%d", TS_HTTP_RPC_PORT);
+
+    nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
+    if (!nc) {
+        EXLOGE("[rpc] TsHttpRpc::init 127.0.0.1:%d\n", TS_HTTP_RPC_PORT);
+        return false;
+    }
+    nc->user_data = this;
+
+    mg_set_protocol_http_websocket(nc);
+
+    return _on_init();
+}
+
+bool TsHttpRpc::init_https() {
+    ex_wstr file_ssl_cert = g_env.m_exec_path;
+    ex_path_join(file_ssl_cert, true, L"cfg", L"localhost.pem", NULL);
+    ex_wstr file_ssl_key = g_env.m_exec_path;
+    ex_path_join(file_ssl_key, true, L"cfg", L"localhost.key", NULL);
+    ex_astr _ssl_cert;
+    ex_wstr2astr(file_ssl_cert, _ssl_cert);
+    ex_astr _ssl_key;
+    ex_wstr2astr(file_ssl_key, _ssl_key);
+
+    const char *err = NULL;
+    struct mg_bind_opts bind_opts;
+    memset(&bind_opts, 0, sizeof(bind_opts));
+    bind_opts.ssl_cert = _ssl_cert.c_str();
+    bind_opts.ssl_key = _ssl_key.c_str();
+    bind_opts.error_string = &err;
+
+
+    char addr[128] = { 0 };
+    ex_strformat(addr, 128, "tcp://127.0.0.1:%d", TS_HTTPS_RPC_PORT);
+    //ex_strformat(addr, 128, "%d", TS_HTTPS_RPC_PORT);
+
+    struct mg_connection* nc = nullptr;
+    nc = mg_bind_opt(&m_mg_mgr, addr, _mg_event_handler, bind_opts);
+    if (!nc) {
+        EXLOGE("[rpc] TsHttpRpc::init 127.0.0.1:%d\n", TS_HTTPS_RPC_PORT);
+        return false;
+    }
+    nc->user_data = this;
+
+    mg_set_protocol_http_websocket(nc);
+
+    return _on_init();
+}
+
+bool TsHttpRpc::_on_init() {
     char file_name[MAX_PATH] = { 0 };
     if (!GetModuleFileNameA(nullptr, file_name, MAX_PATH))
         return false;
@@ -211,23 +283,6 @@ bool TsHttpRpc::init(const char* ip, int port) {
     char* match = strrchr(file_name, '\\');
     if (match)
         *match = '\0';
-
-    struct mg_connection* nc = nullptr;
-
-    char addr[128] = { 0 };
-    if (0 == strcmp(ip, "127.0.0.1") || 0 == strcmp(ip, "localhost"))
-        ex_strformat(addr, 128, "tcp://127.0.0.1:%d", port);
-    else
-        ex_strformat(addr, 128, "tcp://%s:%d", ip, port);
-
-    nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
-    if (!nc) {
-        EXLOGE("[rpc] TsHttpRpc::init %s:%d\n", ip, port);
-        return false;
-    }
-    nc->user_data = this;
-
-    mg_set_protocol_http_websocket(nc);
 
     m_content_type_map[".js"] = "application/javascript";
     m_content_type_map[".png"] = "image/png";
