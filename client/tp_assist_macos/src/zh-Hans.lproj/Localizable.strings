@@ -7,9 +7,13 @@
 
 /* NSLocalizedString(@"",nil)*/
 
-"About " = "关于 ";
-//"Version: " = "版本：";
-"Teleport Assist" = "Teleport 助手 - macOS";
+"app_name" = "Teleport助手";
 
-"Quit" = "退出";
-//"Continue" = "继续";
+//=============================================
+// for About Window
+//=============================================
+"about " = "关于 ";
+"version" = "版本：";
+"app_full_name" = "Teleport助手 - macOS";
+"copyright" = "© 2017~2018 TP4A，保留所有权利。";
+"visit_tp4a_website" = "访问 Teleport 网站";

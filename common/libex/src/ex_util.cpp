@@ -376,9 +376,13 @@ static const char * _inet_ntop_v6(const ex_u8 *src, char *dst, size_t size)
 	{
 		if (words[i] == 0)
 		{
-			if (cur.base == -1)
-				cur.base = i, cur.len = 1;
-			else cur.len++;
+            if (cur.base == -1) {
+                cur.base = i;
+                cur.len = 1;
+            }
+            else{
+                cur.len++;
+            }
 		}
 		else if (cur.base != -1)
 		{

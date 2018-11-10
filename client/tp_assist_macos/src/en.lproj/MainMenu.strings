@@ -15,7 +15,7 @@
 "136.title" = "Quit TPAssist";
 
 /* Class = "NSMenuItem"; title = "About"; ObjectID = "638"; */
-"638.title" = "About";
+"638.title" = "About Teleport Assist";
 
 /* Class = "NSMenuItem"; title = "Quit"; ObjectID = "644"; */
 "644.title" = "Quit";
@@ -23,11 +23,4 @@
 /* Class = "NSMenuItem"; title = "Settings"; ObjectID = "646"; */
 "646.title" = "Settings";
 
-/* Class = "NSMenu"; title = "Settings"; ObjectID = "647"; */
-"647.title" = "Settings";
-
-/* Class = "NSMenuItem"; title = "Edit"; ObjectID = "648"; */
-"648.title" = "Edit";
-
-/* Class = "NSMenuItem"; title = "Quit"; ObjectID = "649"; */
-"649.title" = "Quit";
+"pkv-BD-W9b.title" = "Visit Teleport Website";

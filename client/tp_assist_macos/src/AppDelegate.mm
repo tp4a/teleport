@@ -44,7 +44,7 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 
 	// if the config file does not exist, create a default one
 	if ( ![[NSFileManager defaultManager] fileExistsAtPath:cfgFile] ) {
-		NSString *cfgFileInResource = [[NSBundle mainBundle] pathForResource:@"tp-assist.default" ofType:@"json"];
+		NSString *cfgFileInResource = [[NSBundle mainBundle] pathForResource:@"tp-assist.macos" ofType:@"json"];
 		[[NSFileManager defaultManager] copyItemAtPath:cfgFileInResource toPath:cfgFile error:nil];
 	}
 	
@@ -67,9 +67,6 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 
     // Needed to trigger the menuWillOpen event
     [menu setDelegate:self];
-
-
-	//http_rpc_start((__bridge void*)self);
 	
 	NSString *resPath = [[NSBundle mainBundle] resourcePath];
 	std::string cpp_res_path = [resPath cStringUsingEncoding:NSUTF8StringEncoding];
@@ -87,11 +84,20 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 		else
 			msg = @"发生未知错误！";
 		
-		NSAlert *alert = [NSAlert alertWithMessageText:@"无法启动Teleport助手"
-										 defaultButton:@"确定"
-									   alternateButton:Nil
-										   otherButton:Nil
-							 informativeTextWithFormat:msg];
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.icon = [NSImage imageNamed:@"tpassist"];
+        
+        [alert addButtonWithTitle:@"确定"];
+        [alert setMessageText:@"无法启动Teleport助手"];
+        [alert setInformativeText:msg];
+        
+        [alert runModal];
+        
+//        NSAlert *alert = [NSAlert alertWithMessageText:@"无法启动Teleport助手"
+//                                         defaultButton:@"确定"
+//                                       alternateButton:Nil
+//                                           otherButton:Nil
+//                             informativeTextWithFormat:@"%@", msg];
 		[alert runModal];
 
 		http_rpc_stop();
@@ -134,7 +140,8 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
         
         //Create the container event
         
-        //We need these constants from the Carbon OpenScripting framework, but we don't actually need Carbon.framework...
+        // We need these constants from the Carbon OpenScripting framework,
+        // but we don't actually need Carbon.framework...
 #define kASAppleScriptSuite 'ascr'
 #define kASSubroutineEvent  'psbr'
 #define keyASSubroutineName 'snam'

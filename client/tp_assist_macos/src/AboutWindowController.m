@@ -38,28 +38,29 @@ NSDictionary *plistDict;
     plistDict = [[NSBundle mainBundle] infoDictionary];
     
     //Get the application name.
-    id applicationName = [plistDict objectForKey:@"CFBundleName"];
+//    id applicationName = [plistDict objectForKey:@"CFBundleName"];
     //Get the build version.
     id applicationVersion = [plistDict objectForKey:@"CFBundleVersion"];
     //Get the copyright.
-    id applicationCopyright = [plistDict objectForKey:@"NSHumanReadableCopyright"];
+//    id applicationCopyright = [plistDict objectForKey:@"NSHumanReadableCopyright"];
     
     //Build the string for the windows title.
-    NSString *aboutTitle = [NSString stringWithFormat:@"%@%@", NSLocalizedString(@"About ",nil), applicationName];
-    [aboutWindow.window setTitle:aboutTitle];
+    // NSString *aboutTitle = [NSString stringWithFormat:@"%@%@", NSLocalizedString(@"About ",nil), applicationName];
+    NSString *strTitle = [NSString stringWithFormat:@"%@%@",
+                          NSLocalizedString(@"about ",nil),
+                          NSLocalizedString(@"app_name",nil)];
+    [aboutWindow.window setTitle:strTitle];
     
     //Build the string for the application name. appName - tagline
-    NSString *progName = [NSString stringWithFormat:@"%@", NSLocalizedString(@"Teleport Assist",nil)];
-    [appName setStringValue:progName];
+    NSString *strProgName = [NSString stringWithFormat:@"%@", NSLocalizedString(@"app_full_name", nil)];
+    [appName setStringValue:strProgName];
     
     //Build the string for the version. Version: $build
-    NSString *progVersion = [NSString stringWithFormat:@"%@", applicationVersion];
-    [appVersion setStringValue:progVersion];
-    
-    //Make the copyright font smaller.
-//    [appCopyright setFont:[NSFont systemFontOfSize:10]];
-    [appCopyright setStringValue:applicationCopyright];
-    
+    NSString *strVersion = [NSString stringWithFormat:@"%@%@", NSLocalizedString(@"version", nil), applicationVersion];
+    [appVersion setStringValue:strVersion];
+
+    NSString *strCopyright = [NSString stringWithFormat:@"%@", NSLocalizedString(@"copyright", nil)];
+    [appCopyright setStringValue:strCopyright];
 }
 
 - (IBAction)btnHomepage:(id)sender {

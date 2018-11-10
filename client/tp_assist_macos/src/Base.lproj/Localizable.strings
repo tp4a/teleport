@@ -2,3 +2,13 @@
   Localizable.strings
   TPAssist
 */
+
+"app_name" = "Teleport助手";
+
+//=============================================
+// for About Window
+//=============================================
+"version" = "Version: ";
+"app_full_name" = "Teleport Assist for macOS";
+"copyright" = "Copyright © 2017~2018 TP4A. All rights reserved.";
+"visit_tp4a_website" = "Visit Teleport Website"

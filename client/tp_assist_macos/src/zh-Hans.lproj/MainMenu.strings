@@ -15,7 +15,7 @@
 "136.title" = "退出 TPAssist";
 
 /* Class = "NSMenuItem"; title = "关于"; ObjectID = "638"; */
-"638.title" = "关于";
+"638.title" = "关于Teleport助手";
 
 /* Class = "NSMenuItem"; title = "退出"; ObjectID = "644"; */
 "644.title" = "退出";
@@ -23,11 +23,4 @@
 /* Class = "NSMenuItem"; title = "设置"; ObjectID = "646"; */
 "646.title" = "设置";
 
-/* Class = "NSMenu"; title = "设置"; ObjectID = "647"; */
-"647.title" = "设置";
-
-/* Class = "NSMenuItem"; title = "编辑"; ObjectID = "648"; */
-"648.title" = "编辑";
-
-/* Class = "NSMenuItem"; title = "Quit"; ObjectID = "649"; */
-"649.title" = "Quit";
+"pkv-BD-W9b.title" = "访问Teleport网站";

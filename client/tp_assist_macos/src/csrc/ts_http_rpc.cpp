@@ -1,9 +1,3 @@
-//#include "stdafx.h"
-
-//#pragma warning(disable:4091)
-
-//#include <commdlg.h>
-//#include <ShlObj.h>
 #include <unistd.h>
 
 #include <teleport_const.h>
@@ -15,7 +9,6 @@
 #include "../AppDelegate-C-Interface.h"
 
 #include "ts_http_rpc.h"
-//#include "dlg_main.h"
 #include "ts_ver.h"
 #include "ts_env.h"
 #include "ts_cfg.h"
@@ -140,7 +133,7 @@ bool TsHttpRpc::init(const char* ip, int port)
 
 void TsHttpRpc::_thread_loop(void)
 {
-	while (!m_stop_flag)
+	while (!m_need_stop)
 	{
 		mg_mgr_poll(&m_mg_mgr, 500);
 	}
@@ -148,10 +141,10 @@ void TsHttpRpc::_thread_loop(void)
 	EXLOGV("[core] rpc main loop end.\n");
 }
 
-void TsHttpRpc::_set_stop_flag(void)
-{
-	m_stop_flag = true;
-}
+//void TsHttpRpc::_set_stop_flag(void)
+//{
+//    m_stop_flag = true;
+//}
 
 void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_data)
 {
@@ -478,7 +471,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		// RDP
 		//==============================================
 
-		if(g_cfg.rdp_app.length() == 0) {
+		if(g_cfg.rdp.application.length() == 0) {
 			_create_json_ret(buf, TPE_NOT_EXISTS);
 			return;
 		}
@@ -546,7 +539,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//w_exe_path = _T("/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp -u {user_name} {size} {console} ");
 		//w_exe_path = _T("xfreerdp -u {user_name} {size} {console} ");
 		//s_exec = "/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp";
-		s_exec = g_cfg.rdp_app;
+		s_exec = g_cfg.rdp.application;
 		s_argv.push_back(s_exec.c_str());
 
 		{
@@ -594,18 +587,21 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 		if (pro_sub == TP_PROTOCOL_TYPE_SSH_SHELL)
 		{
-			char szCmd[1024] = {0};
-			ex_strformat(szCmd, 1023, "ssh %s@%s -p %d", sid.c_str(), teleport_ip.c_str(), teleport_port);
-			
-			char szTitle[128] = {0};
-			ex_strformat(szTitle, 127, "TP#%s", real_host_ip.c_str());
-
-			int ret = AppDelegate_start_ssh_client(g_app, szCmd, g_cfg.term_name.c_str(), g_cfg.term_profile.c_str(), szTitle);
-			if(ret == 0)
-				_create_json_ret(buf, TPE_OK);
-			else
-				_create_json_ret(buf, TPE_FAILED);
-			return;
+            if(g_cfg.ssh.name == "terminal" || g_cfg.ssh.name == "iterm2") {
+                char szCmd[1024] = {0};
+                ex_strformat(szCmd, 1023, "ssh %s@%s -p %d", sid.c_str(), teleport_ip.c_str(), teleport_port);
+                
+                char szTitle[128] = {0};
+                ex_strformat(szTitle, 127, "TP#%s", real_host_ip.c_str());
+                
+                int ret = AppDelegate_start_ssh_client(g_app, szCmd, g_cfg.ssh.name.c_str(), g_cfg.ssh.cmdline.c_str(), szTitle);
+                if(ret == 0)
+                    _create_json_ret(buf, TPE_OK);
+                else
+                    _create_json_ret(buf, TPE_FAILED);
+                return;
+            }
+            
 		}
 		else
 		{
