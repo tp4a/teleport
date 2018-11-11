@@ -56,19 +56,16 @@ int AppDelegate_select_app (void *_self) {
     // Define Icons
     //only regular icon is needed for 10.10 and higher. OS X changes the icon for us.
     regularIcon = [NSImage imageNamed:@"StatusIcon"];
+    [regularIcon setTemplate:YES];
+    
     altIcon = [NSImage imageNamed:@"StatusIconAlt"];
-	
-	// TODO: 现在statusIcon有两个问题：
-	//   1. 不会响应系统设置“暗色菜单栏和Dock”的事件
-	//   2. 即使是设置为暗色系，启动本程序也会使用黑色图标，导致在菜单栏中看不到图标。
-	// 因此，应该响应系统的设置菜单栏颜色的事件，同时启动前先获取菜单栏的色系。
 	
     // Create the status bar item
     statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
     [statusItem setMenu:menu];
     [statusItem setImage: regularIcon];
 	[statusItem setHighlightMode:YES];
-	[statusItem setAlternateImage: altIcon];
+    [statusItem setAlternateImage: altIcon];
 
     // Needed to trigger the menuWillOpen event
     [menu setDelegate:self];
@@ -79,7 +76,9 @@ int AppDelegate_select_app (void *_self) {
 	
 	int ret = cpp_main((__bridge void*)self, cpp_cfg_file.c_str(), cpp_res_path.c_str());
 	if(ret != 0) {
-		NSString *msg = Nil;
+        http_rpc_stop();
+
+        NSString *msg = Nil;
 		if(ret == -1)
 			msg = @"初始化运行环境失败！";
 		else if(ret == -2)
@@ -91,22 +90,11 @@ int AppDelegate_select_app (void *_self) {
 		
         NSAlert *alert = [[NSAlert alloc] init];
         alert.icon = [NSImage imageNamed:@"tpassist"];
-        
         [alert addButtonWithTitle:@"确定"];
         [alert setMessageText:@"无法启动Teleport助手"];
         [alert setInformativeText:msg];
-        
         [alert runModal];
         
-//        NSAlert *alert = [NSAlert alertWithMessageText:@"无法启动Teleport助手"
-//                                         defaultButton:@"确定"
-//                                       alternateButton:Nil
-//                                           otherButton:Nil
-//                             informativeTextWithFormat:@"%@", msg];
-		[alert runModal];
-
-		http_rpc_stop();
-		
 		[[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
 		[NSApp terminate:NSApp];	}
 }
@@ -134,8 +122,8 @@ int AppDelegate_select_app (void *_self) {
     
     if (handlerName && [handlerName length])
     {
-        /* If we have a handlerName (and potentially parameters), we build
-         * an NSAppleEvent to execute the script. */
+        // If we have a handlerName (and potentially parameters), we build
+        // an NSAppleEvent to execute the script.
         
         //Get a descriptor
         int pid = [[NSProcessInfo processInfo] processIdentifier];
@@ -179,7 +167,7 @@ int AppDelegate_select_app (void *_self) {
 }
 
 - (int) select_app:(NSString*)strIgnore {
-    // NOT WORK
+    // NOT WORK NOW
     // this function called by ts_http_rpc.c but it run in worker thread.
     // once we call select_app from worker thread, the NSOpenPanel alloc crash.
     // so we have had to show UI like "post a event and call callback" stuff.
