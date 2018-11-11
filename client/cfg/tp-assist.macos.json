@@ -1,27 +1,27 @@
 {
     "file_version": 3,
-	"ssh": {
-		"selected": "terminal",
-		"available": [
-			{
-				"name":"terminal",
-				"display": "终端（系统自带）",
-				"app": "Terminal.app",
-				"cmdline": "Basic",
+    "ssh": {
+        "selected": "terminal",
+        "available": [
+            {
+                "name":"terminal",
+                "display": "终端（系统自带）",
+                "app": "Terminal.app",
+                "cmdline": "Basic",
                 "desc": []
-			},
-			{
-				"name": "iterm2",
-				"display": "iTerm2",
-				"app": "iTerm2.app",
+            },
+            {
+                "name": "iterm2",
+                "display": "iTerm2",
+                "app": "iTerm2.app",
                 "cmdline": "Default",
                 "desc": []
-			},
+            },
             {
                 "name": "securecrt",
                 "display": "SecureCRT",
-                "app": "SecureCRT.app",
-                "cmdline": "/T /N \"TP#ssh://{real_ip}\" /SSH2 /P {host_port} /PASSWORD **** {user_name}@{host_ip}",
+                "app": "/Applications/SecureCRT.app/Contents/MacOS/SecureCRT",
+                "cmdline": "/T /N \"TP#ssh://{real_ip}\" /SSH2 /L {user_name} /PASSWORD **** {host_ip}:{host_port}",
                 "desc": []
             },
             {
@@ -31,8 +31,8 @@
                 "cmdline": "",
                 "desc": []
             }
-		]
-	},
+        ]
+    },
 
     "sftp": {
         "selected": "securefx",
@@ -40,8 +40,8 @@
             {
                 "name": "securefx",
                 "display": "SecureFX",
-                "app": "SecureCRT.app",
-                "cmdline": "/T /N \"TP#ssh://{real_ip}\" /SSH2 /P {host_port} /PASSWORD **** {user_name}@{host_ip}",
+                "app": "/Applications/SecureFX.app/Contents/MacOS/SecureFX",
+                "cmdline": "sftp://{user_name}:****@{host_ip}:{host_port}",
                 "desc": []
             },
             {
@@ -89,18 +89,18 @@
     },
 
     "rdp": {
-		"selected": "freerdp",
-		"available": [
-			{
-				"name": "FreeRDP",
-				"display": "FreeRDP",
-				"app": "",
+        "selected": "freerdp",
+        "available": [
+            {
+                "name": "FreeRDP",
+                "display": "FreeRDP",
+                "app": "",
                 "cmdline": "",
                 "desc": [
                     "建议使用homebrew安装freerdp，安装后freerdp默认路径在：/usr/local/Cellar/freerdp/x.y.z/bin/xfreerdp",
                     "首次安装freerdp后需要重新启动计算机"
                 ]
-			}
-		]
-	}
+            }
+        ]
+    }
 }

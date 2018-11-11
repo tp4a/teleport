@@ -2,7 +2,6 @@ on scriptRun(argsCmd, argsProfile, argsTitle)
     set theCmd to (argsCmd)
 	set theProfile to (argsProfile)
 	set theTitle to (argsTitle)
-    set useless to "useless"
 	CommandRun(theCmd, theProfile, theTitle)
 end scriptRun
 

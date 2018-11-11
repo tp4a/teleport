@@ -115,10 +115,10 @@ bool TsCfg::_parse_app(const Json::Value& m_root, const ex_astr& str_app, APP_CO
         break;
     }
     
-    if (cfg.application.empty() || cfg.cmdline.empty()) {
-        EXLOGE("invalid config, error 6.\n");
-        return false;
-    }
+//    if (cfg.application.empty() || cfg.cmdline.empty()) {
+//        EXLOGE("invalid config, error 6.\n");
+//        return false;
+//    }
 
     return true;
 }
@@ -136,6 +136,12 @@ bool TsCfg::_load(const ex_astr& str_json) {
 	// check ssh config
 	//===================================
     if(!_parse_app(m_root, "ssh", ssh))
+        return false;
+    if(!_parse_app(m_root, "sftp", sftp))
+        return false;
+    if(!_parse_app(m_root, "telnet", telnet))
+        return false;
+    if(!_parse_app(m_root, "rdp", rdp))
         return false;
 
 #if 0

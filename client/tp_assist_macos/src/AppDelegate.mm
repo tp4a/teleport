@@ -37,6 +37,11 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 	return [(__bridge id)_self start_ssh_client:cmdLine termType:termType termTheme:termTheme termTitle:termTitle];
 }
 
+int AppDelegate_select_app (void *_self) {
+    NSString* strIgnore = @"";
+    return [(__bridge id)_self select_app:strIgnore];
+}
+
 - (void) awakeFromNib {
 	
 	// The path for the configuration file (by default: ~/.tp_assist.ini)
@@ -171,6 +176,27 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
         //Execute the event
         [appleScript executeAppleEvent:containerEvent error:nil];
     }
+}
+
+- (int) select_app:(NSString*)strIgnore {
+    // NOT WORK
+    // this function called by ts_http_rpc.c but it run in worker thread.
+    // once we call select_app from worker thread, the NSOpenPanel alloc crash.
+    // so we have had to show UI like "post a event and call callback" stuff.
+
+    NSOpenPanel *mySelectPanel = [[NSOpenPanel alloc] init];
+    [mySelectPanel setCanChooseDirectories:YES];
+    [mySelectPanel setCanChooseFiles:YES];
+    [mySelectPanel setCanCreateDirectories:YES];
+    [mySelectPanel setAllowsMultipleSelection:NO];
+    [mySelectPanel setResolvesAliases:YES];
+
+    if([mySelectPanel runModal] == NSOKButton) {
+        NSURL *ret = [mySelectPanel URL];
+        NSLog(@"%@", ret.absoluteString);
+    }
+
+    return 0;
 }
 
 - (IBAction)visitWebsite:(id)sender {

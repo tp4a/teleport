@@ -29,7 +29,7 @@ on CommandRun(theCmd, theProfile, theTitle)
 						set profile to theProfile
 						write text theCmd
 						delay 0.5
-						write text "useless"
+						write text ""
 					end tell
 				end tell
 			end tell
@@ -50,7 +50,7 @@ on CommandRun(theCmd, theProfile, theTitle)
 								set name to theTitle
 								write text theCmd
 								delay 0.5
-								write text "useless"
+								write text ""
 							end tell
 						end tell
 					end tell
@@ -70,7 +70,7 @@ on CommandRun(theCmd, theProfile, theTitle)
 							set name to theTitle
 							write text theCmd
 							delay 0.5
-							write text "useless"
+							write text ""
 						end tell
 					end tell
 				end tell

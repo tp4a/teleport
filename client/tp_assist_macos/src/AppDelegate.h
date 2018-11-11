@@ -16,5 +16,6 @@
 }
 
 - (int) start_ssh_client:(NSString*)cmd_line termType:(NSString*)term_type termTheme:(NSString*)term_theme termTitle:(NSString*)term_title;
+- (int) select_app:(NSString*)ignore;
 
 @end
