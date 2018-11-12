@@ -18,33 +18,44 @@
 #define RDP_CLIENT_FREERDP
 
 TsHttpRpc g_http_interface;
+TsHttpRpc g_https_interface;
 
 void* g_app = NULL;
 
 int http_rpc_start(void* app) {
 	g_app = app;
-	
-//	if(!g_env.init())
-//		return;
 
-	if (!g_http_interface.init(TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT))
+    EXLOGW("======================================================\n");
+
+    if (!g_http_interface.init_http())
 	{
 		EXLOGE("[ERROR] can not start HTTP-RPC listener, maybe port %d is already in use.\n", TS_HTTP_RPC_PORT);
 		return -1;
 	}
 	
-	EXLOGW("======================================================\n");
-	EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on %s:%d\n", TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT);
+	EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on localhost:%d\n", TS_HTTP_RPC_PORT);
 	
 	if(!g_http_interface.start())
 		return -2;
 
-	return 0;
+    if (!g_https_interface.init_https())
+    {
+        EXLOGE("[ERROR] can not start HTTPS-RPC listener, maybe port %d is already in use.\n", TS_HTTPS_RPC_PORT);
+        return -1;
+    }
+    
+    EXLOGW("[rpc] TeleportAssist-HTTPS-RPC ready on localhost:%d\n", TS_HTTPS_RPC_PORT);
+    
+    if(!g_https_interface.start())
+        return -2;
+
+    return 0;
 }
 
 void http_rpc_stop(void)
 {
-	g_http_interface.stop();
+    g_http_interface.stop();
+    g_https_interface.stop();
 }
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
@@ -95,40 +106,74 @@ TsHttpRpc::~TsHttpRpc()
 	mg_mgr_free(&m_mg_mgr);
 }
 
-bool TsHttpRpc::init(const char* ip, int port)
+bool TsHttpRpc::init_http()
 {
-	struct mg_connection* nc = NULL;
+    
+    char addr[128] = { 0 };
+    ex_strformat(addr, 128, "tcp://localhost:%d", TS_HTTP_RPC_PORT);
+    
+    struct mg_connection* nc = NULL;
+    nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
+    if (nc == NULL) {
+        EXLOGE("[rpc] TsHttpRpc::init_http() localhost:%d\n", TS_HTTP_RPC_PORT);
+        return false;
+    }
+    nc->user_data = this;
+    
+    mg_set_protocol_http_websocket(nc);
+    
+    return _on_init();
+}
 
-	char addr[128] = { 0 };
-	if (0 == strcmp(ip, "127.0.0.1") || 0 == strcmp(ip, "localhost"))
-		ex_strformat(addr, 128, "tcp://127.0.0.1:%d", port);
-	else
-		ex_strformat(addr, 128, "tcp://%s:%d", ip, port);
+bool TsHttpRpc::init_https()
+{
+    ex_wstr file_ssl_cert = g_env.m_res_path;
+    ex_path_join(file_ssl_cert, false, L"localhost.pem", NULL);
+    ex_wstr file_ssl_key = g_env.m_res_path;
+    ex_path_join(file_ssl_key, false, L"localhost.key", NULL);
+    ex_astr _ssl_cert;
+    ex_wstr2astr(file_ssl_cert, _ssl_cert);
+    ex_astr _ssl_key;
+    ex_wstr2astr(file_ssl_key, _ssl_key);
+    
+    const char *err = NULL;
+    struct mg_bind_opts bind_opts;
+    memset(&bind_opts, 0, sizeof(bind_opts));
+    bind_opts.ssl_cert = _ssl_cert.c_str();
+    bind_opts.ssl_key = _ssl_key.c_str();
+    bind_opts.error_string = &err;
+    
+    char addr[128] = { 0 };
+    ex_strformat(addr, 128, "tcp://localhost:%d", TS_HTTPS_RPC_PORT);
 
-	nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
-	if (nc == NULL)
-	{
-		EXLOGE("[rpc] TsHttpRpc::init %s:%d\n", ip, port);
-		return false;
-	}
-	nc->user_data = this;
+    struct mg_connection* nc = NULL;
+    nc = mg_bind_opt(&m_mg_mgr, addr, _mg_event_handler, bind_opts);
+    if (nc == NULL) {
+        EXLOGE("[rpc] TsHttpRpc::init_https() localhost:%d\n", TS_HTTPS_RPC_PORT);
+        return false;
+    }
+    nc->user_data = this;
+    
+    mg_set_protocol_http_websocket(nc);
+    
+    return _on_init();
+}
 
-	mg_set_protocol_http_websocket(nc);
+bool TsHttpRpc::_on_init() {
+    m_content_type_map[".js"] = "application/javascript";
+    m_content_type_map[".png"] = "image/png";
+    m_content_type_map[".jpeg"] = "image/jpeg";
+    m_content_type_map[".jpg"] = "image/jpeg";
+    m_content_type_map[".gif"] = "image/gif";
+    m_content_type_map[".ico"] = "image/x-icon";
+    m_content_type_map[".json"] = "image/json";
+    m_content_type_map[".html"] = "text/html";
+    m_content_type_map[".css"] = "text/css";
+    m_content_type_map[".tif"] = "image/tiff";
+    m_content_type_map[".tiff"] = "image/tiff";
+    m_content_type_map[".svg"] = "text/html";
 
-	m_content_type_map[".js"] = "application/javascript";
-	m_content_type_map[".png"] = "image/png";
-	m_content_type_map[".jpeg"] = "image/jpeg";
-	m_content_type_map[".jpg"] = "image/jpeg";
-	m_content_type_map[".gif"] = "image/gif";
-	m_content_type_map[".ico"] = "image/x-icon";
-	m_content_type_map[".json"] = "image/json";
-	m_content_type_map[".html"] = "text/html";
-	m_content_type_map[".css"] = "text/css";
-	m_content_type_map[".tif"] = "image/tiff";
-	m_content_type_map[".tiff"] = "image/tiff";
-	m_content_type_map[".svg"] = "text/html";
-
-	return true;
+    return true;
 }
 
 void TsHttpRpc::_thread_loop(void)

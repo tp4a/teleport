@@ -179,7 +179,7 @@ int AppDelegate_select_app (void *_self) {
     [mySelectPanel setAllowsMultipleSelection:NO];
     [mySelectPanel setResolvesAliases:YES];
 
-    if([mySelectPanel runModal] == NSOKButton) {
+    if([mySelectPanel runModal] == NSModalResponseOK) {
         NSURL *ret = [mySelectPanel URL];
         NSLog(@"%@", ret.absoluteString);
     }

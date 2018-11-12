@@ -129,7 +129,7 @@ void http_rpc_main_loop(bool is_https) {
         }
 
         EXLOGW("======================================================\n");
-        EXLOGW("[rpc] TeleportAssist-HTTPS-RPC ready on 127.0.0.1:%d\n", TS_HTTPS_RPC_PORT);
+        EXLOGW("[rpc] TeleportAssist-HTTPS-RPC ready on localhost:%d\n", TS_HTTPS_RPC_PORT);
 
         g_https_interface.run();
 
@@ -141,7 +141,7 @@ void http_rpc_main_loop(bool is_https) {
         }
 
         EXLOGW("======================================================\n");
-        EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on 127.0.0.1:%d\n", TS_HTTP_RPC_PORT);
+        EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on localhost:%d\n", TS_HTTP_RPC_PORT);
 
         g_http_interface.run();
 
@@ -221,11 +221,11 @@ bool TsHttpRpc::init_http() {
     struct mg_connection* nc = nullptr;
 
     char addr[128] = { 0 };
-    ex_strformat(addr, 128, "tcp://127.0.0.1:%d", TS_HTTP_RPC_PORT);
+    ex_strformat(addr, 128, "tcp://localhost:%d", TS_HTTP_RPC_PORT);
 
     nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
     if (!nc) {
-        EXLOGE("[rpc] TsHttpRpc::init 127.0.0.1:%d\n", TS_HTTP_RPC_PORT);
+        EXLOGE("[rpc] TsHttpRpc::init localhost:%d\n", TS_HTTP_RPC_PORT);
         return false;
     }
     nc->user_data = this;
@@ -254,13 +254,13 @@ bool TsHttpRpc::init_https() {
 
 
     char addr[128] = { 0 };
-    ex_strformat(addr, 128, "tcp://127.0.0.1:%d", TS_HTTPS_RPC_PORT);
+    ex_strformat(addr, 128, "tcp://localhost:%d", TS_HTTPS_RPC_PORT);
     //ex_strformat(addr, 128, "%d", TS_HTTPS_RPC_PORT);
 
     struct mg_connection* nc = nullptr;
     nc = mg_bind_opt(&m_mg_mgr, addr, _mg_event_handler, bind_opts);
     if (!nc) {
-        EXLOGE("[rpc] TsHttpRpc::init 127.0.0.1:%d\n", TS_HTTPS_RPC_PORT);
+        EXLOGE("[rpc] TsHttpRpc::init localhost:%d\n", TS_HTTPS_RPC_PORT);
         return false;
     }
     nc->user_data = this;

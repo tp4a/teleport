@@ -37,6 +37,8 @@
 		7AA2CD541F6AB9F10074C92B /* json_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD501F6AB9F10074C92B /* json_writer.cpp */; };
 		7AA2CD571F6ABA2E0074C92B /* mongoose.c in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD561F6ABA2E0074C92B /* mongoose.c */; };
 		7AA2CD591F6AC0DA0074C92B /* site in Resources */ = {isa = PBXBuildFile; fileRef = 7AA2CD581F6AC0DA0074C92B /* site */; };
+		7AF9BF272199E3DE00BE5DBC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF1F2199E31A00BE5DBC /* libssl.a */; };
+		7AF9BF292199E3DF00BE5DBC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF282199E3DF00BE5DBC /* libcrypto.a */; };
 		A1B7B9DD1DB53ED200809327 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A1B7B9DF1DB53ED200809327 /* Localizable.strings */; };
 		A1D700071A5DCE8D003563E4 /* AboutWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1D700061A5DCE8D003563E4 /* AboutWindowController.m */; };
 		C149EBFE15D5214600B1F558 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C149EBFD15D5214600B1F558 /* Cocoa.framework */; };
@@ -76,7 +78,6 @@
 		7A27E4A61F6A899B004FDE5D /* ts_const.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ts_const.h; sourceTree = "<group>"; };
 		7A27E4A71F6A8EEC004FDE5D /* ts_env.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ts_env.cpp; sourceTree = "<group>"; };
 		7A27E4A81F6A8EEC004FDE5D /* ts_env.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ts_env.h; sourceTree = "<group>"; };
-		7A2EC2C1219863A3009CFA85 /* tp_assist.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = tp_assist.entitlements; sourceTree = "<group>"; };
 		7A40FFE21F7B2A4500F11697 /* AppDelegate-C-Interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AppDelegate-C-Interface.h"; sourceTree = "<group>"; };
 		7A7C6C8F21973C24006869D9 /* StatusIconAlt@3X.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusIconAlt@3X.png"; sourceTree = "<group>"; };
 		7A7C6C9021973C24006869D9 /* StatusIcon@3X.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusIcon@3X.png"; sourceTree = "<group>"; };
@@ -106,6 +107,11 @@
 		7AA2CD501F6AB9F10074C92B /* json_writer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = json_writer.cpp; path = ../../../../external/jsoncpp/src/lib_json/json_writer.cpp; sourceTree = "<group>"; };
 		7AA2CD561F6ABA2E0074C92B /* mongoose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mongoose.c; path = ../../../../external/mongoose/mongoose.c; sourceTree = "<group>"; };
 		7AA2CD581F6AC0DA0074C92B /* site */ = {isa = PBXFileReference; lastKnownFileType = folder; path = site; sourceTree = "<group>"; };
+		7AF9BF1F2199E31A00BE5DBC /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = ../../external/macos/release/lib/libssl.a; sourceTree = "<group>"; };
+		7AF9BF212199E32B00BE5DBC /* libmbedx509.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmbedx509.a; path = ../../external/macos/release/lib/libmbedx509.a; sourceTree = "<group>"; };
+		7AF9BF222199E32B00BE5DBC /* libmbedtls.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmbedtls.a; path = ../../external/macos/release/lib/libmbedtls.a; sourceTree = "<group>"; };
+		7AF9BF232199E32B00BE5DBC /* libmbedcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmbedcrypto.a; path = ../../external/macos/release/lib/libmbedcrypto.a; sourceTree = "<group>"; };
+		7AF9BF282199E3DF00BE5DBC /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../../external/macos/release/lib/libcrypto.a; sourceTree = "<group>"; };
 		A1B7B9D31DB5361700809327 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		A1B7B9DE1DB53ED200809327 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		A1B7B9E01DB53ED700809327 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -137,6 +143,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				C149EBFE15D5214600B1F558 /* Cocoa.framework in Frameworks */,
+				7AF9BF292199E3DF00BE5DBC /* libcrypto.a in Frameworks */,
+				7AF9BF272199E3DE00BE5DBC /* libssl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,6 +247,13 @@
 			path = csrc;
 			sourceTree = "<group>";
 		};
+		7AF9BF1E2199E0DD00BE5DBC /* mbedtls */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = mbedtls;
+			sourceTree = "<group>";
+		};
 		A12D9BE61BCF2C72004F52A6 /* apple-scpt */ = {
 			isa = PBXGroup;
 			children = (
@@ -251,7 +266,6 @@
 		C149EBEE15D5214600B1F558 = {
 			isa = PBXGroup;
 			children = (
-				7A2EC2C1219863A3009CFA85 /* tp_assist.entitlements */,
 				7A1818951F8242E900F3C882 /* apple-scripts */,
 				7AA2CD581F6AC0DA0074C92B /* site */,
 				C149EBFC15D5214600B1F558 /* Frameworks */,
@@ -271,6 +285,11 @@
 		C149EBFC15D5214600B1F558 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7AF9BF282199E3DF00BE5DBC /* libcrypto.a */,
+				7AF9BF232199E32B00BE5DBC /* libmbedcrypto.a */,
+				7AF9BF222199E32B00BE5DBC /* libmbedtls.a */,
+				7AF9BF212199E32B00BE5DBC /* libmbedx509.a */,
+				7AF9BF1F2199E31A00BE5DBC /* libssl.a */,
 				C149EBFD15D5214600B1F558 /* Cocoa.framework */,
 				C149EBFF15D5214600B1F558 /* Other Frameworks */,
 			);
@@ -290,6 +309,7 @@
 		C149EC0315D5214600B1F558 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				7AF9BF1E2199E0DD00BE5DBC /* mbedtls */,
 				7A45423D2196E32800FEB5B4 /* cfg */,
 				7AD3E8741F6A7CC600D2EB48 /* csrc */,
 				A12D9BE61BCF2C72004F52A6 /* apple-scpt */,
@@ -589,8 +609,20 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/tp_assist-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					MG_ENABLE_SSL,
+				);
+				HEADER_SEARCH_PATHS = (
+					../../common/teleport,
+					../../common/libex/include,
+					../../external/mongoose,
+					../../external/jsoncpp/include,
+					../../external/macos/release/include,
+				);
 				INFOPLIST_FILE = "src/tp_assist-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				LIBRARY_SEARCH_PATHS = ../../external/macos/release/lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_BUNDLE_IDENTIFIER = "teleport.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VALID_ARCHS = x86_64;
@@ -605,8 +637,17 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/tp_assist-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = MG_ENABLE_SSL;
+				HEADER_SEARCH_PATHS = (
+					../../common/teleport,
+					../../common/libex/include,
+					../../external/mongoose,
+					../../external/jsoncpp/include,
+					../../external/macos/release/include,
+				);
 				INFOPLIST_FILE = "src/tp_assist-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				LIBRARY_SEARCH_PATHS = ../../external/macos/release/lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_BUNDLE_IDENTIFIER = "teleport.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VALID_ARCHS = x86_64;

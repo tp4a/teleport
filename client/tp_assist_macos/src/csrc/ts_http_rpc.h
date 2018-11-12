@@ -59,7 +59,8 @@ public:
 	TsHttpRpc();
 	~TsHttpRpc();
 
-	bool init(const char* ip, int port);
+    bool init_http();
+    bool init_https();
 
 	ex_astr get_content_type(ex_astr file_suffix)
 	{
@@ -78,6 +79,8 @@ protected:
 	void _thread_loop(void);
 //    void _set_stop_flag(void);
 //    void _on_stop();
+    
+    bool _on_init();
 	
 private:
 	int _parse_request(struct http_message* req, ex_astr& func_cmd, ex_astr& func_args);
