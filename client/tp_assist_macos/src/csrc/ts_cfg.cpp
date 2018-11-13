@@ -100,15 +100,13 @@ bool TsCfg::_parse_app(const Json::Value& m_root, const ex_astr& str_app, APP_CO
         cfg.cmdline = jAppList[i]["cmdline"].asCString();
 
         if(jAppList[i]["desc"].size() > 0) {
-//            cfg.description = jApp["available"][i]["app"].asCString();
-
             const Json::Value& jAppDescList = jAppList[i]["desc"];
             
             int j = 0;
             for(j = 0; j < jAppDescList.size(); ++j) {
-                if(!jAppDescList[i].isString())
+                if(!jAppDescList[j].isString())
                     return false;
-                cfg.description.push_back(jAppDescList[i].asCString());
+                cfg.description.push_back(jAppDescList[j].asCString());
             }
         }
 
@@ -139,8 +137,8 @@ bool TsCfg::_load(const ex_astr& str_json) {
         return false;
     if(!_parse_app(m_root, "sftp", sftp))
         return false;
-    if(!_parse_app(m_root, "telnet", telnet))
-        return false;
+//    if(!_parse_app(m_root, "telnet", telnet))
+//        return false;
     if(!_parse_app(m_root, "rdp", rdp))
         return false;
 

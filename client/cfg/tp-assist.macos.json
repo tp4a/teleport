@@ -6,16 +6,16 @@
             {
                 "name":"terminal",
                 "display": "终端（系统自带）",
-                "app": "Terminal.app",
+                "app": "",
                 "cmdline": "Basic",
-                "desc": []
+                "desc": ["命令参数为终端偏好设置中描述文件的名称"]
             },
             {
                 "name": "iterm2",
                 "display": "iTerm2",
-                "app": "iTerm2.app",
+                "app": "",
                 "cmdline": "Default",
-                "desc": []
+                "desc": ["命令参数为iTerm偏好设置中描述文件的名称"]
             },
             {
                 "name": "securecrt",
@@ -62,20 +62,20 @@
                 "display": "终端（系统自带）",
                 "app": "Terminal.app",
                 "cmdline": "Basic",
-                "desc": []
+                "desc": ["命令参数为终端偏好设置中描述文件的名称"]
             },
             {
                 "name": "iterm2",
                 "display": "iTerm2",
                 "app": "iTerm2.app",
                 "cmdline": "Default",
-                "desc": []
+                "desc": ["命令参数为iTerm偏好设置中描述文件的名称"]
             },
             {
                 "name": "securecrt",
                 "display": "SecureCRT",
                 "app": "SecureCRT.app",
-                "cmdline": "/T /N \"TP#ssh://{real_ip}\" /SSH2 /P {host_port} /PASSWORD **** {user_name}@{host_ip}",
+                "cmdline": "/T /N \"TP#telnet://{real_ip}\" /TELNET {user_name}@{host_ip} {host_port}",
                 "desc": []
             },
             {

@@ -69,10 +69,6 @@
                     <label for="ssh-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
                     <div class="col-sm-9">
                         <input id="ssh-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径">
-<!--                        <div class="input-group">-->
-<!--                            <input id="ssh-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径">-->
-<!--                            <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="ssh-select-app">选择...</button></span>-->
-<!--                        </div>-->
                     </div>
                 </div>
 
@@ -80,6 +76,7 @@
                     <label for="ssh-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
                     <div class="col-sm-9">
                         <input id="ssh-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数" />
+                        <div id="ssh-desc"></div>
                     </div>
                 </div>
             </div>
@@ -99,10 +96,7 @@
                 <div class="form-group form-group-sm">
                     <label for="sftp-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
                     <div class="col-sm-9">
-                        <div class="input-group">
-                            <input id="sftp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
-                            <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="sftp-select-app">选择...</button></span>
-                        </div>
+                        <input id="sftp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径">
                     </div>
                 </div>
 
@@ -110,57 +104,44 @@
                     <label for="sftp-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
                     <div class="col-sm-9">
                         <input id="sftp-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数" />
+                        <div id="sftp-desc"></div>
                     </div>
                 </div>
 
             </div>
 
 
-            <hr/>
-            <p class="cfg-title">本地 TELNET 客户端配置</p>
-
-            <div class="form-horizontal">
-                <div class="form-group form-group-sm">
-                    <label for="telnet-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
-                    <div class="col-sm-4">
-                        <select id="telnet-type" class="form-control"></select>
-                    </div>
-                </div>
-
-                <div class="form-group form-group-sm">
-                    <label for="telnet-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
-                    <div class="col-sm-9">
-                        <div class="input-group">
-                            <input id="telnet-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
-                            <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="telnet-select-app">选择...</button></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group form-group-sm">
-                    <label for="telnet-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
-                    <div class="col-sm-9">
-                        <input id="telnet-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数" />
-                    </div>
-                </div>
-
-            </div>
+<!--            <hr/>-->
+<!--            <p class="cfg-title">本地 TELNET 客户端配置</p>-->
+<!---->
+<!--            <div class="form-horizontal">-->
+<!--                <div class="form-group form-group-sm">-->
+<!--                    <label for="telnet-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>-->
+<!--                    <div class="col-sm-4">-->
+<!--                        <select id="telnet-type" class="form-control"></select>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!---->
+<!--                <div class="form-group form-group-sm">-->
+<!--                    <label for="telnet-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>-->
+<!--                    <div class="col-sm-9">-->
+<!--                        <input id="telnet-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径">-->
+<!--                    </div>-->
+<!--                </div>-->
+<!---->
+<!--                <div class="form-group form-group-sm">-->
+<!--                    <label for="telnet-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>-->
+<!--                    <div class="col-sm-9">-->
+<!--                        <input id="telnet-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数" />-->
+<!--<div id="telnet-desc"></div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!---->
+<!--            </div>-->
 
 
             <hr/>
             <p class="cfg-title">本地 RDP 客户端配置</p>
-
-            <!--<div class="arg-detail arg-detail-common">-->
-            <!--RDP专用命令行参数：-->
-            <!--<ul>-->
-            <!--<li><span class="arg-varb">{tmp_rdp_file}</span> 替换为助手工具生成的临时配置文件（.rdp）的绝对路径，用于支持按.rdp配置文件进行连接的RDP客户端</li>-->
-            <!--<li><span class="arg-varb">{size}</span> [仅FreeRDP] 替换为屏幕尺寸</li>-->
-            <!--<li><span class="arg-varb">{console}</span> [仅FreeRDP] 替换为是否以Console模式连接</li>-->
-            <!--<li><span class="arg-varb">{clipboard}</span> [仅FreeRDP] 替换为是否允许剪贴板</li>-->
-            <!--<li><span class="arg-varb">{drives}</span> [仅FreeRDP] 替换为是否允许映射本地磁盘</li>-->
-            <!--</ul>-->
-            <!--</div>-->
-
 
             <div class="form-horizontal">
                 <div class="form-group form-group-sm">
@@ -173,10 +154,7 @@
                 <div class="form-group form-group-sm">
                     <label for="ssh-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
                     <div class="col-sm-9">
-                        <div class="input-group">
-                            <input id="rdp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
-                            <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="rdp-select-app">选择...</button></span>
-                        </div>
+                        <input id="rdp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径">
                     </div>
                 </div>
 
@@ -184,6 +162,9 @@
                     <label for="rdp-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
                     <div class="col-sm-9">
                         <input id="rdp-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数" />
+                        <div id="rdp-desc"></div>
+<!--                        <div class="desc"><i class="fa fa-info-circle"></i> 建议使用homebrew安装freerdp，安装后freerdp默认路径在：/usr/local/Cellar/freerdp/x.y.z/bin/xfreerdp</div>-->
+<!--                        <div class="desc"><i class="fa fa-info-circle"></i> 首次安装freerdp后需要重新启动计算机</div>-->
                     </div>
                 </div>
             </div>

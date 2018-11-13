@@ -10,22 +10,23 @@ var dom = {
     ssh_type: $('#ssh-type'),
     ssh_app: $('#ssh-app'),
     ssh_cmdline: $('#ssh-cmdline'),
-    ssh_select_app: $('#ssh-select-app'),
+    ssh_desc: $('#ssh-desc'),
 
     sftp_type: $('#sftp-type'),
     sftp_app: $('#sftp-app'),
     sftp_cmdline: $('#sftp-cmdline'),
-    sftp_select_app: $('#sftp-select-app'),
+    sftp_desc: $('#sftp-desc'),
+
 
     telnet_type: $('#telnet-type'),
     telnet_app: $('#telnet-app'),
     telnet_cmdline: $('#telnet-cmdline'),
-    telnet_select_app: $('#telnet-select-app'),
+    telnet_desc: $('#telnet-desc'),
 
     rdp_type: $('#rdp-type'),
     rdp_app: $('#rdp-app'),
     rdp_cmdline: $('#rdp-cmdline'),
-    rdp_select_app: $('#rdp-select-app'),
+    rdp_desc: $('#rdp-desc'),
 
     btn_save: $('#btn-save')
 };
@@ -107,6 +108,8 @@ function update_dom() {
             dom.ssh_type.val(selected);
             dom.ssh_app.val(app);
             dom.ssh_cmdline.val(cmdline);
+
+            $(dom.ssh_type).trigger('change');
         }
     }
 
@@ -139,6 +142,8 @@ function update_dom() {
             dom.sftp_type.val(selected);
             dom.sftp_app.val(app);
             dom.sftp_cmdline.val(cmdline);
+
+            $(dom.sftp_type).trigger('change');
         }
     }
 
@@ -172,6 +177,8 @@ function update_dom() {
             dom.telnet_type.val(selected);
             dom.telnet_app.val(app);
             dom.telnet_cmdline.val(cmdline);
+
+            $(dom.telnet_type).trigger('change');
         }
     }
 
@@ -205,6 +212,8 @@ function update_dom() {
             dom.rdp_type.val(selected);
             dom.rdp_app.val(app);
             dom.rdp_cmdline.val(cmdline);
+            
+            $(dom.rdp_type).trigger('change');
         }
     }
 }
@@ -230,14 +239,14 @@ function on_save() {
             break;
         }
     }
-    for (i = 0; i < g_cfg.telnet.available.length; i++) {
-        var item = g_cfg.telnet.available[i];
-        if (item.name === g_cfg.telnet.selected) {
-            item.app = dom.telnet_app.val();
-            item.cmdline = dom.telnet_cmdline.val();
-            break;
-        }
-    }
+//    for (i = 0; i < g_cfg.telnet.available.length; i++) {
+//        var item = g_cfg.telnet.available[i];
+//        if (item.name === g_cfg.telnet.selected) {
+//            item.app = dom.telnet_app.val();
+//            item.cmdline = dom.telnet_cmdline.val();
+//            break;
+//        }
+//    }
     for (i = 0; i < g_cfg.rdp.available.length; i++) {
         var item = g_cfg.rdp.available[i];
         if (item.name === g_cfg.rdp.selected) {
@@ -319,8 +328,6 @@ function notify_success(message_, title_) {
 $(document).ready(function () {
     get_version();
 
-    get_config();
-
     dom.ssh_type.change(function () {
         g_cfg.ssh.selected = dom.ssh_type.val();
         for (var i = 0; i < g_cfg.ssh.available.length; i++) {
@@ -328,22 +335,19 @@ $(document).ready(function () {
             if (item.name === g_cfg.ssh.selected) {
                 dom.ssh_app.val(item.app);
                 dom.ssh_cmdline.val(item.cmdline);
+
+                var html = [];
+                for(var j = 0; j < item.desc.length; j++) {
+                    html.push('<div class="desc"><i class="fa fa-info-circle"></i> ' + item.desc[j] + '</div>');
+                }
+                dom.ssh_desc.html(html.join(''));
                 return;
             }
         }
         notify_error('所选的配置项不存在！');
     });
-    dom.ssh_select_app.click(function () {
-        select_local_file(function (code, path) {
-            if (code == 0) {
-                dom.ssh_app.val(path);
-            } else {
-                console.log("can not select file.");
-            }
-        });
-    });
 
-
+                  
     dom.sftp_type.change(function () {
         g_cfg.sftp.selected = dom.sftp_type.val();
         for (var i = 0; i < g_cfg.sftp.available.length; i++) {
@@ -351,19 +355,16 @@ $(document).ready(function () {
             if (item.name === g_cfg.sftp.selected) {
                 dom.sftp_app.val(item.app);
                 dom.sftp_cmdline.val(item.cmdline);
+
+                var html = [];
+                for(var j = 0; j < item.desc.length; j++) {
+                    html.push('<div class="desc"><i class="fa fa-info-circle"></i> ' + item.desc[j] + '</div>');
+                }
+                dom.sftp_desc.html(html.join(''));
                 return;
             }
         }
         notify_error('所选的配置项不存在！');
-    });
-    dom.sftp_select_app.click(function () {
-        select_local_file(function (code, path) {
-            if (code == 0) {
-                dom.sftp_app.val(path);
-            } else {
-                console.log("can not select file.");
-            }
-        });
     });
 
 
@@ -374,19 +375,16 @@ $(document).ready(function () {
             if (item.name === g_cfg.telnet.selected) {
                 dom.telnet_app.val(item.app);
                 dom.telnet_cmdline.val(item.cmdline);
+
+               var html = [];
+               for(var j = 0; j < item.desc.length; j++) {
+                    html.push('<div class="desc"><i class="fa fa-info-circle"></i> ' + item.desc[j] + '</div>');
+               }
+               dom.telnet_desc.html(html.join(''));
                 return;
             }
         }
         notify_error('所选的配置项不存在！');
-    });
-    dom.telnet_select_app.click(function () {
-        select_local_file(function (code, path) {
-            if (code == 0) {
-                dom.telnet_app.val(path);
-            } else {
-                console.log("can not select file.");
-            }
-        });
     });
 
 
@@ -397,20 +395,20 @@ $(document).ready(function () {
             if (item.name === g_cfg.rdp.selected) {
                 dom.rdp_app.val(item.app);
                 dom.rdp_cmdline.val(item.cmdline);
+
+                var html = [];
+                for(var j = 0; j < item.desc.length; j++) {
+                    html.push('<div class="desc"><i class="fa fa-info-circle"></i> ' + item.desc[j] + '</div>');
+                }
+                dom.rdp_desc.html(html.join(''));
                 return;
             }
         }
         notify_error('所选的配置项不存在！');
     });
-    dom.rdp_select_app.click(function () {
-        select_local_file(function (code, path) {
-            if (code == 0) {
-                dom.rdp_app.val(path);
-            } else {
-                console.log("can not select file.");
-            }
-        });
-    });
+
+
+    get_config();
 
 
     dom.btn_save.click(function () {

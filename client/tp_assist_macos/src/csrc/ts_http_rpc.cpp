@@ -687,9 +687,34 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//==============================================
 
 		// sorry, TELNET not supported yet for macOS.
-		_create_json_ret(buf, TPE_NOT_IMPLEMENT);
-		return;
-	}
+        _create_json_ret(buf, TPE_NOT_IMPLEMENT);
+        return;
+
+//        if(g_cfg.telnet.name == "terminal" || g_cfg.telnet.name == "iterm2") {
+//            char szCmd[1024] = {0};
+//            ex_strformat(szCmd, 1023, "telnet -l %s %s %d", sid.c_str(), teleport_ip.c_str(), teleport_port);
+//
+//            char szTitle[128] = {0};
+//            ex_strformat(szTitle, 127, "TP#%s", real_host_ip.c_str());
+//
+//            int ret = AppDelegate_start_ssh_client(g_app, szCmd, g_cfg.telnet.name.c_str(), g_cfg.telnet.cmdline.c_str(), szTitle);
+//            if(ret == 0)
+//                _create_json_ret(buf, TPE_OK);
+//            else
+//                _create_json_ret(buf, TPE_FAILED);
+//            return;
+//        }
+//
+//        if(g_cfg.telnet.application.length() == 0) {
+//            _create_json_ret(buf, TPE_NOT_EXISTS);
+//            return;
+//        }
+//
+//        s_exec = g_cfg.telnet.application;
+//        s_argv.push_back(s_exec.c_str());
+//
+//        s_arg = g_cfg.telnet.cmdline;
+    }
 
     
     //---- split s_arg and push to s_argv ---

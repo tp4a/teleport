@@ -262,6 +262,9 @@ function tp_error_msg(error_code, message) {
         case TPE_PRIVILEGE:
             msg = '没有此操作权限';
             break;
+        case TPE_NOT_IMPLEMENT:
+            msg = '功能尚未实现';
+            break;
         case TPE_EXISTS:
             msg = '已经存在';
             break;
