@@ -16,6 +16,7 @@ cmake-build
 cmake-build-debug
 client/tp_assist_macos/build
 **/xcode_build
+**/DerivedData
 
 # for Python
 __pycache__

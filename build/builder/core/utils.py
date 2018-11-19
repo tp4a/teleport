@@ -308,9 +308,6 @@ def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
 
 
 def xcode_build(proj_file, proj_name, target, force_rebuild):
-    # if env.msbuild is None:
-    #     raise RuntimeError('where is `msbuild`?')
-
     if force_rebuild:
         cmd = 'xcodebuild -project "{}" -target {} -configuration {} clean'.format(proj_file, proj_name, target)
         ret, _ = sys_exec(cmd, direct_output=True)
@@ -320,6 +317,19 @@ def xcode_build(proj_file, proj_name, target, force_rebuild):
     ret, _ = sys_exec(cmd, direct_output=True)
     if ret != 0:
         raise RuntimeError('build XCode project `{}` failed.'.format(proj_name))
+
+
+def make_dmg(json_file, dmg_file):
+    out_path = os.path.dirname(dmg_file)
+    cc.v(out_path)
+
+    if not os.path.exists(out_path):
+        makedirs(out_path)
+
+    cmd = 'appdmg "{}" "{}"'.format(json_file, dmg_file)
+    ret, _ = sys_exec(cmd, direct_output=True)
+    if ret != 0:
+        raise RuntimeError('make dmg failed.')
 
 
 def nsis_build(nsi_file, _define=''):
