@@ -141,7 +141,7 @@ class Builder:
         self._update_ver_nsi(nsi_file, self.VER_TP_ASSIST)
 
     def make_assist_macos_ver(self):
-        plist_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'src', 'tp_assist-Info.plist')
+        plist_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'src', 'TP-Assist-Info.plist')
         self._update_ver_plist(plist_file, self.VER_TP_ASSIST)
 
         ver_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'src', 'csrc', 'ts_ver.h')
