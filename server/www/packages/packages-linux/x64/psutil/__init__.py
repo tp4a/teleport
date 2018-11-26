@@ -32,7 +32,6 @@ import signal
 import subprocess
 import sys
 import time
-import traceback
 try:
     import pwd
 except ImportError:
@@ -221,7 +220,7 @@ __all__ = [
 ]
 __all__.extend(_psplatform.__extra__all__)
 __author__ = "Giampaolo Rodola'"
-__version__ = "5.4.7"
+__version__ = "5.4.8"
 version_info = tuple([int(num) for num in __version__.split('.')])
 AF_LINK = _psplatform.AF_LINK
 POWER_TIME_UNLIMITED = _common.POWER_TIME_UNLIMITED
@@ -1609,14 +1608,12 @@ try:
 except Exception:
     # Don't want to crash at import time.
     _last_cpu_times = None
-    traceback.print_exc()
 
 try:
     _last_per_cpu_times = cpu_times(percpu=True)
 except Exception:
     # Don't want to crash at import time.
     _last_per_cpu_times = None
-    traceback.print_exc()
 
 
 def _cpu_tot_time(times):
@@ -1864,13 +1861,25 @@ if hasattr(_psplatform, "cpu_freq"):
                 return ret[0]
             else:
                 currs, mins, maxs = 0.0, 0.0, 0.0
+                set_none = False
                 for cpu in ret:
                     currs += cpu.current
+                    # On Linux if /proc/cpuinfo is used min/max are set
+                    # to None.
+                    if LINUX and cpu.min is None:
+                        set_none = True
+                        continue
                     mins += cpu.min
                     maxs += cpu.max
+
                 current = currs / num_cpus
-                min_ = mins / num_cpus
-                max_ = maxs / num_cpus
+
+                if set_none:
+                    min_ = max_ = None
+                else:
+                    min_ = mins / num_cpus
+                    max_ = maxs / num_cpus
+
                 return _common.scpufreq(current, min_, max_)
 
     __all__.append("cpu_freq")

@@ -65,7 +65,7 @@ class GifImageFile(ImageFile.ImageFile):
             raise SyntaxError("not a GIF file")
 
         self.info["version"] = s[:6]
-        self.size = i16(s[6:]), i16(s[8:])
+        self._size = i16(s[6:]), i16(s[8:])
         self.tile = []
         flags = i8(s[10])
         bits = (flags & 7) + 1
@@ -166,6 +166,7 @@ class GifImageFile(ImageFile.ImageFile):
         from copy import copy
         self.palette = copy(self.global_palette)
 
+        info = {}
         while True:
 
             s = self.fp.read(1)
@@ -184,8 +185,8 @@ class GifImageFile(ImageFile.ImageFile):
                     #
                     flags = i8(block[0])
                     if flags & 1:
-                        self.info["transparency"] = i8(block[3])
-                    self.info["duration"] = i16(block[1:3]) * 10
+                        info["transparency"] = i8(block[3])
+                    info["duration"] = i16(block[1:3]) * 10
 
                     # disposal method - find the value of bits 4 - 6
                     dispose_bits = 0b00011100 & flags
@@ -200,16 +201,16 @@ class GifImageFile(ImageFile.ImageFile):
                     #
                     # comment extension
                     #
-                    self.info["comment"] = block
+                    info["comment"] = block
                 elif i8(s) == 255:
                     #
                     # application extension
                     #
-                    self.info["extension"] = block, self.fp.tell()
+                    info["extension"] = block, self.fp.tell()
                     if block[:11] == b"NETSCAPE2.0":
                         block = self.data()
                         if len(block) >= 3 and i8(block[0]) == 1:
-                            self.info["loop"] = i16(block[1:3])
+                            info["loop"] = i16(block[1:3])
                 while self.data():
                     pass
 
@@ -267,6 +268,12 @@ class GifImageFile(ImageFile.ImageFile):
         if not self.tile:
             # self.__fp = None
             raise EOFError
+
+        for k in ["transparency", "duration", "comment", "extension", "loop"]:
+            if k in info:
+                self.info[k] = info[k]
+            elif k in self.info:
+                del self.info[k]
 
         self.mode = "L"
         if self.palette:
@@ -397,7 +404,8 @@ def _write_multiple_frames(im, fp, palette):
 
     im_frames = []
     frame_count = 0
-    for imSequence in itertools.chain([im], im.encoderinfo.get("append_images", [])):
+    for imSequence in itertools.chain([im],
+                                      im.encoderinfo.get("append_images", [])):
         for im_frame in ImageSequence.Iterator(imSequence):
             # a copy is required here since seek can still mutate the image
             im_frame = _normalize_mode(im_frame.copy())
@@ -413,17 +421,19 @@ def _write_multiple_frames(im, fp, palette):
             if im_frames:
                 # delta frame
                 previous = im_frames[-1]
-                if _get_palette_bytes(im_frame) == _get_palette_bytes(previous['im']):
+                if _get_palette_bytes(im_frame) == \
+                   _get_palette_bytes(previous['im']):
                     delta = ImageChops.subtract_modulo(im_frame,
                                                        previous['im'])
                 else:
-                    delta = ImageChops.subtract_modulo(im_frame.convert('RGB'),
-                                                       previous['im'].convert('RGB'))
+                    delta = ImageChops.subtract_modulo(
+                        im_frame.convert('RGB'), previous['im'].convert('RGB'))
                 bbox = delta.getbbox()
                 if not bbox:
                     # This frame is identical to the previous frame
                     if duration:
-                        previous['encoderinfo']['duration'] += encoderinfo['duration']
+                        previous['encoderinfo']['duration'] += \
+                            encoderinfo['duration']
                     continue
             else:
                 bbox = None
@@ -525,7 +535,8 @@ def _write_local_header(fp, im, offset, flags):
                  o8(transparency) +       # transparency index
                  o8(0))
 
-    if "comment" in im.encoderinfo and 1 <= len(im.encoderinfo["comment"]) <= 255:
+    if "comment" in im.encoderinfo and \
+       1 <= len(im.encoderinfo["comment"]) <= 255:
         fp.write(b"!" +
                  o8(254) +                # extension intro
                  o8(len(im.encoderinfo["comment"])) +
@@ -543,7 +554,6 @@ def _write_local_header(fp, im, offset, flags):
                  o8(0))
     include_color_table = im.encoderinfo.get('include_color_table')
     if include_color_table:
-        palette = im.encoderinfo.get("palette", None)
         palette_bytes = _get_palette_bytes(im)
         color_table_size = _get_color_table_size(palette_bytes)
         if color_table_size:
@@ -692,7 +702,8 @@ def _get_global_header(im, info):
     for extensionKey in ["transparency", "duration", "loop", "comment"]:
         if info and extensionKey in info:
             if ((extensionKey == "duration" and info[extensionKey] == 0) or
-               (extensionKey == "comment" and not (1 <= len(info[extensionKey]) <= 255))):
+                (extensionKey == "comment" and
+                 not (1 <= len(info[extensionKey]) <= 255))):
                 continue
             version = b"89a"
             break

@@ -159,7 +159,7 @@ def SOF(self, marker):
 
     n = i16(self.fp.read(2))-2
     s = ImageFile._safe_read(self.fp, n)
-    self.size = i16(s[3:]), i16(s[1:])
+    self._size = i16(s[3:]), i16(s[1:])
 
     self.bits = i8(s[0])
     if self.bits != 8:
@@ -334,7 +334,6 @@ class JpegImageFile(ImageFile.ImageFile):
 
             if i in MARKER:
                 name, description, handler = MARKER[i]
-                # print(hex(i), name, description)
                 if handler is not None:
                     handler(self, i)
                 if i == 0xFFDA:  # start of scan
@@ -391,7 +390,7 @@ class JpegImageFile(ImageFile.ImageFile):
                 if scale >= s:
                     break
             e = e[0], e[1], (e[2]-e[0]+s-1)//s+e[0], (e[3]-e[1]+s-1)//s+e[1]
-            self.size = ((self.size[0]+s-1)//s, (self.size[1]+s-1)//s)
+            self._size = ((self.size[0]+s-1)//s, (self.size[1]+s-1)//s)
             scale = s
 
         self.tile = [(d, e, o, a)]
@@ -424,7 +423,7 @@ class JpegImageFile(ImageFile.ImageFile):
                 pass
 
         self.mode = self.im.mode
-        self.size = self.im.size
+        self._size = self.im.size
 
         self.tile = []
 
@@ -793,12 +792,13 @@ def jpeg_factory(fp=None, filename=None):
     return im
 
 
-# -------------------------------------------------------------------q-
+# ---------------------------------------------------------------------
 # Registry stuff
 
 Image.register_open(JpegImageFile.format, jpeg_factory, _accept)
 Image.register_save(JpegImageFile.format, _save)
 
-Image.register_extensions(JpegImageFile.format, [".jfif", ".jpe", ".jpg", ".jpeg"])
+Image.register_extensions(JpegImageFile.format,
+                          [".jfif", ".jpe", ".jpg", ".jpeg"])
 
 Image.register_mime(JpegImageFile.format, "image/jpeg")

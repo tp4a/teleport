@@ -96,7 +96,7 @@ class SgiImageFile(ImageFile.ImageFile):
         if rawmode == "":
             raise ValueError("Unsupported SGI image mode")
 
-        self.size = xsize, ysize
+        self._size = xsize, ysize
         self.mode = rawmode.split(";")[0]
 
         # orientation -1 : scanlines begins at the bottom-left corner
@@ -222,6 +222,7 @@ Image.register_save(SgiImageFile.format, _save)
 Image.register_mime(SgiImageFile.format, "image/sgi")
 Image.register_mime(SgiImageFile.format, "image/rgb")
 
-Image.register_extensions(SgiImageFile.format, [".bw", ".rgb", ".rgba", ".sgi"])
+Image.register_extensions(SgiImageFile.format,
+                          [".bw", ".rgb", ".rgba", ".sgi"])
 
 # End of file

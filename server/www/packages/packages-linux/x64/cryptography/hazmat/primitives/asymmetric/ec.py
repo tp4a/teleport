@@ -9,6 +9,16 @@ import abc
 import six
 
 from cryptography import utils
+from cryptography.hazmat._oid import ObjectIdentifier
+
+
+class EllipticCurveOID(object):
+    SECP192R1 = ObjectIdentifier("1.2.840.10045.3.1.1")
+    SECP224R1 = ObjectIdentifier("1.3.132.0.33")
+    SECP256K1 = ObjectIdentifier("1.3.132.0.10")
+    SECP256R1 = ObjectIdentifier("1.2.840.10045.3.1.7")
+    SECP384R1 = ObjectIdentifier("1.3.132.0.34")
+    SECP521R1 = ObjectIdentifier("1.3.132.0.35")
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -68,7 +78,7 @@ class EllipticCurvePrivateKey(object):
         Bit size of a secret scalar for the curve.
         """
 
-    @abc.abstractproperty
+    @abc.abstractmethod
     def sign(self, data, signature_algorithm):
         """
         Signs the data

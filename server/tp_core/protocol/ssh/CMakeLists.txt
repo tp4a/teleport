@@ -3,8 +3,10 @@ cmake_minimum_required(VERSION 3.5)
 MESSAGE(STATUS "=======================================================")
 MESSAGE(STATUS "               libtpssh")
 MESSAGE(STATUS "=======================================================")
-MESSAGE(STATUS "operation system is ${CMAKE_SYSTEM}")
-MESSAGE(STATUS "current source directory is ${CMAKE_CURRENT_SOURCE_DIR}")
+#MESSAGE(STATUS "operation system is ${CMAKE_SYSTEM}")
+#MESSAGE(STATUS "current source directory is ${CMAKE_CURRENT_SOURCE_DIR}")
+include(../../../../CMakeCfg.txt)
+
 
 set(CMAKE_CXX_FLAGS "-fPIC")
 set(CMAKE_C_FLAGS "-fPIC")

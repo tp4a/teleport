@@ -75,7 +75,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 class MongooseManager {
 public:
     MongooseManager() {
-        mg_mgr_free(&m_mg_mgr);
+        //mg_mgr_free(&m_mg_mgr);
         m_initialized = false;
     }
 

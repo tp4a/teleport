@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.5)
 MESSAGE(STATUS "=======================================================")
 MESSAGE(STATUS "               tp_core")
 MESSAGE(STATUS "=======================================================")
-MESSAGE(STATUS "operation system is ${CMAKE_SYSTEM}")
-MESSAGE(STATUS "current source directory is ${CMAKE_CURRENT_SOURCE_DIR}")
+#MESSAGE(STATUS "operation system is ${CMAKE_SYSTEM}")
+#MESSAGE(STATUS "current source directory is ${CMAKE_CURRENT_SOURCE_DIR}")
+include(../../../CMakeCfg.txt)
 
 ADD_DEFINITIONS(
         -DMG_ENABLE_THREADS

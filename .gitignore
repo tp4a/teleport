@@ -51,6 +51,8 @@ __pycache__
 /external/libuv
 /client/tools/putty
 /client/tools/winscp
+/server/**/test/
+/server/**/tests/
 
 # for dist folder
 **/_tmp_

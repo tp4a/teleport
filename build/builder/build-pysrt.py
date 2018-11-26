@@ -46,7 +46,7 @@ class PYSBase:
         utils.sys_exec('{} -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pip --upgrade'.format(env.py_exec))
 
         pip = self._get_pip()
-        pypi_modules = ['mako', 'pymysql', 'qrcode', 'tornado', 'wheezy.captcha', 'Pillow', 'psutil']
+        pypi_modules = ['ldap3', 'mako', 'Pillow', 'psutil', 'pymysql', 'qrcode', 'tornado', 'wheezy.captcha']
         for p in pypi_modules:
             cc.n('install {} ...'.format(p))
             utils.sys_exec('{} install -i https://pypi.tuna.tsinghua.edu.cn/simple {}'.format(pip, p), direct_output=True)

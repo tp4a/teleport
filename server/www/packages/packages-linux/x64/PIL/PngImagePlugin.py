@@ -142,7 +142,8 @@ class ChunkStream(object):
     def crc(self, cid, data):
         "Read and verify checksum"
 
-        # Skip CRC checks for ancillary chunks if allowed to load truncated images
+        # Skip CRC checks for ancillary chunks if allowed to load truncated
+        # images
         # 5th byte of first char is 1 [specs, section 5.4]
         if ImageFile.LOAD_TRUNCATED_IMAGES and (i8(cid[0]) >> 5 & 1):
             self.crc_skip(cid, data)
@@ -301,8 +302,8 @@ class PngStream(ChunkStream):
     def check_text_memory(self, chunklen):
         self.text_memory += chunklen
         if self.text_memory > MAX_TEXT_MEMORY:
-            raise ValueError("Too much memory used in text chunks: %s>MAX_TEXT_MEMORY" %
-                             self.text_memory)
+            raise ValueError("Too much memory used in text chunks: "
+                             "%s>MAX_TEXT_MEMORY" % self.text_memory)
 
     def chunk_iCCP(self, pos, length):
 
@@ -576,7 +577,7 @@ class PngImageFile(ImageFile.ImageFile):
         # (believe me, I've tried ;-)
 
         self.mode = self.png.im_mode
-        self.size = self.png.im_size
+        self._size = self.png.im_size
         self.info = self.png.im_info
         self.text = self.png.im_text  # experimental
         self.tile = self.png.im_tile
