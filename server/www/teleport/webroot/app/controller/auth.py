@@ -107,15 +107,20 @@ class DoLoginHandler(TPBaseJsonHandler):
                               ]:
             oath = None
 
+        # 检查用户名合法性，防止SQL注入攻击
+        if '<' in username or '>' in username:
+            username = username.replace('<', '&lt;')
+            username = username.replace('>', '&gt;')
+            err = TPE_USER_AUTH
+            syslog.sys_log({'username': '???', 'surname': '???'}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，可能是攻击行为。试图使用用户名 {} 进行登录。'.format(username))
+            return self.write_json(err)
+
         err, user_info = user.login(self, username, password=password, oath_code=oath)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH
-                syslog.sys_log({'username': username, 'surname': username}, self.request.remote_ip, TPE_NOT_EXISTS,
-                               '登录失败，用户`{}`不存在'.format(username))
-                return self.write_json(err)
-            elif err == TPE_PRIVILEGE:
-                return self.write_json(err, '尚未分配角色，请联系管理员')
+                syslog.sys_log({'username': '???', 'surname': '???'}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
+            return self.write_json(err)
 
         # 判断此用户是否被允许使用当前登录认证方式
         auth_type = user_info.auth_type
