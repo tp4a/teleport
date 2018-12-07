@@ -235,6 +235,18 @@
                             <input id="sess-noop-timeout" type="text" value="15"/><span class="unit">分钟</span><span class="desc">0~60。指定时间内远程会话没有任何数据包收发时，将此会话断开，为0则不检查。默认为15分钟。</span>
                         </td>
                     </tr>
+                    <tr>
+                        <td colspan="2" class="title">
+                            <hr class="hr-sm"/>
+                            远程启动方式
+                        </td>
+                    </tr>
+					<tr>
+                        <td class="key"></td>
+                        <td class="value">
+                            <div id="sess-use-url-protocol" class="tp-checkbox tp-editable">使用UrlProtocl启动远程</div>
+                        </td>
+                    </tr>
 
                 </table>
                 <hr/>
