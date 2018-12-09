@@ -221,7 +221,7 @@ bool TsHttpRpc::init_http() {
     struct mg_connection* nc = nullptr;
 
     char addr[128] = { 0 };
-    ex_strformat(addr, 128, "tcp://localhost:%d", TS_HTTP_RPC_PORT);
+    ex_strformat(addr, 128, "tcp://127.0.0.1:%d", TS_HTTP_RPC_PORT);
 
     nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
     if (!nc) {
@@ -254,7 +254,7 @@ bool TsHttpRpc::init_https() {
 
 
     char addr[128] = { 0 };
-    ex_strformat(addr, 128, "tcp://localhost:%d", TS_HTTPS_RPC_PORT);
+    ex_strformat(addr, 128, "tcp://127.0.0.1:%d", TS_HTTPS_RPC_PORT);
     //ex_strformat(addr, 128, "%d", TS_HTTPS_RPC_PORT);
 
     struct mg_connection* nc = nullptr;
