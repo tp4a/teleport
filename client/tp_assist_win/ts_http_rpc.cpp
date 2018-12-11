@@ -16,22 +16,22 @@
 
 /*
 1.
-SecureCRTÖ§³ÖÉèÖÃ±êÇ©Ò³µÄ±êÌâ£¬ÃüÁîĞĞ²ÎÊı /N "tab name"¾Í¿ÉÒÔ
+SecureCRTæ”¯æŒè®¾ç½®æ ‡ç­¾é¡µçš„æ ‡é¢˜ï¼Œå‘½ä»¤è¡Œå‚æ•° /N "tab name"å°±å¯ä»¥
 Example:
 To launch a new Telnet session, displaying the name "Houston, TX" on the tab, use the following:
 /T /N "Houston, TX" /TELNET 192.168.0.6
 
 2.
-¶à´ÎÆô¶¯µÄSecureCRT·Åµ½Ò»¸ö´°¿ÚµÄ²»Í¬±êÇ©Ò³ÖĞ£¬Ê¹ÓÃ²ÎÊı£º  /T
+å¤šæ¬¡å¯åŠ¨çš„SecureCRTæ”¾åˆ°ä¸€ä¸ªçª—å£çš„ä¸åŒæ ‡ç­¾é¡µä¸­ï¼Œä½¿ç”¨å‚æ•°ï¼š  /T
   SecureCRT.exe /T /N "TP#ssh://192.168.1.3" /SSH2 /L root /PASSWORD 1234 120.26.109.25
 
 3.
-telnet¿Í»§¶ËµÄÆô¶¯£º
+telnetå®¢æˆ·ç«¯çš„å¯åŠ¨ï¼š
   putty.exe telnet://administrator@127.0.0.1:52389
-Èç¹ûÊÇSecureCRT£¬ÔòĞèÒª
+å¦‚æœæ˜¯SecureCRTï¼Œåˆ™éœ€è¦
   SecureCRT.exe /T /N "TP#telnet://192.168.1.3" /SCRIPT X:\path\to\startup.vbs /TELNET 127.0.0.1 52389
-ÆäÖĞ£¬startup.vbsµÄÄÚÈİÎª£º
----------ÎÄ¼ş¿ªÊ¼---------
+å…¶ä¸­ï¼Œstartup.vbsçš„å†…å®¹ä¸ºï¼š
+---------æ–‡ä»¶å¼€å§‹---------
 #$language = "VBScript"
 #$interface = "1.0"
 Sub main
@@ -40,11 +40,11 @@ Sub main
   crt.Screen.Send "SESSION-ID" & VbCr
   crt.Screen.Synchronous = False
 End Sub
----------ÎÄ¼ş½áÊø---------
+---------æ–‡ä»¶ç»“æŸ---------
 
-4. ÎªÁËÈÃputtyµÄ´°¿Ú±êÇ©ÏÔÊ¾Õı³£µÄIP£¬¿ÉÒÔ³¢ÊÔÔÚÁ¬½Ó³É¹¦ºó£¬Ö÷¶¯Ïò·şÎñ¶Ë·¢ËÍÏÂÁĞÃüÁî£º
+4. ä¸ºäº†è®©puttyçš„çª—å£æ ‡ç­¾æ˜¾ç¤ºæ­£å¸¸çš„IPï¼Œå¯ä»¥å°è¯•åœ¨è¿æ¥æˆåŠŸåï¼Œä¸»åŠ¨å‘æœåŠ¡ç«¯å‘é€ä¸‹åˆ—å‘½ä»¤ï¼š
 	PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@192.168.1.2: \w\a\]$PS1"
-ÊÖ¹¤²âÊÔÁË£¬ubuntu·şÎñÆ÷¿ÉÒÔ£¬²»ÖªµÀÊÇ·ñÄÜ¹»Ö§³ÖËùÓĞµÄLinux¡£SecureCRT¶Ô´Ë±íÊ¾ºöÂÔ¡£
+æ‰‹å·¥æµ‹è¯•äº†ï¼ŒubuntuæœåŠ¡å™¨å¯ä»¥ï¼Œä¸çŸ¥é“æ˜¯å¦èƒ½å¤Ÿæ”¯æŒæ‰€æœ‰çš„Linuxã€‚SecureCRTå¯¹æ­¤è¡¨ç¤ºå¿½ç•¥ã€‚
 */
 
 //#define RDP_CLIENT_SYSTEM_BUILTIN
@@ -203,6 +203,40 @@ bool calc_psw51b(const char* password, std::string& ret)
 	return true;
 }
 
+bool isDegital(std::string str) {
+	for (int i = 0; i < str.size(); i++) {
+		if (str.at(i) == '-' && str.size() > 1)  // æœ‰å¯èƒ½å‡ºç°è´Ÿæ•°
+			continue;
+		if (str.at(i) > '9' || str.at(i) < '0')
+			return false;
+	}
+	return true;
+}
+
+std::string strtolower(std::string str) {
+	for (int i = 0; i < str.size(); i++)
+	{
+		str[i] = tolower(str[i]);
+	}
+	return str;
+}
+
+void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c)
+{
+	std::string::size_type pos1, pos2;
+	pos2 = s.find(c);
+	pos1 = 0;
+	while (std::string::npos != pos2)
+	{
+		v.push_back(s.substr(pos1, pos2 - pos1));
+
+		pos1 = pos2 + c.size();
+		pos2 = s.find(c, pos1);
+	}
+	if (pos1 != s.length())
+		v.push_back(s.substr(pos1));
+}
+
 TsHttpRpc::TsHttpRpc()
 {
 	m_stop = false;
@@ -317,7 +351,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 
 		if (uri == "/")
 		{
-			ex_wstr page = L"<html lang=\"zh_CN\"><head><meta charset=\"utf-8\"/><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>TeleportÖúÊÖ</title>\n<style type=\"text/css\">\n.box{padding:20px;margin:40px;border:1px solid #78b17c;background-color:#e4ffe5;}\n</style>\n</head><body><div class=\"box\">TeleportÖúÊÖ¹¤×÷Õı³££¡</div></body></html>";
+			ex_wstr page = L"<html lang=\"zh_CN\"><head><meta charset=\"utf-8\"/><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>TeleportåŠ©æ‰‹</title>\n<style type=\"text/css\">\n.box{padding:20px;margin:40px;border:1px solid #78b17c;background-color:#e4ffe5;}\n</style>\n</head><body><div class=\"box\">TeleportåŠ©æ‰‹å·¥ä½œæ­£å¸¸ï¼</div></body></html>";
 			ex_wstr2astr(page, ret_buf, EX_CODEPAGE_UTF8);
 
 			mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: text/html\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
@@ -424,7 +458,7 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 
 	ex_astrs strs;
 
-	size_t pos_start = 1;	// Ìø¹ıµÚÒ»¸ö×Ö½Ú£¬Ò»¶¨ÊÇ '/'
+	size_t pos_start = 1;	// è·³è¿‡ç¬¬ä¸€ä¸ªå­—èŠ‚ï¼Œä¸€å®šæ˜¯ '/'
 
 	size_t i = 0;
 	for (i = pos_start; i < req->uri.len; ++i)
@@ -437,7 +471,7 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 				tmp_uri.assign(req->uri.p + pos_start, i - pos_start);
 				strs.push_back(tmp_uri);
 			}
-			pos_start = i + 1;	// Ìø¹ıµ±Ç°ÕÒµ½µÄ·Ö¸ô·û
+			pos_start = i + 1;	// è·³è¿‡å½“å‰æ‰¾åˆ°çš„åˆ†éš”ç¬¦
 		}
 	}
 	if (pos_start < req->uri.len)
@@ -485,7 +519,7 @@ int TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, ex_as
 
 	if (func_args.length() > 0)
 	{
-		// ½«²ÎÊı½øĞĞ url-decode ½âÂë
+		// å°†å‚æ•°è¿›è¡Œ url-decode è§£ç 
 		int len = func_args.length() * 2;
 		ex_chars sztmp;
 		sztmp.resize(len);
@@ -536,7 +570,7 @@ void TsHttpRpc::_process_js_request(const ex_astr& func_cmd, const ex_astr& func
 
 void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode)
 {
-	// ·µ»Ø£º {"code":123}
+	// è¿”å›ï¼š {"code":123}
 
 	Json::FastWriter jr_writer;
 	Json::Value jr_root;
@@ -551,13 +585,65 @@ void TsHttpRpc::_create_json_ret(ex_astr& buf, Json::Value& jr_root)
 	buf = jr_writer.write(jr_root);
 }
 
+void TsHttpRpc::_rpc_func_url_protocol(const ex_astr& args, ex_astr& buf)
+{
+	//å¤„ç†urlprotocolè°ƒç”¨è®¿å¼
+	// å°†å‚æ•°è¿›è¡Œ url-decode è§£ç 
+	std::string func_args = args;
+	if (func_args.length() > 0)
+	{
+		int len = func_args.length() * 2;
+		ex_chars sztmp;
+		sztmp.resize(len);
+		memset(&sztmp[0], 0, len);
+		if (-1 == ts_url_decode(func_args.c_str(), func_args.length(), &sztmp[0], len, 0))
+			return ;
+
+		func_args = &sztmp[0];
+	}
+	EXLOGD(("%s\n"), func_args.c_str());
+	//å¤„ç†ä¼ å‚è¿‡æ¥çš„teleport://{}/,åªä¿ç•™å‚æ•°éƒ¨ä»½
+	std::string urlproto_appname = TP_URLPROTO_APP_NAME;
+	urlproto_appname += "://{";
+	func_args.erase(0, urlproto_appname.length());//å»é™¤ç¬¬ä¸€ä¸ªURLPROTO_APP_NAMEä»¥åŠ://å­—ç¬¦
+	int pos = func_args.length() - 1;
+	if (func_args.substr(pos, 1) == "/")
+		func_args.erase(pos - 1, 2);//å»é™¤æœ€åä¸€ä¸ª}/å­—ç¬¦
+	else
+		func_args.erase(pos, 1);
+
+	//ç”±äºå‘½ä»¤è¡Œã€ieæµè§ˆå™¨å‚æ•°ä¼ é€’æ—¶ä¼šæŠŠåŸæ¥jsonç»“æ„ä¸­çš„"å·å»æ‰ï¼Œéœ€è¦é‡æ–°æ ¼å¼åŒ–å‚æ•°ä¸ºjsonæ ¼å¼
+	if (func_args.find("\"", 0) == std::string::npos) {
+		std::vector<std::string> strv;
+		SplitString(func_args, strv, ",");
+		func_args = "";
+		for (std::vector<std::string>::size_type i = 0; i < strv.size(); i++) {
+			std::vector<std::string> strv1;
+			SplitString(strv[i], strv1, ":");
+			strv1[0] = "\"" + strv1[0] + "\"";
+			if (!isDegital(strv1[1]) && strtolower(strv1[1]) != "true" && strtolower(strv1[1]) != "false")
+				strv1[1] = "\"" + strv1[1] + "\"";
+
+			strv[i] = strv1[0] + ":" + strv1[1];
+			if (i == 0)
+				func_args = strv[i];
+			else
+				func_args += "," + strv[i];
+		}
+	}
+	func_args = "{" + func_args + "}";
+	EXLOGD(("%s\n"), func_args.c_str());
+	//è°ƒç”¨TsHttpRpcç±»é‡Œçš„_rpc_func_run_clientå¯åŠ¨å®¢æˆ·ç«¯
+	_rpc_func_run_client(func_args, buf);
+}
+
 void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 {
-	// Èë²Î£º{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
+	// å…¥å‚ï¼š{"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
 	//   authmode: 1=password, 2=private-key
 	//   protocol: 1=rdp, 2=ssh
-	// SSH·µ»Ø£º {"code":0, "data":{"sid":"0123abcde"}}
-	// RDP·µ»Ø£º {"code":0, "data":{"sid":"0123abcde0A"}}
+	// SSHè¿”å›ï¼š {"code":0, "data":{"sid":"0123abcde"}}
+	// RDPè¿”å›ï¼š {"code":0, "data":{"sid":"0123abcde0A"}}
 
 	Json::Reader jreader;
 	Json::Value jsRoot;
@@ -573,7 +659,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		return;
 	}
 
-	// ÅĞ¶Ï²ÎÊıÊÇ·ñÕıÈ·
+	// åˆ¤æ–­å‚æ•°æ˜¯å¦æ­£ç¡®
 	if (!jsRoot["teleport_ip"].isString()
 		|| !jsRoot["teleport_port"].isNumeric() || !jsRoot["remote_host_ip"].isString()
 		|| !jsRoot["session_id"].isString() || !jsRoot["protocol_type"].isNumeric() || !jsRoot["protocol_sub_type"].isNumeric()
@@ -688,7 +774,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			int iHeight = GetSystemMetrics(SM_CYSCREEN);
 
 			if (rdp_w == 0 || rdp_h == 0) {
-				//È«ÆÁ
+				//å…¨å±
 				width = iWidth;
 				higth = iHeight;
 				display = 2;
@@ -763,7 +849,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			fclose(f);
 			ex_astr2wstr(sz_file_name, tmp_rdp_file);
 
-			// ±äÁ¿Ìæ»»
+			// å˜é‡æ›¿æ¢
 			ex_replace_all(w_exe_path, _T("{tmp_rdp_file}"), tmp_rdp_file);
 		}
 		else if (g_cfg.rdp_name == L"freerdp") {
@@ -773,7 +859,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 			ex_wstr w_screen;
 
 			if (rdp_w == 0 || rdp_h == 0) {
-				//È«ÆÁ
+				//å…¨å±
 				w_screen = _T("/f");
 			}
 			else {
@@ -800,10 +886,10 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 			w_sid = L"02" + w_sid;
 
-			w_exe_path += L" /gdi:sw"; // Ê¹ÓÃÈí¼şäÖÈ¾£¬gdi:hwÊ¹ÓÃÓ²¼ş¼ÓËÙ£¬µ«ÊÇ»á³öÏÖºÜ¶àºÚ¿é£¨Â¼Ïñ»Ø·ÅÊ±ÓÖÊÇÕı³£µÄ£¡£©
-			w_exe_path += L" -grab-keyboard"; // [new style] ·ÀÖ¹Æô¶¯FreeRDPºó£¬Ê§È¥±¾µØ¼üÅÌÏìÓ¦£¬±ØĞëµÃÏÈ×îĞ¡»¯Ò»ÏÂFreeRDP´°¿Ú£¨²»¹ıÃ²ËÆ²»Æğ×÷ÓÃ£©
+			w_exe_path += L" /gdi:sw"; // ä½¿ç”¨è½¯ä»¶æ¸²æŸ“ï¼Œgdi:hwä½¿ç”¨ç¡¬ä»¶åŠ é€Ÿï¼Œä½†æ˜¯ä¼šå‡ºç°å¾ˆå¤šé»‘å—ï¼ˆå½•åƒå›æ”¾æ—¶åˆæ˜¯æ­£å¸¸çš„ï¼ï¼‰
+			w_exe_path += L" -grab-keyboard"; // [new style] é˜²æ­¢å¯åŠ¨FreeRDPåï¼Œå¤±å»æœ¬åœ°é”®ç›˜å“åº”ï¼Œå¿…é¡»å¾—å…ˆæœ€å°åŒ–ä¸€ä¸‹FreeRDPçª—å£ï¼ˆä¸è¿‡è²Œä¼¼ä¸èµ·ä½œç”¨ï¼‰
 
-			// ±äÁ¿Ìæ»»
+			// å˜é‡æ›¿æ¢
 			ex_replace_all(w_exe_path, _T("{size}"), w_screen);
 
 			if (flag_console && rdp_console)
@@ -899,7 +985,7 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 		return;
 	}
 
-	// ÅĞ¶Ï²ÎÊıÊÇ·ñÕıÈ·
+	// åˆ¤æ–­å‚æ•°æ˜¯å¦æ­£ç¡®
 	if (!jsRoot["rid"].isInt()
 		|| !jsRoot["web"].isString()
 		|| !jsRoot["sid"].isString()
@@ -924,9 +1010,9 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 	char cmd_args[1024] = { 0 };
 	ex_strformat(cmd_args, 1023, "%d \"%s\" \"%09d-%s-%s-%s-%s\"", rid, a_sid.c_str(), rid, a_user.c_str(), a_acc.c_str(), a_host.c_str(), a_start.c_str());
 
-	// TODO: ÀíÂÛÉÏ²»Ó¦¸ÃÓÉÖúÊÖÀ´ÌáÇ°×öÓòÃû×ªÎªIPÕâÑùµÄ²Ù×÷£¬¶øÊÇÓ¦¸Ã½²ÓòÃû·¢ËÍ¸ø²¥·ÅÆ÷£¬ÓÉ²¥·ÅÆ÷×Ô¼ºÈ¥´¦Àí
-	// µ«ÊÇÔÚ¸ÄÔìFreeRDPÖÆ×÷µÄ²¥·ÅÆ÷Ê±£¬ÎªÁË´Ó·şÎñÆ÷ÉÏÏÂÔØÎÄ¼ş£¬Ê¹ÓÃÁËMongoose¿â£¬Èç¹û´«ÈëµÄÊÇÓòÃû£¬»á³öÏÖÎÊÌâ£¨Ã²ËÆÊÇÒì²½²éÑ¯DNSµÄÎÊÌâ£©
-	// ËùÒÔÔİÊ±ÏÈÓÉÖúÊÖ½øĞĞÓòÃûIP×ª»»¡£
+	// TODO: ç†è®ºä¸Šä¸åº”è¯¥ç”±åŠ©æ‰‹æ¥æå‰åšåŸŸåè½¬ä¸ºIPè¿™æ ·çš„æ“ä½œï¼Œè€Œæ˜¯åº”è¯¥è®²åŸŸåå‘é€ç»™æ’­æ”¾å™¨ï¼Œç”±æ’­æ”¾å™¨è‡ªå·±å»å¤„ç†
+	// ä½†æ˜¯åœ¨æ”¹é€ FreeRDPåˆ¶ä½œçš„æ’­æ”¾å™¨æ—¶ï¼Œä¸ºäº†ä»æœåŠ¡å™¨ä¸Šä¸‹è½½æ–‡ä»¶ï¼Œä½¿ç”¨äº†Mongooseåº“ï¼Œå¦‚æœä¼ å…¥çš„æ˜¯åŸŸåï¼Œä¼šå‡ºç°é—®é¢˜ï¼ˆè²Œä¼¼æ˜¯å¼‚æ­¥æŸ¥è¯¢DNSçš„é—®é¢˜ï¼‰
+	// æ‰€ä»¥æš‚æ—¶å…ˆç”±åŠ©æ‰‹è¿›è¡ŒåŸŸåIPè½¬æ¢ã€‚
 	{
 		unsigned int port_i = 0;
 		struct mg_str scheme, query, fragment, user_info, host, path;
@@ -942,7 +1028,7 @@ void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
 		ex_astr _scheme;
 		_scheme.assign(scheme.p, scheme.len);
 
-		// ½«host´ÓÓòÃû×ª»»ÎªIP
+		// å°†hostä»åŸŸåè½¬æ¢ä¸ºIP
 		ex_astr str_tp_host;
 		str_tp_host.assign(host.p, host.len);
 		struct hostent *tp_host = gethostbyname(str_tp_host.c_str());
@@ -1052,7 +1138,7 @@ void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
 		_create_json_ret(buf, TPE_JSON_FORMAT);
 		return;
 	}
-	// ÅĞ¶Ï²ÎÊıÊÇ·ñÕıÈ·
+	// åˆ¤æ–­å‚æ•°æ˜¯å¦æ­£ç¡®
 	if (!jsRoot["action"].isNumeric())
 	{
 		_create_json_ret(buf, TPE_PARAM);
@@ -1077,9 +1163,9 @@ void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
 		ZeroMemory(&ofn, sizeof(ofn));
 
 		ofn.lStructSize = sizeof(ofn);
-		ofn.lpstrTitle = _T("Ñ¡ÔñÎÄ¼ş");
+		ofn.lpstrTitle = _T("é€‰æ‹©æ–‡ä»¶");
 		ofn.hwndOwner = hParent;
-		ofn.lpstrFilter = _T("¿ÉÖ´ĞĞ³ÌĞò (*.exe)\0*.exe\0");
+		ofn.lpstrFilter = _T("å¯æ‰§è¡Œç¨‹åº (*.exe)\0*.exe\0");
 		ofn.lpstrFile = wszReturnPath;
 		ofn.nMaxFile = MAX_PATH;
 		ofn.lpstrInitialDir = wsDefaultPath.c_str();
@@ -1102,12 +1188,12 @@ void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
 		ZeroMemory(&bi, sizeof(BROWSEINFO));
 		bi.hwndOwner = NULL;
 		bi.pidlRoot = NULL;
-		bi.pszDisplayName = wszReturnPath; //´Ë²ÎÊıÈçÎªNULLÔò²»ÄÜÏÔÊ¾¶Ô»°¿ò
-		bi.lpszTitle = _T("Ñ¡ÔñÄ¿Â¼");
+		bi.pszDisplayName = wszReturnPath; //æ­¤å‚æ•°å¦‚ä¸ºNULLåˆ™ä¸èƒ½æ˜¾ç¤ºå¯¹è¯æ¡†
+		bi.lpszTitle = _T("é€‰æ‹©ç›®å½•");
 		bi.ulFlags = BIF_RETURNONLYFSDIRS;
 		bi.lpfn = NULL;
-		bi.iImage = 0;   //³õÊ¼»¯Èë¿Ú²ÎÊıbi½áÊø
-		LPITEMIDLIST pIDList = SHBrowseForFolder(&bi);//µ÷ÓÃÏÔÊ¾Ñ¡Ôñ¶Ô»°¿ò
+		bi.iImage = 0;   //åˆå§‹åŒ–å…¥å£å‚æ•°biç»“æŸ
+		LPITEMIDLIST pIDList = SHBrowseForFolder(&bi);//è°ƒç”¨æ˜¾ç¤ºé€‰æ‹©å¯¹è¯æ¡†
 		if (pIDList)
 		{
 			ret = true;
