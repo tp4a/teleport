@@ -90,6 +90,70 @@ $app.create_info_table = function () {
     return _info;
 };
 
+$app.create_config_global = function () {
+    var _global = {};
+
+    _global.dom = {
+        btn_save: $('#btn-save-global-config'),
+
+        btn_global_use_url_protocol: $('#global-use-url-protocol')
+    };
+
+    _global.init = function (cb_stack) {
+        _global.update_dom_global_cfg($app.options.sys_cfg.glob);
+
+        $('#tab-global').find('.tp-checkbox.tp-editable').click(function () {
+            if ($(this).hasClass('tp-selected'))
+                $(this).removeClass('tp-selected');
+            else
+                $(this).addClass('tp-selected');
+        });
+
+        _global.dom.btn_save.click(function () {
+            _global.on_btn_save();
+        });
+
+        cb_stack.exec();
+    };
+
+    _global.update_dom_global_cfg = function (global) {
+        _global.dom.btn_global_use_url_protocol.removeClass('tp-selected');
+        if (global.url_proto)
+            _global.dom.btn_global_use_url_protocol.addClass('tp-selected');
+
+     };
+
+    _global.on_btn_save = function () {
+        
+        var _url_proto = _global.dom.btn_global_use_url_protocol.hasClass('tp-selected'); // now we always need record replay.
+
+        _global.dom.btn_save.attr('disabled', 'disabled');
+        $tp.ajax_post_json('/system/save-cfg',
+            {
+                global: {
+                    url_proto: _url_proto
+                }
+            },
+            function (ret) {
+                _global.dom.btn_save.removeAttr('disabled');
+                if (ret.code === TPE_OK) {
+                    $tp.notify_success('全局设置更新成功！');
+
+                } else {
+                    $tp.notify_error('全局设置更新失败：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                _global.dom.btn_save.removeAttr('disabled');
+                $tp.notify_error('网路故障，全局连接控制设置更新失败！');
+            }
+        );
+
+    };
+
+    return _global;
+};
+
 $app.create_dlg_result = function () {
     var _dlg = {};
 
