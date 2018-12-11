@@ -15,28 +15,28 @@
 
 /*
 //=================================================================
-�ӿ�ʹ��˵����
+接口使用说明：
 
-�����������󣬼��� 127.0.0.1:50022������http���������ʽҪ�����£�
+本程序启动后，监听 127.0.0.1:50022，接收http请求，请求格式要求如下：
 
-GET ��ʽ
+GET 方式
 http://127.0.0.1:50022/method/json_param
-����json_param��ʹ��url_encode���б�����json��ʽ�ַ���
+其中json_param是使用url_encode进行编码后的json格式字符串
 
-POST ��ʽ
+POST 方式
 http://127.0.0.1:50022/method
-post������������json_param
+post的数据区域是json_param
 
-���У�URI��Ϊ�������֣�
-method			����ִ�е����񷽷���
-json_param		�����񷽷��ĸ��Ӳ��������û�и��Ӳ������ⲿ�ֿ���ʡ�ԡ�
+其中，URI分为三个部分：
+method			请求执行的任务方法。
+json_param		此任务方法的附加参数，如果没有附加参数，这部分可以省略。
 
-���ظ�ʽ��ִ�н����󣬷���һ��json��ʽ���ַ����������ߣ���ʽ���£�
+返回格式：执行结束后，返回一个json格式的字符串给请求者，格式如下：
 
 {"code":0,"data":varb}
 
-���У�code�Ǳ��еģ���ֵ��һ��������룬0��ʾ�ɹ������ʧ�ܣ������û��data�򡣲����ɹ�ʱ��data�����
-�����ķ������ݣ����ʽ���ݾ���ִ�е����񷽷���ͬ����ͬ��
+其中，code是必有的，其值是一个错误编码，0表示成功。如果失败，则可能没有data域。操作成功时，data域就是
+操作的返回数据，其格式根据具体执行的任务方法不同而不同。
 
 */
 
@@ -54,6 +54,7 @@ public:
 	bool init(const char* ip, int port);
 	void run(void);
 	void stop(void);
+	void _rpc_func_url_protocol(const ex_astr& func_args, ex_astr& buf);
 
 	ex_astr get_content_type(ex_astr file_suffix)
 	{
