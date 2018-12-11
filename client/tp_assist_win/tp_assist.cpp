@@ -91,6 +91,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 
 	for (int i = 0; i < g_argc; ++i)
 	{
+		arg = g_argv[i];
 		if(0 == lstrcmp(g_argv[i], _T("--stop")))
 		{
 			PostMessage(HWND_BROADCAST, g_ulSingleInstanceMsgId, WMU_INSTANCE_EXIT, 0);
