@@ -45,6 +45,13 @@
                 "desc": []
             },
             {
+                "name": "filezilla",
+                "display": "FileZilla",
+                "app": "/Applications/FileZilla.app/Contents/MacOS/filezilla",
+                "cmdline": "sftp://{user_name}:****@{host_ip}:{host_port}",
+                "desc": []
+            },
+            {
                 "name": "other",
                 "display": "自定义",
                 "app": "",
