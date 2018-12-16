@@ -82,9 +82,9 @@ int AppDelegate_select_app (void *_self) {
 		if(ret == -1)
 			msg = @"初始化运行环境失败！";
 		else if(ret == -2)
-			msg = @"加载配置文件失败！";
+			msg = @"加载配置文件失败！\n\n请删除 ~/.tp-assist.json 后重试！";
 		else if(ret == -3)
-			msg = @"启动本地通讯端口失败！请检查本地50022端口是否被占用！";
+			msg = @"启动本地通讯端口失败！\n\n请检查本地50022和50023端口是否被占用！";
 		else
 			msg = @"发生未知错误！";
 		
@@ -96,7 +96,8 @@ int AppDelegate_select_app (void *_self) {
         [alert runModal];
         
 		[[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
-		[NSApp terminate:NSApp];	}
+		[NSApp terminate:NSApp];
+    }
 }
 
 - (int) start_ssh_client:(NSString*)cmd_line termType:(NSString*)term_type termTheme:(NSString*)term_theme termTitle:(NSString*)term_title {
