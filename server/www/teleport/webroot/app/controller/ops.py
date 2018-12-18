@@ -39,7 +39,7 @@ class RemoteHandler(TPBaseHandler):
         _cfg = tp_cfg()
         param = {
             'host_groups': groups,
-            'core_cfg': tp_cfg().core
+            'core_cfg': _cfg.core,
             'url_proto': _cfg.sys.glob.url_proto
         }
 
