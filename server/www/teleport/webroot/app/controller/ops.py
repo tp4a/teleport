@@ -36,9 +36,11 @@ class RemoteHandler(TPBaseHandler):
             return
 
         err, groups = group.get_host_groups_for_user(self.current_user['id'], self.current_user['privilege'])
+        _cfg = tp_cfg()
         param = {
             'host_groups': groups,
-            'core_cfg': tp_cfg().core
+            'core_cfg': _cfg.core,
+            'url_proto': _cfg.sys.glob.url_proto
         }
 
         # param = {
