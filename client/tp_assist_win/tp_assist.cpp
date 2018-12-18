@@ -88,16 +88,35 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
     if (0 == g_ulSingleInstanceMsgId)
         return FALSE;
 
-    LPWSTR szCmdLine=(LPWSTR)::GetCommandLineW(); //»ñÈ¡ÃüÁîĞĞ²ÎÊı£»
-    g_argv=CommandLineToArgvW(szCmdLine, &g_argc); //²ğ·ÖÃüÁîĞĞ²ÎÊı×Ö·û´®£»
-
+    LPWSTR szCmdLine=(LPWSTR)::GetCommandLineW(); //è·å–å‘½ä»¤è¡Œå‚æ•°ï¼›
+    g_argv=CommandLineToArgvW(szCmdLine, &g_argc); //æ‹†åˆ†å‘½ä»¤è¡Œå‚æ•°å­—ç¬¦ä¸²ï¼›
+    std::wstring arg;
     for (int i=0; i < g_argc; ++i) {
+        arg = g_argv[i];
         if (0 == lstrcmp(g_argv[i], _T("--stop"))) {
             PostMessage(HWND_BROADCAST, g_ulSingleInstanceMsgId, WMU_INSTANCE_EXIT, 0);
             LocalFree(g_argv);
             g_argv=NULL;
             return -1;
-        }
+        }else if (arg.find(L"teleport_ip",0) !=std::wstring::npos && arg.find(L"teleport_port") != std::wstring::npos && arg.find(L"remote_host_ip") != std::wstring::npos && arg.find(L"session_id") != std::wstring::npos) {
+			//æŠŠwchar_t **è½¬æ¢ä¸ºstd::string
+			size_t len = wcslen(g_argv[i]) + 1;
+			size_t converted = 0;
+			char *CStr;
+			CStr = (char*)malloc(len * sizeof(char));
+			wcstombs_s(&converted, CStr, len, g_argv[i], _TRUNCATE);
+			std::string func_args = CStr;
+			
+			//è°ƒç”¨TsHttpRpcç±»é‡Œçš„_rpc_func_run_clientå¯åŠ¨å®¢æˆ·ç«¯
+			TsHttpRpc ts_http_rpc;
+			ex_astr buf;
+			ts_http_rpc._rpc_func_url_protocol(func_args, buf);
+			
+			free(CStr); 
+			LocalFree(g_argv);
+			g_argv = NULL;
+			return 0;
+		}
     }
 
     // make sure run single instance.

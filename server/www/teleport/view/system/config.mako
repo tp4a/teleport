@@ -18,6 +18,7 @@
     <div class="box box-nav-tabs">
         <ul class="nav nav-tabs">
             <li class="active"><a href="#tab-info" data-toggle="tab">基本信息</a></li>
+            <li><a href="#tab-global" data-toggle="tab">全局配置</a></li>
             <li><a href="#tab-security" data-toggle="tab">安全</a></li>
             <li><a href="#tab-session" data-toggle="tab">连接控制</a></li>
             <li><a href="#tab-smtp" data-toggle="tab">邮件系统</a></li>
@@ -33,6 +34,29 @@
                 <hr/>
                 <h4>核心服务配置</h4>
                 <table id="core-info-kv" class="table table-info-list"></table>
+            </div>
+            
+            <!-- panel for glabal config -->
+            <div class="tab-pane" id="tab-global">
+                <div class="alert alert-warning">
+                    注意：该配置影响全局，请小心修改。
+                </div>
+                <table class="table table-config-list">
+					<tr>
+                        <td colspan="2" class="title">
+                            <hr class="hr-sm"/>
+                            远程启动方式
+                        </td>
+                    </tr>
+					<tr>
+                        <td class="key"></td>
+                        <td class="value">
+                            <div id="global-use-url-protocol" class="tp-checkbox tp-editable">使用UrlProtocl启动远程</div>
+                        </td>
+                    </tr>
+                </table>
+                <hr/>
+                <button id="btn-save-global-config" class="btn btn-sm btn-primary"><i class="fa fa-check-circle fa-fw"></i> 保存设置</button>
             </div>
 
             <!-- panel for security config -->
