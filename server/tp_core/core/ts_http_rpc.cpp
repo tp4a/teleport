@@ -176,25 +176,27 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
 		return TPE_HTTP_METHOD;
 
 	ex_astr json_str;
-	if (is_get)
-		json_str.assign(req->query_string.p, req->query_string.len);
-	else
-		json_str.assign(req->body.p, req->body.len);
+    if (is_get) {
+        json_str.assign(req->query_string.p, req->query_string.len);
+
+        // 将参数进行 url-decode 解码
+        int len = json_str.length() * 2;
+        ex_chars sztmp;
+        sztmp.resize(len);
+        memset(&sztmp[0], 0, len);
+        if (-1 == ts_url_decode(json_str.c_str(), json_str.length(), &sztmp[0], len, 0))
+            return TPE_HTTP_URL_ENCODE;
+
+        json_str = &sztmp[0];
+    }
+    else {
+        json_str.assign(req->body.p, req->body.len);
+    }
 
 	if (0 == json_str.length())
 		return TPE_PARAM;
 
-	// 将参数进行 url-decode 解码
-	int len = json_str.length() * 2;
-	ex_chars sztmp;
-	sztmp.resize(len);
-	memset(&sztmp[0], 0, len);
-	if (-1 == ts_url_decode(json_str.c_str(), json_str.length(), &sztmp[0], len, 0))
-		return TPE_HTTP_URL_ENCODE;
-
-	json_str = &sztmp[0];
-
-	Json::Reader jreader;
+    Json::Reader jreader;
 
 	if (!jreader.parse(json_str.c_str(), json_param))
 		return TPE_JSON_FORMAT;
