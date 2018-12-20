@@ -121,7 +121,7 @@ class BuilderMacOS(BuilderBase):
 
         utils.makedirs(out_path)
 
-        utils.cmake(os.path.join(env.root_path, 'server', 'cmake-build'), ctx.target_path, False)
+        utils.cmake(os.path.join(env.root_path, 'cmake-build'), ctx.target_path, False)
         # utils.strip(out_file)
 
         for f in out_files:

@@ -50,28 +50,40 @@ def _check_download_file(file_name):
 def download_file(desc, url, target_path, file_name):
     cc.n('download {} ... '.format(desc), end='')
 
-    local_file_name = os.path.join(target_path, file_name)
-    if os.path.exists(local_file_name):
-        if not _check_download_file(local_file_name):
-            cc.w('already exists but broken, download it again...')
-        else:
-            cc.w('already exists, skip.')
-            return True
+    _temp_file = os.path.join(target_path, '_dl_{}'.format(file_name))
+    _real_file = os.path.join(target_path, file_name)
+
+    if os.path.exists(_temp_file):
+        cc.w('already exists but broken, download it again...')
+        remove(_temp_file)
+        remove(_real_file)
+
+        # if not _check_download_file(local_file_name):
+        #     cc.w('already exists but broken, download it again...')
+        # else:
+        #     cc.w('already exists, skip.')
+        #     return True
+
+    if os.path.exists(_real_file):
+        cc.w('already exists, skip.')
+        return True
 
     cc.v('')
     # 因为下载过程会在命令行显示进度，所以不能使用subprocess.Popen()的方式捕获输出，会很难看！
     if env.is_win:
-        cmd = '""{}" --no-check-certificate {} -O "{}""'.format(env.wget, url, local_file_name)
+        cmd = '""{}" --no-check-certificate {} -O "{}""'.format(env.wget, url, _temp_file)
         os.system(cmd)
     elif env.is_linux or env.is_macos:
-        os.system('wget --no-check-certificate {} -O "{}"'.format(url, local_file_name))
+        os.system('wget --no-check-certificate {} -O "{}"'.format(url, _temp_file))
     else:
         cc.e('can not download, no download tool.')
         return False
 
-    if not os.path.exists(local_file_name) or not _check_download_file(local_file_name):
+    if not os.path.exists(_temp_file) or not _check_download_file(_temp_file):
         cc.e('downloading {} from {} failed.'.format(desc, url))
         return False
+
+    os.rename(_temp_file, _real_file)
 
     return True
 

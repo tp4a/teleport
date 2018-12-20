@@ -319,20 +319,7 @@ class Builder:
                 if nsiline.find('\n') != -1:
                     nsiline = nsiline[:-1]
 
-                # if nsiline.find(" FILE_VER") != -1 or nsiline.find(" STR_FILE_VER") != -1:
                 if nsiline.startswith("!define FILE_VER"):
-                    # # cc.v('[ver] old ver:  %s' % nsiLines[x])
-                    # pos1 = nsiline.find('"')
-                    # pos2 = nsiline.rfind('"')
-                    # _ver = nsiline[pos1 + 1: pos2]
-
-                    # nsiSplitList = _ver.split(".")
-                    # if (len(nsiSplitList) != 3):
-                    #     raise RuntimeError('Invalid .nsi file (1).')
-                    # if '.'.join(nsiSplitList) == ver:
-                    #     continue
-
-                    # # nsiline = '%s\"%d.%d.%d.%d\"\n' % (nsiline[0:pos1], self.major, self.minor, self.revision, self.build)
                     nsiline = '!define FILE_VER \"%s.%s.%s.0\"\n' % (t_ver[0], t_ver[1], t_ver[2])
 
                     nsiLines[x] = ""
@@ -340,20 +327,7 @@ class Builder:
                     # cc.v('[ver] new ver:  %s' % nsiLines[x])
                     bOK = True
 
-                # elif nsiline.find(" OUT_VER") != -1 or nsiline.find(" STR_OUT_VER") != -1:
                 elif nsiline.startswith("!define OUT_VER"):
-                    # # cc.v('[ver] old ver:  %s' % nsiLines[x])
-                    # pos1 = nsiline.find('"')
-                    # pos2 = nsiline.rfind('"')
-                    # _ver = nsiline[pos1 + 1: pos2]
-
-                    # nsiSplitList = _ver.split(".")
-                    # if (len(nsiSplitList) != 3):
-                    #     raise RuntimeError('Invalid .nsi file (1).')
-                    # if '.'.join(nsiSplitList) == ver:
-                    #     continue
-
-                    # nsiline = '%s\"%d.%d.%d.%d\"\n' % (nsiline[0:pos1], self.major, self.minor, self.revision, self.build)
                     nsiline = '!define OUT_VER \"%s.%s.%s\"\n' % (t_ver[0], t_ver[1], t_ver[2])
 
                     nsiLines[x] = ""
@@ -361,18 +335,6 @@ class Builder:
                     # cc.v('[ver] new ver:  %s' % nsiLines[x])
                     bOK = True
                 elif nsiline.startswith("!define PRODUCT_VER"):
-                    # # cc.v('[ver] old ver:  %s' % nsiLines[x])
-                    # pos1 = nsiline.find('"')
-                    # pos2 = nsiline.rfind('"')
-                    # _ver = nsiline[pos1 + 1: pos2]
-
-                    # nsiSplitList = _ver.split(".")
-                    # if (len(nsiSplitList) != 2):
-                    #     raise RuntimeError('Invalid .nsi file (2).')
-                    # if '.'.join(nsiSplitList) == '%s.%s' % (t_ver[0], t_ver[1]):
-                    #     continue
-
-                    # nsiline = '%s\"%d.%d\"\n' % (nsiline[0:pos1], self.major, self.minor)
                     nsiline = '!define PRODUCT_VER \"%s.%s\"\n' % (t_ver[0], t_ver[1])
 
                     nsiLines[x] = ""
@@ -417,24 +379,6 @@ class Builder:
                 if l.find('<key>CFBundleVersion</key>') != -1:
                     is_ver = True
                     continue
-                    # pos1 = rcline.find(' FILEVERSION ')
-                    # pos2 = rcline.rfind('\\0"')
-                    # _ver = rcline[pos1 + 13: pos2].strip()
-                    #
-                    # rcSplitList = _ver.split(",")
-                    # if (len(rcSplitList) < 4):
-                    #     rcSplitList = _ver.split(".")
-                    # if (len(rcSplitList) < 4):
-                    #     raise RuntimeError('Invalid .rc file.')
-                    # if '.'.join(rcSplitList) == ver:
-                    #     continue
-                    #
-                    # rcline = '%s%s,%s,%s,%s\n' % (rcline[0:pos1 + 13], t_ver[0], t_ver[1], t_ver[2], t_ver[3])
-                    #
-                    # rcLines[x] = ""
-                    # rcLines[x] = rcline
-                    # # cc.v('[ver] new ver:  %s' % rcLines[x])
-                    # bOK = True
 
                 if is_ver:
                     is_ver = False
