@@ -36,7 +36,7 @@ $app.on_init = function (cb_stack) {
 };
 
 $app.test = function (cb) {
-    cb.add($app.dlg_ldap_import.show);
+    cb.add($app.dlg_ldap_config.show);
     cb.exec();
 };
 
@@ -1256,7 +1256,9 @@ $app.create_dlg_ldap_config = function () {
         password: '',
         base_dn: '',
         filter: '',
-        attr_map: ''
+        attr_username: '',
+        attr_surname: '',
+        attr_email: ''
     };
     // {"server":"192.168.0.101","port":3892,"domain":"apexnas.com","admin":"cn=admin,dc=apexnas,dc=com","password":"Abcd1234","base_dn":"ou=people,dc=apexnas,dc=com","filter":"(&(objectClass=person))","attr_map":"tp.username = uid\ntp.surname = cn111\ntp.email = mail"}
 
@@ -1269,7 +1271,10 @@ $app.create_dlg_ldap_config = function () {
         password: $('#edit-ldap-password'),
         base_dn: $('#edit-ldap-base-dn'),
         filter: $('#edit-ldap-filter'),
-        attr_map: $('#edit-ldap-attr-map'),
+        // attr_map: $('#edit-ldap-attr-map'),
+        attr_username: $('#edit-ldap-attr-username'),
+        attr_surname: $('#edit-ldap-attr-surname'),
+        attr_email: $('#edit-ldap-attr-email'),
 
         btn_switch_password: $('#btn-switch-ldap-password'),
         btn_switch_password_icon: $('#btn-switch-ldap-password i'),
@@ -1283,12 +1288,6 @@ $app.create_dlg_ldap_config = function () {
         dlg.dom.btn_list_attr.click(dlg.do_list_attr);
         dlg.dom.btn_test.click(dlg.do_test);
         dlg.dom.btn_save.click(dlg.do_save);
-
-        // dlg.dom.btn_gen_random_password.click(function () {
-        //     dlg.dom.password.val(tp_gen_password(8));
-        //     dlg.dom.password.attr('type', 'text');
-        //     dlg.dom.btn_switch_password_icon.removeClass('fa-eye').addClass('fa-eye-slash')
-        // });
 
         dlg.dom.btn_switch_password.click(function () {
             if ('password' === dlg.dom.password.attr('type')) {
@@ -1317,7 +1316,10 @@ $app.create_dlg_ldap_config = function () {
             dlg.dom.admin.val(dlg.ldap_config.admin);
             dlg.dom.base_dn.val(dlg.ldap_config.base_dn);
             dlg.dom.filter.val(dlg.ldap_config.filter);
-            dlg.dom.attr_map.text(dlg.ldap_config.attr_map);
+            // dlg.dom.attr_map.text(dlg.ldap_config.attr_map);
+            dlg.dom.attr_username.val(dlg.ldap_config.attr_username);
+            dlg.dom.attr_surname.val(dlg.ldap_config.attr_surname);
+            dlg.dom.attr_email.val(dlg.ldap_config.attr_email);
         }
     };
 
@@ -1334,7 +1336,10 @@ $app.create_dlg_ldap_config = function () {
         dlg.ldap_config.admin = dlg.dom.admin.val();
         dlg.ldap_config.base_dn = dlg.dom.base_dn.val();
         dlg.ldap_config.filter = dlg.dom.filter.val();
-        dlg.ldap_config.attr_map = dlg.dom.attr_map.val();
+        // dlg.ldap_config.attr_map = dlg.dom.attr_map.val();
+        dlg.ldap_config.attr_username = dlg.dom.attr_username.val();
+        dlg.ldap_config.attr_surname = dlg.dom.attr_surname.val();
+        dlg.ldap_config.attr_email = dlg.dom.attr_email.val();
 
         if (!tp_is_host(dlg.ldap_config.server)) {
             dlg.dom.server.focus();
@@ -1382,9 +1387,14 @@ $app.create_dlg_ldap_config = function () {
             $tp.notify_error('请填写LDAP的用户过滤器！');
             return false;
         }
-        if (tp_is_empty_str(dlg.ldap_config.attr_map)) {
-            dlg.dom.attr_map.focus();
-            $tp.notify_error('请填写LDAP的用户属性与teleport用户属性的映射关系！');
+        // if (tp_is_empty_str(dlg.ldap_config.attr_map)) {
+        //     dlg.dom.attr_map.focus();
+        //     $tp.notify_error('请填写LDAP的用户属性与teleport用户属性的映射关系！');
+        //     return false;
+        // }
+        if (tp_is_empty_str(dlg.ldap_config.attr_username)) {
+            dlg.dom.attr_username.focus();
+            $tp.notify_error('请填写映射为teleport登录账号的LDAP用户属性！');
             return false;
         }
 

@@ -505,8 +505,7 @@
                             <label for="edit-ldap-base-dn" class="col-sm-2 control-label require">用户基准DN：</label>
                             <div class="col-sm-9">
                                 <input id="edit-ldap-base-dn" type="text" class="form-control" placeholder=""/>
-                                <div class="control-desc-sm">限制用户DN的范围，例如 <span class="important">ou=dev,ou=company,ou=com</span>。用户的完整DN为
-                                    <span class="important">cn=用户登录名,用户基准DN</span>。
+                                <div class="control-desc-sm">限制用户DN的范围，例如 <span class="important">ou=dev,ou=company,ou=com</span>。
                                 </div>
                             </div>
                         </div>
@@ -522,14 +521,51 @@
                         </div>
 
                         <div class="form-group form-group-sm">
-                            <label for="edit-ldap-attr-map" class="col-sm-2 control-label require">属性映射：</label>
+                            <label class="col-sm-2 control-label require">属性映射：</label>
                             <div class="col-sm-9">
-                                <textarea id="edit-ldap-attr-map" class="form-control"
-                                          style="resize:vertical;height:8em;" placeholder="">t</textarea>
-                                <div class="control-desc-sm">将LDAP的属性映射到 teleport 的用户属性，例如 <span class="important">LDAP中的用户属性 sAMAccountName 映射为teleport的登录账号</span>。如果不清楚此LDAP服务的用户属性，可使用下方的“列举属性”按钮进行查询。
+                                <div class="control-desc-sm">将LDAP的属性映射到 teleport 的用户属性，例如 <span class="important">LDAP中的用户属性 sAMAccountName 映射为teleport的登录账号</span>。如果不清楚此LDAP服务的用户属性，可使用下方的“列举属性”按钮进行查询。</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-attr-username" class="col-sm-offset-1 col-sm-2 control-label require">登录账号字段：</label>
+                            <div class="col-sm-3">
+                                <input id="edit-ldap-attr-username" type="text" class="form-control" placeholder=""/>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="control-desc-sm">例如<span class="important">sAMAccountName</span>。
                                 </div>
                             </div>
                         </div>
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-attr-surname" class="col-sm-offset-1 col-sm-2 control-label">真实姓名字段：</label>
+                            <div class="col-sm-3">
+                                <input id="edit-ldap-attr-surname" type="text" class="form-control" placeholder=""/>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="control-desc-sm">例如<span class="important">uid</span>。
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label for="edit-ldap-attr-email" class="col-sm-offset-1 col-sm-2 control-label">邮箱地址字段：</label>
+                            <div class="col-sm-3">
+                                <input id="edit-ldap-attr-email" type="text" class="form-control" placeholder=""/>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="control-desc-sm">例如<span class="important">mail</span>。
+                                </div>
+                            </div>
+                        </div>
+
+
+##                         <div class="form-group form-group-sm">
+##                             <label for="edit-ldap-attr-map" class="col-sm-2 control-label require">属性映射：</label>
+##                             <div class="col-sm-9">
+##                                 <textarea id="edit-ldap-attr-map" class="form-control" style="resize:vertical;height:8em;" placeholder=""></textarea>
+##                                 <div class="control-desc-sm">将LDAP的属性映射到 teleport 的用户属性，例如 <span class="important">LDAP中的用户属性 sAMAccountName 映射为teleport的登录账号</span>。如果不清楚此LDAP服务的用户属性，可使用下方的“列举属性”按钮进行查询。</div>
+##                             </div>
+##                         </div>
 
                     </div>
 
@@ -537,11 +573,12 @@
 
                 <div class="modal-footer">
                     <div class="row">
-                        <div class="col-sm-6">
-                            <div id="edit-user-message" class="alert alert-danger"
-                                 style="text-align:left;display:none;"></div>
+                        <div class="col-sm-12">
+                            <div id="edit-user-message" class="alert alert-danger" style="text-align:left;display:none;"></div>
                         </div>
-                        <div class="col-sm-6" style="text-align:right;">
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12" style="text-align:right;">
                             <button type="button" class="btn btn-sm btn-success" id="btn-ldap-config-list-attr"><i
                                     class="fa fa-list-alt fa-fw"></i> 列举属性
                             </button>

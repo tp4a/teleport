@@ -13,26 +13,41 @@ class Ldap(object):
         self._base_dn = base_dn
 
     @staticmethod
-    def _parse_attr_map(attr_map):
+    def _parse_attr_map(attr_username, attr_surname, attr_email):
         attrs_ldap = []
         attrs_tp = []
 
-        lines = attr_map.split('\n')
-        for line in lines:
-            x = line.split('=')
-            if len(x) != 2:
-                return None, None, line
-            y = x[0].strip().split('.')
-            if len(y) != 2 or 'tp' != y[0]:
-                return None, None, line
-            tp_attr = y[1]
-            ldap_attr = x[1].strip()
-            if len(tp_attr) == 0 or len(ldap_attr) == 0:
-                return None, None, line
-            attrs_ldap.append(ldap_attr)
-            attrs_tp.append(tp_attr)
+        if len(attr_username) > 0:
+            attrs_ldap.append(attr_username)
+            attrs_tp.append('username')
+        if len(attr_surname) > 0:
+            attrs_ldap.append(attr_surname)
+            attrs_tp.append('surname')
+        if len(attr_email) > 0:
+            attrs_ldap.append(attr_email)
+            attrs_tp.append('email')
 
-        return attrs_ldap, attrs_tp, ''
+        if len(attrs_ldap) > 0:
+            return attrs_ldap, attrs_tp
+        else:
+            return None, None
+
+        # lines = attr_map.split('\n')
+        # for line in lines:
+        #     x = line.split('=')
+        #     if len(x) != 2:
+        #         return None, None, line
+        #     y = x[0].strip().split('.')
+        #     if len(y) != 2 or 'tp' != y[0]:
+        #         return None, None, line
+        #     tp_attr = y[1]
+        #     ldap_attr = x[1].strip()
+        #     if len(tp_attr) == 0 or len(ldap_attr) == 0:
+        #         return None, None, line
+        #     attrs_ldap.append(ldap_attr)
+        #     attrs_tp.append(tp_attr)
+        #
+        # return attrs_ldap, attrs_tp, ''
 
     def get_all_attr(self, admin, password, search_filter):
         conn = ldap3.Connection(
@@ -77,10 +92,10 @@ class Ldap(object):
             result[attr_name] = attr_val
         return TPE_OK, result, ''
 
-    def list_users(self, admin, password, search_filter, attr_map, size_limit=0):
-        attrs_ldap, attrs_tp, msg = self._parse_attr_map(attr_map)
+    def list_users(self, admin, password, search_filter, attr_username, attr_surname, attr_email, size_limit=0):
+        attrs_ldap, attrs_tp = self._parse_attr_map(attr_username, attr_surname, attr_email)
         if attrs_ldap is None:
-            return TPE_PARAM, None, '属性映射格式错误: {}'.format(msg)
+            return TPE_PARAM, None, '属性映射错误'
 
         user = admin
         conn = ldap3.Connection(

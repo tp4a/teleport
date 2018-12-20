@@ -594,8 +594,12 @@ class AppConfig(BaseAppConfig):
             self.sys.ldap.base_dn = ''
         if not self.sys.ldap.is_exists('filter'):
             self.sys.ldap.filter = ''
-        if not self.sys.ldap.is_exists('attr_map'):
-            self.sys.ldap.attr_map = ''
+        if not self.sys.ldap.is_exists('attr_username'):
+            self.sys.ldap.attr_username = ''
+        if not self.sys.ldap.is_exists('attr_surname'):
+            self.sys.ldap.attr_surname = ''
+        if not self.sys.ldap.is_exists('attr_email'):
+            self.sys.ldap.attr_email = ''
         if self.sys.ldap.is_exists('password'):
             self.sys_ldap_password = self.sys.ldap.password
             self.sys.ldap.password = '********'
