@@ -8,6 +8,9 @@ $app.on_init = function (cb_stack) {
 
     $app.info = $app.create_info_table();
     cb_stack.add($app.info.init);
+    
+    $app.global = $app.create_config_global();
+    cb_stack.add($app.global.init);
 
     $app.sess = $app.create_config_sess();
     cb_stack.add($app.sess.init);
