@@ -74,11 +74,11 @@ class BuilderWin(BuilderBase):
         utils.makedirs(tmp_cfg_path)
 
         utils.copy_file(os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_app_path, 'tp_assist.exe')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'cfg'), tmp_cfg_path, ('tp-assist.default.json', 'tp-assist.json'))
+        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, ('tp-assist.windows.json', 'tp-assist.json'))
 
-        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'cfg'), tmp_cfg_path, 'cacert.cer')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'cfg'), tmp_cfg_path, 'localhost.key')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'cfg'), tmp_cfg_path, 'localhost.pem')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, 'cacert.cer')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, 'localhost.key')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, 'localhost.pem')
 
         utils.copy_ex(os.path.join(env.root_path, 'client', 'tp_assist_win'), tmp_app_path, 'site')
 

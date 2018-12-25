@@ -8,16 +8,16 @@
 ;
 ;==========================================================================;
 
-!define COMPANY_NAME		"EOMSoft"
+!define COMPANY_NAME		"TP4A"
 
 !define BASE_NAME			"teleport-assist"
 !define PRODUCT_NAME		"Teleport-Assist"
-!define PRODUCT_WEBSITE 	"teleport.eomsoft.net"
+!define PRODUCT_WEBSITE 	"tp4a.com"
 
 ; 产品安装包GUID
 !define PRODUCT_GUID			"{2FFD2BF7-24C0-4AC5-BF7B-B8C7420CF694_TP_ASSIST}"
-!define PRODUCT_NAME_DESC		"EOMSoft-Teleport"
-!define PRODUCT_NAME_DISPLAY	"Teleport by EOMSoft"
+!define PRODUCT_NAME_DESC		"TP4A-Teleport"
+!define PRODUCT_NAME_DISPLAY	"Teleport by TP4A"
 
 !define PRODUCT_VER "3.2"
 !define FILE_VER "3.2.0.0"
