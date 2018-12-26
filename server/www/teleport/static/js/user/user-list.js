@@ -1392,11 +1392,11 @@ $app.create_dlg_ldap_config = function () {
         //     $tp.notify_error('请填写LDAP的用户属性与teleport用户属性的映射关系！');
         //     return false;
         // }
-        if (tp_is_empty_str(dlg.ldap_config.attr_username)) {
-            dlg.dom.attr_username.focus();
-            $tp.notify_error('请填写映射为teleport登录账号的LDAP用户属性！');
-            return false;
-        }
+        // if (tp_is_empty_str(dlg.ldap_config.attr_username)) {
+        //     dlg.dom.attr_username.focus();
+        //     $tp.notify_error('请填写映射为teleport登录账号的LDAP用户属性！');
+        //     return false;
+        // }
 
         return true;
     };
@@ -1429,6 +1429,11 @@ $app.create_dlg_ldap_config = function () {
     dlg.do_test = function () {
         if (!dlg.check_fields())
             return;
+        if (tp_is_empty_str(dlg.ldap_config.attr_username)) {
+            dlg.dom.attr_username.focus();
+            $tp.notify_error('请填写映射为teleport登录账号的LDAP用户属性！');
+            return false;
+        }
         dlg.dom.btn_test.attr('disabled', 'disabled');
         $tp.ajax_post_json('/system/do-ldap-config-test', {
                 ldap: dlg.ldap_config
@@ -1532,29 +1537,26 @@ $app.create_dlg_ldap_test_result = function () {
         dlg.dom.table.empty();
 
         var h = [];
-        var dn, x;
-        var th_created = false;
-        for (dn in data) {
-            if (!th_created) {
-                h.push('<thead>');
-                for (x in data[dn]) {
-                    h.push('<th style="text-align:left;" class="mono">');
-                    h.push(x);
-                    h.push('</th>');
-                }
-                h.push('</thead>');
-                th_created = true;
-            }
+        h.push('<thead>');
+        h.push('<th style="text-align:left;" class="mono">登录名</th>');
+        h.push('<th style="text-align:left;" class="mono">姓名</th>');
+        h.push('<th style="text-align:left;" class="mono">邮箱</th>');
+        h.push('</thead>');
 
+        var _mktd = function(h, d) {
+            if((!_.isUndefined(d)) && !_.isEmpty(d))
+                h.push('<td style="text-align:left;" class="mono">'+d+'</td>');
+            else
+                h.push('<td></td>');
+        };
+
+        var dn;
+        for (dn in data) {
             h.push('<tr>');
-            for (x in data[dn]) {
-                h.push('<td style="text-align:left;" class="mono">');
-                if (!_.isEmpty(data[dn][x]))
-                    h.push(data[dn][x]);
-                else
-                    h.push('');
-                h.push('</td>');
-            }
+            console.log(data[dn]);
+            _mktd(h, data[dn]['username']);
+            _mktd(h, data[dn]['surname']);
+            _mktd(h, data[dn]['email']);
             h.push('</tr>');
         }
 

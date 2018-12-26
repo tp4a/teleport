@@ -639,6 +639,11 @@ class DoLdapImportHandler(TPBaseJsonHandler):
         try:
             user_list = []
             for _u in users:
+                if 'surname' not in _u:
+                    _u['surname'] = _u['username']
+                if 'email' not in _u:
+                    _u['email'] = ''
+
                 u = dict()
                 u['_line'] = 0
                 u['_id'] = 0

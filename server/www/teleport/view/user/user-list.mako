@@ -644,7 +644,7 @@
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i
                             class="fa fa-times-circle fa-fw"></i></button>
-                    <h3 class="modal-title">LDAP连接测试结果</h3>
+                    <h3 class="modal-title">获取LDAP用户测试</h3>
                 </div>
                 <div class="modal-body">
 
@@ -711,23 +711,6 @@
                             </div>
                         </div>
                     </div>
-
-
-                    ##                     <div class="form-horizontal">
-                    ##                         <div style="margin-bottom:8px;">
-                    ##                             LDAP用户列表：
-                    ##                         </div>
-                    ##
-                    ##                         <div class="form-group form-group-sm">
-                    ##
-                    ##                             <div class="col-sm-12">
-                    ##                                 <table id="table-ldap-user-list"
-                    ##                                        class="table table-striped table-bordered table-hover table-data no-footer dtr-inline"></table>
-                    ##                             </div>
-                    ##
-                    ##                         </div>
-                    ##
-                    ##                     </div>
 
                 </div>
 
