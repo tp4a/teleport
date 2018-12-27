@@ -188,7 +188,7 @@ class BuilderWin(BuilderBase):
         cc.v('')
 
         cc.w('On Windows, when build libssh, need you use cmake-gui.exe to generate solution file')
-        cc.w('for Visual Studio 2015. Visit https://docs.tp4a.com for more details.')
+        cc.w('for Visual Studio 2017. Visit https://docs.tp4a.com for more details.')
         cc.w('\nOnce the libssh.sln generated, press Enter to continue or Q to quit...', end='')
         try:
             x = env.input()

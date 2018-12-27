@@ -190,29 +190,40 @@ class Env(object):
 
         return True
 
-    def _get_msbuild(self):
-        # 14.0 = VS2015
-        # 12.0 = VS2012
-        #  4.0 = VS2008
-        chk = ['14.0', '12.0', '4.0']
+    # def _get_msbuild(self):
+    #     # 14.0 = VS2015
+    #     # 12.0 = VS2012
+    #     #  4.0 = VS2008
+    #     chk = ['14.0', '12.0', '4.0']
 
-        p = None
-        for c in chk:
-            p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\MSBuild\ToolsVersions\{}'.format(c), r'MSBuildToolsPath')
-            if p is not None:
-                break
+    #     p = None
+    #     for c in chk:
+    #         p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\MSBuild\ToolsVersions\{}'.format(c), r'MSBuildToolsPath')
+    #         if p is not None:
+    #             break
 
-        return os.path.join(p[0], 'MSBuild.exe') if p is not None else None
+    #     return os.path.join(p[0], 'MSBuild.exe') if p is not None else None
+
+    # def _get_visual_studio_path(self):
+    #     chk = ['14.0', '12.0', '4.0']
+    #     p = None
+    #     for c in chk:
+    #         p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\VisualStudio\{}'.format(c), r'ShellFolder')
+    #         if p is not None:
+    #             break
+
+    #     return p[0] if p is not None else None
 
     def _get_visual_studio_path(self):
-        chk = ['14.0', '12.0', '4.0']
         p = None
-        for c in chk:
-            p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\VisualStudio\{}'.format(c), r'ShellFolder')
-            if p is not None:
-                break
-
+        p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7', r'15.0')
         return p[0] if p is not None else None
+
+    def _get_msbuild(self):
+        vs2017 = self._get_visual_studio_path()
+        if vs2017 is None:
+            return None
+        return os.path.join(vs2017, 'MSBuild', '15.0', 'Bin', 'MSBuild.exe')
 
     def _get_perl(self):
         p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\perl', 'BinDir')
