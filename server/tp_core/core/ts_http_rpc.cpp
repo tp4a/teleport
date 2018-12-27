@@ -477,10 +477,10 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
 	}
 
 	int noop_timeout = json_param["noop_timeout"].asUInt();
-	if (noop_timeout == 0) {
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
+	// if (noop_timeout == 0) {
+	// 	_create_json_ret(buf, TPE_PARAM);
+	// 	return;
+	// }
 
 	EXLOGV("[core] set run-time config:\n");
 	EXLOGV("[core]   noop_timeout = %dm\n", noop_timeout);
