@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{73f964a0-2430-47c6-b083-956809018ec2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex">
+      <UniqueIdentifier>{68aa1482-4f0d-43b5-9bbd-d7857e9b540b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex\header">
+      <UniqueIdentifier>{e6941d07-304a-4ba8-af5a-c5a09dae61b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex\src">
+      <UniqueIdentifier>{4a7ed97e-93c1-4513-b813-3399eaeb8a2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win32">
+      <UniqueIdentifier>{b95409eb-4905-440f-8537-ee892e96b49a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main app">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="libssh">
+      <UniqueIdentifier>{f1fea9ae-123c-4aa8-a152-e88d1d0a29fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jsoncpp">
+      <UniqueIdentifier>{022b0a3d-47c2-40d8-96d9-dceea02e7eef}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_const.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_ini.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_log.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_path.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_platform.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_str.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_thread.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_types.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_util.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_winsrv.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>win32</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>win32</Filter>
+    </ClInclude>
+    <ClInclude Include="ssh_proxy.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ssh_session.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\ts_const.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\protocol_interface.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\base_record.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\ts_membuf.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="tpp_env.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\base_env.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="ssh_recorder.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\sftp.h">
+      <Filter>libssh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\callbacks.h">
+      <Filter>libssh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\libssh.h">
+      <Filter>libssh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\server.h">
+      <Filter>libssh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\jsoncpp\include\json\json.h">
+      <Filter>jsoncpp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\teleport\teleport_const.h">
+      <Filter>common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="tpssh.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_ini.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_log.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_path.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_str.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_thread.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_util.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_winsrv.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>win32</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>win32</Filter>
+    </ClCompile>
+    <ClCompile Include="ssh_proxy.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ssh_session.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\base_record.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\ts_membuf.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="tpp_env.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\base_env.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="ssh_recorder.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_reader.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_value.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_writer.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

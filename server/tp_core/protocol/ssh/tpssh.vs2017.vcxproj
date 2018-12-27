@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FDA16D20-09B7-45AF-ADF1-DAF3EF2C0531}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>tpssh</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>tpssh</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\..\..\..\out\server\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>..\..\..\..\out\_tmp_\$(ProjectName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\..\..\..\out\server\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>..\..\..\..\out\_tmp_\$(ProjectName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;TPP_EXPORTS;LIBSSH_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../../common/teleport;../../../../common/libex/include;../../../../external/jsoncpp/include;../../../../external/libssh/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\..\..\external\libssh-win-static\lib;..\..\..\..\external\openssl\out32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;TPP_EXPORTS;LIBSSH_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../../common/teleport;../../../../common/libex/include;../../../../external/jsoncpp/include;../../../../external/libssh/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>..\..\..\..\external\libssh-win-static\lib;..\..\..\..\external\openssl\out32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex.h" />
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_const.h" />
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_ini.h" />
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_log.h" />
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_path.h" />
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_platform.h" />
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_str.h" />
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_thread.h" />
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_types.h" />
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_util.h" />
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_winsrv.h" />
+    <ClInclude Include="..\..\..\..\common\teleport\teleport_const.h" />
+    <ClInclude Include="..\..\..\..\external\jsoncpp\include\json\json.h" />
+    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\callbacks.h" />
+    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\libssh.h" />
+    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\server.h" />
+    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\sftp.h" />
+    <ClInclude Include="..\..\common\base_env.h" />
+    <ClInclude Include="..\..\common\base_record.h" />
+    <ClInclude Include="..\..\common\protocol_interface.h" />
+    <ClInclude Include="..\..\common\ts_const.h" />
+    <ClInclude Include="..\..\common\ts_membuf.h" />
+    <ClInclude Include="ssh_proxy.h" />
+    <ClInclude Include="ssh_recorder.h" />
+    <ClInclude Include="ssh_session.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="tpp_env.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_ini.cpp" />
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_log.cpp" />
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_path.cpp" />
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_str.cpp" />
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_thread.cpp" />
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_util.cpp" />
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_winsrv.cpp" />
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_reader.cpp" />
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_value.cpp" />
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_writer.cpp" />
+    <ClCompile Include="..\..\common\base_env.cpp" />
+    <ClCompile Include="..\..\common\base_record.cpp" />
+    <ClCompile Include="..\..\common\ts_membuf.cpp" />
+    <ClCompile Include="dllmain.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ssh_proxy.cpp" />
+    <ClCompile Include="ssh_recorder.cpp" />
+    <ClCompile Include="ssh_session.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="tpp_env.cpp" />
+    <ClCompile Include="tpssh.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

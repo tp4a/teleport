@@ -1,0 +1,320 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{73f964a0-2430-47c6-b083-956809018ec2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex">
+      <UniqueIdentifier>{68aa1482-4f0d-43b5-9bbd-d7857e9b540b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex\header">
+      <UniqueIdentifier>{e6941d07-304a-4ba8-af5a-c5a09dae61b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex\src">
+      <UniqueIdentifier>{4a7ed97e-93c1-4513-b813-3399eaeb8a2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win32">
+      <UniqueIdentifier>{b95409eb-4905-440f-8537-ee892e96b49a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main app">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="libuv">
+      <UniqueIdentifier>{c33b46b3-8d5d-4dff-851b-4a9394b198d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libuv\header">
+      <UniqueIdentifier>{e3918a55-cbc1-4d69-bed8-c0146f2f4ce2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libuv\src">
+      <UniqueIdentifier>{c248e06b-21a4-4f6d-b0ca-0f1b2a5783bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libuv\src\win">
+      <UniqueIdentifier>{89181d75-3db3-45a5-a35d-9083fb349de3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jsoncpp">
+      <UniqueIdentifier>{fae1b562-5e3f-4b9b-9a5d-41bb15ae2223}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_const.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_ini.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_log.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_path.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_platform.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_str.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_thread.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_types.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_util.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_winsrv.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\libex\include\ex.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>win32</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>win32</Filter>
+    </ClInclude>
+    <ClInclude Include="telnet_proxy.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="telnet_session.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\ts_const.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\protocol_interface.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\base_record.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\ts_membuf.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="tpp_env.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\base_env.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="telnet_recorder.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="telnet_conn.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\ts_memstream.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\include\tree.h">
+      <Filter>libuv\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\include\uv.h">
+      <Filter>libuv\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\include\uv-errno.h">
+      <Filter>libuv\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\include\uv-threadpool.h">
+      <Filter>libuv\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\include\uv-version.h">
+      <Filter>libuv\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\include\uv-win.h">
+      <Filter>libuv\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\src\heap-inl.h">
+      <Filter>libuv\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\src\queue.h">
+      <Filter>libuv\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\src\uv-common.h">
+      <Filter>libuv\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\src\win\winapi.h">
+      <Filter>libuv\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libuv\src\win\winsock.h">
+      <Filter>libuv\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\common\teleport\teleport_const.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\jsoncpp\include\json\json.h">
+      <Filter>jsoncpp</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="tptelnet.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_ini.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_log.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_path.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_str.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_thread.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_util.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\common\libex\src\ex_winsrv.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>win32</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>win32</Filter>
+    </ClCompile>
+    <ClCompile Include="telnet_proxy.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="telnet_session.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\base_record.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\ts_membuf.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="tpp_env.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\base_env.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="telnet_recorder.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="telnet_conn.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\ts_memstream.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\fs-poll.c">
+      <Filter>libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\inet.c">
+      <Filter>libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\threadpool.c">
+      <Filter>libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\uv-common.c">
+      <Filter>libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\version.c">
+      <Filter>libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\req.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\signal.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\snprintf.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\stream.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\tcp.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\thread.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\tty.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\udp.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\util.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\winapi.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\winsock.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\async.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\core.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\detect-wakeup.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\dl.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\error.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\fs.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\fs-event.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\getaddrinfo.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\getnameinfo.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\handle.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\loop-watcher.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\pipe.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\poll.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\process.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\process-stdio.c">
+      <Filter>libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_writer.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_reader.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_value.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\timer.c">
+      <Filter>libuv</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

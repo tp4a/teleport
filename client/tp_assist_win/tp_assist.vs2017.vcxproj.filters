@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="dlg_main.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="tp_assist.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_http_rpc.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_network.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="msocketx.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_env.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_cfg.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\external\jsoncpp\src\lib_json\json_reader.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\external\jsoncpp\src\lib_json\json_value.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\external\jsoncpp\src\lib_json\json_writer.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\external\mongoose\mongoose.c">
+      <Filter>mongoose</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_str.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_util.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_path.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_ini.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_log.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\libex\src\ex_thread.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h">
+      <Filter>resource</Filter>
+    </ClInclude>
+    <ClInclude Include="dlg_main.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="tp_assist.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_http_rpc.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_network.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_env.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_cfg.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\external\mongoose\mongoose.h">
+      <Filter>mongoose</Filter>
+    </ClInclude>
+    <ClInclude Include="msocketx.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_const.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_path.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_platform.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_str.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_types.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_util.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_const.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_ver.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_ini.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_log.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\libex\include\ex\ex_thread.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\teleport\teleport_const.h">
+      <Filter>teleport</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\tp.ico">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="res\tp_small.ico">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="res\tray_normal.ico">
+      <Filter>resource</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="resource">
+      <UniqueIdentifier>{52b425b1-8aa9-4e08-acbd-c88387350530}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jsoncpp">
+      <UniqueIdentifier>{adabe93d-3938-4b11-9352-5b67a1efd7e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mongoose">
+      <UniqueIdentifier>{35a345a0-6147-4c87-97c9-3b0b2a57e348}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main app">
+      <UniqueIdentifier>{0942cec3-67df-4d19-bbc1-e962145e496f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex">
+      <UniqueIdentifier>{a88e05d3-51f4-463f-84cc-c3bc86f07aac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex\header">
+      <UniqueIdentifier>{e3e7a811-5905-4ad5-86a7-9721af5d015a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex\src">
+      <UniqueIdentifier>{d7d49fa4-5192-42c5-bc70-5584d9d646c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="teleport">
+      <UniqueIdentifier>{1291a5cf-cb08-4ad6-8a86-8a0486297c63}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="tp_assist.rc">
+      <Filter>resource</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\external\jsoncpp\src\lib_json\json_valueiterator.inl">
+      <Filter>jsoncpp</Filter>
+    </None>
+  </ItemGroup>
+</Project>
