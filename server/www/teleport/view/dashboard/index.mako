@@ -48,7 +48,7 @@
                 <div class="stats-icon">
                     <i class="fa fa-user-secret fa-fw"></i>
                 </div>
-                <div class="stats-content" onclick="window.location.href='/asset/host';return false">
+                <div class="stats-content" onclick="window.location.href='/asset/account-group';return false">
                     <div class="stats-name">主机账号</div>
                     <div class="stats-value" id="count-acc">-</div>
                 </div>
