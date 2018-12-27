@@ -7,8 +7,7 @@
 #include <json/json.h>
 
 // JSON-RPC documentation at:
-// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC
-
+// https://github.com/tp4a/teleport/wiki/TELEPORT-CORE-JSON-RPC
 
 class TsHttpRpc : public ExThreadBase
 {
