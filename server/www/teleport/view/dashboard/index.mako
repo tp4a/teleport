@@ -26,7 +26,7 @@
                 <div class="stats-icon">
                     <i class="far fa-id-card fa-fw"></i>
                 </div>
-                <div class="stats-content">
+                <div class="stats-content" onclick="window.location.href='/user/user';return false">
                     <div class="stats-name">用户</div>
                     <div class="stats-value" id="count-user">-</div>
                 </div>
@@ -37,7 +37,7 @@
                 <div class="stats-icon">
                     <i class="fa fa-cubes fa-fw"></i>
                 </div>
-                <div class="stats-content">
+                <div class="stats-content" onclick="window.location.href='/asset/host';return false">
                     <div class="stats-name">主机</div>
                     <div class="stats-value" id="count-host">-</div>
                 </div>
@@ -48,7 +48,7 @@
                 <div class="stats-icon">
                     <i class="fa fa-user-secret fa-fw"></i>
                 </div>
-                <div class="stats-content">
+                <div class="stats-content" onclick="window.location.href='/asset/account-group';return false">
                     <div class="stats-name">主机账号</div>
                     <div class="stats-value" id="count-acc">-</div>
                 </div>
@@ -59,7 +59,7 @@
                 <div class="stats-icon">
                     <i class="fa fa-link fa-fw"></i>
                 </div>
-                <div class="stats-content">
+                <div class="stats-content" onclick="window.location.href='/ops/session';return false">
                     <div class="stats-name">当前连接</div>
                     <div class="stats-value" id="count-conn">-</div>
                 </div>
