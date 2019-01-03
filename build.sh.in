@@ -16,14 +16,32 @@ function on_error()
 
 function build_linux
 {
+	if [ `id -u` -eq 0 ]; then
+		on_error "Do not build as root."
+	fi
+
+	if [ ! -f "/etc/centos-release" ] ; then
+		on_error "Sorry, build script works on CentOS 7 only."
+	fi
+
+	X=$(yum list installed | grep "libffi-devel")
+	if [ "$X-x" = "-x" ] ; then
+		on_error "Need libffi-devel to build Python, try:\r\n    sudo yum install libffi-devel"
+	fi
+
+	X=$(yum list installed | grep "zlib-devel")
+	if [ "$X-x" = "-x" ] ; then
+		on_error "Need zlib-devel to build Python, try:\r\n    sudo yum install zlib-devel"
+	fi
+
 	PYEXEC=${PATH_ROOT}/external/linux/release/bin/python3.7
 	PYSTATIC=${PATH_ROOT}/external/linux/release/lib/libpython3.7m.a
 
-	if [ ! -f "${PYSTATIC}" ]; then
+	if [ ! -f "${PYSTATIC}" ] ; then
 		echo "python static not found, now build it..."
 		"${PATH_ROOT}/build/build-py-static.sh"
 
-		if [ ! -f "${PYSTATIC}" ]; then
+		if [ ! -f "${PYSTATIC}" ] ; then
 			on_error "can not build python static."
 		fi
 	fi

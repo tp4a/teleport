@@ -390,6 +390,13 @@ class BuilderLinux(BuilderBase):
             return
         cc.v('')
 
+        cc.n('fix libssh source code... ', end='')
+        s_name = 'libssh-{}'.format(env.ver_libssh)
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto.c'))
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto-compat.c'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto.c')
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto-compat.c')
+
         build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
 
         cmake_define = ' -DCMAKE_INSTALL_PREFIX={path_release}' \
