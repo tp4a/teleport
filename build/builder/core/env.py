@@ -111,7 +111,7 @@ class Env(object):
 
             if self.nasm is None or not os.path.exists(self.nasm):
                 if warn_miss_tool:
-                    cc.w(' - can not locate `nasm`, so I can build openssl.')
+                    cc.w(' - can not locate `nasm`, so I can not build openssl.')
             else:
                 _nasm_path = os.path.abspath(os.path.join(self.nasm, '..'))
                 os.environ['path'] = os.environ['path'] + ';' + _nasm_path
@@ -123,12 +123,12 @@ class Env(object):
 
             if self.perl is None or not os.path.exists(self.perl):
                 if warn_miss_tool:
-                    cc.w(' - can not locate `perl`, so I can build openssl.')
+                    cc.w(' - can not locate `perl`, so I can not build openssl.')
 
             self.visual_studio_path = self._get_visual_studio_path()
             if self.visual_studio_path is None or not os.path.exists(self.visual_studio_path):
                 if warn_miss_tool:
-                    cc.w(' - can not locate Visual Studio installation, so I can build openssl.')
+                    cc.w(' - can not locate Visual Studio installation, so I can build nothing.')
 
             if 'msbuild' in _tmp:
                 self.msbuild = _tmp['msbuild']
@@ -215,7 +215,6 @@ class Env(object):
     #     return p[0] if p is not None else None
 
     def _get_visual_studio_path(self):
-        p = None
         p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7', r'15.0')
         return p[0] if p is not None else None
 

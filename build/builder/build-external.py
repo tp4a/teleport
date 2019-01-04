@@ -161,7 +161,10 @@ class BuilderWin(BuilderBase):
         os.chdir(self.OPENSSL_PATH_SRC)
         os.system('""{}" Configure VC-WIN32"'.format(env.perl))
         os.system(r'ms\do_nasm')
-        os.system(r'"{}\VC\bin\vcvars32.bat" && nmake -f ms\nt.mak'.format(env.visual_studio_path))
+        # for vs2015
+        # utils.sys_exec(r'"{}\VC\bin\vcvars32.bat" && nmake -f ms\nt.mak'.format(env.visual_studio_path), direct_output=True)
+        # for vs2017 community
+        utils.sys_exec(r'"{}VC\Auxiliary\Build\vcvars32.bat" && nmake -f ms\nt.mak'.format(env.visual_studio_path), direct_output=True)
 
         for f in _chk_output:
             if not os.path.exists(f):
@@ -175,9 +178,17 @@ class BuilderWin(BuilderBase):
             utils.unzip(os.path.join(PATH_DOWNLOAD, file_name), PATH_EXTERNAL)
             os.rename(os.path.join(PATH_EXTERNAL, 'libssh-{}'.format(env.ver_libssh)), self.LIBSSH_PATH_SRC)
 
+            # cc.n('fix libssh source code... ', end='')
+            # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', 'src', 'sftp.c'))
+            # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'sftp.c')
             cc.n('fix libssh source code... ', end='')
-            utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', 'src', 'sftp.c'))
-            utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'sftp.c')
+            s_name = 'libssh-{}'.format(env.ver_libssh)
+            utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'session.c'))
+            utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto.c'))
+            utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto-compat.c'))
+            utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'session.c')
+            utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto.c')
+            utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto-compat.c')
 
         out_file_lib = os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path, 'ssh.lib')
         out_file_dll = os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path, 'ssh.dll')

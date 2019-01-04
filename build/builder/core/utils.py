@@ -269,6 +269,7 @@ def ensure_file_exists(filename):
 
 
 def sys_exec(cmd, direct_output=False, output_codec=None):
+    print(cmd)
     if output_codec is None:
         if env.is_win:
             output_codec = 'gb2312'
