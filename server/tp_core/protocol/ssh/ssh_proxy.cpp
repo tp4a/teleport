@@ -92,15 +92,15 @@ void SshProxy::kill_sessions(const ex_astrs &sessions) {
     }
 }
 
-
 void SshProxy::_thread_loop() {
     EXLOGI("[ssh] TeleportServer-SSH ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 
     for (;;) {
         // 注意，ssh_new()出来的指针，如果遇到停止标志，本函数内部就释放了，否则这个指针交给了SshSession类实例管理，其析构时会释放。
         ssh_session sess_to_client = ssh_new();
-// 		int verbosity = 4;
-// 		ssh_options_set(sess_to_client, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+
+        // int flag = SSH_LOG_FUNCTIONS;
+ 		// ssh_options_set(sess_to_client, SSH_OPTIONS_LOG_VERBOSITY, &flag);
 
         ssh_set_blocking(sess_to_client, 1);
 

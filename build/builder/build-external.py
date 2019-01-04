@@ -392,8 +392,10 @@ class BuilderLinux(BuilderBase):
 
         cc.n('fix libssh source code... ', end='')
         s_name = 'libssh-{}'.format(env.ver_libssh)
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'session.c'))
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto.c'))
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto-compat.c'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'session.c')
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto.c')
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto-compat.c')
 

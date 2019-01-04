@@ -446,15 +446,19 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
     // config and try to connect to real SSH host.
     EXLOGV("[ssh] try to connect to real SSH server %s:%d\n", _this->m_conn_ip.c_str(), _this->m_conn_port);
     _this->m_srv_session = ssh_new();
+
+    ssh_set_blocking(_this->m_srv_session, 1);
+
     ssh_options_set(_this->m_srv_session, SSH_OPTIONS_HOST, _this->m_conn_ip.c_str());
     int port = (int) _this->m_conn_port;
     ssh_options_set(_this->m_srv_session, SSH_OPTIONS_PORT, &port);
-#ifdef EX_DEBUG
-// 	int flag = SSH_LOG_FUNCTIONS;
-// 	ssh_options_set(_this->m_srv_session, SSH_OPTIONS_LOG_VERBOSITY, &flag);
-#endif
     int val = 0;
     ssh_options_set(_this->m_srv_session, SSH_OPTIONS_STRICTHOSTKEYCHECK, &val);
+
+//#ifdef EX_DEBUG
+//    int flag = SSH_LOG_FUNCTIONS;
+//    ssh_options_set(_this->m_srv_session, SSH_OPTIONS_LOG_VERBOSITY, &flag);
+//#endif
 
 
     if (_this->m_auth_type != TP_AUTH_TYPE_NONE)
@@ -474,10 +478,11 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
     }
 
     // once the server are connected, change the timeout back to default.
-    _timeout = 10; // 10 sec.
+    _timeout = 30; // in seconds.
     ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
     // get ssh version of host, v1 or v2
+    // TODO: libssh-0.8.5 does not support sshv1 anymore.
     _this->m_ssh_ver = ssh_get_version(_this->m_srv_session);
     EXLOGW("[ssh] real host is SSHv%d\n", _this->m_ssh_ver);
 
@@ -500,7 +505,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
     }
 #endif
 
-    int auth_methods = SSH_AUTH_METHOD_INTERACTIVE | SSH_AUTH_METHOD_PASSWORD | SSH_AUTH_METHOD_PUBLICKEY;
+    int auth_methods = 0;
     if (SSH_AUTH_ERROR != ssh_userauth_none(_this->m_srv_session, NULL)) {
         auth_methods = ssh_userauth_list(_this->m_srv_session, NULL);
         EXLOGV("[ssh] allowed auth method: 0x%08x\n", auth_methods);
@@ -508,12 +513,15 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
         EXLOGW("[ssh] can not get allowed auth method, try each method we can.\n");
     }
 
+    // some host does not give me the auth methods list, so we need try each one.
+    if(auth_methods == 0)
+        auth_methods = SSH_AUTH_METHOD_INTERACTIVE | SSH_AUTH_METHOD_PASSWORD | SSH_AUTH_METHOD_PUBLICKEY;
+
     if (_this->m_auth_type == TP_AUTH_TYPE_PASSWORD) {
         if (!(((auth_methods & SSH_AUTH_METHOD_INTERACTIVE) == SSH_AUTH_METHOD_INTERACTIVE) || ((auth_methods & SSH_AUTH_METHOD_PASSWORD) == SSH_AUTH_METHOD_PASSWORD))) {
             _this->_session_error(TP_SESS_STAT_ERR_AUTH_TYPE);
             return SSH_AUTH_ERROR;
         }
-
 
         int retry_count = 0;
 
@@ -743,10 +751,10 @@ int SshSession::_on_client_shell_request(ssh_session session, ssh_channel channe
     g_ssh_env.session_update(cp->db_id, TP_PROTOCOL_TYPE_SSH_SHELL, TP_SESS_STAT_STARTED);
     cp->last_access_timestamp = (ex_u32) time(NULL);
 
-
-    // FIXME: sometimes it will block here. the following function will never return.
-    // at this time, can not write data to this channel. read from this channel with timeout, got 0 byte.
-    // I have no idea how to fix it...  :(
+    // sometimes it will block here. the following function will never return.
+    // Fixed at 20190104:
+    // at libssh ssh_handle_packets_termination(), set timeout always to SSH_TIMEOUT_USER.
+    // and at ssh_handle_packets(), when call ssh_poll_add_events() should use POLLIN|POLLOUT.
     int err = ssh_channel_request_shell(cp->srv_channel);
     if (err != SSH_OK) {
         EXLOGE("[ssh] shell request from server got %d\n", err);
@@ -787,10 +795,14 @@ int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel
     SshSession *_this = (SshSession *) userdata;
 
     // 当前线程正在接收服务端返回的数据，因此我们直接返回，这样紧跟着会重新再发送此数据的
-    if (_this->m_recving_from_srv)
+    if (_this->m_recving_from_srv) {
+        // EXLOGD("recving from srv...try again later...\n");
         return 0;
-    if (_this->m_recving_from_cli)
+    }
+    if (_this->m_recving_from_cli) {
+        // EXLOGD("recving from cli...try again later...\n");
         return 0;
+    }
 
     TP_SSH_CHANNEL_PAIR *cp = _this->_get_channel_pair(TP_SSH_CLIENT_SIDE, channel);
     if (NULL == cp) {
@@ -913,10 +925,14 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
     SshSession *_this = (SshSession *) userdata;
 
     // return 0 means data not processed, so this function will be called with this data again.
-    if (_this->m_recving_from_cli)
+    if (_this->m_recving_from_cli) {
+        // EXLOGD("recving from cli...try again later...\n");
         return 0;
-    if (_this->m_recving_from_srv)
+    }
+    if (_this->m_recving_from_srv) {
+        // EXLOGD("recving from srv...try again later...\n");
         return 0;
+    }
 
     TP_SSH_CHANNEL_PAIR *cp = _this->_get_channel_pair(TP_SSH_SERVER_SIDE, channel);
     if (NULL == cp) {

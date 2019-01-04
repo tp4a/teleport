@@ -71,7 +71,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 //static struct mg_mgr g_mg_mgr;
 //static bool is_mg_mgr_initialized = false;
 
-
+#if 0
 class MongooseManager {
 public:
     MongooseManager() {
@@ -133,5 +133,36 @@ bool ts_http_get(const ex_astr& url, ex_astr& body)
 
 //	mg_mgr_free(&mgr);
 //	delete hdata;
+	return ret;
+}
+#endif // if 0
+
+bool ts_http_get(const ex_astr& url, ex_astr& body)
+{
+    struct mg_mgr _mgr;
+    mg_mgr_init(&_mgr, NULL);
+
+	mg_connection* nc = mg_connect_http(&_mgr, ev_handler, url.c_str(), NULL, NULL);
+	if (NULL == nc) {
+        mg_mgr_free(&_mgr);
+        return false;
+    }
+
+	HTTP_DATA hdata;
+	hdata.exit_flag = false;
+	hdata.have_error = false;
+
+	nc->user_data = (void*)&hdata;
+
+	while (!hdata.exit_flag)
+	{
+		mg_mgr_poll(&_mgr, 100);
+	}
+
+	bool ret = !hdata.have_error;
+	if (ret)
+		body = hdata.body;
+
+    mg_mgr_free(&_mgr);
 	return ret;
 }
