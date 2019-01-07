@@ -53,22 +53,12 @@
                 <button id="btn-import-user" class="btn btn-sm btn-default"><i class="fa fa-plus-square fa-fw"></i> 导入用户
                 </button>
                 <div class="btn-group btn-group-sm dropdown" id="filter-host-group">
-                    <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown"><i
-                            class="fas fa-address-book fa-fw"></i> LDAP管理(试验) <i class="fa fa-caret-right"></i></button>
+                    <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown"><i class="fas fa-address-book fa-fw"></i> LDAP管理 <i class="fa fa-caret-right"></i></button>
                     <ul class="dropdown-menu dropdown-menu-right dropdown-menu-sm">
-                        <li>
-                        <li><a href="javascript:;" data-action="ldap-import"><i
-                                class="fas fa-arrow-alt-circle-left fa-fw"></i> 导入LDAP用户</a></li>
-                        </li>
+                        <li><a href="javascript:;" data-action="ldap-import"><i class="fas fa-arrow-alt-circle-left fa-fw"></i> 导入LDAP用户</a></li>
                         <li role="separator" class="divider"></li>
-                        <li>
-                        <li><a href="javascript:;" data-action="ldap-config"><i class="fas fa-cog fa-fw"></i> 设置LDAP</a>
-                        </li>
-                        </li>
-                        <li>
-                        <li><a href="javascript:;" data-action="ldap-sync"><i class="fas fa-link fa-fw"></i> 同步LDAP</a>
-                        </li>
-                        </li>
+                        <li><a href="javascript:;" data-action="ldap-config"><i class="fas fa-cog fa-fw"></i> 设置LDAP</a></li>
+##                         <li><a href="javascript:;" data-action="ldap-sync"><i class="fas fa-link fa-fw"></i> 同步LDAP</a></li>
                     </ul>
                 </div>
             </div>
@@ -436,7 +426,7 @@
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i
                             class="fa fa-times-circle fa-fw"></i></button>
-                    <h3 class="modal-title">LDAP设置 (实验性)</h3>
+                    <h3 class="modal-title">LDAP设置</h3>
                 </div>
                 <div class="modal-body">
 
@@ -558,15 +548,6 @@
                             </div>
                         </div>
 
-
-##                         <div class="form-group form-group-sm">
-##                             <label for="edit-ldap-attr-map" class="col-sm-2 control-label require">属性映射：</label>
-##                             <div class="col-sm-9">
-##                                 <textarea id="edit-ldap-attr-map" class="form-control" style="resize:vertical;height:8em;" placeholder=""></textarea>
-##                                 <div class="control-desc-sm">将LDAP的属性映射到 teleport 的用户属性，例如 <span class="important">LDAP中的用户属性 sAMAccountName 映射为teleport的登录账号</span>。如果不清楚此LDAP服务的用户属性，可使用下方的“列举属性”按钮进行查询。</div>
-##                             </div>
-##                         </div>
-
                     </div>
 
                 </div>
@@ -684,7 +665,7 @@
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i
                             class="fa fa-times-circle fa-fw"></i></button>
-                    <h3 class="modal-title">导入LDAP用户(试验)</h3>
+                    <h3 class="modal-title">导入LDAP用户</h3>
                 </div>
                 <div class="modal-body">
 

@@ -246,6 +246,16 @@ def get_users(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
     return err, s.total_count, s.page_index, s.recorder
 
 
+def get_users_by_type(_type):
+    s = SQL(get_db())
+    err = s.select_from('user', ['id', 'type', 'ldap_dn'], alt_name='u').where('u.type={}'.format(_type)).query()
+    if err != TPE_OK:
+        return None
+    if len(s.recorder) == 0:
+        return None
+    return s.recorder
+
+
 def create_users(handler, user_list, success, failed):
     """
     批量创建用户

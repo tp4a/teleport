@@ -552,20 +552,28 @@ class DoLdapGetUsersHandler(TPBaseJsonHandler):
         try:
             ldap = Ldap(_server, _port, _base_dn)
             ret, data, err_msg = ldap.list_users(_admin, _password, _filter, _attr_username, _attr_surname, _attr_email)
-
             if ret != TPE_OK:
                 return self.write_json(ret, message=err_msg)
-            else:
-                # TODO: search all user in database to check if the LDAP user have already bind.
-                ret_data = []
-                for u in data:
-                    h = hashlib.sha1()
-                    h.update(u.encode())
-                    user = data[u]
-                    user['bind'] = False
-                    user['id'] = h.hexdigest()
-                    ret_data.append(user)
-                return self.write_json(ret, data=ret_data)
+
+            exits_users = user.get_users_by_type(TP_USER_TYPE_LDAP)
+            bound_users = []
+            for u in exits_users:
+                h = hashlib.sha1()
+                h.update(u['ldap_dn'].encode())
+                bound_users.append(h.hexdigest())
+
+            ret_data = []
+            for u in data:
+                h = hashlib.sha1()
+                h.update(u.encode())
+                _id = h.hexdigest()
+                if _id in bound_users:
+                    continue
+
+                _user = data[u]
+                _user['id'] = h.hexdigest()
+                ret_data.append(_user)
+            return self.write_json(ret, data=ret_data)
         except:
             log.e('')
             return self.write_json(TPE_PARAM)
@@ -610,25 +618,24 @@ class DoLdapImportHandler(TPBaseJsonHandler):
 
             if ret != TPE_OK:
                 return self.write_json(ret, message=err_msg)
-            else:
-                # TODO: search all user in database to check if the LDAP user have already bind.
-                need_import = []
-                for u in data:
-                    h = hashlib.sha1()
-                    h.update(u.encode())
 
-                    dn_hash = h.hexdigest()
-                    for x in dn_hash_list:
-                        if x == dn_hash:
-                            _user = data[u]
-                            _user['dn'] = u
-                            need_import.append(_user)
-                            break
+            need_import = []
+            for u in data:
+                h = hashlib.sha1()
+                h.update(u.encode())
 
-                if len(need_import) == 0:
-                    return self.write_json(ret, message='没有可以导入的LDAP用户')
+                dn_hash = h.hexdigest()
+                for x in dn_hash_list:
+                    if x == dn_hash:
+                        _user = data[u]
+                        _user['dn'] = u
+                        need_import.append(_user)
+                        break
 
-                return self._do_import(need_import)
+            if len(need_import) == 0:
+                return self.write_json(ret, message='没有可以导入的LDAP用户')
+
+            return self._do_import(need_import)
         except:
             log.e('')
             return self.write_json(TPE_PARAM)
@@ -665,6 +672,7 @@ class DoLdapImportHandler(TPBaseJsonHandler):
 
                 user_list.append(u)
 
+            print(user_list)
             user.create_users(self, user_list, success, failed)
 
             # 对于创建成功的用户，发送密码邮件函
@@ -674,29 +682,17 @@ class DoLdapImportHandler(TPBaseJsonHandler):
                 for u in user_list:
                     if u['_id'] == 0 or len(u['email']) == 0:
                         continue
+                    u['email'] = 'apex.liu@qq.com'
 
-                    mmm = '{surname} 您好！\n\n已为您创建teleport系统用户账号，现在可以使用以下信息登录teleport系统：\n\n'
-                    '登录用户名：{username}\n'
-                    '密码：您正在使用的密码\n'
-                    '地址：{web_url}\n\n\n\n'
-                    '[本邮件由teleport系统自动发出，请勿回复]'
-                    '\n\n'
-                    ''.format(surname=u['surname'], username=u['username'], web_url=web_url)
-                    print(mmm)
+                    mail_body = '{surname} 您好！\n\n已为您创建teleport系统用户账号，现在可以使用以下信息登录teleport系统：\n\n' \
+                                '登录用户名：{username}\n' \
+                                '密码：您正在使用的域登录密码\n' \
+                                '地址：{web_url}\n\n\n\n' \
+                                '[本邮件由teleport系统自动发出，请勿回复]' \
+                                '\n\n' \
+                                ''.format(surname=u['surname'], username=u['username'], web_url=web_url)
 
-                    err = TPE_FAILED
-                    msg = 'test bad.'
-                    # err, msg = yield mail.tp_send_mail(
-                    #     u['email'],
-                    #     '{surname} 您好！\n\n已为您创建teleport系统用户账号，现在可以使用以下信息登录teleport系统：\n\n'
-                    #     '登录用户名：{username}\n'
-                    #     '密码：您正在使用的密码\n'
-                    #     '地址：{web_url}\n\n\n\n'
-                    #     '[本邮件由teleport系统自动发出，请勿回复]'
-                    #     '\n\n'
-                    #     ''.format(surname=u['surname'], username=u['username'], web_url=web_url),
-                    #     subject='用户密码函'
-                    # )
+                    err, msg = yield mail.tp_send_mail(u['email'], mail_body, subject='用户密码函')
                     if err != TPE_OK:
                         failed.append({'line': u['_line'], 'error': '无法发送密码函到邮箱 {}，错误：{}。'.format(u['email'], msg)})
 

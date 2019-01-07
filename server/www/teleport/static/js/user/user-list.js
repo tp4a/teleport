@@ -17,7 +17,6 @@ $app.on_init = function (cb_stack) {
 
         btn_ldap_import: $('a[data-action="ldap-import"]'),
         btn_ldap_config: $('a[data-action="ldap-config"]'),
-        btn_ldap_sync: $('a[data-action="ldap-sync"]'),
 
         dlg_import_user: $('#dlg-import-user'),
         btn_import_user: $('#btn-import-user'),
@@ -28,16 +27,10 @@ $app.on_init = function (cb_stack) {
     };
 
     cb_stack
-        // .add($app.test)
         .add($app.create_controls)
         .add($app.load_role_list);
 
     cb_stack.exec();
-};
-
-$app.test = function (cb) {
-    cb.add($app.dlg_ldap_config.show);
-    cb.exec();
 };
 
 //===================================
@@ -996,7 +989,7 @@ $app.create_dlg_edit_user = function () {
             return;
 
         var action = (dlg.field_id === -1) ? '创建' : '更新';
-        var timeout = (dlg.field_id === -1) ? 60000 : 3000;
+        var timeout = (dlg.field_id === -1) ? 60000 : 30000;
 
         // 如果id为-1表示创建，否则表示更新
         $tp.ajax_post_json('/user/update-user', {
@@ -1208,7 +1201,8 @@ $app.create_dlg_reset_password = function () {
             function () {
                 dlg.dom.btn_send_reset_email.removeAttr('disabled');
                 $tp.notify_error('网络故障，用户密码重置失败！');
-            }
+            },
+            60000
         );
 
     };
@@ -1619,16 +1613,17 @@ $app.create_dlg_ldap_import = function () {
                     key: "email",
                     // width: 120,
                     sort: false
-                },
-                {
-                    title: "状态",
-                    key: "bind",
-                    sort: false,
-                    width: 80,
-                    align: 'center',
-                    render: 'ldap_user_state',
-                    fields: {bind: 'bind'}
                 }
+                // ,
+                // {
+                //     title: "状态",
+                //     key: "bound",
+                //     sort: false,
+                //     width: 80,
+                //     align: 'center',
+                //     render: 'ldap_user_state',
+                //     fields: {bound: 'bound'}
+                // }
             ],
 
             // 重载回调函数
@@ -1688,11 +1683,11 @@ $app.create_dlg_ldap_import = function () {
             return '<span><input type="checkbox" data-check-box="' + fields.id + '" data-row-id="' + row_id + '"></span>';
         };
 
-        render.user_state = function (row_id, fields) {
-            if (fields.bind) {
-                return '已导入';
-            }
-        };
+        // render.ldap_user_state = function (row_id, fields) {
+        //     if (fields.bound) {
+        //         return '已导入';
+        //     }
+        // };
     };
 
     dlg.check_user_list_all_selected = function (cb_stack) {
@@ -1782,7 +1777,7 @@ $app.create_dlg_ldap_import = function () {
                 dlg.dom.btn_import.removeAttr('disabled');
                 $tp.notify_error('网络故障，导入LDAP用户失败！');
             },
-            15000
+            60000
         );
     };
 
