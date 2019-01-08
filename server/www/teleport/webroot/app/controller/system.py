@@ -555,12 +555,13 @@ class DoLdapGetUsersHandler(TPBaseJsonHandler):
             if ret != TPE_OK:
                 return self.write_json(ret, message=err_msg)
 
-            exits_users = user.get_users_by_type(TP_USER_TYPE_LDAP)
+            exists_users = user.get_users_by_type(TP_USER_TYPE_LDAP)
             bound_users = []
-            for u in exits_users:
-                h = hashlib.sha1()
-                h.update(u['ldap_dn'].encode())
-                bound_users.append(h.hexdigest())
+            if exists_users is not None:
+                for u in exists_users:
+                    h = hashlib.sha1()
+                    h.update(u['ldap_dn'].encode())
+                    bound_users.append(h.hexdigest())
 
             ret_data = []
             for u in data:
