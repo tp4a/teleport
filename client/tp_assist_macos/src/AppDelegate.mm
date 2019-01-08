@@ -37,6 +37,11 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 	return [(__bridge id)_self start_ssh_client:cmdLine termType:termType termTheme:termTheme termTitle:termTitle];
 }
 
+int AppDelegate_select_app (void *_self) {
+    NSString* strIgnore = @"";
+    return [(__bridge id)_self select_app:strIgnore];
+}
+
 - (void) awakeFromNib {
 	
 	// The path for the configuration file (by default: ~/.tp_assist.ini)
@@ -44,32 +49,26 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 
 	// if the config file does not exist, create a default one
 	if ( ![[NSFileManager defaultManager] fileExistsAtPath:cfgFile] ) {
-		NSString *cfgFileInResource = [[NSBundle mainBundle] pathForResource:@"tp-assist.default" ofType:@"json"];
+		NSString *cfgFileInResource = [[NSBundle mainBundle] pathForResource:@"tp-assist.macos" ofType:@"json"];
 		[[NSFileManager defaultManager] copyItemAtPath:cfgFileInResource toPath:cfgFile error:nil];
 	}
 	
     // Define Icons
     //only regular icon is needed for 10.10 and higher. OS X changes the icon for us.
     regularIcon = [NSImage imageNamed:@"StatusIcon"];
+    [regularIcon setTemplate:YES];
+    
     altIcon = [NSImage imageNamed:@"StatusIconAlt"];
-	
-	// TODO: 现在statusIcon有两个问题：
-	//   1. 不会响应系统设置“暗色菜单栏和Dock”的事件
-	//   2. 即使是设置为暗色系，启动本程序也会使用黑色图标，导致在菜单栏中看不到图标。
-	// 因此，应该响应系统的设置菜单栏颜色的事件，同时启动前先获取菜单栏的色系。
 	
     // Create the status bar item
     statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
     [statusItem setMenu:menu];
     [statusItem setImage: regularIcon];
 	[statusItem setHighlightMode:YES];
-	[statusItem setAlternateImage: altIcon];
+    [statusItem setAlternateImage: altIcon];
 
     // Needed to trigger the menuWillOpen event
     [menu setDelegate:self];
-
-
-	//http_rpc_start((__bridge void*)self);
 	
 	NSString *resPath = [[NSBundle mainBundle] resourcePath];
 	std::string cpp_res_path = [resPath cStringUsingEncoding:NSUTF8StringEncoding];
@@ -77,26 +76,28 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
 	
 	int ret = cpp_main((__bridge void*)self, cpp_cfg_file.c_str(), cpp_res_path.c_str());
 	if(ret != 0) {
-		// TODO: show error message and exit.
-		NSString *msg = Nil;
+        http_rpc_stop();
+
+        NSString *msg = Nil;
 		if(ret == -1)
 			msg = @"初始化运行环境失败！";
 		else if(ret == -2)
-			msg = @"加载配置文件失败！";
+			msg = @"加载配置文件失败！\n\n请删除 ~/.tp-assist.json 后重试！";
 		else if(ret == -3)
-			msg = @"启动本地通讯端口失败！请检查本地50022端口是否被占用！";
+			msg = @"启动本地通讯端口失败！\n\n请检查本地50022和50023端口是否被占用！";
+		else
+			msg = @"发生未知错误！";
 		
-		NSAlert *alert = [NSAlert alertWithMessageText:@"无法启动Teleport助手"
-										 defaultButton:@"确定"
-									   alternateButton:Nil
-										   otherButton:Nil
-							 informativeTextWithFormat:msg];
-		[alert runModal];
-
-		http_rpc_stop();
-		
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.icon = [NSImage imageNamed:@"tpassist"];
+        [alert addButtonWithTitle:@"确定"];
+        [alert setMessageText:@"无法启动Teleport助手"];
+        [alert setInformativeText:msg];
+        [alert runModal];
+        
 		[[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
-		[NSApp terminate:NSApp];	}
+		[NSApp terminate:NSApp];
+    }
 }
 
 - (int) start_ssh_client:(NSString*)cmd_line termType:(NSString*)term_type termTheme:(NSString*)term_theme termTitle:(NSString*)term_title {
@@ -122,8 +123,8 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
     
     if (handlerName && [handlerName length])
     {
-        /* If we have a handlerName (and potentially parameters), we build
-         * an NSAppleEvent to execute the script. */
+        // If we have a handlerName (and potentially parameters), we build
+        // an NSAppleEvent to execute the script.
         
         //Get a descriptor
         int pid = [[NSProcessInfo processInfo] processIdentifier];
@@ -133,7 +134,8 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
         
         //Create the container event
         
-        //We need these constants from the Carbon OpenScripting framework, but we don't actually need Carbon.framework...
+        // We need these constants from the Carbon OpenScripting framework,
+        // but we don't actually need Carbon.framework...
 #define kASAppleScriptSuite 'ascr'
 #define kASSubroutineEvent  'psbr'
 #define keyASSubroutineName 'snam'
@@ -165,9 +167,30 @@ int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char*
     }
 }
 
+- (int) select_app:(NSString*)strIgnore {
+    // NOT WORK NOW
+    // this function called by ts_http_rpc.c but it run in worker thread.
+    // once we call select_app from worker thread, the NSOpenPanel alloc crash.
+    // so we have had to show UI like "post a event and call callback" stuff.
+
+    NSOpenPanel *mySelectPanel = [[NSOpenPanel alloc] init];
+    [mySelectPanel setCanChooseDirectories:YES];
+    [mySelectPanel setCanChooseFiles:YES];
+    [mySelectPanel setCanCreateDirectories:YES];
+    [mySelectPanel setAllowsMultipleSelection:NO];
+    [mySelectPanel setResolvesAliases:YES];
+
+    if([mySelectPanel runModal] == NSModalResponseOK) {
+        NSURL *ret = [mySelectPanel URL];
+        NSLog(@"%@", ret.absoluteString);
+    }
+
+    return 0;
+}
+
 - (IBAction)visitWebsite:(id)sender {
 	
-	NSURL *url = [NSURL URLWithString:@"http://www.tp4a.com/"];
+	NSURL *url = [NSURL URLWithString:@"https://www.tp4a.com/"];
 	[[NSWorkspace sharedWorkspace] openURL:url];
 }
 

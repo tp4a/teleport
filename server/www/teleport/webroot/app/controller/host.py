@@ -100,7 +100,8 @@ class DoGetHostsHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
-        err, total_count, page_index, row_data = host.get_hosts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude)
+        err, total_count, page_index, row_data = \
+            host.get_hosts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude)
         ret = dict()
         ret['page_index'] = page_index
         ret['total'] = total_count
@@ -160,7 +161,8 @@ class DoImportHandler(TPBaseHandler):
     def post(self):
         """
         csv导入规则：
-        每一行的数据格式：  主机IP,操作系统类型,名称,路由IP,路由端口,资产编号,账号,协议类型,协议端口,认证类型,密码或私钥,账号提示,密码提示,分组,描述
+        每一行的数据格式：
+          主机IP,操作系统类型,名称,路由IP,路由端口,资产编号,账号,协议类型,协议端口,认证类型,密码或私钥,账号提示,密码提示,分组,描述
         在导入时：
           0. 以“#”作为行注释。
           1. 首先必须是主机数据，随后可以跟多个账号数据（直到遇到下一个主机数据行之前，账号会与上一个主机关联）。
@@ -171,7 +173,9 @@ class DoImportHandler(TPBaseHandler):
         ret['code'] = TPE_OK
         ret['message'] = ''
 
-        rv = self.check_privilege(TP_PRIVILEGE_ASSET_CREATE | TP_PRIVILEGE_ASSET_GROUP | TP_PRIVILEGE_USER_CREATE | TP_PRIVILEGE_USER_GROUP, need_process=False)
+        rv = self.check_privilege(
+            TP_PRIVILEGE_ASSET_CREATE | TP_PRIVILEGE_ASSET_GROUP | TP_PRIVILEGE_USER_CREATE | TP_PRIVILEGE_USER_GROUP,
+            need_process=False)
         if rv != TPE_OK:
             ret['code'] = rv
             if rv == TPE_NEED_LOGIN:
@@ -194,7 +198,8 @@ class DoImportHandler(TPBaseHandler):
             file_metas = self.request.files['csvfile']  # 提取表单中‘name’为‘file’的文件元数据
             for meta in file_metas:
                 now = time.localtime(time.time())
-                tmp_name = 'upload-{:04d}{:02d}{:02d}{:02d}{:02d}{:02d}.csv'.format(now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
+                tmp_name = 'upload-{:04d}{:02d}{:02d}{:02d}{:02d}{:02d}.csv'.format(
+                    now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
                 csv_filename = os.path.join(upload_path, tmp_name)
                 with open(csv_filename, 'wb') as f:
                     f.write(meta['body'])
@@ -287,7 +292,10 @@ class DoImportHandler(TPBaseHandler):
                         _router_ip = csv_recorder[self.IDX_ROUTER_IP].strip()
                         _router_port = csv_recorder[self.IDX_ROUTER_PORT].strip()
 
-                        if not ((len(_router_ip) == 0 and len(_router_port) == 0) or (len(_router_ip) > 0 and len(_router_port) > 0)):
+                        if not (
+                                (len(_router_ip) == 0 and len(_router_port) == 0)
+                                or (len(_router_ip) > 0 and len(_router_port) > 0)
+                        ):
                             failed.append({'line': line, 'error': '格式错误，错误的路由IP及端口的组合。'})
                             continue
                         if len(_router_ip) > 0:
@@ -498,10 +506,16 @@ class DoImportHandler(TPBaseHandler):
 
                     err, acc_id = account.add_account(self, host_id, args)
                     if err == TPE_EXISTS:
-                        failed.append({'line': hosts[ip]['acc']['_line'], 'error': '增加账号{}@{}失败，账号已经存在。'.format(args['username'], ip)})
+                        failed.append({
+                            'line': hosts[ip]['acc']['_line'],
+                            'error': '增加账号{}@{}失败，账号已经存在。'.format(args['username'], ip)
+                        })
                         continue
                     elif err != TPE_OK:
-                        failed.append({'line': hosts[ip]['acc']['_line'], 'error': '增加账号{}@{}失败，数据库操作失败。'.format(args['username'], ip)})
+                        failed.append({
+                            'line': hosts[ip]['acc']['_line'],
+                            'error': '增加账号{}@{}失败，数据库操作失败。'.format(args['username'], ip)
+                        })
 
                     hosts[ip]['acc'][i]['acc_id'] = acc_id
 

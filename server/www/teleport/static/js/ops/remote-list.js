@@ -9,6 +9,11 @@ $app.on_init = function (cb_stack) {
     };
 
     console.log($app.options);
+    if(!$app.options.core_cfg.detected) {
+        $tp.notify_error('核心服务未启动，无法进行远程连接！');
+        cb_stack.exec();
+        return;
+    }
 
     cb_stack
         .add($app.create_controls)

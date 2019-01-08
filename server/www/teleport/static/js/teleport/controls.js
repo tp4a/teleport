@@ -783,7 +783,7 @@ $tp.create_table_header = function (tbl, on_created) {
         _tbl_header.order_asc = _sort_asc;
 
         // 创建表格头
-        var _dom = ['<thead></tr>'];
+        var _dom = ['<thead><tr>'];
         $.each(_tbl_header._columns, function (i, col) {
             _dom.push('<th');
             var _style = '';
@@ -1706,6 +1706,93 @@ $tp.create_table_header_filter_state = function (tbl, name, states, exclude_ids)
     };
 };
 
+$tp.create_table_header_filter_dropdown = function (tbl, name, states, exclude_ids) {
+    var _tblf = {};
+    _tblf._table_ctrl = tbl;
+    _tblf.dom_id = tbl.dom_id + '-header-filter-' + name;
+    _tblf.name = name;
+    _tblf.default_value = 0;
+    _tblf.filter_value = 0;
+
+    _tblf.states = [];
+    if (exclude_ids && exclude_ids.length > 0) {
+        for (var i = 0; i < states.length; ++i) {
+            if (_.indexOf(exclude_ids, states[i].id) !== -1)
+                continue;
+            _tblf.states.push(states[i]);
+        }
+    } else {
+        _tblf.states = states;
+    }
+
+    _tblf._table_ctrl.add_filter_ctrl(_tblf.name, _tblf);
+
+    _tblf.init = function (cb_stack, cb_args) {
+        // 这是一个表格内嵌过滤器，因此无需在init时创建DOM对象。
+        cb_stack.exec();
+    };
+
+    _tblf.get_filter = function () {
+        var ret = {};
+        if (_tblf.default_value === _tblf.filter_value)
+            return ret;
+        ret[_tblf.name] = _tblf.filter_value;
+        return ret;
+    };
+
+    _tblf.reset = function (cb_stack) {
+        _tblf.filter_value = _tblf.default_value;
+        var name = _tblf._id2name(_tblf.filter_value);
+        $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text(name);
+        cb_stack.exec();
+    };
+
+    _tblf.render = function () {
+        var _ret = [];
+        _ret.push('<div id="' + _tblf.dom_id + '" class="btn-group search-select" role="group">');
+        _ret.push('<button type="button" class="btn dropdown-toggle" data-toggle="dropdown">');
+        _ret.push('<span data-tp-select-result></span> <i class="fa fa-caret-right"></i></button>');
+        _ret.push('<ul class="dropdown-menu dropdown-menu-right dropdown-menu-sm">');
+        _ret.push('<li><a href="javascript:;" data-tp-selector="0"><i class="fa fa-list-ul fa-fw"></i> 所有</a></li>');
+        _ret.push('<li role="separator" class="divider"></li>');
+        $.each(_tblf.states, function (i, state) {
+            _ret.push('<li><a href="javascript:;" data-tp-selector="' + state.id + '"><i class="fa fa-caret-right fa-fw"></i> ' + state.name + '</a></li>');
+        });
+        _ret.push('</ul></div>');
+
+        return _ret.join('');
+    };
+
+    _tblf._id2name = function (id_) {
+        if (id_ === 0)
+            return '所有';
+        for (var i = 0; i < _tblf.states.length; ++i) {
+            if (_tblf.states[i].id === id_)
+                return _tblf.states[i].name;
+        }
+        console.error('on', _tblf.name, 'filter select, no such id.', id_);
+        return '-未知-';
+    };
+
+    _tblf.on_created = function () {
+        $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text('所有');
+        $('#' + _tblf.dom_id + ' li a[data-tp-selector]').click(function () {
+
+            var select = parseInt($(this).attr('data-tp-selector'));
+            if (_tblf.filter_value === select)
+                return;
+            _tblf.filter_value = select;
+
+            var name = _tblf._id2name(select);
+
+            $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text(name);
+
+            // 更新表格过滤器，并刷新数据
+            _tblf._table_ctrl.load_data(CALLBACK_STACK.create(), {});
+        });
+    };
+};
+
 $tp.create_table_filter_group = function (tbl, name, dom_id, groups) {
     var _tblf = {};
     _tblf._table_ctrl = tbl;
@@ -1762,3 +1849,4 @@ $tp.create_table_filter_group = function (tbl, name, dom_id, groups) {
         return '-未知-';
     };
 };
+

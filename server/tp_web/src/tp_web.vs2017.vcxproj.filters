@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="main app">
+      <UniqueIdentifier>{0155895f-d6be-4e0f-970d-9b6b5c759502}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex">
+      <UniqueIdentifier>{0da131e6-c187-4632-a82b-c9b84238b97a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex\header">
+      <UniqueIdentifier>{ffe9fc8a-0268-4a71-8681-ab835e44fd83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex\src">
+      <UniqueIdentifier>{f9606240-3c34-4d3d-8623-7913fe36b8b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pyshell">
+      <UniqueIdentifier>{465c4847-7106-4020-ae5f-bcc649ae7ca9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pyshell\src">
+      <UniqueIdentifier>{4a9f6402-c1c7-4c13-a390-794b6ac77697}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pyshell\header">
+      <UniqueIdentifier>{5696c8d5-f56a-429d-b058-cbe79a1a17ca}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ts_env.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_path.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_str.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_util.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_winsrv.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_thread.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_log.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_ini.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\pyshell\src\pys_api.cpp">
+      <Filter>pyshell\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\pyshell\src\pys_core.cpp">
+      <Filter>pyshell\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\pyshell\src\pys_util.cpp">
+      <Filter>pyshell\src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ts_env.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_const.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_path.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_platform.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_str.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_types.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_util.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_ver.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_winsrv.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_thread.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_log.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_ini.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\pyshell\src\pys_core.h">
+      <Filter>pyshell\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\pyshell\src\pys_util.h">
+      <Filter>pyshell\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\pyshell\include\pys.h">
+      <Filter>pyshell\header</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="tp_web.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\tp_web.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

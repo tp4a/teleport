@@ -27,7 +27,7 @@ class BuilderWin(BuilderBase):
         if ctx.target_path == 'debug':
             cc.w('cannot build debug version of tp_web, skip.')
         else:
-            sln_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'tp_web.vs2015.sln')
+            sln_file = os.path.join(env.root_path, 'server', 'tp_web', 'src', 'tp_web.vs2017.sln')
             out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_web.exe')
             if os.path.exists(out_file):
                 utils.remove(out_file)
@@ -35,7 +35,7 @@ class BuilderWin(BuilderBase):
             utils.ensure_file_exists(out_file)
 
         cc.n('build core server ...')
-        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'core', 'tp_core.vs2015.sln')
+        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'core', 'tp_core.vs2017.sln')
         out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tp_core.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
@@ -43,7 +43,7 @@ class BuilderWin(BuilderBase):
         utils.ensure_file_exists(out_file)
 
         cc.n('build SSH protocol ...')
-        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'ssh', 'tpssh.vs2015.sln')
+        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'ssh', 'tpssh.vs2017.sln')
         out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tpssh.dll')
         if os.path.exists(out_file):
             utils.remove(out_file)
@@ -52,7 +52,7 @@ class BuilderWin(BuilderBase):
         utils.copy_file(os.path.join(env.root_path, 'external', 'libssh', 'lib', ctx.target_path), os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path), 'ssh.dll')
 
         cc.n('build TELNET protocol ...')
-        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'telnet', 'tptelnet.vs2015.sln')
+        sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'telnet', 'tptelnet.vs2017.sln')
         out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tptelnet.dll')
         if os.path.exists(out_file):
             utils.remove(out_file)
@@ -61,7 +61,7 @@ class BuilderWin(BuilderBase):
 
         if with_rdp:
             cc.n('build RDP protocol ...')
-            sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'rdp', 'tprdp.vs2015.sln')
+            sln_file = os.path.join(env.root_path, 'server', 'tp_core', 'protocol', 'rdp', 'tprdp.vs2017.sln')
             out_file = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path, 'tprdp.dll')
             if os.path.exists(out_file):
                 utils.remove(out_file)
@@ -91,7 +91,7 @@ class BuilderLinux(BuilderBase):
 
         utils.makedirs(out_path)
 
-        utils.cmake(os.path.join(env.root_path, 'server', 'cmake-build'), ctx.target_path, False)
+        utils.cmake(os.path.join(env.root_path, 'cmake-build'), ctx.target_path, False)
         # utils.strip(out_file)
 
         for f in out_files:
@@ -121,7 +121,7 @@ class BuilderMacOS(BuilderBase):
 
         utils.makedirs(out_path)
 
-        utils.cmake(os.path.join(env.root_path, 'server', 'cmake-build'), ctx.target_path, False)
+        utils.cmake(os.path.join(env.root_path, 'cmake-build'), ctx.target_path, False)
         # utils.strip(out_file)
 
         for f in out_files:

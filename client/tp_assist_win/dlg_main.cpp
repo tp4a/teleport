@@ -18,7 +18,7 @@
 
 extern HINSTANCE g_hInstance;
 
-HWND g_hDlgMain = NULL;
+HWND g_hDlgMain = nullptr;
 static DWORD g_dwTaskbarRecreateMessage = 0;
 static BOOL g_IsTrayIconShowed = FALSE;
 
@@ -90,19 +90,13 @@ INT_PTR CALLBACK eomDlgMainProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARA
 
 		case IDM_OPEN_WEB:
 		{
-			ShellExecute(NULL, _T("open"), TS_WEB_URL, NULL, NULL, SW_SHOW);
-			return TRUE;
-		}break;
-
-		case IDM_OPEN_BBS:
-		{
-			ShellExecute(NULL, _T("open"), TS_BBS_URL, NULL, NULL, SW_SHOW);
+			ShellExecute(nullptr, _T("open"), TS_WEB_URL, nullptr, nullptr, SW_SHOW);
 			return TRUE;
 		}break;
 
 		case IDM_OPEN_CONFIG:
 		{
-			ShellExecute(NULL, _T("open"), _T("http://127.0.0.1:50022/config"), NULL, NULL, SW_SHOW);
+			ShellExecute(nullptr, _T("open"), _T("http://localhost:50022/config"), nullptr, nullptr, SW_SHOW);
 			return TRUE;
 		}break;
 
@@ -129,7 +123,7 @@ INT_PTR CALLBACK eomDlgMainProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARA
 			HMENU hPopup = GetSubMenu(hMenu, 0);
 			SetMenuDefaultItem(hPopup, IDM_ABOUT, FALSE);
 
-			TrackPopupMenu(hPopup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwndDlg, NULL);
+			TrackPopupMenu(hPopup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwndDlg, nullptr);
 			DestroyMenu(hMenu);
 		}
 
@@ -216,7 +210,7 @@ void center_window(HWND hwndDlg)
 		rc.top = (cyScreen - (rc.bottom - rc.top)) / 3;
 	}
 
-	SetWindowPos(hwndDlg, NULL, rc.left, rc.top, 0, 0, SWP_NOSIZE);
+	SetWindowPos(hwndDlg, nullptr, rc.left, rc.top, 0, 0, SWP_NOSIZE);
 
 	return;
 }

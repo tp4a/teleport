@@ -4,7 +4,6 @@
 #include <teleport_const.h>
 #include <json/json.h>
 
-
 TPP_API ex_rv tpp_init(TPP_INIT_ARGS* init_args)
 {
 #ifdef EX_OS_UNIX

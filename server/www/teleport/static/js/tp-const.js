@@ -73,6 +73,9 @@ var TP_STATE_NORMAL = 1; // 正常
 var TP_STATE_DISABLED = 2; // 禁用
 var TP_STATE_LOCKED = 3; // 临时禁用（用于用户登录连续错误n次）
 
+var TP_USER_TYPE_LOCAL = 1;
+var TP_USER_TYPE_LDAP = 2;
+
 // =======================================================
 // 授权策略对象
 // =======================================================
@@ -91,6 +94,11 @@ var TP_POLICY_AUTH_gUSER_ACC = 5; // 5=用户组:账号
 var TP_POLICY_AUTH_gUSER_gACC = 6; // 6=用户组:账号组
 var TP_POLICY_AUTH_gUSER_HOST = 7; // 7=用户组:主机
 var TP_POLICY_AUTH_gUSER_gHOST = 8; // 8=用户组:主机组
+
+// =======================================================
+// 全局配置
+// =======================================================
+var TP_ASSIST_STARTUP_URLPROTO = 1; // 启用urlprotocol功能
 
 // =======================================================
 // 授权标记
@@ -254,10 +262,13 @@ function tp_error_msg(error_code, message) {
     var msg = '';
     switch (error_code) {
         case TPE_NEED_LOGIN:
-            msg = '需要登录';
+            msg = '需要刷新页面，重新登录';
             break;
         case TPE_PRIVILEGE:
             msg = '没有此操作权限';
+            break;
+        case TPE_NOT_IMPLEMENT:
+            msg = '功能尚未实现';
             break;
         case TPE_EXISTS:
             msg = '已经存在';

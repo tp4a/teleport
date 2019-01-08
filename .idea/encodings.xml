@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_log.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_path.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_thread.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_util.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/libex/src/ex_ini.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/libex/src/ex_log.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/libex/src/ex_util.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/pyshell/include/pys.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/pyshell/src/pys_api.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/pyshell/src/pys_core.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/teleport/teleport_const.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/common/base_env.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/common/base_record.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/common/base_record.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/common/protocol_interface.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/common/ts_const.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/common/ts_membuf.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/common/ts_membuf.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/common/ts_memstream.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/core/main.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_env.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_http_rpc.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_http_rpc.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_main.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_session.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_session.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_web_rpc.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_web_rpc.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_conn.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_conn.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_proxy.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_session.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_session.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/ssh/ssh_proxy.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/ssh/ssh_proxy.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/ssh/ssh_recorder.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/ssh/ssh_recorder.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/ssh/ssh_session.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/ssh/ssh_session.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/telnet/telnet_conn.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/telnet/telnet_conn.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/telnet/telnet_proxy.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/telnet/telnet_session.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/telnet/telnet_session.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_web/src/main.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_web/src/ts_env.cpp" charset="GBK" />
+  </component>
+</project>

@@ -74,7 +74,6 @@ def isSpiderHeader(t):
     labrec = int(h[13])   # no. records in file header
     labbyt = int(h[22])   # total no. of bytes in header
     lenbyt = int(h[23])   # record length in bytes
-    # print("labrec = %d, labbyt = %d, lenbyt = %d" % (labrec,labbyt,lenbyt))
     if labbyt != (labrec * lenbyt):
         return 0
     # looks like a valid header
@@ -121,7 +120,7 @@ class SpiderImageFile(ImageFile.ImageFile):
         if iform != 1:
             raise SyntaxError("not a Spider 2D image")
 
-        self.size = int(h[12]), int(h[2])  # size in pixels (width, height)
+        self._size = int(h[12]), int(h[2])  # size in pixels (width, height)
         self.istack = int(h[24])
         self.imgnumber = int(h[27])
 

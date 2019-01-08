@@ -68,17 +68,46 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 	}
 }
 
-static struct mg_mgr g_mg_mgr;
-static bool is_mg_mgr_initialized = false;
+//static struct mg_mgr g_mg_mgr;
+//static bool is_mg_mgr_initialized = false;
+
+#if 0
+class MongooseManager {
+public:
+    MongooseManager() {
+        //mg_mgr_free(&m_mg_mgr);
+        m_initialized = false;
+    }
+
+    ~MongooseManager() {
+        if (m_initialized) {
+            mg_mgr_free(&m_mg_mgr);
+            m_initialized = false;
+        }
+    }
+
+    struct mg_mgr* get_mg_mgr() {
+        if (!m_initialized) {
+            mg_mgr_init(&m_mg_mgr, NULL);
+            m_initialized = true;
+        }
+        return &m_mg_mgr;
+    }
+
+private:
+    bool m_initialized;
+    struct mg_mgr m_mg_mgr;
+};
+static MongooseManager g_mg_mgr;
 
 bool ts_http_get(const ex_astr& url, ex_astr& body)
 {
-    if(!is_mg_mgr_initialized) {
-        mg_mgr_init(&g_mg_mgr, NULL);
-        is_mg_mgr_initialized = true;
-    }
+//     if(!is_mg_mgr_initialized) {
+//         mg_mgr_init(&g_mg_mgr, NULL);
+//         is_mg_mgr_initialized = true;
+//     }
 
-	mg_connection* nc = mg_connect_http(&g_mg_mgr, ev_handler, url.c_str(), NULL, NULL);
+	mg_connection* nc = mg_connect_http(g_mg_mgr.get_mg_mgr(), ev_handler, url.c_str(), NULL, NULL);
 	if (NULL == nc)
 		return false;
 
@@ -92,7 +121,7 @@ bool ts_http_get(const ex_astr& url, ex_astr& body)
 //	int count = 0;
 	while (!hdata.exit_flag)
 	{
-		mg_mgr_poll(&g_mg_mgr, 100);
+		mg_mgr_poll(g_mg_mgr.get_mg_mgr(), 100);
 // 		count++;
 // 		if (count > 2)
 // 			break;
@@ -104,5 +133,36 @@ bool ts_http_get(const ex_astr& url, ex_astr& body)
 
 //	mg_mgr_free(&mgr);
 //	delete hdata;
+	return ret;
+}
+#endif // if 0
+
+bool ts_http_get(const ex_astr& url, ex_astr& body)
+{
+    struct mg_mgr _mgr;
+    mg_mgr_init(&_mgr, NULL);
+
+	mg_connection* nc = mg_connect_http(&_mgr, ev_handler, url.c_str(), NULL, NULL);
+	if (NULL == nc) {
+        mg_mgr_free(&_mgr);
+        return false;
+    }
+
+	HTTP_DATA hdata;
+	hdata.exit_flag = false;
+	hdata.have_error = false;
+
+	nc->user_data = (void*)&hdata;
+
+	while (!hdata.exit_flag)
+	{
+		mg_mgr_poll(&_mgr, 100);
+	}
+
+	bool ret = !hdata.have_error;
+	if (ret)
+		body = hdata.body;
+
+    mg_mgr_free(&_mgr);
 	return ret;
 }

@@ -63,7 +63,7 @@ class MspImageFile(ImageFile.ImageFile):
             raise SyntaxError("bad MSP checksum")
 
         self.mode = "1"
-        self.size = i16(s[4:]), i16(s[6:])
+        self._size = i16(s[4:]), i16(s[6:])
 
         if s[:4] == b"DanM":
             self.tile = [("raw", (0, 0)+self.size, 32, ("1", 0, 1))]
@@ -126,8 +126,9 @@ class MspDecoder(ImageFile.PyDecoder):
                     continue
                 row = self.fd.read(rowlen)
                 if len(row) != rowlen:
-                    raise IOError("Truncated MSP file, expected %d bytes on row %s",
-                                  (rowlen, x))
+                    raise IOError(
+                        "Truncated MSP file, expected %d bytes on row %s",
+                        (rowlen, x))
                 idx = 0
                 while idx < rowlen:
                     runtype = i8(row[idx])

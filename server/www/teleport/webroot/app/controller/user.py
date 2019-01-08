@@ -12,13 +12,11 @@ from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.logger import *
 from app.base.session import tp_session
 from app.base.utils import tp_check_strong_password, tp_gen_password
-# from app.base.utils import tp_timestamp_utc_now
 from app.logic.auth.oath import tp_oath_verify_code
 from app.const import *
 from app.logic.auth.oath import tp_oath_generate_secret, tp_oath_generate_qrcode
 from app.logic.auth.password import tp_password_generate_secret, tp_password_verify
 from app.model import group
-# from app.model import syslog
 from app.model import user
 
 
@@ -195,6 +193,7 @@ class DoBindOathHandler(TPBaseJsonHandler):
 
         return self.write_json(TPE_OK)
 
+
 class DoUnBindOathHandler(TPBaseJsonHandler):
     def post(self):
         ret = self.check_privilege(TP_PRIVILEGE_USER_DELETE)
@@ -217,6 +216,7 @@ class DoUnBindOathHandler(TPBaseJsonHandler):
         # 把oath设置为空就是去掉oath验证
         err = user.update_oath_secret(self, users, '')
         self.write_json(err)
+
 
 class OathSecretQrCodeHandler(TPBaseHandler):
     def get(self):

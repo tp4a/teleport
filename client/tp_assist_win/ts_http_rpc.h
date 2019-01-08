@@ -17,14 +17,14 @@
 //=================================================================
 接口使用说明：
 
-本程序启动后，监听 127.0.0.1:50022，接收http请求，请求格式要求如下：
+本程序启动后，监听 localhost:50022，接收http请求，请求格式要求如下：
 
 GET 方式
-http://127.0.0.1:50022/method/json_param
+http://localhost:50022/method/json_param
 其中json_param是使用url_encode进行编码后的json格式字符串
 
 POST 方式
-http://127.0.0.1:50022/method
+http://localhost:50022/method
 post的数据区域是json_param
 
 其中，URI分为三个部分：
@@ -40,54 +40,55 @@ json_param		此任务方法的附加参数，如果没有附加参数，这部分可以省略。
 
 */
 
-void http_rpc_main_loop(void);
-void http_rpc_stop(void);
+void http_rpc_main_loop(bool is_https);
+void http_rpc_stop(bool is_https);
 
 typedef std::map<ex_astr, ex_astr> content_type_map;
 
-class TsHttpRpc
-{
+// for https server, see
+// http://www.xiaovdiy.cn/?post=284
+
+class TsHttpRpc {
 public:
-	TsHttpRpc();
-	~TsHttpRpc();
+    TsHttpRpc();
+    ~TsHttpRpc();
 
-	bool init(const char* ip, int port);
-	void run(void);
-	void stop(void);
+    bool init_http();
+    bool init_https();
+    void run(void);
+    void stop(void);
+    void _rpc_func_url_protocol(const ex_astr& func_args, ex_astr& buf);
 
-	ex_astr get_content_type(ex_astr file_suffix)
-	{
-		content_type_map::iterator it = m_content_type_map.find(file_suffix);
-		if (it != m_content_type_map.end())
-		{
-			return it->second;
-		}
-		else
-		{
-			return "application/octet-stream";
-		}
-	};
+    ex_astr get_content_type(ex_astr file_suffix) {
+        content_type_map::iterator it=m_content_type_map.find(file_suffix);
+        if (it != m_content_type_map.end()) {
+            return it->second;
+        } else {
+            return "application/octet-stream";
+        }
+    };
 
 private:
-	int _parse_request(struct http_message* req, ex_astr& func_cmd, ex_astr& func_args);
-	void _process_js_request(const ex_astr& func_cmd, const ex_astr& func_args, ex_astr& buf);
-	void _create_json_ret(ex_astr& buf, int errcode);
-	void _create_json_ret(ex_astr& buf, Json::Value& jr_root);
+    bool _on_init();
+    int _parse_request(struct http_message* req, ex_astr& func_cmd, ex_astr& func_args);
+    void _process_js_request(const ex_astr& func_cmd, const ex_astr& func_args, ex_astr& buf);
+    void _create_json_ret(ex_astr& buf, int errcode);
+    void _create_json_ret(ex_astr& buf, Json::Value& jr_root);
 
-	void _rpc_func_run_client(const ex_astr& func_args, ex_astr& buf);
-// 	void _rpc_func_check(const ex_astr& func_args, ex_astr& buf);
-	void _rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf);
-	void _rpc_func_get_config(const ex_astr& func_args, ex_astr& buf);
-	void _rpc_func_set_config(const ex_astr& func_args, ex_astr& buf);
-	void _rpc_func_file_action(const ex_astr& func_args, ex_astr& buf);
-	void _rpc_func_get_version(const ex_astr& func_args, ex_astr& buf);
+    void _rpc_func_run_client(const ex_astr& func_args, ex_astr& buf);
+    // 	void _rpc_func_check(const ex_astr& func_args, ex_astr& buf);
+    void _rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf);
+    void _rpc_func_get_config(const ex_astr& func_args, ex_astr& buf);
+    void _rpc_func_set_config(const ex_astr& func_args, ex_astr& buf);
+    void _rpc_func_file_action(const ex_astr& func_args, ex_astr& buf);
+    void _rpc_func_get_version(const ex_astr& func_args, ex_astr& buf);
 
-	static void _mg_event_handler(struct mg_connection *nc, int ev, void *ev_data);
+    static void _mg_event_handler(struct mg_connection *nc, int ev, void *ev_data);
 
 private:
-	content_type_map m_content_type_map;
-	struct mg_mgr m_mg_mgr;
-	bool m_stop;
+    content_type_map m_content_type_map;
+    struct mg_mgr m_mg_mgr;
+    bool m_stop;
 };
 
 #endif // __TS_HTTP_RPC_H__

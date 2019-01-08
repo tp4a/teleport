@@ -62,7 +62,7 @@ void TsHttpRpc::_thread_loop(void)
 {
 	EXLOGI("[core] TeleportServer-RPC ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 
-	while (!m_stop_flag)
+	while (!m_need_stop)
 	{
 		mg_mgr_poll(&m_mg_mgr, 500);
 	}
@@ -70,10 +70,6 @@ void TsHttpRpc::_thread_loop(void)
 	EXLOGV("[core] rpc main loop end.\n");
 }
 
-void TsHttpRpc::_set_stop_flag(void)
-{
-	m_stop_flag = true;
-}
 
 bool TsHttpRpc::init(void)
 {
@@ -180,25 +176,33 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
 		return TPE_HTTP_METHOD;
 
 	ex_astr json_str;
-	if (is_get)
-		json_str.assign(req->query_string.p, req->query_string.len);
-	else
-		json_str.assign(req->body.p, req->body.len);
+    bool need_decode = false;
+    if (is_get) {
+        json_str.assign(req->query_string.p, req->query_string.len);
+        need_decode = true;
+    }
+    else {
+        json_str.assign(req->body.p, req->body.len);
+        if (json_str.length() > 0 && json_str[0] == '%')
+            need_decode = true;
+    }
+
+    if (need_decode) {
+        // 将参数进行 url-decode 解码
+        int len = json_str.length() * 2;
+        ex_chars sztmp;
+        sztmp.resize(len);
+        memset(&sztmp[0], 0, len);
+        if (-1 == ts_url_decode(json_str.c_str(), json_str.length(), &sztmp[0], len, 0))
+            return TPE_HTTP_URL_ENCODE;
+
+        json_str = &sztmp[0];
+    }
 
 	if (0 == json_str.length())
 		return TPE_PARAM;
 
-	// 将参数进行 url-decode 解码
-	int len = json_str.length() * 2;
-	ex_chars sztmp;
-	sztmp.resize(len);
-	memset(&sztmp[0], 0, len);
-	if (-1 == ts_url_decode(json_str.c_str(), json_str.length(), &sztmp[0], len, 0))
-		return TPE_HTTP_URL_ENCODE;
-
-	json_str = &sztmp[0];
-
-	Json::Reader jreader;
+    Json::Reader jreader;
 
 	if (!jreader.parse(json_str.c_str(), json_param))
 		return TPE_JSON_FORMAT;
@@ -333,7 +337,7 @@ void TsHttpRpc::_rpc_func_get_config(const Json::Value& json_param, ex_astr& buf
 
 void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr& buf)
 {
-	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#request_session
+	// https://github.com/tp4a/teleport/wiki/TELEPORT-CORE-JSON-RPC#request_session
 
 	int conn_id = 0;
 	ex_rv rv = TPE_OK;
@@ -416,7 +420,7 @@ void TsHttpRpc::_rpc_func_kill_sessions(const Json::Value& json_param, ex_astr& 
 
 void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 {
-	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#enc
+	// https://github.com/tp4a/teleport/wiki/TELEPORT-CORE-JSON-RPC#enc
 	// 加密一个字符串 [ p=plain-text, c=cipher-text ]
 	// 入参: {"p":"need be encrypt"}
 	// 示例: {"p":"this-is-a-password"}
@@ -461,7 +465,7 @@ void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 
 void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf)
 {
-	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#set_config
+	// https://github.com/tp4a/teleport/wiki/TELEPORT-CORE-JSON-RPC#set_config
 	/*
 	{
 	  "noop-timeout": 15     # 按分钟计
@@ -479,11 +483,6 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
 	}
 
 	int noop_timeout = json_param["noop_timeout"].asUInt();
-	if (noop_timeout == 0) {
-		_create_json_ret(buf, TPE_PARAM);
-		return;
-	}
-
 	EXLOGV("[core] set run-time config:\n");
 	EXLOGV("[core]   noop_timeout = %dm\n", noop_timeout);
 
@@ -497,7 +496,7 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
 /*
 void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 {
-	// https://github.com/eomsoft/teleport/wiki/TELEPORT-CORE-JSON-RPC#enc
+	// https://github.com/tp4a/teleport/wiki/TELEPORT-CORE-JSON-RPC#enc
 	// 加密多个个字符串 [ p=plain-text, c=cipher-text ]
 	// 入参: {"p":["need be encrypt", "plain to cipher"]}
 	// 示例: {"p":["password-for-A"]}

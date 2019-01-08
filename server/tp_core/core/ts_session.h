@@ -57,10 +57,7 @@ public:
 	bool free_connect_info(const ex_astr& sid);
 
 protected:
-	// 线程循环
 	void _thread_loop(void);
-	// 设置停止标志，让线程能够正常结束
-	void _set_stop_flag(void);
 
 private:
 	void _gen_session_id(ex_astr& sid, const TS_CONNECT_INFO* info, int len);

@@ -12,25 +12,27 @@
 # for CMake
 CMakeFiles
 cmake_install.cmake
-Makefile
 cmake-build
 cmake-build-debug
 client/tp_assist_macos/build
+**/xcode_build
+**/DerivedData
 
 # for Python
 __pycache__
 *.pyc
 
 
-# for pyCharm
+# for JetBrains IDEs.
 **/.idea/workspace.xml
 **/.idea/misc.xml
-**/.idea/modules.xml
 **/.idea/dictionaries
 **/.idea/watcherTasks.xml
 **/.idea/inspectionProfiles
-**/.idea/vcs.xml
 **/.idea/codeStyles
+**/.idea/inspectionProfiles
+**/.idea/vcs.xml
+**/.idea/modules.xml
 
 *.css.map
 
@@ -44,15 +46,13 @@ __pycache__
 /external/openssl
 /external/python
 /external/libssh
-/external/libssh-win-static/include/libssh
-/external/libssh-win-static/src
-/external/libssh-win-static/lib
 /external/mbedtls
 /external/sqlite
 /external/libuv
 /client/tools/putty
 /client/tools/winscp
-/client/tp_assist_macos/DerivedData
+/server/**/test/
+/server/**/tests/
 
 # for dist folder
 **/_tmp_
@@ -71,6 +71,7 @@ __pycache__
 # for generated files.
 /config.ini
 /build.bat
+/build.sh
 
 # for not finished code
 /common/libex/test
@@ -84,7 +85,7 @@ __pycache__
 # for MacOS.
 .DS_Store
 
-# Xcode
+# for Xcode
 build/*
 *.pbxuser
 !default.pbxuser
@@ -100,4 +101,4 @@ xcuserdata
 profile
 *.moved-aside
 /server/share/tmp
-/build.sh
+

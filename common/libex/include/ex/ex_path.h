@@ -35,7 +35,7 @@ wchar_t* ex_abspath_to(const wchar_t* base_abs_path, const wchar_t* relate_path)
 bool ex_exec_file(ex_wstr& out_filename);
 bool ex_abspath(ex_wstr& inout_path);
 bool ex_dirname(ex_wstr& inout_filename);
-bool ex_path_join(ex_wstr& inout_path, bool auto_abspath, ...);
+bool ex_path_join(ex_wstr& inout_path, EX_BOOL auto_abspath, ...);
 bool ex_abspath_to(const ex_wstr& base_abs_path, const ex_wstr& relate_path, ex_wstr& out_path);
 bool ex_mkdirs(const ex_wstr& in_path);
 

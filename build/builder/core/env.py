@@ -111,7 +111,7 @@ class Env(object):
 
             if self.nasm is None or not os.path.exists(self.nasm):
                 if warn_miss_tool:
-                    cc.w(' - can not locate `nasm`, so I can build openssl.')
+                    cc.w(' - can not locate `nasm`, so I can not build openssl.')
             else:
                 _nasm_path = os.path.abspath(os.path.join(self.nasm, '..'))
                 os.environ['path'] = os.environ['path'] + ';' + _nasm_path
@@ -123,12 +123,12 @@ class Env(object):
 
             if self.perl is None or not os.path.exists(self.perl):
                 if warn_miss_tool:
-                    cc.w(' - can not locate `perl`, so I can build openssl.')
+                    cc.w(' - can not locate `perl`, so I can not build openssl.')
 
             self.visual_studio_path = self._get_visual_studio_path()
             if self.visual_studio_path is None or not os.path.exists(self.visual_studio_path):
                 if warn_miss_tool:
-                    cc.w(' - can not locate Visual Studio installation, so I can build openssl.')
+                    cc.w(' - can not locate Visual Studio installation, so I can build nothing.')
 
             if 'msbuild' in _tmp:
                 self.msbuild = _tmp['msbuild']
@@ -190,29 +190,39 @@ class Env(object):
 
         return True
 
-    def _get_msbuild(self):
-        # 14.0 = VS2015
-        # 12.0 = VS2012
-        #  4.0 = VS2008
-        chk = ['14.0', '12.0', '4.0']
+    # def _get_msbuild(self):
+    #     # 14.0 = VS2015
+    #     # 12.0 = VS2012
+    #     #  4.0 = VS2008
+    #     chk = ['14.0', '12.0', '4.0']
 
-        p = None
-        for c in chk:
-            p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\MSBuild\ToolsVersions\{}'.format(c), r'MSBuildToolsPath')
-            if p is not None:
-                break
+    #     p = None
+    #     for c in chk:
+    #         p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\MSBuild\ToolsVersions\{}'.format(c), r'MSBuildToolsPath')
+    #         if p is not None:
+    #             break
 
-        return os.path.join(p[0], 'MSBuild.exe') if p is not None else None
+    #     return os.path.join(p[0], 'MSBuild.exe') if p is not None else None
+
+    # def _get_visual_studio_path(self):
+    #     chk = ['14.0', '12.0', '4.0']
+    #     p = None
+    #     for c in chk:
+    #         p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\VisualStudio\{}'.format(c), r'ShellFolder')
+    #         if p is not None:
+    #             break
+
+    #     return p[0] if p is not None else None
 
     def _get_visual_studio_path(self):
-        chk = ['14.0', '12.0', '4.0']
-        p = None
-        for c in chk:
-            p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\VisualStudio\{}'.format(c), r'ShellFolder')
-            if p is not None:
-                break
-
+        p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7', r'15.0')
         return p[0] if p is not None else None
+
+    def _get_msbuild(self):
+        vs2017 = self._get_visual_studio_path()
+        if vs2017 is None:
+            return None
+        return os.path.join(vs2017, 'MSBuild', '15.0', 'Bin', 'MSBuild.exe')
 
     def _get_perl(self):
         p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\perl', 'BinDir')

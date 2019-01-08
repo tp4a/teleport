@@ -1,0 +1,10 @@
+{
+  "title": "Teleport助手安装",
+  "icon": "dmg_icon.icns",
+  "background": "dmg_bg.png",
+  "icon-size": 108,
+  "contents": [
+    { "x": 140, "y": 320, "type": "file", "path": "../../../client/tp_assist_macos/build//Release/TP-Assist.app" },
+    { "x": 498, "y": 320, "type": "link", "path": "/Applications" }
+  ]
+}

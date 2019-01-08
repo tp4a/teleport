@@ -4,220 +4,223 @@
 <!--[if !IE]><!-->
 <html lang="zh_CN">
 <!--<![endif]-->
+
 <head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>TELEPORT助手配置</title>
     <link rel="shortcut icon" href="favicon.png">
 
-    <link href="plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link href="plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="plugins/gritter/css/jquery.gritter.css" rel="stylesheet">
 
-    <link href="css/style.css" rel="stylesheet" type="text/css"/>
+    <link href="css/style.css" rel="stylesheet" type="text/css" />
 
 </head>
+
 <body>
 
-<div class="header">
-    <div class="container">
-        <span class="title"><i class="fa fa-cog fa-fw"></i> Teleport 助手本地配置</span>
-        <span class="sub-title" id="version"></span>
+    <div class="header">
+        <div class="container">
+            <span class="title"><i class="fa fa-cog fa-fw"></i> Teleport 助手本地配置</span>
+            <span class="sub-title" id="version"></span>
+        </div>
     </div>
-</div>
-<div class="header-fix"></div>
+    <div class="header-fix"></div>
 
-<div class="footer">
-    <div class="container">
-        <p><a href="http://teleport.eomsoft.net/" target="_blank">TELEPORT</a> | &copy;2015 - 2018，保留所有权利。</p>
+    <div class="footer">
+        <div class="container">
+            <p><a href="https://tp4a.com/" target="_blank">TELEPORT</a> | &copy;2015 - 2018，保留所有权利。</p>
+        </div>
     </div>
-</div>
 
 
-<div class="container">
+    <div class="container">
 
-    <div class="content">
+        <div class="content">
 
-        <div class="arg-detail arg-detail-common">
-            <p><strong>此处配置保存到本地计算机上，如果更换计算机，需要重新配置！</strong></p>
-            <span><strong>注意：</strong>命令行参数设置中，可以用以下变量替换（注意大小写！）：</span>
-            <ul>
-                <li><span class="arg-varb">{host_ip}</span> 替换主机IP地址</li>
-                <li><span class="arg-varb">{host_port}</span> 替换主机端口号</li>
-                <li><span class="arg-varb">{user_name}</span> 替换用户名</li>
-                <li><span class="arg-varb">{real_ip}</span> 替换为远程主机真实IP（仅用于显示，例如客户端的窗口标题或标签页标题等）</li>
-                <li><span class="arg-varb">{assist_tools_path}</span> 替换为助手工具所在的tools目录的绝对路径</li>
-            </ul>
-        </div>
-
-
-        <hr/>
-        <p class="cfg-title">本地 SSH 客户端配置</p>
-
-        <div class="form-horizontal">
-            <div class="form-group form-group-sm">
-                <label for="ssh-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
-                <div class="col-sm-4">
-                    <select id="ssh-type" class="form-control"></select>
-                </div>
+            <div class="arg-detail arg-detail-common">
+                <p><strong>此处配置保存到本地计算机上，如果更换计算机，需要重新配置！</strong></p>
+                <span><strong>注意：</strong>命令行参数设置中，可以用以下变量替换（注意大小写！）：</span>
+                <ul>
+                    <li><span class="arg-varb">{host_ip}</span> 替换主机IP地址</li>
+                    <li><span class="arg-varb">{host_port}</span> 替换主机端口号</li>
+                    <li><span class="arg-varb">{user_name}</span> 替换用户名</li>
+                    <li><span class="arg-varb">{real_ip}</span> 替换为远程主机真实IP（仅用于显示，例如客户端的窗口标题或标签页标题等）</li>
+                    <li><span class="arg-varb">{assist_tools_path}</span> 替换为助手工具所在的tools目录的绝对路径</li>
+                </ul>
             </div>
 
-            <div class="form-group form-group-sm">
-                <label for="ssh-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
-                <div class="col-sm-9">
-                    <div class="input-group">
-                        <input id="ssh-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
-                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="ssh-select-app">选择...</button></span>
+
+            <hr/>
+            <p class="cfg-title">本地 SSH 客户端配置</p>
+
+            <div class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label for="ssh-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
+                    <div class="col-sm-4">
+                        <select id="ssh-type" class="form-control"></select>
+                    </div>
+                </div>
+
+                <div class="form-group form-group-sm">
+                    <label for="ssh-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="ssh-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
+                            <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="ssh-select-app">选择...</button></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-group-sm">
+                    <label for="ssh-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
+                    <div class="col-sm-9">
+                        <input id="ssh-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数" />
                     </div>
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
-                <label for="ssh-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
-                <div class="col-sm-9">
-                    <input id="ssh-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
-                </div>
-            </div>
-        </div>
+
+            <hr/>
+            <p class="cfg-title">本地 SFTP 客户端配置</p>
 
 
-        <hr/>
-        <p class="cfg-title">本地 SFTP 客户端配置</p>
-
-
-        <div class="form-horizontal">
-            <div class="form-group form-group-sm">
-                <label for="scp-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
-                <div class="col-sm-4">
-                    <select id="scp-type" class="form-control"></select>
-                </div>
-            </div>
-
-            <div class="form-group form-group-sm">
-                <label for="scp-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
-                <div class="col-sm-9">
-                    <div class="input-group">
-                        <input id="scp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
-                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="scp-select-app">选择...</button></span>
+            <div class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label for="scp-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
+                    <div class="col-sm-4">
+                        <select id="scp-type" class="form-control"></select>
                     </div>
                 </div>
-            </div>
 
-            <div class="form-group form-group-sm">
-                <label for="scp-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
-                <div class="col-sm-9">
-                    <input id="scp-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
-                </div>
-            </div>
-
-        </div>
-
-
-        <hr/>
-        <p class="cfg-title">本地 TELNET 客户端配置</p>
-
-        <div class="form-horizontal">
-            <div class="form-group form-group-sm">
-                <label for="telnet-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
-                <div class="col-sm-4">
-                    <select id="telnet-type" class="form-control"></select>
-                </div>
-            </div>
-
-            <div class="form-group form-group-sm">
-                <label for="telnet-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
-                <div class="col-sm-9">
-                    <div class="input-group">
-                        <input id="telnet-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
-                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="telnet-select-app">选择...</button></span>
+                <div class="form-group form-group-sm">
+                    <label for="scp-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="scp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
+                            <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="scp-select-app">选择...</button></span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="form-group form-group-sm">
-                <label for="telnet-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
-                <div class="col-sm-9">
-                    <input id="telnet-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
+                <div class="form-group form-group-sm">
+                    <label for="scp-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
+                    <div class="col-sm-9">
+                        <input id="scp-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数" />
+                    </div>
                 </div>
+
             </div>
 
-        </div>
+
+            <hr/>
+            <p class="cfg-title">本地 TELNET 客户端配置</p>
+
+            <div class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label for="telnet-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
+                    <div class="col-sm-4">
+                        <select id="telnet-type" class="form-control"></select>
+                    </div>
+                </div>
+
+                <div class="form-group form-group-sm">
+                    <label for="telnet-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="telnet-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
+                            <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="telnet-select-app">选择...</button></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-group-sm">
+                    <label for="telnet-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
+                    <div class="col-sm-9">
+                        <input id="telnet-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数" />
+                    </div>
+                </div>
+
+            </div>
 
 
-        <hr/>
-        <p class="cfg-title">本地 RDP 客户端配置</p>
+            <hr/>
+            <p class="cfg-title">本地 RDP 客户端配置</p>
 
-        <!--<div class="arg-detail arg-detail-common">-->
+            <!--<div class="arg-detail arg-detail-common">-->
             <!--RDP专用命令行参数：-->
             <!--<ul>-->
-                <!--<li><span class="arg-varb">{tmp_rdp_file}</span> 替换为助手工具生成的临时配置文件（.rdp）的绝对路径，用于支持按.rdp配置文件进行连接的RDP客户端</li>-->
-                <!--<li><span class="arg-varb">{size}</span> [仅FreeRDP] 替换为屏幕尺寸</li>-->
-                <!--<li><span class="arg-varb">{console}</span> [仅FreeRDP] 替换为是否以Console模式连接</li>-->
-                <!--<li><span class="arg-varb">{clipboard}</span> [仅FreeRDP] 替换为是否允许剪贴板</li>-->
-                <!--<li><span class="arg-varb">{drives}</span> [仅FreeRDP] 替换为是否允许映射本地磁盘</li>-->
+            <!--<li><span class="arg-varb">{tmp_rdp_file}</span> 替换为助手工具生成的临时配置文件（.rdp）的绝对路径，用于支持按.rdp配置文件进行连接的RDP客户端</li>-->
+            <!--<li><span class="arg-varb">{size}</span> [仅FreeRDP] 替换为屏幕尺寸</li>-->
+            <!--<li><span class="arg-varb">{console}</span> [仅FreeRDP] 替换为是否以Console模式连接</li>-->
+            <!--<li><span class="arg-varb">{clipboard}</span> [仅FreeRDP] 替换为是否允许剪贴板</li>-->
+            <!--<li><span class="arg-varb">{drives}</span> [仅FreeRDP] 替换为是否允许映射本地磁盘</li>-->
             <!--</ul>-->
-        <!--</div>-->
+            <!--</div>-->
 
 
-        <div class="form-horizontal">
-            <div class="form-group form-group-sm">
-                <label for="ssh-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
-                <div class="col-sm-4">
-                    <select id="rdp-type" class="form-control"></select>
+            <div class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label for="ssh-type" class="col-sm-2 control-label"><strong>客户端：</strong></label>
+                    <div class="col-sm-4">
+                        <select id="rdp-type" class="form-control"></select>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group form-group-sm">
-                <label for="ssh-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
-                <div class="col-sm-9">
-                    <div class="input-group">
-                        <input id="rdp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
-                        <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="rdp-select-app">选择...</button></span>
+                <div class="form-group form-group-sm">
+                    <label for="ssh-app" class="col-sm-2 control-label"><strong>程序路径：</strong></label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="rdp-app" type="text" class="form-control input-args" placeholder="客户端可执行程序文件路径" readonly="readonly">
+                            <span class="input-group-btn"><button class="btn btn-sm btn-primary" type="button" id="rdp-select-app">选择...</button></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-group-sm">
+                    <label for="rdp-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
+                    <div class="col-sm-9">
+                        <input id="rdp-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数" />
                     </div>
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
-                <label for="rdp-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
-                <div class="col-sm-9">
-                    <input id="rdp-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
+
+            <hr/>
+            <div class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <div class="col-sm-2"></div>
+                    <div class="col-sm-6">
+                        <a id="btn-save" class="btn btn-primary" href="javascript:;"><i class="fa fa-check fa-fw"></i> 保存设置！</a>
+                    </div>
                 </div>
             </div>
         </div>
 
-
-        <hr/>
-        <div class="form-horizontal">
-            <div class="form-group form-group-sm">
-                <div class="col-sm-2"></div>
-                <div class="col-sm-6">
-                    <a id="btn-save" class="btn btn-primary" href="javascript:;"><i class="fa fa-check fa-fw"></i> 保存设置！</a>
-                </div>
-            </div>
-        </div>
     </div>
 
-</div>
 
-
-<script type="text/javascript" src="plugins/underscore/underscore-min.js"></script>
-<script type="text/javascript" src="plugins/jquery/jquery.min.js"></script>
-<script type="text/javascript" src="plugins/bootstrap/js/bootstrap.min.js"></script>
-<!--[if lt IE 9]>
+    <script type="text/javascript" src="plugins/underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="plugins/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="plugins/bootstrap/js/bootstrap.min.js"></script>
+    <!--[if lt IE 9]>
 <script src="plugins/html5shiv/html5shiv.min.js"></script>
 <![endif]-->
-<!--<script type="text/javascript" src="js/json2.js"></script>-->
+    <!--<script type="text/javascript" src="js/json2.js"></script>-->
 
-<script type="text/javascript" src="plugins/gritter/js/jquery.gritter.js"></script>
+    <script type="text/javascript" src="plugins/gritter/js/jquery.gritter.js"></script>
 
-<script type="text/javascript" src="plugins/keypress/keypress.min.js"></script>
+    <script type="text/javascript" src="plugins/keypress/keypress.min.js"></script>
 
-<script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/config.js"></script>
 
 
-<script type="text/javascript">
-</script>
+    <script type="text/javascript">
+    </script>
 
 </body>
+
 </html>

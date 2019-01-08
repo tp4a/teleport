@@ -92,7 +92,7 @@ public:
 
 	int Count(void) const
 	{
-		return m_secs.size();
+		return (int)(m_secs.size());
 	}
 	void Save(int codepage = EX_CODEPAGE_UTF8);
 #ifdef EX_DEBUG

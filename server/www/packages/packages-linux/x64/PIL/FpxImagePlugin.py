@@ -81,7 +81,7 @@ class FpxImageFile(ImageFile.ImageFile):
 
         # size (highest resolution)
 
-        self.size = prop[0x1000002], prop[0x1000003]
+        self._size = prop[0x1000002], prop[0x1000003]
 
         size = max(self.size)
         i = 1
@@ -114,8 +114,6 @@ class FpxImageFile(ImageFile.ImageFile):
             if id in prop:
                 self.jpeg[i] = prop[id]
 
-        # print(len(self.jpeg), "tables loaded")
-
         self._open_subimage(1, self.maxid)
 
     def _open_subimage(self, index=1, subimage=0):
@@ -142,8 +140,6 @@ class FpxImageFile(ImageFile.ImageFile):
         # channels = i32(s, 24)
         offset = i32(s, 28)
         length = i32(s, 32)
-
-        # print(size, self.mode, self.rawmode)
 
         if size != self.size:
             raise IOError("subimage mismatch")

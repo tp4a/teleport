@@ -36,7 +36,7 @@
 <div class="page-content">
     <div class="info-box">
         <div class="info-icon-box">
-            <i id="icon-bg"></i>
+            <i class="fa fa-key" style="color:#ffa043;"></i>
         </div>
         <div class="info-message-box">
             <div id="title" class="title">设置密码</div>

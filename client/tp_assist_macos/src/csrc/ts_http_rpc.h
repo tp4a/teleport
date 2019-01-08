@@ -14,29 +14,38 @@
 
 /*
 //=================================================================
-接口使用说明：
 
-本程序启动后，监听 127.0.0.1:50022，接收http请求，请求格式要求如下：
+ # HTTP-RPC-INTERFACE:
+ 
+ listen on http://localhost:50022 and https://localhost:50023.
+ 
+ ----------------
+ GET method:
+ http://127.0.0.1:50022/method/json_param
+ 
+ here `json_param` is string in json format and encoded by url_encode().
 
-GET 方式
-http://127.0.0.1:50022/method/json_param
-其中json_param是使用url_encode进行编码后的json格式字符串
+ ----------------
+ POST method
+ http://127.0.0.1:50022/method
 
-POST 方式
-http://127.0.0.1:50022/method
-post的数据区域是json_param
+ here the data field of POST should be json_param.
+ 
+ 
+ ## URI detail:
+ 
+  - method          the method to request to execute.
+  - json_param      param of the method and it is optional.
 
-其中，URI分为三个部分：
-method			请求执行的任务方法。
-json_param		此任务方法的附加参数，如果没有附加参数，这部分可以省略。
+ ## RESULT
 
-返回格式：执行结束后，返回一个json格式的字符串给请求者，格式如下：
+ A string in json format should returned with following format:
+ 
+ {"code":0,"data":varb}
 
-{"code":0,"data":varb}
-
-其中，code是必有的，其值是一个错误编码，0表示成功。如果失败，则可能没有data域。操作成功时，data域就是
-操作的返回数据，其格式根据具体执行的任务方法不同而不同。
-
+ `code` field always exists and 0 means success.
+ `data` field is optional.
+ 
 */
 
 int http_rpc_start(void* app);
@@ -50,7 +59,8 @@ public:
 	TsHttpRpc();
 	~TsHttpRpc();
 
-	bool init(const char* ip, int port);
+    bool init_http();
+    bool init_https();
 
 	ex_astr get_content_type(ex_astr file_suffix)
 	{
@@ -67,7 +77,10 @@ public:
 
 protected:
 	void _thread_loop(void);
-	void _set_stop_flag(void);
+//    void _set_stop_flag(void);
+//    void _on_stop();
+    
+    bool _on_init();
 	
 private:
 	int _parse_request(struct http_message* req, ex_astr& func_cmd, ex_astr& func_args);

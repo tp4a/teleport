@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import hashlib
 import json
 import shutil
 
@@ -17,8 +18,10 @@ from app.model import syslog
 from app.model import record
 from app.model import ops
 from app.model import audit
+from app.model import user
 from app.base.core_server import core_service_async_post_http
 from app.base.session import tp_session
+from app.logic.auth.ldap import Ldap
 
 
 class DoGetTimeHandler(TPBaseJsonHandler):
@@ -241,6 +244,9 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 _sender = _cfg['sender']
                 _password = _cfg['password']
 
+                # TODO: encrypt the password before save by core-service.
+                # TODO: if not send password, use pre-saved password.
+
                 err = system_model.save_config(self, '更新SMTP设置', 'smtp', _cfg)
                 if err == TPE_OK:
                     # 同时更新内存缓存
@@ -251,7 +257,20 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                     # 特殊处理，防止前端拿到密码
                     tp_cfg().sys_smtp_password = _password
                 else:
+                    return self.write_json(err)            
+            
+            #增加urlprotocol的配置		
+            if 'global' in args:
+                processed = True
+                _cfg = args['global']
+                _url_proto = _cfg['url_proto']
+                
+                err = system_model.save_config(self, '更新全局设置', 'global', _cfg)
+                if err == TPE_OK:
+                    tp_cfg().sys.glob.url_proto = _url_proto
+                else:
                     return self.write_json(err)
+            
 
             if 'password' in args:
                 processed = True
@@ -332,6 +351,44 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)
 
+            if 'ldap' in args:
+                processed = True
+                _cfg = args['ldap']
+                # _password = _cfg['password']
+                _server = _cfg['server']
+                _port = _cfg['port']
+                _domain = _cfg['domain']
+                _admin = _cfg['admin']
+                _base_dn = _cfg['base_dn']
+                _filter = _cfg['filter']
+                _attr_username = _cfg['attr_username']
+                _attr_surname = _cfg['attr_surname']
+                _attr_email = _cfg['attr_email']
+
+                if len(_cfg['password']) == 0:
+                    _cfg['password'] = tp_cfg().sys_ldap_password
+
+                if len(_cfg['password']) == 0:
+                    return self.write_json(TPE_PARAM, '请设置LDAP管理员密码')
+
+                # TODO: encrypt the password before save by core-service.
+
+                err = system_model.save_config(self, '更新LDAP设置', 'ldap', _cfg)
+                if err == TPE_OK:
+                    tp_cfg().sys.ldap.server = _server
+                    tp_cfg().sys.ldap.port = _port
+                    tp_cfg().sys.ldap.domain = _domain
+                    tp_cfg().sys.ldap.admin = _admin
+                    tp_cfg().sys.ldap.base_dn = _base_dn
+                    tp_cfg().sys.ldap.filter = _filter
+                    tp_cfg().sys.ldap.attr_username = _attr_username
+                    tp_cfg().sys.ldap.attr_surname = _attr_surname
+                    tp_cfg().sys.ldap.attr_email = _attr_email
+                    # 特殊处理，防止前端拿到密码
+                    tp_cfg().sys_ldap_password = _cfg['password']
+                else:
+                    return self.write_json(err)
+
             if not processed:
                 return self.write_json(TPE_PARAM)
 
@@ -381,6 +438,302 @@ class DoSendTestMailHandler(TPBaseJsonHandler):
         self.write_json(code, message=msg)
 
 
+class DoLdapListUserAttrHandler(TPBaseJsonHandler):
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            cfg = args['ldap']
+            cfg['port'] = int(cfg['port'])
+            if len(cfg['password']) == 0:
+                if len(tp_cfg().sys_ldap_password) == 0:
+                    return self.write_json(TPE_PARAM, message='需要设置LDAP管理员密码')
+                else:
+                    cfg['password'] = tp_cfg().sys_ldap_password
+        except:
+            return self.write_json(TPE_PARAM)
+
+        try:
+            ldap = Ldap(cfg['server'], cfg['port'], cfg['base_dn'])
+            ret, data, err_msg = ldap.get_all_attr(cfg['admin'], cfg['password'], cfg['filter'])
+            if ret != TPE_OK:
+                return self.write_json(ret, message=err_msg)
+            else:
+                return self.write_json(ret, data=data)
+        except:
+            log.e('')
+            return self.write_json(TPE_PARAM)
+
+
+class DoLdapConfigTestHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            cfg = args['ldap']
+            cfg['port'] = int(cfg['port'])
+            if len(cfg['password']) == 0:
+                if len(tp_cfg().sys_ldap_password) == 0:
+                    return self.write_json(TPE_PARAM, message='需要设置LDAP管理员密码')
+                else:
+                    cfg['password'] = tp_cfg().sys_ldap_password
+        except:
+            return self.write_json(TPE_PARAM)
+
+        try:
+            ldap = Ldap(cfg['server'], cfg['port'], cfg['base_dn'])
+            ret, data, err_msg = ldap.list_users(
+                cfg['admin'], cfg['password'], cfg['filter'],
+                cfg['attr_username'], cfg['attr_surname'], cfg['attr_email'],
+                size_limit=10
+            )
+
+            if ret != TPE_OK:
+                return self.write_json(ret, message=err_msg)
+            else:
+                return self.write_json(ret, data=data)
+        except:
+            log.e('')
+            return self.write_json(TPE_PARAM)
+
+
+class DoLdapGetUsersHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            if len(tp_cfg().sys_ldap_password) == 0:
+                return self.write_json(TPE_PARAM, message='LDAP未能正确配置，需要管理员密码')
+            else:
+                _password = tp_cfg().sys_ldap_password
+            _server = tp_cfg().sys.ldap.server
+            _port = tp_cfg().sys.ldap.port
+            _admin = tp_cfg().sys.ldap.admin
+            _base_dn = tp_cfg().sys.ldap.base_dn
+            _filter = tp_cfg().sys.ldap.filter
+            _attr_username = tp_cfg().sys.ldap.attr_username
+            _attr_surname = tp_cfg().sys.ldap.attr_surname
+            _attr_email = tp_cfg().sys.ldap.attr_email
+        except:
+            return self.write_json(TPE_PARAM)
+
+        try:
+            ldap = Ldap(_server, _port, _base_dn)
+            ret, data, err_msg = ldap.list_users(_admin, _password, _filter, _attr_username, _attr_surname, _attr_email)
+            if ret != TPE_OK:
+                return self.write_json(ret, message=err_msg)
+
+            exits_users = user.get_users_by_type(TP_USER_TYPE_LDAP)
+            bound_users = []
+            for u in exits_users:
+                h = hashlib.sha1()
+                h.update(u['ldap_dn'].encode())
+                bound_users.append(h.hexdigest())
+
+            ret_data = []
+            for u in data:
+                h = hashlib.sha1()
+                h.update(u.encode())
+                _id = h.hexdigest()
+                if _id in bound_users:
+                    continue
+
+                _user = data[u]
+                _user['id'] = h.hexdigest()
+                ret_data.append(_user)
+            return self.write_json(ret, data=ret_data)
+        except:
+            log.e('')
+            return self.write_json(TPE_PARAM)
+
+
+class DoLdapImportHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_USER_CREATE)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            dn_hash_list = args['ldap_users']
+
+            if len(tp_cfg().sys_ldap_password) == 0:
+                return self.write_json(TPE_PARAM, message='LDAP未能正确配置，需要管理员密码')
+            else:
+                _password = tp_cfg().sys_ldap_password
+            _server = tp_cfg().sys.ldap.server
+            _port = tp_cfg().sys.ldap.port
+            _admin = tp_cfg().sys.ldap.admin
+            _base_dn = tp_cfg().sys.ldap.base_dn
+            _filter = tp_cfg().sys.ldap.filter
+            _attr_username = tp_cfg().sys.ldap.attr_username
+            _attr_surname = tp_cfg().sys.ldap.attr_surname
+            _attr_email = tp_cfg().sys.ldap.attr_email
+        except:
+            return self.write_json(TPE_PARAM)
+
+        try:
+            ldap = Ldap(_server, _port, _base_dn)
+            ret, data, err_msg = ldap.list_users(_admin, _password, _filter, _attr_username, _attr_surname, _attr_email)
+
+            if ret != TPE_OK:
+                return self.write_json(ret, message=err_msg)
+
+            need_import = []
+            for u in data:
+                h = hashlib.sha1()
+                h.update(u.encode())
+
+                dn_hash = h.hexdigest()
+                for x in dn_hash_list:
+                    if x == dn_hash:
+                        _user = data[u]
+                        _user['dn'] = u
+                        need_import.append(_user)
+                        break
+
+            if len(need_import) == 0:
+                return self.write_json(ret, message='没有可以导入的LDAP用户')
+
+            return self._do_import(need_import)
+        except:
+            log.e('')
+            return self.write_json(TPE_PARAM)
+
+    def _do_import(self, users):
+        success = list()
+        failed = list()
+        try:
+            user_list = []
+            for _u in users:
+                if 'surname' not in _u:
+                    _u['surname'] = _u['username']
+                if 'email' not in _u:
+                    _u['email'] = ''
+
+                u = dict()
+                u['_line'] = 0
+                u['_id'] = 0
+                u['type'] = TP_USER_TYPE_LDAP
+                u['ldap_dn'] = _u['dn']
+                u['username'] = '{}@{}'.format(_u['username'], tp_cfg().sys.ldap.domain)
+                u['surname'] = _u['surname']
+                u['email'] = _u['email']
+                u['mobile'] = ''
+                u['qq'] = ''
+                u['wechat'] = ''
+                u['desc'] = ''
+                u['password'] = ''
+
+                # fix
+                if len(u['surname']) == 0:
+                    u['surname'] = u['username']
+                u['username'] = u['username'].lower()
+
+                user_list.append(u)
+
+            print(user_list)
+            user.create_users(self, user_list, success, failed)
+
+            # 对于创建成功的用户，发送密码邮件函
+            sys_smtp_password = tp_cfg().sys_smtp_password
+            if len(sys_smtp_password) > 0:
+                web_url = '{}://{}'.format(self.request.protocol, self.request.host)
+                for u in user_list:
+                    if u['_id'] == 0 or len(u['email']) == 0:
+                        continue
+                    u['email'] = 'apex.liu@qq.com'
+
+                    mail_body = '{surname} 您好！\n\n已为您创建teleport系统用户账号，现在可以使用以下信息登录teleport系统：\n\n' \
+                                '登录用户名：{username}\n' \
+                                '密码：您正在使用的域登录密码\n' \
+                                '地址：{web_url}\n\n\n\n' \
+                                '[本邮件由teleport系统自动发出，请勿回复]' \
+                                '\n\n' \
+                                ''.format(surname=u['surname'], username=u['username'], web_url=web_url)
+
+                    err, msg = yield mail.tp_send_mail(u['email'], mail_body, subject='用户密码函')
+                    if err != TPE_OK:
+                        failed.append({'line': u['_line'], 'error': '无法发送密码函到邮箱 {}，错误：{}。'.format(u['email'], msg)})
+
+            # 统计结果
+            total_success = 0
+            total_failed = 0
+            for u in user_list:
+                if u['_id'] == 0:
+                    total_failed += 1
+                else:
+                    total_success += 1
+
+            # 生成最终结果信息
+            if len(failed) == 0:
+                # ret['code'] = TPE_OK
+                # ret['message'] = '共导入 {} 个用户账号！'.format(total_success)
+                return self.write_json(TPE_OK, message='共导入 {} 个用户账号！'.format(total_success))
+            else:
+                # ret['code'] = TPE_FAILED
+                msg = ''
+                if total_success > 0:
+                    msg = '{} 个用户账号导入成功，'.format(total_success)
+                if total_failed > 0:
+                    msg += '{} 个用户账号未能导入！'.format(total_failed)
+
+                # ret['data'] = failed
+                return self.write_json(TPE_FAILED, data=failed, message=msg)
+
+        except:
+            log.e('got exception when import LDAP user.\n')
+            # ret['code'] = TPE_FAILED
+            msg = ''
+            if len(success) > 0:
+                msg += '{} 个用户账号导入后发生异常！'.format(len(success))
+            else:
+                msg = '发生异常！'
+
+            # ret['data'] = failed
+            return self.write_json(TPE_FAILED, data=failed, message=msg)
+
+
 class DoCleanupStorageHandler(TPBaseJsonHandler):
     @tornado.gen.coroutine
     def post(self):
@@ -411,5 +764,3 @@ class DoRebuildAuditAuzMapHandler(TPBaseJsonHandler):
 
         err = ops.build_auz_map()
         self.write_json(err)
-
-

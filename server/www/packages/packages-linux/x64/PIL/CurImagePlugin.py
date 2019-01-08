@@ -56,14 +56,6 @@ class CurImageFile(BmpImagePlugin.BmpImageFile):
                 m = s
             elif i8(s[0]) > i8(m[0]) and i8(s[1]) > i8(m[1]):
                 m = s
-            # print("width", i8(s[0]))
-            # print("height", i8(s[1]))
-            # print("colors", i8(s[2]))
-            # print("reserved", i8(s[3]))
-            # print("hotspot x", i16(s[4:]))
-            # print("hotspot y", i16(s[6:]))
-            # print("bytes", i32(s[8:]))
-            # print("offset", i32(s[12:]))
         if not m:
             raise TypeError("No cursors were found")
 
@@ -71,7 +63,7 @@ class CurImageFile(BmpImagePlugin.BmpImageFile):
         self._bitmap(i32(m[12:]) + offset)
 
         # patch up the bitmap height
-        self.size = self.size[0], self.size[1]//2
+        self._size = self.size[0], self.size[1]//2
         d, e, o, a = self.tile[0]
         self.tile[0] = d, (0, 0)+self.size, o, a
 

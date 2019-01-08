@@ -1,6 +1,6 @@
 "use strict";
 
-var g_url_base = 'http://127.0.0.1:50022';
+var g_url_base = 'http://localhost:50022';
 
 var g_cfg = null;
 

@@ -103,8 +103,6 @@ class IptcImageFile(ImageFile.ImageFile):
             else:
                 self.info[tag] = tagdata
 
-            # print(tag, self.info[tag])
-
         # mode
         layers = i8(self.info[(3, 60)][0])
         component = i8(self.info[(3, 60)][1])
@@ -120,7 +118,7 @@ class IptcImageFile(ImageFile.ImageFile):
             self.mode = "CMYK"[id]
 
         # size
-        self.size = self.getint((3, 20)), self.getint((3, 30))
+        self._size = self.getint((3, 20)), self.getint((3, 30))
 
         # compression
         try:

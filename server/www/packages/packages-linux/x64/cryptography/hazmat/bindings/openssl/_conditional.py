@@ -98,6 +98,18 @@ def cryptography_has_102_verification_params():
         "X509_VERIFY_PARAM_set1_ip",
         "X509_VERIFY_PARAM_set1_ip_asc",
         "X509_VERIFY_PARAM_set_hostflags",
+        "SSL_get0_param",
+        "X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT",
+        "X509_CHECK_FLAG_NO_WILDCARDS",
+        "X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS",
+        "X509_CHECK_FLAG_MULTI_LABEL_WILDCARDS",
+        "X509_CHECK_FLAG_SINGLE_LABEL_SUBDOMAINS"
+    ]
+
+
+def cryptography_has_110_verification_params():
+    return [
+        "X509_CHECK_FLAG_NEVER_CHECK_SUBJECT"
     ]
 
 
@@ -143,6 +155,7 @@ def cryptography_has_locking_callbacks():
         "CRYPTO_READ",
         "CRYPTO_LOCK_SSL",
         "CRYPTO_lock",
+        "Cryptography_setup_ssl_threads",
     ]
 
 
@@ -181,11 +194,19 @@ def cryptography_has_sct():
         "SCT_get_version",
         "SCT_get_log_entry_type",
         "SCT_get0_log_id",
+        "SCT_get0_signature",
         "SCT_get_timestamp",
         "SCT_set_source",
         "sk_SCT_num",
         "sk_SCT_value",
         "SCT_LIST_free",
+        "sk_SCT_push",
+        "sk_SCT_new_null",
+        "SCT_new",
+        "SCT_set1_log_id",
+        "SCT_set_timestamp",
+        "SCT_set_version",
+        "SCT_set_log_entry_type",
     ]
 
 
@@ -200,6 +221,19 @@ def cryptography_has_x25519():
     return [
         "EVP_PKEY_X25519",
         "NID_X25519",
+    ]
+
+
+def cryptography_has_ed25519():
+    return [
+        "NID_ED25519",
+    ]
+
+
+def cryptography_has_oneshot_evp_digest_sign_verify():
+    return [
+        "EVP_DigestSign",
+        "EVP_DigestVerify",
     ]
 
 
@@ -246,6 +280,27 @@ def cryptography_has_openssl_cleanup():
     ]
 
 
+def cryptography_has_cipher_details():
+    return [
+        "SSL_CIPHER_is_aead",
+        "SSL_CIPHER_get_cipher_nid",
+        "SSL_CIPHER_get_digest_nid",
+        "SSL_CIPHER_get_kx_nid",
+        "SSL_CIPHER_get_auth_nid",
+    ]
+
+
+def cryptography_has_tlsv13():
+    return [
+        "SSL_OP_NO_TLSv1_3",
+        "SSL_VERIFY_POST_HANDSHAKE",
+        "SSL_CTX_set_ciphersuites",
+        "SSL_verify_client_post_handshake",
+        "SSL_CTX_set_post_handshake_auth",
+        "SSL_set_post_handshake_auth",
+    ]
+
+
 # This is a mapping of
 # {condition: function-returning-names-dependent-on-that-condition} so we can
 # loop over them and delete unsupported names at runtime. It will be removed
@@ -270,6 +325,9 @@ CONDITIONAL_NAMES = {
     "Cryptography_HAS_102_VERIFICATION_PARAMS": (
         cryptography_has_102_verification_params
     ),
+    "Cryptography_HAS_110_VERIFICATION_PARAMS": (
+        cryptography_has_110_verification_params
+    ),
     "Cryptography_HAS_X509_V_FLAG_TRUSTED_FIRST": (
         cryptography_has_x509_v_flag_trusted_first
     ),
@@ -291,6 +349,10 @@ CONDITIONAL_NAMES = {
         cryptography_has_x509_store_ctx_get_issuer
     ),
     "Cryptography_HAS_X25519": cryptography_has_x25519,
+    "Cryptography_HAS_ED25519": cryptography_has_ed25519,
+    "Cryptography_HAS_ONESHOT_EVP_DIGEST_SIGN_VERIFY": (
+        cryptography_has_oneshot_evp_digest_sign_verify
+    ),
     "Cryptography_HAS_EVP_PKEY_get_set_tls_encodedpoint": (
         cryptography_has_evp_pkey_get_set_tls_encodedpoint
     ),
@@ -299,4 +361,6 @@ CONDITIONAL_NAMES = {
     "Cryptography_HAS_PSK": cryptography_has_psk,
     "Cryptography_HAS_CUSTOM_EXT": cryptography_has_custom_ext,
     "Cryptography_HAS_OPENSSL_CLEANUP": cryptography_has_openssl_cleanup,
+    "Cryptography_HAS_CIPHER_DETAILS": cryptography_has_cipher_details,
+    "Cryptography_HAS_TLSv1_3": cryptography_has_tlsv13,
 }

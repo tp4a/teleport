@@ -107,11 +107,19 @@ class DoLoginHandler(TPBaseJsonHandler):
                               ]:
             oath = None
 
+        # 检查用户名合法性，防止SQL注入攻击
+        if '<' in username or '>' in username:
+            username = username.replace('<', '&lt;')
+            username = username.replace('>', '&gt;')
+            err = TPE_USER_AUTH
+            syslog.sys_log({'username': '???', 'surname': '???'}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，可能是攻击行为。试图使用用户名 {} 进行登录。'.format(username))
+            return self.write_json(err)
+
         err, user_info = user.login(self, username, password=password, oath_code=oath)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH
-                syslog.sys_log({'username': username, 'surname': username}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
+                syslog.sys_log({'username': '???', 'surname': '???'}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
             return self.write_json(err)
 
         # 判断此用户是否被允许使用当前登录认证方式
@@ -121,54 +129,6 @@ class DoLoginHandler(TPBaseJsonHandler):
 
         if (auth_type & login_type) != login_type:
             return self.write_json(TPE_USER_AUTH, '不允许使用此身份认证方式')
-
-        # err, user_info = user.get_by_username(username)
-        # if err != TPE_OK:
-        #     if err == TPE_NOT_EXISTS:
-        #         syslog.sys_log({'username': username, 'surname': username}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
-        #     return self.write_json(err)
-        #
-        # if user_info.privilege == 0:
-        #     # 尚未为此用户设置角色
-        #     return self.write_json(TPE_PRIVILEGE, '用户尚未分配角色')
-        #
-        # if user_info['state'] == TP_STATE_LOCKED:
-        #     # 用户已经被锁定，如果系统配置为一定时间后自动解锁，则更新一下用户信息
-        #     if sys_cfg.login.lock_timeout != 0:
-        #         if tp_timestamp_utc_now() - user_info.lock_time > sys_cfg.login.lock_timeout * 60:
-        #             user_info.fail_count = 0
-        #             user_info.state = TP_STATE_NORMAL
-        #     if user_info['state'] == TP_STATE_LOCKED:
-        #         syslog.sys_log(user_info, self.request.remote_ip, TPE_USER_LOCKED, '登录失败，用户已被锁定')
-        #         return self.write_json(TPE_USER_LOCKED)
-        # elif user_info['state'] == TP_STATE_DISABLED:
-        #     syslog.sys_log(user_info, self.request.remote_ip, TPE_USER_DISABLED, '登录失败，用户已被禁用')
-        #     return self.write_json(TPE_USER_DISABLED)
-        # elif user_info['state'] != TP_STATE_NORMAL:
-        #     syslog.sys_log(user_info, self.request.remote_ip, TPE_FAILED, '登录失败，系统内部错误')
-        #     return self.write_json(TPE_FAILED)
-        #
-        # err_msg = ''
-        # if login_type in [TP_LOGIN_AUTH_USERNAME_PASSWORD, TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
-        #     # 如果系统配置了密码有效期，则检查用户的密码是否失效
-        #     if sys_cfg.password.timeout != 0:
-        #         pass
-        #
-        #     if not tp_password_verify(password, user_info['password']):
-        #         err, is_locked = user.update_fail_count(self, user_info)
-        #         if is_locked:
-        #             err_msg = '用户被临时锁定！'
-        #         syslog.sys_log(user_info, self.request.remote_ip, TPE_USER_AUTH, '登录失败，密码错误！{}'.format(err_msg))
-        #         return self.write_json(TPE_USER_AUTH)
-        #
-        # if login_type in [TP_LOGIN_AUTH_USERNAME_OATH, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
-        #     # use oath
-        #     if not tp_oath_verify_code(user_info['oath_secret'], oath):
-        #         err, is_locked = user.update_fail_count(self, user_info)
-        #         if is_locked:
-        #             err_msg = '用户被临时锁定！'
-        #         syslog.sys_log(user_info, self.request.remote_ip, TPE_OATH_MISMATCH, "登录失败，身份验证器动态验证码错误！{}".format(err_msg))
-        #         return self.write_json(TPE_OATH_MISMATCH)
 
         self._user = user_info
         self._user['_is_login'] = True

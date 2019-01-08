@@ -174,7 +174,7 @@ EX_BOOL ex_copy_file(const wchar_t* from_file, const wchar_t* to_file) {
 
 	if (S_ISLNK(src_stat.st_mode)) {
 		char lnk[1024] = {0};
-		int lnk_size;
+		ssize_t lnk_size;
 		if ((lnk_size = readlink(source.c_str(), lnk, 1023)) == -1)
 			return EX_FALSE;
 		lnk[lnk_size] = '\0';
@@ -182,9 +182,9 @@ EX_BOOL ex_copy_file(const wchar_t* from_file, const wchar_t* to_file) {
 			return EX_FALSE;
 	}
 	else if (S_ISREG(src_stat.st_mode)) {
-		int src, dst;
-		int rsize;
-		char buf[1024];
+		int src = -1, dst = -1;
+		ssize_t rsize = 0;
+		char buf[1024] = {0};
 		if ((src = open(source.c_str(), O_RDONLY)) == -1) {
 			close(dst);
 			return EX_FALSE;
@@ -409,7 +409,7 @@ bool ex_abspath(ex_wstr& inout_path)
 	return true;
 }
 
-bool ex_path_join(ex_wstr& inout_path, bool auto_abspath, ...)
+bool ex_path_join(ex_wstr& inout_path, EX_BOOL auto_abspath, ...)
 {
 	wchar_t* tmp;
 

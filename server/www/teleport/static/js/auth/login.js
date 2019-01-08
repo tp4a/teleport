@@ -199,6 +199,7 @@ $app.login_account = function () {
             function () {
                 $app.hide_op_box();
                 $app.show_op_box('error', '很抱歉，无法连接服务器！请稍后再试一次！');
+                $app.dom.captcha_image.attr('src', '/auth/captcha?h=36&rnd=' + Math.random());
                 $app.dom.btn_login.removeAttr('disabled');
             }
         );
@@ -216,6 +217,7 @@ $app.do_account_login = function (username, password, captcha, oath, is_remember
             } else {
                 $app.hide_op_box();
                 $app.show_op_box('error', '登录失败：' + tp_error_msg(ret.code, ret.message));
+                $app.dom.captcha_image.attr('src', '/auth/captcha?h=36&rnd=' + Math.random());
                 console.log(ret);
             }
 
@@ -224,6 +226,7 @@ $app.do_account_login = function (username, password, captcha, oath, is_remember
         function () {
             $app.hide_op_box();
             $app.show_op_box('error', '很抱歉，无法连接服务器！请稍后再试！');
+            $app.dom.captcha_image.attr('src', '/auth/captcha?h=36&rnd=' + Math.random());
             $app.dom.btn_login.removeAttr('disabled');
         }
     );

@@ -1,9 +1,3 @@
-//#include "stdafx.h"
-
-//#pragma warning(disable:4091)
-
-//#include <commdlg.h>
-//#include <ShlObj.h>
 #include <unistd.h>
 
 #include <teleport_const.h>
@@ -15,7 +9,6 @@
 #include "../AppDelegate-C-Interface.h"
 
 #include "ts_http_rpc.h"
-//#include "dlg_main.h"
 #include "ts_ver.h"
 #include "ts_env.h"
 #include "ts_cfg.h"
@@ -25,33 +18,44 @@
 #define RDP_CLIENT_FREERDP
 
 TsHttpRpc g_http_interface;
+TsHttpRpc g_https_interface;
 
 void* g_app = NULL;
 
 int http_rpc_start(void* app) {
 	g_app = app;
-	
-//	if(!g_env.init())
-//		return;
 
-	if (!g_http_interface.init(TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT))
+    EXLOGW("======================================================\n");
+
+    if (!g_http_interface.init_http())
 	{
 		EXLOGE("[ERROR] can not start HTTP-RPC listener, maybe port %d is already in use.\n", TS_HTTP_RPC_PORT);
 		return -1;
 	}
 	
-	EXLOGW("======================================================\n");
-	EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on %s:%d\n", TS_HTTP_RPC_HOST, TS_HTTP_RPC_PORT);
+	EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on localhost:%d\n", TS_HTTP_RPC_PORT);
 	
 	if(!g_http_interface.start())
 		return -2;
 
-	return 0;
+    if (!g_https_interface.init_https())
+    {
+        EXLOGE("[ERROR] can not start HTTPS-RPC listener, maybe port %d is already in use.\n", TS_HTTPS_RPC_PORT);
+        return -1;
+    }
+    
+    EXLOGW("[rpc] TeleportAssist-HTTPS-RPC ready on localhost:%d\n", TS_HTTPS_RPC_PORT);
+    
+    if(!g_https_interface.start())
+        return -2;
+
+    return 0;
 }
 
 void http_rpc_stop(void)
 {
-	g_http_interface.stop();
+    g_http_interface.stop();
+    g_https_interface.stop();
 }
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
@@ -102,45 +106,79 @@ TsHttpRpc::~TsHttpRpc()
 	mg_mgr_free(&m_mg_mgr);
 }
 
-bool TsHttpRpc::init(const char* ip, int port)
+bool TsHttpRpc::init_http()
 {
-	struct mg_connection* nc = NULL;
+    
+    char addr[128] = { 0 };
+    ex_strformat(addr, 128, "tcp://localhost:%d", TS_HTTP_RPC_PORT);
+    
+    struct mg_connection* nc = NULL;
+    nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
+    if (nc == NULL) {
+        EXLOGE("[rpc] TsHttpRpc::init_http() localhost:%d\n", TS_HTTP_RPC_PORT);
+        return false;
+    }
+    nc->user_data = this;
+    
+    mg_set_protocol_http_websocket(nc);
+    
+    return _on_init();
+}
 
-	char addr[128] = { 0 };
-	if (0 == strcmp(ip, "127.0.0.1") || 0 == strcmp(ip, "localhost"))
-		ex_strformat(addr, 128, "tcp://127.0.0.1:%d", port);
-	else
-		ex_strformat(addr, 128, "tcp://%s:%d", ip, port);
+bool TsHttpRpc::init_https()
+{
+    ex_wstr file_ssl_cert = g_env.m_res_path;
+    ex_path_join(file_ssl_cert, false, L"localhost.pem", NULL);
+    ex_wstr file_ssl_key = g_env.m_res_path;
+    ex_path_join(file_ssl_key, false, L"localhost.key", NULL);
+    ex_astr _ssl_cert;
+    ex_wstr2astr(file_ssl_cert, _ssl_cert);
+    ex_astr _ssl_key;
+    ex_wstr2astr(file_ssl_key, _ssl_key);
+    
+    const char *err = NULL;
+    struct mg_bind_opts bind_opts;
+    memset(&bind_opts, 0, sizeof(bind_opts));
+    bind_opts.ssl_cert = _ssl_cert.c_str();
+    bind_opts.ssl_key = _ssl_key.c_str();
+    bind_opts.error_string = &err;
+    
+    char addr[128] = { 0 };
+    ex_strformat(addr, 128, "tcp://localhost:%d", TS_HTTPS_RPC_PORT);
 
-	nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
-	if (nc == NULL)
-	{
-		EXLOGE("[rpc] TsHttpRpc::init %s:%d\n", ip, port);
-		return false;
-	}
-	nc->user_data = this;
+    struct mg_connection* nc = NULL;
+    nc = mg_bind_opt(&m_mg_mgr, addr, _mg_event_handler, bind_opts);
+    if (nc == NULL) {
+        EXLOGE("[rpc] TsHttpRpc::init_https() localhost:%d\n", TS_HTTPS_RPC_PORT);
+        return false;
+    }
+    nc->user_data = this;
+    
+    mg_set_protocol_http_websocket(nc);
+    
+    return _on_init();
+}
 
-	mg_set_protocol_http_websocket(nc);
+bool TsHttpRpc::_on_init() {
+    m_content_type_map[".js"] = "application/javascript";
+    m_content_type_map[".png"] = "image/png";
+    m_content_type_map[".jpeg"] = "image/jpeg";
+    m_content_type_map[".jpg"] = "image/jpeg";
+    m_content_type_map[".gif"] = "image/gif";
+    m_content_type_map[".ico"] = "image/x-icon";
+    m_content_type_map[".json"] = "image/json";
+    m_content_type_map[".html"] = "text/html";
+    m_content_type_map[".css"] = "text/css";
+    m_content_type_map[".tif"] = "image/tiff";
+    m_content_type_map[".tiff"] = "image/tiff";
+    m_content_type_map[".svg"] = "text/html";
 
-	m_content_type_map[".js"] = "application/javascript";
-	m_content_type_map[".png"] = "image/png";
-	m_content_type_map[".jpeg"] = "image/jpeg";
-	m_content_type_map[".jpg"] = "image/jpeg";
-	m_content_type_map[".gif"] = "image/gif";
-	m_content_type_map[".ico"] = "image/x-icon";
-	m_content_type_map[".json"] = "image/json";
-	m_content_type_map[".html"] = "text/html";
-	m_content_type_map[".css"] = "text/css";
-	m_content_type_map[".tif"] = "image/tiff";
-	m_content_type_map[".tiff"] = "image/tiff";
-	m_content_type_map[".svg"] = "text/html";
-
-	return true;
+    return true;
 }
 
 void TsHttpRpc::_thread_loop(void)
 {
-	while (!m_stop_flag)
+	while (!m_need_stop)
 	{
 		mg_mgr_poll(&m_mg_mgr, 500);
 	}
@@ -148,10 +186,10 @@ void TsHttpRpc::_thread_loop(void)
 	EXLOGV("[core] rpc main loop end.\n");
 }
 
-void TsHttpRpc::_set_stop_flag(void)
-{
-	m_stop_flag = true;
-}
+//void TsHttpRpc::_set_stop_flag(void)
+//{
+//    m_stop_flag = true;
+//}
 
 void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_data)
 {
@@ -464,11 +502,15 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 	ex_astr teleport_ip = jsRoot["teleport_ip"].asCString();
 	int teleport_port = jsRoot["teleport_port"].asUInt();
+    char _port[64] = {0};
+    ex_strformat(_port, 64, "%d", teleport_port);
+    ex_astr str_teleport_port = _port;
 
 	ex_astr real_host_ip = jsRoot["remote_host_ip"].asCString();
 	ex_astr sid = jsRoot["session_id"].asCString();
 
 	ex_astr s_exec;
+    ex_astr s_arg;
 	ex_astrs s_argv;
 	
 	
@@ -478,7 +520,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		// RDP
 		//==============================================
 
-		if(g_cfg.rdp_app.length() == 0) {
+		if(g_cfg.rdp.application.length() == 0) {
 			_create_json_ret(buf, TPE_NOT_EXISTS);
 			return;
 		}
@@ -546,7 +588,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//w_exe_path = _T("/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp -u {user_name} {size} {console} ");
 		//w_exe_path = _T("xfreerdp -u {user_name} {size} {console} ");
 		//s_exec = "/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp";
-		s_exec = g_cfg.rdp_app;
+		s_exec = g_cfg.rdp.application;
 		s_argv.push_back(s_exec.c_str());
 
 		{
@@ -594,25 +636,49 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 
 		if (pro_sub == TP_PROTOCOL_TYPE_SSH_SHELL)
 		{
-			char szCmd[1024] = {0};
-			ex_strformat(szCmd, 1023, "ssh %s@%s -p %d", sid.c_str(), teleport_ip.c_str(), teleport_port);
-			
-			char szTitle[128] = {0};
-			ex_strformat(szTitle, 127, "TP#%s", real_host_ip.c_str());
-
-			int ret = AppDelegate_start_ssh_client(g_app, szCmd, g_cfg.term_name.c_str(), g_cfg.term_profile.c_str(), szTitle);
-			if(ret == 0)
-				_create_json_ret(buf, TPE_OK);
-			else
-				_create_json_ret(buf, TPE_FAILED);
-			return;
+            if(g_cfg.ssh.name == "terminal" || g_cfg.ssh.name == "iterm2") {
+                char szCmd[1024] = {0};
+                ex_strformat(szCmd, 1023, "ssh %s@%s -p %d", sid.c_str(), teleport_ip.c_str(), teleport_port);
+                
+                char szTitle[128] = {0};
+                ex_strformat(szTitle, 127, "TP#%s", real_host_ip.c_str());
+                
+                int ret = AppDelegate_start_ssh_client(g_app, szCmd, g_cfg.ssh.name.c_str(), g_cfg.ssh.cmdline.c_str(), szTitle);
+                if(ret == 0)
+                    _create_json_ret(buf, TPE_OK);
+                else
+                    _create_json_ret(buf, TPE_FAILED);
+                return;
+            }
+            
+            if(g_cfg.ssh.application.length() == 0) {
+                _create_json_ret(buf, TPE_NOT_EXISTS);
+                return;
+            }
+            
+            s_exec = g_cfg.ssh.application;
+            s_argv.push_back(s_exec.c_str());
+            
+            s_arg = g_cfg.ssh.cmdline;
 		}
 		else
 		{
+            
 			// sorry, SFTP not supported yet for macOS.
-			_create_json_ret(buf, TPE_NOT_IMPLEMENT);
-			return;
-		}
+//            _create_json_ret(buf, TPE_NOT_IMPLEMENT);
+//            return;
+
+            if(g_cfg.sftp.application.length() == 0) {
+                _create_json_ret(buf, TPE_NOT_EXISTS);
+                return;
+            }
+            
+            s_exec = g_cfg.sftp.application;
+            s_argv.push_back(s_exec.c_str());
+            
+            s_arg = g_cfg.sftp.cmdline;
+
+        }
 	}
 	else if (pro_type == TP_PROTOCOL_TYPE_TELNET)
 	{
@@ -621,74 +687,96 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//==============================================
 
 		// sorry, TELNET not supported yet for macOS.
-		_create_json_ret(buf, TPE_NOT_IMPLEMENT);
-		return;
-	}
+        _create_json_ret(buf, TPE_NOT_IMPLEMENT);
+        return;
 
-//	ex_replace_all(w_exe_path, _T("{host_port}"), w_port);
-//	ex_replace_all(w_exe_path, _T("{host_ip}"), w_teleport_ip.c_str());
-//	ex_replace_all(w_exe_path, _T("{user_name}"), w_sid.c_str());
-//	ex_replace_all(w_exe_path, _T("{real_ip}"), w_real_host_ip.c_str());
-	//ex_replace_all(w_exe_path, _T("{assist_tools_path}"), g_env.m_tools_path.c_str());
+//        if(g_cfg.telnet.name == "terminal" || g_cfg.telnet.name == "iterm2") {
+//            char szCmd[1024] = {0};
+//            ex_strformat(szCmd, 1023, "telnet -l %s %s %d", sid.c_str(), teleport_ip.c_str(), teleport_port);
+//
+//            char szTitle[128] = {0};
+//            ex_strformat(szTitle, 127, "TP#%s", real_host_ip.c_str());
+//
+//            int ret = AppDelegate_start_ssh_client(g_app, szCmd, g_cfg.telnet.name.c_str(), g_cfg.telnet.cmdline.c_str(), szTitle);
+//            if(ret == 0)
+//                _create_json_ret(buf, TPE_OK);
+//            else
+//                _create_json_ret(buf, TPE_FAILED);
+//            return;
+//        }
+//
+//        if(g_cfg.telnet.application.length() == 0) {
+//            _create_json_ret(buf, TPE_NOT_EXISTS);
+//            return;
+//        }
+//
+//        s_exec = g_cfg.telnet.application;
+//        s_argv.push_back(s_exec.c_str());
+//
+//        s_arg = g_cfg.telnet.cmdline;
+    }
 
+    
+    //---- split s_arg and push to s_argv ---
+    ex_astr::size_type p1 = 0;
+    ex_astr::size_type p2 = 0;
+    ex_astr tmp = s_arg;
+    for(;;) {
+        ex_remove_white_space(tmp, EX_RSC_BEGIN);
+        if(tmp.empty()) {
+            break;
+        }
 
+        if(tmp[0] == '"') {
+            p1 = 1;
+            p2 = tmp.find('"', p1);
+
+            if(p2 == ex_astr::npos) {
+                _create_json_ret(buf, TPE_PARAM);
+                return;
+            }
+
+            ex_astr _t;
+            _t.assign(tmp, p1, p2 - p1);
+            tmp.erase(0, p2 + 2);
+            
+            s_argv.push_back(_t);
+        } else {
+            p1 = 0;
+            p2 = tmp.find(' ', p1);
+
+            if(p2 == ex_astr::npos) {
+                s_argv.push_back(tmp);
+                tmp.clear();
+                break;
+            }
+
+            ex_astr _t;
+            _t.assign(tmp, p1, p2 - p1);
+            tmp.erase(0, p2 + 1);
+            
+            s_argv.push_back(_t);
+        }
+    }
+    
+    
 	Json::Value root_ret;
 	ex_astr utf8_path = s_exec;
-	//ex_wstr2astr(w_exe_path, utf8_path, EX_CODEPAGE_UTF8);
 
 	ex_astrs::iterator it = s_argv.begin();
 	for(; it != s_argv.end(); ++it) {
-		utf8_path += " ";
-		utf8_path += (*it);
-	}
+        ex_replace_all((*it), "{host_port}", str_teleport_port);
+        ex_replace_all((*it), "{host_ip}", teleport_ip);
+        ex_replace_all((*it), "{user_name}", sid);
+        ex_replace_all((*it), "{real_ip}", real_host_ip);
+        //ex_replace_all(utf8_path, _T("{assist_tools_path}"), g_env.m_tools_path.c_str());
 
+        utf8_path += " ";
+        utf8_path += (*it);
+    }
+    
 	root_ret["path"] = utf8_path;
 
-	// if (!CreateProcess(NULL, (wchar_t *)w_exe_path.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-	// {
-	// 	EXLOGE(_T("CreateProcess() failed. Error=0x%08X.\n  %s\n"), GetLastError(), w_exe_path.c_str());
-	// 	root_ret["code"] = TPE_START_CLIENT;
-	// 	_create_json_ret(buf, root_ret);
-	// 	return;
-	// }
-
-	//system(utf8_path.c_str());
-	//ex_astr __sid;
-	//ex_wstr2astr(w_sid, __sid);
-	//execlp("xfreerdp", "-u", __sid.c_str(), "-g", "800x600", "127.0.0.1:52089", NULL);
-//	FILE *f = popen(utf8_path.c_str(), "r");
-//	if(f == NULL) {
-//		root_ret["code"] = TPE_FAILED;
-//	} else {
-//		root_ret["code"] = TPE_OK;
-//		pclose(f);
-//	}
-
-//	{
-//		int i = 0;
-//		char** _argv = (char**)calloc(s_argv.size()+1, sizeof(char*));
-//		if (!_argv)
-//			return;
-//
-//		for (i = 0; i < s_argv.size(); ++i)
-//		{
-//			_argv[i] = ex_strdup(s_argv[i].c_str());
-//		}
-//		_argv[i] = NULL;
-//
-//		execv(s_exec.c_str(), _argv);
-//
-//		for(i = 0; i < s_argv.size(); ++i) {
-//			if(_argv[i] != NULL) {
-//				free(_argv[i]);
-//			}
-//		}
-//		free(_argv);
-//
-//	}
-	
-	
-	
 	// for macOS, Create Process should be fork()/exec()...
 	pid_t processId;
 	if ((processId = fork()) == 0) {
@@ -704,8 +792,8 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		}
 		_argv[i] = NULL;
 
-		execv(s_exec.c_str(), _argv);
-		
+        execv(s_exec.c_str(), _argv);
+
 		for(i = 0; i < s_argv.size(); ++i) {
 			if(_argv[i] != NULL) {
 				free(_argv[i]);
@@ -756,8 +844,44 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
 }
 
 void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
-	_create_json_ret(buf, TPE_NOT_IMPLEMENT);
+    _create_json_ret(buf, TPE_FAILED);
+#if 0
+    Json::Reader jreader;
+    Json::Value jsRoot;
+    
+    if (!jreader.parse(func_args.c_str(), jsRoot)) {
+        _create_json_ret(buf, TPE_JSON_FORMAT);
+        return;
+    }
 
+//    if (!jsRoot["action"].isNumeric()) {
+//        _create_json_ret(buf, TPE_PARAM);
+//        return;
+//    }
+//    int action = jsRoot["action"].asUInt();
+    
+    AppDelegate_select_app(g_app);
+    _create_json_ret(buf, TPE_FAILED);
+
+//    if (ret) {
+//        if (action == 1 || action == 2 || action == 3) {
+//            ex_astr utf8_path;
+//            ex_wstr2astr(wszReturnPath, utf8_path, EX_CODEPAGE_UTF8);
+//            Json::Value root;
+//            root["code"] = TPE_OK;
+//            root["path"] = utf8_path;
+//            _create_json_ret(buf, root);
+//
+//            return;
+//        } else {
+//            _create_json_ret(buf, TPE_OK);
+//            return;
+//        }
+//    } else {
+//        _create_json_ret(buf, TPE_DATA);
+//        return;
+//    }
+#endif
 }
 
 void TsHttpRpc::_rpc_func_get_version(const ex_astr& func_args, ex_astr& buf)

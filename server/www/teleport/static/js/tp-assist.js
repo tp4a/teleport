@@ -3,15 +3,21 @@
 $tp.assist = {
     running: false,
     version: '',
-    // api_url: 'http://localhost:50022/api',
-    api_url: 'http://127.0.0.1:50022/api',
+    api_url: '',
     teleport_ip: window.location.hostname
 };
+
+console.log(window.location.protocol);
 
 // $assist 是 $tp.assist 的别名，方便使用。
 var $assist = $tp.assist;
 
 $assist.init = function (cb_stack) {
+    if(location.protocol === 'http:') {
+        $assist.api_url = 'http://localhost:50022/api';
+    } else {
+        $assist.api_url = 'https://localhost:50023/api';
+    }
 
     $assist._make_message_box();
 
@@ -121,25 +127,35 @@ $assist.do_teleport = function (args, func_success, func_error) {
 
                 // console.log('---', data);
                 var args_ = encodeURIComponent(JSON.stringify(data));
-                $.ajax({
-                    type: 'GET',
-                    timeout: 5000,
-                    //url: 'http://localhost:50022/ts_op/' + args_,
-                    url: $assist.api_url + '/run/' + args_,
-                    jsonp: 'callback',
-                    dataType: 'json',
-                    success: function (ret) {
-                        console.log('ret', ret);
-                        if (ret.code === TPE_OK) {
-                            func_success();
-                        } else {
-                            func_error(ret.code, ret.message);
+                //判断是否使用urlprocotol处理方式
+				if ($app.options.url_proto){
+
+					if(!$("#urlproto").length) {
+						var _html = "<div id='urlproto' style='display:none;z-index=-1;'><iframe src=''/></div>";
+						$('body').append($(_html));
+					}
+					$("#urlproto").find("iframe").attr("src",'teleport://' + JSON.stringify(data));
+				}else{
+                    $.ajax({
+                        type: 'GET',
+                        timeout: 5000,
+                        //url: 'http://localhost:50022/ts_op/' + args_,
+                        url: $assist.api_url + '/run/' + args_,
+                        jsonp: 'callback',
+                        dataType: 'json',
+                        success: function (ret) {
+                            console.log('ret', ret);
+                            if (ret.code === TPE_OK) {
+                                func_success();
+                            } else {
+                                func_error(ret.code, ret.message);
+                            }
+                        },
+                        error: function () {
+                            func_error(TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
                         }
-                    },
-                    error: function () {
-                        func_error(TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
-                    }
-                });
+                    });
+                }
             } else {
                 if (ret.code === TPE_NO_CORE_SERVER) {
                     func_error(ret.code, '远程连接请求失败，可能teleport核心服务尚未启动！' + ret.message);

@@ -23,7 +23,8 @@ from collections import namedtuple
 class TagInfo(namedtuple("_TagInfo", "value name type length enum")):
     __slots__ = []
 
-    def __new__(cls, value=None, name="unknown", type=None, length=None, enum=None):
+    def __new__(cls, value=None, name="unknown",
+                type=None, length=None, enum=None):
         return super(TagInfo, cls).__new__(
             cls, value, name, type, length, enum or {})
 
@@ -72,8 +73,8 @@ TAGS_V2 = {
     257: ("ImageLength", LONG, 1),
     258: ("BitsPerSample", SHORT, 0),
     259: ("Compression", SHORT, 1,
-          {"Uncompressed": 1, "CCITT 1d": 2, "Group 3 Fax": 3, "Group 4 Fax": 4,
-           "LZW": 5, "JPEG": 6, "PackBits": 32773}),
+          {"Uncompressed": 1, "CCITT 1d": 2, "Group 3 Fax": 3,
+           "Group 4 Fax": 4, "LZW": 5, "JPEG": 6, "PackBits": 32773}),
 
     262: ("PhotometricInterpretation", SHORT, 1,
           {"WhiteIsZero": 0, "BlackIsZero": 1, "RGB": 2, "RGB Palette": 3,
@@ -121,7 +122,7 @@ TAGS_V2 = {
     316: ("HostComputer", ASCII, 1),
     317: ("Predictor", SHORT, 1, {"none": 1, "Horizontal Differencing": 2}),
     318: ("WhitePoint", RATIONAL, 2),
-    319: ("PrimaryChromaticities", SHORT, 6),
+    319: ("PrimaryChromaticities", RATIONAL, 6),
 
     320: ("ColorMap", SHORT, 0),
     321: ("HalftoneHints", SHORT, 2),
@@ -158,7 +159,7 @@ TAGS_V2 = {
     529: ("YCbCrCoefficients", RATIONAL, 3),
     530: ("YCbCrSubSampling", SHORT, 2),
     531: ("YCbCrPositioning", SHORT, 1),
-    532: ("ReferenceBlackWhite", LONG, 0),
+    532: ("ReferenceBlackWhite", RATIONAL, 6),
 
     700: ('XMP', BYTE, 1),
 
@@ -437,7 +438,7 @@ LIBTIFF_CORE.remove(301)  # Array of short, crashes
 LIBTIFF_CORE.remove(532)  # Array of long, crashes
 
 LIBTIFF_CORE.remove(255)  # We don't have support for subfiletypes
-LIBTIFF_CORE.remove(322)  # We don't have support for tiled images in libtiff
+LIBTIFF_CORE.remove(322)  # We don't have support for writing tiled images with libtiff
 LIBTIFF_CORE.remove(323)  # Tiled images
 LIBTIFF_CORE.remove(333)  # Ink Names either
 

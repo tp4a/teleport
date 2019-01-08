@@ -1,0 +1,234 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6548CB1D-A7BA-4A68-9B3F-A5129F77868B}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>tp_core</RootNamespace>
+    <ProjectName>tp_core</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\..\..\out\server\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>..\..\..\out\_tmp_\$(ProjectName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>C:\Program Files %28x86%29\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files %28x86%29\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\..\out\$(ProjectName)\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>..\..\out\_tmp_\$(ProjectName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\..\..\out\server\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>..\..\..\out\_tmp_\$(ProjectName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\..\out\$(ProjectName)\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>..\..\out\_tmp_\$(ProjectName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WINSOCK_DEPRECATED_NO_WARNINGS;MG_ENABLE_THREADS;MG_DISABLE_HTTP_DIGEST_AUTH;MG_DISABLE_MQTT;MG_DISABLE_SSI;MG_DISABLE_FILESYSTEM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>../../../common/teleport;../../../common/libex/include;../../../external/jsoncpp/include;../../../external/mbedtls/include;../../../external/mongoose</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>../../external/windows/libuv/include;../../external/windows/openssl/include;../../external/windows/zlib/include;../../external/windows/mbedtls/include;../../external/windows/libssh/include;../../external/common/jsoncpp/include;../../external/common/sqlite;d:/apps/vld/include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>../../external/windows/openssl/lib;../../external/windows/zlib/lib;../../external/windows/libssh/lib</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;MG_ENABLE_THREADS;MG_DISABLE_HTTP_DIGEST_AUTH;MG_DISABLE_MQTT;MG_DISABLE_SSI;MG_DISABLE_FILESYSTEM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>../../../common/teleport;../../../common/libex/include;../../../external/jsoncpp/include;../../../external/mbedtls/include;../../../external/mongoose</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>../../external/windows/libuv/include;../../external/windows/openssl/include;../../external/windows/zlib/include;../../external/windows/mbedtls/include;../../external/windows/libssh/include;../../external/common/jsoncpp/include;../../external/common/sqlite</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>../../external/windows/openssl/lib;../../external/windows/zlib/lib;../../external/windows/libssh/lib</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\common\libex\src\ex_ini.cpp" />
+    <ClCompile Include="..\..\..\common\libex\src\ex_log.cpp" />
+    <ClCompile Include="..\..\..\common\libex\src\ex_path.cpp" />
+    <ClCompile Include="..\..\..\common\libex\src\ex_str.cpp" />
+    <ClCompile Include="..\..\..\common\libex\src\ex_thread.cpp" />
+    <ClCompile Include="..\..\..\common\libex\src\ex_util.cpp" />
+    <ClCompile Include="..\..\..\common\libex\src\ex_winsrv.cpp" />
+    <ClCompile Include="..\..\..\external\jsoncpp\src\lib_json\json_reader.cpp" />
+    <ClCompile Include="..\..\..\external\jsoncpp\src\lib_json\json_value.cpp" />
+    <ClCompile Include="..\..\..\external\jsoncpp\src\lib_json\json_writer.cpp" />
+    <ClCompile Include="..\..\..\external\mbedtls\library\aes.c" />
+    <ClCompile Include="..\..\..\external\mbedtls\library\base64.c" />
+    <ClCompile Include="..\..\..\external\mbedtls\library\platform_util.c" />
+    <ClCompile Include="..\..\..\external\mbedtls\library\sha1.c" />
+    <ClCompile Include="..\..\..\external\mongoose\mongoose.c" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="tp_tpp_mgr.cpp" />
+    <ClCompile Include="ts_crypto.cpp" />
+    <ClCompile Include="ts_web_rpc.cpp" />
+    <ClCompile Include="ts_env.cpp" />
+    <ClCompile Include="ts_http_client.cpp" />
+    <ClCompile Include="ts_http_rpc.cpp" />
+    <ClCompile Include="ts_main.cpp" />
+    <ClCompile Include="ts_session.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\common\libex\include\ex.h" />
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_const.h" />
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_ini.h" />
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_log.h" />
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_path.h" />
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_platform.h" />
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_str.h" />
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_thread.h" />
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_types.h" />
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_util.h" />
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_winsrv.h" />
+    <ClInclude Include="..\..\..\common\teleport\teleport_const.h" />
+    <ClInclude Include="..\..\..\external\jsoncpp\include\json\json.h" />
+    <ClInclude Include="..\..\..\external\mongoose\mongoose.h" />
+    <ClInclude Include="..\common\protocol_interface.h" />
+    <ClInclude Include="..\common\ts_const.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="tp_tpp_mgr.h" />
+    <ClInclude Include="ts_crypto.h" />
+    <ClInclude Include="ts_ver.h" />
+    <ClInclude Include="ts_web_rpc.h" />
+    <ClInclude Include="ts_env.h" />
+    <ClInclude Include="ts_http_client.h" />
+    <ClInclude Include="ts_http_rpc.h" />
+    <ClInclude Include="ts_main.h" />
+    <ClInclude Include="ts_session.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="tp_core.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\tp_core.ico" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

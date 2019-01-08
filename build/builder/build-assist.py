@@ -29,7 +29,7 @@ class BuilderWin(BuilderBase):
 
     def build_exe(self):
         cc.i('build tp_assist...')
-        sln_file = os.path.join(env.root_path, 'client', 'tp_assist_win', 'tp_assist.vs2015.sln')
+        sln_file = os.path.join(env.root_path, 'client', 'tp_assist_win', 'tp_assist.vs2017.sln')
         out_file = os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path, 'tp_assist.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
@@ -74,7 +74,11 @@ class BuilderWin(BuilderBase):
         utils.makedirs(tmp_cfg_path)
 
         utils.copy_file(os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_app_path, 'tp_assist.exe')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'cfg'), tmp_cfg_path, ('tp-assist.default.json', 'tp-assist.json'))
+        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, ('tp-assist.windows.json', 'tp-assist.json'))
+
+        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, 'cacert.cer')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, 'localhost.key')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, 'localhost.pem')
 
         utils.copy_ex(os.path.join(env.root_path, 'client', 'tp_assist_win'), tmp_app_path, 'site')
 
@@ -106,28 +110,23 @@ class BuilderMacOS(BuilderBase):
 
         configuration = ctx.target_path.capitalize()
 
-        proj_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'tp_assist.xcodeproj')
-        out_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'build', ctx.target_path, 'tp_assist.app')
+        proj_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'TP-Assist.xcodeproj')
+        out_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'build', configuration, 'TP-Assist.app')
         if os.path.exists(out_file):
             utils.remove(out_file)
-        utils.xcode_build(proj_file, 'tp_assist', configuration, False)
+        utils.xcode_build(proj_file, 'TP-Assist', configuration, False)
         utils.ensure_file_exists(os.path.join(out_file, 'Contents', 'Info.plist'))
 
     def build_installer(self):
-        cc.e('assist for macOS does not need an installer, you should make an .DMG file for release...')
+        cc.i('make tp_assist dmg file...')
 
-        # name = 'teleport-assist-{}-{}'.format(ctx.dist, VER_TP_ASSIST)
-        #
-        # out_path = os.path.join(env.root_path, 'out', 'installer')
-        # utils.makedirs(out_path)
-        #
-        # out_file = os.path.join(out_path, '{}.exe'.format(name))
-        # utils.remove(out_file)
-        #
-        # self._build_installer()
-        #
-        # utils.ensure_file_exists(out_file)
+        json_file = os.path.join(env.root_path, 'dist', 'client', 'macos', 'dmg.json')
+        dmg_file = os.path.join(env.root_path, 'out', 'client', 'macos', 'teleport-assist-macos-{}.dmg'.format(VER_TP_ASSIST))
+        if os.path.exists(dmg_file):
+            utils.remove(dmg_file)
 
+        utils.make_dmg(json_file, dmg_file)
+        utils.ensure_file_exists(dmg_file)
 
     @staticmethod
     def _build_installer():

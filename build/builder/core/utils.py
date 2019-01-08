@@ -50,28 +50,40 @@ def _check_download_file(file_name):
 def download_file(desc, url, target_path, file_name):
     cc.n('download {} ... '.format(desc), end='')
 
-    local_file_name = os.path.join(target_path, file_name)
-    if os.path.exists(local_file_name):
-        if not _check_download_file(local_file_name):
-            cc.w('already exists but broken, download it again...')
-        else:
-            cc.w('already exists, skip.')
-            return True
+    _temp_file = os.path.join(target_path, '_dl_{}'.format(file_name))
+    _real_file = os.path.join(target_path, file_name)
+
+    if os.path.exists(_temp_file):
+        cc.w('already exists but broken, download it again...')
+        remove(_temp_file)
+        remove(_real_file)
+
+        # if not _check_download_file(local_file_name):
+        #     cc.w('already exists but broken, download it again...')
+        # else:
+        #     cc.w('already exists, skip.')
+        #     return True
+
+    if os.path.exists(_real_file):
+        cc.w('already exists, skip.')
+        return True
 
     cc.v('')
     # 因为下载过程会在命令行显示进度，所以不能使用subprocess.Popen()的方式捕获输出，会很难看！
     if env.is_win:
-        cmd = '""{}" --no-check-certificate {} -O "{}""'.format(env.wget, url, local_file_name)
+        cmd = '""{}" --no-check-certificate {} -O "{}""'.format(env.wget, url, _temp_file)
         os.system(cmd)
     elif env.is_linux or env.is_macos:
-        os.system('wget --no-check-certificate {} -O "{}"'.format(url, local_file_name))
+        os.system('wget --no-check-certificate {} -O "{}"'.format(url, _temp_file))
     else:
         cc.e('can not download, no download tool.')
         return False
 
-    if not os.path.exists(local_file_name) or not _check_download_file(local_file_name):
+    if not os.path.exists(_temp_file) or not _check_download_file(_temp_file):
         cc.e('downloading {} from {} failed.'.format(desc, url))
         return False
+
+    os.rename(_temp_file, _real_file)
 
     return True
 
@@ -257,6 +269,7 @@ def ensure_file_exists(filename):
 
 
 def sys_exec(cmd, direct_output=False, output_codec=None):
+    print(cmd)
     if output_codec is None:
         if env.is_win:
             output_codec = 'gb2312'
@@ -308,9 +321,6 @@ def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
 
 
 def xcode_build(proj_file, proj_name, target, force_rebuild):
-    # if env.msbuild is None:
-    #     raise RuntimeError('where is `msbuild`?')
-
     if force_rebuild:
         cmd = 'xcodebuild -project "{}" -target {} -configuration {} clean'.format(proj_file, proj_name, target)
         ret, _ = sys_exec(cmd, direct_output=True)
@@ -320,6 +330,19 @@ def xcode_build(proj_file, proj_name, target, force_rebuild):
     ret, _ = sys_exec(cmd, direct_output=True)
     if ret != 0:
         raise RuntimeError('build XCode project `{}` failed.'.format(proj_name))
+
+
+def make_dmg(json_file, dmg_file):
+    out_path = os.path.dirname(dmg_file)
+    cc.v(out_path)
+
+    if not os.path.exists(out_path):
+        makedirs(out_path)
+
+    cmd = 'appdmg "{}" "{}"'.format(json_file, dmg_file)
+    ret, _ = sys_exec(cmd, direct_output=True)
+    if ret != 0:
+        raise RuntimeError('make dmg failed.')
 
 
 def nsis_build(nsi_file, _define=''):

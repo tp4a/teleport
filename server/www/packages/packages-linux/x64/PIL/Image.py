@@ -443,7 +443,6 @@ def _getdecoder(mode, decoder_name, args, extra=()):
     try:
         # get decoder
         decoder = getattr(core, decoder_name + "_decoder")
-        # print(decoder, mode, args + extra)
         return decoder(mode, *args + extra)
     except AttributeError:
         raise IOError("decoder %s not available" % decoder_name)
@@ -465,7 +464,6 @@ def _getencoder(mode, encoder_name, args, extra=()):
     try:
         # get encoder
         encoder = getattr(core, encoder_name + "_encoder")
-        # print(encoder, mode, args + extra)
         return encoder(mode, *args + extra)
     except AttributeError:
         raise IOError("encoder %s not available" % encoder_name)
@@ -533,7 +531,7 @@ class Image(object):
         # FIXME: turn mode and size into delegating properties?
         self.im = None
         self.mode = ""
-        self.size = (0, 0)
+        self._size = (0, 0)
         self.palette = None
         self.info = {}
         self.category = NORMAL
@@ -548,11 +546,15 @@ class Image(object):
     def height(self):
         return self.size[1]
 
+    @property
+    def size(self):
+        return self._size
+
     def _new(self, im):
         new = Image()
         new.im = im
         new.mode = im.mode
-        new.size = im.size
+        new._size = im.size
         if im.mode in ('P', 'PA'):
             if self.palette:
                 new.palette = self.palette.copy()
@@ -700,7 +702,7 @@ class Image(object):
         info, mode, size, palette, data = state
         self.info = info
         self.mode = mode
-        self.size = size
+        self._size = size
         self.im = core.new(mode, size)
         if mode in ("L", "P") and palette:
             self.putpalette(palette)
@@ -875,12 +877,17 @@ class Image(object):
         use other thresholds, use the :py:meth:`~PIL.Image.Image.point`
         method.
 
+        When converting from "RGBA" to "P" without a **matrix** argument,
+        this passes the operation to :py:meth:`~PIL.Image.Image.quantize`,
+        and **dither** and **palette** are ignored.
+
         :param mode: The requested mode. See: :ref:`concept-modes`.
         :param matrix: An optional conversion matrix.  If given, this
            should be 4- or 12-tuple containing floating point values.
         :param dither: Dithering method, used when converting from
            mode "RGB" to "P" or from "RGB" or "L" to "1".
            Available methods are NONE or FLOYDSTEINBERG (default).
+           Note that this is not used when **matrix** is supplied.
         :param palette: Palette to use when converting from mode "RGB"
            to "P".  Available palettes are WEB or ADAPTIVE.
         :param colors: Number of colors to use for the ADAPTIVE palette.
@@ -900,12 +907,28 @@ class Image(object):
         if not mode or (mode == self.mode and not matrix):
             return self.copy()
 
+        has_transparency = self.info.get('transparency') is not None
         if matrix:
             # matrix conversion
             if mode not in ("L", "RGB"):
                 raise ValueError("illegal conversion")
             im = self.im.convert_matrix(mode, matrix)
-            return self._new(im)
+            new = self._new(im)
+            if has_transparency and self.im.bands == 3:
+                transparency = new.info['transparency']
+
+                def convert_transparency(m, v):
+                    v = m[0]*v[0] + m[1]*v[1] + m[2]*v[2] + m[3]*0.5
+                    return max(0, min(255, int(v)))
+                if mode == "L":
+                    transparency = convert_transparency(matrix, transparency)
+                elif len(mode) == 3:
+                    transparency = tuple([
+                        convert_transparency(matrix[i*4:i*4+4], transparency)
+                        for i in range(0, len(transparency))
+                    ])
+                new.info['transparency'] = transparency
+            return new
 
         if mode == "P" and self.mode == "RGBA":
             return self.quantize(colors)
@@ -913,8 +936,7 @@ class Image(object):
         trns = None
         delete_trns = False
         # transparency handling
-        if "transparency" in self.info and \
-                self.info['transparency'] is not None:
+        if has_transparency:
             if self.mode in ('L', 'RGB') and mode == 'RGBA':
                 # Use transparent conversion to promote from transparent
                 # color to an alpha channel.
@@ -1104,12 +1126,9 @@ class Image(object):
 
         x0, y0, x1, y1 = map(int, map(round, box))
 
-        if x1 < x0:
-            x1 = x0
-        if y1 < y0:
-            y1 = y0
+        absolute_values = (abs(x1 - x0), abs(y1 - y0))
 
-        _decompression_bomb_check((x1, y1))
+        _decompression_bomb_check(absolute_values)
 
         return im.crop((x0, y0, x1, y1))
 
@@ -1894,7 +1913,7 @@ class Image(object):
            parameter should always be used.
         :param params: Extra parameters to the image writer.
         :returns: None
-        :exception KeyError: If the output format could not be determined
+        :exception ValueError: If the output format could not be determined
            from the file name.  Use the format option to solve this.
         :exception IOError: If the file could not be written.  The file
            may have been created, and may contain partial data.
@@ -2089,7 +2108,7 @@ class Image(object):
 
         self.im = im.im
         self.mode = im.mode
-        self.size = size
+        self._size = size
 
         self.readonly = 0
         self.pyaccess = None
@@ -2440,8 +2459,19 @@ def fromarray(obj, mode=None):
     Creates an image memory from an object exporting the array interface
     (using the buffer protocol).
 
-    If obj is not contiguous, then the tobytes method is called
+    If **obj** is not contiguous, then the tobytes method is called
     and :py:func:`~PIL.Image.frombuffer` is used.
+
+    If you have an image in NumPy::
+
+      from PIL import Image
+      import numpy as np
+      im = Image.open('hopper.jpg')
+      a = np.asarray(im)
+
+    Then this can be used to convert it to a Pillow image::
+
+      im = Image.fromarray(a)
 
     :param obj: Object with array interface
     :param mode: Mode to use (will be determined from type if None)
@@ -2459,7 +2489,6 @@ def fromarray(obj, mode=None):
             typekey = (1, 1) + shape[2:], arr['typestr']
             mode, rawmode = _fromarray_typemap[typekey]
         except KeyError:
-            # print(typekey)
             raise TypeError("Cannot handle this data type")
     else:
         rawmode = mode
@@ -2590,11 +2619,15 @@ def open(fp, mode="r"):
 
     preinit()
 
+    accept_warnings = []
     def _open_core(fp, filename, prefix):
         for i in ID:
             try:
                 factory, accept = OPEN[i]
-                if not accept or accept(prefix):
+                result = not accept or accept(prefix)
+                if type(result) in [str, bytes]:
+                    accept_warnings.append(result)
+                elif result:
                     fp.seek(0)
                     im = factory(fp, filename)
                     _decompression_bomb_check(im.size)
@@ -2618,6 +2651,8 @@ def open(fp, mode="r"):
 
     if exclusive_fp:
         fp.close()
+    for message in accept_warnings:
+        warnings.warn(message)
     raise IOError("cannot identify image file %r"
                   % (filename if filename else fp))
 

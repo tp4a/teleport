@@ -78,8 +78,8 @@ controllers = [
     (r'/user/verify-user', user.DoVerifyUserHandler),
     #  - [json] 绑定身份认证器
     (r'/user/do-bind-oath', user.DoBindOathHandler),
-    #  - 取消绑定身份认证器
-    (r'/user/do-unbind-oath', user.DoUnBindOathHandler),  
+    #  - [json] 取消绑定身份认证器
+    (r'/user/do-unbind-oath', user.DoUnBindOathHandler),
     #
     #  - 用户组管理页面
     (r'/user/group', user.GroupListHandler),
@@ -252,6 +252,15 @@ controllers = [
     (r'/system/send-test-mail', system.DoSendTestMailHandler),
     #  - [json] 系统配置-清理存储空间
     (r'/system/cleanup-storage', system.DoCleanupStorageHandler),
+    #  - [json] 列出LDAP服务器的用户的属性，便于管理员做属性映射
+    (r'/system/do-ldap-config-list-attr', system.DoLdapListUserAttrHandler),
+    #  - [json] 测试LDAP的配置
+    (r'/system/do-ldap-config-test', system.DoLdapConfigTestHandler),
+    #  - [json] 获取LDAP用户列表
+    (r'/system/do-ldap-get-users', system.DoLdapGetUsersHandler),
+    #  - [json] 导入LDAP用户
+    (r'/system/do-ldap-import', system.DoLdapImportHandler),
+
     #
     #  - [json] 获取服务器时间
     (r'/system/get-time', system.DoGetTimeHandler),

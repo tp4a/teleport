@@ -359,9 +359,8 @@ void _sig_handler(int signum, siginfo_t* info, void* ptr)
 {
 	if (signum == SIGINT || signum == SIGTERM)
 	{
-		EXLOGW("[core] received signal SIGINT, exit now.\n");
+		EXLOGW("\n[core] received signal SIGINT, exit now.\n");
 		g_exit_flag = true;
-		// exit(1);
 	}
 }
 

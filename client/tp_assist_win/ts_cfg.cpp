@@ -105,7 +105,7 @@ bool TsCfg::_load(const ex_astr& str_json) {
 	}
 
 	//===================================
-	// check scp config
+	// check sftp config
 	//===================================
 
 	if (!m_root["scp"].isObject()) {

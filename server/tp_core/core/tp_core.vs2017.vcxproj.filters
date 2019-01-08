@@ -1,0 +1,206 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="main app">
+      <UniqueIdentifier>{0155895f-d6be-4e0f-970d-9b6b5c759502}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex">
+      <UniqueIdentifier>{9c2d60b3-2932-485b-bccd-b66886b0286b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex\header">
+      <UniqueIdentifier>{541f6e28-2218-4de7-9f3a-d45c56647c82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libex\src">
+      <UniqueIdentifier>{95f40be8-2d36-40ee-92ea-184bb5c44411}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jsoncpp">
+      <UniqueIdentifier>{a3d6f884-46a8-4450-9b4c-184c6189fea2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jsoncpp\header">
+      <UniqueIdentifier>{2450e4a6-cc0b-40fe-ac51-0b4367adef26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jsoncpp\src">
+      <UniqueIdentifier>{ffc7dbb8-e1f6-4655-bc79-1038b5cdfb15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mbedtls">
+      <UniqueIdentifier>{d38dfe81-e91d-4248-a0bc-1f2e014d15ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mbedtls\library">
+      <UniqueIdentifier>{0f03131b-cf95-4be3-bc23-8bdf582d9198}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mongoose">
+      <UniqueIdentifier>{dd7c7b9e-b873-42ba-939f-ae6e7b7bde12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{b94c32df-7b3a-4712-a951-ec92d2e875cc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ts_main.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_http_rpc.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_session.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_crypto.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_env.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_http_client.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_path.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_str.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_thread.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_util.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_winsrv.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_ini.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\libex\src\ex_log.cpp">
+      <Filter>libex\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external\mongoose\mongoose.c">
+      <Filter>mongoose</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external\jsoncpp\src\lib_json\json_reader.cpp">
+      <Filter>jsoncpp\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external\jsoncpp\src\lib_json\json_value.cpp">
+      <Filter>jsoncpp\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external\jsoncpp\src\lib_json\json_writer.cpp">
+      <Filter>jsoncpp\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external\mbedtls\library\aes.c">
+      <Filter>mbedtls\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external\mbedtls\library\base64.c">
+      <Filter>mbedtls\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external\mbedtls\library\sha1.c">
+      <Filter>mbedtls\library</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_web_rpc.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="tp_tpp_mgr.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external\mbedtls\library\platform_util.c">
+      <Filter>mbedtls\library</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ts_main.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_http_rpc.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_session.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_crypto.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_env.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_http_client.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_const.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_ini.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_log.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_path.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_platform.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_str.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_thread.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_types.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_util.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\libex\include\ex\ex_winsrv.h">
+      <Filter>libex\header</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external\jsoncpp\include\json\json.h">
+      <Filter>jsoncpp\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external\mongoose\mongoose.h">
+      <Filter>mongoose</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\protocol_interface.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\ts_const.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_web_rpc.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_ver.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\teleport\teleport_const.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="tp_tpp_mgr.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="tp_core.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\tp_core.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

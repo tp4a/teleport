@@ -1,0 +1,113 @@
+{
+    "file_version": 3,
+    "ssh": {
+        "selected": "terminal",
+        "available": [
+            {
+                "name":"terminal",
+                "display": "终端（系统自带）",
+                "app": "",
+                "cmdline": "Basic",
+                "desc": ["命令参数为终端偏好设置中描述文件的名称"]
+            },
+            {
+                "name": "iterm2",
+                "display": "iTerm2",
+                "app": "",
+                "cmdline": "Default",
+                "desc": ["命令参数为iTerm偏好设置中描述文件的名称"]
+            },
+            {
+                "name": "securecrt",
+                "display": "SecureCRT",
+                "app": "/Applications/SecureCRT.app/Contents/MacOS/SecureCRT",
+                "cmdline": "/T /N \"TP#ssh://{real_ip}\" /SSH2 /L {user_name} /PASSWORD **** {host_ip}:{host_port}",
+                "desc": []
+            },
+            {
+                "name": "other",
+                "display": "自定义",
+                "app": "",
+                "cmdline": "",
+                "desc": []
+            }
+        ]
+    },
+
+    "sftp": {
+        "selected": "securefx",
+        "available": [
+            {
+                "name": "securefx",
+                "display": "SecureFX",
+                "app": "/Applications/SecureFX.app/Contents/MacOS/SecureFX",
+                "cmdline": "sftp://{user_name}:****@{host_ip}:{host_port}",
+                "desc": []
+            },
+            {
+                "name": "filezilla",
+                "display": "FileZilla",
+                "app": "/Applications/FileZilla.app/Contents/MacOS/filezilla",
+                "cmdline": "sftp://{user_name}:****@{host_ip}:{host_port}",
+                "desc": []
+            },
+            {
+                "name": "other",
+                "display": "自定义",
+                "app": "",
+                "cmdline": "",
+                "desc": []
+            }
+        ]
+    },
+
+    "telnet": {
+        "selected": "terminal",
+        "available": [
+            {
+                "name":"terminal",
+                "display": "终端（系统自带）",
+                "app": "Terminal.app",
+                "cmdline": "Basic",
+                "desc": ["命令参数为终端偏好设置中描述文件的名称"]
+            },
+            {
+                "name": "iterm2",
+                "display": "iTerm2",
+                "app": "iTerm2.app",
+                "cmdline": "Default",
+                "desc": ["命令参数为iTerm偏好设置中描述文件的名称"]
+            },
+            {
+                "name": "securecrt",
+                "display": "SecureCRT",
+                "app": "SecureCRT.app",
+                "cmdline": "/T /N \"TP#telnet://{real_ip}\" /TELNET {user_name}@{host_ip} {host_port}",
+                "desc": []
+            },
+            {
+                "name": "other",
+                "display": "自定义",
+                "app": "",
+                "cmdline": "",
+                "desc": []
+            }
+        ]
+    },
+
+    "rdp": {
+        "selected": "freerdp",
+        "available": [
+            {
+                "name": "FreeRDP",
+                "display": "FreeRDP",
+                "app": "",
+                "cmdline": "",
+                "desc": [
+                    "建议使用homebrew安装freerdp，安装后freerdp默认路径在：/usr/local/Cellar/freerdp/x.y.z/bin/xfreerdp",
+                    "首次安装freerdp后需要重新启动计算机"
+                ]
+            }
+        ]
+    }
+}

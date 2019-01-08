@@ -33,6 +33,8 @@ from ._common import memoize_when_activated
 from ._common import NIC_DUPLEX_FULL
 from ._common import NIC_DUPLEX_HALF
 from ._common import NIC_DUPLEX_UNKNOWN
+from ._common import open_binary
+from ._common import open_text
 from ._common import parse_environ_block
 from ._common import path_exists_strict
 from ._common import supports_ipv6
@@ -71,6 +73,7 @@ __extra__all__ = [
 POWER_SUPPLY_PATH = "/sys/class/power_supply"
 HAS_SMAPS = os.path.exists('/proc/%s/smaps' % os.getpid())
 HAS_PRLIMIT = hasattr(cext, "linux_prlimit")
+HAS_PROC_IO_PRIORITY = hasattr(cext, "proc_ioprio_get")
 _DEFAULT = object()
 
 # RLIMIT_* constants, not guaranteed to be present on all kernels
@@ -199,24 +202,6 @@ pio = namedtuple('pio', ['read_count', 'write_count',
 # =====================================================================
 # --- utils
 # =====================================================================
-
-
-def open_binary(fname, **kwargs):
-    return open(fname, "rb", **kwargs)
-
-
-def open_text(fname, **kwargs):
-    """On Python 3 opens a file in text mode by using fs encoding and
-    a proper en/decoding errors handler.
-    On Python 2 this is just an alias for open(name, 'rt').
-    """
-    if PY3:
-        # See:
-        # https://github.com/giampaolo/psutil/issues/675
-        # https://github.com/giampaolo/psutil/pull/733
-        kwargs.setdefault('encoding', ENCODING)
-        kwargs.setdefault('errors', ENCODING_ERRS)
-    return open(fname, "rt", **kwargs)
 
 
 if PY3:
@@ -720,6 +705,19 @@ if os.path.exists("/sys/devices/system/cpu/cpufreq") or \
             ret.append(_common.scpufreq(curr, min_, max_))
         return ret
 
+elif os.path.exists("/proc/cpuinfo"):
+    def cpu_freq():
+        """Alternate implementation using /proc/cpuinfo.
+        min and max frequencies are not available and are set to None.
+        """
+        ret = []
+        with open_binary('%s/cpuinfo' % get_procfs_path()) as f:
+            for line in f:
+                if line.lower().startswith(b'cpu mhz'):
+                    key, value = line.split(b'\t:', 1)
+                    ret.append(_common.scpufreq(float(value), None, None))
+        return ret
+
 
 # =====================================================================
 # --- network
@@ -1142,7 +1140,8 @@ def disk_io_counters(perdisk=False):
 def disk_partitions(all=False):
     """Return mounted disk partitions as a list of namedtuples."""
     fstypes = set()
-    with open_text("%s/filesystems" % get_procfs_path()) as f:
+    procfs_path = get_procfs_path()
+    with open_text("%s/filesystems" % procfs_path) as f:
         for line in f:
             line = line.strip()
             if not line.startswith("nodev"):
@@ -1153,8 +1152,14 @@ def disk_partitions(all=False):
                 if fstype == "zfs":
                     fstypes.add("zfs")
 
+    # See: https://github.com/giampaolo/psutil/issues/1307
+    if procfs_path == "/proc":
+        mtab_path = os.path.realpath("/etc/mtab")
+    else:
+        mtab_path = os.path.realpath("%s/self/mounts" % procfs_path)
+
     retlist = []
-    partitions = cext.disk_partitions()
+    partitions = cext.disk_partitions(mtab_path)
     for partition in partitions:
         device, mountpoint, fstype, opts = partition
         if device == 'none':
@@ -1229,7 +1234,51 @@ def sensors_temperatures():
 
         ret[unit_name].append((label, current, high, critical))
 
-    return ret
+    # Indication that no sensors were detected in /sys/class/hwmon/
+    if not basenames:
+        basenames = glob.glob('/sys/class/thermal/thermal_zone*')
+        basenames = sorted(set(basenames))
+
+        for base in basenames:
+            try:
+                path = os.path.join(base, 'temp')
+                current = float(cat(path)) / 1000.0
+                path = os.path.join(base, 'type')
+                unit_name = cat(path, binary=False)
+            except (IOError, OSError, ValueError) as err:
+                warnings.warn("ignoring %r for file %r" % (err, path),
+                              RuntimeWarning)
+                continue
+
+            trip_paths = glob.glob(base + '/trip_point*')
+            trip_points = set(['_'.join(
+                os.path.basename(p).split('_')[0:3]) for p in trip_paths])
+            critical = None
+            high = None
+            for trip_point in trip_points:
+                path = os.path.join(base, trip_point + "_type")
+                trip_type = cat(path, fallback='', binary=False)
+                if trip_type == 'critical':
+                    critical = cat(os.path.join(base, trip_point + "_temp"),
+                                   fallback=None)
+                elif trip_type == 'high':
+                    high = cat(os.path.join(base, trip_point + "_temp"),
+                               fallback=None)
+
+                if high is not None:
+                    try:
+                        high = float(high) / 1000.0
+                    except ValueError:
+                        high = None
+                if critical is not None:
+                    try:
+                        critical = float(critical) / 1000.0
+                    except ValueError:
+                        critical = None
+
+            ret[unit_name].append(('', current, high, critical))
+
+    return dict(ret)
 
 
 def sensors_fans():
@@ -1601,18 +1650,27 @@ class Process(object):
                     # https://github.com/giampaolo/psutil/issues/1004
                     line = line.strip()
                     if line:
-                        name, value = line.split(b': ')
-                        fields[name] = int(value)
+                        try:
+                            name, value = line.split(b': ')
+                        except ValueError:
+                            # https://github.com/giampaolo/psutil/issues/1004
+                            continue
+                        else:
+                            fields[name] = int(value)
             if not fields:
                 raise RuntimeError("%s file was empty" % fname)
-            return pio(
-                fields[b'syscr'],  # read syscalls
-                fields[b'syscw'],  # write syscalls
-                fields[b'read_bytes'],  # read bytes
-                fields[b'write_bytes'],  # write bytes
-                fields[b'rchar'],  # read chars
-                fields[b'wchar'],  # write chars
-            )
+            try:
+                return pio(
+                    fields[b'syscr'],  # read syscalls
+                    fields[b'syscw'],  # write syscalls
+                    fields[b'read_bytes'],  # read bytes
+                    fields[b'write_bytes'],  # write bytes
+                    fields[b'rchar'],  # read chars
+                    fields[b'wchar'],  # write chars
+                )
+            except KeyError as err:
+                raise ValueError("%r field was not found in %s; found fields "
+                                 "are %r" % (err[0], fname, fields))
     else:
         def io_counters(self):
             raise NotImplementedError("couldn't find /proc/%s/io (kernel "
@@ -1887,7 +1945,7 @@ class Process(object):
             raise
 
     # only starting from kernel 2.6.13
-    if hasattr(cext, "proc_ioprio_get"):
+    if HAS_PROC_IO_PRIORITY:
 
         @wrap_exceptions
         def ionice_get(self):
@@ -1930,6 +1988,7 @@ class Process(object):
             return cext.proc_ioprio_set(self.pid, ioclass, value)
 
     if HAS_PRLIMIT:
+
         @wrap_exceptions
         def rlimit(self, resource, limits=None):
             # If pid is 0 prlimit() applies to the calling process and
