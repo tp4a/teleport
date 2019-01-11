@@ -142,7 +142,6 @@
     <ClCompile Include="..\..\..\..\external\libuv\src\fs-poll.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\inet.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\threadpool.c" />
-    <ClCompile Include="..\..\..\..\external\libuv\src\timer.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\uv-common.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\version.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\async.c" />
@@ -166,6 +165,7 @@
     <ClCompile Include="..\..\..\..\external\libuv\src\win\stream.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\tcp.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\thread.c" />
+    <ClCompile Include="..\..\..\..\external\libuv\src\win\timer.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\tty.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\udp.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\util.c" />
