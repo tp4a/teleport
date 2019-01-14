@@ -662,7 +662,7 @@ $app.on_btn_lock_user_click = function () {
         return;
     }
 
-    $app._lock_hosts(users);
+    $app._lock_users(users);
 };
 
 $app._unlock_users = function (users) {
