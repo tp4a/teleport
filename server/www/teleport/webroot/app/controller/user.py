@@ -114,6 +114,16 @@ class ResetPasswordHandler(TPBaseHandler):
         self.render('user/reset-password.mako', page_param=json.dumps(param))
 
 
+class ChangeExpiredPasswordHandler(TPBaseHandler):
+    def get(self):
+        _username = self.get_argument('username', None)
+        if _username is None:
+            return self.redirect('/')
+
+        param = {'username': _username, 'force_strong': tp_cfg().sys.password.force_strong}
+        self.render('user/change-expired-password.mako', page_param=json.dumps(param))
+
+
 class BindOathHandler(TPBaseHandler):
     def get(self):
         self.render('user/bind-oath.mako')
@@ -147,7 +157,7 @@ class DoVerifyUserHandler(TPBaseJsonHandler):
         except:
             check_bind_oath = False
 
-        err, user_info = user.login(self, username, password=password, check_bind_oath=check_bind_oath)
+        err, user_info, msg = user.login(self, username, password=password, check_bind_oath=check_bind_oath)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH
@@ -173,7 +183,7 @@ class DoBindOathHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
-        err, user_info = user.login(self, username, password=password)
+        err, user_info, msg = user.login(self, username, password=password)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH

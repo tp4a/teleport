@@ -115,12 +115,13 @@ class DoLoginHandler(TPBaseJsonHandler):
             syslog.sys_log({'username': '???', 'surname': '???'}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，可能是攻击行为。试图使用用户名 {} 进行登录。'.format(username))
             return self.write_json(err)
 
-        err, user_info = user.login(self, username, password=password, oath_code=oath)
+        err, user_info, msg = user.login(self, username, password=password, oath_code=oath)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH
+                msg = '用户名或密码错误'
                 syslog.sys_log({'username': '???', 'surname': '???'}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
-            return self.write_json(err)
+            return self.write_json(err, msg)
 
         # 判断此用户是否被允许使用当前登录认证方式
         auth_type = user_info.auth_type

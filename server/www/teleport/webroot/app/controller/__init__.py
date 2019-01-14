@@ -66,6 +66,8 @@ controllers = [
     (r'/user/get-users', user.DoGetUsersHandler),
     #  - 用户重设密码页面 /auth/reset-password
     (r'/user/reset-password', user.ResetPasswordHandler),
+    #  - 用户密码过期，修改密码页面 /auth/change-password
+    (r'/user/change-expired-password', user.ChangeExpiredPasswordHandler),
     #  - [json] 重置密码
     (r'/user/do-reset-password', user.DoResetPasswordHandler),
     #  - 用户绑定OATH

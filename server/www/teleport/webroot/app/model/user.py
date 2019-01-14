@@ -56,20 +56,19 @@ def get_by_username(username):
 
 def login(handler, username, password=None, oath_code=None, check_bind_oath=False):
     sys_cfg = tp_cfg().sys
+    msg = ''
 
     err, user_info = get_by_username(username)
     if err != TPE_OK:
-        # if err == TPE_NOT_EXISTS:
-        #     syslog.sys_log({'username': username, 'surname': username}, handler.request.remote_ip, TPE_NOT_EXISTS,
-        #                    '用户身份验证失败，用户`{}`不存在'.format(username))
-        return err, None
+        return err, None, msg
 
     if user_info.privilege == 0:
         # 尚未为此用户设置角色
-        return TPE_PRIVILEGE, None
+        msg = '登录失败，用户尚未分配权限'
+        return TPE_PRIVILEGE, None, msg
 
     if check_bind_oath and len(user_info['oath_secret']) != 0:
-        return TPE_OATH_ALREADY_BIND, None
+        return TPE_OATH_ALREADY_BIND, None, msg
 
     if user_info['state'] == TP_STATE_LOCKED:
         # 用户已经被锁定，如果系统配置为一定时间后自动解锁，则更新一下用户信息
@@ -78,14 +77,17 @@ def login(handler, username, password=None, oath_code=None, check_bind_oath=Fals
                 user_info.fail_count = 0
                 user_info.state = TP_STATE_NORMAL
         if user_info['state'] == TP_STATE_LOCKED:
-            syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_LOCKED, '登录失败，用户已被临时锁定')
-            return TPE_USER_LOCKED, None
+            msg = '登录失败，用户已被临时锁定'
+            syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_LOCKED, msg)
+            return TPE_USER_LOCKED, None, msg
     elif user_info['state'] == TP_STATE_DISABLED:
-        syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_DISABLED, '登录失败，用户已被禁用')
-        return TPE_USER_DISABLED, None
+        msg = '登录失败，用户已被禁用'
+        syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_DISABLED, msg)
+        return TPE_USER_DISABLED, None, msg
     elif user_info['state'] != TP_STATE_NORMAL:
-        syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, '登录失败，用户状态异常')
-        return TPE_FAILED, None
+        msg = '登录失败，用户状态异常'
+        syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, msg)
+        return TPE_FAILED, None, msg
 
     err_msg = ''
     if password is not None:
@@ -94,28 +96,32 @@ def login(handler, username, password=None, oath_code=None, check_bind_oath=Fals
             if sys_cfg.password.timeout != 0:
                 _time_now = tp_timestamp_utc_now()
                 if user_info['last_chpass'] + (sys_cfg.password.timeout * 60 * 60 * 24) < _time_now:
-                    syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, '登录失败，用户密码已过期')
-                    return TPE_USER_AUTH, None
+                    msg = '登录失败，用户密码已过期'
+                    syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
+                    return TPE_EXPIRED, None, msg
 
             if not tp_password_verify(password, user_info['password']):
                 err, is_locked = update_fail_count(handler, user_info)
                 if is_locked:
                     err_msg = '，用户已被临时锁定'
-                syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, '登录失败，密码错误{}'.format(err_msg))
-                return TPE_USER_AUTH, None
+                msg = '登录失败，密码错误{}'.format(err_msg)
+                syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
+                return TPE_USER_AUTH, None, msg
         elif user_info['type'] == TP_USER_TYPE_LDAP:
             try:
                 if len(tp_cfg().sys_ldap_password) == 0:
-                    syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, 'LDAP未能正确配置，需要管理员密码')
-                    return TPE_USER_AUTH, None
+                    msg = 'LDAP尚未配置'
+                    syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
+                    return TPE_USER_AUTH, None, msg
                 else:
                     _ldap_password = tp_cfg().sys_ldap_password
                 _ldap_server = tp_cfg().sys.ldap.server
                 _ldap_port = tp_cfg().sys.ldap.port
                 _ldap_base_dn = tp_cfg().sys.ldap.base_dn
             except:
-                syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, 'LDAP未能正确配置')
-                return TPE_USER_AUTH, None
+                msg = 'LDAP尚未正确配置'
+                syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
+                return TPE_USER_AUTH, None, msg
 
             try:
                 ldap = Ldap(_ldap_server, _ldap_port, _ldap_base_dn)
@@ -125,40 +131,42 @@ def login(handler, username, password=None, oath_code=None, check_bind_oath=Fals
                         err, is_locked = update_fail_count(handler, user_info)
                         if is_locked:
                             err_msg = '，用户已被临时锁定'
-                        syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH,
-                                       'LDAP用户登录失败，密码错误{}'.format(err_msg))
-                        return TPE_USER_AUTH, None
+                        msg = 'LDAP用户验证失败{}'.format(err_msg)
+                        syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
+                        return TPE_USER_AUTH, None, msg
                     else:
-                        syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH,
-                                       'LDAP用户登录失败，{}'.format(err_msg))
-                        return TPE_USER_AUTH, None
+                        msg = 'LDAP用户登录失败，{}'.format(err_msg)
+                        syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
+                        return TPE_USER_AUTH, None, msg
             except:
-                syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, 'LDAP用户登录失败，发生内部错误')
-                return TPE_USER_AUTH, None
+                msg = 'LDAP用户登录失败，发生内部错误'
+                syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
+                return TPE_USER_AUTH, None, msg
 
         else:
-            syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, '登录失败，系统内部错误')
-            return TPE_USER_AUTH, None
+            msg = '登录失败，系统内部错误'
+            syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
+            return TPE_USER_AUTH, None, msg
 
     if oath_code is not None:
         # use oath
         if len(user_info['oath_secret']) == 0:
-            return TPE_OATH_MISMATCH, None
+            return TPE_OATH_MISMATCH, None, msg
 
         if not tp_oath_verify_code(user_info['oath_secret'], oath_code):
             err, is_locked = update_fail_count(handler, user_info)
             if is_locked:
                 err_msg = '，用户已被临时锁定！'
-            syslog.sys_log(user_info, handler.request.remote_ip, TPE_OATH_MISMATCH,
-                           "登录失败，身份验证器动态验证码错误{}".format(err_msg))
-            return TPE_OATH_MISMATCH, None
+            msg = '登录失败，身份验证器动态验证码错误{}'.format(err_msg)
+            syslog.sys_log(user_info, handler.request.remote_ip, TPE_OATH_MISMATCH, msg)
+            return TPE_OATH_MISMATCH, None, msg
 
     del user_info['password']
     del user_info['oath_secret']
 
     if len(user_info['surname']) == 0:
         user_info['surname'] = user_info['username']
-    return TPE_OK, user_info
+    return TPE_OK, user_info, msg
 
 
 def get_users(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):

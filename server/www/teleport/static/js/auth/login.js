@@ -157,7 +157,7 @@ $app.login_account = function () {
         }
     } else if ($app.login_type === TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH) {
         var test_oath = '' + parseInt(str_oath);
-        if(str_oath.length === 6) {
+        if (str_oath.length === 6) {
             for (; ;) {
                 if (test_oath.length < 6)
                     test_oath = '0' + test_oath;
@@ -216,8 +216,14 @@ $app.do_account_login = function (username, password, captcha, oath, is_remember
                 window.location.href = $app.options.ref;
             } else {
                 $app.hide_op_box();
-                $app.show_op_box('error', '登录失败：' + tp_error_msg(ret.code, ret.message));
                 $app.dom.captcha_image.attr('src', '/auth/captcha?h=36&rnd=' + Math.random());
+
+                if (ret.code === TPE_EXPIRED) {
+                    // must change password before login.
+                    window.location.href = '/user/change-expired-password?username=' + username;
+                }
+
+                $app.show_op_box('error', '登录失败：' + tp_error_msg(ret.code, ret.message));
                 console.log(ret);
             }
 

@@ -285,6 +285,9 @@ function tp_error_msg(error_code, message) {
         case TPE_DATABASE:
             msg = '数据库操作失败';
             break;
+        case TPE_EXPIRED:
+            msg = '已过期';
+            break;
 
 //-------------------------------------------------------
 // HTTP请求相关错误
@@ -329,7 +332,7 @@ function tp_error_msg(error_code, message) {
             break;
         
         case TPE_OATH_ALREADY_BIND:
-            msg = '该账号已经绑定了身份验证器，如无法使用，请联系管理员重置密码或更换登陆方式';
+            msg = '该账号已经绑定了身份验证器，如无法使用，请联系管理员重置密码或更换登录方式';
             break;
 
         case TPE_USER_LOCKED:
