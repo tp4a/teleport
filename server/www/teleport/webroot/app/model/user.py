@@ -457,7 +457,7 @@ def set_role_for_users(handler, users, role_id):
     return TPE_OK
 
 
-def set_password(handler, user_id, password):
+def set_password(handler, mode, user_id, password):
     db = get_db()
 
     operator = handler.get_current_user()
@@ -476,15 +476,19 @@ def set_password(handler, user_id, password):
     if len(surname) == 0:
         surname = name
 
-    sql = 'UPDATE `{}user` SET password="{password}" WHERE id={user_id};' \
-          ''.format(db.table_prefix, password=password, user_id=user_id)
+    _time_now = tp_timestamp_utc_now()
+
+    sql = 'UPDATE `{}user` SET `password`="{password}", `last_chpass`={last_chpass} WHERE `id`={user_id};' \
+          ''.format(db.table_prefix, password=password, last_chpass=_time_now, user_id=user_id)
     db_ret = db.exec(sql)
     if not db_ret:
         return TPE_DATABASE
 
-    if operator['id'] == 0:
-        syslog.sys_log({'username': name, 'surname': surname}, handler.request.remote_ip, TPE_OK,
-                       "用户 {} 通过邮件方式重置了密码".format(name))
+    if mode in [3, 4, 5, 6]:
+        if mode == 6:
+            syslog.sys_log({'username': name, 'surname': surname}, handler.request.remote_ip, TPE_OK, "用户 {} 修改了过期的密码".format(name))
+        else:
+            syslog.sys_log({'username': name, 'surname': surname}, handler.request.remote_ip, TPE_OK, "用户 {} 通过邮件方式重置了密码".format(name))
     else:
         syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "为用户 {} 手动重置了密码".format(name))
 

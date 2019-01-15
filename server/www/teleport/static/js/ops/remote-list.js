@@ -8,7 +8,7 @@ $app.on_init = function (cb_stack) {
         // , group_selected: $('#group-selected')
     };
 
-    console.log($app.options);
+    // console.log($app.options);
     if(!$app.options.core_cfg.detected) {
         $tp.notify_error('核心服务未启动，无法进行远程连接！');
         cb_stack.exec();

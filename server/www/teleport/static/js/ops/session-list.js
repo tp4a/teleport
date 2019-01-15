@@ -402,7 +402,7 @@ $app.get_selected_sessions = function (tbl) {
 
 $app.on_btn_kill_sessions_click = function () {
     var sessions = $app.get_selected_sessions($app.table_session);
-    console.log(sessions);
+    // console.log(sessions);
     if (sessions.length === 0) {
         $tp.notify_error('请选择要强行终止的会话！');
         return;

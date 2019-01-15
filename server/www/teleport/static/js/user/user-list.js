@@ -2,7 +2,7 @@
 
 $app.on_init = function (cb_stack) {
 
-    console.log($app.options);
+    // console.log($app.options);
 
     $app.dom = {
         btn_refresh_user_list: $('#btn-refresh-user-list'),
@@ -233,7 +233,7 @@ $app.on_table_users_cell_created = function (tbl, row_id, col_key, cell_obj) {
             if (action === 'edit') {
                 $app.dlg_edit_user.show_edit(row_id);
             } else if (action === 'reset-password') {
-                console.log(user);
+                // console.log(user);
                 if(user.type === TP_USER_TYPE_LDAP)
                     return;
                 $app.dlg_reset_password.show_edit(row_id);
@@ -464,8 +464,8 @@ $app.on_btn_select_file_click = function () {
         $app.dom.upload_file_message.hide();
         // var dom_file_name = $('#upload-file-name');
 
-        console.log(btn_file_selector[0]);
-        console.log(btn_file_selector[0].files);
+        // console.log(btn_file_selector[0]);
+        // console.log(btn_file_selector[0].files);
 
         var file = null;
         if (btn_file_selector[0].files && btn_file_selector[0].files[0]) {
@@ -474,7 +474,7 @@ $app.on_btn_select_file_click = function () {
             file = btn_file_selector[0].files.item(0);
         }
 
-        console.log(file);
+        // console.log(file);
 
         if (file === null) {
             $app.dom.upload_file_info.html('请点击图标，选择要上传的文件！');
@@ -527,7 +527,7 @@ $app.on_btn_do_upload_click = function () {
 
             var ret = JSON.parse(data);
 
-            console.log('import ret', ret);
+            // console.log('import ret', ret);
 
             if (ret.code === TPE_OK) {
                 $app.dom.upload_file_message
@@ -931,7 +931,7 @@ $app.create_dlg_edit_user = function () {
 
     dlg.show_edit = function (row_id) {
         var user = $app.table_users.get_row(row_id);
-        console.log(user);
+        // console.log(user);
         dlg.init_fields(user);
         dlg.dom.dialog.modal({backdrop: 'static'});
     };
@@ -1406,7 +1406,7 @@ $app.create_dlg_ldap_config = function () {
                 dlg.dom.btn_list_attr.removeAttr('disabled');
                 if (ret.code === TPE_OK) {
                     $tp.notify_success('列举LDAP用户属性成功！');
-                    console.log(ret.data);
+                    // console.log(ret.data);
                     $app.dlg_ldap_list_attr_result.show(ret.data.attributes);
                 } else {
                     $tp.notify_error('列举LDAP用户属性失败：' + tp_error_msg(ret.code, ret.message));
@@ -1435,7 +1435,7 @@ $app.create_dlg_ldap_config = function () {
             function (ret) {
                 dlg.dom.btn_test.removeAttr('disabled');
                 if (ret.code === TPE_OK) {
-                    console.log(ret.data);
+                    // console.log(ret.data);
                     $tp.notify_success('LDAP连接测试成功！');
                     $app.dlg_ldap_test_result.show(ret.data);
                 } else {
@@ -1547,7 +1547,7 @@ $app.create_dlg_ldap_test_result = function () {
         var dn;
         for (dn in data) {
             h.push('<tr>');
-            console.log(data[dn]);
+            // console.log(data[dn]);
             _mktd(h, data[dn]['username']);
             _mktd(h, data[dn]['surname']);
             _mktd(h, data[dn]['email']);
@@ -1727,7 +1727,7 @@ $app.create_dlg_ldap_import = function () {
             function (ret) {
                 dlg.dom.btn_refresh.removeAttr('disabled');
                 if (ret.code === TPE_OK) {
-                    console.log(ret.data);
+                    // console.log(ret.data);
 
                     var _d = [];
                     for (var i = 0; i < ret.data.length; ++i) {
@@ -1755,7 +1755,7 @@ $app.create_dlg_ldap_import = function () {
             return;
         }
 
-        console.log(items);
+        // console.log(items);
 
         dlg.dom.btn_import.attr('disabled', 'disabled');
         $tp.ajax_post_json('/system/do-ldap-import', {ldap_users: items},

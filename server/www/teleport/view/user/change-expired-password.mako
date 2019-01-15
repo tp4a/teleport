@@ -70,7 +70,7 @@
                             <p class="input-addon-desc">验证码，点击图片可更换</p>
 
                             <div style="margin:20px 0;">
-                                <button type="button" class="btn btn-primary" data-field="btn-submit" style="width:100%;"><i class="fa fa-check fa-fw"></i> 确定修改</button>
+                                <button type="button" class="btn btn-primary" id="btn-submit" style="width:100%;"><i class="fa fa-check fa-fw"></i> 确定修改</button>
                                 <div id="message" style="display: none;"></div>
                             </div>
 

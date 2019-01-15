@@ -748,6 +748,42 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
                 return self.write_json(TPE_USER_AUTH)
             user_id = user_info['id']
 
+        elif mode == 6:
+            # 用户密码过期，在登录前进行修改
+            try:
+                username = args['username']
+                current_password = args['password']
+                password = args['new_password']
+                captcha = args['captcha']
+            except:
+                return self.write_json(TPE_PARAM)
+
+            code = self.get_session('captcha')
+            if code is None:
+                return self.write_json(TPE_CAPTCHA_EXPIRED, '验证码已失效')
+            if code.lower() != captcha.lower():
+                return self.write_json(TPE_CAPTCHA_MISMATCH, '验证码错误')
+
+            self.del_session('captcha')
+
+            err, user_info = user.get_by_username(username)
+            if err != TPE_OK:
+                return self.write_json(err)
+
+            # xxx 如果是密码过期而在登录前修改密码，需要额外判断用户是否已经被锁定
+            # 如果用户被禁用或锁定，在登录时会被拒绝，因此此处仍然允许其修改密码
+            # if user_info['state'] != TP_STATE_NORMAL:
+            #     if user_info['state'] == TP_STATE_LOCKED:
+            #         return self.write_json(TPE_USER_LOCKED)
+            #     elif user_info['state'] == TP_STATE_DISABLED:
+            #         return self.write_json(TPE_USER_DISABLED)
+            #     else:
+            #         return self.write_json(TPE_FAILED)
+
+            if not tp_password_verify(current_password, user_info['password']):
+                return self.write_json(TPE_USER_AUTH)
+            user_id = user_info['id']
+
         else:
             return self.write_json(TPE_PARAM)
 
@@ -774,7 +810,7 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
 
             return self.write_json(err, msg)
 
-        elif mode == 2 or mode == 4 or mode == 5:
+        elif mode == 2 or mode == 4 or mode == 5 or mode == 6:
             if len(password) == 0:
                 return self.write_json(TPE_PARAM)
 
@@ -784,14 +820,14 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
                     return self.write_json(TPE_FAILED, '密码强度太弱！强密码需要至少8个英文字符，必须包含大写字母、小写字母和数字。')
 
             password = tp_password_generate_secret(password)
-            err = user.set_password(self, user_id, password)
+            err = user.set_password(self, mode, user_id, password)
 
             if mode == 4 and err == TPE_OK:
                 user.remove_reset_token(token)
 
             # 非用户自行修改密码的情况，都默认重置身份认证
-            if mode != 5 and err == TPE_OK:
-                print("reset oath secret")
+            if not (mode == 5 or mode == 6) and err == TPE_OK:
+                # print("reset oath secret")
                 user.update_oath_secret(self, user_id, '')
 
             self.write_json(err)

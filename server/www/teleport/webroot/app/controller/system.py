@@ -259,7 +259,7 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)            
             
-            #增加urlprotocol的配置		
+            # 增加 url-protocol 的配置
             if 'global' in args:
                 processed = True
                 _cfg = args['global']

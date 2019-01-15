@@ -20,7 +20,7 @@
                 <div id="msg-slogan" style="display: none;"></div>
             </div>
 
-            <div id="auth-box-container" style="display: none;" class="col-md-6">
+            <div id="auth-box-container" style="display: anone;" class="col-md-6">
                 <div id="auth-box" class="auth-box auth-box-lg">
                     <div class="header">
                         <a id="login-type-password" class="title selected" href="javascript:;">账号/密码登录</a>

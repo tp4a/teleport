@@ -3,11 +3,19 @@
 $tp.assist = {
     running: false,
     version: '',
+    ver_require: '0.0.0',
+    errcode: TPE_OK,
     api_url: '',
-    teleport_ip: window.location.hostname
+    teleport_ip: window.location.hostname,
+
+    dom: {
+        msg_box_title: null,
+        msg_box_info: null,
+        msg_box_desc: null
+    }
 };
 
-console.log(window.location.protocol);
+// console.log(window.location.protocol);
 
 // $assist 是 $tp.assist 的别名，方便使用。
 var $assist = $tp.assist;
@@ -59,7 +67,41 @@ $assist.init = function (cb_stack) {
 };
 
 $assist.alert_assist_not_found = function () {
+    console.log($assist.errcode);
+    if($assist.errcode === TPE_NO_ASSIST) {
+        $assist.dom.msg_box_title.html('未检测到TELEPORT助手');
+        $assist.dom.msg_box_info.html('需要TELEPORT助手来辅助远程连接，请确认本机运行了TELEPORT助手！');
+        $assist.dom.msg_box_desc.html('如果您尚未运行TELEPORT助手，请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦运行了TELEPORT助手，即可重新进行远程连接。');
+    } else if($assist.errcode === TPE_OLD_ASSIST) {
+        $assist.dom.msg_box_title.html('TELEPORT助手需要升级');
+        $assist.dom.msg_box_info.html('检测到TELEPORT助手版本 v'+ $assist.version +'，但需要最低版本 v'+ $assist.ver_require+'。');
+        $assist.dom.msg_box_desc.html('请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦升级了TELEPORT助手，即可重新进行远程连接。');
+    }
+
     $('#dialog-need-assist').modal();
+};
+
+// 1.2.0  > 1.1.0
+// 1.2    = 1.2.0
+// 2.1.1  > 1.2.9
+// 2.1.10 > 2.1.9
+$assist._version_compare = function () {
+    var ver_current = $assist.version.split(".");
+    var ver_require = $assist.ver_require.split(".");
+
+    var count = ver_current.length;
+    if(ver_require.length > count)
+        count = ver_require.length;
+
+    var c, r;
+    for(var i = 0; i < count; ++i) {
+        c = ver_current[i] || 0;
+        r = ver_require[i] || 0;
+        if(c < r)
+            return false;
+    }
+
+    return true;
 };
 
 $assist._make_message_box = function () {
@@ -68,13 +110,13 @@ $assist._make_message_box = function () {
         '<div class="modal-dialog" role="document">',
         '<div class="modal-content">',
         '<div class="modal-header">',
-        '<h4 class="modal-title">未检测到TELEPORT助手！</h4>',
+        '<h4 class="modal-title" id="assist-msg-box-tittle"></h4>',
         '</div>',
         '<div class="modal-body">',
-        '<div class="alert alert-info" role="alert">',
-        '<p>需要TELEPORT助手来辅助远程连接，请确认本机运行了TELEPORT助手！</p>',
+        '<div class="alert alert-danger" role="alert">',
+        '<p id="assist-msg-box-info"></p>',
         '</div>',
-        '<p>如果您尚未运行TELEPORT助手，请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手</strong></a> 并安装。一旦运行了TELEPORT助手，即可重新进行远程连接。</p>',
+        '<p id="assist-msg-box-desc"></p>',
         '</div>',
         '<div class="modal-footer">',
         '<button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> 我知道了</button>',
@@ -85,9 +127,23 @@ $assist._make_message_box = function () {
         '</div>'
     ].join('\n');
     $('body').append($(_html));
+
+    $assist.dom.msg_box_title = $('#assist-msg-box-tittle');
+    $assist.dom.msg_box_info = $('#assist-msg-box-info');
+    $assist.dom.msg_box_desc = $('#assist-msg-box-desc');
 };
 
 $assist.do_teleport = function (args, func_success, func_error) {
+    if(!$assist.running) {
+        $assist.errcode = TPE_NO_ASSIST;
+        func_error(TPE_NO_ASSIST, '');
+        return;
+    } else if(!$assist._version_compare()) {
+        $assist.errcode = TPE_OLD_ASSIST;
+        func_error(TPE_NO_ASSIST, '');
+        return;
+    }
+
     // 第一步：将参数传递给web服务，准备获取一个远程连接会话ID
     var args_ = JSON.stringify(args);
     $.ajax({
@@ -127,19 +183,17 @@ $assist.do_teleport = function (args, func_success, func_error) {
 
                 // console.log('---', data);
                 var args_ = encodeURIComponent(JSON.stringify(data));
-                //判断是否使用urlprocotol处理方式
+                // 判断是否使用 url-protocol 处理方式
 				if ($app.options.url_proto){
-
-					if(!$("#urlproto").length) {
-						var _html = "<div id='urlproto' style='display:none;z-index=-1;'><iframe src=''/></div>";
+					if(!$("#url-protocol").length) {
+						var _html = '<div id="url-protocol" style="display:none;z-index=-1;"><iframe src=""/></div>';
 						$('body').append($(_html));
 					}
-					$("#urlproto").find("iframe").attr("src",'teleport://' + JSON.stringify(data));
+					$("#url-protocol").find("iframe").attr("src",'teleport://' + JSON.stringify(data));
 				}else{
                     $.ajax({
                         type: 'GET',
                         timeout: 5000,
-                        //url: 'http://localhost:50022/ts_op/' + args_,
                         url: $assist.api_url + '/run/' + args_,
                         jsonp: 'callback',
                         dataType: 'json',
