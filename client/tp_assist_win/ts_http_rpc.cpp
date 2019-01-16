@@ -782,12 +782,12 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
             real_sid = "01" + real_sid;
 
             char sz_rdp_file_content[4096] = { 0 };
-            sprintf_s(sz_rdp_file_content, rdp_content.c_str()
+            sprintf_s(sz_rdp_file_content, 4096, rdp_content.c_str()
                 , (flag_console && rdp_console) ? 1 : 0
                 , display, width, higth
                 , cx, cy, cx + width + 100, cy + higth + 100
-                , flag_clipboard ? 1 : 0
                 , teleport_ip.c_str(), teleport_port
+                , flag_clipboard ? 1 : 0
                 , flag_disk ? "*" : ""
                 , real_sid.c_str()
                 , psw51b.c_str()
@@ -805,7 +805,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
             ex_astr temp_host_ip = real_host_ip;
             ex_replace_all(temp_host_ip, ".", "-");
 
-            sprintf_s(sz_file_name, ("%s%s.rdp"), temp_path, temp_host_ip.c_str());
+            sprintf_s(sz_file_name, MAX_PATH, ("%s%s.rdp"), temp_path, temp_host_ip.c_str());
 
             FILE* f = NULL;
             if (fopen_s(&f, sz_file_name, "wt") != 0) {
