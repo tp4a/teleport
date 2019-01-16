@@ -14,11 +14,12 @@ from .env import env
 def remove(*args):
     path = os.path.join(*args)
 
-    cc.v(' - remove [%s] ... ' % path, end='')
+    # cc.v(' - remove [%s] ... ' % path, end='')
     if not (os.path.exists(path) or os.path.islink(path)):
-        cc.v('not exists, skip.')
+        # cc.v('not exists, skip.')
         return
 
+    cc.v(' - remove [%s] ... ' % path, end='')
     for i in range(5):
         cc.v('.', end='')
         try:
