@@ -17,8 +17,8 @@ class LoginHandler(TPBaseHandler):
         if tp_cfg().app_mode == APP_MODE_MAINTENANCE and get_db().need_create:
             _user = {
                 'id': 0,
-                'username': 'installer',
-                'surname': '安装程序',
+                'username': 'maintainer',
+                'surname': '系统维护-安装',
                 'role_id': 0,
                 'role': '',
                 'privilege': TP_PRIVILEGE_SYS_CONFIG,
@@ -26,6 +26,20 @@ class LoginHandler(TPBaseHandler):
             }
             self.set_session('user', _user)
             self.redirect('/maintenance/install')
+            return
+
+        if tp_cfg().app_mode == APP_MODE_MAINTENANCE and get_db().need_upgrade:
+            _user = {
+                'id': 0,
+                'username': 'maintainer',
+                'surname': '系统维护-升级',
+                'role_id': 0,
+                'role': '',
+                'privilege': TP_PRIVILEGE_SYS_CONFIG,
+                '_is_login': True
+            }
+            self.set_session('user', _user)
+            self.redirect('/maintenance/upgrade')
             return
 
         _user = self.get_current_user()

@@ -82,6 +82,7 @@ class DatabaseInit:
 
     def _create_core_server(self):
         """ 核心服务（为分布式准备）
+        v7 新增
         特别注意：分布式部署时，核心服务的RPC通讯端口仅允许来自web服务的IP访问
         """
 
@@ -152,7 +153,7 @@ class DatabaseInit:
         f.append('`surname` varchar(64) DEFAULT ""')
         # type 1=本地账号，2=LDAP（待扩展）
         f.append('`type` int(11) DEFAULT 1')
-        # ldap_dn: 用户的ldap全路径名称，仅用于LDAP导入的用户
+        # ldap_dn: 用户的ldap全路径名称，仅用于LDAP导入的用户（v7版新增）
         f.append('`ldap_dn` varchar(128) DEFAULT ""')
         # avatar: 用户头像图片地址
         f.append('`avatar` varchar(64) DEFAULT ""')
@@ -185,6 +186,11 @@ class DatabaseInit:
         f.append('`login_ip` varchar(40) DEFAULT ""')
         # last_ip: 最近一次成功登录IP
         f.append('`last_ip` varchar(40) DEFAULT ""')
+
+        # valid_from: 有效期起始时间，为0则不限（v7版新增）
+        f.append('`valid_from` int(11) DEFAULT 0')
+        # valid_to: 有效期终止时间，为0则不限（v7版新增）
+        f.append('`valid_to` int(11) DEFAULT 0')
 
         # creator_id: 创建者的用户id，0=系统默认创建
         f.append('`creator_id` int(11) DEFAULT 0')
@@ -321,11 +327,11 @@ class DatabaseInit:
 
         # 下面三个主机相关字段用于显示（注意更新host表时同步更新此字段）
 
-        # host_ip: 主机IP地址
+        # host_ip: 主机IP地址（v7版新增）
         f.append('`host_ip` varchar(40) NOT NULL')
-        # router_ip: 路由IP
+        # router_ip: 路由IP（v7版新增）
         f.append('`router_ip` varchar(40) DEFAULT ""')
-        # router_port: 路由端口
+        # router_port: 路由端口（v7版新增）
         f.append('`router_port` int(11) DEFAULT 0')
 
         # protocol_type: 协议类型，0=？，1=SSH，2=RDP，3=TELNET
@@ -737,13 +743,13 @@ class DatabaseInit:
         # id: 自增主键
         f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
 
-        # core_uuid:
+        # core_sn:（v7版新增）
         f.append('`core_sn` varchar(5) DEFAULT "0000"')
 
         # flag: 是否已审查/是否要永久保留，异或方式设置，0=初始，1=已审查，2=要永久保留
         f.append('`flag` int(11) DEFAULT 0')
 
-        # reason: 本次运维的原因
+        # reason: 本次运维的原因（v7版新增）
         f.append('`reason` varchar(255) DEFAULT ""')
 
         # sid: 会话ID

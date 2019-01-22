@@ -276,7 +276,7 @@ controllers = [
     #  - 初始安装设置（新安装，未创建数据库时自动跳转到此页面）
     (r'/maintenance/install', maintenance.InstallHandler),
     #  - 升级（数据库版本发生变化时跳转到此页面）
-    # (r'/maintenance/upgrade', maintenance.UpgradeHandler),
+    (r'/maintenance/upgrade', maintenance.UpgradeHandler),
     #  - [json] 维护过程中页面与后台的通讯接口
     (r'/maintenance/rpc', maintenance.RpcHandler),
 
