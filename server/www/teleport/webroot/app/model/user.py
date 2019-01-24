@@ -604,8 +604,13 @@ def update_oath_secret(handler, user_id, oath_secret):
     sql = 'UPDATE `{dbtp}user` SET oath_secret="{secret}" WHERE id={user_id}' \
           ''.format(dbtp=db.table_prefix, secret=oath_secret, user_id=user_id)
     if db.exec(sql):
-        syslog.sys_log({'username': username, 'surname': surname}, handler.request.remote_ip, TPE_OK,
-                       "用户 {} 绑定了身份认证器".format(username))
+        if len(oath_secret) > 0:
+            syslog.sys_log({'username': username, 'surname': surname}, handler.request.remote_ip, TPE_OK,
+                           "用户 {} 更新了身份认证器绑定信息".format(username))
+        else:
+            syslog.sys_log({'username': username, 'surname': surname}, handler.request.remote_ip, TPE_OK,
+                           "用户 {} 清除了身份认证器绑定信息".format(username))
+
         return TPE_OK
     else:
         return TPE_DATABASE
