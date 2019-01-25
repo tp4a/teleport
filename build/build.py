@@ -155,6 +155,7 @@ def do_opt(opt):
 
     # cmd = '"%s" -B "%s" %s' % (utils.cfg.py_exec, os.path.join(BUILDER_PATH, script), arg)
     cmd = '%s -B %s %s' % (env.py_exec, os.path.join(env.builder_path, script), arg)
+    print(cmd)
     os.system(cmd)
 
 

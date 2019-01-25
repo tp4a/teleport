@@ -96,7 +96,7 @@ INT_PTR CALLBACK eomDlgMainProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARA
 
 		case IDM_OPEN_CONFIG:
 		{
-			ShellExecute(nullptr, _T("open"), _T("http://localhost:50022/config"), nullptr, nullptr, SW_SHOW);
+			ShellExecute(nullptr, _T("open"), _T("http://127.0.0.1:50022/config"), nullptr, nullptr, SW_SHOW);
 			return TRUE;
 		}break;
 

@@ -17,14 +17,14 @@
 //=================================================================
 接口使用说明：
 
-本程序启动后，监听 localhost:50022，接收http请求，请求格式要求如下：
+本程序启动后，监听 127.0.0.1:50022，接收http请求，请求格式要求如下：
 
 GET 方式
-http://localhost:50022/method/json_param
+http://127.0.0.1:50022/method/json_param
 其中json_param是使用url_encode进行编码后的json格式字符串
 
 POST 方式
-http://localhost:50022/method
+http://127.0.0.1:50022/method
 post的数据区域是json_param
 
 其中，URI分为三个部分：

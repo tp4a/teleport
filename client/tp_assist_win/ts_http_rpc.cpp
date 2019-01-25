@@ -129,7 +129,7 @@ void http_rpc_main_loop(bool is_https) {
         }
 
         EXLOGW("======================================================\n");
-        EXLOGW("[rpc] TeleportAssist-HTTPS-RPC ready on localhost:%d\n", TS_HTTPS_RPC_PORT);
+        EXLOGW("[rpc] TeleportAssist-HTTPS-RPC ready on 127.0.0.1:%d\n", TS_HTTPS_RPC_PORT);
 
         g_https_interface.run();
 
@@ -141,7 +141,7 @@ void http_rpc_main_loop(bool is_https) {
         }
 
         EXLOGW("======================================================\n");
-        EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on localhost:%d\n", TS_HTTP_RPC_PORT);
+        EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on 127.0.0.1:%d\n", TS_HTTP_RPC_PORT);
 
         g_http_interface.run();
 
