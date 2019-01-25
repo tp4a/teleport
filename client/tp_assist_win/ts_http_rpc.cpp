@@ -259,7 +259,7 @@ bool TsHttpRpc::init_http() {
 
     nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
     if (!nc) {
-        EXLOGE("[rpc] TsHttpRpc::init localhost:%d\n", TS_HTTP_RPC_PORT);
+        EXLOGE("[rpc] TsHttpRpc::init 127.0.0.1:%d\n", TS_HTTP_RPC_PORT);
         return false;
     }
     nc->user_data = this;
@@ -289,12 +289,11 @@ bool TsHttpRpc::init_https() {
 
     char addr[128] = { 0 };
     ex_strformat(addr, 128, "tcp://127.0.0.1:%d", TS_HTTPS_RPC_PORT);
-    //ex_strformat(addr, 128, "%d", TS_HTTPS_RPC_PORT);
 
     struct mg_connection* nc = nullptr;
     nc = mg_bind_opt(&m_mg_mgr, addr, _mg_event_handler, bind_opts);
     if (!nc) {
-        EXLOGE("[rpc] TsHttpRpc::init localhost:%d\n", TS_HTTPS_RPC_PORT);
+        EXLOGE("[rpc] TsHttpRpc::init 127.0.0.1:%d\n", TS_HTTPS_RPC_PORT);
         return false;
     }
     nc->user_data = this;
@@ -375,20 +374,24 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
         EXLOGV("[rpc] got %s request: %s\n", dbg_method, uri.c_str());
 #endif
         ex_astr ret_buf;
-        bool b_is_index = false;
+        bool b_is_html = false;
+
+//         if (uri == "/") {
+//             ex_wstr page = L"<html lang=\"zh_CN\"><head><meta charset=\"utf-8\"/><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>Teleport助手</title>\n<style type=\"text/css\">\n.box{padding:20px;margin:40px;border:1px solid #78b17c;background-color:#e4ffe5;}\n</style>\n</head><body><div class=\"box\">Teleport助手工作正常！</div></body></html>";
+//             ex_wstr2astr(page, ret_buf, EX_CODEPAGE_UTF8);
+// 
+//             mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: text/html\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
+//             nc->flags |= MG_F_SEND_AND_CLOSE;
+//             return;
+//         }
 
         if (uri == "/") {
-            ex_wstr page = L"<html lang=\"zh_CN\"><head><meta charset=\"utf-8\"/><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>Teleport助手</title>\n<style type=\"text/css\">\n.box{padding:20px;margin:40px;border:1px solid #78b17c;background-color:#e4ffe5;}\n</style>\n</head><body><div class=\"box\">Teleport助手工作正常！</div></body></html>";
-            ex_wstr2astr(page, ret_buf, EX_CODEPAGE_UTF8);
-
-            mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: text/html\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
-            nc->flags |= MG_F_SEND_AND_CLOSE;
-            return;
+            uri = "/status.html";
+            b_is_html = true;
         }
-
-        if (uri == "/config") {
+        else if (uri == "/config") {
             uri = "/index.html";
-            b_is_index = true;
+            b_is_html = true;
         }
 
         ex_astr temp;
@@ -445,7 +448,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
             delete[]buf;
             nc->flags |= MG_F_SEND_AND_CLOSE;
             return;
-        } else if (b_is_index) {
+        } else if (b_is_html) {
             ex_wstr page = L"<html lang=\"zh_CN\"><html><head><title>404 Not Found</title></head><body bgcolor=\"white\"><center><h1>404 Not Found</h1></center><hr><center><p>Teleport Assistor configuration page not found.</p></center></body></html>";
             ex_wstr2astr(page, ret_buf, EX_CODEPAGE_UTF8);
 
