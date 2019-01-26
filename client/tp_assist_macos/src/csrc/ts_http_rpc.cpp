@@ -106,8 +106,8 @@ TsHttpRpc::~TsHttpRpc()
 	mg_mgr_free(&m_mg_mgr);
 }
 
-bool TsHttpRpc::init_http()
-    struct mg_connection* nc = nullptr;
+bool TsHttpRpc::init_http() {
+    struct mg_connection* nc = NULL;
 
     char addr[128] = { 0 };
     ex_strformat(addr, 128, "tcp://127.0.0.1:%d", TS_HTTP_RPC_PORT);
