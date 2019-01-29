@@ -498,6 +498,18 @@ class InstallerLinux(InstallerBase):
         elif os.path.exists('/etc/init.d/teleport'):
             self._is_installed = True
             self._install_path = '/usr/local/teleport'
+
+            with open('/etc/init.d/teleport', 'r') as f:
+                lines = f.readlines()
+                for l in lines:
+                    if l.startswith('DAEMON_PATH='):
+                        l = l.replace('\r', '')
+                        l = l.replace('\n', '')
+                        x = l.split('=')
+                        self._install_path = x[1]
+                        break
+                        
+            
             # self._fix_path()
 
         if self._is_installed:

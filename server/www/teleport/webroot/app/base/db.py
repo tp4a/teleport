@@ -12,7 +12,7 @@ from app.base.configs import tp_cfg
 from app.base.utils import AttrDict, tp_make_dir
 from app.base.logger import log
 from .database.create import DatabaseInit
-# from .database.upgrade import DatabaseUpgrade
+from .database.upgrade import DatabaseUpgrade
 from .database.export import export_database
 
 __all__ = ['get_db', 'SQL']
@@ -23,7 +23,8 @@ __all__ = ['get_db', 'SQL']
 
 class TPDatabase:
     # 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
-    DB_VERSION = 6
+    # 20190123: server-v3.2.2, db-v7
+    DB_VERSION = 7
 
     DB_TYPE_UNKNOWN = 0
     DB_TYPE_SQLITE = 1
@@ -267,15 +268,15 @@ class TPDatabase:
             log.e('database create and initialize failed.\n')
             return False
 
-    # def upgrade_database(self, step_begin, step_end):
-    #     log.v('start database upgrade process.\n')
-    #     if DatabaseUpgrade(self, step_begin, step_end).do_upgrade():
-    #         log.v('database upgraded.\n')
-    #         self.need_upgrade = False
-    #         return True
-    #     else:
-    #         log.e('database upgrade failed.\n')
-    #         return False
+    def upgrade_database(self, step_begin, step_end):
+        log.v('start database upgrade process.\n')
+        if DatabaseUpgrade(self, step_begin, step_end).do_upgrade():
+            log.v('database upgraded.\n')
+            self.need_upgrade = False
+            return True
+        else:
+            log.e('database upgrade failed.\n')
+            return False
 
     def alter_table(self, table_names, field_names=None):
         """

@@ -683,7 +683,6 @@ class DoLdapImportHandler(TPBaseJsonHandler):
                 for u in user_list:
                     if u['_id'] == 0 or len(u['email']) == 0:
                         continue
-                    u['email'] = 'apex.liu@qq.com'
 
                     mail_body = '{surname} 您好！\n\n已为您创建teleport系统用户账号，现在可以使用以下信息登录teleport系统：\n\n' \
                                 '登录用户名：{username}\n' \
