@@ -318,7 +318,8 @@ class BuilderLinux(BuilderBase):
             cc.w('already exists, skip.')
 
     def _build_openssl(self, file_name):
-        pass  # we do not need build openssl anymore, because first time run build.sh we built Python, it include openssl.
+        # we do not need build openssl anymore, because first time run build.sh we built Python with openssl included.
+        pass
 
     def _build_libuv(self, file_name):
         if not os.path.exists(self.LIBUV_PATH_SRC):
@@ -346,6 +347,8 @@ class BuilderLinux(BuilderBase):
             if i.startswith('libuv.so') or i.startswith('libuv.la'):
                 # use os.unlink() because some file should be a link.
                 os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
+
+        utils.ensure_file_exists(os.path.join(self.PATH_RELEASE, 'lib', 'libuv.a'))
 
     def _build_mbedtls(self, file_name):
         if not os.path.exists(self.MBEDTLS_PATH_SRC):
@@ -382,8 +385,6 @@ class BuilderLinux(BuilderBase):
         # fix source file
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls', 'config.h'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'include', 'mbedtls'), os.path.join(self.MBEDTLS_PATH_SRC, 'include', 'mbedtls'), 'config.h')
-        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library', 'rsa.c'))
-        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'mbedtls', 'library'), os.path.join(self.MBEDTLS_PATH_SRC, 'library'), 'rsa.c')
 
         old_p = os.getcwd()
         os.chdir(self.MBEDTLS_PATH_SRC)
