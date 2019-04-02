@@ -1,5 +1,7 @@
 # TELEPORT
 
+[![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
+
 欢迎使用TELEPORT！
 
 ## 快速了解
@@ -18,9 +20,7 @@ Teleport非常小巧且极易安装部署：**仅需一分钟，就可以安装�
 Teleport支持部署到Linux系统中，目前支持的系统版本如下：
 
 - Ubuntu 14.04 64位 及以上版本
-- CentOS 6.2 64位 及以上版本
-- Debian 6.0 64位 及以上版本
-- Redhat 6.2 64位 及以上版本
+- CentOS 7.2 64位 及以上版本
 
 ## 依赖环境
 
