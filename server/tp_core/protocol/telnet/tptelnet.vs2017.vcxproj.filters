@@ -313,8 +313,8 @@
     <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_value.cpp">
       <Filter>jsoncpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\external\libuv\src\win\timer.c">
-      <Filter>libuv\src\win</Filter>
+    <ClCompile Include="..\..\..\..\external\libuv\src\timer.c">
+      <Filter>libuv\src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
