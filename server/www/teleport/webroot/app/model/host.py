@@ -13,7 +13,7 @@ from app.base.utils import tp_timestamp_utc_now
 
 def get_host_info(host_id):
     s = SQL(get_db())
-    s.select_from('host', ['id', 'type', 'ip', 'router_ip', 'router_port', 'state'], alt_name='h')
+    s.select_from('host', ['id', 'name', 'type', 'ip', 'router_ip', 'router_port', 'state'], alt_name='h')
     s.where('h.id={}'.format(host_id))
     err = s.query()
     if err != TPE_OK:

@@ -298,6 +298,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         data = dict()
         data['session_id'] = ret_data['sid']
         data['host_ip'] = host_info['ip']
+        data['host_name'] = host_info['name']
         data['protocol_flag'] = acc_info['protocol_flag']
 
         if conn_info['protocol_type'] == TP_PROTOCOL_TYPE_RDP:
