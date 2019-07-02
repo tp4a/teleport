@@ -98,23 +98,23 @@
     <ClInclude Include="ssh_recorder.h">
       <Filter>main app</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\sftp.h">
-      <Filter>libssh</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\callbacks.h">
-      <Filter>libssh</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\libssh.h">
-      <Filter>libssh</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\server.h">
-      <Filter>libssh</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\external\jsoncpp\include\json\json.h">
       <Filter>jsoncpp</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\common\teleport\teleport_const.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libssh\include\libssh\callbacks.h">
+      <Filter>libssh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libssh\include\libssh\libssh.h">
+      <Filter>libssh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libssh\include\libssh\server.h">
+      <Filter>libssh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\external\libssh\include\libssh\sftp.h">
+      <Filter>libssh</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
