@@ -30,8 +30,12 @@
     <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_web_rpc.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_web_rpc.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/librdp/core/config.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/librdp/rdp/x224.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/membuf.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/membuf.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_conn.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_conn.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_package.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_proxy.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_session.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_session.h" charset="GBK" />

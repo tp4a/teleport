@@ -1,18 +1,10 @@
 // testssh.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
+//#include "stdafx.h"
 
 #include <libssh/libssh.h>
-
-#ifdef _DEBUG
-#	pragma comment(lib, "debug/ssh.lib")
-#else
-#	pragma comment(lib, "release/ssh.lib")
-#endif
-#pragma comment(lib, "libeay32.lib")
-#pragma comment(lib, "ws2_32.lib")
-
+#include <ex.h>
 
 void show_usage() {
     printf("Usage:\n");
@@ -103,8 +95,8 @@ int main(int argc, char** argv)
                 retry_count += 1;
                 if (retry_count >= 5)
                     break;
-                //ex_sleep_ms(500);
-                Sleep(500);
+                ex_sleep_ms(500);
+                // Sleep(500);
                 rc = ssh_userauth_kbdint(sess, nullptr, nullptr);
                 continue;
             }
@@ -144,7 +136,8 @@ int main(int argc, char** argv)
                 retry_count += 1;
                 if (retry_count >= 3)
                     break;
-                Sleep(100);
+                ex_sleep_ms(100);
+                // Sleep(100);
                 rc = ssh_userauth_password(sess, nullptr, password);
                 continue;
             }
