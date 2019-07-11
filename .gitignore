@@ -65,7 +65,6 @@ __pycache__
 /server/share/db
 /server/share/log
 /server/share/replay
-/server/testssh
 
 
 # for generated files.
@@ -78,7 +77,6 @@ __pycache__
 /client/tp_rdp
 /server/tp_core/protocol/rdp
 /client/tools/tprdp
-/server/tp_core/testssh
 /client/tp_assist_win_it_doctor
 /dist/client/windows/assist-it-doctor
 
