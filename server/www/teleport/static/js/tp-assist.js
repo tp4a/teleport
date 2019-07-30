@@ -159,6 +159,7 @@ $assist.do_teleport = function (args, func_success, func_error) {
                 // 第二步：获取到临时会话ID后，将此ID传递给助手，准备开启一次远程会话
                 var session_id = ret.data.session_id;
                 var remote_host_ip = ret.data.host_ip;
+                var remote_host_name = ret.data.host_name;
                 var teleport_port = ret.data.teleport_port;
                 var data = {
                     //server_ip: g_host_name,	//args.server_ip,
@@ -166,6 +167,7 @@ $assist.do_teleport = function (args, func_success, func_error) {
                     teleport_ip: $assist.teleport_ip,
                     teleport_port: teleport_port,
                     remote_host_ip: remote_host_ip,
+                    remote_host_name: remote_host_name,
                     // remote_host_port: args.host_port,
                     // rdp_size: args.rdp_size,
                     // rdp_console: args.rdp_console,

@@ -226,9 +226,6 @@
     <ClCompile Include="..\..\..\..\external\libuv\src\version.c">
       <Filter>libuv\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\external\libuv\src\win\req.c">
-      <Filter>libuv\src\win</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\external\libuv\src\win\signal.c">
       <Filter>libuv\src\win</Filter>
     </ClCompile>
@@ -313,8 +310,14 @@
     <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_value.cpp">
       <Filter>jsoncpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\external\libuv\src\win\timer.c">
-      <Filter>libuv\src\win</Filter>
+    <ClCompile Include="..\..\..\..\external\libuv\src\timer.c">
+      <Filter>libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\strscpy.c">
+      <Filter>libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\external\libuv\src\idna.c">
+      <Filter>libuv\src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

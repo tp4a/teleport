@@ -140,8 +140,11 @@
     <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_value.cpp" />
     <ClCompile Include="..\..\..\..\external\jsoncpp\src\lib_json\json_writer.cpp" />
     <ClCompile Include="..\..\..\..\external\libuv\src\fs-poll.c" />
+    <ClCompile Include="..\..\..\..\external\libuv\src\idna.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\inet.c" />
+    <ClCompile Include="..\..\..\..\external\libuv\src\strscpy.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\threadpool.c" />
+    <ClCompile Include="..\..\..\..\external\libuv\src\timer.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\uv-common.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\version.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\async.c" />
@@ -159,13 +162,11 @@
     <ClCompile Include="..\..\..\..\external\libuv\src\win\poll.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\process-stdio.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\process.c" />
-    <ClCompile Include="..\..\..\..\external\libuv\src\win\req.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\signal.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\snprintf.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\stream.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\tcp.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\thread.c" />
-    <ClCompile Include="..\..\..\..\external\libuv\src\win\timer.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\tty.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\udp.c" />
     <ClCompile Include="..\..\..\..\external\libuv\src\win\util.c" />

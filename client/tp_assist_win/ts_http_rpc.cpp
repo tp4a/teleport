@@ -660,6 +660,8 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
     ex_astr teleport_ip = jsRoot["teleport_ip"].asCString();
     int teleport_port = jsRoot["teleport_port"].asUInt();
 
+    ex_astr remote_host_name = jsRoot["remote_host_name"].asCString();
+
     ex_astr real_host_ip = jsRoot["remote_host_ip"].asCString();
     ex_astr sid = jsRoot["session_id"].asCString();
 
@@ -673,6 +675,8 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
     ex_astr2wstr(teleport_ip, w_teleport_ip);
     ex_wstr w_real_host_ip;
     ex_astr2wstr(real_host_ip, w_real_host_ip);
+    ex_wstr w_remote_host_name;
+    ex_astr2wstr(remote_host_name, w_remote_host_name);
     WCHAR w_port[32] = { 0 };
     swprintf_s(w_port, _T("%d"), teleport_port);
 
@@ -905,9 +909,10 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
         w_exe_path += g_cfg.telnet_cmdline;
     }
 
-    ex_replace_all(w_exe_path, _T("{host_port}"), w_port);
     ex_replace_all(w_exe_path, _T("{host_ip}"), w_teleport_ip.c_str());
+    ex_replace_all(w_exe_path, _T("{host_port}"), w_port);
     ex_replace_all(w_exe_path, _T("{user_name}"), w_sid.c_str());
+    ex_replace_all(w_exe_path, _T("{host_name}"), w_remote_host_name.c_str());
     ex_replace_all(w_exe_path, _T("{real_ip}"), w_real_host_ip.c_str());
     ex_replace_all(w_exe_path, _T("{assist_tools_path}"), g_env.m_tools_path.c_str());
 

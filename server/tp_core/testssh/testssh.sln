@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testssh", "testssh.vcxproj", "{27998EAA-69B4-4AA5-9D91-54CE740181A9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{27998EAA-69B4-4AA5-9D91-54CE740181A9}.Debug|x86.ActiveCfg = Debug|Win32
+		{27998EAA-69B4-4AA5-9D91-54CE740181A9}.Debug|x86.Build.0 = Debug|Win32
+		{27998EAA-69B4-4AA5-9D91-54CE740181A9}.Release|x86.ActiveCfg = Release|Win32
+		{27998EAA-69B4-4AA5-9D91-54CE740181A9}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0FAE3FD8-A9E1-4BF8-9A6C-A9AC50174CDF}
+	EndGlobalSection
+EndGlobal
