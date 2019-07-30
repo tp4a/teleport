@@ -134,14 +134,16 @@ $assist._make_message_box = function () {
 };
 
 $assist.do_teleport = function (args, func_success, func_error) {
-    if(!$assist.running) {
-        $assist.errcode = TPE_NO_ASSIST;
-        func_error(TPE_NO_ASSIST, '');
-        return;
-    } else if(!$assist._version_compare()) {
-        $assist.errcode = TPE_OLD_ASSIST;
-        func_error(TPE_NO_ASSIST, '');
-        return;
+    if(!$app.options.url_proto){
+        if(!$assist.running) {
+            $assist.errcode = TPE_NO_ASSIST;
+            func_error(TPE_NO_ASSIST, '');
+            return;
+        } else if(!$assist._version_compare()) {
+            $assist.errcode = TPE_OLD_ASSIST;
+            func_error(TPE_NO_ASSIST, '');
+            return;
+	}
     }
 
     // 第一步：将参数传递给web服务，准备获取一个远程连接会话ID
