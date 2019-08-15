@@ -28,8 +28,10 @@ __pycache__
 **/.idea/misc.xml
 **/.idea/dictionaries
 **/.idea/watcherTasks.xml
+**/.idea/dataSources.*
 **/.idea/inspectionProfiles
 **/.idea/codeStyles
+**/.idea/dataSources
 **/.idea/inspectionProfiles
 **/.idea/vcs.xml
 **/.idea/modules.xml
