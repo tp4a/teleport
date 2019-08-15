@@ -5,6 +5,7 @@
 """Sun OS Solaris platform implementation."""
 
 import errno
+import functools
 import os
 import socket
 import subprocess
@@ -17,6 +18,7 @@ from . import _psposix
 from . import _psutil_posix as cext_posix
 from . import _psutil_sunos as cext
 from ._common import AF_INET6
+from ._common import get_procfs_path
 from ._common import isfile_strict
 from ._common import memoize_when_activated
 from ._common import sockfam_to_enum
@@ -24,9 +26,6 @@ from ._common import socktype_to_enum
 from ._common import usage_percent
 from ._compat import b
 from ._compat import PY3
-from ._exceptions import AccessDenied
-from ._exceptions import NoSuchProcess
-from ._exceptions import ZombieProcess
 
 
 __extra__all__ = ["CONN_IDLE", "CONN_BOUND", "PROCFS_PATH"]
@@ -85,6 +84,13 @@ proc_info_map = dict(
     gid=10,
     egid=11)
 
+# These objects get set on "import psutil" from the __init__.py
+# file, see: https://github.com/giampaolo/psutil/issues/1402
+NoSuchProcess = None
+ZombieProcess = None
+AccessDenied = None
+TimeoutExpired = None
+
 
 # =====================================================================
 # --- named tuples
@@ -107,16 +113,6 @@ pmmap_grouped = namedtuple('pmmap_grouped',
 # psutil.Process.memory_maps(grouped=False)
 pmmap_ext = namedtuple(
     'pmmap_ext', 'addr perms ' + ' '.join(pmmap_grouped._fields))
-
-
-# =====================================================================
-# --- utils
-# =====================================================================
-
-
-def get_procfs_path():
-    """Return updated psutil.PROCFS_PATH constant."""
-    return sys.modules['psutil'].PROCFS_PATH
 
 
 # =====================================================================
@@ -341,7 +337,7 @@ def wrap_exceptions(fun):
     """Call callable into a try/except clause and translate ENOENT,
     EACCES and EPERM in NoSuchProcess or AccessDenied exceptions.
     """
-
+    @functools.wraps(fun)
     def wrapper(self, *args, **kwargs):
         try:
             return fun(self, *args, **kwargs)
@@ -368,7 +364,7 @@ def wrap_exceptions(fun):
 class Process(object):
     """Wrapper class around underlying C implementation."""
 
-    __slots__ = ["pid", "_name", "_ppid", "_procfs_path"]
+    __slots__ = ["pid", "_name", "_ppid", "_procfs_path", "_cache"]
 
     def __init__(self, pid):
         self.pid = pid
@@ -376,32 +372,38 @@ class Process(object):
         self._ppid = None
         self._procfs_path = get_procfs_path()
 
+    def _assert_alive(self):
+        """Raise NSP if the process disappeared on us."""
+        # For those C function who do not raise NSP, possibly returning
+        # incorrect or incomplete result.
+        os.stat('%s/%s' % (self._procfs_path, self.pid))
+
     def oneshot_enter(self):
-        self._proc_name_and_args.cache_activate()
-        self._proc_basic_info.cache_activate()
-        self._proc_cred.cache_activate()
+        self._proc_name_and_args.cache_activate(self)
+        self._proc_basic_info.cache_activate(self)
+        self._proc_cred.cache_activate(self)
 
     def oneshot_exit(self):
-        self._proc_name_and_args.cache_deactivate()
-        self._proc_basic_info.cache_deactivate()
-        self._proc_cred.cache_deactivate()
+        self._proc_name_and_args.cache_deactivate(self)
+        self._proc_basic_info.cache_deactivate(self)
+        self._proc_cred.cache_deactivate(self)
 
+    @wrap_exceptions
     @memoize_when_activated
     def _proc_name_and_args(self):
         return cext.proc_name_and_args(self.pid, self._procfs_path)
 
+    @wrap_exceptions
     @memoize_when_activated
     def _proc_basic_info(self):
         ret = cext.proc_basic_info(self.pid, self._procfs_path)
         assert len(ret) == len(proc_info_map)
         return ret
 
+    @wrap_exceptions
     @memoize_when_activated
     def _proc_cred(self):
-        @wrap_exceptions
-        def proc_cred(self):
-            return cext.proc_cred(self.pid, self._procfs_path)
-        return proc_cred(self)
+        return cext.proc_cred(self.pid, self._procfs_path)
 
     @wrap_exceptions
     def name(self):
@@ -518,8 +520,7 @@ class Process(object):
                         continue
                     raise
         if hit_enoent:
-            # raise NSP if the process disappeared on us
-            os.stat('%s/%s' % (procfs_path, self.pid))
+            self._assert_alive()
 
     @wrap_exceptions
     def cwd(self):
@@ -581,8 +582,7 @@ class Process(object):
                 nt = _common.pthread(tid, utime, stime)
                 ret.append(nt)
         if hit_enoent:
-            # raise NSP if the process disappeared on us
-            os.stat('%s/%s' % (procfs_path, self.pid))
+            self._assert_alive()
         return ret
 
     @wrap_exceptions
@@ -606,8 +606,7 @@ class Process(object):
                     if isfile_strict(file):
                         retlist.append(_common.popenfile(file, int(fd)))
         if hit_enoent:
-            # raise NSP if the process disappeared on us
-            os.stat('%s/%s' % (procfs_path, self.pid))
+            self._assert_alive()
         return retlist
 
     def _get_unix_sockets(self, pid):
@@ -707,8 +706,7 @@ class Process(object):
                         raise
             retlist.append((addr, perm, name, rss, anon, locked))
         if hit_enoent:
-            # raise NSP if the process disappeared on us
-            os.stat('%s/%s' % (procfs_path, self.pid))
+            self._assert_alive()
         return retlist
 
     @wrap_exceptions

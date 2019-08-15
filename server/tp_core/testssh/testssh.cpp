@@ -1,18 +1,10 @@
 // testssh.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
+//#include "stdafx.h"
 
 #include <libssh/libssh.h>
-
-#ifdef _DEBUG
-#	pragma comment(lib, "debug/ssh.lib")
-#else
-#	pragma comment(lib, "release/ssh.lib")
-#endif
-#pragma comment(lib, "libeay32.lib")
-#pragma comment(lib, "ws2_32.lib")
-
+#include <ex.h>
 
 void show_usage() {
     printf("Usage:\n");
@@ -81,7 +73,7 @@ int main(int argc, char** argv)
 
     // get banner.
     const char* banner = ssh_get_issue_banner(sess);
-    if (banner != nullptr) {
+    if (banner != NULL) {
         printf("[INFO] server issue banner: %s\n", banner);
     }
 
@@ -92,7 +84,7 @@ int main(int argc, char** argv)
     // first try interactive login mode if server allow.
     if (!ok && (auth_methods & SSH_AUTH_METHOD_INTERACTIVE) == SSH_AUTH_METHOD_INTERACTIVE) {
         retry_count = 0;
-        rc = ssh_userauth_kbdint(sess, nullptr, nullptr);
+        rc = ssh_userauth_kbdint(sess, NULL, NULL);
         for (;;) {
             if (rc == SSH_AUTH_SUCCESS) {
                 ok = true;
@@ -103,9 +95,9 @@ int main(int argc, char** argv)
                 retry_count += 1;
                 if (retry_count >= 5)
                     break;
-                //ex_sleep_ms(500);
-                Sleep(500);
-                rc = ssh_userauth_kbdint(sess, nullptr, nullptr);
+                ex_sleep_ms(500);
+                // Sleep(500);
+                rc = ssh_userauth_kbdint(sess, NULL, NULL);
                 continue;
             }
 
@@ -114,7 +106,7 @@ int main(int argc, char** argv)
 
             int nprompts = ssh_userauth_kbdint_getnprompts(sess);
             if (0 == nprompts) {
-                rc = ssh_userauth_kbdint(sess, nullptr, nullptr);
+                rc = ssh_userauth_kbdint(sess, NULL, NULL);
                 continue;
             }
 
@@ -131,21 +123,22 @@ int main(int argc, char** argv)
                 }
             }
 
-            rc = ssh_userauth_kbdint(sess, nullptr, nullptr);
+            rc = ssh_userauth_kbdint(sess, NULL, NULL);
         }
     }
 
     // and then try password login mode if server allow.
     if (!ok && (auth_methods & SSH_AUTH_METHOD_PASSWORD) == SSH_AUTH_METHOD_PASSWORD) {
         retry_count = 0;
-        rc = ssh_userauth_password(sess, nullptr, password);
+        rc = ssh_userauth_password(sess, NULL, password);
         for (;;) {
             if (rc == SSH_AUTH_AGAIN) {
                 retry_count += 1;
                 if (retry_count >= 3)
                     break;
-                Sleep(100);
-                rc = ssh_userauth_password(sess, nullptr, password);
+                ex_sleep_ms(100);
+                // Sleep(100);
+                rc = ssh_userauth_password(sess, NULL, password);
                 continue;
             }
             if (rc == SSH_AUTH_SUCCESS) {
