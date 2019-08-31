@@ -1,4 +1,4 @@
-#ifndef __LIB_EX_UTIL_H__
+ï»¿#ifndef __LIB_EX_UTIL_H__
 #define __LIB_EX_UTIL_H__
 
 #include "ex_types.h"
@@ -20,7 +20,7 @@ EX_BOOL ex_initialize(const char* lc_ctype);
 
 void ex_free(void* buffer);
 
-// ÔÚhaystack£¨³¤¶ÈÎªhaystacklen×Ö½Ú£©ÖĞ²éÕÒneedle£¨³¤¶ÈÎªneedlelen£©µÄÆğÊ¼µØÖ·£¬·µ»ØNULL±íÊ¾Ã»ÓĞÕÒµ½
+// åœ¨haystackï¼ˆé•¿åº¦ä¸ºhaystacklenå­—èŠ‚ï¼‰ä¸­æŸ¥æ‰¾needleï¼ˆé•¿åº¦ä¸ºneedlelenï¼‰çš„èµ·å§‹åœ°å€ï¼Œè¿”å›NULLè¡¨ç¤ºæ²¡æœ‰æ‰¾åˆ°
 const ex_u8* ex_memmem(const ex_u8* haystack, size_t haystacklen, const ex_u8* needle, size_t needlelen);
 void ex_mem_reverse(ex_u8* p, size_t l);
 

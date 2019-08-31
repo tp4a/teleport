@@ -1,4 +1,4 @@
-#include <ex/ex_ini.h>
+ï»¿#include <ex/ex_ini.h>
 #include <ex/ex_log.h>
 #include <ex/ex_util.h>
 
@@ -241,7 +241,7 @@ bool ExIniFile::LoadFromFile(const ex_wstr& strFileName, bool bClearOld)
 	{
 		pOffset += 3;
 	}
-	// ÅäÖÃÎÄ¼þ¾ùÊ¹ÓÃUTF8±àÂë
+	// é…ç½®æ–‡ä»¶å‡ä½¿ç”¨UTF8ç¼–ç 
 	ex_wstr fileData;
 	if (!ex_astr2wstr(pOffset, fileData, EX_CODEPAGE_UTF8))
 		return false;
@@ -357,7 +357,7 @@ void ExIniFile::Save(int codepage/* = EX_CODEPAGE_UTF8*/)
 		return;
 	}
 
-	// Èç¹ûÓÐ²»ÊôÓÚÈÎºÎÐ¡½ÚµÄÖµ¶Ô£¬ÏÈ±£´æÖ®
+	// å¦‚æžœæœ‰ä¸å±žäºŽä»»ä½•å°èŠ‚çš„å€¼å¯¹ï¼Œå…ˆä¿å­˜ä¹‹
 	if (m_dumy_sec.Count() > 0)
 		m_dumy_sec.Save(file, codepage);
 
@@ -415,16 +415,16 @@ ExIniSection* ExIniFile::GetSection(const ex_wstr& strName, bool bCreateIfNotExi
 }
 
 // static function.
-// ½âÎöÒ»ÐÐ£¬·µ»ØÖµÎª [½ÚÃû/Öµ¶Ô/×¢ÊÍ/Ê²Ã´Ò²²»ÊÇ/³ö´íÁË]
-// ½ÚÃû => strKey = [section_name]
-// Öµ¶Ô => strKey = strValue
+// è§£æžä¸€è¡Œï¼Œè¿”å›žå€¼ä¸º [èŠ‚å/å€¼å¯¹/æ³¨é‡Š/ä»€ä¹ˆä¹Ÿä¸æ˜¯/å‡ºé”™äº†]
+// èŠ‚å => strKey = [section_name]
+// å€¼å¯¹ => strKey = strValue
 ExIniFile::PARSE_RV ExIniFile::_ParseLine(const ex_wstr& strOrigLine, ex_wstr& strKey, ex_wstr& strValue)
 {
-	// Ê×ÏÈÈ¥µôÐÐÊ×µÄ¿Õ¸ñ»òÕß TAB ¿ØÖÆ
+	// é¦–å…ˆåŽ»æŽ‰è¡Œé¦–çš„ç©ºæ ¼æˆ–è€… TAB æŽ§åˆ¶
 	ex_wstr strLine(strOrigLine);
 	ex_remove_white_space(strLine, EX_RSC_BEGIN);
 
-	// ÅÐ¶ÏÊÇ·ñÎª×¢ÊÍ¡£ .ini ÎÄ¼þÒÔ ·ÖºÅ';'/'#' ×÷Îª×¢ÊÍÐÐµÄµÚÒ»¸ö×Ö·û
+	// åˆ¤æ–­æ˜¯å¦ä¸ºæ³¨é‡Šã€‚ .ini æ–‡ä»¶ä»¥ åˆ†å·';'/'#' ä½œä¸ºæ³¨é‡Šè¡Œçš„ç¬¬ä¸€ä¸ªå­—ç¬¦
 	if (';' == strLine[0] || '#' == strLine[0])
 	{
 		return PARSE_COMMENT;
@@ -432,7 +432,7 @@ ExIniFile::PARSE_RV ExIniFile::_ParseLine(const ex_wstr& strOrigLine, ex_wstr& s
 
 	if ('[' == strLine[0])
 	{
-		// ÕâÊÇÒ»¸ö½Ú(section)
+		// è¿™æ˜¯ä¸€ä¸ªèŠ‚(section)
 		ex_wstr::size_type startPos = strLine.find('[');
 		ex_wstr::size_type endPos = strLine.rfind(']');
 		strLine.erase(endPos);
@@ -443,23 +443,23 @@ ExIniFile::PARSE_RV ExIniFile::_ParseLine(const ex_wstr& strOrigLine, ex_wstr& s
 	}
 	else
 	{
-		// ¿´¿´ÄÜ·ñÕÒµ½µÈºÅ(=)£¬ÕâÊÇ key=value µÄÅÐ±ð·½·¨
+		// çœ‹çœ‹èƒ½å¦æ‰¾åˆ°ç­‰å·(=)ï¼Œè¿™æ˜¯ key=value çš„åˆ¤åˆ«æ–¹æ³•
 		ex_wstr::size_type pos = strLine.find('=');
 		if (ex_wstr::npos == pos)
 		{
-			//return PARSE_OTHER;	// Ã»ÓÐµÈºÅ
+			//return PARSE_OTHER;	// æ²¡æœ‰ç­‰å·
 			ex_remove_white_space(strLine);
 			strKey = strLine;
 			strValue.clear();
 			return PARSE_KEYVALUE;
 		}
 
-		// ½«µÈºÅÇ°ÃæµÄÓëµÈºÅºóÃæµÄ·Ö¸î
+		// å°†ç­‰å·å‰é¢çš„ä¸Žç­‰å·åŽé¢çš„åˆ†å‰²
 		strKey.assign(strLine, 0, pos);
 		strValue.assign(strLine, pos + 1, strLine.length() - pos);
 		ex_remove_white_space(strKey);
 
-		// µÈºÅºóÃæµÄÓ¦¸ÃÔ­·â²»¶¯£¬²»Ó¦¸ÃÒÆ³ý¿Õ°××Ö·û
+		// ç­‰å·åŽé¢çš„åº”è¯¥åŽŸå°ä¸åŠ¨ï¼Œä¸åº”è¯¥ç§»é™¤ç©ºç™½å­—ç¬¦
 		ex_remove_white_space(strValue, EX_RSC_BEGIN);
 
 		return PARSE_KEYVALUE;
@@ -489,7 +489,7 @@ bool ExIniFile::_ProcessLine(const ex_wstr strLine, ExIniSection** pCurSection)
 		break;
 	case PARSE_SECTION:
 	{
-		// ´´½¨Ò»¸ö½Ú
+		// åˆ›å»ºä¸€ä¸ªèŠ‚
 		ExIniSection* pSection = GetSection(strKey, true);
 		if (NULL == pSection)
 		{
@@ -508,7 +508,7 @@ bool ExIniFile::_ProcessLine(const ex_wstr strLine, ExIniSection** pCurSection)
 			*pCurSection = &m_dumy_sec;
 		}
 
-		// ´´½¨Ò»¸öÖµ¶Ô
+		// åˆ›å»ºä¸€ä¸ªå€¼å¯¹
 		if (!(*pCurSection)->SetValue(strKey, strValue, true))
 		{
 			bError = true;

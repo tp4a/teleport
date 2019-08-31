@@ -102,3 +102,5 @@ profile
 *.moved-aside
 /server/share/tmp
 
+/server/tp_core/testssh/Debug
+/server/tp_core/testssh/Release

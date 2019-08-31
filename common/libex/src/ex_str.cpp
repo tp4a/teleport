@@ -1,4 +1,4 @@
-#include <ex/ex_platform.h>
+﻿#include <ex/ex_platform.h>
 #include <ex/ex_str.h>
 #include <ex/ex_util.h>
 

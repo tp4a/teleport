@@ -1,4 +1,4 @@
-#ifndef __EX_INI_H__
+﻿#ifndef __EX_INI_H__
 #define __EX_INI_H__
 
 /*

@@ -1,4 +1,4 @@
-#ifndef __TS_BASE_RECORD_H__
+ï»¿#ifndef __TS_BASE_RECORD_H__
 #define __TS_BASE_RECORD_H__
 
 #include "base_env.h"
@@ -12,43 +12,43 @@
 #pragma pack(push,1)
 
 /*
- * Â¼Ïñ
+ * å½•åƒ
  *
- * Ò»¸öÂ¼Ïñ·ÖÎªÁ½¸öÎÄ¼ş£¬Ò»¸öĞÅÏ¢ÎÄ¼ş£¬Ò»¸öÊı¾İÎÄ¼ş¡£
- * ·şÎñÄÚ²¿»º´æ×î´ó4M£¬»òÕß5Ãë£¬¾Í½«Êı¾İĞ´ÈëÊı¾İÎÄ¼şÖĞ£¬²¢Í¬Ê±¸üĞÂĞÅÏ¢ÎÄ¼ş¡£
+ * ä¸€ä¸ªå½•åƒåˆ†ä¸ºä¸¤ä¸ªæ–‡ä»¶ï¼Œä¸€ä¸ªä¿¡æ¯æ–‡ä»¶ï¼Œä¸€ä¸ªæ•°æ®æ–‡ä»¶ã€‚
+ * æœåŠ¡å†…éƒ¨ç¼“å­˜æœ€å¤§4Mï¼Œæˆ–è€…5ç§’ï¼Œå°±å°†æ•°æ®å†™å…¥æ•°æ®æ–‡ä»¶ä¸­ï¼Œå¹¶åŒæ—¶æ›´æ–°ä¿¡æ¯æ–‡ä»¶ã€‚
  *
  */
 
 
-// Â¼ÏñÎÄ¼şÍ·(Ëæ×ÅÂ¼ÏñÊı¾İĞ´Èë£¬»á¸Ä±äµÄ²¿·Ö)
+// å½•åƒæ–‡ä»¶å¤´(éšç€å½•åƒæ•°æ®å†™å…¥ï¼Œä¼šæ”¹å˜çš„éƒ¨åˆ†)
 typedef struct TS_RECORD_HEADER_INFO
 {
-	ex_u32 magic;		// "TPPR" ±êÖ¾ TelePort Protocol Record
-	ex_u16 ver;			// Â¼ÏñÎÄ¼ş°æ±¾£¬Ä¿Ç°Îª3
-	ex_u32 packages;	// ×Ü°üÊı
-	ex_u32 time_ms;		// ×ÜºÄÊ±£¨ºÁÃë£©
-	//ex_u32 file_size;	// Êı¾İÎÄ¼ş´óĞ¡
+	ex_u32 magic;		// "TPPR" æ ‡å¿— TelePort Protocol Record
+	ex_u16 ver;			// å½•åƒæ–‡ä»¶ç‰ˆæœ¬ï¼Œç›®å‰ä¸º3
+	ex_u32 packages;	// æ€»åŒ…æ•°
+	ex_u32 time_ms;		// æ€»è€—æ—¶ï¼ˆæ¯«ç§’ï¼‰
+	//ex_u32 file_size;	// æ•°æ®æ–‡ä»¶å¤§å°
 }TS_RECORD_HEADER_INFO;
 #define ts_record_header_info_size sizeof(TS_RECORD_HEADER_INFO)
 
-// Â¼ÏñÎÄ¼şÍ·(¹Ì¶¨²»±ä²¿·Ö)
+// å½•åƒæ–‡ä»¶å¤´(å›ºå®šä¸å˜éƒ¨åˆ†)
 typedef struct TS_RECORD_HEADER_BASIC
 {
-	ex_u16 protocol_type;		// Ğ­Òé£º1=RDP, 2=SSH, 3=Telnet
-	ex_u16 protocol_sub_type;	// ×ÓĞ­Òé£º100=RDP-DESKTOP, 200=SSH-SHELL, 201=SSH-SFTP, 300=Telnet
-	ex_u64 timestamp;	// ±¾´ÎÂ¼ÏñµÄÆğÊ¼Ê±¼ä£¨UTCÊ±¼ä´Á£©
-	ex_u16 width;		// ³õÊ¼ÆÁÄ»³ß´ç£º¿í
-	ex_u16 height;		// ³õÊ¼ÆÁÄ»³ß´ç£º¸ß
-	char user_username[64];	// teleportÕËºÅ
-	char acc_username[64];	// Ô¶³ÌÖ÷»úÓÃ»§Ãû
+	ex_u16 protocol_type;		// åè®®ï¼š1=RDP, 2=SSH, 3=Telnet
+	ex_u16 protocol_sub_type;	// å­åè®®ï¼š100=RDP-DESKTOP, 200=SSH-SHELL, 201=SSH-SFTP, 300=Telnet
+	ex_u64 timestamp;	// æœ¬æ¬¡å½•åƒçš„èµ·å§‹æ—¶é—´ï¼ˆUTCæ—¶é—´æˆ³ï¼‰
+	ex_u16 width;		// åˆå§‹å±å¹•å°ºå¯¸ï¼šå®½
+	ex_u16 height;		// åˆå§‹å±å¹•å°ºå¯¸ï¼šé«˜
+	char user_username[64];	// teleportè´¦å·
+	char acc_username[64];	// è¿œç¨‹ä¸»æœºç”¨æˆ·å
 
-	char host_ip[40];	// Ô¶³ÌÖ÷»úIP
-	char conn_ip[40];	// Ô¶³ÌÖ÷»úIP
-	ex_u16 conn_port;	// Ô¶³ÌÖ÷»ú¶Ë¿Ú
+	char host_ip[40];	// è¿œç¨‹ä¸»æœºIP
+	char conn_ip[40];	// è¿œç¨‹ä¸»æœºIP
+	ex_u16 conn_port;	// è¿œç¨‹ä¸»æœºç«¯å£
 
-	char client_ip[40];		// ¿Í»§¶ËIP
+	char client_ip[40];		// å®¢æˆ·ç«¯IP
 
-	// RDP×¨ÓĞ
+	// RDPä¸“æœ‰
 	ex_u8 rdp_security;	// 0 = RDP, 1 = TLS
 
 	ex_u8 _reserve[512 - 2 - 2 - 8 - 2 - 2 - 64 - 64 - 40 - 40 - 2 - 40 - 1 - ts_record_header_info_size];
@@ -61,17 +61,17 @@ typedef struct TS_RECORD_HEADER
 	TS_RECORD_HEADER_BASIC basic;
 }TS_RECORD_HEADER;
 
-// header²¿·Ö£¨header-info + header-basic£© = 512B
+// headeréƒ¨åˆ†ï¼ˆheader-info + header-basicï¼‰ = 512B
 #define ts_record_header_size sizeof(TS_RECORD_HEADER)
 
 
-// Ò»¸öÊı¾İ°üµÄÍ·
+// ä¸€ä¸ªæ•°æ®åŒ…çš„å¤´
 typedef struct TS_RECORD_PKG
 {
-	ex_u8 type;			// °üµÄÊı¾İÀàĞÍ
-	ex_u32 size;		// Õâ¸ö°üµÄ×Ü´óĞ¡£¨²»º¬°üÍ·£©
-	ex_u32 time_ms;		// Õâ¸ö°ü¾àÆğÊ¼Ê±¼äµÄÊ±¼ä²î£¨ºÁÃë£¬ÒâÎ¶×ÅÒ»¸öÁ¬½Ó²»ÄÜ³ÖĞø³¬¹ı49Ìì£©
-	ex_u8 _reserve[3];	// ±£Áô
+	ex_u8 type;			// åŒ…çš„æ•°æ®ç±»å‹
+	ex_u32 size;		// è¿™ä¸ªåŒ…çš„æ€»å¤§å°ï¼ˆä¸å«åŒ…å¤´ï¼‰
+	ex_u32 time_ms;		// è¿™ä¸ªåŒ…è·èµ·å§‹æ—¶é—´çš„æ—¶é—´å·®ï¼ˆæ¯«ç§’ï¼Œæ„å‘³ç€ä¸€ä¸ªè¿æ¥ä¸èƒ½æŒç»­è¶…è¿‡49å¤©ï¼‰
+	ex_u8 _reserve[3];	// ä¿ç•™
 }TS_RECORD_PKG;
 
 #pragma pack(pop)
@@ -90,8 +90,8 @@ protected:
 	virtual bool _on_end() = 0;
 
 protected:
-	ex_wstr m_base_path;		// Â¼ÏñÎÄ¼ş»ù´¡Â·¾¶£¬ÀıÈç /usr/local/teleport/data/replay/ssh/123£¬Êı×Ö±àºÅÊÇÄÚ²¿¸½¼ÓµÄ£¬×÷Îª±¾´Î»á»°Â¼ÏñÎÄ¼şµÄÄ¿Â¼Ãû³Æ
-	ex_wstr m_base_fname;		// Â¼ÏñÎÄ¼şµÄÎÄ¼şÃû£¬²»º¬À©Õ¹Ãû²¿·Ö£¬ÄÚ²¿»áÒÔ´ËÎª»ù´¡ºÏ³ÉÎÄ¼şÈ«Ãû£¬²¢½«Â¼ÏñÎÄ¼ş´æ·ÅÔÚ m_base_path Ö¸ÏòµÄÄ¿Â¼ÖĞ
+	ex_wstr m_base_path;		// å½•åƒæ–‡ä»¶åŸºç¡€è·¯å¾„ï¼Œä¾‹å¦‚ /usr/local/teleport/data/replay/ssh/123ï¼Œæ•°å­—ç¼–å·æ˜¯å†…éƒ¨é™„åŠ çš„ï¼Œä½œä¸ºæœ¬æ¬¡ä¼šè¯å½•åƒæ–‡ä»¶çš„ç›®å½•åç§°
+	ex_wstr m_base_fname;		// å½•åƒæ–‡ä»¶çš„æ–‡ä»¶åï¼Œä¸å«æ‰©å±•åéƒ¨åˆ†ï¼Œå†…éƒ¨ä¼šä»¥æ­¤ä¸ºåŸºç¡€åˆæˆæ–‡ä»¶å…¨åï¼Œå¹¶å°†å½•åƒæ–‡ä»¶å­˜æ”¾åœ¨ m_base_path æŒ‡å‘çš„ç›®å½•ä¸­
 
 	ex_u64 m_start_time;
 

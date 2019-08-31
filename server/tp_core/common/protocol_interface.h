@@ -1,4 +1,4 @@
-#ifndef __TP_PROTOCOL_INTERFACE_H__
+ï»¿#ifndef __TP_PROTOCOL_INTERFACE_H__
 #define __TP_PROTOCOL_INTERFACE_H__
 
 #include "ts_const.h"
@@ -22,20 +22,20 @@ typedef struct TPP_CONNECT_INFO
 {
 	char* sid;
 
-	// Óë´ËÁ¬½ÓĞÅÏ¢Ïà¹ØµÄÈı¸öÒªËØµÄID
+	// ä¸æ­¤è¿æ¥ä¿¡æ¯ç›¸å…³çš„ä¸‰ä¸ªè¦ç´ çš„ID
 	int user_id;
 	int host_id;
 	int acc_id;
 
-	char* user_username;		// ÉêÇë±¾´ÎÁ¬½ÓµÄÓÃ»§Ãû
+	char* user_username;		// ç”³è¯·æœ¬æ¬¡è¿æ¥çš„ç”¨æˆ·å
 
-	char* host_ip;	// ÕæÕıµÄÔ¶³ÌÖ÷»úIP£¨Èç¹ûÊÇÖ±½ÓÁ¬½ÓÄ£Ê½£¬ÔòÓëremote_host_ipÏàÍ¬£©
-	char* conn_ip;	// ÒªÁ¬½ÓµÄÔ¶³ÌÖ÷»úµÄIP£¨Èç¹ûÊÇ¶Ë¿ÚÓ³ÉäÄ£Ê½£¬ÔòÎªÂ·ÓÉÖ÷»úµÄIP£©
-	int conn_port;	// ÒªÁ¬½ÓµÄÔ¶³ÌÖ÷»úµÄ¶Ë¿Ú£¨Èç¹ûÊÇ¶Ë¿ÚÓ³ÉäÄ£Ê½£¬ÔòÎªÂ·ÓÉÖ÷»úµÄ¶Ë¿Ú£©
+	char* host_ip;	// çœŸæ­£çš„è¿œç¨‹ä¸»æœºIPï¼ˆå¦‚æœæ˜¯ç›´æ¥è¿æ¥æ¨¡å¼ï¼Œåˆ™ä¸remote_host_ipç›¸åŒï¼‰
+	char* conn_ip;	// è¦è¿æ¥çš„è¿œç¨‹ä¸»æœºçš„IPï¼ˆå¦‚æœæ˜¯ç«¯å£æ˜ å°„æ¨¡å¼ï¼Œåˆ™ä¸ºè·¯ç”±ä¸»æœºçš„IPï¼‰
+	int conn_port;	// è¦è¿æ¥çš„è¿œç¨‹ä¸»æœºçš„ç«¯å£ï¼ˆå¦‚æœæ˜¯ç«¯å£æ˜ å°„æ¨¡å¼ï¼Œåˆ™ä¸ºè·¯ç”±ä¸»æœºçš„ç«¯å£ï¼‰
 	char* client_ip;
 
-	char* acc_username;		// Ô¶³ÌÖ÷»úµÄÕËºÅ
-	char* acc_secret;	// Ô¶³ÌÖ÷»úÕËºÅµÄÃÜÂë£¨»òÕßË½Ô¿£©
+	char* acc_username;		// è¿œç¨‹ä¸»æœºçš„è´¦å·
+	char* acc_secret;	// è¿œç¨‹ä¸»æœºè´¦å·çš„å¯†ç ï¼ˆæˆ–è€…ç§é’¥ï¼‰
 	char* username_prompt;	// for telnet
 	char* password_prompt;	// for telnet
 

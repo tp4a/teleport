@@ -1,4 +1,4 @@
-#ifndef __LIB_EX_PLATFORM_H__
+﻿#ifndef __LIB_EX_PLATFORM_H__
 #define __LIB_EX_PLATFORM_H__
 
 #if defined(_WIN32) || defined(WIN32)

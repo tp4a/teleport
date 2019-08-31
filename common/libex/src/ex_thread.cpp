@@ -1,4 +1,4 @@
-#include <ex/ex_thread.h>
+﻿#include <ex/ex_thread.h>
 #include <ex/ex_log.h>
 
 //=========================================================

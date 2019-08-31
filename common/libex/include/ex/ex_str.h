@@ -1,4 +1,4 @@
-#ifndef __LIB_EX_STR_H__
+ï»¿#ifndef __LIB_EX_STR_H__
 #define __LIB_EX_STR_H__
 
 #include "ex_types.h"
@@ -77,7 +77,7 @@ void ex_remove_white_space(ex_wstr& str_fix, int ulFlag = EX_RSC_ALL);
 ex_astr& ex_replace_all(ex_astr& str, const ex_astr& old_value, const ex_astr& new_value);
 ex_wstr& ex_replace_all(ex_wstr& str, const ex_wstr& old_value, const ex_wstr& new_value);
 
-// ½«UTF8×Ö·û´®×ª»»ÎªUTF16-LE×Ö·û´®£¨Êä³ö½á¹û°üº¬\0½áÊø·û£©
+// å°†UTF8å­—ç¬¦ä¸²è½¬æ¢ä¸ºUTF16-LEå­—ç¬¦ä¸²ï¼ˆè¾“å‡ºç»“æœåŒ…å«\0ç»“æŸç¬¦ï¼‰
 bool ex_utf8_to_utf16le(const std::string& from, ex_str_utf16le& to);
 
 #endif
