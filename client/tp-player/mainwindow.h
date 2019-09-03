@@ -28,8 +28,6 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QImage m_bg;
-    QImage m_pt_normal;
-    QImage m_img_update;
     //QPixmap m_bg1;
     bool m_shown;
 
@@ -37,8 +35,15 @@ private:
 
     bool m_show_bg;
     TS_RECORD_HEADER m_rec_hdr;
+
+    bool m_update_img;
+
+    QImage m_pt_normal;
     TS_RECORD_RDP_POINTER m_pt;
 
+    QImage m_img_update;
+    int m_win_board_w;
+    int m_win_board_h;
     int m_img_update_x;
     int m_img_update_y;
     int m_img_update_w;

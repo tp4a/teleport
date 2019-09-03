@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/tp-player">
-        <file>res/logo.png</file>
         <file>res/bg.png</file>
         <file>res/cursor.png</file>
     </qresource>

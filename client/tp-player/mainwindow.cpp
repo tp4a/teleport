@@ -5,6 +5,7 @@
 #include <QMatrix>
 #include <QDebug>
 #include <QPainter>
+#include <QDesktopWidget>
 
 bool rdpimg2QImage(QImage& out, int w, int h, int bitsPerPixel, bool isCompressed, uint8_t* dat, uint32_t len) {
     switch(bitsPerPixel) {
@@ -29,6 +30,19 @@ bool rdpimg2QImage(QImage& out, int w, int h, int bitsPerPixel, bool isCompresse
                 free(_dat);
                 return false;
             }
+
+//            static bool first = true;
+//            if(first) {
+//                first = false;
+//                int total_bytes = w*h*2;
+//                for(int i = 0; i < total_bytes; i++) {
+//                    printf("%02x ", _dat[i]);
+//                    if(i != 0 && i % 16 == 0)
+//                        printf("\n");
+//                }
+//                fflush(stdout);
+//            }
+
             out = QImage(_dat, w, h, QImage::Format_RGB16);
             free(_dat);
         }
@@ -56,6 +70,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_show_bg = true;
     m_bg = QImage(":/tp-player/res/bg");
     m_pt_normal = QImage(":/tp-player/res/cursor.png");
+    m_update_img = false;
 
     qDebug() << m_pt_normal.width() << "x" << m_pt_normal.height();
 
@@ -71,10 +86,10 @@ MainWindow::MainWindow(QWidget *parent) :
 //    setWindowFlags(Qt::FramelessWindowHint | Qt::MSWindowsFixedSizeDialogHint | windowFlags());
 //#endif //__APPLE__
 
-    setWindowFlags(windowFlags()&~Qt::WindowMaximizeButtonHint);    // 禁止最大化按钮
-    //setFixedSize(this->width(),this->height());                     // 禁止拖动窗口大小
-
     resize(m_bg.width(), m_bg.height());
+
+    setWindowFlags(windowFlags()&~Qt::WindowMaximizeButtonHint);    // 禁止最大化按钮
+    setFixedSize(m_bg.width(), m_bg.height());                     // 禁止拖动窗口大小
 
     connect(&m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(on_update_data(update_data*)));
 }
@@ -102,9 +117,11 @@ void MainWindow::paintEvent(QPaintEvent *)
     }
 
     else {
-        painter.drawImage(m_img_update_x, m_img_update_y, m_img_update, 0, 0, m_img_update_w, m_img_update_h, Qt::AutoColor);
-        //qDebug() << "draw pt (" << m_pt.x << "," << m_pt.y << ")";
-        painter.drawImage(m_pt.x, m_pt.y, m_pt_normal);
+        if(m_update_img)
+            painter.drawImage(m_img_update_x, m_img_update_y, m_img_update, 0, 0, m_img_update_w, m_img_update_h, Qt::AutoColor);
+        else
+            //qDebug() << "draw pt (" << m_pt.x << "," << m_pt.y << ")";
+            painter.drawImage(m_pt.x, m_pt.y, m_pt_normal);
     }
 
 
@@ -138,6 +155,7 @@ void MainWindow::on_update_data(update_data* dat) {
             }
 
             memcpy(&m_pt, dat->data_buf() + sizeof(TS_RECORD_PKG), sizeof(TS_RECORD_RDP_POINTER));
+            m_update_img = false;
             update();
             //update(m_pt.x - 8, m_pt.y - 8, 32, 32);
         }
@@ -158,9 +176,11 @@ void MainWindow::on_update_data(update_data* dat) {
             m_img_update_w = info->destRight - info->destLeft + 1;
             m_img_update_h = info->destBottom - info->destTop + 1;
 
-            qDebug() << "img " << ((info->format == TS_RDP_IMG_BMP) ? "+" : " ") << " (" << m_img_update_x << "," << m_img_update_y << "), [" << m_img_update.width() << "x" << m_img_update.height() << "]";
+            static int count = 0;
+            qDebug() << count << "img " << ((info->format == TS_RDP_IMG_BMP) ? "+" : " ") << " (" << m_img_update_x << "," << m_img_update_y << "), [" << m_img_update.width() << "x" << m_img_update.height() << "]";
+            count++;
 
-
+            m_update_img = true;
             update(m_img_update_x, m_img_update_y, m_img_update_w, m_img_update_h);
         }
 
@@ -180,7 +200,15 @@ void MainWindow::on_update_data(update_data* dat) {
 
         qDebug() << "resize (" << m_rec_hdr.basic.width << "," << m_rec_hdr.basic.height << ")";
         if(m_rec_hdr.basic.width > 0 && m_rec_hdr.basic.height > 0) {
-            resize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
+            m_win_board_w = frameGeometry().width() - geometry().width();
+            m_win_board_h = frameGeometry().height() - geometry().height();
+
+            setFixedSize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
+            resize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
+
+//            QDesktopWidget *desktop = QApplication::desktop(); // =qApp->desktop();也可以
+//            //move((desktop->width() - this->width())/2, (desktop->height() - this->height())/2);
+//            move(10, (desktop->height() - this->height())/2);
         }
 
         QString title;
