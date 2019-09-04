@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QVector>
 #include "thr_play.h"
 #include "update_data.h"
 #include "record_format.h"
@@ -37,10 +38,10 @@ private:
     bool m_show_bg;
     TS_RECORD_HEADER m_rec_hdr;
 
-    bool m_update_img;
-
     QImage m_pt_normal;
     TS_RECORD_RDP_POINTER m_pt;
+    QVector<TS_RECORD_RDP_POINTER> m_pt_history;
+
 
     QImage m_img_update;
     int m_win_board_w;

@@ -18,10 +18,10 @@ RD_BOOL bitmap_decompress2(uint8 * output, int width, int height, uint8 * input,
 RD_BOOL bitmap_decompress3(uint8 * output, int width, int height, uint8 * input, int size);
 RD_BOOL bitmap_decompress4(uint8 * output, int width, int height, uint8 * input, int size);
 
-//int bitmap_decompress_15(uint8 * output, int output_width, int output_height, int input_width, int input_height, uint8* input, int size);
-//int bitmap_decompress_16(uint8 * output, int output_width, int output_height, int input_width, int input_height, uint8* input, int size);
-//int bitmap_decompress_24(uint8 * output, int output_width, int output_height, int input_width, int input_height, uint8* input, int size);
-//int bitmap_decompress_32(uint8 * output, int output_width, int output_height, int input_width, int input_height, uint8* input, int size);
+int bitmap_decompress_15(uint8 * output, int output_width, int output_height, int input_width, int input_height, uint8* input, int size);
+int bitmap_decompress_16(uint8 * output, int output_width, int output_height, int input_width, int input_height, uint8* input, int size);
+int bitmap_decompress_24(uint8 * output, int output_width, int output_height, int input_width, int input_height, uint8* input, int size);
+int bitmap_decompress_32(uint8 * output, int output_width, int output_height, int input_width, int input_height, uint8* input, int size);
 
 
 #ifdef __cplusplus

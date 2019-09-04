@@ -1,4 +1,5 @@
-﻿#include <QDebug>
+﻿#include <QDateTime>
+#include <QDebug>
 #include <QFile>
 
 #include "thr_play.h"
@@ -57,6 +58,10 @@ void ThreadPlay::run() {
         return;
     }
 
+    uint32_t time_pass = 0;
+
+    qint64 time_begin = QDateTime::currentMSecsSinceEpoch();
+
     for(uint32_t i = 0; i < total_pkg; ++i) {
         if(m_need_stop) {
             qDebug() << "stop, user cancel.";
@@ -66,7 +71,7 @@ void ThreadPlay::run() {
         TS_RECORD_PKG pkg;
         read_len = f_dat.read((char*)(&pkg), sizeof(pkg));
         if(read_len != sizeof(TS_RECORD_PKG)) {
-            qDebug() << "invaid .dat file.";
+            qDebug() << "invaid .dat file (1).";
             return;
         }
 
@@ -81,7 +86,40 @@ void ThreadPlay::run() {
             return;
         }
 
-        emit signal_update_data(dat);
-        msleep(10);
+        time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin);
+
+        if(time_pass >= pkg.time_ms) {
+            //time_pass = pkg.time_ms;
+            emit signal_update_data(dat);
+            continue;
+        }
+
+        // 需要等待
+        uint32_t time_wait = pkg.time_ms - time_pass;
+        uint32_t wait_this_time = 0;
+        for(;;) {
+            wait_this_time = time_wait;
+            if(wait_this_time > 5)
+                wait_this_time = 5;
+
+            if(m_need_stop) {
+                qDebug() << "stop, user cancel (2).";
+                break;
+            }
+
+            msleep(wait_this_time);
+
+            //time_pass += wait_this_time;
+            //time_pass = pkg.time_ms;
+
+            time_wait -= wait_this_time;
+            if(time_wait == 0) {
+                emit signal_update_data(dat);
+                break;
+            }
+        }
+
+//        emit signal_update_data(dat);
+//        msleep(15);
     }
 }

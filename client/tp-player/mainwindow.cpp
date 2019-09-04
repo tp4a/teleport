@@ -32,36 +32,24 @@ bool rdpimg2QImage(QImage& out, int w, int h, int bitsPerPixel, bool isCompresse
                 return false;
             }
 
-//            static bool first = true;
-//            if(first) {
-//                first = false;
-//                int total_bytes = w*h*2;
-//                for(int i = 0; i < total_bytes; i++) {
-//                    printf("%02x ", _dat[i]);
-//                    if(i != 0 && i % 16 == 0)
-//                        printf("\n");
-//                }
-//                fflush(stdout);
-//            }
+            // TODO: 这里需要进一步优化，直接操作QImage的buffer。
 
-            //out = QImage(_dat, w, h, QImage::Format_RGB16);
+            out = QImage(w, h, QImage::Format_RGB16);
+            for(int y = 0; y < h; y++) {
+                for(int x = 0; x < w; x++) {
+                    uint16 a = ((uint16*)_dat)[y * w + x];
+                    uint8 r = ((a & 0xf800) >> 11) * 255 / 31;
+                    uint8 g = ((a & 0x07e0) >> 5) * 255 / 63;
+                    uint8 b = (a & 0x001f) * 255 / 31;
+//                    r = r * 255 / 31;
+//                    g = g * 255 / 63;
+//                    b = b * 255 / 31;
 
-            static bool bf = true;
-            if(bf) {
-                bf = false;
-                int total_bytes = w*h*2;
-                if(total_bytes == 32) {
-                    uchar aaa[32] = {0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff};
-                    memcpy(_dat, aaa, 32);
+                    out.setPixelColor(x, y, QColor(r,g,b));
                 }
             }
 
-            out = QImage(_dat, w, h, QImage::Format_RGB16);
             free(_dat);
-
-//            QPixmap x(w, h);
-//            x.fill(QColor(0,0,0));
-//            out = x.toImage();
         }
         else {
             out = QImage(dat, w, h, QImage::Format_RGB16).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)) ;
@@ -87,7 +75,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_show_bg = true;
     m_bg = QImage(":/tp-player/res/bg");
     m_pt_normal = QImage(":/tp-player/res/cursor.png");
-    m_update_img = false;
     memset(&m_pt, 0, sizeof(TS_RECORD_RDP_POINTER));
 
     qDebug() << m_pt_normal.width() << "x" << m_pt_normal.height();
@@ -126,33 +113,23 @@ void MainWindow::paintEvent(QPaintEvent *pe)
 {
     QPainter painter(this);
 
-    if(m_show_bg) {
-        //qDebug() << "draw bg.";
-//        painter.setBrush(Qt::black);
-//        painter.drawRect(this->rect());
+    painter.drawPixmap(pe->rect(), m_canvas, pe->rect());
 
-//        int x = (rect().width() - m_bg.width()) / 2;
-//        int y = (rect().height() - m_bg.height()) / 2;
-//        painter.drawImage(x, y, m_bg);
-
-        painter.drawPixmap(rect(), m_canvas);
+    if(!m_pt_history.empty()) {
+        for(int i = 0; i < m_pt_history.count(); i++) {
+            qDebug("pt clean %d,%d", m_pt_history[i].x, m_pt_history[i].y);
+            QRect rcpt(m_pt_normal.rect());
+            rcpt.moveTo(m_pt_history[i].x - m_pt_normal.width()/2, m_pt_history[i].y-m_pt_normal.height()/2);
+            painter.drawPixmap(rcpt, m_canvas, rcpt);
+        }
+        m_pt_history.clear();
     }
 
-    else {
-        painter.drawPixmap(rect(), m_canvas);
+    QRect rcpt(m_pt_normal.rect());
+    rcpt.moveTo(m_pt.x - m_pt_normal.width()/2, m_pt.y-m_pt_normal.height()/2);
 
-//        if(m_update_img)
-//            painter.drawImage(m_img_update_x, m_img_update_y, m_img_update, 0, 0, m_img_update_w, m_img_update_h, Qt::AutoColor);
-//        else
-            //qDebug() << "draw pt (" << m_pt.x << "," << m_pt.y << ")";
-//            painter.drawImage(m_pt.x, m_pt.y, m_pt_normal);
-
-        QRect rcpt(m_pt_normal.rect());
-        rcpt.moveTo(m_pt.x - m_pt_normal.width()/2, m_pt.y-m_pt_normal.height()/2);
-        QRect rcpe(pe->rect());
-
-        if(pe->rect().intersects(rcpt))
-            painter.drawImage(m_pt.x, m_pt.y, m_pt_normal);
+    if(pe->rect().intersects(rcpt)) {
+        painter.drawImage(m_pt.x-m_pt_normal.width()/2, m_pt.y-m_pt_normal.height()/2, m_pt_normal);
     }
 
 
@@ -165,7 +142,6 @@ void MainWindow::paintEvent(QPaintEvent *pe)
 void MainWindow::on_update_data(update_data* dat) {
     if(!dat)
         return;
-//    qDebug() << "slot-event: " << dat->data_type();
 
     if(dat->data_type() == TYPE_DATA) {
         m_show_bg = false;
@@ -185,10 +161,16 @@ void MainWindow::on_update_data(update_data* dat) {
                 return;
             }
 
+            // 将现有虚拟鼠标信息放入历史队列，这样下一次绘制界面时就会将其清除掉
+            m_pt_history.push_back(m_pt);
+
+            // 更新虚拟鼠标信息，这样下一次绘制界面时就会在新的位置绘制出虚拟鼠标
             memcpy(&m_pt, dat->data_buf() + sizeof(TS_RECORD_PKG), sizeof(TS_RECORD_RDP_POINTER));
-            m_update_img = false;
-            update();
-            //update(m_pt.x - 8, m_pt.y - 8, 32, 32);
+            qDebug("pt new position %d,%d", m_pt.x, m_pt.y);
+
+            //setUpdatesEnabled(false);
+            update(m_pt.x - m_pt_normal.width()/2, m_pt.y - m_pt_normal.width()/2, m_pt_normal.width(), m_pt_normal.height());
+            //setUpdatesEnabled(true);
         }
         else if(pkg->type == TS_RECORD_TYPE_RDP_IMAGE) {
             if(dat->data_len() <= sizeof(TS_RECORD_PKG) + sizeof(TS_RECORD_RDP_IMAGE_INFO)) {
@@ -203,40 +185,17 @@ void MainWindow::on_update_data(update_data* dat) {
 
             rdpimg2QImage(m_img_update, info->width, info->height, info->bitsPerPixel, (info->format == TS_RDP_IMG_BMP) ? true : false, img_dat, img_len);
 
-            static bool need_save = true;
-            if(need_save) {
-                need_save = false;
-                m_img_update.save("E:\\work\\tp4a\\teleport\\server\\share\\replay\\rdp\\000000197\\test.bmp", "BMP");
-
-                uchar* xx = m_img_update.bits();
-                int total_bytes = m_img_update.width()*m_img_update.height()*2;
-                for(int i = 0; i < total_bytes; i++) {
-                    printf("%02x ", xx[i]);
-                    if(i != 0 && i % 16 == 0)
-                        printf("\n");
-                }
-                fflush(stdout);
-
-            }
-
-
-
-            QPainter pp(&m_canvas);
-            pp.drawImage(m_img_update_x, m_img_update_y, m_img_update, 0, 0, m_img_update_w, m_img_update_h, Qt::AutoColor);
-
-
-
             m_img_update_x = info->destLeft;
             m_img_update_y = info->destTop;
             m_img_update_w = info->destRight - info->destLeft + 1;
             m_img_update_h = info->destBottom - info->destTop + 1;
 
-            static int count = 0;
-            qDebug() << count << "img " << ((info->format == TS_RDP_IMG_BMP) ? "+" : " ") << " (" << m_img_update_x << "," << m_img_update_y << "), [" << m_img_update.width() << "x" << m_img_update.height() << "]";
-            count++;
+            setUpdatesEnabled(false);
+            QPainter pp(&m_canvas);
+            pp.drawImage(m_img_update_x, m_img_update_y, m_img_update, 0, 0, m_img_update_w, m_img_update_h, Qt::AutoColor);
 
-            m_update_img = true;
             update(m_img_update_x, m_img_update_y, m_img_update_w, m_img_update_h);
+            setUpdatesEnabled(true);
         }
 
         delete dat;
@@ -262,8 +221,10 @@ void MainWindow::on_update_data(update_data* dat) {
             m_win_board_w = frameGeometry().width() - geometry().width();
             m_win_board_h = frameGeometry().height() - geometry().height();
 
-            setFixedSize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
-            resize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
+            //setFixedSize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
+            //resize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
+            setFixedSize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
+            resize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
 
 //            QDesktopWidget *desktop = QApplication::desktop(); // =qApp->desktop();也可以
 //            //move((desktop->width() - this->width())/2, (desktop->height() - this->height())/2);
