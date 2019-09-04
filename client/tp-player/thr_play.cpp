@@ -82,6 +82,6 @@ void ThreadPlay::run() {
         }
 
         emit signal_update_data(dat);
-        msleep(5);
+        msleep(10);
     }
 }

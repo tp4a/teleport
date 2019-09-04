@@ -28,10 +28,11 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QImage m_bg;
-    //QPixmap m_bg1;
     bool m_shown;
 
     ThreadPlay m_thr_play;
+
+    QPixmap m_canvas;
 
     bool m_show_bg;
     TS_RECORD_HEADER m_rec_hdr;
