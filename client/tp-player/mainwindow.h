@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QVector>
+#include "bar.h"
 #include "thr_play.h"
 #include "update_data.h"
 #include "record_format.h"
@@ -34,6 +35,8 @@ private:
     ThreadPlay m_thr_play;
 
     QPixmap m_canvas;
+
+    Bar m_bar;
 
     bool m_show_bg;
     TS_RECORD_HEADER m_rec_hdr;

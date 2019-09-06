@@ -2,5 +2,25 @@
     <qresource prefix="/tp-player">
         <file>res/bg.png</file>
         <file>res/cursor.png</file>
+        <file>res/bar/bg-left.png</file>
+        <file>res/bar/bg-mid.png</file>
+        <file>res/bar/bg-right.png</file>
+        <file>res/bar/btn-left.png</file>
+        <file>res/bar/btn-mid.png</file>
+        <file>res/bar/btn-right.png</file>
+        <file>res/bar/btnsel-left.png</file>
+        <file>res/bar/btnsel-mid.png</file>
+        <file>res/bar/btnsel-right.png</file>
+        <file>res/bar/play-hover.png</file>
+        <file>res/bar/play.png</file>
+        <file>res/bar/prgbar-left.png</file>
+        <file>res/bar/prgbar-mid.png</file>
+        <file>res/bar/prgbar-right.png</file>
+        <file>res/bar/prgbarh-left.png</file>
+        <file>res/bar/prgbarh-mid.png</file>
+        <file>res/bar/prgpt-hover.png</file>
+        <file>res/bar/prgpt.png</file>
+        <file>res/bar/select.png</file>
+        <file>res/bar/selected.png</file>
     </qresource>
 </RCC>

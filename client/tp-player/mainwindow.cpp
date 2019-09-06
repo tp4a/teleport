@@ -99,6 +99,9 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowFlags(windowFlags()&~Qt::WindowMaximizeButtonHint);    // 禁止最大化按钮
     setFixedSize(m_bg.width(), m_bg.height());                     // 禁止拖动窗口大小
 
+    if(!m_bar.init(this, 480))
+        return;
+
     connect(&m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(on_update_data(update_data*)));
 }
 
@@ -117,26 +120,29 @@ void MainWindow::paintEvent(QPaintEvent *pe)
 
     if(!m_pt_history.empty()) {
         for(int i = 0; i < m_pt_history.count(); i++) {
-            qDebug("pt clean %d,%d", m_pt_history[i].x, m_pt_history[i].y);
+            //qDebug("pt clean %d,%d", m_pt_history[i].x, m_pt_history[i].y);
             QRect rcpt(m_pt_normal.rect());
             rcpt.moveTo(m_pt_history[i].x - m_pt_normal.width()/2, m_pt_history[i].y-m_pt_normal.height()/2);
-            painter.drawPixmap(rcpt, m_canvas, rcpt);
+            //painter.drawPixmap(rcpt, m_canvas, rcpt);
+            qDebug("pt ---- (%d,%d), (%d,%d)", rcpt.x(), rcpt.y(), rcpt.width(), rcpt.height());
+            painter.fillRect(rcpt, QColor(255, 255, 0, 128));
         }
         m_pt_history.clear();
     }
 
     QRect rcpt(m_pt_normal.rect());
     rcpt.moveTo(m_pt.x - m_pt_normal.width()/2, m_pt.y-m_pt_normal.height()/2);
-
     if(pe->rect().intersects(rcpt)) {
+        qDebug("pt draw (%d,%d), (%d,%d)", m_pt.x-m_pt_normal.width()/2, m_pt.y-m_pt_normal.height()/2, m_pt_normal.width(), m_pt_normal.height());
         painter.drawImage(m_pt.x-m_pt_normal.width()/2, m_pt.y-m_pt_normal.height()/2, m_pt_normal);
     }
 
+    m_bar.draw(painter, pe->rect());
 
-    if(!m_shown) {
-        m_shown = true;
-        m_thr_play.start();
-    }
+//    if(!m_shown) {
+//        m_shown = true;
+//        m_thr_play.start();
+//    }
 }
 
 void MainWindow::on_update_data(update_data* dat) {
@@ -166,7 +172,7 @@ void MainWindow::on_update_data(update_data* dat) {
 
             // 更新虚拟鼠标信息，这样下一次绘制界面时就会在新的位置绘制出虚拟鼠标
             memcpy(&m_pt, dat->data_buf() + sizeof(TS_RECORD_PKG), sizeof(TS_RECORD_RDP_POINTER));
-            qDebug("pt new position %d,%d", m_pt.x, m_pt.y);
+            //qDebug("pt new position %d,%d", m_pt.x, m_pt.y);
 
             //setUpdatesEnabled(false);
             update(m_pt.x - m_pt_normal.width()/2, m_pt.y - m_pt_normal.width()/2, m_pt_normal.width(), m_pt_normal.height());
@@ -226,9 +232,10 @@ void MainWindow::on_update_data(update_data* dat) {
             setFixedSize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
             resize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
 
-//            QDesktopWidget *desktop = QApplication::desktop(); // =qApp->desktop();也可以
-//            //move((desktop->width() - this->width())/2, (desktop->height() - this->height())/2);
-//            move(10, (desktop->height() - this->height())/2);
+            QDesktopWidget *desktop = QApplication::desktop(); // =qApp->desktop();也可以
+            qDebug("desktop width: %d", desktop->width());
+            //move((desktop->width() - this->width())/2, (desktop->height() - this->height())/2);
+            move(10, (desktop->height() - this->height())/2);
         }
 
         QString title;

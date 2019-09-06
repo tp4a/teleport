@@ -5,13 +5,16 @@ QT += core gui widgets
 
 HEADERS += \
     mainwindow.h \
+    bar.h \
     thr_play.h \
     update_data.h \
     record_format.h \
     rle.h
 
-SOURCES += main.cpp \
-        mainwindow.cpp \
+SOURCES += \
+    main.cpp \
+    mainwindow.cpp \
+    bar.cpp \
     thr_play.cpp \
     update_data.cpp \
     rle.c
