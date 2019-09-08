@@ -18,6 +18,9 @@ void ThreadPlay::stop() {
 }
 
 void ThreadPlay::run() {
+
+    sleep(1);
+
     qint64 read_len = 0;
     uint32_t total_pkg = 0;
 
@@ -59,6 +62,7 @@ void ThreadPlay::run() {
     }
 
     uint32_t time_pass = 0;
+    uint32_t time_last_pass = 0;
 
     qint64 time_begin = QDateTime::currentMSecsSinceEpoch();
 
@@ -87,6 +91,14 @@ void ThreadPlay::run() {
         }
 
         time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin);
+        if(time_pass - time_last_pass > 1000) {
+            update_data* _passed_ms = new update_data;
+            _passed_ms->data_type(TYPE_TIMER);
+            _passed_ms->passed_ms(time_pass);
+//            qDebug("--- 1  %d", time_pass);
+            emit signal_update_data(_passed_ms);
+            time_last_pass = time_pass;
+        }
 
         if(time_pass >= pkg.time_ms) {
             //time_pass = pkg.time_ms;
@@ -99,8 +111,8 @@ void ThreadPlay::run() {
         uint32_t wait_this_time = 0;
         for(;;) {
             wait_this_time = time_wait;
-            if(wait_this_time > 5)
-                wait_this_time = 5;
+            if(wait_this_time > 10)
+                wait_this_time = 10;
 
             if(m_need_stop) {
                 qDebug() << "stop, user cancel (2).";
@@ -109,8 +121,15 @@ void ThreadPlay::run() {
 
             msleep(wait_this_time);
 
-            //time_pass += wait_this_time;
-            //time_pass = pkg.time_ms;
+            uint32_t _time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin);
+            if(_time_pass - time_last_pass > 1000) {
+                update_data* _passed_ms = new update_data;
+                _passed_ms->data_type(TYPE_TIMER);
+                _passed_ms->passed_ms(_time_pass);
+//                qDebug("--- 2  %d", _time_pass);
+                emit signal_update_data(_passed_ms);
+                time_last_pass = _time_pass;
+            }
 
             time_wait -= wait_this_time;
             if(time_wait == 0) {
@@ -118,8 +137,9 @@ void ThreadPlay::run() {
                 break;
             }
         }
-
-//        emit signal_update_data(dat);
-//        msleep(15);
     }
+
+    update_data* _end = new update_data;
+    _end->data_type(TYPE_END);
+    emit signal_update_data(_end);
 }

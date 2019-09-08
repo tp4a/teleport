@@ -13,7 +13,8 @@
         <file>res/bar/btnsel-right.png</file>
         <file>res/bar/play-hover.png</file>
         <file>res/bar/play.png</file>
-        <file>res/bar/prgbar-left.png</file>
+        <file>res/bar/pause-hover.png</file>
+        <file>res/bar/pause.png</file>
         <file>res/bar/prgbar-mid.png</file>
         <file>res/bar/prgbar-right.png</file>
         <file>res/bar/prgbarh-left.png</file>

@@ -6,6 +6,8 @@
 
 #define TYPE_HEADER_INFO    0
 #define TYPE_DATA           1
+#define TYPE_TIMER          2
+#define TYPE_END            3
 
 
 #define TS_RECORD_TYPE_RDP_POINTER          0x12    // 鼠标坐标位置改变，用于绘制虚拟鼠标
