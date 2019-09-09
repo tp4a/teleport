@@ -1,12 +1,11 @@
-﻿#include <QDateTime>
+﻿#include <QCoreApplication>
+#include <QDateTime>
 #include <QDebug>
+#include <QDir>
 #include <QFile>
 
 #include "thr_play.h"
 #include "record_format.h"
-
-static QString REPLAY_PATH = "E:\\work\\tp4a\\teleport\\server\\share\\replay\\rdp\\000000197\\";
-
 
 ThreadPlay::ThreadPlay()
 {
@@ -23,11 +22,16 @@ void ThreadPlay::run() {
 
     sleep(1);
 
+
+    QString currentPath = QCoreApplication::applicationDirPath() + "/testdata/";
+
     qint64 read_len = 0;
     uint32_t total_pkg = 0;
     uint32_t total_ms = 0;
 
-    QString hdr_filename(REPLAY_PATH);
+    // 加载录像基本信息数据
+
+    QString hdr_filename(currentPath);
     hdr_filename += "tp-rdp.tpr";
 
     QFile f_hdr(hdr_filename);
@@ -54,9 +58,9 @@ void ThreadPlay::run() {
         emit signal_update_data(dat);
     }
 
+    // 加载录像文件数据
 
-
-    QString dat_filename(REPLAY_PATH);
+    QString dat_filename(currentPath);
     dat_filename += "tp-rdp.dat";
 
     QFile f_dat(dat_filename);
