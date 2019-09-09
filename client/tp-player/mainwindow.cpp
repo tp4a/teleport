@@ -70,14 +70,18 @@ MainWindow::MainWindow(QWidget *parent) :
     m_shown = false;
     m_show_default = true;
     m_bar_shown = false;
+    m_bar_fade_in = false;
+    m_bar_fading = false;
+    m_bar_opacity = 1.0;
     memset(&m_pt, 0, sizeof(TS_RECORD_RDP_POINTER));
+
+    m_thr_play = nullptr;
+    m_play_state = PLAY_STATE_UNKNOWN;
 
     ui->setupUi(this);
 
     ui->centralWidget->setMouseTracking(true);
     setMouseTracking(true);
-
-    //qRegisterMetaType<update_data*>("update_data");
 
     // frame-less window.
 //#ifdef __APPLE__
@@ -98,14 +102,45 @@ MainWindow::MainWindow(QWidget *parent) :
         return;
     }
 
-    connect(&m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(on_update_data(update_data*)));
+//    connect(&m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
+    connect(&m_timer_bar_fade, SIGNAL(timeout()), this, SLOT(_do_bar_fade()));
+    connect(&m_timer_bar_delay_hide, SIGNAL(timeout()), this, SLOT(_do_bar_delay_hide()));
 }
 
 MainWindow::~MainWindow()
 {
-    m_thr_play.stop();
-    m_thr_play.wait();
+    if(m_thr_play) {
+        m_thr_play->stop();
+        m_thr_play->wait();
+
+        disconnect(m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
+
+        delete m_thr_play;
+        m_thr_play = nullptr;
+    }
     delete ui;
+}
+
+void MainWindow::_start_play_thread() {
+    if(m_thr_play) {
+        m_thr_play->stop();
+        m_thr_play->wait();
+
+        disconnect(m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
+
+        delete m_thr_play;
+        m_thr_play = nullptr;
+    }
+
+    m_thr_play = new ThreadPlay;
+    connect(m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
+    m_thr_play->speed(m_bar.get_speed());
+    m_thr_play->start();
+}
+
+void MainWindow::speed(int s) {
+    if(m_thr_play)
+        m_thr_play->speed(s);
 }
 
 void MainWindow::paintEvent(QPaintEvent *e)
@@ -125,17 +160,40 @@ void MainWindow::paintEvent(QPaintEvent *e)
         }
 
         // 绘制浮动控制窗
-        if(m_bar_shown)
+        if(m_bar_fading) {
+            painter.setOpacity(m_bar_opacity);
             m_bar.draw(painter, e->rect());
+        }
+        else if(m_bar_shown) {
+            m_bar.draw(painter, e->rect());
+        }
     }
 
     if(!m_shown) {
         m_shown = true;
-        m_thr_play.start();
+        //m_thr_play.start();
+        _start_play_thread();
     }
 }
 
-void MainWindow::on_update_data(update_data* dat) {
+void MainWindow::pause() {
+    if(m_play_state != PLAY_STATE_RUNNING)
+        return;
+    m_thr_play->pause();
+    m_play_state = PLAY_STATE_PAUSE;
+}
+
+void MainWindow::resume() {
+    if(m_play_state == PLAY_STATE_PAUSE)
+        m_thr_play->resume();
+    else if(m_play_state == PLAY_STATE_STOP)
+        //m_thr_play->start();
+        _start_play_thread();
+
+    m_play_state = PLAY_STATE_RUNNING;
+}
+
+void MainWindow::_do_update_data(update_data* dat) {
     if(!dat)
         return;
 
@@ -197,6 +255,7 @@ void MainWindow::on_update_data(update_data* dat) {
         return;
     }
 
+    // 这是播放开始时收到的第一个数据包
     if(dat->data_type() == TYPE_HEADER_INFO) {
         if(dat->data_len() != sizeof(TS_RECORD_HEADER)) {
             qDebug() << "invalid record header.";
@@ -206,26 +265,38 @@ void MainWindow::on_update_data(update_data* dat) {
 
         qDebug() << "resize (" << m_rec_hdr.basic.width << "," << m_rec_hdr.basic.height << ")";
         if(m_rec_hdr.basic.width > 0 && m_rec_hdr.basic.height > 0) {
-            m_canvas = QPixmap(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
+
+            if(m_canvas.width() != m_rec_hdr.basic.width && m_canvas.height() != m_rec_hdr.basic.height) {
+                m_canvas = QPixmap(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
+
+                //m_win_board_w = frameGeometry().width() - geometry().width();
+                //m_win_board_h = frameGeometry().height() - geometry().height();
+
+                QDesktopWidget *desktop = QApplication::desktop(); // =qApp->desktop();也可以
+                qDebug("desktop w:%d,h:%d, this w:%d,h:%d", desktop->width(), desktop->height(), width(), height());
+                //move((desktop->width() - this->width())/2, (desktop->height() - this->height())/2);
+                move(10, (desktop->height() - m_rec_hdr.basic.height)/2);
+
+                //setFixedSize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
+                //resize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
+                //resize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
+                setFixedSize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
+            }
+
             m_canvas.fill(QColor(38, 73, 111));
-
-            //m_win_board_w = frameGeometry().width() - geometry().width();
-            //m_win_board_h = frameGeometry().height() - geometry().height();
-
-            QDesktopWidget *desktop = QApplication::desktop(); // =qApp->desktop();也可以
-            qDebug("desktop w:%d,h:%d, this w:%d,h:%d", desktop->width(), desktop->height(), width(), height());
-            //move((desktop->width() - this->width())/2, (desktop->height() - this->height())/2);
-            move(10, (desktop->height() - m_rec_hdr.basic.height)/2);
-
-            //setFixedSize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
-            //resize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
-            //resize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
-            setFixedSize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
 
             m_show_default = false;
             repaint();
 
             m_bar.start(m_rec_hdr.info.time_ms, 640);
+            m_bar_shown = true;
+            m_play_state = PLAY_STATE_RUNNING;
+
+            update(m_bar.rc());
+
+            m_bar_fade_in = false;
+            m_bar_fading = true;
+            m_timer_bar_delay_hide.start(2000);
         }
 
         QString title;
@@ -242,28 +313,80 @@ void MainWindow::on_update_data(update_data* dat) {
 
     if(dat->data_type() == TYPE_END) {
         m_bar.end();
+        m_play_state = PLAY_STATE_STOP;
         return;
     }
+}
+
+void MainWindow::_do_bar_delay_hide() {
+    m_bar_fading = true;
+    m_timer_bar_delay_hide.stop();
+    m_timer_bar_fade.stop();
+    m_timer_bar_fade.start(50);
+}
+
+void MainWindow::_do_bar_fade() {
+    if(m_bar_fade_in) {
+        if(m_bar_opacity < 1.0)
+            m_bar_opacity += 0.3;
+        if(m_bar_opacity >= 1.0) {
+            m_bar_opacity = 1.0;
+            m_bar_shown = true;
+            m_bar_fading = false;
+            m_timer_bar_fade.stop();
+        }
+    }
+    else {
+        if(m_bar_opacity > 0.0)
+            m_bar_opacity -= 0.2;
+        if(m_bar_opacity <= 0.0) {
+            m_bar_opacity = 0.0;
+            m_bar_shown = false;
+            m_bar_fading = false;
+            m_timer_bar_fade.stop();
+        }
+    }
+
+    update(m_bar.rc());
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *e) {
     if(!m_show_default) {
         QRect rc = m_bar.rc();
         if(e->y() > rc.top() - 20 && e->y() < rc.bottom() + 20) {
-            if(!m_bar_shown) {
-                m_bar_shown = true;
-                update(rc);
+            if((!m_bar_shown && !m_bar_fading) || (m_bar_fading && !m_bar_fade_in)) {
+                m_bar_fade_in = true;
+                m_bar_fading = true;
+
+                m_timer_bar_delay_hide.stop();
+                m_timer_bar_fade.stop();
+                m_timer_bar_fade.start(50);
             }
 
-            if(rc.contains(QPoint(e->x(), e->y())))
+            if(rc.contains(e->pos()))
                 m_bar.onMouseMove(e->x(), e->y());
         }
         else {
-            if(m_bar_shown) {
-                m_bar_shown = false;
-                update(rc);
+            if((m_bar_shown && !m_bar_fading) || (m_bar_fading && m_bar_fade_in)) {
+                m_bar_fade_in = false;
+                m_bar_fading = true;
+                m_timer_bar_fade.stop();
+                m_timer_bar_delay_hide.stop();
+
+                if(m_bar_opacity != 1.0)
+                    m_timer_bar_fade.start(50);
+                else
+                    m_timer_bar_delay_hide.start(1000);
             }
         }
     }
 }
 
+void MainWindow::mousePressEvent(QMouseEvent *e) {
+    if(!m_show_default) {
+        QRect rc = m_bar.rc();
+        if(rc.contains(e->pos())) {
+            m_bar.onMousePress(e->x(), e->y());
+        }
+    }
+}

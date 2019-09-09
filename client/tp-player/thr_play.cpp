@@ -11,6 +11,8 @@ static QString REPLAY_PATH = "E:\\work\\tp4a\\teleport\\server\\share\\replay\\r
 ThreadPlay::ThreadPlay()
 {
     m_need_stop = false;
+    m_need_pause = false;
+    m_speed = 2;
 }
 
 void ThreadPlay::stop() {
@@ -23,6 +25,7 @@ void ThreadPlay::run() {
 
     qint64 read_len = 0;
     uint32_t total_pkg = 0;
+    uint32_t total_ms = 0;
 
     QString hdr_filename(REPLAY_PATH);
     hdr_filename += "tp-rdp.tpr";
@@ -46,6 +49,7 @@ void ThreadPlay::run() {
 
         TS_RECORD_HEADER* hdr = (TS_RECORD_HEADER*)dat->data_buf();
         total_pkg = hdr->info.packages;
+        total_ms = hdr->info.time_ms;
 
         emit signal_update_data(dat);
     }
@@ -72,6 +76,12 @@ void ThreadPlay::run() {
             break;
         }
 
+        if(m_need_pause) {
+            msleep(50);
+            time_begin += 50;
+            continue;
+        }
+
         TS_RECORD_PKG pkg;
         read_len = f_dat.read((char*)(&pkg), sizeof(pkg));
         if(read_len != sizeof(TS_RECORD_PKG)) {
@@ -90,18 +100,18 @@ void ThreadPlay::run() {
             return;
         }
 
-        time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin);
-        if(time_pass - time_last_pass > 1000) {
+        time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin) * m_speed;
+        if(time_pass > total_ms)
+            time_pass = total_ms;
+        if(time_pass - time_last_pass > 200) {
             update_data* _passed_ms = new update_data;
             _passed_ms->data_type(TYPE_TIMER);
             _passed_ms->passed_ms(time_pass);
-//            qDebug("--- 1  %d", time_pass);
             emit signal_update_data(_passed_ms);
             time_last_pass = time_pass;
         }
 
         if(time_pass >= pkg.time_ms) {
-            //time_pass = pkg.time_ms;
             emit signal_update_data(dat);
             continue;
         }
@@ -110,6 +120,12 @@ void ThreadPlay::run() {
         uint32_t time_wait = pkg.time_ms - time_pass;
         uint32_t wait_this_time = 0;
         for(;;) {
+            if(m_need_pause) {
+                msleep(50);
+                time_begin += 50;
+                continue;
+            }
+
             wait_this_time = time_wait;
             if(wait_this_time > 10)
                 wait_this_time = 10;
@@ -121,12 +137,13 @@ void ThreadPlay::run() {
 
             msleep(wait_this_time);
 
-            uint32_t _time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin);
-            if(_time_pass - time_last_pass > 1000) {
+            uint32_t _time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin) * m_speed;
+            if(_time_pass > total_ms)
+                _time_pass = total_ms;
+            if(_time_pass - time_last_pass > 200) {
                 update_data* _passed_ms = new update_data;
                 _passed_ms->data_type(TYPE_TIMER);
                 _passed_ms->passed_ms(_time_pass);
-//                qDebug("--- 2  %d", _time_pass);
                 emit signal_update_data(_passed_ms);
                 time_last_pass = _time_pass;
             }

@@ -55,8 +55,7 @@ typedef enum {
 #define speed_2x        1
 #define speed_4x        2
 #define speed_8x        3
-#define speed_16x       4
-#define speed_count     5
+#define speed_count     4
 
 #define btnspd_normal       0
 #define btnspd_sel          1
@@ -67,27 +66,32 @@ typedef enum {
 #define chkbox_selected         1
 #define chkbox_state_count      2
 
+class MainWindow;
+
 class Bar {
 public:
     Bar();
     ~Bar();
 
-    bool init(QWidget* owner);
+    bool init(MainWindow* owner);
     void start(uint32_t total_ms, int width);
     void end();
     void draw(QPainter& painter, const QRect& rc);
     void update_passed_time(uint32_t ms);
 
+    int get_speed();
+
     QRect rc(){return m_rc;}
 
     void onMouseMove(int x, int y);
+    void onMousePress(int x, int y);
 
 private:
     void _init_imgages();
     void _ms_to_str(uint32_t ms, QString& str);
 
 private:
-    QWidget* m_owner;
+    MainWindow* m_owner;
 
     uint32_t m_total_ms;    // 录像的总时长
     uint32_t m_passed_ms;   // 已经播放了的时长

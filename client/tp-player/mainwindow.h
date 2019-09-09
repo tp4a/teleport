@@ -2,10 +2,16 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTimer>
 #include "bar.h"
 #include "thr_play.h"
 #include "update_data.h"
 #include "record_format.h"
+
+#define PLAY_STATE_UNKNOWN      0
+#define PLAY_STATE_RUNNING      1
+#define PLAY_STATE_PAUSE        2
+#define PLAY_STATE_STOP         3
 
 namespace Ui {
 class MainWindow;
@@ -19,22 +25,31 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void pause();
+    void resume();
+    void restart();
+    void speed(int s);
+
 private:
     void paintEvent(QPaintEvent *e);
     void mouseMoveEvent(QMouseEvent *e);
+    void mousePressEvent(QMouseEvent *e);
+
+    void _start_play_thread();
 
 private slots:
-    void on_update_data(update_data*);
+    void _do_update_data(update_data*);
+    void _do_bar_fade();
+    void _do_bar_delay_hide();
 
 private:
     Ui::MainWindow *ui;
-    //QImage m_bg;
     bool m_shown;
     bool m_show_default;
     bool m_bar_shown;
     QPixmap m_default_bg;
 
-    ThreadPlay m_thr_play;
+    ThreadPlay* m_thr_play;
 
     QPixmap m_canvas;
 
@@ -44,6 +59,14 @@ private:
 
     QPixmap m_pt_normal;
     TS_RECORD_RDP_POINTER m_pt;
+
+    QTimer m_timer_bar_fade;
+    QTimer m_timer_bar_delay_hide;
+    bool m_bar_fade_in;
+    bool m_bar_fading;
+    qreal m_bar_opacity;
+
+    int m_play_state;
 };
 
 #endif // MAINWINDOW_H

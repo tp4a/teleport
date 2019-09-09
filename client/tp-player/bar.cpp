@@ -1,10 +1,11 @@
 #include "bar.h"
 #include <QPainter>
 #include <QDebug>
+#include "mainwindow.h"
 
 
 #define FONT_SIZE_DEFAULT           12
-#define TIME_STR_PIXEL_SIZE         16
+#define FONT_SIZE_TIME              14
 #define TEXT_COLOR                  QColor(255,255,255,153)
 #define SPEED_BTN_WIDTH             42
 #define CHKBOX_RIGHT_PADDING        6
@@ -58,7 +59,6 @@ static SPEED_MAP speed[speed_count] = {
     {speed_2x, "2x"},
     {speed_4x, "4x"},
     {speed_8x, "8x"},
-    {speed_16x, "16x"}
 };
 
 static inline int min(int a, int b){
@@ -92,7 +92,7 @@ Bar::~Bar() {
 
 }
 
-bool Bar::init(QWidget* owner) {
+bool Bar::init(MainWindow* owner) {
     m_owner = owner;
 
     // 加载所需的图像资源
@@ -140,6 +140,9 @@ void Bar::start(uint32_t total_ms, int width) {
 void Bar::end() {
     if(m_passed_ms != m_total_ms)
         update_passed_time(m_total_ms);
+
+    m_playing = false;
+    m_owner->update(m_rc.left()+m_rc_btn_play.left(), m_rc.top()+m_rc_btn_play.top(), m_rc_btn_play.width(), m_rc_btn_play.height());
 }
 
 void Bar::_init_imgages() {
@@ -261,7 +264,7 @@ void Bar::_init_imgages() {
         // 计算显示时间所需的宽高
         font.setFamily("consolas");
         font.setBold(true);
-        font.setPixelSize(TIME_STR_PIXEL_SIZE);
+        font.setPixelSize(FONT_SIZE_TIME);
         pp.setFont(font);
         {
             QFontMetrics fm = pp.fontMetrics();
@@ -276,7 +279,7 @@ void Bar::_init_imgages() {
         QFont font = pp.font();
         font.setFamily("consolas");
         font.setBold(true);
-        font.setPixelSize(TIME_STR_PIXEL_SIZE);
+        font.setPixelSize(FONT_SIZE_TIME);
         pp.setFont(font);
         pp.drawText(m_rc_time_total, Qt::AlignLeft, m_str_total_time);
 
@@ -287,7 +290,7 @@ void Bar::_init_imgages() {
         int prog_width = m_rc_time_total.left() - PADDING_TIME_PROGRESS_BAR - PADDING_TIME_PROGRESS_BAR - m_rc_time_passed.right();
         int prog_height = max(m_res[res_prgbarh_left].height(), m_img_progress_pointer->height());
         m_rc_progress = QRect(0, 0, prog_width, prog_height);
-        m_rc_progress.moveTo(m_rc_time_passed.right() + PADDING_TIME_PROGRESS_BAR, m_rc_time_passed.height() + (m_rc_time_passed.height() - prog_height)/2);
+        m_rc_progress.moveTo(m_rc_time_passed.right() + PADDING_TIME_PROGRESS_BAR, m_rc_time_passed.top() + (m_rc_time_passed.height() - prog_height)/2);
     }
 
 
@@ -394,6 +397,60 @@ void Bar::onMouseMove(int x, int y) {
     // TODO: more hover detect.
 }
 
+void Bar::onMousePress(int x, int y) {
+    // 映射鼠标坐标点到本浮动窗内部的相对位置
+    QPoint pt(x-m_rc.left(), y-m_rc.top());
+
+    if(m_rc_btn_play.contains(pt)) {
+        if(m_playing)
+            m_owner->pause();
+        else
+            m_owner->resume();
+
+        m_playing = !m_playing;
+        m_owner->update(m_rc.left()+m_rc_btn_play.left(), m_rc.top()+m_rc_btn_play.top(), m_rc_btn_play.width(), m_rc_btn_play.height());
+
+        return;
+    }
+
+    int speed_sel = speed_count;
+    for(int i = 0; i < speed_count; ++i) {
+        if(m_rc_btn_speed[i].contains(pt)) {
+            speed_sel = i;
+            break;
+        }
+    }
+    if(m_speed_selected != speed_sel && speed_sel != speed_count) {
+        int old_sel = m_speed_selected;
+        m_speed_selected = speed_sel;
+        m_owner->speed(get_speed());
+        m_owner->update(m_rc.left()+m_rc_btn_speed[old_sel].left(), m_rc.top()+m_rc_btn_speed[old_sel].top(), m_rc_btn_speed[old_sel].width(), m_rc_btn_speed[old_sel].height());
+        m_owner->update(m_rc.left()+m_rc_btn_speed[m_speed_hover].left(), m_rc.top()+m_rc_btn_speed[m_speed_hover].top(), m_rc_btn_speed[m_speed_hover].width(), m_rc_btn_speed[m_speed_hover].height());
+        return;
+    }
+
+    if(m_rc_skip.contains(pt)) {
+        m_skip_selected = !m_skip_selected;
+        m_owner->update(m_rc.left()+m_rc_skip.left(), m_rc.top()+m_rc_skip.top(), m_rc_skip.width(), m_rc_skip.height());
+        return;
+    }
+}
+
+int Bar::get_speed() {
+    switch (m_speed_selected) {
+    case speed_1x:
+        return 1;
+    case speed_2x:
+        return 2;
+    case speed_4x:
+        return 4;
+    case speed_8x:
+        return 8;
+    default:
+        return 1;
+    }
+}
+
 void Bar::draw(QPainter& painter, const QRect& rc_draw){
     if(!m_width)
         return;
@@ -427,14 +484,14 @@ void Bar::draw(QPainter& painter, const QRect& rc_draw){
             int to_y = rc.top() + from_y;
             if(m_playing){
                 if(m_play_hover)
-                    painter.drawPixmap(to_x, to_y, m_img_btn_play[play_running][widget_hover], from_x, from_y, w, h);
-                else
-                    painter.drawPixmap(to_x, to_y, m_img_btn_play[play_running][widget_normal], from_x, from_y, w, h);
-            } else {
-                if(m_play_hover)
                     painter.drawPixmap(to_x, to_y, m_img_btn_play[play_paused][widget_hover], from_x, from_y, w, h);
                 else
                     painter.drawPixmap(to_x, to_y, m_img_btn_play[play_paused][widget_normal], from_x, from_y, w, h);
+            } else {
+                if(m_play_hover)
+                    painter.drawPixmap(to_x, to_y, m_img_btn_play[play_running][widget_hover], from_x, from_y, w, h);
+                else
+                    painter.drawPixmap(to_x, to_y, m_img_btn_play[play_running][widget_normal], from_x, from_y, w, h);
             }
         }
     }
@@ -452,7 +509,7 @@ void Bar::draw(QPainter& painter, const QRect& rc_draw){
                 QFont font = pp.font();
                 font.setFamily("consolas");
                 font.setBold(true);
-                font.setPixelSize(TIME_STR_PIXEL_SIZE);
+                font.setPixelSize(FONT_SIZE_TIME);
                 pp.setFont(font);
                 pp.drawText(QRect(0,0,m_rc_time_passed.width(), m_rc_time_passed.height()), Qt::AlignRight, m_str_passed_time);
 
