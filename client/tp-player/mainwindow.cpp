@@ -72,8 +72,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_bar_shown = false;
     memset(&m_pt, 0, sizeof(TS_RECORD_RDP_POINTER));
 
-    qDebug() << m_pt_normal.width() << "x" << m_pt_normal.height();
-
     ui->setupUi(this);
 
     ui->centralWidget->setMouseTracking(true);
@@ -95,8 +93,10 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowFlags(windowFlags()&~Qt::WindowMaximizeButtonHint);    // 禁止最大化按钮
     setFixedSize(m_default_bg.width(), m_default_bg.height());                     // 禁止拖动窗口大小
 
-    if(!m_bar.init(this))
+    if(!m_bar.init(this)) {
+        qDebug("bar init failed.");
         return;
+    }
 
     connect(&m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(on_update_data(update_data*)));
 }
