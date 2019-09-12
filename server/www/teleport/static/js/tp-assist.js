@@ -76,7 +76,7 @@ $assist.alert_assist_not_found = function () {
     } else if($assist.errcode === TPE_OLD_ASSIST) {
         $assist.dom.msg_box_title.html('TELEPORT助手需要升级');
         $assist.dom.msg_box_info.html('检测到TELEPORT助手版本 v'+ $assist.version +'，但需要最低版本 v'+ $assist.ver_require+'。');
-		$assist.dom.msg_box_desc.html('请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦升级了TELEPORT助手，即可重新进行远程连接。');
+        $assist.dom.msg_box_desc.html('请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦升级了TELEPORT助手，即可重新进行远程连接。');
         //$assist.dom.msg_box_desc.html('请 <a href="/static/download/teleport-assist-windows.exe" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦升级了TELEPORT助手，即可重新进行远程连接。');
     }
 
