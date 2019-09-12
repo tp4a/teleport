@@ -744,6 +744,8 @@ $app.create_dlg_edit_user = function () {
     dlg.field_mobile = '';
     dlg.field_qq = '';
     dlg.field_wechat = '';
+    dlg.field_vaild_from = '';
+    dlg.field_vaild_to = '';
     dlg.field_desc = '';
 
     dlg.dom = {
@@ -756,6 +758,8 @@ $app.create_dlg_edit_user = function () {
         , edit_mobile: $('#edit-user-mobile')
         , edit_qq: $('#edit-user-qq')
         , edit_wechat: $('#edit-user-wechat')
+        , edit_valid_from: $('#edit-user-valid-from')
+        , edit_valid_to: $('#edit-user-valid-to')
         , edit_desc: $('#edit-user-desc')
         , msg: $('#edit-user-message')
         , btn_save: $('#btn-edit-user-save')
@@ -778,6 +782,8 @@ $app.create_dlg_edit_user = function () {
             _ret.push('<li><a href="javascript:;" data-tp-selector="' + role.id + '"><i class="fa fa-user-circle fa-fw"></i> ' + role.name + '</a></li>');
         });
         _ret.push('</ul>');
+        dlg.dom.edit_valid_from.datetimepicker({format: "yyyy-mm-dd h:ii", autoclose: 1, todayHighlight: 1});
+        dlg.dom.edit_valid_to.datetimepicker({format: "yyyy-mm-dd h:ii", autoclose: 1, todayHighlight: 1});
         dlg.dom.select_role.after($(_ret.join('')));
 
         dlg.dom.selected_role = $('#' + dlg.dom_id + ' span[data-selected-role]');
@@ -869,7 +875,7 @@ $app.create_dlg_edit_user = function () {
         var role_name = '选择角色';
         dlg.field_role = -1;
         dlg.field_auth_type = 0;
-
+        
         // dlg.dom.btn_auth_use_sys_config.removeClass('tp-selected');
         // dlg.dom.btn_auth_username_password.removeClass('tp-selected');
         // dlg.dom.btn_auth_username_password_captcha.removeClass('tp-selected');
@@ -887,6 +893,8 @@ $app.create_dlg_edit_user = function () {
             dlg.dom.edit_qq.val('');
             dlg.dom.edit_wechat.val('');
             dlg.dom.edit_desc.val('');
+            dlg.dom.edit_valid_from.find('input').val('');
+            dlg.dom.edit_valid_to.find('input').val('');
         } else {
             dlg.field_id = user.id;
             dlg.field_auth_type = user.auth_type;
@@ -905,6 +913,16 @@ $app.create_dlg_edit_user = function () {
             dlg.dom.edit_qq.val(user.qq);
             dlg.dom.edit_wechat.val(user.wechat);
             dlg.dom.edit_desc.val(user.desc);
+            if (user.valid_from == 0 ) {
+            	dlg.dom.edit_valid_from.find('input').val('');
+            }else{
+            	dlg.dom.edit_valid_from.find('input').val(tp_format_datetime(tp_utc2local(user.valid_from), 'yyyy-MM-dd HH:mm'));	
+            }
+            if (user.valid_to == 0 ) {
+            	dlg.dom.edit_valid_to.find('input').val('');
+            }else{
+            	dlg.dom.edit_valid_to.find('input').val(tp_format_datetime(tp_utc2local(user.valid_to), 'yyyy-MM-dd HH:mm'));
+        	}
         }
         dlg.dom.selected_role.text(role_name);
 
@@ -943,6 +961,8 @@ $app.create_dlg_edit_user = function () {
         dlg.field_mobile = dlg.dom.edit_mobile.val();
         dlg.field_qq = dlg.dom.edit_qq.val();
         dlg.field_wechat = dlg.dom.edit_wechat.val();
+        dlg.field_valid_from = dlg.dom.edit_valid_from.find('input').val();
+        dlg.field_valid_to = dlg.dom.edit_valid_to.find('input').val();
         dlg.field_desc = dlg.dom.edit_desc.val();
 
         if (dlg.field_role === -1) {
@@ -1002,6 +1022,8 @@ $app.create_dlg_edit_user = function () {
                 , mobile: dlg.field_mobile
                 , qq: dlg.field_qq
                 , wechat: dlg.field_wechat
+                , valid_from: dlg.field_valid_from
+                , valid_to: dlg.field_valid_to
                 , desc: dlg.field_desc
             },
             function (ret) {
