@@ -7,6 +7,8 @@
 #include <QPainter>
 #include <QDesktopWidget>
 #include <QPaintEvent>
+#include <QMessageBox>
+#include <QDialogButtonBox>
 
 bool rdpimg2QImage(QImage& out, int w, int h, int bitsPerPixel, bool isCompressed, uint8_t* dat, uint32_t len) {
     switch(bitsPerPixel) {
@@ -67,7 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    m_shown = false;
+    //m_shown = false;
     m_show_default = true;
     m_bar_shown = false;
     m_bar_fade_in = false;
@@ -77,6 +79,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_thr_play = nullptr;
     m_play_state = PLAY_STATE_UNKNOWN;
+
+    m_msg_box = nullptr;
 
     ui->setupUi(this);
 
@@ -103,28 +107,46 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
 //    connect(&m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
+    connect(&m_timer_first_run, SIGNAL(timeout()), this, SLOT(_do_first_run()));
     connect(&m_timer_bar_fade, SIGNAL(timeout()), this, SLOT(_do_bar_fade()));
     connect(&m_timer_bar_delay_hide, SIGNAL(timeout()), this, SLOT(_do_bar_delay_hide()));
+
+    m_timer_first_run.setSingleShot(true);
+    m_timer_first_run.start(500);
 }
 
 MainWindow::~MainWindow()
 {
     if(m_thr_play) {
         m_thr_play->stop();
-        m_thr_play->wait();
+        //m_thr_play->wait();
+        //qDebug() << "play thread stoped.";
 
         disconnect(m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
 
         delete m_thr_play;
         m_thr_play = nullptr;
     }
+
+    if(m_msg_box) {
+        delete m_msg_box;
+    }
+
     delete ui;
+}
+
+void MainWindow::set_resource(const QString &res) {
+    m_res = res;
+}
+
+void MainWindow::_do_first_run() {
+    _start_play_thread();
 }
 
 void MainWindow::_start_play_thread() {
     if(m_thr_play) {
         m_thr_play->stop();
-        m_thr_play->wait();
+        //m_thr_play->wait();
 
         disconnect(m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
 
@@ -132,7 +154,7 @@ void MainWindow::_start_play_thread() {
         m_thr_play = nullptr;
     }
 
-    m_thr_play = new ThreadPlay;
+    m_thr_play = new ThreadPlay(m_res);
     connect(m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
     m_thr_play->speed(m_bar.get_speed());
     m_thr_play->start();
@@ -169,11 +191,11 @@ void MainWindow::paintEvent(QPaintEvent *e)
         }
     }
 
-    if(!m_shown) {
-        m_shown = true;
-        //m_thr_play.start();
-        _start_play_thread();
-    }
+//    if(!m_shown) {
+//        m_shown = true;
+//        //m_thr_play.start();
+//        _start_play_thread();
+//    }
 }
 
 void MainWindow::pause() {
@@ -200,6 +222,9 @@ void MainWindow::_do_update_data(update_data* dat) {
     UpdateDataHelper data_helper(dat);
 
     if(dat->data_type() == TYPE_DATA) {
+        if(m_msg_box) {
+            m_msg_box->hide();
+        }
 
         if(dat->data_len() <= sizeof(TS_RECORD_PKG)) {
             qDebug() << "invalid record package(1).";
@@ -250,13 +275,35 @@ void MainWindow::_do_update_data(update_data* dat) {
         return;
     }
 
-    if(dat->data_type() == TYPE_TIMER) {
-        m_bar.update_passed_time(dat->passed_ms());
+    else if(dat->data_type() == TYPE_PLAYED_MS) {
+        m_bar.update_passed_time(dat->played_ms());
+        return;
+    }
+
+    else if(dat->data_type() == TYPE_MESSAGE) {
+        //QMessageBox::warning(nullptr, QGuiApplication::applicationDisplayName(), dat->message());
+        if(!m_msg_box) {
+            m_msg_box = new DlgMessage(this);
+            // 无窗口标题栏，无边框
+            m_msg_box->setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint | Qt::ToolTip | Qt::FramelessWindowHint);
+            // 设置成非模态
+            m_msg_box->setModal(false);
+        }
+
+        m_msg_box->set_text(dat->message());
+        // 显示对话框
+        m_msg_box->show();
+        return;
+    }
+
+    else if(dat->data_type() == TYPE_ERROR) {
+        QMessageBox::warning(nullptr, QGuiApplication::applicationDisplayName(), dat->message());
+        QApplication::instance()->exit(0);
         return;
     }
 
     // 这是播放开始时收到的第一个数据包
-    if(dat->data_type() == TYPE_HEADER_INFO) {
+    else if(dat->data_type() == TYPE_HEADER_INFO) {
         if(dat->data_len() != sizeof(TS_RECORD_HEADER)) {
             qDebug() << "invalid record header.";
             return;
@@ -264,40 +311,38 @@ void MainWindow::_do_update_data(update_data* dat) {
         memcpy(&m_rec_hdr, dat->data_buf(), sizeof(TS_RECORD_HEADER));
 
         qDebug() << "resize (" << m_rec_hdr.basic.width << "," << m_rec_hdr.basic.height << ")";
-        if(m_rec_hdr.basic.width > 0 && m_rec_hdr.basic.height > 0) {
 
-            if(m_canvas.width() != m_rec_hdr.basic.width && m_canvas.height() != m_rec_hdr.basic.height) {
-                m_canvas = QPixmap(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
+        if(m_canvas.width() != m_rec_hdr.basic.width && m_canvas.height() != m_rec_hdr.basic.height) {
+            m_canvas = QPixmap(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
 
-                //m_win_board_w = frameGeometry().width() - geometry().width();
-                //m_win_board_h = frameGeometry().height() - geometry().height();
+            //m_win_board_w = frameGeometry().width() - geometry().width();
+            //m_win_board_h = frameGeometry().height() - geometry().height();
 
-                QDesktopWidget *desktop = QApplication::desktop(); // =qApp->desktop();也可以
-                qDebug("desktop w:%d,h:%d, this w:%d,h:%d", desktop->width(), desktop->height(), width(), height());
-                //move((desktop->width() - this->width())/2, (desktop->height() - this->height())/2);
-                move(10, (desktop->height() - m_rec_hdr.basic.height)/2);
+            QDesktopWidget *desktop = QApplication::desktop(); // =qApp->desktop();也可以
+            qDebug("desktop w:%d,h:%d, this w:%d,h:%d", desktop->width(), desktop->height(), width(), height());
+            //move((desktop->width() - this->width())/2, (desktop->height() - this->height())/2);
+            move(10, (desktop->height() - m_rec_hdr.basic.height)/2);
 
-                //setFixedSize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
-                //resize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
-                //resize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
-                setFixedSize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
-            }
-
-            m_canvas.fill(QColor(38, 73, 111));
-
-            m_show_default = false;
-            repaint();
-
-            m_bar.start(m_rec_hdr.info.time_ms, 640);
-            m_bar_shown = true;
-            m_play_state = PLAY_STATE_RUNNING;
-
-            update(m_bar.rc());
-
-            m_bar_fade_in = false;
-            m_bar_fading = true;
-            m_timer_bar_delay_hide.start(2000);
+            //setFixedSize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
+            //resize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
+            //resize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
+            setFixedSize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
         }
+
+        m_canvas.fill(QColor(38, 73, 111));
+
+        m_show_default = false;
+        repaint();
+
+        m_bar.start(m_rec_hdr.info.time_ms, 640);
+        m_bar_shown = true;
+        m_play_state = PLAY_STATE_RUNNING;
+
+        update(m_bar.rc());
+
+        m_bar_fade_in = false;
+        m_bar_fading = true;
+        m_timer_bar_delay_hide.start(2000);
 
         QString title;
         if (m_rec_hdr.basic.conn_port == 3389)
@@ -311,7 +356,7 @@ void MainWindow::_do_update_data(update_data* dat) {
     }
 
 
-    if(dat->data_type() == TYPE_END) {
+    else if(dat->data_type() == TYPE_END) {
         m_bar.end();
         m_play_state = PLAY_STATE_STOP;
         return;
@@ -383,6 +428,8 @@ void MainWindow::mouseMoveEvent(QMouseEvent *e) {
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *e) {
+//    QApplication::instance()->exit(0);
+//    return;
     if(!m_show_default) {
         QRect rc = m_bar.rc();
         if(rc.contains(e->pos())) {

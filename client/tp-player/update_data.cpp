@@ -1,8 +1,8 @@
 #include "update_data.h"
 
-update_data::update_data(QObject *parent) : QObject(parent)
+update_data::update_data(int data_type, QObject *parent) : QObject(parent)
 {
-    m_data_type = 0xff;
+    m_data_type = data_type;
     m_data_buf = nullptr;
     m_data_len = 0;
 }

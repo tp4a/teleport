@@ -2,11 +2,13 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QTimer>
 #include "bar.h"
 #include "thr_play.h"
 #include "update_data.h"
 #include "record_format.h"
+#include "dlgmessage.h"
 
 #define PLAY_STATE_UNKNOWN      0
 #define PLAY_STATE_RUNNING      1
@@ -25,6 +27,8 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void set_resource(const QString& res);
+
     void pause();
     void resume();
     void restart();
@@ -38,17 +42,20 @@ private:
     void _start_play_thread();
 
 private slots:
+    void _do_first_run(); // 默认界面加载完成后，开始播放操作（可能会进行数据下载）
     void _do_update_data(update_data*);
     void _do_bar_fade();
     void _do_bar_delay_hide();
 
 private:
     Ui::MainWindow *ui;
-    bool m_shown;
+
+    //bool m_shown;
     bool m_show_default;
     bool m_bar_shown;
     QPixmap m_default_bg;
 
+    QString m_res;
     ThreadPlay* m_thr_play;
 
     QPixmap m_canvas;
@@ -60,6 +67,7 @@ private:
     QPixmap m_pt_normal;
     TS_RECORD_RDP_POINTER m_pt;
 
+    QTimer m_timer_first_run;
     QTimer m_timer_bar_fade;
     QTimer m_timer_bar_delay_hide;
     bool m_bar_fade_in;
@@ -67,6 +75,9 @@ private:
     qreal m_bar_opacity;
 
     int m_play_state;
+
+    //QMessageBox* m_msg_box;
+    DlgMessage* m_msg_box;
 };
 
 #endif // MAINWINDOW_H
