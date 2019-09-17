@@ -7,14 +7,19 @@
 
 #include <ex.h>
 
-#define MAX_SIZE_PER_FILE 4194304  // 4M = 1024*1024*4
+#define MAX_CACHE_SIZE      1048576  // 1M = 1024*1024*1
+#define MAX_SIZE_PER_FILE   4194304  // 4M = 1024*1024*4
 
 #pragma pack(push,1)
 
 /*
  * 录像
  *
- * 一个录像分为两个文件，一个信息文件，一个数据文件。
+ * 一个录像分为多个文件：
+ *  *.tpr，录像信息文件，一个，固定大小（512字节）
+ *  *.tpd，数据文件，n个，例如 tp-rdp-1.tpd，tp-rdp-2.tpd等等，每个数据文件约4MB
+ *  *.tpk，关键帧信息文件，一个，仅RDP录像，记录各个关键帧数据所在的数据文件序号、偏移、时间点等信息。
+ *  *-cmd.txt，ssh命令记录文件，仅SSH。
  * 服务内部缓存最大4M，或者5秒，就将数据写入数据文件中，并同时更新信息文件。
  *
  */
@@ -26,8 +31,8 @@ typedef struct TS_RECORD_HEADER_INFO {
     ex_u16 ver;         // 录像文件版本，v3.5.0开始为4
     ex_u32 packages;    // 总包数
     ex_u32 time_ms;	    // 总耗时（毫秒）
-    uint32_t dat_file_count; // 数据文件数量
-    uint8_t _reserve[64-4-2-4-4-4];
+    ex_u32 dat_file_count; // 数据文件数量
+    ex_u8 _reserve[64-4-2-4-4-4];
 }TS_RECORD_HEADER_INFO;
 #define ts_record_header_info_size sizeof(TS_RECORD_HEADER_INFO)
 

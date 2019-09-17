@@ -64,6 +64,13 @@ bool rdpimg2QImage(QImage& out, int w, int h, int bitsPerPixel, bool isCompresse
     return true;
 }
 
+static inline int min(int a, int b){
+    return a < b ? a : b;
+}
+
+static inline int max(int a, int b){
+    return a > b ? a : b;
+}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -181,6 +188,20 @@ void MainWindow::paintEvent(QPaintEvent *e)
             painter.drawPixmap(m_pt.x-m_pt_normal.width()/2, m_pt.y-m_pt_normal.height()/2, m_pt_normal);
         }
 
+        {
+            QRect rc_draw = e->rect();
+            QRect rc(100, 100, m_img_message.width(), m_img_message.height());
+            //rc.moveTo(m_rc.left()+rc.left(), m_rc.top() + rc.top());
+
+            int from_x = max(rc_draw.left(), rc.left()) - rc.left();
+            int from_y = max(rc_draw.top(), rc.top()) - rc.top();
+            int w = min(rc.right(), rc_draw.right()) - rc.left() - from_x + 1;
+            int h = min(rc.bottom(), rc_draw.bottom()) - rc.top() - from_y + 1;
+            int to_x = rc.left() + from_x;
+            int to_y = rc.top() + from_y;
+            painter.drawPixmap(to_x, to_y, m_img_message, from_x, from_y, w, h);
+        }
+
         // 绘制浮动控制窗
         if(m_bar_fading) {
             painter.setOpacity(m_bar_opacity);
@@ -281,18 +302,37 @@ void MainWindow::_do_update_data(update_data* dat) {
     }
 
     else if(dat->data_type() == TYPE_MESSAGE) {
-        //QMessageBox::warning(nullptr, QGuiApplication::applicationDisplayName(), dat->message());
-        if(!m_msg_box) {
-            m_msg_box = new DlgMessage(this);
-            // 无窗口标题栏，无边框
-            m_msg_box->setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint | Qt::ToolTip | Qt::FramelessWindowHint);
-            // 设置成非模态
-            m_msg_box->setModal(false);
-        }
+        QPainter pp(&m_canvas);
+        QFontMetrics fm = pp.fontMetrics();
+        QRect rcWin(0, 0, m_canvas.width(), m_canvas.height());
+        QRect rc = fm.boundingRect(rcWin, Qt::AlignLeft|Qt::TextWordWrap, dat->message());
+        qDebug("message, w=%d, h=%d", rc.width(), rc.height());
+//        int w = fm.width(dat->message());
+//        int h = fm.height();
+//        qDebug("message, w=%d, h=%d", w, h);
 
-        m_msg_box->set_text(dat->message());
-        // 显示对话框
-        m_msg_box->show();
+        m_img_message = QPixmap(rc.width() + 30, rc.height() + 30);
+        m_img_message.fill(Qt::transparent);
+        QPainter pm(&m_img_message);
+        pm.setPen(QColor(255,255,255,153));
+        pm.fillRect(rc, QColor(0,0,0,190));
+        pm.drawText(rc, Qt::AlignLeft|Qt::TextWordWrap, dat->message());
+
+
+
+
+//        //QMessageBox::warning(nullptr, QGuiApplication::applicationDisplayName(), dat->message());
+//        if(!m_msg_box) {
+//            m_msg_box = new DlgMessage(this);
+//            // 无窗口标题栏，无边框
+//            m_msg_box->setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint | Qt::ToolTip | Qt::FramelessWindowHint);
+//            // 设置成非模态
+//            m_msg_box->setModal(false);
+//        }
+
+//        m_msg_box->set_text(dat->message());
+//        // 显示对话框
+//        m_msg_box->show();
         return;
     }
 

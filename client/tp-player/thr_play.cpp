@@ -75,9 +75,6 @@ void ThreadPlay::run() {
         qDebug() << "DOWNLOAD";
         m_need_download = true;
 
-//        path_base = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-//        path_base += "/tprdp/";
-
         _notify_message("正在缓存录像数据，请稍候...");
 
         m_thr_download = new ThreadDownload(m_res);
@@ -87,14 +84,8 @@ void ThreadPlay::run() {
         for(;;) {
             msleep(500);
 
-            if(m_need_stop) {
-//                m_thr_download->stop();
-//                m_thr_download->wait();
-//                delete m_thr_download;
-//                m_thr_download = nullptr;
-
+            if(m_need_stop)
                 return;
-            }
 
             if(!m_thr_download->prepare(path_base, msg)) {
                 msg.sprintf("指定的文件或目录不存在！\n\n%s", _tmp_res.toStdString().c_str());
@@ -137,8 +128,11 @@ void ThreadPlay::run() {
     qint64 read_len = 0;
     uint32_t total_pkg = 0;
     uint32_t total_ms = 0;
+    uint32_t file_count = 0;
 
+    //======================================
     // 加载录像基本信息数据
+    //======================================
 
     QString tpr_filename(path_base);
     tpr_filename += "tp-rdp.tpr";
@@ -176,123 +170,151 @@ void ThreadPlay::run() {
             return;
         }
 
-//        if(hdr->basic.width == 0 || hdr->basic.height == 0) {
-//            _notify_error("错误的录像信息，未记录窗口尺寸！");
-//            return;
-//        }
+        if(hdr->basic.width == 0 || hdr->basic.height == 0) {
+            _notify_error("错误的录像信息，未记录窗口尺寸！");
+            return;
+        }
+
+        if(hdr->info.dat_file_count == 0) {
+            _notify_error("错误的录像信息，未记录数据文件数量！");
+            return;
+        }
 
         total_pkg = hdr->info.packages;
         total_ms = hdr->info.time_ms;
+        file_count = hdr->info.dat_file_count;
 
         emit signal_update_data(dat);
     }
 
-    // 加载录像文件数据
+    //======================================
+    // 加载录像文件数据并播放
+    //======================================
 
-    QString tpd_filename(path_base);
-    tpd_filename += "tp-rdp.tpd";
-
-    QFile f_dat(tpd_filename);
-    if(!f_dat.open(QFile::ReadOnly)) {
-        qDebug() << "Can not open " << tpd_filename << " for read.";
-        QString msg;
-        msg.sprintf("无法打开录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
-        _notify_error(msg);
-        return;
-    }
-
+    uint32_t pkg_count = 0;
     uint32_t time_pass = 0;
     uint32_t time_last_pass = 0;
-
     qint64 time_begin = QDateTime::currentMSecsSinceEpoch();
+    QString msg;
 
-    for(uint32_t i = 0; i < total_pkg; ++i) {
+    for(uint32_t fidx = 0; fidx < file_count; ++fidx) {
         if(m_need_stop) {
-            qDebug() << "stop, user cancel.";
+            qDebug() << "stop, user cancel 1.";
             break;
         }
 
-        if(m_need_pause) {
-            msleep(50);
-            time_begin += 50;
-            continue;
-        }
+        QString tpd_filename;
+        tpd_filename.sprintf("%stp-rdp-%d.tpd", path_base.toStdString().c_str(), fidx+1);
 
-        TS_RECORD_PKG pkg;
-        read_len = f_dat.read((char*)(&pkg), sizeof(pkg));
-        if(read_len != sizeof(TS_RECORD_PKG)) {
-            qDebug() << "invaid .tpd file (1).";
-            QString msg;
-            msg.sprintf("错误的录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+        // for test.
+        msg.sprintf("无法打开录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+        _notify_message(msg);
+
+        QFile f_dat(tpd_filename);
+        if(!f_dat.open(QFile::ReadOnly)) {
+            qDebug() << "Can not open " << tpd_filename << " for read.";
+            msg.sprintf("无法打开录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
             _notify_error(msg);
             return;
         }
 
-        update_data* dat = new update_data(TYPE_DATA);
-        dat->alloc_data(sizeof(TS_RECORD_PKG) + pkg.size);
-        memcpy(dat->data_buf(), &pkg, sizeof(TS_RECORD_PKG));
-        read_len = f_dat.read((char*)(dat->data_buf()+sizeof(TS_RECORD_PKG)), pkg.size);
-        if(read_len != pkg.size) {
-            delete dat;
-            qDebug() << "invaid .tpd file.";
-            QString msg;
-            msg.sprintf("错误的录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
-            _notify_error(msg);
-            return;
-        }
-
-        time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin) * m_speed;
-        if(time_pass > total_ms)
-            time_pass = total_ms;
-        if(time_pass - time_last_pass > 200) {
-            update_data* _passed_ms = new update_data(TYPE_PLAYED_MS);
-            _passed_ms->played_ms(time_pass);
-            emit signal_update_data(_passed_ms);
-            time_last_pass = time_pass;
-        }
-
-        if(time_pass >= pkg.time_ms) {
-            emit signal_update_data(dat);
-            continue;
-        }
-
-        // 需要等待
-        uint32_t time_wait = pkg.time_ms - time_pass;
-        uint32_t wait_this_time = 0;
         for(;;) {
+            if(m_need_stop) {
+                qDebug() << "stop, user cancel 2.";
+                break;
+            }
+
             if(m_need_pause) {
                 msleep(50);
                 time_begin += 50;
                 continue;
             }
 
-            wait_this_time = time_wait;
-            if(wait_this_time > 10)
-                wait_this_time = 10;
-
-            if(m_need_stop) {
-                qDebug() << "stop, user cancel (2).";
+            TS_RECORD_PKG pkg;
+            read_len = f_dat.read((char*)(&pkg), sizeof(pkg));
+            if(read_len == 0)
                 break;
+            if(read_len != sizeof(TS_RECORD_PKG)) {
+                qDebug() << "invaid .tpd file (1).";
+                msg.sprintf("错误的录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+                _notify_error(msg);
+                return;
             }
 
-            msleep(wait_this_time);
+            update_data* dat = new update_data(TYPE_DATA);
+            dat->alloc_data(sizeof(TS_RECORD_PKG) + pkg.size);
+            memcpy(dat->data_buf(), &pkg, sizeof(TS_RECORD_PKG));
+            read_len = f_dat.read((char*)(dat->data_buf()+sizeof(TS_RECORD_PKG)), pkg.size);
+            if(read_len != pkg.size) {
+                delete dat;
+                qDebug() << "invaid .tpd file.";
+                msg.sprintf("错误的录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+                _notify_error(msg);
+                return;
+            }
 
-            uint32_t _time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin) * m_speed;
-            if(_time_pass > total_ms)
-                _time_pass = total_ms;
-            if(_time_pass - time_last_pass > 200) {
+            pkg_count++;
+
+            time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin) * m_speed;
+            if(time_pass > total_ms)
+                time_pass = total_ms;
+            if(time_pass - time_last_pass > 200) {
                 update_data* _passed_ms = new update_data(TYPE_PLAYED_MS);
-                _passed_ms->played_ms(_time_pass);
+                _passed_ms->played_ms(time_pass);
                 emit signal_update_data(_passed_ms);
-                time_last_pass = _time_pass;
+                time_last_pass = time_pass;
             }
 
-            time_wait -= wait_this_time;
-            if(time_wait == 0) {
+            if(time_pass >= pkg.time_ms) {
                 emit signal_update_data(dat);
-                break;
+                continue;
             }
+
+            // 需要等待
+            uint32_t time_wait = pkg.time_ms - time_pass;
+            uint32_t wait_this_time = 0;
+            for(;;) {
+                if(m_need_pause) {
+                    msleep(50);
+                    time_begin += 50;
+                    continue;
+                }
+
+                wait_this_time = time_wait;
+                if(wait_this_time > 10)
+                    wait_this_time = 10;
+
+                if(m_need_stop) {
+                    qDebug() << "stop, user cancel (2).";
+                    break;
+                }
+
+                msleep(wait_this_time);
+
+                uint32_t _time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin) * m_speed;
+                if(_time_pass > total_ms)
+                    _time_pass = total_ms;
+                if(_time_pass - time_last_pass > 200) {
+                    update_data* _passed_ms = new update_data(TYPE_PLAYED_MS);
+                    _passed_ms->played_ms(_time_pass);
+                    emit signal_update_data(_passed_ms);
+                    time_last_pass = _time_pass;
+                }
+
+                time_wait -= wait_this_time;
+                if(time_wait == 0) {
+                    emit signal_update_data(dat);
+                    break;
+                }
+            }
+
         }
+    }
+
+    if(pkg_count < total_pkg) {
+        qDebug() << "total-pkg:" << total_pkg << ", played:" << pkg_count;
+        msg.sprintf("录像数据文件有误！\n\n部分录像数据缺失！");
+        _notify_message(msg);
     }
 
     update_data* _end = new update_data(TYPE_END);

@@ -78,6 +78,8 @@ private:
 
     //QMessageBox* m_msg_box;
     DlgMessage* m_msg_box;
+
+    QPixmap m_img_message;
 };
 
 #endif // MAINWINDOW_H
