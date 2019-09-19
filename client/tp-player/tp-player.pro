@@ -4,7 +4,6 @@ TARGET = tp-player
 QT += core gui widgets
 
 HEADERS += \
-    dlgmessage.h \
     mainwindow.h \
     bar.h \
     thr_download.h \
@@ -14,7 +13,6 @@ HEADERS += \
     rle.h
 
 SOURCES += \
-    dlgmessage.cpp \
     main.cpp \
     mainwindow.cpp \
     bar.cpp \
@@ -30,5 +28,4 @@ RC_FILE += \
     tp-player.rc
 
 FORMS += \
-    dlgmessage.ui \
     mainwindow.ui

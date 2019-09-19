@@ -3,6 +3,7 @@
 #include <QCommandLineParser>
 #include <QDebug>
 #include <QMessageBox>
+#include <QTextCodec>
 
 // 编译出来的可执行程序复制到单独目录，然后执行 windeployqt 应用程序文件名
 // 即可自动将依赖的动态库等复制到此目录中。有些文件是多余的，可以酌情删除。
@@ -46,6 +47,11 @@ int main(int argc, char *argv[])
     const QStringList args = parser.positionalArguments();
     QString resource = args.at(0);
     qDebug() << resource;
+
+
+//    QTextCodec::setCodecForTr(QTextCodec::codecForName("GB2312"));
+//    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+//    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("GB2312"));
 
     MainWindow w;
     w.set_resource(resource);

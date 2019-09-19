@@ -87,8 +87,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_thr_play = nullptr;
     m_play_state = PLAY_STATE_UNKNOWN;
 
-    m_msg_box = nullptr;
-
     ui->setupUi(this);
 
     ui->centralWidget->setMouseTracking(true);
@@ -133,10 +131,6 @@ MainWindow::~MainWindow()
 
         delete m_thr_play;
         m_thr_play = nullptr;
-    }
-
-    if(m_msg_box) {
-        delete m_msg_box;
     }
 
     delete ui;
@@ -190,7 +184,7 @@ void MainWindow::paintEvent(QPaintEvent *e)
 
         {
             QRect rc_draw = e->rect();
-            QRect rc(100, 100, m_img_message.width(), m_img_message.height());
+            QRect rc(m_rc_message);
             //rc.moveTo(m_rc.left()+rc.left(), m_rc.top() + rc.top());
 
             int from_x = max(rc_draw.left(), rc.left()) - rc.left();
@@ -243,9 +237,6 @@ void MainWindow::_do_update_data(update_data* dat) {
     UpdateDataHelper data_helper(dat);
 
     if(dat->data_type() == TYPE_DATA) {
-        if(m_msg_box) {
-            m_msg_box->hide();
-        }
 
         if(dat->data_len() <= sizeof(TS_RECORD_PKG)) {
             qDebug() << "invalid record package(1).";
@@ -303,20 +294,28 @@ void MainWindow::_do_update_data(update_data* dat) {
 
     else if(dat->data_type() == TYPE_MESSAGE) {
         QPainter pp(&m_canvas);
-        QFontMetrics fm = pp.fontMetrics();
         QRect rcWin(0, 0, m_canvas.width(), m_canvas.height());
-        QRect rc = fm.boundingRect(rcWin, Qt::AlignLeft|Qt::TextWordWrap, dat->message());
-        qDebug("message, w=%d, h=%d", rc.width(), rc.height());
-//        int w = fm.width(dat->message());
-//        int h = fm.height();
-//        qDebug("message, w=%d, h=%d", w, h);
+        pp.drawText(rcWin, Qt::AlignLeft|Qt::TextDontPrint, dat->message(), &m_rc_message);
 
-        m_img_message = QPixmap(rc.width() + 30, rc.height() + 30);
+        qDebug("message, w=%d, h=%d", m_rc_message.width(), m_rc_message.height());
+        m_rc_message.setWidth(m_rc_message.width()+60);
+        m_rc_message.setHeight(m_rc_message.height()+60);
+
+        m_img_message = QPixmap(m_rc_message.width(), m_rc_message.height());
         m_img_message.fill(Qt::transparent);
         QPainter pm(&m_img_message);
         pm.setPen(QColor(255,255,255,153));
-        pm.fillRect(rc, QColor(0,0,0,190));
-        pm.drawText(rc, Qt::AlignLeft|Qt::TextWordWrap, dat->message());
+        pm.fillRect(m_rc_message, QColor(0,0,0,190));
+
+        QRect rcText(m_rc_message);
+        rcText.setLeft(30);
+        rcText.setTop(30);
+        pm.drawText(rcText, Qt::AlignLeft, dat->message());
+        m_rc_message.moveTo(
+                    (m_canvas.width() - m_rc_message.width())/2,
+                    (m_canvas.height() - m_rc_message.height())/2
+                    );
+
 
 
 

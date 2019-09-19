@@ -8,7 +8,6 @@
 #include "thr_play.h"
 #include "update_data.h"
 #include "record_format.h"
-#include "dlgmessage.h"
 
 #define PLAY_STATE_UNKNOWN      0
 #define PLAY_STATE_RUNNING      1
@@ -76,10 +75,8 @@ private:
 
     int m_play_state;
 
-    //QMessageBox* m_msg_box;
-    DlgMessage* m_msg_box;
-
     QPixmap m_img_message;
+    QRect m_rc_message;
 };
 
 #endif // MAINWINDOW_H

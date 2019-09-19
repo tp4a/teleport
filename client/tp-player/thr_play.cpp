@@ -75,6 +75,7 @@ void ThreadPlay::run() {
         qDebug() << "DOWNLOAD";
         m_need_download = true;
 
+        // "正在缓存录像数据，请稍候..."
         _notify_message("正在缓存录像数据，请稍候...");
 
         m_thr_download = new ThreadDownload(m_res);
@@ -207,7 +208,9 @@ void ThreadPlay::run() {
         tpd_filename.sprintf("%stp-rdp-%d.tpd", path_base.toStdString().c_str(), fidx+1);
 
         // for test.
-        msg.sprintf("无法打开录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+        msg = QString::fromLocal8Bit("无法打开录像数据文件！\n\n");
+        //msg.sprintf("无法打开录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+        msg += tpd_filename.toStdString().c_str();
         _notify_message(msg);
 
         QFile f_dat(tpd_filename);
