@@ -207,11 +207,11 @@ void ThreadPlay::run() {
         QString tpd_filename;
         tpd_filename.sprintf("%stp-rdp-%d.tpd", path_base.toStdString().c_str(), fidx+1);
 
-        // for test.
-        msg = QString::fromLocal8Bit("无法打开录像数据文件！\n\n");
-        //msg.sprintf("无法打开录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
-        msg += tpd_filename.toStdString().c_str();
-        _notify_message(msg);
+//        // for test.
+//        msg = QString::fromLocal8Bit("无法打开录像数据文件！\n\n");
+//        //msg.sprintf("无法打开录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+//        msg += tpd_filename.toStdString().c_str();
+//        _notify_message(msg);
 
         QFile f_dat(tpd_filename);
         if(!f_dat.open(QFile::ReadOnly)) {

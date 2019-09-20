@@ -313,25 +313,8 @@ void MainWindow::_do_update_data(update_data* dat) {
         pm.drawText(rcText, Qt::AlignLeft, dat->message());
         m_rc_message.moveTo(
                     (m_canvas.width() - m_rc_message.width())/2,
-                    (m_canvas.height() - m_rc_message.height())/2
+                    (m_canvas.height() - m_rc_message.height())/3
                     );
-
-
-
-
-
-//        //QMessageBox::warning(nullptr, QGuiApplication::applicationDisplayName(), dat->message());
-//        if(!m_msg_box) {
-//            m_msg_box = new DlgMessage(this);
-//            // 无窗口标题栏，无边框
-//            m_msg_box->setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint | Qt::ToolTip | Qt::FramelessWindowHint);
-//            // 设置成非模态
-//            m_msg_box->setModal(false);
-//        }
-
-//        m_msg_box->set_text(dat->message());
-//        // 显示对话框
-//        m_msg_box->show();
         return;
     }
 
