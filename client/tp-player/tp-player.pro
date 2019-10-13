@@ -10,7 +10,8 @@ HEADERS += \
     thr_play.h \
     update_data.h \
     record_format.h \
-    rle.h
+    rle.h \
+    util.h
 
 SOURCES += \
     main.cpp \
@@ -19,7 +20,8 @@ SOURCES += \
     thr_download.cpp \
     thr_play.cpp \
     update_data.cpp \
-    rle.c
+    rle.c \
+    util.cpp
 
 RESOURCES += \
     tp-player.qrc

@@ -216,7 +216,9 @@ void ThreadPlay::run() {
         QFile f_dat(tpd_filename);
         if(!f_dat.open(QFile::ReadOnly)) {
             qDebug() << "Can not open " << tpd_filename << " for read.";
-            msg.sprintf("无法打开录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+            // msg.sprintf("无法打开录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+            msg = QString::fromLocal8Bit("无法打开录像数据文件！\n\n");
+            msg += tpd_filename.toStdString().c_str();
             _notify_error(msg);
             return;
         }
@@ -239,9 +241,14 @@ void ThreadPlay::run() {
                 break;
             if(read_len != sizeof(TS_RECORD_PKG)) {
                 qDebug() << "invaid .tpd file (1).";
-                msg.sprintf("错误的录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+                // msg.sprintf("错误的录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+                msg = QString::fromLocal8Bit("错误的录像数据文件！\n\n");
+                msg += tpd_filename.toStdString().c_str();
                 _notify_error(msg);
                 return;
+            }
+            if(pkg.type == TS_RECORD_TYPE_RDP_KEYFRAME) {
+                qDebug("----key frame: %d", pkg.time_ms);
             }
 
             update_data* dat = new update_data(TYPE_DATA);
@@ -251,7 +258,9 @@ void ThreadPlay::run() {
             if(read_len != pkg.size) {
                 delete dat;
                 qDebug() << "invaid .tpd file.";
-                msg.sprintf("错误的录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+                // msg.sprintf("错误的录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
+                msg = QString::fromLocal8Bit("错误的录像数据文件！\n\n");
+                msg += tpd_filename.toStdString().c_str();
                 _notify_error(msg);
                 return;
             }
@@ -316,7 +325,8 @@ void ThreadPlay::run() {
 
     if(pkg_count < total_pkg) {
         qDebug() << "total-pkg:" << total_pkg << ", played:" << pkg_count;
-        msg.sprintf("录像数据文件有误！\n\n部分录像数据缺失！");
+        // msg.sprintf("录像数据文件有误！\n\n部分录像数据缺失！");
+        msg = QString::fromLocal8Bit("录像数据文件有误！\n\n部分录像数据缺失！");
         _notify_message(msg);
     }
 

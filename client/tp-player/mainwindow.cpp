@@ -28,6 +28,7 @@ bool rdpimg2QImage(QImage& out, int w, int h, int bitsPerPixel, bool isCompresse
         break;
     case 16:
         if(isCompressed) {
+
             uint8_t* _dat = (uint8_t*)calloc(1, w*h*2);
             if(!bitmap_decompress2(_dat, w, h, dat, len)) {
                 free(_dat);
@@ -35,6 +36,8 @@ bool rdpimg2QImage(QImage& out, int w, int h, int bitsPerPixel, bool isCompresse
             }
 
             // TODO: 这里需要进一步优化，直接操作QImage的buffer。
+//            QTime t1;
+//            t1.start();
 
             out = QImage(w, h, QImage::Format_RGB16);
             for(int y = 0; y < h; y++) {
@@ -46,6 +49,7 @@ bool rdpimg2QImage(QImage& out, int w, int h, int bitsPerPixel, bool isCompresse
                     out.setPixelColor(x, y, QColor(r,g,b));
                 }
             }
+//            qDebug("parse: %dB, %dms", len, t1.elapsed());
 
             free(_dat);
         }
@@ -381,6 +385,7 @@ void MainWindow::_do_update_data(update_data* dat) {
     else if(dat->data_type() == TYPE_END) {
         m_bar.end();
         m_play_state = PLAY_STATE_STOP;
+
         return;
     }
 }

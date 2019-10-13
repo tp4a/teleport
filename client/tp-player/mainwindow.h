@@ -8,6 +8,7 @@
 #include "thr_play.h"
 #include "update_data.h"
 #include "record_format.h"
+#include "util.h"
 
 #define PLAY_STATE_UNKNOWN      0
 #define PLAY_STATE_RUNNING      1
@@ -77,6 +78,11 @@ private:
 
     QPixmap m_img_message;
     QRect m_rc_message;
+
+
+    // for test
+    TimeUseTest m_time_imgconvert_normal;
+    TimeUseTest m_time_imgconvert_compressed;
 };
 
 #endif // MAINWINDOW_H

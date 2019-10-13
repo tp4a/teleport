@@ -5,6 +5,7 @@
 
 #define TS_RECORD_TYPE_RDP_POINTER          0x12    // 鼠标坐标位置改变，用于绘制虚拟鼠标
 #define TS_RECORD_TYPE_RDP_IMAGE            0x13    // 服务端返回的图像，用于展示
+#define TS_RECORD_TYPE_RDP_KEYFRAME         0x14    //
 
 #define TS_RDP_BTN_FREE                     0
 #define TS_RDP_BTN_PRESSED                  1
@@ -17,10 +18,11 @@
 typedef struct TS_RECORD_HEADER_INFO {
    uint32_t magic;      // "TPPR" 标志 TelePort Protocol Record
    uint16_t ver;        // 录像文件版本，从3.5.0开始，为4
+   uint16_t type;       //
    uint32_t packages;   // 总包数
    uint32_t time_ms;    // 总耗时（毫秒）
    uint32_t dat_file_count; // 数据文件数量
-   uint8_t _reserve[64-4-2-4-4-4];
+   uint8_t _reserve[64-4-2-2-4-4-4];
 }TS_RECORD_HEADER_INFO;
 #define ts_record_header_info_size sizeof(TS_RECORD_HEADER_INFO)
 

@@ -11,7 +11,7 @@
 // #define MAX_SIZE_PER_FILE   4194304  // 4M = 1024*1024*4
 // for test.
 #define MAX_CACHE_SIZE      524288  // 512KB = 512*1024
-#define MAX_SIZE_PER_FILE   1048576  // 4M = 1024*1024*1
+#define MAX_SIZE_PER_FILE   1048576  // 1M = 1024*1024*1
 
 #pragma pack(push,1)
 
@@ -27,15 +27,19 @@
  *
  */
 
+#define TS_TPPR_TYPE_UNKNOWN    0x0000
+#define TS_TPPR_TYPE_SSH        0x0001
+#define TS_TPPR_TYPE_RDP        0x0101
 
  // 录像文件头(随着录像数据写入，会改变的部分)
 typedef struct TS_RECORD_HEADER_INFO {
     ex_u32 magic;       // "TPPR" 标志 TelePort Protocol Record
     ex_u16 ver;         // 录像文件版本，v3.5.0开始为4
+    ex_u16 type;        // 录像内容，SSH or RDP
     ex_u32 packages;    // 总包数
     ex_u32 time_ms;	    // 总耗时（毫秒）
     ex_u32 dat_file_count; // 数据文件数量
-    ex_u8 _reserve[64-4-2-4-4-4];
+    ex_u8 _reserve[64-4-2-2-4-4-4];
 }TS_RECORD_HEADER_INFO;
 #define ts_record_header_info_size sizeof(TS_RECORD_HEADER_INFO)
 
@@ -58,7 +62,7 @@ typedef struct TS_RECORD_HEADER_BASIC {
 // 	// RDP专有 - v3.5.0废弃并移除
 // 	ex_u8 rdp_security;	// 0 = RDP, 1 = TLS
 
-    ex_u8 _reserve[512 - 2 - 2 - 8 - 2 - 2 - 64 - 64 - 40 - 40 - 2 - 40 - ts_record_header_info_size];
+    ex_u8 _reserve[512 - ts_record_header_info_size - 2 - 2 - 8 - 2 - 2 - 64 - 64 - 40 - 40 - 2 - 40];
 }TS_RECORD_HEADER_BASIC;
 #define ts_record_header_basic_size sizeof(TS_RECORD_HEADER_BASIC)
 
@@ -69,7 +73,6 @@ typedef struct TS_RECORD_HEADER {
 
 // header部分（header-info + header-basic） = 512B
 #define ts_record_header_size sizeof(TS_RECORD_HEADER)
-
 
 // 一个数据包的头
 typedef struct TS_RECORD_PKG {
