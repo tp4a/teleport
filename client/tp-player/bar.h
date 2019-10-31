@@ -1,4 +1,4 @@
-#ifndef BAR_H
+﻿#ifndef BAR_H
 #define BAR_H
 
 #include <QPainter>

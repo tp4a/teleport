@@ -1,13 +1,20 @@
-#ifndef THREADDOWNLOAD_H
-#define THREADDOWNLOAD_H
+﻿#ifndef THR_DATA_H
+#define THR_DATA_H
 
 #include <QThread>
+#include <QQueue>
+#include <QMutex>
+#include <QNetworkReply>
+#include <QFile>
+#include "downloader.h"
+#include "update_data.h"
+#include "record_format.h"
 
 /*
 为支持“边下载，边播放”、“可拖动进度条”等功能，录像数据会分为多个文件存放，目前每个文件约4MB。
 例如：
   tp-rdp.tpr
-  tp-rdp.tpk  (关键帧信息文件，v3.5.0开始引入)
+  tp-rdp.tpk  (关键帧信息文件，v3.5.1开始引入)
   tp-rdp-1.tpd, tp-rdp-2.tpd, tp-rdp-3.tpd, ...
 这样，下载完一个数据文件，即可播放此数据文件中的内容，同时下载线程可以下载后续数据文件。
 
@@ -25,23 +32,66 @@
 这样，下次需要下载指定文件时，如果发现对应的临时文件存在，可以根据已下载字节数，继续下载。
 */
 
+typedef struct KEYFRAME_INFO {
+    uint32_t time_ms;       // 此关键帧的时间点
+    uint32_t file_index;    // 此关键帧图像数据位于哪一个数据文件中
+    uint32_t offset;        // 此关键帧图像数据在数据文件中的偏移
+}KEYFRAME_INFO;
 
-class ThreadDownload : public QThread
-{
+typedef std::vector<KEYFRAME_INFO> KeyFrames;
+
+class MainWindow;
+
+// 下载必要的文件，解析文件数据，生成图像数据（QImage*），将数据包放入待显示队列中，等待 ThrPlay 线程使用
+// 注意，无需将所有数据解析并放入待显示队列，此队列有数量限制（例如1000个），避免过多占用内存
+class ThrData : public QThread {
+    Q_OBJECT
 public:
-    ThreadDownload(const QString& url);
+    ThrData(MainWindow* mainwin, const QString& url);
+    ~ThrData();
 
     virtual void run();
     void stop();
 
-    // 下载 .tpr 和 .tpf 文件，出错返回false，正在下载或已经下载完成则返回true.
-    bool prepare(QString& path_base, QString& msg);
+
+    bool have_more_data();
+
+    UpdateData* get_data();
 
 private:
-    bool m_need_stop;
-    QString m_url;
 
+    bool _load_header();
+    bool _load_keyframe();
+    bool _download_file(const QString& url, const QString filename);
+
+    void _prepare();
+
+    void _notify_message(const QString& msg);
+    void _notify_error(const QString& err_msg);
+    void _notify_download(DownloadParam* param);
+
+signals:
+    void signal_update_data(UpdateData*);
+    void signal_download(DownloadParam*);
+
+private:
+    MainWindow* m_mainwin;
+    QQueue<UpdateData*> m_data;
+    QMutex m_locker;
+
+    bool m_need_stop;
+
+    bool m_need_download;
+    QString m_res;
+    QString m_local_data_path_base;
+
+    QString m_url_base;
+    QString m_sid;
+    QString m_rid;
     QString m_path_base;
+
+    TS_RECORD_HEADER m_hdr;
+    KeyFrames m_kf;
 };
 
-#endif // THREADDOWNLOAD_H
+#endif // THR_DATA_H

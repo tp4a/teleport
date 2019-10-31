@@ -1,4 +1,4 @@
-/* -*- c-basic-offset: 8 -*-
+﻿/* -*- c-basic-offset: 8 -*-
    rdesktop: A Remote Desktop Protocol client.
    Bitmap decompression routines
    Copyright (C) Matthew Chapman <matthewc.unsw.edu.au> 1999-2008

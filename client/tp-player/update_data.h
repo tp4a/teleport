@@ -11,12 +11,12 @@
 #define TYPE_MESSAGE            5
 #define TYPE_ERROR              6
 
-class update_data : public QObject
+class UpdateData : public QObject
 {
     Q_OBJECT
 public:
-    explicit update_data(int data_type, QObject *parent = nullptr);
-    virtual ~update_data();
+    explicit UpdateData(int data_type, QObject *parent = nullptr);
+    virtual ~UpdateData();
 
     void alloc_data(uint32_t len);
     void attach_data(const uint8_t* dat, uint32_t len);
@@ -47,7 +47,7 @@ private:
 
 class UpdateDataHelper {
 public:
-    UpdateDataHelper(update_data* data) {
+    UpdateDataHelper(UpdateData* data) {
         m_data = data;
     }
     ~UpdateDataHelper() {
@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    update_data* m_data;
+    UpdateData* m_data;
 };
 
 

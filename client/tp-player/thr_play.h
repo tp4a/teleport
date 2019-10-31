@@ -1,16 +1,19 @@
-#ifndef THR_PLAY_H
+﻿#ifndef THR_PLAY_H
 #define THR_PLAY_H
 
 #include <QThread>
 #include "update_data.h"
-#include "thr_download.h"
+#include "downloader.h"
 
-class ThreadPlay : public QThread
+// 根据播放规则，将要播放的图像发送给主UI线程进行显示
+class ThrPlay : public QThread
 {
     Q_OBJECT
+
+friend class ThrData;
 public:
-    ThreadPlay(const QString& res);
-    ~ThreadPlay();
+    ThrPlay();
+    ~ThrPlay();
 
     virtual void run();
     void stop();
@@ -23,17 +26,12 @@ private:
     void _notify_error(const QString& err_msg);
 
 signals:
-    void signal_update_data(update_data*);
+    void signal_update_data(UpdateData*);
 
 private:
     bool m_need_stop;
     bool m_need_pause;
     int m_speed;
-
-    QString m_res;
-    bool m_need_download;
-
-    ThreadDownload* m_thr_download;
 };
 
 #endif // THR_PLAY_H

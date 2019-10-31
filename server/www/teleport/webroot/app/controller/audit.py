@@ -671,12 +671,13 @@ class DoGetFileHandler(TPBaseHandler):
         #     return self.write('need login first.')
         # self._user = _user
 
-        if not self._user['_is_login']:
-            self.set_status(401)  # 401=未授权, 要求身份验证
-            return self.write('need login first.')
-        if (self._user['privilege'] & require_privilege) == 0:
-            self.set_status(403)  # 403=禁止
-            return self.write('you have no such privilege.')
+        # when test, disable auth.
+        # if not self._user['_is_login']:
+        #     self.set_status(401)  # 401=未授权, 要求身份验证
+        #     return self.write('need login first.')
+        # if (self._user['privilege'] & require_privilege) == 0:
+        #     self.set_status(403)  # 403=禁止
+        #     return self.write('you have no such privilege.')
 
         act = self.get_argument('act', None)
         _type = self.get_argument('type', None)

@@ -1,4 +1,4 @@
-#include "bar.h"
+﻿#include "bar.h"
 #include <QPainter>
 #include <QDebug>
 #include "mainwindow.h"

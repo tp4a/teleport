@@ -1,18 +1,18 @@
-#include "update_data.h"
+﻿#include "update_data.h"
 
-update_data::update_data(int data_type, QObject *parent) : QObject(parent)
+UpdateData::UpdateData(int data_type, QObject *parent) : QObject(parent)
 {
     m_data_type = data_type;
     m_data_buf = nullptr;
     m_data_len = 0;
 }
 
-update_data::~update_data() {
+UpdateData::~UpdateData() {
     if(m_data_buf)
         delete m_data_buf;
 }
 
-void update_data::alloc_data(uint32_t len) {
+void UpdateData::alloc_data(uint32_t len) {
     if(m_data_buf)
         delete m_data_buf;
 
@@ -21,7 +21,7 @@ void update_data::alloc_data(uint32_t len) {
     m_data_len = len;
 }
 
-void update_data::attach_data(const uint8_t* dat, uint32_t len) {
+void UpdateData::attach_data(const uint8_t* dat, uint32_t len) {
     if(m_data_buf)
         delete m_data_buf;
     m_data_buf = new uint8_t[len];

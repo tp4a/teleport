@@ -1,27 +1,36 @@
 ﻿#include <QCoreApplication>
 #include <QDateTime>
 #include <QDebug>
-#include <QDir>
-#include <QFile>
-#include <QStandardPaths>
 
 #include "thr_play.h"
+#include "thr_data.h"
 #include "record_format.h"
+#include "util.h"
 
-ThreadPlay::ThreadPlay(const QString& res)
-{
+
+/*
+ * 录像播放流程：
+ *  - 数据处理线程，该线程负责（下载）文件、解析文件，将数据准备成待播放队列；
+ *    + 数据处理线程维护待播放队列，少于500个则填充至1000个，每20ms检查一次队列是否少于500个。
+ *  - 播放线程从队列中取出一个数据，判断当前时间是否应该播放此数据，如果应该，则将此数据发送给主UI
+ *    + if( 播放速率 * (当前时间 - 播放时间) >= (当前数据包偏移时间 - 上个数据包偏移时间))  则 播放
+ *    + 如选择“跳过无操作时间”，则数据包偏移时间差超过3秒的，视为3秒。
+ */
+
+
+ThrPlay::ThrPlay() {
     m_need_stop = false;
     m_need_pause = false;
     m_speed = 2;
-    m_res = res;
-    m_thr_download = nullptr;
+//    m_res = res;
+//    m_thr_data = nullptr;
 }
 
-ThreadPlay::~ThreadPlay() {
+ThrPlay::~ThrPlay() {
     stop();
 }
 
-void ThreadPlay::stop() {
+void ThrPlay::stop() {
     if(!isRunning())
         return;
 
@@ -31,28 +40,31 @@ void ThreadPlay::stop() {
     wait();
     qDebug() << "play-thread end.";
 
-    if(m_thr_download) {
-        m_thr_download->stop();
-        //m_thr_download->wait();
-        delete m_thr_download;
-        m_thr_download = nullptr;
-    }
+//    if(m_thr_data) {
+//        m_thr_data->stop();
+//        qDebug("delete thrData.");
+//        //m_thr_download->wait();
+//        delete m_thr_data;
+//        m_thr_data = nullptr;
+//    }
 }
 
-void ThreadPlay::_notify_message(const QString& msg) {
-    update_data* _msg = new update_data(TYPE_MESSAGE);
+void ThrPlay::_notify_message(const QString& msg) {
+    UpdateData* _msg = new UpdateData(TYPE_MESSAGE);
     _msg->message(msg);
     emit signal_update_data(_msg);
 }
 
-void ThreadPlay::_notify_error(const QString& err_msg) {
-    update_data* _err = new update_data(TYPE_ERROR);
-    _err->message(err_msg);
-    emit signal_update_data(_err);
+void ThrPlay::_notify_error(const QString& msg) {
+    UpdateData* _msg = new UpdateData(TYPE_ERROR);
+    _msg->message(msg);
+    emit signal_update_data(_msg);
 }
 
+void ThrPlay::run() {
 
-void ThreadPlay::run() {
+    // http://127.0.0.1:7190/tp_1491560510_ca67fceb75a78c9d/211
+    // E:\work\tp4a\teleport\server\share\replay\rdp\000000211
 
 //#ifdef __APPLE__
 //    QString currentPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
@@ -62,11 +74,19 @@ void ThreadPlay::run() {
 //#endif
 
     // /Users/apex/Library/Preferences/tp-player
-    //qDebug() << "appdata:" << QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+//    qDebug() << "appdata:" << QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
 
     // /private/var/folders/_3/zggrxjdx1lxcdqnfsbgpcwzh0000gn/T
     //qDebug() << "tmp:" << QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 
+//    m_thr_data = new ThrData(this, m_res);
+//    m_thr_data->start();
+
+    // "正在准备录像数据，请稍候..."
+//    _notify_message(LOCAL8BIT("正在准备录像数据，请稍候..."));
+
+
+#if 0
     // base of data path (include the .tpr file)
     QString path_base;
 
@@ -78,8 +98,8 @@ void ThreadPlay::run() {
         // "正在缓存录像数据，请稍候..."
         _notify_message("正在缓存录像数据，请稍候...");
 
-        m_thr_download = new ThreadDownload(m_res);
-        m_thr_download->start();
+        m_thr_data = new ThreadDownload(m_res);
+        m_thr_data->start();
 
         QString msg;
         for(;;) {
@@ -88,7 +108,7 @@ void ThreadPlay::run() {
             if(m_need_stop)
                 return;
 
-            if(!m_thr_download->prepare(path_base, msg)) {
+            if(!m_thr_data->prepare(path_base, msg)) {
                 msg.sprintf("指定的文件或目录不存在！\n\n%s", _tmp_res.toStdString().c_str());
                 _notify_error(msg);
                 return;
@@ -147,7 +167,7 @@ void ThreadPlay::run() {
         return;
     }
     else {
-        update_data* dat = new update_data(TYPE_HEADER_INFO);
+        UpdateData* dat = new UpdateData(TYPE_HEADER_INFO);
         dat->alloc_data(sizeof(TS_RECORD_HEADER));
 
         read_len = f_hdr.read((char*)(dat->data_buf()), dat->data_len());
@@ -251,7 +271,7 @@ void ThreadPlay::run() {
                 qDebug("----key frame: %d", pkg.time_ms);
             }
 
-            update_data* dat = new update_data(TYPE_DATA);
+            UpdateData* dat = new UpdateData(TYPE_DATA);
             dat->alloc_data(sizeof(TS_RECORD_PKG) + pkg.size);
             memcpy(dat->data_buf(), &pkg, sizeof(TS_RECORD_PKG));
             read_len = f_dat.read((char*)(dat->data_buf()+sizeof(TS_RECORD_PKG)), pkg.size);
@@ -271,7 +291,7 @@ void ThreadPlay::run() {
             if(time_pass > total_ms)
                 time_pass = total_ms;
             if(time_pass - time_last_pass > 200) {
-                update_data* _passed_ms = new update_data(TYPE_PLAYED_MS);
+                UpdateData* _passed_ms = new UpdateData(TYPE_PLAYED_MS);
                 _passed_ms->played_ms(time_pass);
                 emit signal_update_data(_passed_ms);
                 time_last_pass = time_pass;
@@ -307,7 +327,7 @@ void ThreadPlay::run() {
                 if(_time_pass > total_ms)
                     _time_pass = total_ms;
                 if(_time_pass - time_last_pass > 200) {
-                    update_data* _passed_ms = new update_data(TYPE_PLAYED_MS);
+                    UpdateData* _passed_ms = new UpdateData(TYPE_PLAYED_MS);
                     _passed_ms->played_ms(_time_pass);
                     emit signal_update_data(_passed_ms);
                     time_last_pass = _time_pass;
@@ -330,6 +350,9 @@ void ThreadPlay::run() {
         _notify_message(msg);
     }
 
-    update_data* _end = new update_data(TYPE_END);
+#endif
+
+    qDebug("play end.");
+    UpdateData* _end = new UpdateData(TYPE_END);
     emit signal_update_data(_end);
 }

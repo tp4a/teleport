@@ -76,10 +76,11 @@ typedef struct TS_RECORD_HEADER {
 
 // 一个数据包的头
 typedef struct TS_RECORD_PKG {
-    ex_u8 type;			// 包的数据类型
-    ex_u32 size;		// 这个包的总大小（不含包头）
-    ex_u32 time_ms;		// 这个包距起始时间的时间差（毫秒，意味着一个连接不能持续超过49天）
-    ex_u8 _reserve[3];	// 保留
+    ex_u8 type;         // 包的数据类型
+    ex_u8 _reserve[3];  // 保留
+    ex_u32 size;        // 这个包的总大小（不含包头）
+    ex_u32 time_ms;	    // 这个包距起始时间的时间差（毫秒，意味着一个连接不能持续超过49天）
+    ex_u32 index;       // 这个包的序号（最后一个包的序号与TS_RECORD_HEADER_INFO::packages数量匹配）
 }TS_RECORD_PKG;
 
 #pragma pack(pop)

@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -6,9 +6,11 @@
 #include <QTimer>
 #include "bar.h"
 #include "thr_play.h"
+#include "thr_data.h"
 #include "update_data.h"
 #include "record_format.h"
 #include "util.h"
+#include "downloader.h"
 
 #define PLAY_STATE_UNKNOWN      0
 #define PLAY_STATE_RUNNING      1
@@ -34,6 +36,9 @@ public:
     void restart();
     void speed(int s);
 
+    Downloader* downloader() {return m_dl;}
+    void reset_downloader() {if(m_dl){delete m_dl;m_dl= nullptr;}}
+
 private:
     void paintEvent(QPaintEvent *e);
     void mouseMoveEvent(QMouseEvent *e);
@@ -43,9 +48,12 @@ private:
 
 private slots:
     void _do_first_run(); // 默认界面加载完成后，开始播放操作（可能会进行数据下载）
-    void _do_update_data(update_data*);
+    void _do_update_data(UpdateData*);
     void _do_bar_fade();
     void _do_bar_delay_hide();
+
+//    void _do_download(Downloader*);
+    void _do_download(DownloadParam*);
 
 private:
     Ui::MainWindow *ui;
@@ -56,7 +64,8 @@ private:
     QPixmap m_default_bg;
 
     QString m_res;
-    ThreadPlay* m_thr_play;
+    ThrPlay* m_thr_play;
+    ThrData* m_thr_data;
 
     QPixmap m_canvas;
 
@@ -76,9 +85,13 @@ private:
 
     int m_play_state;
 
+    bool m_show_message;
     QPixmap m_img_message;
     QRect m_rc_message;
 
+
+    QNetworkAccessManager m_nam;
+    Downloader* m_dl;
 
     // for test
     TimeUseTest m_time_imgconvert_normal;

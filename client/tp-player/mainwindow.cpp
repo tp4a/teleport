@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "rle.h"
 
@@ -86,10 +86,14 @@ MainWindow::MainWindow(QWidget *parent) :
     m_bar_fade_in = false;
     m_bar_fading = false;
     m_bar_opacity = 1.0;
+    m_show_message = false;
     memset(&m_pt, 0, sizeof(TS_RECORD_RDP_POINTER));
 
     m_thr_play = nullptr;
     m_play_state = PLAY_STATE_UNKNOWN;
+    m_thr_data = nullptr;
+
+    m_dl = nullptr;
 
     ui->setupUi(this);
 
@@ -107,13 +111,19 @@ MainWindow::MainWindow(QWidget *parent) :
     m_pt_normal.load(":/tp-player/res/cursor.png");
     m_default_bg.load(":/tp-player/res/bg.png");
 
+    m_canvas = QPixmap(m_default_bg.width(), m_default_bg.height());
+    QPainter pp(&m_canvas);
+    pp.drawPixmap(0, 0, m_default_bg, 0, 0, m_default_bg.width(), m_default_bg.height());
+
+
     setWindowFlags(windowFlags()&~Qt::WindowMaximizeButtonHint);    // 禁止最大化按钮
-    setFixedSize(m_default_bg.width(), m_default_bg.height());                     // 禁止拖动窗口大小
+    setFixedSize(m_default_bg.width(), m_default_bg.height());      // 禁止拖动窗口大小
 
     if(!m_bar.init(this)) {
         qDebug("bar init failed.");
         return;
     }
+
 
 //    connect(&m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
     connect(&m_timer_first_run, SIGNAL(timeout()), this, SLOT(_do_first_run()));
@@ -131,10 +141,23 @@ MainWindow::~MainWindow()
         //m_thr_play->wait();
         //qDebug() << "play thread stoped.";
 
-        disconnect(m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
+        disconnect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
 
         delete m_thr_play;
         m_thr_play = nullptr;
+    }
+
+    if(m_thr_data) {
+        m_thr_data->stop();
+        disconnect(m_thr_data, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
+        disconnect(m_thr_data, SIGNAL(signal_download(DownloadParam*)), this, SLOT(_do_download(DownloadParam*)));
+        delete m_thr_data;
+        m_thr_data = nullptr;
+    }
+
+    if(m_dl) {
+        delete m_dl;
+        m_dl = nullptr;
     }
 
     delete ui;
@@ -145,6 +168,11 @@ void MainWindow::set_resource(const QString &res) {
 }
 
 void MainWindow::_do_first_run() {
+    m_thr_data = new ThrData(this, m_res);
+    connect(m_thr_data, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
+    connect(m_thr_data, SIGNAL(signal_download(DownloadParam*)), this, SLOT(_do_download(DownloadParam*)));
+    m_thr_data->start();
+
     _start_play_thread();
 }
 
@@ -153,14 +181,15 @@ void MainWindow::_start_play_thread() {
         m_thr_play->stop();
         //m_thr_play->wait();
 
-        disconnect(m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
+        disconnect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
 
         delete m_thr_play;
         m_thr_play = nullptr;
     }
 
-    m_thr_play = new ThreadPlay(m_res);
-    connect(m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
+    m_thr_play = new ThrPlay();
+    connect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
+
     m_thr_play->speed(m_bar.get_speed());
     m_thr_play->start();
 }
@@ -186,19 +215,19 @@ void MainWindow::paintEvent(QPaintEvent *e)
             painter.drawPixmap(m_pt.x-m_pt_normal.width()/2, m_pt.y-m_pt_normal.height()/2, m_pt_normal);
         }
 
-        {
-            QRect rc_draw = e->rect();
-            QRect rc(m_rc_message);
-            //rc.moveTo(m_rc.left()+rc.left(), m_rc.top() + rc.top());
+//        {
+//            QRect rc_draw = e->rect();
+//            QRect rc(m_rc_message);
+//            //rc.moveTo(m_rc.left()+rc.left(), m_rc.top() + rc.top());
 
-            int from_x = max(rc_draw.left(), rc.left()) - rc.left();
-            int from_y = max(rc_draw.top(), rc.top()) - rc.top();
-            int w = min(rc.right(), rc_draw.right()) - rc.left() - from_x + 1;
-            int h = min(rc.bottom(), rc_draw.bottom()) - rc.top() - from_y + 1;
-            int to_x = rc.left() + from_x;
-            int to_y = rc.top() + from_y;
-            painter.drawPixmap(to_x, to_y, m_img_message, from_x, from_y, w, h);
-        }
+//            int from_x = max(rc_draw.left(), rc.left()) - rc.left();
+//            int from_y = max(rc_draw.top(), rc.top()) - rc.top();
+//            int w = min(rc.right(), rc_draw.right()) - rc.left() - from_x + 1;
+//            int h = min(rc.bottom(), rc_draw.bottom()) - rc.top() - from_y + 1;
+//            int to_x = rc.left() + from_x;
+//            int to_y = rc.top() + from_y;
+//            painter.drawPixmap(to_x, to_y, m_img_message, from_x, from_y, w, h);
+//        }
 
         // 绘制浮动控制窗
         if(m_bar_fading) {
@@ -208,6 +237,20 @@ void MainWindow::paintEvent(QPaintEvent *e)
         else if(m_bar_shown) {
             m_bar.draw(painter, e->rect());
         }
+    }
+
+    if(m_show_message) {
+        QRect rc_draw = e->rect();
+        QRect rc(m_rc_message);
+        //rc.moveTo(m_rc.left()+rc.left(), m_rc.top() + rc.top());
+
+        int from_x = max(rc_draw.left(), rc.left()) - rc.left();
+        int from_y = max(rc_draw.top(), rc.top()) - rc.top();
+        int w = min(rc.right(), rc_draw.right()) - rc.left() - from_x + 1;
+        int h = min(rc.bottom(), rc_draw.bottom()) - rc.top() - from_y + 1;
+        int to_x = rc.left() + from_x;
+        int to_y = rc.top() + from_y;
+        painter.drawPixmap(to_x, to_y, m_img_message, from_x, from_y, w, h);
     }
 
 //    if(!m_shown) {
@@ -234,7 +277,7 @@ void MainWindow::resume() {
     m_play_state = PLAY_STATE_RUNNING;
 }
 
-void MainWindow::_do_update_data(update_data* dat) {
+void MainWindow::_do_update_data(UpdateData* dat) {
     if(!dat)
         return;
 
@@ -297,11 +340,19 @@ void MainWindow::_do_update_data(update_data* dat) {
     }
 
     else if(dat->data_type() == TYPE_MESSAGE) {
+        m_show_message = true;
+
+        qDebug("1message, w=%d, h=%d", m_canvas.width(), m_canvas.height());
+//        if(0 == m_canvas.width()) {
+//            QMessageBox::warning(nullptr, QGuiApplication::applicationDisplayName(), dat->message());
+//            return;
+//        }
+
         QPainter pp(&m_canvas);
         QRect rcWin(0, 0, m_canvas.width(), m_canvas.height());
         pp.drawText(rcWin, Qt::AlignLeft|Qt::TextDontPrint, dat->message(), &m_rc_message);
 
-        qDebug("message, w=%d, h=%d", m_rc_message.width(), m_rc_message.height());
+        qDebug("2message, w=%d, h=%d", m_rc_message.width(), m_rc_message.height());
         m_rc_message.setWidth(m_rc_message.width()+60);
         m_rc_message.setHeight(m_rc_message.height()+60);
 
@@ -311,6 +362,11 @@ void MainWindow::_do_update_data(update_data* dat) {
         pm.setPen(QColor(255,255,255,153));
         pm.fillRect(m_rc_message, QColor(0,0,0,190));
 
+        QRect rcRect(m_rc_message);
+        rcRect.setWidth(rcRect.width()-1);
+        rcRect.setHeight(rcRect.height()-1);
+        pm.drawRect(rcRect);
+
         QRect rcText(m_rc_message);
         rcText.setLeft(30);
         rcText.setTop(30);
@@ -319,11 +375,14 @@ void MainWindow::_do_update_data(update_data* dat) {
                     (m_canvas.width() - m_rc_message.width())/2,
                     (m_canvas.height() - m_rc_message.height())/3
                     );
+
+        update(m_rc_message.x(), m_rc_message.y(), m_rc_message.width(), m_rc_message.height());
+
         return;
     }
 
     else if(dat->data_type() == TYPE_ERROR) {
-        QMessageBox::warning(nullptr, QGuiApplication::applicationDisplayName(), dat->message());
+        QMessageBox::critical(this, QGuiApplication::applicationDisplayName(), dat->message());
         QApplication::instance()->exit(0);
         return;
     }
@@ -338,7 +397,7 @@ void MainWindow::_do_update_data(update_data* dat) {
 
         qDebug() << "resize (" << m_rec_hdr.basic.width << "," << m_rec_hdr.basic.height << ")";
 
-        if(m_canvas.width() != m_rec_hdr.basic.width && m_canvas.height() != m_rec_hdr.basic.height) {
+        //if(m_canvas.width() != m_rec_hdr.basic.width && m_canvas.height() != m_rec_hdr.basic.height) {
             m_canvas = QPixmap(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
 
             //m_win_board_w = frameGeometry().width() - geometry().width();
@@ -353,7 +412,7 @@ void MainWindow::_do_update_data(update_data* dat) {
             //resize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
             //resize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
             setFixedSize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
-        }
+        //}
 
         m_canvas.fill(QColor(38, 73, 111));
 
@@ -420,6 +479,18 @@ void MainWindow::_do_bar_fade() {
     }
 
     update(m_bar.rc());
+}
+
+void MainWindow::_do_download(DownloadParam* param) {
+    qDebug("MainWindow::_do_download(). %s %s %s", param->url.toStdString().c_str(), param->sid.toStdString().c_str(), param->fname.toStdString().c_str());
+
+    if(m_dl) {
+        delete m_dl;
+        m_dl = nullptr;
+    }
+
+    m_dl = new Downloader();
+    m_dl->run(&m_nam, param->url, param->sid, param->fname);
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *e) {
