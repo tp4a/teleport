@@ -3,6 +3,8 @@ TARGET = tp-player
 
 QT += core gui widgets network
 
+#DEFINES += QT_NO_DEBUG_OUTPUT
+
 HEADERS += \
     mainwindow.h \
     bar.h \

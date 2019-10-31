@@ -36,8 +36,8 @@ public:
     void restart();
     void speed(int s);
 
-    Downloader* downloader() {return m_dl;}
-    void reset_downloader() {if(m_dl){delete m_dl;m_dl= nullptr;}}
+//    Downloader* downloader() {return m_dl;}
+//    void reset_downloader() {if(m_dl){delete m_dl;m_dl= nullptr;}}
 
 private:
     void paintEvent(QPaintEvent *e);
@@ -53,7 +53,7 @@ private slots:
     void _do_bar_delay_hide();
 
 //    void _do_download(Downloader*);
-    void _do_download(DownloadParam*);
+//    void _do_download(DownloadParam*);
 
 private:
     Ui::MainWindow *ui;
@@ -90,8 +90,8 @@ private:
     QRect m_rc_message;
 
 
-    QNetworkAccessManager m_nam;
-    Downloader* m_dl;
+//    QNetworkAccessManager m_nam;
+//    Downloader* m_dl;
 
     // for test
     TimeUseTest m_time_imgconvert_normal;

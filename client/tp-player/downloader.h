@@ -9,9 +9,9 @@ class Downloader : public QObject {
 
 public:
     enum EndCode{
-        codeUnknown = 0,
         codeSuccess,
         codeDownloading,
+        codeAbort,
         codeFailed
     };
 
@@ -20,9 +20,9 @@ public:
     Downloader();
     ~Downloader();
 
-    void run(QNetworkAccessManager* nam, QString& url, QString& sid, QString& filename);
+    void run(QNetworkAccessManager* nam, const QString& url, const QString& sid, const QString& filename);
     void abort();
-    void reset();
+//    void reset();
     QByteArray& data(){return m_data;}
 
     EndCode code() {return m_code;}

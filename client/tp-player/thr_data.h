@@ -72,7 +72,6 @@ private:
 
 signals:
     void signal_update_data(UpdateData*);
-    void signal_download(DownloadParam*);
 
 private:
     MainWindow* m_mainwin;
@@ -89,6 +88,8 @@ private:
     QString m_sid;
     QString m_rid;
     QString m_path_base;
+
+    Downloader* m_dl;
 
     TS_RECORD_HEADER m_hdr;
     KeyFrames m_kf;

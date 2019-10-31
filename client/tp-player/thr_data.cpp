@@ -21,6 +21,7 @@ ThrData::ThrData(MainWindow* mainwin, const QString& res) {
     m_res = res;
     m_need_download = false;
     m_need_stop = false;
+    m_dl = nullptr;
 
 #ifdef __APPLE__
     QString data_path_base = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
@@ -48,12 +49,19 @@ GenericCacheLocation: "C:/Users/apex/AppData/Local/cache"
 }
 
 ThrData::~ThrData() {
+    if(m_dl)
+        delete m_dl;
 }
 
 void ThrData::stop() {
     if(!isRunning())
         return;
     m_need_stop = true;
+
+    if(m_dl) {
+        m_dl->abort();
+    }
+
     wait();
     qDebug("data thread stop() end.");
 }
@@ -70,10 +78,6 @@ void ThrData::_notify_error(const QString& msg) {
     emit signal_update_data(_msg);
 }
 
-void ThrData::_notify_download(DownloadParam* param) {
-    emit signal_download(param);
-}
-
 //	tp-player.exe http://teleport.domain.com:7190/{sub/path/}tp_1491560510_ca67fceb75a78c9d/1234 (注意，并不直接访问此URI，实际上其并不存在)
 //                TP服务器地址(可能包含子路径哦，例如上例中的{sub/path/}部分)/session-id(用于判断当前授权用户)/录像会话编号
 
@@ -84,11 +88,11 @@ void ThrData::run() {
     if(!_load_keyframe())
         return;
 
-    for(;;) {
-        if(m_need_stop)
-            break;
-        msleep(500);
-    }
+//    for(;;) {
+//        if(m_need_stop)
+//            break;
+//        msleep(500);
+//    }
 
     qDebug("ThrData thread run() end.");
 }
@@ -149,8 +153,10 @@ bool ThrData::_load_header() {
 //            return false;
 //        }
 
-        Downloader* dl = m_mainwin->downloader();
-        QByteArray& data = dl->data();
+        //Downloader* dl = m_mainwin->downloader();
+        if(!m_dl)
+            return false;
+        QByteArray& data = m_dl->data();
         if(data.size() != sizeof(TS_RECORD_HEADER)) {
             qDebug("invalid header file. %d", data.size());
             _notify_error(QString("%1\n\n%2").arg(LOCAL8BIT("指定的文件或目录不存在！"), _tmp_res));
@@ -285,28 +291,35 @@ bool ThrData::_load_header() {
 }
 
 bool ThrData::_load_keyframe() {
-    //    _notify_error(QString("%1").arg(LOCAL8BIT("测试！")));
-
     QString tpk_fname = QString("%1/tp-rdp.tpk").arg(m_path_base);
     tpk_fname = QDir::toNativeSeparators(tpk_fname);
 
     if(m_need_download) {
-        // download .tpr
-        QString url(m_url_base);
-        url += "/audit/get-file?act=read&type=rdp&rid=";
-        url += m_rid;
-        url += "&f=tp-rdp.tpk";
-
         QString tmp_fname = QString("%1/tp-rdp.tpk.downloading").arg(m_path_base);
         tmp_fname = QDir::toNativeSeparators(tmp_fname);
-        qDebug() << "TPK(tmp): " << tmp_fname;
-        qDebug() << "TPK(out): " << tpk_fname;
 
-        if(!_download_file(url, tmp_fname))
-            return false;
+        QFileInfo fi_tmp(tmp_fname);
+        if(fi_tmp.isFile()) {
+            QFile::remove(tmp_fname);
+        }
 
-        QFile::rename(tmp_fname, tpk_fname);
+        QFileInfo fi_tpk(tpk_fname);
+        if(!fi_tpk.exists()) {
+            QString url(m_url_base);
+            url += "/audit/get-file?act=read&type=rdp&rid=";
+            url += m_rid;
+            url += "&f=tp-rdp.tpk";
+
+            qDebug() << "TPK(tmp): " << tmp_fname;
+            if(!_download_file(url, tmp_fname))
+                return false;
+
+            if(!QFile::rename(tmp_fname, tpk_fname))
+                return false;
+        }
     }
+
+    qDebug() << "TPK: " << tpk_fname;
 
     QFile f_kf(tpk_fname);
     if(!f_kf.open(QFile::ReadOnly)) {
@@ -346,6 +359,46 @@ bool ThrData::_download_file(const QString& url, const QString filename) {
         return false;
     }
 
+    if(m_dl) {
+        delete m_dl;
+        m_dl = nullptr;
+    }
+
+    m_dl = new Downloader();
+
+    QNetworkAccessManager* nam =  new QNetworkAccessManager;
+
+    m_dl->run(nam, url, m_sid, filename);
+//    qDebug("m_dl.run(%p) end.", m_dl);
+
+    for(;;) {
+        if(m_dl->code() == Downloader::codeDownloading) {
+            msleep(100);
+            continue;
+        }
+
+        if(m_dl->code() != Downloader::codeSuccess) {
+            qDebug() << "download failed.";
+            _notify_error(QString("%1").arg(LOCAL8BIT("下载文件失败！")));
+            delete nam;
+            return false;
+        }
+        else {
+            qDebug() << "download ok.";
+            delete nam;
+            return true;
+        }
+    }
+
+}
+
+#if 0
+bool ThrData::_download_file(const QString& url, const QString filename) {
+    if(!m_need_download) {
+        qDebug() << "download not necessary.";
+        return false;
+    }
+
     m_mainwin->reset_downloader();
     msleep(100);
 
@@ -373,6 +426,8 @@ bool ThrData::_download_file(const QString& url, const QString filename) {
         }
     }
 }
+#endif
+
 
 #if 0
 void ThrData::run() {

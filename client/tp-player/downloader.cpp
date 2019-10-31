@@ -1,6 +1,7 @@
 ﻿#include "downloader.h"
 #include "record_format.h"
 
+#include <QEventLoop>
 #include <QNetworkReply>
 #include <qelapsedtimer.h>
 
@@ -22,36 +23,50 @@ eventLoop.exec();
 //=================================================================
 Downloader::Downloader() {
     m_reply = nullptr;
-    m_code = codeUnknown;
+    m_code = codeDownloading;
 }
 
 Downloader::~Downloader() {
+//    qDebug("Downloader destroied.");
 }
 
-void Downloader::run(QNetworkAccessManager* nam, QString& url, QString& sid, QString& filename) {
+void Downloader::run(QNetworkAccessManager* nam, const QString& url, const QString& sid, const QString& filename) {
+    m_code = codeDownloading;
     m_filename = filename;
 
     if(!m_filename.isEmpty()) {
         m_file.setFileName(m_filename);
         if(!m_file.open(QIODevice::WriteOnly | QFile::Truncate)){
             qDebug("open file for write failed.");
+            m_code = codeFailed;
             return;
         }
     }
 
-    m_code = codeDownloading;
     QString cookie = QString("_sid=%1\r\n").arg(sid);
 
     QNetworkRequest req;
     req.setUrl(QUrl(url));
     req.setRawHeader("Cookie", cookie.toLatin1());
 
+    QEventLoop eventLoop;
     m_reply = nam->get(req);
+    connect(m_reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
     connect(m_reply, &QNetworkReply::finished, this, &Downloader::_on_finished);
     connect(m_reply, &QIODevice::readyRead, this, &Downloader::_on_data_ready);
+
+    eventLoop.exec();
+
+    disconnect(m_reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+    disconnect(m_reply, &QNetworkReply::finished, this, &Downloader::_on_finished);
+    disconnect(m_reply, &QIODevice::readyRead, this, &Downloader::_on_data_ready);
+    delete m_reply;
+    m_reply = nullptr;
+    qDebug("Downloader::run(%p) end.", this);
 }
 
 void Downloader::_on_data_ready() {
+//    qDebug("Downloader::_on_data_ready(%p).", this);
     QNetworkReply *reply = reinterpret_cast<QNetworkReply*>(sender());
 
     if(m_filename.isEmpty()) {
@@ -62,17 +77,16 @@ void Downloader::_on_data_ready() {
     }
 }
 
-void Downloader::reset() {
-    m_code = codeUnknown;
-}
-
 void Downloader::abort() {
-    if(m_reply)
+    if(m_reply) {
+        qDebug("Downloader::abort(%p);", this);
         m_reply->abort();
+        m_code = codeAbort;
+    }
 }
 
 void Downloader::_on_finished() {
-    qDebug("download finished");
+//    qDebug("Downloader::_on_finished(%p).", this);
     QNetworkReply *reply = reinterpret_cast<QNetworkReply*>(sender());
 
     QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
@@ -83,13 +97,10 @@ void Downloader::_on_finished() {
         //qDebug() << strError;
         m_file.flush();
         m_file.close();
-        m_code = codeFailed;
+        if(m_code != codeDownloading)
+            m_code = codeFailed;
         return;
     }
-
-    disconnect(m_reply, &QNetworkReply::finished, this, &Downloader::_on_finished);
-    disconnect(m_reply, &QIODevice::readyRead, this, &Downloader::_on_data_ready);
-//    reply->deleteLater();
 
     if(m_filename.isEmpty()) {
         m_data += reply->readAll();

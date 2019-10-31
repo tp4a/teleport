@@ -93,7 +93,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_play_state = PLAY_STATE_UNKNOWN;
     m_thr_data = nullptr;
 
-    m_dl = nullptr;
+//    m_dl = nullptr;
 
     ui->setupUi(this);
 
@@ -150,15 +150,15 @@ MainWindow::~MainWindow()
     if(m_thr_data) {
         m_thr_data->stop();
         disconnect(m_thr_data, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
-        disconnect(m_thr_data, SIGNAL(signal_download(DownloadParam*)), this, SLOT(_do_download(DownloadParam*)));
+//        disconnect(m_thr_data, SIGNAL(signal_download(DownloadParam*)), this, SLOT(_do_download(DownloadParam*)));
         delete m_thr_data;
         m_thr_data = nullptr;
     }
 
-    if(m_dl) {
-        delete m_dl;
-        m_dl = nullptr;
-    }
+//    if(m_dl) {
+//        delete m_dl;
+//        m_dl = nullptr;
+//    }
 
     delete ui;
 }
@@ -170,7 +170,7 @@ void MainWindow::set_resource(const QString &res) {
 void MainWindow::_do_first_run() {
     m_thr_data = new ThrData(this, m_res);
     connect(m_thr_data, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
-    connect(m_thr_data, SIGNAL(signal_download(DownloadParam*)), this, SLOT(_do_download(DownloadParam*)));
+//    connect(m_thr_data, SIGNAL(signal_download(DownloadParam*)), this, SLOT(_do_download(DownloadParam*)));
     m_thr_data->start();
 
     _start_play_thread();
@@ -481,17 +481,17 @@ void MainWindow::_do_bar_fade() {
     update(m_bar.rc());
 }
 
-void MainWindow::_do_download(DownloadParam* param) {
-    qDebug("MainWindow::_do_download(). %s %s %s", param->url.toStdString().c_str(), param->sid.toStdString().c_str(), param->fname.toStdString().c_str());
+//void MainWindow::_do_download(DownloadParam* param) {
+//    qDebug("MainWindow::_do_download(). %s %s %s", param->url.toStdString().c_str(), param->sid.toStdString().c_str(), param->fname.toStdString().c_str());
 
-    if(m_dl) {
-        delete m_dl;
-        m_dl = nullptr;
-    }
+//    if(m_dl) {
+//        delete m_dl;
+//        m_dl = nullptr;
+//    }
 
-    m_dl = new Downloader();
-    m_dl->run(&m_nam, param->url, param->sid, param->fname);
-}
+//    m_dl = new Downloader();
+//    m_dl->run(&m_nam, param->url, param->sid, param->fname);
+//}
 
 void MainWindow::mouseMoveEvent(QMouseEvent *e) {
     if(!m_show_default) {
