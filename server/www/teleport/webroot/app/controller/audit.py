@@ -711,8 +711,8 @@ class DoGetFileHandler(TPBaseHandler):
             self.set_status(416)  # 416=请求范围不符合要求
             return self.write('no more data.')
 
-        # we read most 4096 bytes one time.
-        BULK_SIZE = 4096
+        # we read most 8192 bytes one time.
+        BULK_SIZE = 8192
         total_need = file_size - offset
         if length != -1 and length < total_need:
             total_need = length
@@ -722,6 +722,7 @@ class DoGetFileHandler(TPBaseHandler):
             read_this_time = BULK_SIZE if total_need > BULK_SIZE else total_need
             while read_this_time > 0:
                 self.write(f.read(read_this_time))
+                self.flush()
                 total_read += read_this_time
                 if total_read >= total_need:
                     break

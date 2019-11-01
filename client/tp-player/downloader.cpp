@@ -5,41 +5,36 @@
 #include <QNetworkReply>
 #include <qelapsedtimer.h>
 
-
-// TODO: 将Downloader的实现代码迁移到ThrData线程中
-// 使用局部event循环的方式进行下载
-/*
-QEventLoop eventLoop;
-connect(netWorker, &NetWorker::finished,
-        &eventLoop, &QEventLoop::quit);
-QNetworkReply *reply = netWorker->get(url);
-replyMap.insert(reply, FetchWeatherInfo);
-eventLoop.exec();
-*/
-
-
-//=================================================================
-// Downloader
-//=================================================================
-Downloader::Downloader() {
+Downloader::Downloader() : QObject () {
+    m_data = nullptr;
     m_reply = nullptr;
-    m_code = codeDownloading;
+    m_result = false;
 }
 
 Downloader::~Downloader() {
-//    qDebug("Downloader destroied.");
 }
 
-void Downloader::run(QNetworkAccessManager* nam, const QString& url, const QString& sid, const QString& filename) {
-    m_code = codeDownloading;
-    m_filename = filename;
+bool Downloader::request(const QString& url, const QString& sid, const QString& filename) {
+    return _request(url, sid, filename, nullptr);
+}
 
-    if(!m_filename.isEmpty()) {
-        m_file.setFileName(m_filename);
+bool Downloader::request(const QString& url, const QString& sid, QByteArray* data) {
+    QString fname;
+    return _request(url, sid, fname, data);
+}
+
+bool Downloader::_request(const QString& url, const QString& sid, const QString& filename, QByteArray* data) {
+    if(filename.isEmpty() && data == nullptr)
+        return false;
+    if(!filename.isEmpty() && data != nullptr)
+        return false;
+    m_data = data;
+
+    if(!filename.isEmpty()) {
+        m_file.setFileName(filename);
         if(!m_file.open(QIODevice::WriteOnly | QFile::Truncate)){
             qDebug("open file for write failed.");
-            m_code = codeFailed;
-            return;
+            return false;
         }
     }
 
@@ -49,28 +44,36 @@ void Downloader::run(QNetworkAccessManager* nam, const QString& url, const QStri
     req.setUrl(QUrl(url));
     req.setRawHeader("Cookie", cookie.toLatin1());
 
-    QEventLoop eventLoop;
+    QNetworkAccessManager* nam = new QNetworkAccessManager();
+    QEventLoop eloop;
     m_reply = nam->get(req);
-    connect(m_reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+
+    connect(m_reply, &QNetworkReply::finished, &eloop, &QEventLoop::quit);
     connect(m_reply, &QNetworkReply::finished, this, &Downloader::_on_finished);
     connect(m_reply, &QIODevice::readyRead, this, &Downloader::_on_data_ready);
 
-    eventLoop.exec();
+//    qDebug("before eventLoop.exec(%p)", &eloop);
+    eloop.exec();
+//    qDebug("after eventLoop.exec()");
 
-    disconnect(m_reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+    disconnect(m_reply, &QNetworkReply::finished, &eloop, &QEventLoop::quit);
     disconnect(m_reply, &QNetworkReply::finished, this, &Downloader::_on_finished);
     disconnect(m_reply, &QIODevice::readyRead, this, &Downloader::_on_data_ready);
+
     delete m_reply;
     m_reply = nullptr;
-    qDebug("Downloader::run(%p) end.", this);
+    delete nam;
+
+    qDebug("Downloader::_request() end.");
+    return m_result;
 }
 
 void Downloader::_on_data_ready() {
 //    qDebug("Downloader::_on_data_ready(%p).", this);
     QNetworkReply *reply = reinterpret_cast<QNetworkReply*>(sender());
 
-    if(m_filename.isEmpty()) {
-        m_data += reply->readAll();
+    if(m_data != nullptr) {
+        m_data->push_back(reply->readAll());
     }
     else {
         m_file.write(reply->readAll());
@@ -79,9 +82,8 @@ void Downloader::_on_data_ready() {
 
 void Downloader::abort() {
     if(m_reply) {
-        qDebug("Downloader::abort(%p);", this);
+        qDebug("Downloader::abort().");
         m_reply->abort();
-        m_code = codeAbort;
     }
 }
 
@@ -94,16 +96,17 @@ void Downloader::_on_finished() {
     if (reply->error() != QNetworkReply::NoError) {
         // reply->abort() got "Operation canceled"
         //QString strError = reply->errorString();
-        //qDebug() << strError;
-        m_file.flush();
-        m_file.close();
-        if(m_code != codeDownloading)
-            m_code = codeFailed;
+        qDebug() << "ERROR:" << reply->errorString();
+        if(m_data == nullptr) {
+            m_file.flush();
+            m_file.close();
+        }
+        m_result = false;
         return;
     }
 
-    if(m_filename.isEmpty()) {
-        m_data += reply->readAll();
+    if(m_data != nullptr) {
+        m_data->push_back(reply->readAll());
     }
     else {
         m_file.write(reply->readAll());
@@ -113,5 +116,5 @@ void Downloader::_on_finished() {
 
     reply->deleteLater();
 
-    m_code = codeSuccess;
+    m_result = true;
 }

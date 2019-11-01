@@ -6,7 +6,7 @@
 #include <QMutex>
 #include <QNetworkReply>
 #include <QFile>
-#include "downloader.h"
+#include <QEventLoop>
 #include "update_data.h"
 #include "record_format.h"
 
@@ -59,16 +59,17 @@ public:
     UpdateData* get_data();
 
 private:
+    void _run();
 
     bool _load_header();
     bool _load_keyframe();
     bool _download_file(const QString& url, const QString filename);
+    bool _download_file(const QString& url, QByteArray& data);
 
     void _prepare();
 
     void _notify_message(const QString& msg);
     void _notify_error(const QString& err_msg);
-    void _notify_download(DownloadParam* param);
 
 signals:
     void signal_update_data(UpdateData*);
@@ -88,8 +89,6 @@ private:
     QString m_sid;
     QString m_rid;
     QString m_path_base;
-
-    Downloader* m_dl;
 
     TS_RECORD_HEADER m_hdr;
     KeyFrames m_kf;

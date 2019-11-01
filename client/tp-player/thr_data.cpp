@@ -8,6 +8,7 @@
 #include "thr_play.h"
 #include "thr_data.h"
 #include "util.h"
+#include "downloader.h"
 #include "record_format.h"
 #include "mainwindow.h"
 
@@ -21,7 +22,7 @@ ThrData::ThrData(MainWindow* mainwin, const QString& res) {
     m_res = res;
     m_need_download = false;
     m_need_stop = false;
-    m_dl = nullptr;
+//    m_dl = nullptr;
 
 #ifdef __APPLE__
     QString data_path_base = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
@@ -49,19 +50,12 @@ GenericCacheLocation: "C:/Users/apex/AppData/Local/cache"
 }
 
 ThrData::~ThrData() {
-    if(m_dl)
-        delete m_dl;
 }
 
 void ThrData::stop() {
     if(!isRunning())
         return;
     m_need_stop = true;
-
-    if(m_dl) {
-        m_dl->abort();
-    }
-
     wait();
     qDebug("data thread stop() end.");
 }
@@ -82,19 +76,137 @@ void ThrData::_notify_error(const QString& msg) {
 //                TP服务器地址(可能包含子路径哦，例如上例中的{sub/path/}部分)/session-id(用于判断当前授权用户)/录像会话编号
 
 void ThrData::run() {
+    _run();
+    qDebug("ThrData thread run() end.");
+}
+
+void ThrData::_run() {
     if(!_load_header())
         return;
 
     if(!_load_keyframe())
         return;
 
-//    for(;;) {
-//        if(m_need_stop)
-//            break;
-//        msleep(500);
-//    }
+    uint32_t file_idx = 0;
+    for(;;) {
+        if(m_need_stop)
+            break;
+        QString str_fidx;
+        str_fidx.sprintf("%d", file_idx+1);
 
-    qDebug("ThrData thread run() end.");
+        QString tpd_fname = QString("%1/tp-rdp-%2.tpd").arg(m_path_base, str_fidx);
+        tpd_fname = QDir::toNativeSeparators(tpd_fname);
+
+        if(m_need_download) {
+            QString tmp_fname = QString("%1/tp-rdp-%2.tpd.downloading").arg(m_path_base, str_fidx);
+            tmp_fname = QDir::toNativeSeparators(tmp_fname);
+
+            QFileInfo fi_tmp(tmp_fname);
+            if(fi_tmp.isFile()) {
+                QFile::remove(tmp_fname);
+            }
+
+            QFileInfo fi_tpd(tpd_fname);
+            if(!fi_tpd.exists()) {
+                QString url = QString("%1/audit/get-file?act=read&type=rdp&rid=%2&f=tp-rdp-%3.tpd").arg(m_url_base, m_rid, str_fidx);
+
+                qDebug() << "URL : " << url;
+                qDebug() << "TPD : " << tmp_fname;
+                if(!_download_file(url, tmp_fname))
+                    return;
+
+                if(!QFile::rename(tmp_fname, tpd_fname))
+                    return;
+            }
+        }
+
+        qDebug() << "TPD: " << tpd_fname;
+
+        QFile f_tpd(tpd_fname);
+        if(!f_tpd.open(QFile::ReadOnly)) {
+            qDebug() << "Can not open " << tpd_fname << " for read.";
+            _notify_error(QString("%1\n\n%3").arg(LOCAL8BIT("无法打开录像数据文件！"), tpd_fname));
+            return;
+        }
+
+        qint64 filesize = f_tpd.size();
+        qint64 processed = 0;
+
+        // 加载并解析到待播放队列
+        qint64 read_len = 0;
+        for(;;) {
+            {
+//                if(m_need_stop)
+//                    break;
+
+//                m_locker.lock();
+
+//                if(m_data.size() > 500) {
+//                    msleep(1000);
+//                    continue;
+//                }
+
+//                m_locker.unlock();
+            }
+
+            if(filesize - processed < sizeof(TS_RECORD_PKG)) {
+                qDebug("invaid tp-rdp-%d.tpd file, filesize=%d, processed=%d, need=%d.", file_idx+1, filesize, processed, sizeof(TS_RECORD_PKG));
+                _notify_error(QString("%1\n\n%3").arg(LOCAL8BIT("错误的录像数据文件！"), tpd_fname));
+                return;
+            }
+
+            TS_RECORD_PKG pkg;
+            read_len = f_tpd.read(reinterpret_cast<char*>(&pkg), sizeof(pkg));
+            if(read_len == 0)
+                break;
+            if(read_len != sizeof(TS_RECORD_PKG)) {
+                qDebug("invaid tp-rdp-%d.tpd file, read_len=%d (1).", file_idx+1, read_len);
+                _notify_error(QString("%1\n\n%3").arg(LOCAL8BIT("错误的录像数据文件！"), tpd_fname));
+                return;
+            }
+            processed += sizeof(TS_RECORD_PKG);
+
+            if(filesize - processed < pkg.size) {
+                qDebug("invaid tp-rdp-%d.tpd file (2).", file_idx+1);
+                _notify_error(QString("%1\n\n%3").arg(LOCAL8BIT("错误的录像数据文件！"), tpd_fname));
+                return;
+            }
+
+            if(pkg.type == TS_RECORD_TYPE_RDP_KEYFRAME) {
+                qDebug("----key frame: %d, pkg.size=%d", pkg.time_ms, pkg.size);
+                if(pkg.size > 0) {
+                    f_tpd.read(pkg.size);
+                }
+                continue;
+            }
+
+            UpdateData* dat = new UpdateData(TYPE_DATA);
+            dat->alloc_data(sizeof(TS_RECORD_PKG) + pkg.size);
+            memcpy(dat->data_buf(), &pkg, sizeof(TS_RECORD_PKG));
+            read_len = f_tpd.read(reinterpret_cast<char*>(dat->data_buf()+sizeof(TS_RECORD_PKG)), pkg.size);
+            if(read_len != pkg.size) {
+                delete dat;
+                qDebug("invaid tp-rdp-%d.tpd file (3).", file_idx+1);
+                _notify_error(QString("%1\n\n%3").arg(LOCAL8BIT("错误的录像数据文件！"), tpd_fname));
+                return;
+            }
+
+
+            {
+                m_locker.lock();
+                m_data.enqueue(dat);
+//                qDebug("data count: %d", m_data.size());
+                m_locker.unlock();
+            }
+        }
+
+
+
+
+        file_idx += 1;
+        if(file_idx >= m_hdr.info.dat_file_count)
+            break;
+    }
 }
 
 bool ThrData::_load_header() {
@@ -121,42 +233,11 @@ bool ThrData::_load_header() {
         qDebug() << "url-base:[" << m_url_base << "], sid:[" << m_sid << "], rid:[" << m_rid << "]";
 
         // download .tpr
-        QString url(m_url_base);
-        url += "/audit/get-file?act=read&type=rdp&rid=";
-        url += m_rid;
-        url += "&f=tp-rdp.tpr";
-
-        QString fname;
-        if(!_download_file(url, fname))
+        QString url = QString("%1/audit/get-file?act=read&type=rdp&rid=%2&f=tp-rdp.tpr").arg(m_url_base, m_rid);
+        QByteArray data;
+        if(!_download_file(url, data))
             return false;
 
-//        Downloader& dl = m_mainwin->downloader();
-//        dl.reset();
-
-//        DownloadParam param;
-//        param.url = url;
-//        param.sid = m_sid;
-//        param.fname = fname;
-//        _notify_download(&param);
-
-//        for(;;) {
-//            if(dl.code() == Downloader::codeUnknown || dl.code() == Downloader::codeDownloading) {
-//                msleep(100);
-//                continue;
-//            }
-
-//            break;
-//        }
-
-//        if(dl.code() != Downloader::codeSuccess) {
-//            _notify_error(QString("%1").arg(LOCAL8BIT("下载文件失败！")));
-//            return false;
-//        }
-
-        //Downloader* dl = m_mainwin->downloader();
-        if(!m_dl)
-            return false;
-        QByteArray& data = m_dl->data();
         if(data.size() != sizeof(TS_RECORD_HEADER)) {
             qDebug("invalid header file. %d", data.size());
             _notify_error(QString("%1\n\n%2").arg(LOCAL8BIT("指定的文件或目录不存在！"), _tmp_res));
@@ -305,12 +386,8 @@ bool ThrData::_load_keyframe() {
 
         QFileInfo fi_tpk(tpk_fname);
         if(!fi_tpk.exists()) {
-            QString url(m_url_base);
-            url += "/audit/get-file?act=read&type=rdp&rid=";
-            url += m_rid;
-            url += "&f=tp-rdp.tpk";
-
-            qDebug() << "TPK(tmp): " << tmp_fname;
+            QString url = QString("%1/audit/get-file?act=read&type=rdp&rid=%2&f=tp-rdp.tpk").arg(m_url_base, m_rid);
+            qDebug() << "TPK: " << tmp_fname;
             if(!_download_file(url, tmp_fname))
                 return false;
 
@@ -359,348 +436,33 @@ bool ThrData::_download_file(const QString& url, const QString filename) {
         return false;
     }
 
-    if(m_dl) {
-        delete m_dl;
-        m_dl = nullptr;
+    Downloader dl;
+    if(!dl.request(url, m_sid, filename)) {
+        qDebug() << "download failed.";
+        _notify_error(QString("%1").arg(LOCAL8BIT("下载文件失败！")));
+        return false;
     }
 
-    m_dl = new Downloader();
-
-    QNetworkAccessManager* nam =  new QNetworkAccessManager;
-
-    m_dl->run(nam, url, m_sid, filename);
-//    qDebug("m_dl.run(%p) end.", m_dl);
-
-    for(;;) {
-        if(m_dl->code() == Downloader::codeDownloading) {
-            msleep(100);
-            continue;
-        }
-
-        if(m_dl->code() != Downloader::codeSuccess) {
-            qDebug() << "download failed.";
-            _notify_error(QString("%1").arg(LOCAL8BIT("下载文件失败！")));
-            delete nam;
-            return false;
-        }
-        else {
-            qDebug() << "download ok.";
-            delete nam;
-            return true;
-        }
-    }
-
+    return true;
 }
 
-#if 0
-bool ThrData::_download_file(const QString& url, const QString filename) {
+bool ThrData::_download_file(const QString& url, QByteArray& data) {
     if(!m_need_download) {
         qDebug() << "download not necessary.";
         return false;
     }
 
-    m_mainwin->reset_downloader();
-    msleep(100);
+    Downloader dl;
 
-    DownloadParam param;
-    param.url = url;
-    param.sid = m_sid;
-    param.fname = filename;
-    _notify_download(&param);
-
-    for(;;) {
-        Downloader* dl = m_mainwin->downloader();
-        if(!dl || dl->code() == Downloader::codeUnknown || dl->code() == Downloader::codeDownloading) {
-            msleep(100);
-            continue;
-        }
-
-        if(dl->code() != Downloader::codeSuccess) {
-            qDebug() << "download failed.";
-            _notify_error(QString("%1").arg(LOCAL8BIT("下载文件失败！")));
-            return false;
-        }
-        else {
-            qDebug() << "download ok.";
-            return true;
-        }
+    if(!dl.request(url, m_sid, &data)) {
+        qDebug() << "download failed.";
+        _notify_error(QString("%1").arg(LOCAL8BIT("下载文件失败！")));
+        return false;
     }
+
+    return true;
 }
-#endif
 
-
-#if 0
-void ThrData::run() {
-    QString msg;
-    QString path_base;
-
-    QString _tmp_res = m_res.toLower();
-
-    if(_tmp_res.startsWith("http")) {
-        qDebug() << "DOWNLOAD";
-        m_need_download = true;
-
-        // "正在缓存录像数据，请稍候..."
-        m_thr_play->_notify_message(LOCAL8BIT("正在下载录像数据，请稍候..."));
-
-        //        QString msg;
-        //        for(;;) {
-        //            msleep(500);
-
-        //            if(m_need_stop)
-        //                return;
-
-        //            if(!m_thr_data->prepare(path_base, msg)) {
-        //                msg.sprintf("指定的文件或目录不存在！\n\n%s", _tmp_res.toStdString().c_str());
-        //                _notify_error(msg);
-        //                return;
-        //            }
-
-        //            if(path_base.length())
-        //                break;
-        //        }
-    }
-    else {
-        QFileInfo fi_chk_link(m_res);
-        if(fi_chk_link.isSymLink())
-            _tmp_res = fi_chk_link.symLinkTarget();
-        else
-            _tmp_res = m_res;
-
-        QFileInfo fi(_tmp_res);
-        if(!fi.exists()) {
-            msg.sprintf(LOCAL8BIT("指定的文件或目录不存在！\n\n%s").toStdString().c_str(), _tmp_res.toStdString().c_str());
-            m_thr_play->_notify_error(msg);
-            return;
-        }
-
-        if(fi.isFile()) {
-            path_base = fi.path();
-        }
-        else if(fi.isDir()) {
-            path_base = m_res;
-        }
-
-        path_base += "/";
-    }
-
-    //======================================
-    // 加载录像基本信息数据
-    //======================================
-
-    QString tpr_filename(path_base);
-    tpr_filename += "tp-rdp.tpr";
-
-    QFile f_hdr(tpr_filename);
-    if(!f_hdr.open(QFile::ReadOnly)) {
-        qDebug() << "Can not open " << tpr_filename << " for read.";
-        msg.sprintf(LOCAL8BIT("无法打开录像信息文件！\n\n%s").toStdString().c_str(), tpr_filename.toStdString().c_str());
-        m_thr_play->_notify_error(msg);
-        return;
-    }
-
-    TS_RECORD_HEADER hdr;
-    memset(&hdr, 0, sizeof(TS_RECORD_HEADER));
-
-    qint64 read_len = 0;
-    read_len = f_hdr.read((char*)(&hdr), sizeof(TS_RECORD_HEADER));
-    if(read_len != sizeof(TS_RECORD_HEADER)) {
-        qDebug() << "invaid .tpr file.";
-        msg.sprintf(LOCAL8BIT("错误的录像信息文件！\n\n%s").toStdString().c_str(), tpr_filename.toStdString().c_str());
-        m_thr_play->_notify_error(msg);
-        return;
-    }
-
-    if(hdr.info.ver != 4) {
-        qDebug() << "invaid .tpr file.";
-        msg.sprintf(LOCAL8BIT("不支持的录像文件版本 %d！\n\n此播放器支持录像文件版本 4。").toStdString().c_str(), hdr.info.ver);
-        m_thr_play->_notify_error(msg);
-        return;
-    }
-
-    if(hdr.basic.width == 0 || hdr.basic.height == 0) {
-        m_thr_play->_notify_error(LOCAL8BIT("错误的录像信息，未记录窗口尺寸！"));
-        return;
-    }
-
-    if(hdr.info.dat_file_count == 0) {
-        m_thr_play->_notify_error(LOCAL8BIT("错误的录像信息，未记录数据文件数量！"));
-        return;
-    }
-
-    //======================================
-    // 加载关键帧数据
-    //======================================
-    QString tpk_filename(path_base);
-    tpk_filename += "tp-rdp.tpk";
-
-    QFile f_kf(tpk_filename);
-    if(!f_kf.open(QFile::ReadOnly)) {
-        qDebug() << "Can not open " << tpk_filename << " for read.";
-        msg.sprintf(LOCAL8BIT("无法打开关键帧信息文件！\n\n%s").toStdString().c_str(), tpk_filename.toStdString().c_str());
-        m_thr_play->_notify_error(msg);
-        return;
-    }
-
-    qint64 fsize = f_kf.size();
-    if(!fsize || fsize % sizeof(KEYFRAME_INFO) != 0) {
-        qDebug() << "Can not open " << tpk_filename << " for read.";
-        msg.sprintf(LOCAL8BIT("关键帧信息文件格式错误！\n\n").toStdString().c_str());
-        m_thr_play->_notify_error(msg);
-        return;
-    }
-
-    int kf_count = fsize / sizeof(KEYFRAME_INFO);
-    for(int i = 0; i < kf_count; ++i) {
-        KEYFRAME_INFO kf;
-        memset(&kf, 0, sizeof(KEYFRAME_INFO));
-        read_len = f_kf.read((char*)(&kf), sizeof(KEYFRAME_INFO));
-        if(read_len != sizeof(KEYFRAME_INFO)) {
-            qDebug() << "invaid .tpk file.";
-            msg.sprintf(LOCAL8BIT("关键帧信息文件格式错误！\n\n").toStdString().c_str());
-            m_thr_play->_notify_error(msg);
-            return;
-        }
-
-        m_kf.push_back(kf);
-    }
-
-    //======================================
-    // 读取并解析录像数据文件
-    //======================================
-    uint32_t fidx = 0;
-    while(!m_need_stop) {
-
-        for(fidx = 0; fidx < hdr.info.dat_file_count; ++fidx) {
-            QString tpd_filename(path_base);
-            QString str_tmp;
-
-            str_tmp.sprintf("tp-rdp-%d.tpd", fidx+1);
-            tpd_filename += str_tmp;
-
-            QFileInfo fi(tpd_filename);
-            if(!fi.isFile()) {
-                // 文件不存在，如需下载，则启动下载函数并等待下载结束。（下载是异步的吗？）
-            }
-
-            QFile f_dat(tpd_filename);
-            if(!f_dat.open(QFile::ReadOnly)) {
-                qDebug() << "Can not open " << tpd_filename << " for read.";
-                // msg.sprintf("无法打开录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
-                msg = QString::fromLocal8Bit("无法打开录像数据文件！\n\n");
-                msg += tpd_filename;
-                m_thr_play->_notify_error(msg);
-                return;
-            }
-
-
-
-            for(;;) {
-                if(m_need_stop) {
-                    qDebug() << "stop, user cancel 2.";
-                    break;
-                }
-
-                if(m_need_pause) {
-                    msleep(50);
-                    time_begin += 50;
-                    continue;
-                }
-
-                TS_RECORD_PKG pkg;
-                read_len = f_dat.read((char*)(&pkg), sizeof(pkg));
-                if(read_len == 0)
-                    break;
-                if(read_len != sizeof(TS_RECORD_PKG)) {
-                    qDebug() << "invaid .tpd file (1).";
-                    // msg.sprintf("错误的录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
-                    msg = QString::fromLocal8Bit("错误的录像数据文件！\n\n");
-                    msg += tpd_filename.toStdString().c_str();
-                    _notify_error(msg);
-                    return;
-                }
-                if(pkg.type == TS_RECORD_TYPE_RDP_KEYFRAME) {
-                    qDebug("----key frame: %d", pkg.time_ms);
-                }
-
-                UpdateData* dat = new UpdateData(TYPE_DATA);
-                dat->alloc_data(sizeof(TS_RECORD_PKG) + pkg.size);
-                memcpy(dat->data_buf(), &pkg, sizeof(TS_RECORD_PKG));
-                read_len = f_dat.read((char*)(dat->data_buf()+sizeof(TS_RECORD_PKG)), pkg.size);
-                if(read_len != pkg.size) {
-                    delete dat;
-                    qDebug() << "invaid .tpd file.";
-                    // msg.sprintf("错误的录像数据文件！\n\n%s", tpd_filename.toStdString().c_str());
-                    msg = QString::fromLocal8Bit("错误的录像数据文件！\n\n");
-                    msg += tpd_filename.toStdString().c_str();
-                    _notify_error(msg);
-                    return;
-                }
-
-                pkg_count++;
-
-                time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin) * m_speed;
-                if(time_pass > total_ms)
-                    time_pass = total_ms;
-                if(time_pass - time_last_pass > 200) {
-                    UpdateData* _passed_ms = new UpdateData(TYPE_PLAYED_MS);
-                    _passed_ms->played_ms(time_pass);
-                    emit signal_update_data(_passed_ms);
-                    time_last_pass = time_pass;
-                }
-
-                if(time_pass >= pkg.time_ms) {
-                    emit signal_update_data(dat);
-                    continue;
-                }
-
-                // 需要等待
-                uint32_t time_wait = pkg.time_ms - time_pass;
-                uint32_t wait_this_time = 0;
-                for(;;) {
-                    if(m_need_pause) {
-                        msleep(50);
-                        time_begin += 50;
-                        continue;
-                    }
-
-                    wait_this_time = time_wait;
-                    if(wait_this_time > 10)
-                        wait_this_time = 10;
-
-                    if(m_need_stop) {
-                        qDebug() << "stop, user cancel (2).";
-                        break;
-                    }
-
-                    msleep(wait_this_time);
-
-                    uint32_t _time_pass = (uint32_t)(QDateTime::currentMSecsSinceEpoch() - time_begin) * m_speed;
-                    if(_time_pass > total_ms)
-                        _time_pass = total_ms;
-                    if(_time_pass - time_last_pass > 200) {
-                        UpdateData* _passed_ms = new UpdateData(TYPE_PLAYED_MS);
-                        _passed_ms->played_ms(_time_pass);
-                        emit signal_update_data(_passed_ms);
-                        time_last_pass = _time_pass;
-                    }
-
-                    time_wait -= wait_this_time;
-                    if(time_wait == 0) {
-                        emit signal_update_data(dat);
-                        break;
-                    }
-                }
-
-            }
-        }
-    }
-
-
-    //    msg = LOCAL8BIT("开始播放...");
-    //    m_thr_play->_notify_error(msg);
-}
-#endif
 
 void ThrData::_prepare() {
     UpdateData* d = new UpdateData(TYPE_HEADER_INFO);

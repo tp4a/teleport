@@ -8,37 +8,27 @@ class Downloader : public QObject {
     Q_OBJECT
 
 public:
-    enum EndCode{
-        codeSuccess,
-        codeDownloading,
-        codeAbort,
-        codeFailed
-    };
-
-public:
-    // 从url下载数据，写入到filename文件中，如果filename为空字符串，则保存在内存中，可通过 data() 获取。
+    // 从url下载数据，写入到filename文件中，或放入data中。
     Downloader();
     ~Downloader();
 
-    void run(QNetworkAccessManager* nam, const QString& url, const QString& sid, const QString& filename);
+    bool request(const QString& url, const QString& sid, const QString& filename);
+    bool request(const QString& url, const QString& sid, QByteArray* data);
     void abort();
-//    void reset();
-    QByteArray& data(){return m_data;}
 
-    EndCode code() {return m_code;}
+private:
+    bool _request(const QString& url, const QString& sid, const QString& filename, QByteArray* data);
 
 private slots:
     void _on_data_ready();  // 有数据可读了，读取并写入文件
     void _on_finished();    // 下载结束了
 
 private:
-    QString m_filename;
     QFile m_file;
-    QByteArray m_data;
+    QByteArray* m_data;
 
+    bool m_result;
     QNetworkReply* m_reply;
-
-    EndCode m_code;
 };
 
 typedef struct DownloadParam {
