@@ -39,6 +39,9 @@ public:
 //    Downloader* downloader() {return m_dl;}
 //    void reset_downloader() {if(m_dl){delete m_dl;m_dl= nullptr;}}
 
+    // TODO: 将thr_data移动到thr_play线程，由play线程进行管理
+    ThrData* get_thr_data() {return m_thr_data;}
+
 private:
     void paintEvent(QPaintEvent *e);
     void mouseMoveEvent(QMouseEvent *e);

@@ -14,7 +14,8 @@ HEADERS += \
     record_format.h \
     rle.h \
     util.h \
-    downloader.h
+    downloader.h \
+    thr_download.h
 
 SOURCES += \
     main.cpp \
@@ -25,7 +26,8 @@ SOURCES += \
     update_data.cpp \
     rle.c \
     util.cpp \
-    downloader.cpp
+    downloader.cpp \
+    thr_download.cpp
 
 RESOURCES += \
     tp-player.qrc

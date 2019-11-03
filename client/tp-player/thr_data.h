@@ -9,6 +9,7 @@
 #include <QEventLoop>
 #include "update_data.h"
 #include "record_format.h"
+#include "thr_download.h"
 
 /*
 为支持“边下载，边播放”、“可拖动进度条”等功能，录像数据会分为多个文件存放，目前每个文件约4MB。
@@ -63,9 +64,8 @@ private:
 
     bool _load_header();
     bool _load_keyframe();
-    bool _download_file(const QString& url, const QString filename);
-    bool _download_file(const QString& url, QByteArray& data);
 
+    void _clear_data();
     void _prepare();
 
     void _notify_message(const QString& msg);
@@ -79,16 +79,18 @@ private:
     QQueue<UpdateData*> m_data;
     QMutex m_locker;
 
+    ThrDownload m_thr_download;
+
     bool m_need_stop;
 
     bool m_need_download;
     QString m_res;
-    QString m_local_data_path_base;
+    QString m_data_path_base;
 
     QString m_url_base;
     QString m_sid;
     QString m_rid;
-    QString m_path_base;
+    QString m_data_path;
 
     TS_RECORD_HEADER m_hdr;
     KeyFrames m_kf;

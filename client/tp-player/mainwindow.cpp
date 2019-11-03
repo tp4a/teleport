@@ -187,7 +187,7 @@ void MainWindow::_start_play_thread() {
         m_thr_play = nullptr;
     }
 
-    m_thr_play = new ThrPlay();
+    m_thr_play = new ThrPlay(this);
     connect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
 
     m_thr_play->speed(m_bar.get_speed());
@@ -340,6 +340,11 @@ void MainWindow::_do_update_data(UpdateData* dat) {
     }
 
     else if(dat->data_type() == TYPE_MESSAGE) {
+        if(dat->message().isEmpty()) {
+            m_show_message = false;
+            return;
+        }
+
         m_show_message = true;
 
         qDebug("1message, w=%d, h=%d", m_canvas.width(), m_canvas.height());
@@ -430,10 +435,14 @@ void MainWindow::_do_update_data(UpdateData* dat) {
         m_timer_bar_delay_hide.start(2000);
 
         QString title;
-        if (m_rec_hdr.basic.conn_port == 3389)
-            title.sprintf("[%s] %s@%s [Teleport-RDP录像回放]", m_rec_hdr.basic.acc_username, m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip);
-        else
-            title.sprintf("[%s] %s@%s:%d [Teleport-RDP录像回放]", m_rec_hdr.basic.acc_username, m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip, m_rec_hdr.basic.conn_port);
+        if (m_rec_hdr.basic.conn_port == 3389) {
+            title = QString(LOCAL8BIT("[%1] %2@%3 [Teleport-RDP录像回放]").arg(m_rec_hdr.basic.acc_username, m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip));
+        }
+        else {
+            QString _port;
+            _port.sprintf("%d", m_rec_hdr.basic.conn_port);
+            title = QString(LOCAL8BIT("[%1] %2@%3:%4 [Teleport-RDP录像回放]").arg(m_rec_hdr.basic.acc_username, m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip, _port));
+        }
 
         setWindowTitle(title);
 

@@ -5,6 +5,7 @@
 #include "update_data.h"
 #include "downloader.h"
 
+class MainWindow;
 // 根据播放规则，将要播放的图像发送给主UI线程进行显示
 class ThrPlay : public QThread
 {
@@ -12,7 +13,7 @@ class ThrPlay : public QThread
 
 friend class ThrData;
 public:
-    ThrPlay();
+    ThrPlay(MainWindow* mainwnd);
     ~ThrPlay();
 
     virtual void run();
@@ -29,6 +30,7 @@ signals:
     void signal_update_data(UpdateData*);
 
 private:
+    MainWindow* m_mainwnd;
     bool m_need_stop;
     bool m_need_pause;
     int m_speed;

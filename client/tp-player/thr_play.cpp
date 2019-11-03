@@ -4,6 +4,7 @@
 
 #include "thr_play.h"
 #include "thr_data.h"
+#include "mainwindow.h"
 #include "record_format.h"
 #include "util.h"
 
@@ -18,7 +19,8 @@
  */
 
 
-ThrPlay::ThrPlay() {
+ThrPlay::ThrPlay(MainWindow* mainwnd) {
+    m_mainwnd = mainwnd;
     m_need_stop = false;
     m_need_pause = false;
     m_speed = 2;
@@ -63,151 +65,37 @@ void ThrPlay::_notify_error(const QString& msg) {
 
 void ThrPlay::run() {
 
-    // http://127.0.0.1:7190/tp_1491560510_ca67fceb75a78c9d/211
-    // E:\work\tp4a\teleport\server\share\replay\rdp\000000211
+    ThrData* thr_data = m_mainwnd->get_thr_data();
+    bool first_run = true;
 
-//#ifdef __APPLE__
-//    QString currentPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-//    currentPath += "/tp-testdata/";
-//#else
-//    QString currentPath = QCoreApplication::applicationDirPath() + "/testdata/";
-//#endif
+    for(;;) {
+        if(m_need_stop)
+            break;
 
-    // /Users/apex/Library/Preferences/tp-player
-//    qDebug() << "appdata:" << QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-
-    // /private/var/folders/_3/zggrxjdx1lxcdqnfsbgpcwzh0000gn/T
-    //qDebug() << "tmp:" << QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-
-//    m_thr_data = new ThrData(this, m_res);
-//    m_thr_data->start();
-
-    // "正在准备录像数据，请稍候..."
-//    _notify_message(LOCAL8BIT("正在准备录像数据，请稍候..."));
-
-
-#if 0
-    // base of data path (include the .tpr file)
-    QString path_base;
-
-    QString _tmp_res = m_res.toLower();
-    if(_tmp_res.startsWith("http")) {
-        qDebug() << "DOWNLOAD";
-        m_need_download = true;
-
-        // "正在缓存录像数据，请稍候..."
-        _notify_message("正在缓存录像数据，请稍候...");
-
-        m_thr_data = new ThreadDownload(m_res);
-        m_thr_data->start();
-
-        QString msg;
-        for(;;) {
-            msleep(500);
-
-            if(m_need_stop)
-                return;
-
-            if(!m_thr_data->prepare(path_base, msg)) {
-                msg.sprintf("指定的文件或目录不存在！\n\n%s", _tmp_res.toStdString().c_str());
-                _notify_error(msg);
-                return;
-            }
-
-            if(path_base.length())
-                break;
-        }
-    }
-    else {
-        {
-            QFileInfo fi(m_res);
-            if(fi.isSymLink())
-                _tmp_res = fi.symLinkTarget();
-            else
-                _tmp_res = m_res;
+        // 1. 从ThrData的待播放队列中取出一个数据
+        UpdateData* dat = thr_data->get_data();
+        if(dat == nullptr) {
+            msleep(20);
+            continue;
         }
 
-        QFileInfo fi(_tmp_res);
-        if(!fi.exists()) {
-            QString msg;
-            msg.sprintf("指定的文件或目录不存在！\n\n%s", _tmp_res.toStdString().c_str());
-            _notify_error(msg);
-            return;
+        if(first_run) {
+            first_run = false;
+           _notify_message("");
         }
 
-        if(fi.isFile()) {
-            path_base = fi.path();
+        // 2. 根据数据包的信息，等待到播放时间点
+        // 3. 将数据包发送给主UI界面进行显示
+//        qDebug("emit one package.");
+        if(dat->data_type() == TYPE_END) {
+            _notify_message(LOCAL8BIT("播放结束"));
         }
-        else if(fi.isDir()) {
-            path_base = m_res;
-        }
-
-        path_base += "/";
-    }
-
-
-    qint64 read_len = 0;
-    uint32_t total_pkg = 0;
-    uint32_t total_ms = 0;
-    uint32_t file_count = 0;
-
-    //======================================
-    // 加载录像基本信息数据
-    //======================================
-
-    QString tpr_filename(path_base);
-    tpr_filename += "tp-rdp.tpr";
-
-    QFile f_hdr(tpr_filename);
-    if(!f_hdr.open(QFile::ReadOnly)) {
-        qDebug() << "Can not open " << tpr_filename << " for read.";
-        QString msg;
-        msg.sprintf("无法打开录像信息文件！\n\n%s", tpr_filename.toStdString().c_str());
-        _notify_error(msg);
-        return;
-    }
-    else {
-        UpdateData* dat = new UpdateData(TYPE_HEADER_INFO);
-        dat->alloc_data(sizeof(TS_RECORD_HEADER));
-
-        read_len = f_hdr.read((char*)(dat->data_buf()), dat->data_len());
-        if(read_len != sizeof(TS_RECORD_HEADER)) {
-            delete dat;
-            qDebug() << "invaid .tpr file.";
-            QString msg;
-            msg.sprintf("错误的录像信息文件！\n\n%s", tpr_filename.toStdString().c_str());
-            _notify_error(msg);
-            return;
-        }
-
-        TS_RECORD_HEADER* hdr = (TS_RECORD_HEADER*)dat->data_buf();
-
-        if(hdr->info.ver != 4) {
-            delete dat;
-            qDebug() << "invaid .tpr file.";
-            QString msg;
-            msg.sprintf("不支持的录像文件版本 %d！\n\n此播放器支持录像文件版本 4。", hdr->info.ver);
-            _notify_error(msg);
-            return;
-        }
-
-        if(hdr->basic.width == 0 || hdr->basic.height == 0) {
-            _notify_error("错误的录像信息，未记录窗口尺寸！");
-            return;
-        }
-
-        if(hdr->info.dat_file_count == 0) {
-            _notify_error("错误的录像信息，未记录数据文件数量！");
-            return;
-        }
-
-        total_pkg = hdr->info.packages;
-        total_ms = hdr->info.time_ms;
-        file_count = hdr->info.dat_file_count;
 
         emit signal_update_data(dat);
-    }
+        msleep(5);
+}
 
+#if 0
     //======================================
     // 加载录像文件数据并播放
     //======================================
@@ -351,8 +239,7 @@ void ThrPlay::run() {
     }
 
 #endif
-
-    qDebug("play end.");
-    UpdateData* _end = new UpdateData(TYPE_END);
-    emit signal_update_data(_end);
+//    qDebug("play end.");
+//    UpdateData* _end = new UpdateData(TYPE_END);
+//    emit signal_update_data(_end);
 }

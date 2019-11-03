@@ -219,7 +219,7 @@ void Bar::_init_imgages() {
             int h = fm.height();
             if(h < m_res[res_chkbox_normal].height())
                 h = m_res[res_chkbox_normal].height();
-            m_rc_skip = QRect(0, 0, fm.width("无操作则跳过") + CHKBOX_RIGHT_PADDING + m_res[res_chkbox_normal].width(), h);
+            m_rc_skip = QRect(0, 0, fm.width(LOCAL8BIT("无操作则跳过")) + CHKBOX_RIGHT_PADDING + m_res[res_chkbox_normal].width(), h);
         }
 
         int w = m_rc_skip.width();
@@ -254,7 +254,7 @@ void Bar::_init_imgages() {
                     img = &m_res[res_chkbox_normal];
                 }
                 ps.drawPixmap(0, chkbox_top, img->width(), img->height(), *img);
-                ps.drawText(QRect(text_left, text_top, w-text_left, h-text_top), Qt::AlignCenter, "无操作则跳过");
+                ps.drawText(QRect(text_left, text_top, w-text_left, h-text_top), Qt::AlignCenter, LOCAL8BIT("无操作则跳过"));
             }
         }
     }

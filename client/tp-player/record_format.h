@@ -3,6 +3,11 @@
 
 #include <Qt>
 
+#define TS_TPPR_TYPE_UNKNOWN    0x0000
+#define TS_TPPR_TYPE_SSH        0x0001
+#define TS_TPPR_TYPE_RDP        0x0101
+
+
 #define TS_RECORD_TYPE_RDP_POINTER          0x12    // 鼠标坐标位置改变，用于绘制虚拟鼠标
 #define TS_RECORD_TYPE_RDP_IMAGE            0x13    // 服务端返回的图像，用于展示
 #define TS_RECORD_TYPE_RDP_KEYFRAME         0x14    //
