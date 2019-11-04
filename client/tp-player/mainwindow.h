@@ -34,10 +34,8 @@ public:
     void pause();
     void resume();
     void restart();
-    void speed(int s);
-
-//    Downloader* downloader() {return m_dl;}
-//    void reset_downloader() {if(m_dl){delete m_dl;m_dl= nullptr;}}
+    void set_speed(int s);
+    void set_skip(bool s);
 
     // TODO: 将thr_data移动到thr_play线程，由play线程进行管理
     ThrData* get_thr_data() {return m_thr_data;}
@@ -55,13 +53,9 @@ private slots:
     void _do_bar_fade();
     void _do_bar_delay_hide();
 
-//    void _do_download(Downloader*);
-//    void _do_download(DownloadParam*);
-
 private:
     Ui::MainWindow *ui;
 
-    //bool m_shown;
     bool m_show_default;
     bool m_bar_shown;
     QPixmap m_default_bg;
@@ -91,14 +85,6 @@ private:
     bool m_show_message;
     QPixmap m_img_message;
     QRect m_rc_message;
-
-
-//    QNetworkAccessManager m_nam;
-//    Downloader* m_dl;
-
-    // for test
-    TimeUseTest m_time_imgconvert_normal;
-    TimeUseTest m_time_imgconvert_compressed;
 };
 
 #endif // MAINWINDOW_H

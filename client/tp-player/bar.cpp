@@ -423,7 +423,7 @@ void Bar::onMousePress(int x, int y) {
     if(m_speed_selected != speed_sel && speed_sel != speed_count) {
         int old_sel = m_speed_selected;
         m_speed_selected = speed_sel;
-        m_owner->speed(get_speed());
+        m_owner->set_speed(get_speed());
         m_owner->update(m_rc.left()+m_rc_btn_speed[old_sel].left(), m_rc.top()+m_rc_btn_speed[old_sel].top(), m_rc_btn_speed[old_sel].width(), m_rc_btn_speed[old_sel].height());
         m_owner->update(m_rc.left()+m_rc_btn_speed[m_speed_hover].left(), m_rc.top()+m_rc_btn_speed[m_speed_hover].top(), m_rc_btn_speed[m_speed_hover].width(), m_rc_btn_speed[m_speed_hover].height());
         return;

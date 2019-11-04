@@ -21,6 +21,7 @@ public:
     void pause() {m_need_pause = true;}
     void resume() {m_need_pause = false;}
     void speed(int s) {if(s >= 1 && s <= 16) m_speed = s;}
+    void skip(bool s) {m_skip = s;}
 
 private:
     void _notify_message(const QString& msg);
@@ -34,6 +35,7 @@ private:
     bool m_need_stop;
     bool m_need_pause;
     int m_speed;
+    bool m_skip;
 };
 
 #endif // THR_PLAY_H

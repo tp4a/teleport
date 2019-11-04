@@ -137,9 +137,9 @@ void ThrData::_run() {
         return;
 
 
-    UpdateData* dat = new UpdateData(TYPE_HEADER_INFO);
-    dat->alloc_data(sizeof(TS_RECORD_HEADER));
-    memcpy(dat->data_buf(), &m_hdr, sizeof(TS_RECORD_HEADER));
+    UpdateData* dat = new UpdateData(m_hdr);
+//    dat->alloc_data(sizeof(TS_RECORD_HEADER));
+//    memcpy(dat->data_buf(), &m_hdr, sizeof(TS_RECORD_HEADER));
     emit signal_update_data(dat);
 
 
@@ -290,17 +290,33 @@ void ThrData::_run() {
                 qDebug("################## too bad.");
             }
 
-            UpdateData* dat = new UpdateData(TYPE_DATA);
-            dat->alloc_data(sizeof(TS_RECORD_PKG) + pkg.size);
-            memcpy(dat->data_buf(), &pkg, sizeof(TS_RECORD_PKG));
-            read_len = fdata->read(reinterpret_cast<char*>(dat->data_buf()+sizeof(TS_RECORD_PKG)), pkg.size);
-            if(read_len != pkg.size) {
-                delete dat;
+            QByteArray pkg_data = fdata->read(pkg.size);
+            if(pkg_data.size() != pkg.size) {
                 qDebug("invaid tp-rdp-%d.tpd file, read_len=%" PRId64 " (3).", file_idx+1, read_len);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
             file_processed += pkg.size;
+
+            UpdateData* dat = new UpdateData();
+            if(!dat->parse(pkg, pkg_data)) {
+                qDebug("invaid tp-rdp-%d.tpd file (4).", file_idx+1);
+                _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
+                return;
+            }
+
+
+//            UpdateData* dat = new UpdateData(TYPE_DATA);
+//            dat->alloc_data(sizeof(TS_RECORD_PKG) + pkg.size);
+//            memcpy(dat->data_buf(), &pkg, sizeof(TS_RECORD_PKG));
+//            read_len = fdata->read(reinterpret_cast<char*>(dat->data_buf()+sizeof(TS_RECORD_PKG)), pkg.size);
+//            if(read_len != pkg.size) {
+//                delete dat;
+//                qDebug("invaid tp-rdp-%d.tpd file, read_len=%" PRId64 " (3).", file_idx+1, read_len);
+//                _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
+//                return;
+//            }
+//            file_processed += pkg.size;
 
             // 跳过关键帧
             // TODO: 拖动滚动条后，需要显示一次关键帧数据，然后跳过后续关键帧。
@@ -315,9 +331,11 @@ void ThrData::_run() {
             if(dat) {
                 m_locker.lock();
                 m_data.enqueue(dat);
-                qDebug("queue data count: %d", m_data.size());
+//                qDebug("queue data count: %d", m_data.size());
                 m_locker.unlock();
             }
+
+            msleep(1);
 
             // 如果此文件已经处理完毕，则关闭文件，这样下次处理一个新的文件
 //            qDebug("C processed: %" PRId64 ", size: %" PRId64, file_processed, file_size);
@@ -332,7 +350,7 @@ void ThrData::_run() {
                 UpdateData* dat = new UpdateData(TYPE_END);
                 m_locker.lock();
                 m_data.enqueue(dat);
-                qDebug("queue data count: %d", m_data.size());
+//                qDebug("queue data count: %d", m_data.size());
                 m_locker.unlock();
             }
         }
@@ -433,8 +451,10 @@ UpdateData* ThrData::get_data() {
     UpdateData* d = nullptr;
 
     m_locker.lock();
-    if(m_data.size() > 0)
+    if(m_data.size() > 0) {
+//        qDebug("get_data(), left: %d", m_data.size());
         d = m_data.dequeue();
+    }
     m_locker.unlock();
 
     return d;

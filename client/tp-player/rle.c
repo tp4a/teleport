@@ -74,7 +74,7 @@
 
 /* 1 byte bitmap decompress */
 RD_BOOL
-bitmap_decompress1(uint8 * output, int width, int height, uint8 * input, int size)
+bitmap_decompress1(uint8 * output, int width, int height, const uint8 * input, int size)
 {
     uint8 *end = input + size;
     uint8 *prevline = NULL, *line = NULL;
@@ -272,7 +272,7 @@ bitmap_decompress1(uint8 * output, int width, int height, uint8 * input, int siz
 
 /* 2 byte bitmap decompress */
 RD_BOOL
-bitmap_decompress2(uint8 * output, int width, int height, uint8 * input, int size)
+bitmap_decompress2(uint8 * output, int width, int height, const uint8 * input, int size)
 {
     uint8 *end = input + size;
 	uint16 *prevline = NULL, *line = NULL;
@@ -471,7 +471,7 @@ bitmap_decompress2(uint8 * output, int width, int height, uint8 * input, int siz
 
 /* 3 byte bitmap decompress */
 RD_BOOL
-bitmap_decompress3(uint8 * output, int width, int height, uint8 * input, int size)
+bitmap_decompress3(uint8 * output, int width, int height, const uint8 * input, int size)
 {
     uint8 *end = input + size;
     uint8 *prevline = NULL, *line = NULL;
@@ -863,7 +863,7 @@ process_plane(uint8 * in, int width, int height, uint8 * out, int size)
 
 /* 4 byte bitmap decompress */
 RD_BOOL
-bitmap_decompress4(uint8 * output, int width, int height, uint8 * input, int size)
+bitmap_decompress4(uint8 * output, int width, int height, const uint8 * input, int size)
 {
 	int code;
 	int bytes_pro;

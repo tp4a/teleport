@@ -1,6 +1,5 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "rle.h"
 
 #include <QMatrix>
 #include <QDebug>
@@ -9,64 +8,6 @@
 #include <QPaintEvent>
 #include <QMessageBox>
 #include <QDialogButtonBox>
-
-bool rdpimg2QImage(QImage& out, int w, int h, int bitsPerPixel, bool isCompressed, uint8_t* dat, uint32_t len) {
-    switch(bitsPerPixel) {
-    case 15:
-        if(isCompressed) {
-            uint8_t* _dat = (uint8_t*)calloc(1, w*h*2);
-            if(!bitmap_decompress1(_dat, w, h, dat, len)) {
-                free(_dat);
-                return false;
-            }
-            out = QImage(_dat, w, h, QImage::Format_RGB555);
-            free(_dat);
-        }
-        else {
-            out = QImage(dat, w, h, QImage::Format_RGB555).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)) ;
-        }
-        break;
-    case 16:
-        if(isCompressed) {
-
-            uint8_t* _dat = (uint8_t*)calloc(1, w*h*2);
-            if(!bitmap_decompress2(_dat, w, h, dat, len)) {
-                free(_dat);
-                return false;
-            }
-
-            // TODO: 这里需要进一步优化，直接操作QImage的buffer。
-//            QTime t1;
-//            t1.start();
-
-            out = QImage(w, h, QImage::Format_RGB16);
-            for(int y = 0; y < h; y++) {
-                for(int x = 0; x < w; x++) {
-                    uint16 a = ((uint16*)_dat)[y * w + x];
-                    uint8 r = ((a & 0xf800) >> 11) * 255 / 31;
-                    uint8 g = ((a & 0x07e0) >> 5) * 255 / 63;
-                    uint8 b = (a & 0x001f) * 255 / 31;
-                    out.setPixelColor(x, y, QColor(r,g,b));
-                }
-            }
-//            qDebug("parse: %dB, %dms", len, t1.elapsed());
-
-            free(_dat);
-        }
-        else {
-            out = QImage(dat, w, h, QImage::Format_RGB16).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)) ;
-        }
-        break;
-    case 24:
-        qDebug() << "--------NOT support 24";
-        break;
-    case 32:
-        qDebug() << "--------NOT support 32";
-        break;
-    }
-
-    return true;
-}
 
 static inline int min(int a, int b){
     return a < b ? a : b;
@@ -80,7 +21,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    //m_shown = false;
     m_show_default = true;
     m_bar_shown = false;
     m_bar_fade_in = false;
@@ -92,8 +32,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_thr_play = nullptr;
     m_play_state = PLAY_STATE_UNKNOWN;
     m_thr_data = nullptr;
-
-//    m_dl = nullptr;
 
     ui->setupUi(this);
 
@@ -125,7 +63,6 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
 
-//    connect(&m_thr_play, SIGNAL(signal_update_data(update_data*)), this, SLOT(_do_update_data(update_data*)));
     connect(&m_timer_first_run, SIGNAL(timeout()), this, SLOT(_do_first_run()));
     connect(&m_timer_bar_fade, SIGNAL(timeout()), this, SLOT(_do_bar_fade()));
     connect(&m_timer_bar_delay_hide, SIGNAL(timeout()), this, SLOT(_do_bar_delay_hide()));
@@ -194,9 +131,14 @@ void MainWindow::_start_play_thread() {
     m_thr_play->start();
 }
 
-void MainWindow::speed(int s) {
+void MainWindow::set_speed(int s) {
     if(m_thr_play)
         m_thr_play->speed(s);
+}
+
+void MainWindow::set_skip(bool s) {
+    if(m_thr_play)
+        m_thr_play->skip(s);
 }
 
 void MainWindow::paintEvent(QPaintEvent *e)
@@ -252,12 +194,6 @@ void MainWindow::paintEvent(QPaintEvent *e)
         int to_y = rc.top() + from_y;
         painter.drawPixmap(to_x, to_y, m_img_message, from_x, from_y, w, h);
     }
-
-//    if(!m_shown) {
-//        m_shown = true;
-//        //m_thr_play.start();
-//        _start_play_thread();
-//    }
 }
 
 void MainWindow::pause() {
@@ -271,7 +207,6 @@ void MainWindow::resume() {
     if(m_play_state == PLAY_STATE_PAUSE)
         m_thr_play->resume();
     else if(m_play_state == PLAY_STATE_STOP)
-        //m_thr_play->start();
         _start_play_thread();
 
     m_play_state = PLAY_STATE_RUNNING;
@@ -283,53 +218,28 @@ void MainWindow::_do_update_data(UpdateData* dat) {
 
     UpdateDataHelper data_helper(dat);
 
-    if(dat->data_type() == TYPE_DATA) {
+    if(dat->data_type() == TYPE_POINTER) {
+        TS_RECORD_RDP_POINTER pt;
+        memcpy(&pt, &m_pt, sizeof(TS_RECORD_RDP_POINTER));
 
-        if(dat->data_len() <= sizeof(TS_RECORD_PKG)) {
-            qDebug() << "invalid record package(1).";
+        // 更新虚拟鼠标信息，这样下一次绘制界面时就会在新的位置绘制出虚拟鼠标
+        memcpy(&m_pt, dat->get_pointer(), sizeof(TS_RECORD_RDP_POINTER));
+        update(m_pt.x - m_pt_normal.width()/2, m_pt.y - m_pt_normal.width()/2, m_pt_normal.width(), m_pt_normal.height());
+
+        update(pt.x - m_pt_normal.width()/2, pt.y - m_pt_normal.width()/2, m_pt_normal.width(), m_pt_normal.height());
+
+        return;
+    }
+    else if(dat->data_type() == TYPE_IMAGE) {
+        QImage* img_update = nullptr;
+        int x, y, w, h;
+        if(!dat->get_image(&img_update, x, y, w, h))
             return;
-        }
 
-        TS_RECORD_PKG* pkg = (TS_RECORD_PKG*)dat->data_buf();
+        QPainter pp(&m_canvas);
+        pp.drawImage(x, y, *img_update, 0, 0, w, h, Qt::AutoColor);
 
-        if(pkg->type == TS_RECORD_TYPE_RDP_POINTER) {
-            if(dat->data_len() != sizeof(TS_RECORD_PKG) + sizeof(TS_RECORD_RDP_POINTER)) {
-                qDebug() << "invalid record package(2).";
-                return;
-            }
-
-            TS_RECORD_RDP_POINTER pt;
-            memcpy(&pt, &m_pt, sizeof(TS_RECORD_RDP_POINTER));
-
-            // 更新虚拟鼠标信息，这样下一次绘制界面时就会在新的位置绘制出虚拟鼠标
-            memcpy(&m_pt, dat->data_buf() + sizeof(TS_RECORD_PKG), sizeof(TS_RECORD_RDP_POINTER));
-            update(m_pt.x - m_pt_normal.width()/2, m_pt.y - m_pt_normal.width()/2, m_pt_normal.width(), m_pt_normal.height());
-
-            update(pt.x - m_pt_normal.width()/2, pt.y - m_pt_normal.width()/2, m_pt_normal.width(), m_pt_normal.height());
-        }
-        else if(pkg->type == TS_RECORD_TYPE_RDP_IMAGE) {
-            if(dat->data_len() <= sizeof(TS_RECORD_PKG) + sizeof(TS_RECORD_RDP_IMAGE_INFO)) {
-                qDebug() << "invalid record package(3).";
-                return;
-            }
-
-            TS_RECORD_RDP_IMAGE_INFO* info = (TS_RECORD_RDP_IMAGE_INFO*)(dat->data_buf() + sizeof(TS_RECORD_PKG));
-            uint8_t* img_dat = dat->data_buf() + sizeof(TS_RECORD_PKG) + sizeof(TS_RECORD_RDP_IMAGE_INFO);
-            uint32_t img_len = dat->data_len() - sizeof(TS_RECORD_PKG) - sizeof(TS_RECORD_RDP_IMAGE_INFO);
-
-            QImage img_update;
-            rdpimg2QImage(img_update, info->width, info->height, info->bitsPerPixel, (info->format == TS_RDP_IMG_BMP) ? true : false, img_dat, img_len);
-
-            int x = info->destLeft;
-            int y = info->destTop;
-            int w = info->destRight - info->destLeft + 1;
-            int h = info->destBottom - info->destTop + 1;
-
-            QPainter pp(&m_canvas);
-            pp.drawImage(x, y, img_update, 0, 0, w, h, Qt::AutoColor);
-
-            update(x, y, w, h);
-        }
+        update(x, y, w, h);
 
         return;
     }
@@ -394,11 +304,10 @@ void MainWindow::_do_update_data(UpdateData* dat) {
 
     // 这是播放开始时收到的第一个数据包
     else if(dat->data_type() == TYPE_HEADER_INFO) {
-        if(dat->data_len() != sizeof(TS_RECORD_HEADER)) {
-            qDebug() << "invalid record header.";
+        TS_RECORD_HEADER* hdr = dat->get_header();
+        if(hdr == nullptr)
             return;
-        }
-        memcpy(&m_rec_hdr, dat->data_buf(), sizeof(TS_RECORD_HEADER));
+        memcpy(&m_rec_hdr, hdr, sizeof(TS_RECORD_HEADER));
 
         qDebug() << "resize (" << m_rec_hdr.basic.width << "," << m_rec_hdr.basic.height << ")";
 
@@ -489,18 +398,6 @@ void MainWindow::_do_bar_fade() {
 
     update(m_bar.rc());
 }
-
-//void MainWindow::_do_download(DownloadParam* param) {
-//    qDebug("MainWindow::_do_download(). %s %s %s", param->url.toStdString().c_str(), param->sid.toStdString().c_str(), param->fname.toStdString().c_str());
-
-//    if(m_dl) {
-//        delete m_dl;
-//        m_dl = nullptr;
-//    }
-
-//    m_dl = new Downloader();
-//    m_dl->run(&m_nam, param->url, param->sid, param->fname);
-//}
 
 void MainWindow::mouseMoveEvent(QMouseEvent *e) {
     if(!m_show_default) {
