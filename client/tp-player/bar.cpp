@@ -470,6 +470,8 @@ void Bar::onMousePress(int x, int y, Qt::MouseButton button) {
         // TODO: 暂停播放，按比例计算出点击位置占整个录像时长的百分比，定位到此位置准备播放。
         // TODO: 如果点击的位置是进度条指示标志，则仅暂停播放
         m_owner->pause();
+        m_playing = false;
+        m_owner->update(m_rc.left()+m_rc_btn_play.left(), m_rc.top()+m_rc_btn_play.top(), m_rc_btn_play.width(), m_rc_btn_play.height());
     }
 }
 
@@ -481,6 +483,8 @@ void Bar::onMouseRelease(int x, int y, Qt::MouseButton button) {
         m_progress_pressed = false;
         qDebug("resume at %dms.", m_resume_ms);
         m_owner->resume(true, m_resume_ms);
+        m_playing = true;
+        m_owner->update(m_rc.left()+m_rc_btn_play.left(), m_rc.top()+m_rc_btn_play.top(), m_rc_btn_play.width(), m_rc_btn_play.height());
     }
 }
 

@@ -109,7 +109,10 @@ void ThrPlay::run() {
         uint32_t this_time_ms = dat->get_time();
         uint32_t this_pass_ms = last_time_ms;
         if(this_time_ms > 0) {
-            need_wait_ms = this_time_ms - last_time_ms;
+            if(this_time_ms >= last_time_ms)
+                need_wait_ms = this_time_ms - last_time_ms;
+            else
+                need_wait_ms = 0;
 
             if(need_wait_ms > 0) {
                 uint32_t time_wait = 0;
@@ -177,8 +180,8 @@ void ThrPlay::run() {
 //                }
             }
 
-            last_time_ms = this_time_ms;
         }
+        last_time_ms = this_time_ms;
 
         // 3. 将数据包发送给主UI界面进行显示
         if(dat->data_type() == TYPE_END) {
