@@ -84,7 +84,8 @@ public:
     QRect rc(){return m_rc;}
 
     void onMouseMove(int x, int y);
-    void onMousePress(int x, int y);
+    void onMousePress(int x, int y, Qt::MouseButton button);
+    void onMouseRelease(int x, int y, Qt::MouseButton button);
 
 private:
     void _init_imgages();
@@ -94,7 +95,7 @@ private:
     MainWindow* m_owner;
 
     uint32_t m_total_ms;    // 录像的总时长
-    uint32_t m_passed_ms;   // 已经播放了的时长
+    uint32_t m_played_ms;   // 已经播放了的时长
     int m_percent;       // 已经播放了的百分比（0~100）
     int m_percent_last_draw;
     QString m_str_total_time;
@@ -139,6 +140,10 @@ private:
     int m_speed_hover;    // speed__max=no-hover
     bool m_skip_selected;
     bool m_skip_hover;
+    bool m_progress_hover;
+    bool m_progress_pressed;
+
+    uint32_t m_resume_ms;   // after drag progress-pointer, resume play from here.
 };
 
 #endif // BAR_H

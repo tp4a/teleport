@@ -19,7 +19,7 @@ public:
     virtual void run();
     void stop();
     void pause() {m_need_pause = true;}
-    void resume() {m_need_pause = false;}
+    void resume(bool relocate, uint32_t start_ms);
     void speed(int s) {if(s >= 1 && s <= 16) m_speed = s;}
     void skip(bool s) {m_skip = s;}
 
@@ -36,6 +36,8 @@ private:
     bool m_need_pause;
     int m_speed;
     bool m_skip;
+    bool m_first_run;
+    uint32_t m_start_ms;
 };
 
 #endif // THR_PLAY_H

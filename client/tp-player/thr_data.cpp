@@ -23,7 +23,12 @@ ThrData::ThrData(MainWindow* mainwin, const QString& res) {
     m_res = res;
     m_need_download = false;
     m_need_stop = false;
-//    m_dl = nullptr;
+    m_need_restart = false;
+    m_wait_restart = false;
+    m_need_show_kf = false;
+
+    m_file_idx = 0;
+    m_offset = 0;
 
 #ifdef __APPLE__
     m_data_path_base = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
@@ -138,54 +143,12 @@ void ThrData::_run() {
 
 
     UpdateData* dat = new UpdateData(m_hdr);
-//    dat->alloc_data(sizeof(TS_RECORD_HEADER));
-//    memcpy(dat->data_buf(), &m_hdr, sizeof(TS_RECORD_HEADER));
     emit signal_update_data(dat);
 
 
-    /*
-    // fake-code:
-    file_index = 0;
-
-    for(;;) {
-        if(file_index >= file_count) {
-            msleep(500);
-            continue;
-        }
-
-
-        if(queue.size < 500) {
-            need_pkg = 1000 - queue.size;
-
-            for(i = 0; i < need_pkg; i++) {
-                if(f.not_open) {
-                    f.open(file_index);
-                }
-
-                pkg = read_pkg()
-                if(f.to_end) {
-                    f.close();
-                    file_index += 1;
-                    if(file_index >= file_count)
-                        break;
-                }
-
-                queue.add(pkg)
-            }
-
-            if(file_index >= file_count)
-                break;
-        }
-        else {
-            msleep(100);
-        }
-    }
-
-    */
-
     QFile* fdata = nullptr;
-    uint32_t file_idx = 0;
-    uint32_t start_offset = 0;
+    //uint32_t file_idx = 0;
+    //uint32_t start_offset = 0;
     qint64 file_size = 0;
     qint64 file_processed = 0;
     qint64 read_len = 0;
@@ -196,8 +159,20 @@ void ThrData::_run() {
         if(m_need_stop)
             return;
 
+        if(m_need_restart) {
+            if(fdata) {
+                fdata->close();
+                delete fdata;
+                fdata = nullptr;
+            }
+
+            m_wait_restart = true;
+            msleep(50);
+            continue;
+        }
+
         // 如果所有文件都已经处理完了，则等待（可能用户会拖动滚动条，或者重新播放）
-        if(file_idx >= m_hdr.info.dat_file_count) {
+        if(m_file_idx >= m_hdr.info.dat_file_count) {
             msleep(500);
             continue;
         }
@@ -222,10 +197,12 @@ void ThrData::_run() {
         for(int i = 0; i < pkg_need_add; ++i) {
             if(m_need_stop)
                 return;
+            if(m_need_restart)
+                break;
 
             // 如果数据文件尚未打开，则打开它
             if(fdata == nullptr) {
-                str_fidx.sprintf("%d", file_idx+1);
+                str_fidx.sprintf("%d", m_file_idx+1);
                 QString tpd_fname = QString("%1/tp-rdp-%2.tpd").arg(m_data_path, str_fidx);
                 tpd_fname = QDir::toNativeSeparators(tpd_fname);
 
@@ -236,13 +213,13 @@ void ThrData::_run() {
                         for(;;) {
                             if(m_need_stop)
                                 return;
-                            if(!m_thr_download.is_running() || m_thr_download.is_tpd_downloaded(file_idx))
+                            if(!m_thr_download.is_running() || m_thr_download.is_tpd_downloaded(m_file_idx))
                                 break;
                             msleep(100);
                         }
 
                         // 下载失败了
-                        if(!m_thr_download.is_tpd_downloaded(file_idx))
+                        if(!m_thr_download.is_tpd_downloaded(m_file_idx))
                             return;
                     }
                 }
@@ -256,15 +233,22 @@ void ThrData::_run() {
 
                 file_size = fdata->size();
                 file_processed = 0;
-                qDebug("Open file, processed: %" PRId64 ", size: %" PRId64, file_processed, file_size);
+                qDebug("Open file tp-rdp-%d.tpd, processed: %" PRId64 ", size: %" PRId64, m_file_idx+1, file_processed, file_size);
             }
 //            qDebug("B processed: %" PRId64 ", size: %" PRId64, file_processed, file_size);
+
+            // 如果指定了起始偏移，则跳过这部分数据
+            if(m_offset > 0) {
+                fdata->seek(m_offset);
+                file_processed = m_offset;
+                m_offset = 0;
+            }
 
             //----------------------------------
             // 读取一个数据包
             //----------------------------------
             if(file_size - file_processed < sizeof(TS_RECORD_PKG)) {
-                qDebug("invaid tp-rdp-%d.tpd file, filesize=%" PRId64 ", processed=%" PRId64 ", need=%d.", file_idx+1, file_size, file_processed, sizeof(TS_RECORD_PKG));
+                qDebug("invaid tp-rdp-%d.tpd file, filesize=%" PRId64 ", processed=%" PRId64 ", need=%d.", m_file_idx+1, file_size, file_processed, sizeof(TS_RECORD_PKG));
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
@@ -274,14 +258,14 @@ void ThrData::_run() {
     //        if(read_len == 0)
     //            break;
             if(read_len != sizeof(TS_RECORD_PKG)) {
-                qDebug("invaid tp-rdp-%d.tpd file, read_len=%" PRId64 " (1).", file_idx+1, read_len);
+                qDebug("invaid tp-rdp-%d.tpd file, read_len=%" PRId64 " (1).", m_file_idx+1, read_len);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
             file_processed += sizeof(TS_RECORD_PKG);
 
             if(file_size - file_processed < pkg.size) {
-                qDebug("invaid tp-rdp-%d.tpd file (2).", file_idx+1);
+                qDebug("invaid tp-rdp-%d.tpd file (2).", m_file_idx+1);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
@@ -292,7 +276,7 @@ void ThrData::_run() {
 
             QByteArray pkg_data = fdata->read(pkg.size);
             if(pkg_data.size() != pkg.size) {
-                qDebug("invaid tp-rdp-%d.tpd file, read_len=%" PRId64 " (3).", file_idx+1, read_len);
+                qDebug("invaid tp-rdp-%d.tpd file, read_len=%" PRId64 " (3).", m_file_idx+1, read_len);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
@@ -300,30 +284,23 @@ void ThrData::_run() {
 
             UpdateData* dat = new UpdateData();
             if(!dat->parse(pkg, pkg_data)) {
-                qDebug("invaid tp-rdp-%d.tpd file (4).", file_idx+1);
+                qDebug("invaid tp-rdp-%d.tpd file (4).", m_file_idx+1);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
 
-
-//            UpdateData* dat = new UpdateData(TYPE_DATA);
-//            dat->alloc_data(sizeof(TS_RECORD_PKG) + pkg.size);
-//            memcpy(dat->data_buf(), &pkg, sizeof(TS_RECORD_PKG));
-//            read_len = fdata->read(reinterpret_cast<char*>(dat->data_buf()+sizeof(TS_RECORD_PKG)), pkg.size);
-//            if(read_len != pkg.size) {
-//                delete dat;
-//                qDebug("invaid tp-rdp-%d.tpd file, read_len=%" PRId64 " (3).", file_idx+1, read_len);
-//                _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
-//                return;
-//            }
-//            file_processed += pkg.size;
-
-            // 跳过关键帧
-            // TODO: 拖动滚动条后，需要显示一次关键帧数据，然后跳过后续关键帧。
+            // 拖动滚动条后，需要显示一次关键帧数据，然后跳过后续关键帧。
             if(pkg.type == TS_RECORD_TYPE_RDP_KEYFRAME) {
                 qDebug("----key frame: %ld, processed=%" PRId64 ", pkg.size=%d", pkg.time_ms, file_processed, pkg.size);
-                delete dat;
-                dat = nullptr;
+                if(m_need_show_kf) {
+                    m_need_show_kf = false;
+                    qDebug("++ show keyframe.");
+                }
+                else {
+                    qDebug("-- skip keyframe.");
+                    delete dat;
+                    dat = nullptr;
+                }
             }
 
 
@@ -331,30 +308,73 @@ void ThrData::_run() {
             if(dat) {
                 m_locker.lock();
                 m_data.enqueue(dat);
-//                qDebug("queue data count: %d", m_data.size());
                 m_locker.unlock();
             }
 
+            // 让线程调度器让播放线程有机会执行
             msleep(1);
 
             // 如果此文件已经处理完毕，则关闭文件，这样下次处理一个新的文件
-//            qDebug("C processed: %" PRId64 ", size: %" PRId64, file_processed, file_size);
             if(file_processed >= file_size) {
                 fdata->close();
                 delete fdata;
                 fdata = nullptr;
-                file_idx++;
+                m_file_idx++;
             }
 
-            if(file_idx >= m_hdr.info.dat_file_count) {
+            if(m_file_idx >= m_hdr.info.dat_file_count) {
                 UpdateData* dat = new UpdateData(TYPE_END);
                 m_locker.lock();
                 m_data.enqueue(dat);
-//                qDebug("queue data count: %d", m_data.size());
                 m_locker.unlock();
+                break;
             }
         }
     }
+}
+
+void ThrData::restart(uint32_t start_ms) {
+    // 让处理线程处理完当前循环，然后等待
+    m_need_restart = true;
+
+    // 确保处理线程已经处理完当前循环
+    for(;;) {
+        msleep(50);
+        if(m_need_stop)
+            return;
+        if(m_wait_restart)
+            break;
+    }
+
+    // 清空待播放队列
+    _clear_data();
+
+    if(start_ms == 0) {
+        m_offset = 0;
+        m_file_idx = 0;
+        m_need_show_kf = false;
+    }
+    else {
+        // 找到最接近 start_ms 但小于它的关键帧
+        size_t i = 0;
+        for(i = 0; i < m_kf.size(); ++i) {
+            if(m_kf[i].time_ms > start_ms)
+                break;
+        }
+        if(i > 0)
+            i--;
+
+        // 指定要播放的数据的开始位置
+        m_offset = m_kf[i].offset;
+        m_file_idx = m_kf[i].file_index;
+        m_need_show_kf = true;
+    }
+
+    qDebug("RESTART: offset=%d, file_idx=%d", m_offset, m_file_idx);
+
+    // 让处理线程继续
+    m_wait_restart = false;
+    m_need_restart = false;
 }
 
 bool ThrData::_load_header() {

@@ -54,6 +54,7 @@ public:
     virtual void run();
     void stop();
 
+    void restart(uint32_t start_ms);    // 重新从指定时间开始播放
 
     bool have_more_data();
 
@@ -94,6 +95,12 @@ private:
 
     TS_RECORD_HEADER m_hdr;
     KeyFrames m_kf;
+
+    bool m_need_restart;
+    bool m_wait_restart;
+    bool m_need_show_kf;
+    uint32_t m_file_idx;
+    uint32_t m_offset;
 };
 
 #endif // THR_DATA_H

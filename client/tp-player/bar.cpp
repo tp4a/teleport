@@ -86,6 +86,10 @@ Bar::Bar() {
     m_speed_hover = speed_count;    // speed_count=no-hover
     m_skip_selected = false;
     m_skip_hover = false;
+    m_progress_hover = false;
+    m_progress_pressed = false;
+
+    m_resume_ms = 0;
 }
 
 Bar::~Bar() {
@@ -138,7 +142,7 @@ void Bar::start(uint32_t total_ms, int width) {
 }
 
 void Bar::end() {
-    if(m_passed_ms != m_total_ms)
+    if(m_played_ms != m_total_ms)
         update_passed_time(m_total_ms);
 
     m_playing = false;
@@ -342,13 +346,14 @@ void Bar::update_passed_time(uint32_t ms) {
     }
 
     int percent = 0;
-    if(ms > m_total_ms) {
+    if(ms >= m_total_ms) {
         percent = 100;
-        m_passed_ms = m_total_ms;
+        m_played_ms = m_total_ms;
     }
     else {
-        m_passed_ms = ms;
-        percent = (int)(((double)m_passed_ms / (double)m_total_ms) * 100);
+        m_played_ms = ms;
+        //percent = (int)(((double)m_played_ms / (double)m_total_ms) * 100);
+        percent = m_played_ms * 100 / m_total_ms;
     }
 
     if(percent != m_percent) {
@@ -360,6 +365,27 @@ void Bar::update_passed_time(uint32_t ms) {
 void Bar::onMouseMove(int x, int y) {
     // 映射鼠标坐标点到本浮动窗内部的相对位置
     QPoint pt(x-m_rc.left(), y-m_rc.top());
+
+    if(m_progress_pressed) {
+        // 重新设置进度条指示器位置
+        int percent = 0;
+
+        if(pt.x() < m_rc_progress.left()) {
+            percent = 0;
+            m_resume_ms = 0;
+        }
+        else if(pt.x() > m_rc_progress.right()) {
+            percent = 100;
+            m_resume_ms = m_total_ms;
+        }
+        else {
+            percent = (pt.x() + m_img_progress_pointer[widget_normal].width()/2 - m_rc_progress.left()) * 100 / m_rc_progress.width();
+            m_resume_ms = m_total_ms * percent / 100;
+        }
+        update_passed_time(m_resume_ms);
+        return;
+    }
+
 
     bool play_hover = m_rc_btn_play.contains(pt);
     if(play_hover != m_play_hover) {
@@ -393,11 +419,13 @@ void Bar::onMouseMove(int x, int y) {
     }
     if(skip_hover)
         return;
-
-    // TODO: more hover detect.
 }
 
-void Bar::onMousePress(int x, int y) {
+void Bar::onMousePress(int x, int y, Qt::MouseButton button) {
+    // 我们只关心左键按下
+    if(button != Qt::LeftButton)
+        return;
+
     // 映射鼠标坐标点到本浮动窗内部的相对位置
     QPoint pt(x-m_rc.left(), y-m_rc.top());
 
@@ -405,7 +433,7 @@ void Bar::onMousePress(int x, int y) {
         if(m_playing)
             m_owner->pause();
         else
-            m_owner->resume();
+            m_owner->resume(false, 0);
 
         m_playing = !m_playing;
         m_owner->update(m_rc.left()+m_rc_btn_play.left(), m_rc.top()+m_rc_btn_play.top(), m_rc_btn_play.width(), m_rc_btn_play.height());
@@ -431,8 +459,28 @@ void Bar::onMousePress(int x, int y) {
 
     if(m_rc_skip.contains(pt)) {
         m_skip_selected = !m_skip_selected;
+        m_owner->set_skip(m_skip_selected);
         m_owner->update(m_rc.left()+m_rc_skip.left(), m_rc.top()+m_rc_skip.top(), m_rc_skip.width(), m_rc_skip.height());
         return;
+    }
+
+    //
+    if(m_rc_progress.contains(pt)) {
+        m_progress_pressed = true;
+        // TODO: 暂停播放，按比例计算出点击位置占整个录像时长的百分比，定位到此位置准备播放。
+        // TODO: 如果点击的位置是进度条指示标志，则仅暂停播放
+        m_owner->pause();
+    }
+}
+
+void Bar::onMouseRelease(int x, int y, Qt::MouseButton button) {
+    // 我们只关心左键释放
+    if(button != Qt::LeftButton)
+        return;
+    if(m_progress_pressed) {
+        m_progress_pressed = false;
+        qDebug("resume at %dms.", m_resume_ms);
+        m_owner->resume(true, m_resume_ms);
     }
 }
 

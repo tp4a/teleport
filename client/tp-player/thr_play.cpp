@@ -25,8 +25,7 @@ ThrPlay::ThrPlay(MainWindow* mainwnd) {
     m_need_pause = false;
     m_speed = 1;
     m_skip = false;
-//    m_res = res;
-//    m_thr_data = nullptr;
+    m_start_ms = 0;
 }
 
 ThrPlay::~ThrPlay() {
@@ -64,10 +63,18 @@ void ThrPlay::_notify_error(const QString& msg) {
     emit signal_update_data(_msg);
 }
 
+void ThrPlay::resume(bool relocate, uint32_t start_ms) {
+    if(relocate) {
+        m_start_ms = start_ms;
+        m_first_run = true;
+    }
+    m_need_pause = false;
+}
+
 void ThrPlay::run() {
 
     ThrData* thr_data = m_mainwnd->get_thr_data();
-    bool first_run = true;
+    m_first_run = true;
     uint32_t last_time_ms = 0;
     uint32_t last_pass_ms = 0;
 
@@ -83,9 +90,18 @@ void ThrPlay::run() {
             continue;
         }
 
-        if(first_run) {
-            first_run = false;
+        if(m_first_run) {
+            m_first_run = false;
            _notify_message("");
+        }
+
+        if(m_start_ms > 0) {
+            if(dat->get_time() < m_start_ms) {
+                emit signal_update_data(dat);
+                continue;
+            }
+            last_time_ms = m_start_ms;
+            m_start_ms = 0;
         }
 
         // 2. 根据数据包的信息，等待到播放时间点
@@ -119,6 +135,14 @@ void ThrPlay::run() {
                     if(m_need_stop)
                         break;
 
+                    if(m_start_ms > 0) {
+//                        if(dat) {
+//                            delete dat;
+//                            dat = nullptr;
+//                        }
+                        break;
+                    }
+
                     time_wait *= m_speed;
 
                     // 如果已经在等待长时间无操作区间内，用户设置了跳过无操作区间，则将超过0.5秒的等待时间压缩至0.5秒。
@@ -143,6 +167,14 @@ void ThrPlay::run() {
 
                 if(m_need_stop)
                     break;
+
+//                if(m_start_ms > 0) {
+//                    if(dat) {
+//                        delete dat;
+//                        dat = nullptr;
+//                    }
+//                    break;
+//                }
             }
 
             last_time_ms = this_time_ms;

@@ -110,26 +110,31 @@ void MainWindow::_do_first_run() {
 //    connect(m_thr_data, SIGNAL(signal_download(DownloadParam*)), this, SLOT(_do_download(DownloadParam*)));
     m_thr_data->start();
 
-    _start_play_thread();
-}
-
-void MainWindow::_start_play_thread() {
-    if(m_thr_play) {
-        m_thr_play->stop();
-        //m_thr_play->wait();
-
-        disconnect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
-
-        delete m_thr_play;
-        m_thr_play = nullptr;
-    }
-
+    //_start_play_thread();
     m_thr_play = new ThrPlay(this);
     connect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
 
     m_thr_play->speed(m_bar.get_speed());
     m_thr_play->start();
 }
+
+//void MainWindow::_start_play_thread() {
+//    if(m_thr_play) {
+//        m_thr_play->stop();
+//        //m_thr_play->wait();
+
+//        disconnect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
+
+//        delete m_thr_play;
+//        m_thr_play = nullptr;
+//    }
+
+//    m_thr_play = new ThrPlay(this);
+//    connect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
+
+//    m_thr_play->speed(m_bar.get_speed());
+//    m_thr_play->start();
+//}
 
 void MainWindow::set_speed(int s) {
     if(m_thr_play)
@@ -203,11 +208,17 @@ void MainWindow::pause() {
     m_play_state = PLAY_STATE_PAUSE;
 }
 
-void MainWindow::resume() {
-    if(m_play_state == PLAY_STATE_PAUSE)
-        m_thr_play->resume();
-    else if(m_play_state == PLAY_STATE_STOP)
-        _start_play_thread();
+void MainWindow::resume(bool relocate, uint32_t ms) {
+    if(m_play_state == PLAY_STATE_PAUSE) {
+        if(relocate)
+            m_thr_data->restart(ms);
+        m_thr_play->resume(relocate, ms);
+    }
+    else if(m_play_state == PLAY_STATE_STOP) {
+//        _start_play_thread();
+        m_thr_data->restart(0);
+        m_thr_play->resume(true, 0);
+    }
 
     m_play_state = PLAY_STATE_RUNNING;
 }
@@ -432,12 +443,22 @@ void MainWindow::mouseMoveEvent(QMouseEvent *e) {
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *e) {
-//    QApplication::instance()->exit(0);
-//    return;
     if(!m_show_default) {
         QRect rc = m_bar.rc();
         if(rc.contains(e->pos())) {
-            m_bar.onMousePress(e->x(), e->y());
+            m_bar.onMousePress(e->x(), e->y(), e->button());
         }
     }
 }
+
+void MainWindow::mouseReleaseEvent(QMouseEvent *e) {
+    qDebug("mouse release.");
+//    if(!m_show_default) {
+//        QRect rc = m_bar.rc();
+//        if(rc.contains(e->pos())) {
+//            m_bar.onMouseRelease(e->x(), e->y(), e->button());
+//        }
+//    }
+    m_bar.onMouseRelease(e->x(), e->y(), e->button());
+}
+

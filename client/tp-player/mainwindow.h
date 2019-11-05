@@ -32,7 +32,7 @@ public:
     void set_resource(const QString& res);
 
     void pause();
-    void resume();
+    void resume(bool relocate, uint32_t ms);
     void restart();
     void set_speed(int s);
     void set_skip(bool s);
@@ -44,8 +44,9 @@ private:
     void paintEvent(QPaintEvent *e);
     void mouseMoveEvent(QMouseEvent *e);
     void mousePressEvent(QMouseEvent *e);
+    void mouseReleaseEvent(QMouseEvent *e);
 
-    void _start_play_thread();
+//    void _start_play_thread();
 
 private slots:
     void _do_first_run(); // 默认界面加载完成后，开始播放操作（可能会进行数据下载）
