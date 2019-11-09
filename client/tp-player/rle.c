@@ -76,7 +76,7 @@
 RD_BOOL
 bitmap_decompress1(uint8 * output, int width, int height, const uint8 * input, int size)
 {
-    uint8 *end = input + size;
+    const uint8 *end = input + size;
     uint8 *prevline = NULL, *line = NULL;
 	int opcode, count, offset, isfillormix, x = width;
 	int lastopcode = -1, insertmix = False, bicolour = False;
@@ -274,7 +274,7 @@ bitmap_decompress1(uint8 * output, int width, int height, const uint8 * input, i
 RD_BOOL
 bitmap_decompress2(uint8 * output, int width, int height, const uint8 * input, int size)
 {
-    uint8 *end = input + size;
+    const uint8 *end = input + size;
 	uint16 *prevline = NULL, *line = NULL;
 	int opcode, count, offset, isfillormix, x = width;
 	int lastopcode = -1, insertmix = False, bicolour = False;

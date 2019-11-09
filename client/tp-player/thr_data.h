@@ -101,6 +101,9 @@ private:
     bool m_need_show_kf;
     uint32_t m_file_idx;
     uint32_t m_offset;
+
+    bool m_xxx;
+    int m_restart_kf_idx;
 };
 
 #endif // THR_DATA_H

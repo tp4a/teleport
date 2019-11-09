@@ -216,8 +216,8 @@ void MainWindow::resume(bool relocate, uint32_t ms) {
     }
     else if(m_play_state == PLAY_STATE_STOP) {
 //        _start_play_thread();
-        m_thr_data->restart(0);
-        m_thr_play->resume(true, 0);
+        m_thr_data->restart(ms);
+        m_thr_play->resume(true, ms);
     }
 
     m_play_state = PLAY_STATE_RUNNING;
@@ -246,6 +246,11 @@ void MainWindow::_do_update_data(UpdateData* dat) {
         int x, y, w, h;
         if(!dat->get_image(&img_update, x, y, w, h))
             return;
+
+        static int img_idx = 0;
+        img_idx++;
+        qDebug("draw img: %d (%d,%d)-(%d,%d)", img_idx, x, y, w, h);
+
 
         QPainter pp(&m_canvas);
         pp.drawImage(x, y, *img_update, 0, 0, w, h, Qt::AutoColor);

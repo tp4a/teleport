@@ -13,6 +13,78 @@
 #include "record_format.h"
 #include "mainwindow.h"
 
+#include "rle.h"
+
+// for test only
+int g_kf_idx = 0;
+QByteArray g_kfdata[10];
+QByteArray* g_kf = nullptr;
+
+int g_img_idx = 0;
+
+void _update_key_frame(QByteArray* kf, uint16_t screen_w, uint16_t screen_h, uint16_t destLeft, uint16_t destTop, uint16_t w, uint16_t h, uint16_t wr, uint16_t hr, uint16_t bitsPerPixel, bool isCompressed, const uint8_t* dat, size_t len) {
+    switch(bitsPerPixel) {
+//    case 15:
+//        if(isCompressed) {
+//            uint8_t* _dat = reinterpret_cast<uint8_t*>(calloc(1, w*h*2));
+//            if(!bitmap_decompress1(_dat, w, h, dat, len)) {
+//                free(_dat);
+//                qDebug("bitmap_decompress1() failed.");
+//                return;
+//            }
+//            out = new QImage(_dat, w, h, QImage::Format_RGB555);
+//            free(_dat);
+//        }
+//        else {
+//            out = new QImage(QImage(dat, w, h, QImage::Format_RGB555).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)));
+//        }
+//        return out;
+
+    case 16:
+    {
+        g_img_idx++;
+        uint8_t* kfd = reinterpret_cast<uint8_t*>(kf->data());
+        if(isCompressed) {
+            uint8_t* _dat = reinterpret_cast<uint8_t*>(calloc(1, w*h*2));
+            if(!bitmap_decompress2(_dat, w, h, dat, static_cast<int>(len))) {
+                free(_dat);
+                qDebug() << "------------------DECOMPRESS2 failed.";
+                return;
+            }
+
+//            out = new QImage(w, h, QImage::Format_RGB16);
+
+            qDebug("c: %ld, img: %d (%d,%d)-(%d,%d) (%d,%d)", ((destTop+hr-1)*screen_w)+destLeft+wr-1, g_img_idx, destLeft, destTop, w, h, wr, hr);
+            for(int y = 0; y < hr; y++) {
+//                if((destTop+y)*screen_w+destLeft > 6)
+//                    memcpy(kfd+((destTop+y)*screen_w+destLeft - 6)*2, _dat+((y*w)*2), wr*2);
+//                else
+                    memcpy(kfd+((destTop+y)*screen_w+destLeft)*2, _dat+((y*w)*2), wr*2);
+            }
+
+            free(_dat);
+            return;
+        }
+        else {
+//            out = new QImage(QImage(dat, w, h, QImage::Format_RGB16).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)));
+
+            qDebug("nc: %ld, img: %d (%d,%d)-(%d,%d) (%d,%d)", ((destTop+hr-1)*screen_w)+destLeft+wr-1, g_img_idx, destLeft, destTop, w, h, wr, hr);
+            for(int y = 0; y < hr; y++) {
+                memcpy(kfd+((destTop+h-y)*screen_w+destLeft)*2, dat+(y*w*2), wr*2);
+            }
+        }
+
+        return;
+    }
+
+    case 24:
+    case 32:
+    default:
+        qDebug() << "------------------NOT support UNKNOWN bitsPerPix" << bitsPerPixel;
+        return;
+    }
+}
+
 
 //=================================================================
 // ThrData
@@ -29,6 +101,8 @@ ThrData::ThrData(MainWindow* mainwin, const QString& res) {
 
     m_file_idx = 0;
     m_offset = 0;
+
+    m_xxx = false;
 
 #ifdef __APPLE__
     m_data_path_base = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
@@ -107,8 +181,10 @@ void ThrData::_run() {
             msleep(100);
         }
 
-        if(!m_thr_download.is_tpk_downloaded())
+        if(!m_thr_download.is_tpk_downloaded()) {
+            _notify_error(QString("%1\n%2").arg(LOCAL8BIT("无法下载录像文件！"), m_res));
             return;
+        }
 
         m_thr_download.get_data_path(m_data_path);
     }
@@ -153,6 +229,11 @@ void ThrData::_run() {
     qint64 file_processed = 0;
     qint64 read_len = 0;
     QString str_fidx;
+
+    g_kf_idx = 0;
+    g_kf = &(g_kfdata[g_kf_idx]);
+    g_kf->resize(m_hdr.basic.width*m_hdr.basic.height*2);
+    memset(g_kf->data(), 0, m_hdr.basic.width*m_hdr.basic.height*2);
 
     for(;;) {
         // 任何时候确保第一时间响应退出操作
@@ -282,26 +363,88 @@ void ThrData::_run() {
             }
             file_processed += pkg.size;
 
-            UpdateData* dat = new UpdateData();
+
+
+
+
+            // for test only
+            if(!m_xxx && pkg.type == TS_RECORD_TYPE_RDP_IMAGE) {
+                const TS_RECORD_RDP_IMAGE_INFO* info = reinterpret_cast<const TS_RECORD_RDP_IMAGE_INFO*>(pkg_data.data());
+                uint8_t* img_dat = reinterpret_cast<uint8_t*>(pkg_data.data() + sizeof(TS_RECORD_RDP_IMAGE_INFO));
+                size_t img_len = pkg_data.size() - sizeof(TS_RECORD_RDP_IMAGE_INFO);
+
+                bool isCompress = (info->format == TS_RDP_IMG_BMP) ? true : false;
+//                _update_key_frame(&g_kf, m_hdr.basic.width, m_hdr.basic.height, info->destLeft, info->destTop, (info->destRight-info->destLeft+1), (info->destBottom-info->destTop+1), info->bitsPerPixel, isCompress, img_dat, img_len);
+                _update_key_frame(g_kf, m_hdr.basic.width, m_hdr.basic.height,
+                                  info->destLeft, info->destTop,
+                                  info->width, info->height,
+                                  info->destRight - info->destLeft + 1, info->destBottom - info->destTop + 1,
+                                  info->bitsPerPixel, isCompress, img_dat, img_len);
+            }
+            if(pkg.type == TS_RECORD_TYPE_RDP_KEYFRAME) {
+//                const TS_RECORD_RDP_KEYFRAME_INFO* info = reinterpret_cast<const TS_RECORD_RDP_KEYFRAME_INFO*>(pkg_data.data());
+                uint8_t* img_dat = reinterpret_cast<uint8_t*>(pkg_data.data() + sizeof(TS_RECORD_RDP_KEYFRAME_INFO));
+                uint32_t img_len = pkg_data.size() - sizeof(TS_RECORD_RDP_KEYFRAME_INFO);
+
+                if(m_xxx) {
+                    qDebug("use kf: %d", m_restart_kf_idx);
+                    memcpy(img_dat, g_kfdata[m_restart_kf_idx].data(), img_len);
+                }
+                else {
+                    memcpy(img_dat, g_kf->data(), img_len);
+                }
+            }
+
+
+
+
+
+            UpdateData* dat = new UpdateData(m_hdr.basic.width, m_hdr.basic.height);
             if(!dat->parse(pkg, pkg_data)) {
                 qDebug("invaid tp-rdp-%d.tpd file (4).", m_file_idx+1);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
 
+
+
+
+
             // 拖动滚动条后，需要显示一次关键帧数据，然后跳过后续关键帧。
             if(pkg.type == TS_RECORD_TYPE_RDP_KEYFRAME) {
+                g_kf_idx++;
+                g_kf = &(g_kfdata[g_kf_idx]);
+                if(!m_xxx) {
+                    g_kf->resize(m_hdr.basic.width*m_hdr.basic.height*2);
+                    memcpy(g_kf->data(), g_kfdata[g_kf_idx-1].data(), m_hdr.basic.width*m_hdr.basic.height*2);
+                }
+
                 qDebug("----key frame: %ld, processed=%" PRId64 ", pkg.size=%d", pkg.time_ms, file_processed, pkg.size);
                 if(m_need_show_kf) {
                     m_need_show_kf = false;
                     qDebug("++ show keyframe.");
                 }
                 else {
+                    //m_restart_kf_idx
+
+
+                    QString tmp;
+                    tmp.sprintf("%d", g_kf_idx);
+                    QString img_fname = QString("%1/img-%2.png").arg(m_data_path, tmp);
+                    QImage* img = nullptr;
+                    int x = 0, y = 0, w = 0, h = 0;
+                    dat->get_image(&img, x, y, w, h);
+                    if(img != nullptr)
+                        img->save(img_fname, "png");
+
                     qDebug("-- skip keyframe.");
                     delete dat;
                     dat = nullptr;
                 }
             }
+
+
+
 
 
             // 数据放到待播放列表中
@@ -334,6 +477,7 @@ void ThrData::_run() {
 }
 
 void ThrData::restart(uint32_t start_ms) {
+    qDebug("restart at %ld ms", start_ms);
     // 让处理线程处理完当前循环，然后等待
     m_need_restart = true;
 
@@ -353,16 +497,26 @@ void ThrData::restart(uint32_t start_ms) {
         m_offset = 0;
         m_file_idx = 0;
         m_need_show_kf = false;
+
+        g_kf_idx = 0;
+        m_restart_kf_idx = 0;
+        m_xxx = true;
     }
     else {
         // 找到最接近 start_ms 但小于它的关键帧
         size_t i = 0;
         for(i = 0; i < m_kf.size(); ++i) {
-            if(m_kf[i].time_ms > start_ms)
+            if(m_kf[i].time_ms > start_ms) {
                 break;
+            }
         }
         if(i > 0)
             i--;
+        g_kf_idx = i;
+        m_restart_kf_idx = i;
+        m_xxx = true;
+
+        qDebug("restart acturelly at %ld ms, kf: %d", m_kf[i].time_ms, i);
 
         // 指定要播放的数据的开始位置
         m_offset = m_kf[i].offset;

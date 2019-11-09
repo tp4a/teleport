@@ -22,6 +22,7 @@ public:
     explicit UpdateData();
     explicit UpdateData(int data_type);
     explicit UpdateData(const TS_RECORD_HEADER& hdr);
+    explicit UpdateData(uint16_t screen_w, uint16_t screen_h);
     virtual ~UpdateData();
 
     bool parse(const TS_RECORD_PKG& pkg, const QByteArray& data);
@@ -82,6 +83,9 @@ private:
     int m_img_h;
 
 //    TS_RECORD_RDP_IMAGE_INFO* m_img_info;
+
+    uint16_t m_screen_w;
+    uint16_t m_screen_h;
 };
 
 class UpdateDataHelper {

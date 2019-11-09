@@ -472,6 +472,22 @@ void Bar::onMousePress(int x, int y, Qt::MouseButton button) {
         m_owner->pause();
         m_playing = false;
         m_owner->update(m_rc.left()+m_rc_btn_play.left(), m_rc.top()+m_rc_btn_play.top(), m_rc_btn_play.width(), m_rc_btn_play.height());
+
+        int percent = 0;
+
+        if(pt.x() < m_rc_progress.left()) {
+            percent = 0;
+            m_resume_ms = 0;
+        }
+        else if(pt.x() > m_rc_progress.right()) {
+            percent = 100;
+            m_resume_ms = m_total_ms;
+        }
+        else {
+            percent = (pt.x() + m_img_progress_pointer[widget_normal].width()/2 - m_rc_progress.left()) * 100 / m_rc_progress.width();
+            m_resume_ms = m_total_ms * percent / 100;
+        }
+        update_passed_time(m_resume_ms);
     }
 }
 

@@ -93,6 +93,12 @@ typedef struct TS_RECORD_RDP_IMAGE_INFO {
     uint8_t _reserved;
 }TS_RECORD_RDP_IMAGE_INFO;
 
+// 关键帧索引
+typedef struct TS_RECORD_RDP_KEYFRAME_INFO {
+    uint32_t time_ms;       // 此关键帧的时间点
+    uint32_t file_index;    // 此关键帧图像数据位于哪一个数据文件中
+    uint32_t offset;        // 此关键帧图像数据在数据文件中的偏移
+}TS_RECORD_RDP_KEYFRAME_INFO;
 
 #pragma pack(pop)
 
