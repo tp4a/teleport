@@ -7,11 +7,11 @@
 
 #include <ex.h>
 
-// #define MAX_CACHE_SIZE      1048576  // 1M = 1024*1024*1
-// #define MAX_SIZE_PER_FILE   4194304  // 4M = 1024*1024*4
+#define MAX_CACHE_SIZE      1048576  // 1M = 1024*1024*1
+#define MAX_SIZE_PER_FILE   4194304  // 4M = 1024*1024*4
 // for test.
-#define MAX_CACHE_SIZE      524288  // 512KB = 512*1024
-#define MAX_SIZE_PER_FILE   1048576  // 1M = 1024*1024*1
+// #define MAX_CACHE_SIZE      524288  // 512KB = 512*1024
+// #define MAX_SIZE_PER_FILE   1048576  // 1M = 1024*1024*1
 
 #pragma pack(push,1)
 
