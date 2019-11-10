@@ -75,8 +75,6 @@ MainWindow::~MainWindow()
 {
     if(m_thr_play) {
         m_thr_play->stop();
-        //m_thr_play->wait();
-        //qDebug() << "play thread stoped.";
 
         disconnect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
 
@@ -87,15 +85,9 @@ MainWindow::~MainWindow()
     if(m_thr_data) {
         m_thr_data->stop();
         disconnect(m_thr_data, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
-//        disconnect(m_thr_data, SIGNAL(signal_download(DownloadParam*)), this, SLOT(_do_download(DownloadParam*)));
         delete m_thr_data;
         m_thr_data = nullptr;
     }
-
-//    if(m_dl) {
-//        delete m_dl;
-//        m_dl = nullptr;
-//    }
 
     delete ui;
 }
@@ -107,34 +99,14 @@ void MainWindow::set_resource(const QString &res) {
 void MainWindow::_do_first_run() {
     m_thr_data = new ThrData(this, m_res);
     connect(m_thr_data, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
-//    connect(m_thr_data, SIGNAL(signal_download(DownloadParam*)), this, SLOT(_do_download(DownloadParam*)));
     m_thr_data->start();
 
-    //_start_play_thread();
     m_thr_play = new ThrPlay(this);
     connect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
 
     m_thr_play->speed(m_bar.get_speed());
     m_thr_play->start();
 }
-
-//void MainWindow::_start_play_thread() {
-//    if(m_thr_play) {
-//        m_thr_play->stop();
-//        //m_thr_play->wait();
-
-//        disconnect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
-
-//        delete m_thr_play;
-//        m_thr_play = nullptr;
-//    }
-
-//    m_thr_play = new ThrPlay(this);
-//    connect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
-
-//    m_thr_play->speed(m_bar.get_speed());
-//    m_thr_play->start();
-//}
 
 void MainWindow::set_speed(int s) {
     if(m_thr_play)
@@ -242,26 +214,45 @@ void MainWindow::_do_update_data(UpdateData* dat) {
         return;
     }
     else if(dat->data_type() == TYPE_IMAGE) {
-        QImage* img_update = nullptr;
-        int x, y, w, h;
-        if(!dat->get_image(&img_update, x, y, w, h))
+        UpdateImages uimgs;
+        if(!dat->get_images(uimgs))
             return;
 
-        static int img_idx = 0;
-        img_idx++;
-        qDebug("draw img: %d (%d,%d)-(%d,%d)", img_idx, x, y, w, h);
+        if(uimgs.size() > 1) {
+            // 禁止界面更新
+            setUpdatesEnabled(false);
+        }
 
 
         QPainter pp(&m_canvas);
-        pp.drawImage(x, y, *img_update, 0, 0, w, h, Qt::AutoColor);
+        for(int i = 0; i < uimgs.size(); ++i) {
+            pp.drawImage(uimgs[i].x, uimgs[i].y, *(uimgs[i].img), 0, 0, uimgs[i].w, uimgs[i].h, Qt::AutoColor);
+            update(uimgs[i].x, uimgs[i].y, uimgs[i].w, uimgs[i].h);
+        }
 
-        update(x, y, w, h);
+
+        if(uimgs.size() > 1) {
+            // 允许界面更新
+            setUpdatesEnabled(true);
+        }
 
         return;
     }
 
     else if(dat->data_type() == TYPE_PLAYED_MS) {
         m_bar.update_passed_time(dat->played_ms());
+        return;
+    }
+
+    else if(dat->data_type() == TYPE_DISABLE_DRAW) {
+        // 禁止界面更新
+        setUpdatesEnabled(false);
+        return;
+    }
+
+    else if(dat->data_type() == TYPE_ENABLE_DRAW) {
+        // 允许界面更新
+        setUpdatesEnabled(true);
         return;
     }
 
@@ -361,12 +352,14 @@ void MainWindow::_do_update_data(UpdateData* dat) {
 
         QString title;
         if (m_rec_hdr.basic.conn_port == 3389) {
-            title = QString(LOCAL8BIT("[%1] %2@%3 [Teleport-RDP录像回放]").arg(m_rec_hdr.basic.acc_username, m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip));
+//            title = QString(LOCAL8BIT("[%1] %2@%3 [Teleport-RDP录像回放]").arg(m_rec_hdr.basic.acc_username, m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip));
+            title = QString(LOCAL8BIT("用户 %1 访问 %2 的 %3 账号").arg(m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip, m_rec_hdr.basic.acc_username));
         }
         else {
             QString _port;
             _port.sprintf("%d", m_rec_hdr.basic.conn_port);
-            title = QString(LOCAL8BIT("[%1] %2@%3:%4 [Teleport-RDP录像回放]").arg(m_rec_hdr.basic.acc_username, m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip, _port));
+            //title = QString(LOCAL8BIT("[%1] %2@%3:%4 [Teleport-RDP录像回放]").arg(m_rec_hdr.basic.acc_username, m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip, _port));
+            title = QString(LOCAL8BIT("用户 %1 访问 %2:%3 的 %4 账号").arg(m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip, _port, m_rec_hdr.basic.acc_username));
         }
 
         setWindowTitle(title);
@@ -457,13 +450,6 @@ void MainWindow::mousePressEvent(QMouseEvent *e) {
 }
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *e) {
-    qDebug("mouse release.");
-//    if(!m_show_default) {
-//        QRect rc = m_bar.rc();
-//        if(rc.contains(e->pos())) {
-//            m_bar.onMouseRelease(e->x(), e->y(), e->button());
-//        }
-//    }
     m_bar.onMouseRelease(e->x(), e->y(), e->button());
 }
 

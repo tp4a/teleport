@@ -372,7 +372,7 @@ void Bar::onMouseMove(int x, int y) {
 
         if(pt.x() < m_rc_progress.left()) {
             percent = 0;
-            m_resume_ms = 0;
+            m_resume_ms = 1;
         }
         else if(pt.x() > m_rc_progress.right()) {
             percent = 100;

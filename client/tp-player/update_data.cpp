@@ -105,7 +105,7 @@ void UpdateData::_init() {
     m_data_type = TYPE_UNKNOWN;
     m_hdr = nullptr;
     m_pointer = nullptr;
-    m_img = nullptr;
+//    m_img = nullptr;
 //    m_img_info = nullptr;
 
     m_data_buf = nullptr;
@@ -121,10 +121,14 @@ UpdateData::~UpdateData() {
         delete m_hdr;
     if(m_pointer)
         delete m_pointer;
-    if(m_img)
-        delete m_img;
+//    if(m_img)
+//        delete m_img;
 //    if(m_img_info)
 //        delete m_img_info;
+    for(int i = 0; i < m_images.size(); ++i) {
+        delete m_images[i].img;
+    }
+    m_images.clear();
 
     if(m_data_buf)
         delete m_data_buf;
@@ -143,21 +147,41 @@ bool UpdateData::parse(const TS_RECORD_PKG& pkg, const QByteArray& data) {
     }
     else if(pkg.type == TS_RECORD_TYPE_RDP_IMAGE) {
         m_data_type = TYPE_IMAGE;
-        if(data.size() <= sizeof(TS_RECORD_RDP_IMAGE_INFO))
-            return false;
-        const TS_RECORD_RDP_IMAGE_INFO* info = reinterpret_cast<const TS_RECORD_RDP_IMAGE_INFO*>(data.data());
-        const uint8_t* img_dat = reinterpret_cast<const uint8_t*>(data.data() + sizeof(TS_RECORD_RDP_IMAGE_INFO));
-        uint32_t img_len = data.size() - sizeof(TS_RECORD_RDP_IMAGE_INFO);
-
-        QImage* img = _rdpimg2QImage(info->width, info->height, info->bitsPerPixel, (info->format == TS_RDP_IMG_BMP) ? true : false, img_dat, img_len);
-        if(img == nullptr)
+        if(data.size() <= static_cast<int>(sizeof(uint16_t) + sizeof(TS_RECORD_RDP_IMAGE_INFO)))
             return false;
 
-        m_img = img;
-        m_img_x = info->destLeft;
-        m_img_y = info->destTop;
-        m_img_w = info->destRight - info->destLeft + 1;
-        m_img_h = info->destBottom - info->destTop + 1;
+        const uint8_t* dat_ptr = reinterpret_cast<const uint8_t*>(data.data());
+
+        uint16_t count = (reinterpret_cast<const uint16_t*>(dat_ptr))[0];
+        uint32_t offset = sizeof(uint16_t);
+
+        for(uint16_t i = 0; i < count; ++i) {
+
+            const TS_RECORD_RDP_IMAGE_INFO* info = reinterpret_cast<const TS_RECORD_RDP_IMAGE_INFO*>(dat_ptr+offset);
+            offset += sizeof(TS_RECORD_RDP_IMAGE_INFO);
+            //const uint8_t* img_dat = reinterpret_cast<const uint8_t*>(data.data() + sizeof(TS_RECORD_RDP_IMAGE_INFO));
+            //uint32_t img_len = data.size() - sizeof(TS_RECORD_RDP_IMAGE_INFO);
+            const uint8_t* img_dat = dat_ptr + offset;
+            offset += info->dat_len;
+
+
+            QImage* img = _rdpimg2QImage(info->width, info->height, info->bitsPerPixel, (info->format == TS_RDP_IMG_BMP) ? true : false, img_dat, info->dat_len);
+            if(img == nullptr)
+                return false;
+
+//            m_img = img;
+//            m_img_x = info->destLeft;
+//            m_img_y = info->destTop;
+//            m_img_w = info->destRight - info->destLeft + 1;
+//            m_img_h = info->destBottom - info->destTop + 1;
+            UPDATE_IMAGE uimg;
+            uimg.x = info->destLeft;
+            uimg.y = info->destTop;
+            uimg.w = info->destRight - info->destLeft + 1;
+            uimg.h = info->destBottom - info->destTop + 1;
+            uimg.img = img;
+            m_images.push_back(uimg);
+        }
 
         return true;
     }
@@ -170,11 +194,20 @@ bool UpdateData::parse(const TS_RECORD_PKG& pkg, const QByteArray& data) {
         QImage* img = _raw2QImage((int)m_screen_w, (int)m_screen_h, img_dat, img_len);
         if(img == nullptr)
             return false;
-        m_img = img;
-        m_img_x = 0;
-        m_img_y = 0;
-        m_img_w = m_screen_w;
-        m_img_h = m_screen_h;
+
+        UPDATE_IMAGE uimg;
+        uimg.x = 0;
+        uimg.y = 0;
+        uimg.w = m_screen_w;
+        uimg.h = m_screen_h;
+        uimg.img = img;
+        m_images.push_back(uimg);
+
+//        m_img = img;
+//        m_img_x = 0;
+//        m_img_y = 0;
+//        m_img_w = m_screen_w;
+//        m_img_h = m_screen_h;
         return true;
     }
 

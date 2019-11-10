@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 //    qDebug("data-path-base: %s", data_path_base.toStdString().c_str());
 //    return 0;
 
-    QGuiApplication::setApplicationDisplayName("TP-Player");
+    QGuiApplication::setApplicationDisplayName(LOCAL8BIT("[Teleport播放器]"));
 
     QCommandLineParser parser;
     const QCommandLineOption opt_help = parser.addHelpOption();

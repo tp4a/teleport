@@ -2,10 +2,15 @@
 #define UPDATE_DATA_H
 
 #include <QObject>
+#include <QVector>
 #include "record_format.h"
 
 #define TYPE_UNKNOWN            0
 #define TYPE_HEADER_INFO        1
+
+#define TYPE_DISABLE_DRAW       5
+#define TYPE_ENABLE_DRAW        6
+
 #define TYPE_POINTER            10
 #define TYPE_IMAGE              11
 #define TYPE_KEYFRAME           12
@@ -14,6 +19,17 @@
 #define TYPE_END                50
 #define TYPE_MESSAGE            90
 #define TYPE_ERROR              91
+
+
+typedef struct UPDATE_IMAGE {
+    int x;
+    int y;
+    int w;
+    int h;
+    QImage* img;
+}UPDATE_IMAGE;
+
+typedef QVector<UPDATE_IMAGE> UpdateImages;
 
 class UpdateData : public QObject
 {
@@ -28,14 +44,20 @@ public:
     bool parse(const TS_RECORD_PKG& pkg, const QByteArray& data);
     TS_RECORD_HEADER* get_header() {return m_hdr;}
     TS_RECORD_RDP_POINTER* get_pointer() {return m_pointer;}
-    bool get_image(QImage** img, int& x, int& y, int& w, int& h) {
-        if(m_img == nullptr)
+//    bool get_image(QImage** img, int& x, int& y, int& w, int& h) {
+//        if(m_img == nullptr)
+//            return false;
+//        *img = m_img;
+//        x = m_img_x;
+//        y = m_img_y;
+//        w = m_img_w;
+//        h = m_img_h;
+//        return true;
+//    }
+    bool get_images(UpdateImages& uimgs) const {
+        if(m_images.size() == 0)
             return false;
-        *img = m_img;
-        x = m_img_x;
-        y = m_img_y;
-        w = m_img_w;
-        h = m_img_h;
+        uimgs = m_images;
         return true;
     }
 
@@ -76,11 +98,12 @@ private:
     // for POINTER
     TS_RECORD_RDP_POINTER* m_pointer;
     // for IMAGE
-    QImage* m_img;
-    int m_img_x;
-    int m_img_y;
-    int m_img_w;
-    int m_img_h;
+//    QImage* m_img;
+//    int m_img_x;
+//    int m_img_y;
+//    int m_img_w;
+//    int m_img_h;
+    UpdateImages m_images;
 
 //    TS_RECORD_RDP_IMAGE_INFO* m_img_info;
 

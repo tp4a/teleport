@@ -102,6 +102,8 @@ void ThrPlay::run() {
             }
             last_time_ms = m_start_ms;
             m_start_ms = 0;
+            UpdateData* _enable = new UpdateData(TYPE_ENABLE_DRAW);
+            emit signal_update_data(_enable);
         }
 
         // 2. 根据数据包的信息，等待到播放时间点
@@ -139,10 +141,10 @@ void ThrPlay::run() {
                         break;
 
                     if(m_start_ms > 0) {
-//                        if(dat) {
-//                            delete dat;
-//                            dat = nullptr;
-//                        }
+                        delete dat;
+                        dat = nullptr;
+                        UpdateData* _disable = new UpdateData(TYPE_DISABLE_DRAW);
+                        emit signal_update_data(_disable);
                         break;
                     }
 
@@ -170,25 +172,18 @@ void ThrPlay::run() {
 
                 if(m_need_stop)
                     break;
-
-//                if(m_start_ms > 0) {
-//                    if(dat) {
-//                        delete dat;
-//                        dat = nullptr;
-//                    }
-//                    break;
-//                }
             }
 
         }
         last_time_ms = this_time_ms;
 
         // 3. 将数据包发送给主UI界面进行显示
-        if(dat->data_type() == TYPE_END) {
-            _notify_message(LOCAL8BIT("播放结束"));
+        if(dat != nullptr) {
+            if(dat->data_type() == TYPE_END) {
+                _notify_message(LOCAL8BIT("播放结束"));
+            }
+            emit signal_update_data(dat);
         }
-
-        emit signal_update_data(dat);
     }
 
     if(dat != nullptr)

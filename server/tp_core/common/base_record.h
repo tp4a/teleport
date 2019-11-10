@@ -36,10 +36,10 @@ typedef struct TS_RECORD_HEADER_INFO {
     ex_u32 magic;       // "TPPR" 标志 TelePort Protocol Record
     ex_u16 ver;         // 录像文件版本，v3.5.0开始为4
     ex_u16 type;        // 录像内容，SSH or RDP
-    ex_u32 packages;    // 总包数
+    // ex_u32 packages;    // 总包数
     ex_u32 time_ms;	    // 总耗时（毫秒）
     ex_u32 dat_file_count; // 数据文件数量
-    ex_u8 _reserve[64-4-2-2-4-4-4];
+    ex_u8 _reserve[64-4-2-2-4-4];
 }TS_RECORD_HEADER_INFO;
 #define ts_record_header_info_size sizeof(TS_RECORD_HEADER_INFO)
 
@@ -80,7 +80,7 @@ typedef struct TS_RECORD_PKG {
     ex_u8 _reserve[3];  // 保留
     ex_u32 size;        // 这个包的总大小（不含包头）
     ex_u32 time_ms;	    // 这个包距起始时间的时间差（毫秒，意味着一个连接不能持续超过49天）
-    ex_u32 index;       // 这个包的序号（最后一个包的序号与TS_RECORD_HEADER_INFO::packages数量匹配）
+    //ex_u32 index;       // 这个包的序号（最后一个包的序号与TS_RECORD_HEADER_INFO::packages数量匹配）
 }TS_RECORD_PKG;
 
 #pragma pack(pop)
