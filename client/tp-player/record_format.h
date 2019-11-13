@@ -16,6 +16,7 @@
 #define TS_RDP_BTN_PRESSED                  1
 #define TS_RDP_IMG_RAW                      0       // 未压缩，原始数据（根据bitsPerPixel，多个字节对应一个点的颜色）
 #define TS_RDP_IMG_BMP                      1       // 压缩的BMP数据
+#define TS_RDP_IMG_ALT                      2
 
 #pragma pack(push,1)
 
@@ -92,6 +93,7 @@ typedef struct TS_RECORD_RDP_IMAGE_INFO {
     uint8_t format;
     uint8_t _reserved;
     uint32_t dat_len;
+    uint32_t zip_len;
 }TS_RECORD_RDP_IMAGE_INFO;
 
 // 关键帧索引

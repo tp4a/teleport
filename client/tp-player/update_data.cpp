@@ -1,80 +1,80 @@
 ﻿#include "update_data.h"
-#include "rle.h"
+//#include "rle.h"
 
 #include <QImage>
 #include <QDebug>
 
 
-static QImage* _rdpimg2QImage(int w, int h, int bitsPerPixel, bool isCompressed, const uint8_t* dat, uint32_t len) {
-    QImage* out;
-    switch(bitsPerPixel) {
-    case 15:
-        if(isCompressed) {
-            uint8_t* _dat = reinterpret_cast<uint8_t*>(calloc(1, w*h*2));
-            if(!bitmap_decompress1(_dat, w, h, dat, len)) {
-                free(_dat);
-                return nullptr;
-            }
-            out = new QImage(_dat, w, h, QImage::Format_RGB555);
-            free(_dat);
-        }
-        else {
-            out = new QImage(QImage(dat, w, h, QImage::Format_RGB555).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)));
-        }
-        return out;
+//static QImage* _rdpimg2QImage(int w, int h, int bitsPerPixel, bool isCompressed, const uint8_t* dat, uint32_t len) {
+//    QImage* out;
+//    switch(bitsPerPixel) {
+//    case 15:
+//        if(isCompressed) {
+//            uint8_t* _dat = reinterpret_cast<uint8_t*>(calloc(1, w*h*2));
+//            if(!bitmap_decompress1(_dat, w, h, dat, len)) {
+//                free(_dat);
+//                return nullptr;
+//            }
+//            out = new QImage(_dat, w, h, QImage::Format_RGB555);
+//            free(_dat);
+//        }
+//        else {
+//            out = new QImage(QImage(dat, w, h, QImage::Format_RGB555).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)));
+//        }
+//        return out;
 
-    case 16:
-        if(isCompressed) {
-            uint8_t* _dat = reinterpret_cast<uint8_t*>(calloc(1, w*h*2));
-            if(!bitmap_decompress2(_dat, w, h, dat, len)) {
-                free(_dat);
-                qDebug() << "22------------------DECOMPRESS2 failed.";
-                return nullptr;
-            }
+//    case 16:
+//        if(isCompressed) {
+//            uint8_t* _dat = reinterpret_cast<uint8_t*>(calloc(1, w*h*2));
+//            if(!bitmap_decompress2(_dat, w, h, dat, len)) {
+//                free(_dat);
+//                qDebug() << "22------------------DECOMPRESS2 failed.";
+//                return nullptr;
+//            }
 
-            // TODO: 这里需要进一步优化，直接操作QImage的buffer。
-            out = new QImage(w, h, QImage::Format_RGB16);
-            for(int y = 0; y < h; y++) {
-                for(int x = 0; x < w; x++) {
-                    uint16 a = ((uint16*)_dat)[y * w + x];
-                    uint8 r = ((a & 0xf800) >> 11) * 255 / 31;
-                    uint8 g = ((a & 0x07e0) >> 5) * 255 / 63;
-                    uint8 b = (a & 0x001f) * 255 / 31;
-                    out->setPixelColor(x, y, QColor(r,g,b));
-                }
-            }
-            free(_dat);
-            return out;
-        }
-        else {
-            out = new QImage(QImage(dat, w, h, QImage::Format_RGB16).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)));
-        }
-        return out;
+//            // TODO: 这里需要进一步优化，直接操作QImage的buffer。
+//            out = new QImage(w, h, QImage::Format_RGB16);
+//            for(int y = 0; y < h; y++) {
+//                for(int x = 0; x < w; x++) {
+//                    uint16 a = ((uint16*)_dat)[y * w + x];
+//                    uint8 r = ((a & 0xf800) >> 11) * 255 / 31;
+//                    uint8 g = ((a & 0x07e0) >> 5) * 255 / 63;
+//                    uint8 b = (a & 0x001f) * 255 / 31;
+//                    out->setPixelColor(x, y, QColor(r,g,b));
+//                }
+//            }
+//            free(_dat);
+//            return out;
+//        }
+//        else {
+//            out = new QImage(QImage(dat, w, h, QImage::Format_RGB16).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)));
+//        }
+//        return out;
 
-    case 24:
-    case 32:
-    default:
-        qDebug() << "--------NOT support UNKNOWN bitsPerPix" << bitsPerPixel;
-        return nullptr;
-    }
-}
+//    case 24:
+//    case 32:
+//    default:
+//        qDebug() << "--------NOT support UNKNOWN bitsPerPix" << bitsPerPixel;
+//        return nullptr;
+//    }
+//}
 
-static QImage* _raw2QImage(int w, int h, const uint8_t* dat, uint32_t len) {
-    QImage* out;
+//static QImage* _raw2QImage(int w, int h, const uint8_t* dat, uint32_t len) {
+//    QImage* out;
 
-    // TODO: 这里需要进一步优化，直接操作QImage的buffer。
-    out = new QImage(w, h, QImage::Format_RGB16);
-    for(int y = 0; y < h; y++) {
-        for(int x = 0; x < w; x++) {
-            uint16 a = ((uint16*)dat)[y * w + x];
-            uint8 r = ((a & 0xf800) >> 11) * 255 / 31;
-            uint8 g = ((a & 0x07e0) >> 5) * 255 / 63;
-            uint8 b = (a & 0x001f) * 255 / 31;
-            out->setPixelColor(x, y, QColor(r,g,b));
-        }
-    }
-    return out;
-}
+//    // TODO: 这里需要进一步优化，直接操作QImage的buffer。
+//    out = new QImage(w, h, QImage::Format_RGB16);
+//    for(int y = 0; y < h; y++) {
+//        for(int x = 0; x < w; x++) {
+//            uint16 a = ((uint16*)dat)[y * w + x];
+//            uint8 r = ((a & 0xf800) >> 11) * 255 / 31;
+//            uint8 g = ((a & 0x07e0) >> 5) * 255 / 63;
+//            uint8 b = (a & 0x001f) * 255 / 31;
+//            out->setPixelColor(x, y, QColor(r,g,b));
+//        }
+//    }
+//    return out;
+//}
 
 UpdateData::UpdateData() : QObject(nullptr)
 {
@@ -87,6 +87,13 @@ UpdateData::UpdateData(int data_type) : QObject(nullptr)
     m_data_type = data_type;
 }
 
+UpdateData::UpdateData(int data_type, uint32_t time_ms) : QObject(nullptr)
+{
+    _init();
+    m_data_type = data_type;
+    m_time_ms = time_ms;
+}
+
 UpdateData::UpdateData(const TS_RECORD_HEADER& hdr) : QObject(nullptr)
 {
     _init();
@@ -95,11 +102,11 @@ UpdateData::UpdateData(const TS_RECORD_HEADER& hdr) : QObject(nullptr)
     memcpy(m_hdr, &hdr, sizeof(TS_RECORD_HEADER));
 }
 
-UpdateData::UpdateData(uint16_t screen_w, uint16_t screen_h) {
-    _init();
-    m_screen_w = screen_w;
-    m_screen_h = screen_h;
-}
+//UpdateData::UpdateData(uint16_t screen_w, uint16_t screen_h) {
+//    _init();
+//    m_screen_w = screen_w;
+//    m_screen_h = screen_h;
+//}
 
 void UpdateData::_init() {
     m_data_type = TYPE_UNKNOWN;
@@ -134,6 +141,14 @@ UpdateData::~UpdateData() {
         delete m_data_buf;
 }
 
+void UpdateData::set_pointer(uint32_t ts, const TS_RECORD_RDP_POINTER* p) {
+    m_data_type = TYPE_POINTER;
+    m_time_ms = ts;
+    m_pointer = new TS_RECORD_RDP_POINTER;
+    memcpy(m_pointer, p, sizeof(TS_RECORD_RDP_POINTER));
+}
+
+#if 0
 bool UpdateData::parse(const TS_RECORD_PKG& pkg, const QByteArray& data) {
     m_time_ms = pkg.time_ms;
 
@@ -213,7 +228,7 @@ bool UpdateData::parse(const TS_RECORD_PKG& pkg, const QByteArray& data) {
 
     return false;
 }
-
+#endif
 
 void UpdateData::alloc_data(uint32_t len) {
     if(m_data_buf)

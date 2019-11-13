@@ -214,8 +214,8 @@ void MainWindow::_do_update_data(UpdateData* dat) {
         return;
     }
     else if(dat->data_type() == TYPE_IMAGE) {
-        UpdateImages uimgs;
-        if(!dat->get_images(uimgs))
+        const UpdateImages uimgs = dat->get_images();
+        if(uimgs.size() == 0)
             return;
 
         if(uimgs.size() > 1) {

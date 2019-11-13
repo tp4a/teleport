@@ -5,6 +5,7 @@
 #include <QStandardPaths>
 #include <qcoreapplication.h>
 #include <inttypes.h>
+#include <zlib.h>
 
 #include "thr_play.h"
 #include "thr_data.h"
@@ -14,6 +15,80 @@
 #include "mainwindow.h"
 
 #include "rle.h"
+
+
+static QImage* _rdpimg2QImage(int w, int h, int bitsPerPixel, bool isCompressed, const uint8_t* dat, uint32_t len) {
+    QImage* out;
+    switch(bitsPerPixel) {
+    case 15:
+        if(isCompressed) {
+            uint8_t* _dat = reinterpret_cast<uint8_t*>(calloc(1, w*h*2));
+            if(!bitmap_decompress1(_dat, w, h, dat, len)) {
+                free(_dat);
+                return nullptr;
+            }
+            out = new QImage(_dat, w, h, QImage::Format_RGB555);
+            free(_dat);
+        }
+        else {
+            out = new QImage(QImage(dat, w, h, QImage::Format_RGB555).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)));
+        }
+        return out;
+
+    case 16:
+        if(isCompressed) {
+            uint8_t* _dat = reinterpret_cast<uint8_t*>(calloc(1, w*h*2));
+            if(!bitmap_decompress2(_dat, w, h, dat, len)) {
+                free(_dat);
+                qDebug() << "22------------------DECOMPRESS2 failed.";
+                return nullptr;
+            }
+
+            // TODO: 这里需要进一步优化，直接操作QImage的buffer。
+            out = new QImage(w, h, QImage::Format_RGB16);
+            for(int y = 0; y < h; y++) {
+                for(int x = 0; x < w; x++) {
+                    uint16 a = ((uint16*)_dat)[y * w + x];
+                    uint8 r = ((a & 0xf800) >> 11) * 255 / 31;
+                    uint8 g = ((a & 0x07e0) >> 5) * 255 / 63;
+                    uint8 b = (a & 0x001f) * 255 / 31;
+                    out->setPixelColor(x, y, QColor(r,g,b));
+                }
+            }
+            free(_dat);
+            return out;
+        }
+        else {
+            out = new QImage(QImage(dat, w, h, QImage::Format_RGB16).transformed(QMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)));
+        }
+        return out;
+
+    case 24:
+    case 32:
+    default:
+        qDebug() << "--------NOT support UNKNOWN bitsPerPix" << bitsPerPixel;
+        return nullptr;
+    }
+}
+
+static QImage* _raw2QImage(int w, int h, const uint8_t* dat, uint32_t len) {
+    QImage* out;
+
+    // TODO: 这里需要进一步优化，直接操作QImage的buffer。
+    out = new QImage(w, h, QImage::Format_RGB16);
+    for(int y = 0; y < h; y++) {
+        for(int x = 0; x < w; x++) {
+            uint16 a = ((uint16*)dat)[y * w + x];
+            uint8 r = ((a & 0xf800) >> 11) * 255 / 31;
+            uint8 g = ((a & 0x07e0) >> 5) * 255 / 63;
+            uint8 b = (a & 0x001f) * 255 / 31;
+            out->setPixelColor(x, y, QColor(r,g,b));
+        }
+    }
+    return out;
+}
+
+
 
 //=================================================================
 // ThrData
@@ -186,9 +261,9 @@ void ThrData::_run() {
         pkg_count_in_queue = m_data.size();
         m_locker.unlock();
 
-        // 少于500个的话，补足到1000个
-        if(m_data.size() < 500)
-            pkg_need_add = 1000 - pkg_count_in_queue;
+        // 少于1000个的话，补足到2000个
+        if(m_data.size() < 1000)
+            pkg_need_add = 2000 - pkg_count_in_queue;
 
         if(pkg_need_add == 0) {
             msleep(100);
@@ -283,11 +358,22 @@ void ThrData::_run() {
             }
             file_processed += pkg.size;
 
-            UpdateData* dat = new UpdateData(m_hdr.basic.width, m_hdr.basic.height);
-            if(!dat->parse(pkg, pkg_data)) {
+            //UpdateData* dat = new UpdateData(m_hdr.basic.width, m_hdr.basic.height);
+            UpdateData* dat = _parse(pkg, pkg_data);
+            //if(!dat->parse(pkg, pkg_data)) {
+            if(dat == nullptr) {
                 qDebug("invaid tp-rdp-%d.tpd file (4).", m_file_idx+1);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
+            }
+
+            // 遇到关键帧，需要清除自上一个关键帧以来保存的缓存图像数据
+            if(pkg.type == TS_RECORD_TYPE_RDP_KEYFRAME) {
+                for(size_t ci = 0; ci < m_cache_imgs.size(); ++ci) {
+                    if(m_cache_imgs[ci] != nullptr)
+                        delete m_cache_imgs[ci];
+                }
+                m_cache_imgs.clear();
             }
 
             // 拖动滚动条后，需要显示一次关键帧数据，然后跳过后续关键帧。
@@ -332,6 +418,147 @@ void ThrData::_run() {
         }
     }
 }
+
+UpdateData* ThrData::_parse(const TS_RECORD_PKG& pkg, const QByteArray& data) {
+    if(pkg.type == TS_RECORD_TYPE_RDP_POINTER) {
+        if(data.size() != sizeof(TS_RECORD_RDP_POINTER))
+            return nullptr;
+
+        UpdateData* ud = new UpdateData();
+        ud->set_pointer(pkg.time_ms, reinterpret_cast<const TS_RECORD_RDP_POINTER*>(data.data()));
+        return ud;
+    }
+    else if(pkg.type == TS_RECORD_TYPE_RDP_IMAGE) {
+        UpdateData* ud = new UpdateData(TYPE_IMAGE, pkg.time_ms);
+
+        if(data.size() < static_cast<int>(sizeof(uint16_t) + sizeof(TS_RECORD_RDP_IMAGE_INFO))) {
+            delete ud;
+            return nullptr;
+        }
+
+        const uint8_t* dat_ptr = reinterpret_cast<const uint8_t*>(data.data());
+
+        uint16_t count = (reinterpret_cast<const uint16_t*>(dat_ptr))[0];
+        uint32_t offset = sizeof(uint16_t);
+
+        UpdateImages& imgs = ud->get_images();
+
+        for(uint16_t i = 0; i < count; ++i) {
+
+            const TS_RECORD_RDP_IMAGE_INFO* info = reinterpret_cast<const TS_RECORD_RDP_IMAGE_INFO*>(dat_ptr+offset);
+            offset += sizeof(TS_RECORD_RDP_IMAGE_INFO);
+
+            if(info->format != TS_RDP_IMG_ALT) {
+                const uint8_t* img_dat = dat_ptr + offset;
+
+                const uint8_t* real_img_dat = nullptr;
+                QByteArray unzip_data;
+                if(info->zip_len > 0) {
+                    // 数据被压缩了，需要解压缩
+                    unzip_data.resize(static_cast<int>(info->dat_len));
+
+                    uLong u_len = info->dat_len;
+                    int err = uncompress(reinterpret_cast<uint8_t*>(unzip_data.data()), &u_len, img_dat, info->zip_len);
+                    if(err != Z_OK || u_len != info->dat_len) {
+                        qDebug("image uncompress failed. err=%d.", err);
+                    }
+                    else {
+                        real_img_dat =  reinterpret_cast<const uint8_t*>(unzip_data.data());
+                    }
+
+                    offset += info->zip_len;
+                }
+                else {
+                    real_img_dat = img_dat;
+                    offset += info->dat_len;
+                }
+
+
+                UPDATE_IMAGE uimg;
+                uimg.x = info->destLeft;
+                uimg.y = info->destTop;
+                uimg.w = info->destRight - info->destLeft + 1;
+                uimg.h = info->destBottom - info->destTop + 1;
+                if(real_img_dat)
+                    uimg.img = _rdpimg2QImage(info->width, info->height, info->bitsPerPixel, (info->format == TS_RDP_IMG_BMP) ? true : false, real_img_dat, info->dat_len);
+                else
+                    uimg.img = nullptr;
+                imgs.push_back(uimg);
+
+                QImage* cache_img = nullptr;
+                if(uimg.img != nullptr)
+                    cache_img = new QImage(*uimg.img);
+
+                m_cache_imgs.push_back(cache_img);
+            }
+            else {
+                UPDATE_IMAGE uimg;
+                uimg.x = info->destLeft;
+                uimg.y = info->destTop;
+                uimg.w = info->destRight - info->destLeft + 1;
+                uimg.h = info->destBottom - info->destTop + 1;
+
+                size_t cache_idx = info->dat_len;
+
+                if(cache_idx >= m_cache_imgs.size() || m_cache_imgs[cache_idx] == nullptr) {
+                    uimg.img = nullptr;
+                }
+                else {
+                    uimg.img = new QImage(*m_cache_imgs[cache_idx]);
+                }
+                imgs.push_back(uimg);
+            }
+        }
+
+        return ud;
+    }
+    else if(pkg.type == TS_RECORD_TYPE_RDP_KEYFRAME) {
+        UpdateData* ud = new UpdateData(TYPE_IMAGE, pkg.time_ms);
+        const TS_RECORD_RDP_KEYFRAME_INFO* info = reinterpret_cast<const TS_RECORD_RDP_KEYFRAME_INFO*>(data.data());
+        const uint8_t* data_buf = reinterpret_cast<const uint8_t*>(data.data() + sizeof(TS_RECORD_RDP_KEYFRAME_INFO));
+        uint32_t data_len = data.size() - sizeof(TS_RECORD_RDP_KEYFRAME_INFO);
+
+        UpdateImages& imgs = ud->get_images();
+
+        UPDATE_IMAGE uimg;
+        uimg.x = 0;
+        uimg.y = 0;
+        uimg.w = m_hdr.basic.width;
+        uimg.h = m_hdr.basic.height;
+
+        const uint8_t* real_img_dat = nullptr;
+        uint32_t real_img_len = m_hdr.basic.width * m_hdr.basic.height * 2;
+
+        QByteArray unzip_data;
+        if(data_len != real_img_len) {
+            // 数据被压缩了，需要解压缩
+            unzip_data.resize(static_cast<int>(real_img_len));
+
+            uLong u_len = real_img_len;
+            int err = uncompress(reinterpret_cast<uint8_t*>(unzip_data.data()), &u_len, data_buf, data_len);
+            if(err != Z_OK || u_len != real_img_len) {
+                qDebug("keyframe uncompress failed. err=%d.", err);
+            }
+            else {
+                real_img_dat =  reinterpret_cast<const uint8_t*>(unzip_data.data());
+            }
+        }
+        else {
+            real_img_dat = data_buf;
+        }
+
+        if(real_img_dat != nullptr)
+            uimg.img = _raw2QImage(m_hdr.basic.width, m_hdr.basic.height, real_img_dat, real_img_len);
+        else
+            uimg.img = nullptr;
+        imgs.push_back(uimg);
+
+        return ud;
+    }
+
+    return nullptr;
+}
+
 
 void ThrData::restart(uint32_t start_ms) {
     qDebug("restart at %ld ms", start_ms);
@@ -441,19 +668,19 @@ bool ThrData::_load_keyframe() {
     }
 
     qint64 fsize = f_kf.size();
-    if(!fsize || fsize % sizeof(KEYFRAME_INFO) != 0) {
+    if(!fsize || fsize % sizeof(TS_RECORD_RDP_KEYFRAME_INFO) != 0) {
         qDebug() << "Can not open " << tpk_fname << " for read.";
         _notify_error(LOCAL8BIT("关键帧信息文件格式错误！"));
         return false;
     }
 
     qint64 read_len = 0;
-    int kf_count = static_cast<int>(fsize / sizeof(KEYFRAME_INFO));
+    int kf_count = static_cast<int>(fsize / sizeof(TS_RECORD_RDP_KEYFRAME_INFO));
     for(int i = 0; i < kf_count; ++i) {
-        KEYFRAME_INFO kf;
-        memset(&kf, 0, sizeof(KEYFRAME_INFO));
-        read_len = f_kf.read(reinterpret_cast<char*>(&kf), sizeof(KEYFRAME_INFO));
-        if(read_len != sizeof(KEYFRAME_INFO)) {
+        TS_RECORD_RDP_KEYFRAME_INFO kf;
+        memset(&kf, 0, sizeof(TS_RECORD_RDP_KEYFRAME_INFO));
+        read_len = f_kf.read(reinterpret_cast<char*>(&kf), sizeof(TS_RECORD_RDP_KEYFRAME_INFO));
+        if(read_len != sizeof(TS_RECORD_RDP_KEYFRAME_INFO)) {
             qDebug() << "invaid .tpk file.";
             _notify_error(LOCAL8BIT("关键帧信息文件格式错误！"));
             return false;
