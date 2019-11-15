@@ -215,7 +215,9 @@ void MainWindow::_do_update_data(UpdateData* dat) {
         QPainter pp(&m_canvas);
         for(int i = 0; i < uimgs.size(); ++i) {
             pp.drawImage(uimgs[i].x, uimgs[i].y, *(uimgs[i].img), 0, 0, uimgs[i].w, uimgs[i].h, Qt::AutoColor);
-            update(uimgs[i].x, uimgs[i].y, uimgs[i].w, uimgs[i].h);
+
+            if(!m_disable_draw)
+                update(uimgs[i].x, uimgs[i].y, uimgs[i].w, uimgs[i].h);
         }
 
 
@@ -243,6 +245,7 @@ void MainWindow::_do_update_data(UpdateData* dat) {
         // 允许界面更新
         m_disable_draw = false;
         setUpdatesEnabled(true);
+        update();
         return;
     }
 
