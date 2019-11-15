@@ -46,8 +46,6 @@ private:
     void mousePressEvent(QMouseEvent *e);
     void mouseReleaseEvent(QMouseEvent *e);
 
-//    void _start_play_thread();
-
 private slots:
     void _do_first_run(); // 默认界面加载完成后，开始播放操作（可能会进行数据下载）
     void _do_update_data(UpdateData*);
@@ -86,6 +84,7 @@ private:
     bool m_show_message;
     QPixmap m_img_message;
     QRect m_rc_message;
+    bool m_disable_draw;
 };
 
 #endif // MAINWINDOW_H

@@ -39,12 +39,10 @@ public:
     explicit UpdateData(int data_type);
     explicit UpdateData(int data_type, uint32_t time_ms);
     explicit UpdateData(const TS_RECORD_HEADER& hdr);
-    //explicit UpdateData(uint16_t screen_w, uint16_t screen_h);
     virtual ~UpdateData();
 
     void set_pointer(uint32_t ts, const TS_RECORD_RDP_POINTER* p);
 
-//    bool parse(const TS_RECORD_PKG& pkg, const QByteArray& data);
     TS_RECORD_HEADER* get_header() {return m_hdr;}
     TS_RECORD_RDP_POINTER* get_pointer() {return m_pointer;}
     UpdateImages& get_images() {return m_images;}
@@ -87,17 +85,7 @@ private:
     // for POINTER
     TS_RECORD_RDP_POINTER* m_pointer;
     // for IMAGE
-//    QImage* m_img;
-//    int m_img_x;
-//    int m_img_y;
-//    int m_img_w;
-//    int m_img_h;
     UpdateImages m_images;
-
-//    TS_RECORD_RDP_IMAGE_INFO* m_img_info;
-
-    uint16_t m_screen_w;
-    uint16_t m_screen_h;
 };
 
 class UpdateDataHelper {

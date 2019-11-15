@@ -36,19 +36,9 @@ void ThrPlay::stop() {
     if(!isRunning())
         return;
 
-    // warning: never call stop() inside thread::run() loop.
-
     m_need_stop = true;
     wait();
     qDebug() << "play-thread end.";
-
-//    if(m_thr_data) {
-//        m_thr_data->stop();
-//        qDebug("delete thrData.");
-//        //m_thr_download->wait();
-//        delete m_thr_data;
-//        m_thr_data = nullptr;
-//    }
 }
 
 void ThrPlay::_notify_message(const QString& msg) {
@@ -144,6 +134,7 @@ void ThrPlay::run() {
                         delete dat;
                         dat = nullptr;
                         UpdateData* _disable = new UpdateData(TYPE_DISABLE_DRAW);
+                        msleep(500);
                         emit signal_update_data(_disable);
                         break;
                     }

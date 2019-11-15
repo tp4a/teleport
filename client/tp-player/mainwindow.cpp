@@ -33,6 +33,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_play_state = PLAY_STATE_UNKNOWN;
     m_thr_data = nullptr;
 
+    m_disable_draw = false;
+
     ui->setupUi(this);
 
     ui->centralWidget->setMouseTracking(true);
@@ -99,7 +101,7 @@ void MainWindow::set_resource(const QString &res) {
 void MainWindow::_do_first_run() {
     m_thr_data = new ThrData(this, m_res);
     connect(m_thr_data, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
-    m_thr_data->start();
+    m_thr_data->start(QThread::TimeCriticalPriority);
 
     m_thr_play = new ThrPlay(this);
     connect(m_thr_play, SIGNAL(signal_update_data(UpdateData*)), this, SLOT(_do_update_data(UpdateData*)));
@@ -134,20 +136,6 @@ void MainWindow::paintEvent(QPaintEvent *e)
             painter.drawPixmap(m_pt.x-m_pt_normal.width()/2, m_pt.y-m_pt_normal.height()/2, m_pt_normal);
         }
 
-//        {
-//            QRect rc_draw = e->rect();
-//            QRect rc(m_rc_message);
-//            //rc.moveTo(m_rc.left()+rc.left(), m_rc.top() + rc.top());
-
-//            int from_x = max(rc_draw.left(), rc.left()) - rc.left();
-//            int from_y = max(rc_draw.top(), rc.top()) - rc.top();
-//            int w = min(rc.right(), rc_draw.right()) - rc.left() - from_x + 1;
-//            int h = min(rc.bottom(), rc_draw.bottom()) - rc.top() - from_y + 1;
-//            int to_x = rc.left() + from_x;
-//            int to_y = rc.top() + from_y;
-//            painter.drawPixmap(to_x, to_y, m_img_message, from_x, from_y, w, h);
-//        }
-
         // 绘制浮动控制窗
         if(m_bar_fading) {
             painter.setOpacity(m_bar_opacity);
@@ -161,15 +149,16 @@ void MainWindow::paintEvent(QPaintEvent *e)
     if(m_show_message) {
         QRect rc_draw = e->rect();
         QRect rc(m_rc_message);
-        //rc.moveTo(m_rc.left()+rc.left(), m_rc.top() + rc.top());
 
-        int from_x = max(rc_draw.left(), rc.left()) - rc.left();
-        int from_y = max(rc_draw.top(), rc.top()) - rc.top();
-        int w = min(rc.right(), rc_draw.right()) - rc.left() - from_x + 1;
-        int h = min(rc.bottom(), rc_draw.bottom()) - rc.top() - from_y + 1;
-        int to_x = rc.left() + from_x;
-        int to_y = rc.top() + from_y;
-        painter.drawPixmap(to_x, to_y, m_img_message, from_x, from_y, w, h);
+        if(e->rect().intersects(rc)) {
+            int from_x = max(rc_draw.left(), rc.left()) - rc.left();
+            int from_y = max(rc_draw.top(), rc.top()) - rc.top();
+            int w = min(rc.right(), rc_draw.right()) - rc.left() - from_x + 1;
+            int h = min(rc.bottom(), rc_draw.bottom()) - rc.top() - from_y + 1;
+            int to_x = rc.left() + from_x;
+            int to_y = rc.top() + from_y;
+            painter.drawPixmap(to_x, to_y, m_img_message, from_x, from_y, w, h);
+        }
     }
 }
 
@@ -187,7 +176,6 @@ void MainWindow::resume(bool relocate, uint32_t ms) {
         m_thr_play->resume(relocate, ms);
     }
     else if(m_play_state == PLAY_STATE_STOP) {
-//        _start_play_thread();
         m_thr_data->restart(ms);
         m_thr_play->resume(true, ms);
     }
@@ -218,7 +206,7 @@ void MainWindow::_do_update_data(UpdateData* dat) {
         if(uimgs.size() == 0)
             return;
 
-        if(uimgs.size() > 1) {
+        if(uimgs.size() > 1 && !m_disable_draw) {
             // 禁止界面更新
             setUpdatesEnabled(false);
         }
@@ -231,7 +219,7 @@ void MainWindow::_do_update_data(UpdateData* dat) {
         }
 
 
-        if(uimgs.size() > 1) {
+        if(uimgs.size() > 1 && !m_disable_draw) {
             // 允许界面更新
             setUpdatesEnabled(true);
         }
@@ -246,12 +234,14 @@ void MainWindow::_do_update_data(UpdateData* dat) {
 
     else if(dat->data_type() == TYPE_DISABLE_DRAW) {
         // 禁止界面更新
+        m_disable_draw = true;
         setUpdatesEnabled(false);
         return;
     }
 
     else if(dat->data_type() == TYPE_ENABLE_DRAW) {
         // 允许界面更新
+        m_disable_draw = false;
         setUpdatesEnabled(true);
         return;
     }
@@ -265,10 +255,6 @@ void MainWindow::_do_update_data(UpdateData* dat) {
         m_show_message = true;
 
         qDebug("1message, w=%d, h=%d", m_canvas.width(), m_canvas.height());
-//        if(0 == m_canvas.width()) {
-//            QMessageBox::warning(nullptr, QGuiApplication::applicationDisplayName(), dat->message());
-//            return;
-//        }
 
         QPainter pp(&m_canvas);
         QRect rcWin(0, 0, m_canvas.width(), m_canvas.height());
@@ -318,22 +304,13 @@ void MainWindow::_do_update_data(UpdateData* dat) {
 
         qDebug() << "resize (" << m_rec_hdr.basic.width << "," << m_rec_hdr.basic.height << ")";
 
-        //if(m_canvas.width() != m_rec_hdr.basic.width && m_canvas.height() != m_rec_hdr.basic.height) {
-            m_canvas = QPixmap(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
+        m_canvas = QPixmap(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
 
-            //m_win_board_w = frameGeometry().width() - geometry().width();
-            //m_win_board_h = frameGeometry().height() - geometry().height();
+        QDesktopWidget *desktop = QApplication::desktop(); // =qApp->desktop();也可以
+        qDebug("desktop w:%d,h:%d, this w:%d,h:%d", desktop->width(), desktop->height(), width(), height());
+        move(10, (desktop->height() - m_rec_hdr.basic.height)/2);
 
-            QDesktopWidget *desktop = QApplication::desktop(); // =qApp->desktop();也可以
-            qDebug("desktop w:%d,h:%d, this w:%d,h:%d", desktop->width(), desktop->height(), width(), height());
-            //move((desktop->width() - this->width())/2, (desktop->height() - this->height())/2);
-            move(10, (desktop->height() - m_rec_hdr.basic.height)/2);
-
-            //setFixedSize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
-            //resize(m_rec_hdr.basic.width + m_win_board_w, m_rec_hdr.basic.height + m_win_board_h);
-            //resize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
-            setFixedSize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
-        //}
+        setFixedSize(m_rec_hdr.basic.width, m_rec_hdr.basic.height);
 
         m_canvas.fill(QColor(38, 73, 111));
 
@@ -352,13 +329,11 @@ void MainWindow::_do_update_data(UpdateData* dat) {
 
         QString title;
         if (m_rec_hdr.basic.conn_port == 3389) {
-//            title = QString(LOCAL8BIT("[%1] %2@%3 [Teleport-RDP录像回放]").arg(m_rec_hdr.basic.acc_username, m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip));
             title = QString(LOCAL8BIT("用户 %1 访问 %2 的 %3 账号").arg(m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip, m_rec_hdr.basic.acc_username));
         }
         else {
             QString _port;
             _port.sprintf("%d", m_rec_hdr.basic.conn_port);
-            //title = QString(LOCAL8BIT("[%1] %2@%3:%4 [Teleport-RDP录像回放]").arg(m_rec_hdr.basic.acc_username, m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip, _port));
             title = QString(LOCAL8BIT("用户 %1 访问 %2:%3 的 %4 账号").arg(m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip, _port, m_rec_hdr.basic.acc_username));
         }
 

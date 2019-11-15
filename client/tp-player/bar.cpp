@@ -491,7 +491,7 @@ void Bar::onMousePress(int x, int y, Qt::MouseButton button) {
     }
 }
 
-void Bar::onMouseRelease(int x, int y, Qt::MouseButton button) {
+void Bar::onMouseRelease(int, int, Qt::MouseButton button) {
     // 我们只关心左键释放
     if(button != Qt::LeftButton)
         return;

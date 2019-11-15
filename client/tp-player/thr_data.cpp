@@ -311,7 +311,6 @@ void ThrData::_run() {
                 file_processed = 0;
                 qDebug("Open file tp-rdp-%d.tpd, processed: %" PRId64 ", size: %" PRId64, m_file_idx+1, file_processed, file_size);
             }
-//            qDebug("B processed: %" PRId64 ", size: %" PRId64, file_processed, file_size);
 
             // 如果指定了起始偏移，则跳过这部分数据
             if(m_offset > 0) {
@@ -331,8 +330,6 @@ void ThrData::_run() {
 
             TS_RECORD_PKG pkg;
             read_len = fdata->read(reinterpret_cast<char*>(&pkg), sizeof(TS_RECORD_PKG));
-    //        if(read_len == 0)
-    //            break;
             if(read_len != sizeof(TS_RECORD_PKG)) {
                 qDebug("invaid tp-rdp-%d.tpd file, read_len=%" PRId64 " (1).", m_file_idx+1, read_len);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
@@ -358,9 +355,7 @@ void ThrData::_run() {
             }
             file_processed += pkg.size;
 
-            //UpdateData* dat = new UpdateData(m_hdr.basic.width, m_hdr.basic.height);
             UpdateData* dat = _parse(pkg, pkg_data);
-            //if(!dat->parse(pkg, pkg_data)) {
             if(dat == nullptr) {
                 qDebug("invaid tp-rdp-%d.tpd file (4).", m_file_idx+1);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
@@ -398,7 +393,7 @@ void ThrData::_run() {
             }
 
             // 让线程调度器让播放线程有机会执行
-            msleep(1);
+//            msleep(1);
 
             // 如果此文件已经处理完毕，则关闭文件，这样下次处理一个新的文件
             if(file_processed >= file_size) {
@@ -692,20 +687,11 @@ bool ThrData::_load_keyframe() {
     return true;
 }
 
-void ThrData::_prepare() {
-    UpdateData* d = new UpdateData(TYPE_HEADER_INFO);
-
-    m_locker.lock();
-    m_data.enqueue(d);
-    m_locker.unlock();
-}
-
 UpdateData* ThrData::get_data() {
     UpdateData* d = nullptr;
 
     m_locker.lock();
     if(m_data.size() > 0) {
-//        qDebug("get_data(), left: %d", m_data.size());
         d = m_data.dequeue();
     }
     m_locker.unlock();
