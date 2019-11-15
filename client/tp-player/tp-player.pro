@@ -38,15 +38,22 @@ RC_FILE += \
 FORMS += \
     mainwindow.ui
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../external/zlib/build/release/ -lzlibstatic
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../external/zlib/build/debug/ -lzlibstaticd
+
+win32:CONFIG(release, debug|release): {
+    LIBS += -L$$PWD/../../external/zlib/build/release/ -lzlibstatic
+    DESTDIR = $$PWD/../../out/client/x86/Release/tools/player
+}
+else:win32:CONFIG(debug, debug|release): {
+    LIBS += -L$$PWD/../../external/zlib/build/debug/ -lzlibstaticd
+    DESTDIR = $$PWD/../../out/client/x86/Debug/tools/player
+}
 
 INCLUDEPATH += $$PWD/../../external/zlib
 INCLUDEPATH += $$PWD/../../external/zlib/build
 DEPENDPATH += $$PWD/../../external/zlib
 DEPENDPATH += $$PWD/../../external/zlib/build
 
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/release/libzlibstatic.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/debug/libzlibstaticd.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/release/zlibstatic.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/debug/zlibstaticd.lib
+#win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/release/libzlibstatic.a
+#else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/debug/libzlibstaticd.a
+#else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/release/zlibstatic.lib
+#else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/debug/zlibstaticd.lib

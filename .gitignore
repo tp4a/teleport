@@ -104,12 +104,4 @@ profile
 
 /server/tp_core/testssh/Debug
 /server/tp_core/testssh/Release
-/client/build-tp-player-*
-/client/tp-player/debug
-/client/tp-player/release
 /external/zlib
-/client/tp-player/.qmake.stash
-/client/tp-player/Makefile
-/client/tp-player/Makefile.Debug
-/client/tp-player/Makefile.Release
-/client/tp-player/ui_mainwindow.h
