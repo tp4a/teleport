@@ -588,13 +588,22 @@ class DoUpdateUserHandler(TPBaseJsonHandler):
             args['mobile'] = args['mobile'].strip()
             args['qq'] = args['qq'].strip()
             args['wechat'] = args['wechat'].strip()
+
+            if args['valid_from'] == '':
+                args['valid_from'] = '1970-01-01'
+            else:
+                args['valid_from'] = args['valid_from'].strip()
+            if args['valid_to'] == '':
+                args['valid_to'] = '1970-01-01'
+            else:
+                args['valid_to'] = args['valid_to'].strip()
             args['desc'] = args['desc'].strip()
         except:
             return self.write_json(TPE_PARAM)
 
         if len(args['username']) == 0:
             return self.write_json(TPE_PARAM)
-
+        
         if args['id'] == -1:
             args['password'] = tp_gen_password(8)
             err, _ = user.create_user(self, args)

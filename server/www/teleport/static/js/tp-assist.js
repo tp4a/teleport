@@ -84,11 +84,11 @@ $assist.alert_assist_not_found = function () {
     if($assist.errcode === TPE_NO_ASSIST) {
         $assist.dom.msg_box_title.html('未检测到TELEPORT助手');
         $assist.dom.msg_box_info.html('需要TELEPORT助手来辅助远程连接，请确认本机运行了TELEPORT助手！');
-        $assist.dom.msg_box_desc.html('如果您尚未运行TELEPORT助手，请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦运行了TELEPORT助手，即可刷新页面，重新进行远程连接。');
+        $assist.dom.msg_box_desc.html('如果您尚未运行TELEPORT助手，请 <a href="/static/download/teleport-assist-windows.exe" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦运行了TELEPORT助手，即可刷新页面，重新进行远程连接。');
     } else if($assist.errcode === TPE_OLD_ASSIST) {
         $assist.dom.msg_box_title.html('TELEPORT助手需要升级');
         $assist.dom.msg_box_info.html('检测到TELEPORT助手版本 v'+ $assist.version +'，但需要最低版本 v'+ $assist.ver_require+'。');
-        $assist.dom.msg_box_desc.html('请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦升级了TELEPORT助手，即可刷新页面，重新进行远程连接。');
+        $assist.dom.msg_box_desc.html('请 <a href="/static/download/teleport-assist-windows.exe" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦升级了TELEPORT助手，即可刷新页面，重新进行远程连接。');
     }
 
     $('#dialog-need-assist').modal();
@@ -147,8 +147,10 @@ $assist._make_message_box = function () {
 };
 
 $assist.do_teleport = function (args, func_success, func_error) {
-    if(!$assist.check())
+    if(!$app.options.url_proto){
+        if(!$assist.check())
         return;
+    }
 
     // 第一步：将参数传递给web服务，准备获取一个远程连接会话ID
     var args_ = JSON.stringify(args);
