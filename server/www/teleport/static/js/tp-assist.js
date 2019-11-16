@@ -66,16 +66,29 @@ $assist.init = function (cb_stack) {
     cb_stack.exec();
 };
 
+$assist.check = function() {
+    if (!$assist.running) {
+        $assist.errcode = TPE_NO_ASSIST;
+        $assist.alert_assist_not_found();
+        return false;
+    } else if (!$assist._version_compare()) {
+        $assist.errcode = TPE_OLD_ASSIST;
+        $assist.alert_assist_not_found();
+        return false;
+    }
+    return true;
+};
+
+
 $assist.alert_assist_not_found = function () {
-    console.log($assist.errcode);
     if($assist.errcode === TPE_NO_ASSIST) {
         $assist.dom.msg_box_title.html('未检测到TELEPORT助手');
         $assist.dom.msg_box_info.html('需要TELEPORT助手来辅助远程连接，请确认本机运行了TELEPORT助手！');
-        $assist.dom.msg_box_desc.html('如果您尚未运行TELEPORT助手，请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦运行了TELEPORT助手，即可重新进行远程连接。');
+        $assist.dom.msg_box_desc.html('如果您尚未运行TELEPORT助手，请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦运行了TELEPORT助手，即可刷新页面，重新进行远程连接。');
     } else if($assist.errcode === TPE_OLD_ASSIST) {
         $assist.dom.msg_box_title.html('TELEPORT助手需要升级');
         $assist.dom.msg_box_info.html('检测到TELEPORT助手版本 v'+ $assist.version +'，但需要最低版本 v'+ $assist.ver_require+'。');
-        $assist.dom.msg_box_desc.html('请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦升级了TELEPORT助手，即可重新进行远程连接。');
+        $assist.dom.msg_box_desc.html('请 <a href="http://tp4a.com/download" target="_blank"><strong>下载最新版TELEPORT助手安装包</strong></a> 并安装。一旦升级了TELEPORT助手，即可刷新页面，重新进行远程连接。');
     }
 
     $('#dialog-need-assist').modal();
@@ -134,15 +147,8 @@ $assist._make_message_box = function () {
 };
 
 $assist.do_teleport = function (args, func_success, func_error) {
-    if(!$assist.running) {
-        $assist.errcode = TPE_NO_ASSIST;
-        func_error(TPE_NO_ASSIST, '');
+    if(!$assist.check())
         return;
-    } else if(!$assist._version_compare()) {
-        $assist.errcode = TPE_OLD_ASSIST;
-        func_error(TPE_NO_ASSIST, '');
-        return;
-    }
 
     // 第一步：将参数传递给web服务，准备获取一个远程连接会话ID
     var args_ = JSON.stringify(args);
@@ -226,7 +232,7 @@ $assist.do_teleport = function (args, func_success, func_error) {
     });
 };
 
-$assist.do_rdp_replay = function (args, func_success, func_error) {
+$assist.do_rdp_replay = function (rid, func_success, func_error) {
     // ==================================================
     // args is dict with fields shown below:
     //   rid: (int) - record-id in database.
@@ -236,10 +242,11 @@ $assist.do_rdp_replay = function (args, func_success, func_error) {
     //   start: (string) - when start the RDP connection, should be a UTC timestamp.
     // ==================================================
 
-    // now fix the args.
+    // now make the args.
+    var args = {rid: rid};
     args.web = $tp.web_server; // (string) - teleport server base address, like "http://127.0.0.1:7190", without end-slash.
     args.sid = Cookies.get('_sid'); // (string) - current login user's session-id.
-    args.start = tp_format_datetime(tp_utc2local(args.start), 'yyyyMMdd-HHmmss'); // (string) - convert UTC timestamp to local human-readable string.
+    // args.start = tp_format_datetime(tp_utc2local(args.start), 'yyyyMMdd-HHmmss'); // (string) - convert UTC timestamp to local human-readable string.
 
     console.log('do-rdp-replay:', args);
 
@@ -264,34 +271,3 @@ $assist.do_rdp_replay = function (args, func_success, func_error) {
         }
     });
 };
-
-/*
-
-var version_compare = function () {
-    var cur_version = parseInt(g_current_version.split(".")[2]);
-    var req_version = parseInt(g_req_version.split(".")[2]);
-    return cur_version >= req_version;
-};
-
-var start_rdp_replay = function (args, func_success, func_error) {
-    var args_ = encodeURIComponent(JSON.stringify(args));
-    $.ajax({
-        type: 'GET',
-        timeout: 6000,
-        url: $assist.api_url + '/rdp_play/' + args_,
-        jsonp: 'callback',
-        dataType: 'json',
-        success: function (ret) {
-            if (ret.code === TPE_OK) {
-                error_process(ret, func_success, func_error);
-            } else {
-                func_error(ret.code, '查看录像失败！');
-            }
-            console.log('ret', ret);
-        },
-        error: function () {
-            func_error(TPE_NETWORK, '与助手的络通讯失败！');
-        }
-    });
-};
-*/

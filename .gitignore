@@ -105,3 +105,4 @@ profile
 /server/tp_core/testssh/Debug
 /server/tp_core/testssh/Release
 /external/zlib
+/client/tools/qt-redist

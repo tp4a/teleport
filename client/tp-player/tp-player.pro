@@ -3,8 +3,6 @@ TARGET = tp-player
 
 QT += core gui widgets network
 
-#DEFINES += QT_NO_DEBUG_OUTPUT
-
 HEADERS += \
     mainwindow.h \
     bar.h \
@@ -40,12 +38,13 @@ FORMS += \
 
 
 win32:CONFIG(release, debug|release): {
-    LIBS += -L$$PWD/../../external/zlib/build/release/ -lzlibstatic
-    DESTDIR = $$PWD/../../out/client/x86/Release/tools/player
+    DEFINES += QT_NO_DEBUG_OUTPUT
+    LIBS += -L$$PWD/../../external/zlib/build/release/ -lzlib
+    DESTDIR = $$PWD/../../out/client/x86/Release
 }
 else:win32:CONFIG(debug, debug|release): {
-    LIBS += -L$$PWD/../../external/zlib/build/debug/ -lzlibstaticd
-    DESTDIR = $$PWD/../../out/client/x86/Debug/tools/player
+    LIBS += -L$$PWD/../../external/zlib/build/debug/ -lzlibd
+    DESTDIR = $$PWD/../../out/client/x86/Debug
 }
 
 INCLUDEPATH += $$PWD/../../external/zlib

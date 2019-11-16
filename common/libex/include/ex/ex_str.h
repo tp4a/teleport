@@ -55,9 +55,12 @@ int ex_wcsformat(wchar_t* out_buf, size_t buf_size, const wchar_t* fmt, ...);
 
 #include <string>
 #include <vector>
+#include <ostream>
 
 typedef std::string ex_astr;
 typedef std::wstring ex_wstr;
+typedef std::ostringstream ex_aoss;
+typedef std::wostringstream ex_woss;
 
 typedef std::vector<ex_astr> ex_astrs;
 typedef std::vector<ex_wstr> ex_wstrs;
