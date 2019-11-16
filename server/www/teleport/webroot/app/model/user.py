@@ -90,7 +90,7 @@ def login(handler, username, password=None, oath_code=None, check_bind_oath=Fals
         msg = '登录失败，用户状态异常'
         syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, msg)
         return TPE_FAILED, None, msg
-    elif  current_unix_time < user_info['valid_from'] or (current_unix_time > user_info['valid_to'] and user_info['valid_to'] != 0):
+    elif current_unix_time < user_info['valid_from'] or (current_unix_time > user_info['valid_to'] and user_info['valid_to'] != 0):
         msg = '登录失败，用户已过期'
         syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, msg)
         return TPE_FAILED, None, msg
@@ -362,8 +362,8 @@ def create_user(handler, user):
           '`email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `valid_from`, `valid_to`, `desc`' \
           ') VALUES (' \
           '{role}, "{username}", "{surname}", {user_type}, "{ldap_dn}", {auth_type}, "{password}", {state}, ' \
-          '"{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, unix_timestamp("{valid_from}"), '\
-          'unix_timestamp("{valid_to}"), "{desc}");' \
+          '"{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, {valid_from}, '\
+          '{valid_to}, "{desc}");' \
           ''.format(db.table_prefix, role=user['role'], username=user['username'], surname=user['surname'],
                     user_type=user['type'], ldap_dn=user['ldap_dn'], auth_type=user['auth_type'], password=_password,
                     state=TP_STATE_NORMAL, email=user['email'], creator_id=operator['id'], create_time=_time_now,
@@ -407,7 +407,7 @@ def update_user(handler, args):
     sql = 'UPDATE `{}user` SET ' \
           '`username`="{username}", `surname`="{surname}", `auth_type`={auth_type}, ' \
           '`role_id`={role}, `email`="{email}", `mobile`="{mobile}", `qq`="{qq}", ' \
-          '`wechat`="{wechat}", `valid_from`=unix_timestamp("{valid_from}"), `valid_to`=unix_timestamp("{valid_to}"), '\
+          '`wechat`="{wechat}", `valid_from`={valid_from}, `valid_to`={valid_to}, '\
           '`desc`="{desc}" WHERE `id`={user_id};' \
           ''.format(db.table_prefix,
                     username=args['username'], surname=args['surname'], auth_type=args['auth_type'], role=args['role'],

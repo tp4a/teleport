@@ -11,7 +11,7 @@ from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.logger import *
 from app.base.session import tp_session
-from app.base.utils import tp_check_strong_password, tp_gen_password
+from app.base.utils import tp_check_strong_password, tp_gen_password, tp_timestamp_from_str
 from app.logic.auth.oath import tp_oath_verify_code
 from app.const import *
 from app.logic.auth.oath import tp_oath_generate_secret, tp_oath_generate_qrcode
@@ -590,13 +590,13 @@ class DoUpdateUserHandler(TPBaseJsonHandler):
             args['wechat'] = args['wechat'].strip()
 
             if args['valid_from'] == '':
-                args['valid_from'] = '1970-01-01'
+                args['valid_from'] = 0
             else:
-                args['valid_from'] = args['valid_from'].strip()
+                args['valid_from'] = tp_timestamp_from_str(args['valid_from'].strip(), '%Y-%m-%d %H:%M')
             if args['valid_to'] == '':
-                args['valid_to'] = '1970-01-01'
+                args['valid_to'] = 0
             else:
-                args['valid_to'] = args['valid_to'].strip()
+                args['valid_to'] = tp_timestamp_from_str(args['valid_to'].strip(), '%Y-%m-%d %H:%M')
             args['desc'] = args['desc'].strip()
         except:
             return self.write_json(TPE_PARAM)

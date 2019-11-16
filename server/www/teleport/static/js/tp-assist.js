@@ -235,20 +235,12 @@ $assist.do_teleport = function (args, func_success, func_error) {
 };
 
 $assist.do_rdp_replay = function (rid, func_success, func_error) {
-    // ==================================================
-    // args is dict with fields shown below:
-    //   rid: (int) - record-id in database.
-    //   user: (string) - who did the RDP connection.
-    //   acc: (string) - account to login to remote RDP server.
-    //   host: (string) - IP of the remote RDP server.
-    //   start: (string) - when start the RDP connection, should be a UTC timestamp.
-    // ==================================================
+    // rid: (int) - record-id in database.
 
     // now make the args.
     var args = {rid: rid};
     args.web = $tp.web_server; // (string) - teleport server base address, like "http://127.0.0.1:7190", without end-slash.
     args.sid = Cookies.get('_sid'); // (string) - current login user's session-id.
-    // args.start = tp_format_datetime(tp_utc2local(args.start), 'yyyyMMdd-HHmmss'); // (string) - convert UTC timestamp to local human-readable string.
 
     console.log('do-rdp-replay:', args);
 
