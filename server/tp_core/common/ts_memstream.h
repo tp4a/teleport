@@ -1,4 +1,4 @@
-#ifndef __TS_MEMSTREAM_H__
+ï»¿#ifndef __TS_MEMSTREAM_H__
 #define __TS_MEMSTREAM_H__
 
 #include "ts_membuf.h"
@@ -9,31 +9,31 @@ public:
 	MemStream(MemBuffer& mbuf);
 	~MemStream();
 
-	void reset(void); // Çå¿Õ»º³åÇøÊı¾İ£¨µ«²»ÊÍ·ÅÄÚ´æ£©£¬Ö¸ÕëÒÆ¶¯µ½Í·²¿
+	void reset(void); // æ¸…ç©ºç¼“å†²åŒºæ•°æ®ï¼ˆä½†ä¸é‡Šæ”¾å†…å­˜ï¼‰ï¼ŒæŒ‡é’ˆç§»åŠ¨åˆ°å¤´éƒ¨
 
-	bool seek(size_t offset);	// ÒÆ¶¯Ö¸Õëµ½Ö¸¶¨Æ«ÒÆ£¬Èç¹ûÔ½½ç£¬Ôò·µ»Ø´íÎó
-	bool rewind(size_t n = 0);	// »ØÍËn×Ö½Ú£¬Èç¹ûÔ½½ç£¬·µ»Ø´íÎó£¬Èç¹ûnÎª0£¬Ôò»ØÍËµ½×î¿ªÊ¼´¦
-	bool skip(size_t n);	// Ìø¹ın×Ö½Ú£¬Èç¹ûÔ½½ç£¬Ôò·µ»Ø´íÎó
+	bool seek(size_t offset);	// ç§»åŠ¨æŒ‡é’ˆåˆ°æŒ‡å®šåç§»ï¼Œå¦‚æœè¶Šç•Œï¼Œåˆ™è¿”å›é”™è¯¯
+	bool rewind(size_t n = 0);	// å›é€€nå­—èŠ‚ï¼Œå¦‚æœè¶Šç•Œï¼Œè¿”å›é”™è¯¯ï¼Œå¦‚æœnä¸º0ï¼Œåˆ™å›é€€åˆ°æœ€å¼€å§‹å¤„
+	bool skip(size_t n);	// è·³è¿‡nå­—èŠ‚ï¼Œå¦‚æœè¶Šç•Œï¼Œåˆ™è¿”å›é”™è¯¯
 
-	ex_u8* ptr(void) { return m_mbuf.data() + m_offset; } // ·µ»Øµ±Ç°Êı¾İÖ¸Õë
-	size_t offset(void) { return m_offset; } // ·µ»Øµ±Ç°Ö¸ÕëÏà¶ÔÊı¾İÆğÊ¼µÄÆ«ÒÆ
+	ex_u8* ptr(void) { return m_mbuf.data() + m_offset; } // è¿”å›å½“å‰æ•°æ®æŒ‡é’ˆ
+	size_t offset(void) { return m_offset; } // è¿”å›å½“å‰æŒ‡é’ˆç›¸å¯¹æ•°æ®èµ·å§‹çš„åç§»
 
-	size_t left(void) { return m_mbuf.size() - m_offset; }	// ·µ»ØÊ£ÓàÊı¾İµÄ´óĞ¡£¨´Óµ±Ç°Êı¾İÖ¸Õëµ½»º³åÇø½áÎ²£©
+	size_t left(void) { return m_mbuf.size() - m_offset; }	// è¿”å›å‰©ä½™æ•°æ®çš„å¤§å°ï¼ˆä»å½“å‰æ•°æ®æŒ‡é’ˆåˆ°ç¼“å†²åŒºç»“å°¾ï¼‰
 
 	ex_u8 get_u8(void);
 	ex_u16 get_u16_le(void);
 	ex_u16 get_u16_be(void);
 	ex_u32 get_u32_le(void);
 	ex_u32 get_u32_be(void);
-	ex_u8* get_bin(size_t n); // ·µ»Øµ±Ç°Ö¸ÏòµÄÊı¾İµÄÖ¸Õë£¬ÄÚ²¿Æ«ÒÆ»áÏòºóÒÆ¶¯n×Ö½Ú
+	ex_u8* get_bin(size_t n); // è¿”å›å½“å‰æŒ‡å‘çš„æ•°æ®çš„æŒ‡é’ˆï¼Œå†…éƒ¨åç§»ä¼šå‘åç§»åŠ¨nå­—èŠ‚
 
-	void put_zero(size_t n);  // Ìî³än×Ö½ÚµÄ0
+	void put_zero(size_t n);  // å¡«å……nå­—èŠ‚çš„0
 	void put_u8(ex_u8 v);
 	void put_u16_le(ex_u16 v);
 	void put_u16_be(ex_u16 v);
 	void put_u32_le(ex_u32 v);
 	void put_u32_be(ex_u32 v);
-	void put_bin(const ex_u8* p, size_t n); // Ìî³äpÖ¸ÏòµÄn×Ö½ÚÊı¾İ
+	void put_bin(const ex_u8* p, size_t n); // å¡«å……pæŒ‡å‘çš„nå­—èŠ‚æ•°æ®
 
 	size_t size(void) { return m_mbuf.size(); }
 

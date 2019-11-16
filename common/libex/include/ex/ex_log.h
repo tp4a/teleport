@@ -1,4 +1,4 @@
-#ifndef __EX_LOG_H__
+ï»¿#ifndef __EX_LOG_H__
 #define __EX_LOG_H__
 
 #include "ex_types.h"
@@ -27,7 +27,7 @@ public:
 
 protected:
 	bool _open_file();
-	bool _rotate_file(void);		// ½«ÏÖÓĞÈÕÖ¾ÎÄ¼ş¸ÄÃû±¸·İ£¬È»ºóĞÂ¿ªÒ»¸öÈÕÖ¾ÎÄ¼ş
+	bool _rotate_file(void);		// å°†ç°æœ‰æ—¥å¿—æ–‡ä»¶æ”¹åå¤‡ä»½ï¼Œç„¶åæ–°å¼€ä¸€ä¸ªæ—¥å¿—æ–‡ä»¶
 
 public:
 	ExThreadLock lock;
@@ -63,7 +63,7 @@ void EXLOG_USE_LOGGER(ExLogger* logger);
 void EXLOG_LEVEL(int min_level);
 void EXLOG_DEBUG(bool debug_mode);
 
-// Éè¶¨ÈÕÖ¾ÎÄ¼şÃû¼°Â·¾¶£¬ÈçÎ´Ö¸¶¨Â·¾¶£¬ÔòÎª¿ÉÖ´ĞĞ³ÌĞòËùÔÚÄ¿Â¼ÏÂµÄlogÄ¿Â¼¡£
+// è®¾å®šæ—¥å¿—æ–‡ä»¶ååŠè·¯å¾„ï¼Œå¦‚æœªæŒ‡å®šè·¯å¾„ï¼Œåˆ™ä¸ºå¯æ‰§è¡Œç¨‹åºæ‰€åœ¨ç›®å½•ä¸‹çš„logç›®å½•ã€‚
 void EXLOG_FILE(const wchar_t* log_file, const wchar_t* log_path = NULL, ex_u32 max_filesize = EX_LOG_FILE_MAX_SIZE, ex_u8 max_filecount = EX_LOG_FILE_MAX_COUNT);
 
 void EXLOG_CONSOLE(bool output_to_console);

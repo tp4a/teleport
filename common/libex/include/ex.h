@@ -1,4 +1,4 @@
-#ifndef __LIB_EX_H__
+﻿#ifndef __LIB_EX_H__
 #define __LIB_EX_H__
 
 #ifdef EX_HAVE_CONFIG

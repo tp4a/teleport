@@ -1,4 +1,4 @@
-#ifndef __LIB_EX_CONST_H__
+ï»¿#ifndef __LIB_EX_CONST_H__
 #define __LIB_EX_CONST_H__
 
 #include "ex_platform.h"
@@ -43,8 +43,8 @@
 // error code.
 //====================================================
 #define EXRV_OK				0
-#define EXRV_SYS_ERR			1		// ÏµÍ³´íÎó£¬¿ÉÒÔÊ¹ÓÃGetLastError»òÕßerrnoÀ´»ñÈ¡¾ßÌå´íÎóÖµ
-#define EXRV_FAILED			2		// ²Ù×÷Ê§°Ü
+#define EXRV_SYS_ERR			1		// ç³»ç»Ÿé”™è¯¯ï¼Œå¯ä»¥ä½¿ç”¨GetLastErroræˆ–è€…errnoæ¥è·å–å…·ä½“é”™è¯¯å€¼
+#define EXRV_FAILED			2		// æ“ä½œå¤±è´¥
 
 //#define EXRV_CANNOT_FOUND	9
 #define EXRV_CANNOT_CREATE	10

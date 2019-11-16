@@ -1,4 +1,4 @@
-#include "ts_memstream.h"
+﻿#include "ts_memstream.h"
 
 MemStream::MemStream(MemBuffer& mbuf) : m_mbuf(mbuf)
 {

@@ -1,4 +1,4 @@
-#ifndef __EX_WINSRV_H__
+﻿#ifndef __EX_WINSRV_H__
 #define __EX_WINSRV_H__
 
 #include "ex_str.h"

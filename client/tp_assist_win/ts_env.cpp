@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "ts_env.h"
 
 #include <time.h>
@@ -40,8 +40,8 @@ bool TsEnv::init(void)
 	m_site_path = m_exec_path;
 	ex_path_join(m_site_path, true, L"..", L"..", L"..", L"..", L"client", L"tp_assist_win", L"site", NULL);
 
-	m_tools_path = m_exec_path;
-	ex_path_join(m_tools_path, true, L"..", L"..", L"..", L"..", L"client", L"tools", NULL);
+// 	m_tools_path = m_exec_path;
+// 	ex_path_join(m_tools_path, true, L"..", L"..", L"..", L"..", L"client", L"tools", NULL);
 
 	cfg_default = m_exec_path;
 	ex_path_join(cfg_default, true, L"..", L"..", L"..", L"..", L"client", L"tp_assist_win", L"cfg", L"tp-assist.default.json", NULL);
@@ -50,12 +50,15 @@ bool TsEnv::init(void)
 	m_site_path = m_exec_path;
 	ex_path_join(m_site_path, false, L"site", NULL);
 
-	m_tools_path = m_exec_path;
-	ex_path_join(m_tools_path, false, L"tools", NULL);
+// 	m_tools_path = m_exec_path;
+// 	ex_path_join(m_tools_path, false, L"tools", NULL);
 
 	cfg_default = m_exec_path;
 	ex_path_join(cfg_default, false, L"tp-assist.default.json", NULL);
 #endif
+
+    m_tools_path = m_exec_path;
+    ex_path_join(m_tools_path, false, L"tools", NULL);
 
 	if (!ex_is_file_exists(m_cfg_file.c_str())) {
 		ex_wstr cfg_path = m_exec_path;

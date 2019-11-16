@@ -1,4 +1,4 @@
-#ifndef __LIB_EX_TYPE_H__
+﻿#ifndef __LIB_EX_TYPE_H__
 #define __LIB_EX_TYPE_H__
 
 #include "ex_platform.h"
