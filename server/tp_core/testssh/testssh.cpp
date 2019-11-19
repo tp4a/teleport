@@ -1,7 +1,7 @@
-// testssh.cpp : Defines the entry point for the console application.
+﻿// testssh.cpp : Defines the entry point for the console application.
 //
 
-//#include "stdafx.h"
+#include "stdafx.h"
 
 #include <libssh/libssh.h>
 #include <ex.h>

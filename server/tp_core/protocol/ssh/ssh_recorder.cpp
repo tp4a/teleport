@@ -1,4 +1,4 @@
-#include "ssh_recorder.h"
+ï»¿#include "ssh_recorder.h"
 //#include <teleport_const.h>
 
 static ex_u8 TPP_RECORD_MAGIC[4] = {'T', 'P', 'P', 'R'};
@@ -8,7 +8,8 @@ TppSshRec::TppSshRec() {
 
     memset(&m_head, 0, sizeof(TS_RECORD_HEADER));
     memcpy((ex_u8 *) (&m_head.info.magic), TPP_RECORD_MAGIC, sizeof(ex_u32));
-    m_head.info.ver = 0x03;
+    m_head.info.ver = 0x04;
+    m_head.info.type = TS_TPPR_TYPE_SSH;
     m_header_changed = false;
     m_save_full_header = false;
 
@@ -40,7 +41,7 @@ bool TppSshRec::_on_begin(const TPP_CONNECT_INFO *info) {
 }
 
 bool TppSshRec::_on_end() {
-    // Èç¹û»¹ÓĞÊ£ÏÂÎ´Ğ´ÈëµÄÊı¾İ£¬Ğ´ÈëÎÄ¼şÖĞ¡£
+    // å¦‚æœè¿˜æœ‰å‰©ä¸‹æœªå†™å…¥çš„æ•°æ®ï¼Œå†™å…¥æ–‡ä»¶ä¸­ã€‚
     save_record();
 
     if (m_file_info != NULL)
@@ -73,13 +74,14 @@ void TppSshRec::record(ex_u8 type, const ex_u8 *data, size_t size) {
     if (m_start_time > 0) {
         pkg.time_ms = (ex_u32) (ex_get_tick_count() - m_start_time);
         m_head.info.time_ms = pkg.time_ms;
+        m_header_changed = true;
     }
 
     m_cache.append((ex_u8 *) &pkg, sizeof(TS_RECORD_PKG));
     m_cache.append(data, size);
 
-    m_head.info.packages++;
-    m_header_changed = true;
+    //m_head.info.packages++;
+    //m_header_changed = true;
 }
 
 void TppSshRec::record_win_size_startup(int width, int height) {
@@ -95,7 +97,7 @@ void TppSshRec::record_win_size_change(int width, int height) {
     record(TS_RECORD_TYPE_SSH_TERM_SIZE, (ex_u8 *) &pkg, sizeof(TS_RECORD_WIN_SIZE));
 }
 
-// ÎªÁËÂ¼Ïñ»Ø·ÅºÍÃüÁîÀúÊ·ÄÜ¹»¶ÔÓ¦£¨±ÈÈçµã»÷ÃüÁîÖ±½ÓÌøµ½Â¼ÏñµÄ¶ÔÓ¦Ê±µã£©£¬·ÂÕÕÂ¼ÏñÊı¾İ°üµÄ·½Ê½¼ÇÂ¼Ïà¶ÔÊ±¼äÆ«ÒÆ£¬¶ø²»ÊÇ¾ø¶ÔÊ±¼ä¡£
+// ä¸ºäº†å½•åƒå›æ”¾å’Œå‘½ä»¤å†å²èƒ½å¤Ÿå¯¹åº”ï¼ˆæ¯”å¦‚ç‚¹å‡»å‘½ä»¤ç›´æ¥è·³åˆ°å½•åƒçš„å¯¹åº”æ—¶ç‚¹ï¼‰ï¼Œä»¿ç…§å½•åƒæ•°æ®åŒ…çš„æ–¹å¼è®°å½•ç›¸å¯¹æ—¶é—´åç§»ï¼Œè€Œä¸æ˜¯ç»å¯¹æ—¶é—´ã€‚
 void TppSshRec::record_command(int flag, const ex_astr &cmd) {
     char szTime[100] = {0};
 #ifdef EX_OS_WIN32

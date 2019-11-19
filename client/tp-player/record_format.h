@@ -28,7 +28,6 @@ typedef struct TS_RECORD_HEADER_INFO {
    // uint32_t packages;   // 总包数
    uint32_t time_ms;    // 总耗时（毫秒）
    uint32_t dat_file_count; // 数据文件数量
-   uint8_t _reserve[64-4-2-2-4-4];
 }TS_RECORD_HEADER_INFO;
 #define ts_record_header_info_size sizeof(TS_RECORD_HEADER_INFO)
 
@@ -50,15 +49,14 @@ typedef struct TS_RECORD_HEADER_BASIC {
 
 // 	// RDP专有
 // 	uint8_t rdp_security;	// 0 = RDP, 1 = TLS
-
-//    uint8_t _reserve[512 - 2 - 2 - 8 - 2 - 2 - 64 - 64 - 40 - 40 - 2 - 40 - 1 - ts_record_header_info_size];
-   uint8_t _reserve[512 - 2 - 2 - 8 - 2 - 2 - 64 - 64 - 40 - 40 - 2 - 40 - ts_record_header_info_size];
 }TS_RECORD_HEADER_BASIC;
 #define ts_record_header_basic_size sizeof(TS_RECORD_HEADER_BASIC)
 
 typedef struct TS_RECORD_HEADER {
-   TS_RECORD_HEADER_INFO info;
-   TS_RECORD_HEADER_BASIC basic;
+    TS_RECORD_HEADER_INFO info;
+    ex_u8 _reserve1[64 - ts_record_header_info_size];
+    TS_RECORD_HEADER_BASIC basic;
+    ex_u8 _reserve2[512 - 64 - ts_record_header_basic_size];
 }TS_RECORD_HEADER;
 
 // header部分（header-info + header-basic） = 512B
@@ -67,10 +65,9 @@ typedef struct TS_RECORD_HEADER {
 // 一个数据包的头
 typedef struct TS_RECORD_PKG {
     uint8_t type;           // 包的数据类型
-    uint8_t _reserve[3];    // 保留
     uint32_t size;          // 这个包的总大小（不含包头）
     uint32_t time_ms;       // 这个包距起始时间的时间差（毫秒，意味着一个连接不能持续超过49天）
-    // uint32_t index;         // 这个包的序号（最后一个包的序号与TS_RECORD_HEADER_INFO::packages数量匹配）
+    uint8_t _reserve[3];    // 保留
 }TS_RECORD_PKG;
 
 

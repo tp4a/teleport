@@ -149,30 +149,36 @@ def read_record_head(protocol_type, record_id):
         data = file.read()
         offset = 0
 
-        magic, = struct.unpack_from('I', data, offset)  # magic must be 1381126228, 'TPPR'
-        offset += 4
-        ver, = struct.unpack_from('H', data, offset)
-        offset += 2
-        pkg_count, = struct.unpack_from('I', data, offset)
-        offset += 4
-        time_used, = struct.unpack_from('I', data, offset)
-        offset += 4
+        # 读取 `TPPR` 标记(1380995156) 和录像文件版本、录像类型
+        magic, ver, = struct.unpack_from('=IH', data, offset)
+        offset += 6
+        if magic != 1380995156:
+            return None, TPE_DATA
+        if ver != 4:    # 从v3.5.0开始录像文件版本为版本4
+            return None, TPE_INCOMPATIBLE_VERSION
 
-        protocol_type, = struct.unpack_from('H', data, offset)
-        offset += 2
-        protocol_sub_type, = struct.unpack_from('H', data, offset)
-        offset += 2
-        time_start, = struct.unpack_from('Q', data, offset)
-        offset += 8
-        width, = struct.unpack_from('H', data, offset)
-        offset += 2
-        height, = struct.unpack_from('H', data, offset)
-        offset += 2
+        rec_type, time_used, dat_file_count, = struct.unpack_from('=HII', data, offset)
+        offset += 10
+        log.w('yyy: {}, {}, {}\n'.format(rec_type, time_used, dat_file_count))
 
-        # file_count, = struct.unpack_from('H', data, offset)
+        # TS_RECORD_HEADER_INFO 共计64字节，前面有用的数据读取后，跳过后面补齐用的字节，从第64字节
+        # 开始解析 TS_RECORD_HEADER_BASIC
+        offset = 64
+
+        # protocol_type, = struct.unpack_from('H', data, offset)
         # offset += 2
-        # total_size, = struct.unpack_from('I', data, offset)
-        # offset += 4
+        # protocol_sub_type, = struct.unpack_from('H', data, offset)
+        # offset += 2
+        # time_start, = struct.unpack_from('Q', data, offset)
+        # offset += 8
+        # width, = struct.unpack_from('H', data, offset)
+        # offset += 2
+        # height, = struct.unpack_from('H', data, offset)
+        # offset += 2
+
+        protocol_type, protocol_sub_type, time_start, width, height = struct.unpack_from('=HHQHH', data, offset)
+        offset += 16
+        log.w('xxx: {}, {}, {}, {}, {}\n'.format(protocol_type, protocol_sub_type, time_start, width, height))
 
         user_name, = struct.unpack_from('64s', data, offset)
         user_name = _remove_padding_space(user_name).decode()
@@ -202,7 +208,7 @@ def read_record_head(protocol_type, record_id):
 
     header = dict()
     header['start'] = time_start
-    header['pkg_count'] = pkg_count
+    # header['pkg_count'] = pkg_count
     header['time_used'] = time_used
     header['width'] = width
     header['height'] = height
@@ -212,6 +218,7 @@ def read_record_head(protocol_type, record_id):
     header['conn_ip'] = conn_ip
     header['conn_port'] = conn_port
     header['client_ip'] = client_ip
+    log.d('header:', header, '\n')
 
     return header, TPE_OK
 
@@ -305,10 +312,11 @@ def read_ssh_record_data(record_id, offset):
     data_list = list()
     data_size = 0
     file = None
+    err = TPE_OK
     try:
         file_size = os.path.getsize(file_data)
         if offset >= file_size:
-            return None, 0, TPE_FAILED
+            return None, 0, TPE_NO_MORE_DATA
 
         file = open(file_data, 'rb')
         if offset > 0:
@@ -356,6 +364,7 @@ def read_ssh_record_data(record_id, offset):
 
             data_list.append(temp)
             if offset + data_size == file_size:
+                err = TPE_NO_MORE_DATA
                 break
 
     except Exception:
@@ -365,7 +374,7 @@ def read_ssh_record_data(record_id, offset):
         if file is not None:
             file.close()
 
-    return data_list, data_size, TPE_OK
+    return data_list, data_size, err
 
 
 def read_telnet_record_data(record_id, offset):
