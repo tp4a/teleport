@@ -464,8 +464,9 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
     if (_this->m_auth_type != TP_AUTH_TYPE_NONE)
         ssh_options_set(_this->m_srv_session, SSH_OPTIONS_USER, _this->m_acc_name.c_str());
 
-    // default timeout is 10 seconds, it is too short for connect progress, so set it to 60 sec.
-    int _timeout = 60; // 60 sec.
+    // default timeout is 10 seconds, it is too short for connect progress, so set it to 120 sec.
+    // usually when sshd config to UseDNS.
+    int _timeout = 120; // 120 sec.
     ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
     int rc = 0;
@@ -478,13 +479,13 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
     }
 
     // once the server are connected, change the timeout back to default.
-    _timeout = 30; // in seconds.
+    _timeout = 120; // in seconds.
     ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
     // get ssh version of host, v1 or v2
     // TODO: libssh-0.8.5 does not support sshv1 anymore.
     _this->m_ssh_ver = ssh_get_version(_this->m_srv_session);
-    EXLOGW("[ssh] real host is SSHv%d\n", _this->m_ssh_ver);
+    //EXLOGW("[ssh] real host is SSHv%d\n", _this->m_ssh_ver);
 
 #if 0
     // check supported auth type by host

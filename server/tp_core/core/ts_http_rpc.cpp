@@ -9,6 +9,7 @@
 extern TppManager g_tpp_mgr;
 
 #include <teleport_const.h>
+#include <sstream>
 
 
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')

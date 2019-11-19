@@ -67,6 +67,7 @@
 #	include <fcntl.h>   // O_RDONLY, etc.
 #	include <errno.h>
 #	include <wchar.h>
+#   include <memory>
 #	include <sys/stat.h>
 #	include <sys/types.h>
 #	include <sys/socket.h>
