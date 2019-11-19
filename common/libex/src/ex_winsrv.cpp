@@ -1,4 +1,4 @@
-#include <ex/ex_winsrv.h>
+ï»¿#include <ex/ex_winsrv.h>
 
 #ifdef EX_OS_WIN32
 
@@ -44,14 +44,14 @@ ex_rv ex_winsrv_install(const ex_wstr& srv_name, const ex_wstr& disp_name, const
 	}
 
 	SERVICE_FAILURE_ACTIONS  failure_action;
-	failure_action.dwResetPeriod = 0;				// reset failure count to zero  µÄÊ±¼ä£¬µ¥Î»ÎªÃë
+	failure_action.dwResetPeriod = 0;				// reset failure count to zero  çš„æ—¶é—´ï¼Œå•ä½ä¸ºç§’
 	failure_action.lpRebootMsg = NULL;				// Message to broadcast to server users before rebooting  
 	failure_action.lpCommand = NULL;				// Command line of the process for the CreateProcess function to execute in response 
-	failure_action.cActions = 3;						// actionÊı×éµÄ¸öÊı
+	failure_action.cActions = 3;						// actionæ•°ç»„çš„ä¸ªæ•°
 
 	SC_ACTION actionarray[3];
-	actionarray[0].Type = SC_ACTION_RESTART;		// ÖØĞÂÆô¶¯·şÎñ
-	actionarray[0].Delay = 60000;					// µ¥Î»ÎªºÁÃë
+	actionarray[0].Type = SC_ACTION_RESTART;		// é‡æ–°å¯åŠ¨æœåŠ¡
+	actionarray[0].Delay = 60000;					// å•ä½ä¸ºæ¯«ç§’
 	actionarray[1].Type = SC_ACTION_RESTART;
 	actionarray[1].Delay = 60000;
 	actionarray[2].Type = SC_ACTION_RESTART;

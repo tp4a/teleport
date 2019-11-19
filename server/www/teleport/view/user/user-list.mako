@@ -8,6 +8,7 @@
 <%block name="extend_js_file">
     <script type="text/javascript" src="${ static_url('js/user/user-list.js') }"></script>
     <script type="text/javascript" src="${ static_url('plugins/jquery/ajaxfileupload.js') }"></script>
+    <script type="text/javascript" src="${ static_url('plugins/datetimepicker/js/bootstrap-datetimepicker.js') }"></script>
 </%block>
 
 <%block name="embed_js">
@@ -230,6 +231,25 @@
                                 <input id="edit-user-wechat" type="text" class="form-control"/>
                             </div>
                         </div>
+                        
+                        <div class="form-group form-group-sm">
+                            <label for="edit-user-valid-date" class="col-sm-2 control-label">生效时间：</label>
+                            <div class="col-sm-5">
+                                <div class='input-group date' id='edit-user-valid-from'>
+                					<input type='text' class="form-control" />
+                					<span class="input-group-addon">
+					                    <span class="glyphicon glyphicon-calendar"></span>
+					                </span>
+					            </div>
+					            <div class='input-group date' id='edit-user-valid-to'>
+                					<input type='text' class="form-control" />
+                					<span class="input-group-addon">
+					                    <span class="glyphicon glyphicon-calendar"></span>
+					                </span>
+					            </div>
+                            </div>
+                        </div>
+
 
                         <div class="form-group form-group-sm">
                             <label for="edit-user-desc" class="col-sm-2 control-label">备注：</label>

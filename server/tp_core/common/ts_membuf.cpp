@@ -1,4 +1,4 @@
-#include "ts_membuf.h"
+ï»¿#include "ts_membuf.h"
 #include <memory.h>
 
 MemBuffer::MemBuffer()// : m_buffer(NULL), m_data_size(0), m_buffer_size(0)
@@ -45,7 +45,7 @@ void MemBuffer::reserve(size_t size)
 		return;
 	}
 
-	// ½«ĞÂµÄ»º³åÇø´óĞ¡È¡Õûµ½ MEMBUF_BLOCK_SIZE µÄÕûÊı±¶
+	// å°†æ–°çš„ç¼“å†²åŒºå¤§å°å–æ•´åˆ° MEMBUF_BLOCK_SIZE çš„æ•´æ•°å€
 	size_t new_size = (size + MEMBUF_BLOCK_SIZE - 1) & ~(MEMBUF_BLOCK_SIZE - 1);
 	//EXLOGD("[mbuf:%p] reserve(2): m_buf: %p, m_buf_size: %d, size: %d, new size: %d.\n", this, m_buffer, m_buffer_size, size, new_size);
 

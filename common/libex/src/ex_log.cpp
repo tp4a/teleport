@@ -1,4 +1,4 @@
-#include <ex/ex_log.h>
+﻿#include <ex/ex_log.h>
 #include <ex/ex_path.h>
 //#include <ex/ex_thread.h>
 //#include <vector>
@@ -379,7 +379,7 @@ bool ExLogger::_open_file()
 	}
 
 #ifdef EX_OS_WIN32
-	// ע�⣺�������ʹ�� CreateFile() ������־�ļ���ʹ��FILEָ���޷����ݸ���̬����в�����
+	// 注意：这里必须使用 CreateFile() 来打开日志文件，使用FILE指针无法传递给动态库进行操作。
 	m_file = CreateFileW(m_fullname.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (INVALID_HANDLE_VALUE == m_file)
 	{

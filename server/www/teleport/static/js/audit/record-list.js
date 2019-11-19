@@ -157,7 +157,7 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
         cell_obj.find('[data-action]').click(function () {
 
             var row_data = tbl.get_row(row_id);
-            console.log('---', row_data);
+            // console.log('---', row_data);
             var action = $(this).attr('data-action');
 
             if (action === 'replay') {
@@ -363,83 +363,26 @@ $app.on_table_host_render_created = function (render) {
 };
 
 $app.do_replay_rdp = function (record_id, user_username, acc_username, host_ip, time_begin) {
+    if(!$app.options.core_running) {
+        $tp.notify_error(tp_error_msg(TPE_NO_CORE_SERVER), '无法播放。');
+        return;
+    }
+
+    if(!$assist.check())
+        return;
+
     $assist.do_rdp_replay(
-        {
-            rid: record_id
-            // , web: $tp.web_server // + '/audit/get_rdp_record/' + record_id // 'http://' + ip + ':' + port + '/log/replay/rdp/' + record_id;
-            // , sid: Cookies.get('_sid')
-            , user: user_username
-            , acc: acc_username
-            , host: host_ip
-            , start: time_begin//tp_format_datetime(tp_utc2local(time_begin), 'yyyyMMdd-HHmmss')
-        }
+        record_id
         , function () {
             // func_success
         }
         , function (code, message) {
-            if (code === TPE_NO_ASSIST)
+            if (code === TPE_NO_ASSIST) {
+                $assist.errcode = TPE_NO_ASSIST;
                 $assist.alert_assist_not_found();
+            }
             else
                 $tp.notify_error('播放RDP操作录像失败：' + tp_error_msg(code, message));
         }
     );
 };
-
-
-// $app.on_table_host_header_created = function (header) {
-//     $('#' + header._table_ctrl.dom_id + ' a[data-reset-filter]').click(function () {
-//         CALLBACK_STACK.create()
-//             .add(header._table_ctrl.load_data)
-//             .add(header._table_ctrl.reset_filters)
-//             .exec();
-//     });
-//
-//     // 表格内嵌过滤器的事件绑定在这时进行（也可以延期到整个表格创建完成时进行）
-//     header._table_ctrl.get_filter_ctrl('search').on_created();
-// };
-
-// $app.get_selected_record = function (tbl) {
-//     var records = [];
-//     var _objs = $('#' + $app.table_record.dom_id + ' tbody tr td input[data-check-box]');
-//     $.each(_objs, function (i, _obj) {
-//         if ($(_obj).is(':checked')) {
-//             var _row_data = tbl.get_row(_obj);
-//             records.push(_row_data.id);
-//         }
-//     });
-//     return records;
-// };
-
-// $app.on_btn_remove_record_click = function () {
-//     var records = $app.get_selected_record($app.table_record);
-//     if (records.length === 0) {
-//         $tp.notify_error('请选择要删除的会话记录！');
-//         return;
-//     }
-//
-//     var _fn_sure = function (cb_stack, cb_args) {
-//         $tp.ajax_post_json('/user/remove-user', {users: users},
-//             function (ret) {
-//                 if (ret.code === TPE_OK) {
-//                     cb_stack.add($app.check_host_all_selected);
-//                     cb_stack.add($app.table_record.load_data);
-//                     $tp.notify_success('删除用户账号操作成功！');
-//                 } else {
-//                     $tp.notify_error('删除用户账号操作失败：' + tp_error_msg(ret.code, ret.message));
-//                 }
-//
-//                 cb_stack.exec();
-//             },
-//             function () {
-//                 $tp.notify_error('网络故障，删除用户账号操作失败！');
-//                 cb_stack.exec();
-//             }
-//         );
-//     };
-//
-//     var cb_stack = CALLBACK_STACK.create();
-//     $tp.dlg_confirm(cb_stack, {
-//         msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除用户账号将同时将其从所在用户组中移除，并且删除所有分配给此用户的授权！</p></div><p>如果您希望禁止某个用户登录本系统，可对其进行“禁用”操作！</p><p>您确定要移除所有选定的 <strong>' + user_list.length + '个</strong> 用户账号吗？</p>',
-//         fn_yes: _fn_sure
-//     });
-// };

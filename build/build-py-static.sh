@@ -3,10 +3,10 @@
 ################################################################
 # Basic settings.
 ################################################################
-VER_PYTHON="3.7.0"
+VER_PYTHON="3.7.4"
 VER_PYTHON_SHORT="3.7"
-VER_OPENSSL="1.0.2p"
-VER_SQLITE="3250000"
+VER_OPENSSL="1.0.2s"
+VER_SQLITE="3290000"
 VER_ZLIB="1.2.11"
 VER_PYTHON_LIB="${VER_PYTHON_SHORT}m"
 
@@ -77,7 +77,7 @@ function step_download_files()
 
 	dlfile "python source tarball"  "https://www.python.org/ftp/python/${VER_PYTHON}/" "Python-${VER_PYTHON}.tgz" ${PATH_DOWNLOAD}
 	dlfile "openssl source tarball" "https://www.openssl.org/source/" "openssl-${VER_OPENSSL}.tar.gz" ${PATH_DOWNLOAD}
-	dlfile "sqlite source tarball"  "http://sqlite.org/2018/" "sqlite-autoconf-${VER_SQLITE}.tar.gz" ${PATH_DOWNLOAD}
+	dlfile "sqlite source tarball"  "http://sqlite.org/2019/" "sqlite-autoconf-${VER_SQLITE}.tar.gz" ${PATH_DOWNLOAD}
 	dlfile "zlib source tarball"    "https://www.zlib.net/" "zlib-${VER_ZLIB}.tar.gz" ${PATH_DOWNLOAD}
 }
 

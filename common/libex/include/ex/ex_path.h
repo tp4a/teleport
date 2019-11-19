@@ -1,4 +1,4 @@
-#ifndef __LIB_EX_PATH_H__
+ï»¿#ifndef __LIB_EX_PATH_H__
 #define __LIB_EX_PATH_H__
 
 #include "ex_platform.h"
@@ -39,7 +39,7 @@ bool ex_path_join(ex_wstr& inout_path, EX_BOOL auto_abspath, ...);
 bool ex_abspath_to(const ex_wstr& base_abs_path, const ex_wstr& relate_path, ex_wstr& out_path);
 bool ex_mkdirs(const ex_wstr& in_path);
 
-// »ñÈ¡ÎÄ¼şÃûÖĞµÄÀ©Õ¹Ãû²¿·Ö£¨²»°üÀ¨.£¬ÀıÈçabc.py£¬·µ»Ø py£©
+// è·å–æ–‡ä»¶åä¸­çš„æ‰©å±•åéƒ¨åˆ†ï¼ˆä¸åŒ…æ‹¬.ï¼Œä¾‹å¦‚abc.pyï¼Œè¿”å› pyï¼‰
 bool ex_path_ext_name(const ex_wstr& in_filename, ex_wstr& out_ext);
 
 #endif

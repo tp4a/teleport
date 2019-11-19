@@ -28,8 +28,10 @@ __pycache__
 **/.idea/misc.xml
 **/.idea/dictionaries
 **/.idea/watcherTasks.xml
+**/.idea/dataSources.*
 **/.idea/inspectionProfiles
 **/.idea/codeStyles
+**/.idea/dataSources
 **/.idea/inspectionProfiles
 **/.idea/vcs.xml
 **/.idea/modules.xml
@@ -100,3 +102,7 @@ profile
 *.moved-aside
 /server/share/tmp
 
+/server/tp_core/testssh/Debug
+/server/tp_core/testssh/Release
+/external/zlib
+/client/tools/qt-redist

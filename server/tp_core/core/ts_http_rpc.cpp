@@ -1,4 +1,4 @@
-#include "ts_http_rpc.h"
+ï»¿#include "ts_http_rpc.h"
 #include "ts_ver.h"
 #include "ts_env.h"
 #include "ts_session.h"
@@ -99,7 +99,7 @@ bool TsHttpRpc::init(void)
 
 	mg_set_protocol_http_websocket(nc);
 
-	// µ¼ÖÂÄÚ´æĞ¹Â¶µÄµØ·½£¨Ã¿´ÎÇëÇóÔ¼ÏûºÄ1KBÄÚ´æ£©
+	// å¯¼è‡´å†…å­˜æ³„éœ²çš„åœ°æ–¹ï¼ˆæ¯æ¬¡è¯·æ±‚çº¦æ¶ˆè€—1KBå†…å­˜ï¼‰
 	// DO NOT USE MULTITHREADING OF MG.
 	// cpq (one of the authors of MG) commented on 3 Feb: Multithreading support has been removed.
 	// https://github.com/cesanta/mongoose/commit/707b9ed2d6f177b3ad8787cb16a1bff90ddad992
@@ -153,7 +153,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 			_this->_create_json_ret(ret_buf, TPE_PARAM, "not a `rpc` request.");
 		}
 
-		mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: application/json\r\n\r\n%s", (int)ret_buf.size() - 1, &ret_buf[0]);
+		mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: application/json\r\n\r\n%s", (int)ret_buf.length(), &ret_buf[0]);
 		nc->flags |= MG_F_SEND_AND_CLOSE;
 	}
 	break;
@@ -188,7 +188,7 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
     }
 
     if (need_decode) {
-        // ½«²ÎÊı½øĞĞ url-decode ½âÂë
+        // å°†å‚æ•°è¿›è¡Œ url-decode è§£ç 
         int len = json_str.length() * 2;
         ex_chars sztmp;
         sztmp.resize(len);
@@ -202,9 +202,14 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
 	if (0 == json_str.length())
 		return TPE_PARAM;
 
-    Json::Reader jreader;
+    //Json::Reader jreader;
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
+    const char *str_json_begin = json_str.c_str();
+    ex_astr err;
 
-	if (!jreader.parse(json_str.c_str(), json_param))
+	//if (!jreader.parse(json_str.c_str(), json_param))
+    if (!jreader->parse(str_json_begin, str_json_begin + json_str.length(), &json_param, &err))
 		return TPE_JSON_FORMAT;
 
 	if (json_param.isArray())
@@ -221,37 +226,49 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
 
 void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode, const Json::Value& jr_data)
 {
-	// ·µ»Ø£º {"code":errcode, "data":{jr_data}}
+	// è¿”å›ï¼š {"code":errcode, "data":{jr_data}}
 
-	Json::FastWriter jr_writer;
+	//Json::FastWriter jr_writer;
 	Json::Value jr_root;
-
 	jr_root["code"] = errcode;
 	jr_root["data"] = jr_data;
-	buf = jr_writer.write(jr_root);
+	//buf = jr_writer.write(jr_root);
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(jr_root, &os);
+    buf = os.str();
 }
 
 void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode)
 {
-	// ·µ»Ø£º {"code":errcode}
+	// è¿”å›ï¼š {"code":errcode}
 
-	Json::FastWriter jr_writer;
+	//Json::FastWriter jr_writer;
 	Json::Value jr_root;
-
 	jr_root["code"] = errcode;
-	buf = jr_writer.write(jr_root);
+	//buf = jr_writer.write(jr_root);
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(jr_root, &os);
+    buf = os.str();
 }
 
 void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode, const char* message)
 {
-	// ·µ»Ø£º {"code":errcode, "message":message}
+	// è¿”å›ï¼š {"code":errcode, "message":message}
 
-	Json::FastWriter jr_writer;
+	//Json::FastWriter jr_writer;
 	Json::Value jr_root;
-
 	jr_root["code"] = errcode;
 	jr_root["message"] = message;
-	buf = jr_writer.write(jr_root);
+	//buf = jr_writer.write(jr_root);
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(jr_root, &os);
+    buf = os.str();
 }
 
 void TsHttpRpc::_process_request(const ex_astr& func_cmd, const Json::Value& json_param, ex_astr& buf)
@@ -280,10 +297,10 @@ void TsHttpRpc::_process_request(const ex_astr& func_cmd, const Json::Value& jso
 	}
 }
 
-extern bool g_exit_flag;	// ÒªÇóÕû¸öTSÍË³öµÄ±êÖ¾£¨ÓÃÓÚÍ£Ö¹¸÷¸ö¹¤×÷Ïß³Ì£©
+extern bool g_exit_flag;	// è¦æ±‚æ•´ä¸ªTSé€€å‡ºçš„æ ‡å¿—ï¼ˆç”¨äºåœæ­¢å„ä¸ªå·¥ä½œçº¿ç¨‹ï¼‰
 void TsHttpRpc::_rpc_func_exit(const Json::Value& json_param, ex_astr& buf)
 {
-	// ÉèÖÃÒ»¸öÈ«¾ÖÍË³ö±êÖ¾
+	// è®¾ç½®ä¸€ä¸ªå…¨å±€é€€å‡ºæ ‡å¿—
 	g_exit_flag = true;
 	_create_json_ret(buf, TPE_OK);
 }
@@ -370,7 +387,7 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 // 	info->ref_count = 0;
 // 	info->ticket_start = ex_get_tick_count();
 // 
-	// Éú³ÉÒ»¸ösession-id£¨ÄÚ²¿»á±ÜÃâÖØ¸´£©
+	// ç”Ÿæˆä¸€ä¸ªsession-idï¼ˆå†…éƒ¨ä¼šé¿å…é‡å¤ï¼‰
 	ex_astr sid;
 	if (!g_session_mgr.request_session(sid, info)) {
 		_create_json_ret(buf, TPE_FAILED);
@@ -421,14 +438,14 @@ void TsHttpRpc::_rpc_func_kill_sessions(const Json::Value& json_param, ex_astr& 
 void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 {
 	// https://github.com/tp4a/teleport/wiki/TELEPORT-CORE-JSON-RPC#enc
-	// ¼ÓÃÜÒ»¸ö×Ö·û´® [ p=plain-text, c=cipher-text ]
-	// Èë²Î: {"p":"need be encrypt"}
-	// Ê¾Àı: {"p":"this-is-a-password"}
-	//   p: ±»¼ÓÃÜµÄ×Ö·û´®
-	// ·µ»Ø£º
-	//   dataÓòÖĞµÄ"c"µÄÄÚÈİÊÇ¼ÓÃÜºóÃÜÎÄµÄbase64±àÂë½á¹û
-	// Ê¾Àı: {"code":0, "data":{"c":"Mxs340a9r3fs+3sdf=="}}
-	//   ´íÎó·µ»Ø£º {"code":1234}
+	// åŠ å¯†ä¸€ä¸ªå­—ç¬¦ä¸² [ p=plain-text, c=cipher-text ]
+	// å…¥å‚: {"p":"need be encrypt"}
+	// ç¤ºä¾‹: {"p":"this-is-a-password"}
+	//   p: è¢«åŠ å¯†çš„å­—ç¬¦ä¸²
+	// è¿”å›ï¼š
+	//   dataåŸŸä¸­çš„"c"çš„å†…å®¹æ˜¯åŠ å¯†åå¯†æ–‡çš„base64ç¼–ç ç»“æœ
+	// ç¤ºä¾‹: {"code":0, "data":{"c":"Mxs340a9r3fs+3sdf=="}}
+	//   é”™è¯¯è¿”å›ï¼š {"code":1234}
 
 	if (json_param.isArray())
 	{
@@ -468,7 +485,7 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
 	// https://github.com/tp4a/teleport/wiki/TELEPORT-CORE-JSON-RPC#set_config
 	/*
 	{
-	  "noop-timeout": 15     # °´·ÖÖÓ¼Æ
+	  "noop-timeout": 15     # æŒ‰åˆ†é’Ÿè®¡
 	}
 	*/
 
@@ -497,14 +514,14 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
 void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
 {
 	// https://github.com/tp4a/teleport/wiki/TELEPORT-CORE-JSON-RPC#enc
-	// ¼ÓÃÜ¶à¸ö¸ö×Ö·û´® [ p=plain-text, c=cipher-text ]
-	// Èë²Î: {"p":["need be encrypt", "plain to cipher"]}
-	// Ê¾Àı: {"p":["password-for-A"]}
-	//   p: ±»¼ÓÃÜµÄ×Ö·û´®
-	// ·µ»Ø£º
-	//   dataÓòÖĞµÄ"c"µÄÄÚÈİÊÇ¼ÓÃÜºóÃÜÎÄµÄbase64±àÂë½á¹û
-	// Ê¾Àı: {"code":0, "data":{"c":["Mxs340a9r3fs+3sdf=="]}}
-	//   ´íÎó·µ»Ø£º {"code":1234}
+	// åŠ å¯†å¤šä¸ªä¸ªå­—ç¬¦ä¸² [ p=plain-text, c=cipher-text ]
+	// å…¥å‚: {"p":["need be encrypt", "plain to cipher"]}
+	// ç¤ºä¾‹: {"p":["password-for-A"]}
+	//   p: è¢«åŠ å¯†çš„å­—ç¬¦ä¸²
+	// è¿”å›ï¼š
+	//   dataåŸŸä¸­çš„"c"çš„å†…å®¹æ˜¯åŠ å¯†åå¯†æ–‡çš„base64ç¼–ç ç»“æœ
+	// ç¤ºä¾‹: {"code":0, "data":{"c":["Mxs340a9r3fs+3sdf=="]}}
+	//   é”™è¯¯è¿”å›ï¼š {"code":1234}
 
 	if (json_param.isArray())
 	{

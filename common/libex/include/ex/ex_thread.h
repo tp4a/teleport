@@ -1,4 +1,4 @@
-#ifndef __EX_THREAD_H__
+ï»¿#ifndef __EX_THREAD_H__
 #define __EX_THREAD_H__
 
 #include "ex_str.h"
@@ -23,11 +23,11 @@ public:
 
 	bool is_running(void) { return m_is_running; }
 
-	// ´´½¨²¢Æô¶¯Ïß³Ì£¨Ö´ĞĞ±»ÖØÔØÁËµÄrun()º¯Êı£©
+	// åˆ›å»ºå¹¶å¯åŠ¨çº¿ç¨‹ï¼ˆæ‰§è¡Œè¢«é‡è½½äº†çš„run()å‡½æ•°ï¼‰
 	bool start(void);
-	// ½áÊøÏß³Ì£¨µÈ´ıwait_timeout_msºÁÃë£¬Èç¹ûwait_timeout_msÎª0£¬ÔòÎŞÏŞµÈ´ı£©
+	// ç»“æŸçº¿ç¨‹ï¼ˆç­‰å¾…wait_timeout_msæ¯«ç§’ï¼Œå¦‚æœwait_timeout_msä¸º0ï¼Œåˆ™æ— é™ç­‰å¾…ï¼‰
 	bool stop(void);
-	// Ö±½Ó½áÊøÏß³Ì£¨Ç¿É±£¬²»½¨ÒéÊ¹ÓÃ£©
+	// ç›´æ¥ç»“æŸçº¿ç¨‹ï¼ˆå¼ºæ€ï¼Œä¸å»ºè®®ä½¿ç”¨ï¼‰
 	bool terminate(void);
 
 protected:
@@ -52,7 +52,7 @@ protected:
 };
 
 
-// Ïß³ÌËø£¨½ø³ÌÄÚÊ¹ÓÃ£©
+// çº¿ç¨‹é”ï¼ˆè¿›ç¨‹å†…ä½¿ç”¨ï¼‰
 class ExThreadLock
 {
 public:
@@ -70,7 +70,7 @@ private:
 #endif
 };
 
-// Ïß³ÌËø¸¨ÖúÀà
+// çº¿ç¨‹é”è¾…åŠ©ç±»
 class ExThreadSmartLock
 {
 public:
@@ -109,12 +109,12 @@ private:
 };
 
 
-// Ô­×Ó²Ù×÷
+// åŸå­æ“ä½œ
 int ex_atomic_add(volatile int* pt, int t);
 int ex_atomic_inc(volatile int* pt);
 int ex_atomic_dec(volatile int* pt);
 
-// Ïß³ÌÏà¹Ø²Ù×÷
+// çº¿ç¨‹ç›¸å…³æ“ä½œ
 ex_u64 ex_get_thread_id(void);
 
 #endif // __EX_THREAD_H__

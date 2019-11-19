@@ -411,12 +411,15 @@ class RecordHandler(TPBaseHandler):
             return
 
         if not tp_cfg().core.detected:
+            core_running = False
             total_size = 0
             free_size = 0
         else:
+            core_running = True
             total_size, free_size = get_free_space_bytes(tp_cfg().core.replay_path)
 
         param = {
+            'core_running': core_running,
             'total_size': total_size,
             'free_size': free_size,
         }
@@ -659,18 +662,6 @@ class DoGetFileHandler(TPBaseHandler):
 
         require_privilege = TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT
 
-        # sid = self.get_argument('sid', None)
-        # if sid is None:
-        #     self.set_status(403)
-        #     return self.write('need login first.')
-        #
-        # self._s_id = sid
-        # _user = self.get_session('user')
-        # if _user is None:
-        #     self.set_status(403)
-        #     return self.write('need login first.')
-        # self._user = _user
-
         if not self._user['_is_login']:
             self.set_status(401)  # 401=未授权, 要求身份验证
             return self.write('need login first.')
@@ -710,8 +701,8 @@ class DoGetFileHandler(TPBaseHandler):
             self.set_status(416)  # 416=请求范围不符合要求
             return self.write('no more data.')
 
-        # we read most 4096 bytes one time.
-        BULK_SIZE = 4096
+        # we read most 8192 bytes one time.
+        BULK_SIZE = 8192
         total_need = file_size - offset
         if length != -1 and length < total_need:
             total_need = length
@@ -721,6 +712,7 @@ class DoGetFileHandler(TPBaseHandler):
             read_this_time = BULK_SIZE if total_need > BULK_SIZE else total_need
             while read_this_time > 0:
                 self.write(f.read(read_this_time))
+                self.flush()
                 total_read += read_this_time
                 if total_read >= total_need:
                     break

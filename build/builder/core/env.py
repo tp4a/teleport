@@ -148,6 +148,11 @@ class Env(object):
                 if warn_miss_tool:
                     cc.w(' - can not locate `nsis`, so I can not make installer.')
 
+            if 'qt' in _tmp:
+                self.qt = _tmp['qt']
+            else:
+                self.qt = None
+
         elif self.is_linux or self.is_macos:
             if 'cmake' in _tmp:
                 self.cmake = _tmp['cmake']
@@ -177,6 +182,10 @@ class Env(object):
             _v_openssl = _tmp['openssl'].split(',')
             self.ver_ossl = _v_openssl[0].strip()
             self.ver_ossl_number = _v_openssl[1].strip()
+
+            _v_zlib = _tmp['zlib'].split(',')
+            self.ver_zlib = _v_zlib[0].strip()
+            self.ver_zlib_number = _v_zlib[1].strip()
 
             self.ver_libuv = _tmp['libuv']
             self.ver_mbedtls = _tmp['mbedtls']

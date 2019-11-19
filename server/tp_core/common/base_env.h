@@ -1,4 +1,4 @@
-#ifndef __TS_BASE_ENV_H__
+ï»¿#ifndef __TS_BASE_ENV_H__
 #define __TS_BASE_ENV_H__
 
 #include "protocol_interface.h"
@@ -13,7 +13,7 @@ public:
 
 public:
 	ex_wstr exec_path;
-	ex_wstr etc_path;	// ÅäÖÃÎÄ¼ş¡¢SSH·şÎñÆ÷µÄË½Ô¿ÎÄ¼şµÄ´æ·ÅÂ·¾¶
+	ex_wstr etc_path;	// é…ç½®æ–‡ä»¶ã€SSHæœåŠ¡å™¨çš„ç§é’¥æ–‡ä»¶çš„å­˜æ”¾è·¯å¾„
 	ex_wstr replay_path;
 
 	TPP_GET_CONNNECT_INFO_FUNC get_connect_info;

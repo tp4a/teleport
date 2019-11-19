@@ -22,6 +22,8 @@ wget = C:\Program Files (x86)\wget\wget.exe
 # if not set msbuild path, default to get it by register.
 #msbuild = C:\Program Files (x86)\MSBuild\14.0\bin\MSBuild.exe
 
+# need qt to build tp-player.
+qt = C:\Qt\Qt5.12.0\5.12.0\msvc2017
 
 # ============================================
 # for Linux and macOS
