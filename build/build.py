@@ -64,6 +64,9 @@ def main():
         elif x == 'a':
             clean_everything()
             continue
+        elif x == 'e':
+            clean_external()
+            continue
 
         try:
             x = int(x)
@@ -114,6 +117,27 @@ def clean_everything():
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libsqlite3.a'))
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libssh.a'))
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libssh_threads.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libuv.a'))
+
+
+def clean_external():
+    #utils.remove(os.path.join(env.root_path, 'out'))
+    utils.remove(os.path.join(env.root_path, 'external', 'jsoncpp'))
+    utils.remove(os.path.join(env.root_path, 'external', 'libuv'))
+    utils.remove(os.path.join(env.root_path, 'external', 'mbedtls'))
+    utils.remove(os.path.join(env.root_path, 'external', 'mongoose'))
+    #utils.remove(os.path.join(env.root_path, 'external', 'openssl'))
+    #utils.remove(os.path.join(env.root_path, 'external', 'python'))
+    #utils.remove(os.path.join(env.root_path, 'external', 'libssh-win-static', 'lib'))
+    #utils.remove(os.path.join(env.root_path, 'external', 'libssh-win-static', 'src'))
+    #utils.remove(os.path.join(env.root_path, 'external', 'linux', 'tmp'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libmbedcrypto.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libmbedtls.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libmbedx509.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libsqlite3.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libssh.a'))
+    utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libssh_threads.a'))
+
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libuv.a'))
 
 
@@ -249,6 +273,7 @@ def show_menu():
         cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, '%2d' % options[o]['id']), (cc.CR_NORMAL, '] ', options[o]['disp']))
 
     cc.v('  -------------------------------------------------------')
+    cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' E'), (cc.CR_NORMAL, '] clean external temp. files.'))
     cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' C'), (cc.CR_NORMAL, '] clean build and dist.'))
     cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' A'), (cc.CR_NORMAL, '] clean everything.'))
 

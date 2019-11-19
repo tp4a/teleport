@@ -3,10 +3,10 @@
 ################################################################
 # Basic settings.
 ################################################################
-VER_PYTHON="3.7.4"
+VER_PYTHON="3.7.5"
 VER_PYTHON_SHORT="3.7"
-VER_OPENSSL="1.0.2s"
-VER_SQLITE="3290000"
+VER_OPENSSL="1.1.1d"
+VER_SQLITE="3300100"
 VER_ZLIB="1.2.11"
 VER_PYTHON_LIB="${VER_PYTHON_SHORT}m"
 
@@ -36,15 +36,6 @@ function on_error()
 	echo "==================================================="
 	echo -e "\033[0m"
 	exit 1
-}
-
-function setp_build_git()
-{
-	# su -s
-	# yum install zlib-devel expat-devel libcurl-devel
-	# make prefix=/usr/local
-	# make prefix=/usr/local install
-	echo 'skip build git now.'
 }
 
 function dlfile()

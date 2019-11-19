@@ -250,7 +250,7 @@ class PYSLinux(PYSBase):
 
     def _get_pip(self):
         _exec_path = os.path.dirname(env.py_exec)
-        return os.path.join(_exec_path, 'pip')
+        return os.path.join(_exec_path, 'pip3.7')
 
     def _make_py_ver_file(self):
         # do nothing.
