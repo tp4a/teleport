@@ -40,7 +40,7 @@ int main(int argc, char** argv)
 
 	ssh_options_set(sess, SSH_OPTIONS_USER, username);
 
-	int _timeout = 60; // 60 sec.
+	int _timeout = 120; // 60 sec.
 	ssh_options_set(sess, SSH_OPTIONS_TIMEOUT, &_timeout);
 
     // connect to real SSH host.
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-    _timeout = 10; // 60 sec.
+    _timeout = 120; // 60 sec.
     ssh_options_set(sess, SSH_OPTIONS_TIMEOUT, &_timeout);
 
     // get version of SSH server.
@@ -70,6 +70,12 @@ int main(int argc, char** argv)
 
     int auth_methods = ssh_userauth_list(sess, username);
     printf("[INFO] supported auth-type: 0x%08x\n", auth_methods);
+    if(auth_methods == SSH_AUTH_METHOD_UNKNOWN) {
+//        auth_methods = SSH_AUTH_METHOD_PASSWORD|SSH_AUTH_METHOD_INTERACTIVE;
+//        printf("[WRN] unknown auth-type, try PASSWORD and INTERACTIVE\n");
+        auth_methods = SSH_AUTH_METHOD_PASSWORD;
+        printf("[WRN] unknown auth-type, try PASSWORD mode.\n");
+    }
 
     // get banner.
     const char* banner = ssh_get_issue_banner(sess);
@@ -154,6 +160,9 @@ int main(int argc, char** argv)
 
     if (!ok) {
         printf("[ERROR] can not use password mode or interactive mode to login to SSH server.\n");
+    }
+    else {
+        printf("[INFO] login success.\n");
     }
 
     ssh_disconnect(sess);
