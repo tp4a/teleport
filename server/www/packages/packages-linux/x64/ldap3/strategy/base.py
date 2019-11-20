@@ -28,7 +28,6 @@ from struct import pack
 from platform import system
 from time import sleep
 from random import choice
-from datetime import datetime
 
 from .. import SYNC, ANONYMOUS, get_config_parameter, BASE, ALL_ATTRIBUTES, ALL_OPERATIONAL_ATTRIBUTES, NO_ATTRIBUTES
 from ..core.results import DO_NOT_RAISE_EXCEPTIONS, RESULT_REFERRAL
@@ -457,7 +456,7 @@ class BaseStrategy(object):
         """
         message_type = ldap_message.getComponentByName('protocolOp').getName()
         component = ldap_message['protocolOp'].getComponent()
-        controls = ldap_message['controls']
+        controls = ldap_message['controls'] if ldap_message['controls'].hasValue() else None
         if message_type == 'bindResponse':
             if not bytes(component['matchedDN']).startswith(b'NTLM'):  # patch for microsoft ntlm authentication
                 result = bind_response_to_dict(component)
@@ -577,12 +576,12 @@ class BaseStrategy(object):
         return control_type, {'description': Oids.get(control_type, ''), 'criticality': criticality, 'value': control_value}
 
     @staticmethod
-    def decode_control_fast(control):
+    def decode_control_fast(control, from_server=True):
         """
         decode control, return a 2-element tuple where the first element is the control oid
         and the second element is a dictionary with description (from Oids), criticality and decoded control value
         """
-        control_type = str(to_unicode(control[0][3], from_server=True))
+        control_type = str(to_unicode(control[0][3], from_server=from_server))
         criticality = False
         control_value = None
         for r in control[1:]:
@@ -701,13 +700,17 @@ class BaseStrategy(object):
                         resp['attributes'][attr_type] = list()
                     self.do_next_range_search(request, resp, attr_name)
         return True
-    def do_operation_on_referral(self, request, referrals):
-        if log_enabled(PROTOCOL):
-            log(PROTOCOL, 'following referral for <%s>', self.connection)
+
+    def create_referral_connection(self, referrals):
+        referral_connection = None
+        selected_referral = None
+        cachekey = None
         valid_referral_list = self.valid_referral_list(referrals)
         if valid_referral_list:
-            preferred_referral_list = [referral for referral in valid_referral_list if referral['ssl'] == self.connection.server.ssl]
-            selected_referral = choice(preferred_referral_list) if preferred_referral_list else choice(valid_referral_list)
+            preferred_referral_list = [referral for referral in valid_referral_list if
+                                       referral['ssl'] == self.connection.server.ssl]
+            selected_referral = choice(preferred_referral_list) if preferred_referral_list else choice(
+                valid_referral_list)
 
             cachekey = (selected_referral['host'], selected_referral['port'] or self.connection.server.port, selected_referral['ssl'])
             if self.connection.use_referral_cache and cachekey in self.referral_cache:
@@ -725,7 +728,8 @@ class BaseStrategy(object):
                                                  local_certificate_file=self.connection.server.tls.certificate_file,
                                                  validate=self.connection.server.tls.validate,
                                                  version=self.connection.server.tls.version,
-                                                 ca_certs_file=self.connection.server.tls.ca_certs_file) if selected_referral['ssl'] else None)
+                                                 ca_certs_file=self.connection.server.tls.ca_certs_file) if
+                                         selected_referral['ssl'] else None)
 
                 from ..core.connection import Connection
 
@@ -758,6 +762,13 @@ class BaseStrategy(object):
             if self.connection.usage:
                 self.connection._usage.referrals_followed += 1
 
+        return selected_referral, referral_connection, cachekey
+
+    def do_operation_on_referral(self, request, referrals):
+        if log_enabled(PROTOCOL):
+            log(PROTOCOL, 'following referral for <%s>', self.connection)
+        selected_referral, referral_connection, cachekey = self.create_referral_connection(referrals)
+        if selected_referral:
             if request['type'] == 'searchRequest':
                 referral_connection.search(selected_referral['base'] or request['base'],
                                            selected_referral['filter'] or request['filter'],

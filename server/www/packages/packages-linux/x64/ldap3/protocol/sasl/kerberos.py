@@ -58,9 +58,14 @@ def sasl_gssapi(connection, controls):
     
     - If omitted or None, the authentication ID is used as the authorization ID
     - If a string, the authorization ID to use. Should start with "dn:" or "user:".
+
+    The optional third element is a raw gssapi credentials structure which can be used over
+    the implicit use of a krb ccache.
     """
     target_name = None
     authz_id = b""
+    raw_creds = None
+    creds = None
     if connection.sasl_credentials:
         if len(connection.sasl_credentials) >= 1 and connection.sasl_credentials[0]:
             if connection.sasl_credentials[0] is True:
@@ -70,9 +75,15 @@ def sasl_gssapi(connection, controls):
                 target_name = gssapi.Name('ldap@' + connection.sasl_credentials[0], gssapi.NameType.hostbased_service)
         if len(connection.sasl_credentials) >= 2 and connection.sasl_credentials[1]:
             authz_id = connection.sasl_credentials[1].encode("utf-8")
+        if len(connection.sasl_credentials) >= 3 and connection.sasl_credentials[2]:
+            raw_creds = connection.sasl_credentials[2]
     if target_name is None:
         target_name = gssapi.Name('ldap@' + connection.server.host, gssapi.NameType.hostbased_service)
-    creds = gssapi.Credentials(name=gssapi.Name(connection.user), usage='initiate') if connection.user else None
+
+    if raw_creds is not None:
+        creds = gssapi.Credentials(base=raw_creds, usage='initiate', store=connection.cred_store)
+    else:
+        creds = gssapi.Credentials(name=gssapi.Name(connection.user), usage='initiate', store=connection.cred_store) if connection.user else None
     ctx = gssapi.SecurityContext(name=target_name, mech=gssapi.MechType.kerberos, creds=creds)
     in_token = None
     try:

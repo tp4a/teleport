@@ -525,10 +525,11 @@ def search_result_entry_response_to_dict(response, schema, custom_formatter, che
     entry = dict()
     # entry['dn'] = str(response['object'])
     if response['object']:
-        entry['raw_dn'] = to_raw(response['object'])
         if isinstance(response['object'], STRING_TYPES):  # mock strategies return string not a PyAsn1 object
+            entry['raw_dn'] = to_raw(response['object'])
             entry['dn'] = to_unicode(response['object'])
         else:
+            entry['raw_dn'] = str(response['object'])
             entry['dn'] = to_unicode(bytes(response['object']), from_server=True)
     else:
         entry['raw_dn'] = b''
@@ -555,6 +556,8 @@ def search_result_done_response_to_dict(response):
             result['controls'][control[0]] = control[1]
 
     return result
+
+
 def search_result_reference_response_to_dict(response):
     return {'uri': search_refs_to_list(response)}
 

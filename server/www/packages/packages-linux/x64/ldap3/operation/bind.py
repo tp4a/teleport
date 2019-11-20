@@ -122,7 +122,7 @@ def bind_response_to_dict(response):
             'description': ResultCode().getNamedValues().getName(response['resultCode']),
             'dn': str(response['matchedDN']),
             'message': str(response['diagnosticMessage']),
-            'referrals': referrals_to_list(response['referral']),
+            'referrals': referrals_to_list(response['referral']) if response['referral'] is not None and response['referral'].hasValue() else [],
             'saslCreds': bytes(response['serverSaslCreds']) if response['serverSaslCreds'] is not None and response['serverSaslCreds'].hasValue() else None}
 
 

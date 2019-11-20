@@ -9,6 +9,7 @@ import threading
 import types
 import warnings
 
+import cryptography
 from cryptography import utils
 from cryptography.exceptions import InternalError
 from cryptography.hazmat.bindings._openssl import ffi, lib
@@ -114,10 +115,9 @@ class Binding(object):
         # reliably clear the error queue. Once we clear it here we will
         # error on any subsequent unexpected item in the stack.
         cls.lib.ERR_clear_error()
-        cls._osrandom_engine_id = cls.lib.Cryptography_osrandom_engine_id
-        cls._osrandom_engine_name = cls.lib.Cryptography_osrandom_engine_name
-        result = cls.lib.Cryptography_add_osrandom_engine()
-        _openssl_assert(cls.lib, result in (1, 2))
+        if cls.lib.Cryptography_HAS_ENGINE:
+            result = cls.lib.Cryptography_add_osrandom_engine()
+            _openssl_assert(cls.lib, result in (1, 2))
 
     @classmethod
     def _ensure_ffi_initialized(cls):
@@ -158,11 +158,34 @@ def _verify_openssl_version(lib):
     ):
         warnings.warn(
             "OpenSSL version 1.0.1 is no longer supported by the OpenSSL "
-            "project, please upgrade. A future version of cryptography will "
+            "project, please upgrade. The next version of cryptography will "
             "drop support for it.",
             utils.CryptographyDeprecationWarning
         )
 
+
+def _verify_package_version(version):
+    # Occasionally we run into situations where the version of the Python
+    # package does not match the version of the shared object that is loaded.
+    # This may occur in environments where multiple versions of cryptography
+    # are installed and available in the python path. To avoid errors cropping
+    # up later this code checks that the currently imported package and the
+    # shared object that were loaded have the same version and raise an
+    # ImportError if they do not
+    so_package_version = ffi.string(lib.CRYPTOGRAPHY_PACKAGE_VERSION)
+    if version.encode("ascii") != so_package_version:
+        raise ImportError(
+            "The version of cryptography does not match the loaded "
+            "shared object. This can happen if you have multiple copies of "
+            "cryptography installed in your Python path. Please try creating "
+            "a new virtual environment to resolve this issue. "
+            "Loaded python version: {}, shared object version: {}".format(
+                version, so_package_version
+            )
+        )
+
+
+_verify_package_version(cryptography.__version__)
 
 # OpenSSL is not thread safe until the locks are initialized. We call this
 # method in module scope so that it executes with the import lock. On

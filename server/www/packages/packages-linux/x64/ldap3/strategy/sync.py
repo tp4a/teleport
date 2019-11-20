@@ -67,7 +67,7 @@ class SyncStrategy(BaseStrategy):
 
     def receiving(self):
         """
-        Receive data over the socket
+        Receives data over the socket
         Checks if the socket is closed
         """
         messages = []

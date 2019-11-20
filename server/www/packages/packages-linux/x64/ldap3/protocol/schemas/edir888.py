@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2019 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -939,12 +939,7 @@ edir_8_8_8_dsa_info = """
         "addEntryOps": [
             "947"
         ],
-        "altServer": [
-            "ldap://192.168.137.102:389/",
-            "ldaps://192.168.137.102:636/",
-            "ldap://192.168.137.103:389/",
-            "ldaps://192.168.137.103:636/"
-        ],
+        "altServer": [],
         "bindSecurityErrors": [
             "3"
         ],

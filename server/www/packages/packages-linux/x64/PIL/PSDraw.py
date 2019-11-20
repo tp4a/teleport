@@ -15,9 +15,10 @@
 # See the README file for information on usage and redistribution.
 #
 
+import sys
+
 from . import EpsImagePlugin
 from ._util import py3
-import sys
 
 ##
 # Simple Postscript graphics interface.
@@ -38,16 +39,18 @@ class PSDraw(object):
         if not py3 or self.fp == sys.stdout:
             self.fp.write(to_write)
         else:
-            self.fp.write(bytes(to_write, 'UTF-8'))
+            self.fp.write(bytes(to_write, "UTF-8"))
 
     def begin_document(self, id=None):
         """Set up printing of a document. (Write Postscript DSC header.)"""
         # FIXME: incomplete
-        self._fp_write("%!PS-Adobe-3.0\n"
-                       "save\n"
-                       "/showpage { } def\n"
-                       "%%EndComments\n"
-                       "%%BeginDocument\n")
+        self._fp_write(
+            "%!PS-Adobe-3.0\n"
+            "save\n"
+            "/showpage { } def\n"
+            "%%EndComments\n"
+            "%%BeginDocument\n"
+        )
         # self._fp_write(ERROR_PS)  # debugging!
         self._fp_write(EDROFF_PS)
         self._fp_write(VDI_PS)
@@ -56,9 +59,7 @@ class PSDraw(object):
 
     def end_document(self):
         """Ends printing. (Write Postscript DSC footer.)"""
-        self._fp_write("%%EndDocument\n"
-                       "restore showpage\n"
-                       "%%End\n")
+        self._fp_write("%%EndDocument\nrestore showpage\n%%End\n")
         if hasattr(self.fp, "flush"):
             self.fp.flush()
 
@@ -71,8 +72,7 @@ class PSDraw(object):
         """
         if font not in self.isofont:
             # reencode font
-            self._fp_write("/PSDraw-%s ISOLatin1Encoding /%s E\n" %
-                           (font, font))
+            self._fp_write("/PSDraw-%s ISOLatin1Encoding /%s E\n" % (font, font))
             self.isofont[font] = 1
         # rough
         self._fp_write("/F0 %d /PSDraw-%s F\n" % (size, font))
@@ -141,6 +141,7 @@ class PSDraw(object):
             self._fp_write("%f %f scale\n" % (sx, sy))
         EpsImagePlugin._save(im, self.fp, None, 0)
         self._fp_write("\ngrestore\n")
+
 
 # --------------------------------------------------------------------
 # Postscript driver

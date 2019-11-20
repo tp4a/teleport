@@ -82,7 +82,7 @@ def _hash_algorithm(backend, cert_id):
         return _OIDS_TO_HASH[oid]
     except KeyError:
         raise UnsupportedAlgorithm(
-            "Signature algorithm OID: {0} not recognized".format(oid)
+            "Signature algorithm OID: {} not recognized".format(oid)
         )
 
 
@@ -125,6 +125,17 @@ class _OCSPResponse(object):
         self._backend.openssl_assert(alg != self._backend._ffi.NULL)
         oid = _obj2txt(self._backend, alg.algorithm)
         return x509.ObjectIdentifier(oid)
+
+    @property
+    @_requires_successful_response
+    def signature_hash_algorithm(self):
+        oid = self.signature_algorithm_oid
+        try:
+            return x509._SIG_OIDS_TO_HASH[oid]
+        except KeyError:
+            raise UnsupportedAlgorithm(
+                "Signature algorithm OID:{} not recognized".format(oid)
+            )
 
     @property
     @_requires_successful_response

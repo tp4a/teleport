@@ -382,6 +382,7 @@ class BuilderLinux(BuilderBase):
         self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(env.ver_libuv))
         self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls))
         self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(env.ver_libssh))
+        self.ZLIB_PATH_SRC = os.path.join(self.PATH_TMP, 'zlib-{}'.format(env.ver_zlib))
 
         self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
         self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
@@ -564,7 +565,48 @@ class BuilderLinux(BuilderBase):
         #         os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
 
     def _build_zlib(self, file_name):
-        cc.w('skip build zlib again.')
+        # cc.w('skip build zlib again.')
+        if not self._download_zlib(file_name):
+            return
+        if not os.path.exists(self.ZLIB_PATH_SRC):
+            os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+
+        cc.n('build zlib...', end='')
+        out_file = os.path.join(self.PATH_RELEASE, 'lib', 'libz.a')
+        if os.path.exists(out_file):
+            cc.w('already exists, skip.')
+            return
+        cc.v('')
+
+        # cc.n('fix libssh source code... ', end='')
+        # s_name = 'libssh-{}'.format(env.ver_libssh)
+        # # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'session.c'))
+        # # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto.c'))
+        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto-compat.c'))
+        # # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'session.c')
+        # # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto.c')
+        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto-compat.c')
+
+        build_path = os.path.join(self.ZLIB_PATH_SRC, 'build')
+
+        cmake_define = ' -DCMAKE_INSTALL_PREFIX={path_release}' \
+                       ' ..'.format(path_release=self.PATH_RELEASE)
+
+        old_p = os.getcwd()
+        try:
+            utils.cmake(build_path, 'Release', False, cmake_define=cmake_define, cmake_pre_define='CFLAGS="-fPIC"')
+            os.chdir(build_path)
+            utils.sys_exec('make install')
+        except:
+            pass
+        os.chdir(old_p)
+
+        utils.ensure_file_exists(out_file)
+        files = os.listdir(os.path.join(self.PATH_RELEASE, 'lib'))
+        for i in files:
+            if i.startswith('libz.so'):
+                # use os.unlink() because some file should be a link.
+                os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
 
     def fix_output(self):
         pass

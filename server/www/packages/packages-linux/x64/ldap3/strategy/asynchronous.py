@@ -59,7 +59,7 @@ class AsyncStrategy(BaseStrategy):
 
         def run(self):
             """
-            Wait for data on socket, compute the length of the message and wait for enough bytes to decode the message
+            Waits for data on socket, computes the length of the message and waits for enough bytes to decode the message
             Message are appended to strategy._responses
             """
             unprocessed = b''

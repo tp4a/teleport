@@ -80,8 +80,10 @@ bool ExThreadBase::stop(void) {
         return false;
     }
 #else
-    if (pthread_join(m_handle, NULL) != 0) {
-        return false;
+    if(m_handle != 0) {
+        if (pthread_join(m_handle, NULL) != 0) {
+            return false;
+        }
     }
 #endif
 

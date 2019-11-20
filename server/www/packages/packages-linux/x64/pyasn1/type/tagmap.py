@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 from pyasn1 import error
@@ -56,16 +56,16 @@ class TagMap(object):
         return iter(self.__presentTypes)
 
     def __repr__(self):
-        representation = '%s object at 0x%x' % (self.__class__.__name__, id(self))
+        representation = '%s object' % self.__class__.__name__
 
         if self.__presentTypes:
-            representation += ' present %s' % repr(self.__presentTypes)
+            representation += ', present %s' % repr(self.__presentTypes)
 
         if self.__skipTypes:
-            representation += ' skip %s' % repr(self.__skipTypes)
+            representation += ', skip %s' % repr(self.__skipTypes)
 
         if self.__defaultType is not None:
-            representation += ' default %s' % repr(self.__defaultType)
+            representation += ', default %s' % repr(self.__defaultType)
 
         return '<%s>' % representation
 

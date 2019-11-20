@@ -8,8 +8,9 @@ MESSAGE(STATUS "=======================================================")
 include(../../../../CMakeCfg.txt)
 
 
-set(CMAKE_CXX_FLAGS "-fPIC")
-set(CMAKE_C_FLAGS "-fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+
 
 aux_source_directory(. DIR_SSH_SRCS)
 aux_source_directory(../../common DIR_SSH_SRCS)
@@ -27,15 +28,18 @@ include_directories(
 )
 
 include_directories(
-		${TP_EXTERNAL_RELEASE_DIR}/include
-)
-link_directories(${TP_EXTERNAL_RELEASE_DIR}/lib)
+	${TP_EXTERNAL_RELEASE_DIR}/include
+	)
+link_directories(
+	${TP_EXTERNAL_RELEASE_DIR}/lib
+	${TP_EXTERNAL_RELEASE_DIR}/lib64
+	)
 
 
 add_library(tpssh SHARED ${DIR_SSH_SRCS})
 
 if (OS_LINUX)
-	target_link_libraries(tpssh ssh ssl crypto mbedx509 mbedtls mbedcrypto dl pthread rt util)
+	target_link_libraries(tpssh ssh ssl crypto mbedx509 mbedtls mbedcrypto z dl pthread rt util)
 elseif (OS_MACOS)
-	target_link_libraries(tpssh ssh ssl crypto mbedx509 mbedtls mbedcrypto dl pthread util)
+	target_link_libraries(tpssh ssh ssl crypto mbedx509 mbedtls mbedcrypto z dl pthread util)
 endif()

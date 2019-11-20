@@ -88,7 +88,7 @@ TEXT_TYPES = {
 }
 
 
-DEFAULT_CHARSET = 'utf8mb4'  # TODO: change to utf8mb4
+DEFAULT_CHARSET = 'utf8mb4'
 
 MAX_PACKET_LEN = 2**24-1
 
@@ -152,7 +152,6 @@ class Connection(object):
         (default: 10, min: 1, max: 31536000)
     :param ssl:
         A dict of arguments similar to mysql_ssl_set()'s parameters.
-        For now the capath and cipher arguments are not supported.
     :param read_default_group: Group to read from in the configuration file.
     :param compress: Not supported
     :param named_pipe: Not supported
@@ -295,15 +294,15 @@ class Connection(object):
         self._affected_rows = 0
         self.host_info = "Not connected"
 
-        #: specified autocommit mode. None means use server default.
+        # specified autocommit mode. None means use server default.
         self.autocommit_mode = autocommit
 
         if conv is None:
             conv = converters.conversions
 
         # Need for MySQLdb compatibility.
-        self.encoders = dict([(k, v) for (k, v) in conv.items() if type(k) is not int])
-        self.decoders = dict([(k, v) for (k, v) in conv.items() if type(k) is int])
+        self.encoders = {k: v for (k, v) in conv.items() if type(k) is not int}
+        self.decoders = {k: v for (k, v) in conv.items() if type(k) is int}
         self.sql_mode = sql_mode
         self.init_command = init_command
         self.max_allowed_packet = max_allowed_packet
@@ -316,10 +315,9 @@ class Connection(object):
             '_pid': str(os.getpid()),
             '_client_version': VERSION_STRING,
         }
+
         if program_name:
             self._connect_attrs["program_name"] = program_name
-        elif sys.argv:
-            self._connect_attrs["program_name"] = sys.argv[0]
 
         if defer_connect:
             self._sock = None
@@ -494,6 +492,9 @@ class Connection(object):
 
     def __enter__(self):
         """Context manager that returns a Cursor"""
+        warnings.warn(
+            "Context manager API of Connection object is deprecated; Use conn.begin()",
+            DeprecationWarning)
         return self.cursor()
 
     def __exit__(self, exc, value, traceback):
@@ -696,6 +697,10 @@ class Connection(object):
                 raise err.OperationalError(
                     CR.CR_SERVER_LOST,
                     "Lost connection to MySQL server during query (%s)" % (e,))
+            except BaseException:
+                # Don't convert unknown exception to MySQLError.
+                self._force_close()
+                raise
         if len(data) < num_bytes:
             self._force_close()
             raise err.OperationalError(
@@ -804,7 +809,11 @@ class Connection(object):
         authresp = b''
         plugin_name = None
 
-        if self._auth_plugin_name in ('', 'mysql_native_password'):
+        if self._auth_plugin_name == '':
+            plugin_name = b''
+            authresp = _auth.scramble_native_password(self.password, self.salt)
+        elif self._auth_plugin_name == 'mysql_native_password':
+            plugin_name = b'mysql_native_password'
             authresp = _auth.scramble_native_password(self.password, self.salt)
         elif self._auth_plugin_name == 'caching_sha2_password':
             plugin_name = b'caching_sha2_password'
@@ -842,9 +851,9 @@ class Connection(object):
         if self.server_capabilities & CLIENT.CONNECT_ATTRS:
             connect_attrs = b''
             for k, v in self._connect_attrs.items():
-                k = k.encode('utf8')
+                k = k.encode('utf-8')
                 connect_attrs += struct.pack('B', len(k)) + k
-                v = v.encode('utf8')
+                v = v.encode('utf-8')
                 connect_attrs += struct.pack('B', len(v)) + v
             data += struct.pack('B', len(connect_attrs)) + connect_attrs
 

@@ -12,12 +12,14 @@ from enum import Enum
 import six
 
 from cryptography import utils
-from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
+from cryptography.hazmat.primitives.asymmetric import (
+    dsa, ec, ed25519, ed448, rsa
+)
 from cryptography.x509.extensions import Extension, ExtensionType
 from cryptography.x509.name import Name
 
 
-_UNIX_EPOCH = datetime.datetime(1970, 1, 1)
+_EARLIEST_UTC_TIME = datetime.datetime(1950, 1, 1)
 
 
 def _reject_duplicate_extension(extension, extensions):
@@ -474,9 +476,12 @@ class CertificateBuilder(object):
         Sets the requestor's public key (as found in the signing request).
         """
         if not isinstance(key, (dsa.DSAPublicKey, rsa.RSAPublicKey,
-                                ec.EllipticCurvePublicKey)):
+                                ec.EllipticCurvePublicKey,
+                                ed25519.Ed25519PublicKey,
+                                ed448.Ed448PublicKey)):
             raise TypeError('Expecting one of DSAPublicKey, RSAPublicKey,'
-                            ' or EllipticCurvePublicKey.')
+                            ' EllipticCurvePublicKey, Ed25519PublicKey or'
+                            ' Ed448PublicKey.')
         if self._public_key is not None:
             raise ValueError('The public key may only be set once.')
         return CertificateBuilder(
@@ -516,9 +521,9 @@ class CertificateBuilder(object):
         if self._not_valid_before is not None:
             raise ValueError('The not valid before may only be set once.')
         time = _convert_to_naive_utc_time(time)
-        if time <= _UNIX_EPOCH:
-            raise ValueError('The not valid before date must be after the unix'
-                             ' epoch (1970 January 1).')
+        if time < _EARLIEST_UTC_TIME:
+            raise ValueError('The not valid before date must be on or after'
+                             ' 1950 January 1).')
         if self._not_valid_after is not None and time > self._not_valid_after:
             raise ValueError(
                 'The not valid before date must be before the not valid after '
@@ -539,9 +544,9 @@ class CertificateBuilder(object):
         if self._not_valid_after is not None:
             raise ValueError('The not valid after may only be set once.')
         time = _convert_to_naive_utc_time(time)
-        if time <= _UNIX_EPOCH:
-            raise ValueError('The not valid after date must be after the unix'
-                             ' epoch (1970 January 1).')
+        if time < _EARLIEST_UTC_TIME:
+            raise ValueError('The not valid after date must be on or after'
+                             ' 1950 January 1.')
         if (self._not_valid_before is not None and
                 time < self._not_valid_before):
             raise ValueError(
@@ -620,9 +625,9 @@ class CertificateRevocationListBuilder(object):
         if self._last_update is not None:
             raise ValueError('Last update may only be set once.')
         last_update = _convert_to_naive_utc_time(last_update)
-        if last_update <= _UNIX_EPOCH:
-            raise ValueError('The last update date must be after the unix'
-                             ' epoch (1970 January 1).')
+        if last_update < _EARLIEST_UTC_TIME:
+            raise ValueError('The last update date must be on or after'
+                             ' 1950 January 1.')
         if self._next_update is not None and last_update > self._next_update:
             raise ValueError(
                 'The last update date must be before the next update date.'
@@ -638,9 +643,9 @@ class CertificateRevocationListBuilder(object):
         if self._next_update is not None:
             raise ValueError('Last update may only be set once.')
         next_update = _convert_to_naive_utc_time(next_update)
-        if next_update <= _UNIX_EPOCH:
-            raise ValueError('The last update date must be after the unix'
-                             ' epoch (1970 January 1).')
+        if next_update < _EARLIEST_UTC_TIME:
+            raise ValueError('The last update date must be on or after'
+                             ' 1950 January 1.')
         if self._last_update is not None and next_update < self._last_update:
             raise ValueError(
                 'The next update date must be after the last update date.'
@@ -720,9 +725,9 @@ class RevokedCertificateBuilder(object):
         if self._revocation_date is not None:
             raise ValueError('The revocation date may only be set once.')
         time = _convert_to_naive_utc_time(time)
-        if time <= _UNIX_EPOCH:
-            raise ValueError('The revocation date must be after the unix'
-                             ' epoch (1970 January 1).')
+        if time < _EARLIEST_UTC_TIME:
+            raise ValueError('The revocation date must be on or after'
+                             ' 1950 January 1.')
         return RevokedCertificateBuilder(
             self._serial_number, time, self._extensions
         )

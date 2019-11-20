@@ -185,7 +185,10 @@ void SshProxy::_on_stop() {
         int _timeout_us = 10;
         ssh_options_set(_session, SSH_OPTIONS_TIMEOUT, &_timeout_us);
         ssh_connect(_session);
+        ssh_disconnect(_session);
         ssh_free(_session);
+
+        ex_sleep_ms(100);
     }
 
 // 	m_thread_mgr.stop_all();

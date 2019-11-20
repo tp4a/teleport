@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 try:
@@ -19,6 +19,8 @@ from pyasn1.type import univ
 from pyasn1.type import useful
 
 __all__ = ['encode']
+
+LOG = debug.registerLoggee(__name__, flags=debug.DEBUG_ENCODER)
 
 
 class AbstractItemEncoder(object):
@@ -70,7 +72,9 @@ class SetEncoder(AbstractItemEncoder):
     protoDict = dict
 
     def encode(self, value, encodeFun, **options):
-        value.verifySizeSpec()
+        inconsistency = value.isInconsistent
+        if inconsistency:
+            raise inconsistency
 
         namedTypes = value.componentType
         substrate = self.protoDict()
@@ -88,7 +92,9 @@ class SequenceEncoder(SetEncoder):
 
 class SequenceOfEncoder(AbstractItemEncoder):
     def encode(self, value, encodeFun, **options):
-        value.verifySizeSpec()
+        inconsistency = value.isInconsistent
+        if inconsistency:
+            raise inconsistency
         return [encodeFun(x, **options) for x in value]
 
 
@@ -180,14 +186,9 @@ class Encoder(object):
         if not isinstance(value, base.Asn1Item):
             raise error.PyAsn1Error('value is not valid (should be an instance of an ASN.1 Item)')
 
-        if debug.logger & debug.flagEncoder:
-            logger = debug.logger
-        else:
-            logger = None
-
-        if logger:
+        if LOG:
             debug.scope.push(type(value).__name__)
-            logger('encoder called for type %s <%s>' % (type(value).__name__, value.prettyPrint()))
+            LOG('encoder called for type %s <%s>' % (type(value).__name__, value.prettyPrint()))
 
         tagSet = value.tagSet
 
@@ -204,13 +205,13 @@ class Encoder(object):
             except KeyError:
                 raise error.PyAsn1Error('No encoder for %s' % (value,))
 
-        if logger:
-            logger('using value codec %s chosen by %s' % (concreteEncoder.__class__.__name__, tagSet))
+        if LOG:
+            LOG('using value codec %s chosen by %s' % (concreteEncoder.__class__.__name__, tagSet))
 
         pyObject = concreteEncoder.encode(value, self, **options)
 
-        if logger:
-            logger('encoder %s produced: %s' % (type(concreteEncoder).__name__, repr(pyObject)))
+        if LOG:
+            LOG('encoder %s produced: %s' % (type(concreteEncoder).__name__, repr(pyObject)))
             debug.scope.pop()
 
         return pyObject
@@ -238,7 +239,7 @@ class Encoder(object):
 #:
 #: Raises
 #: ------
-#: :py:class:`~pyasn1.error.PyAsn1Error`
+#: ~pyasn1.error.PyAsn1Error
 #:     On encoding errors
 #:
 #: Examples

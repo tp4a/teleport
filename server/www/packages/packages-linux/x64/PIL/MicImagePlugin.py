@@ -17,10 +17,12 @@
 #
 
 
-from . import Image, TiffImagePlugin
-
 import olefile
 
+from . import Image, TiffImagePlugin
+
+# __version__ is deprecated and will be removed in a future version. Use
+# PIL.__version__ instead.
 __version__ = "0.1"
 
 
@@ -34,6 +36,7 @@ def _accept(prefix):
 
 ##
 # Image plugin for Microsoft's Image Composer file format.
+
 
 class MicImageFile(TiffImagePlugin.TiffImageFile):
 
@@ -95,8 +98,16 @@ class MicImageFile(TiffImagePlugin.TiffImageFile):
         self.frame = frame
 
     def tell(self):
-
         return self.frame
+
+    def _close__fp(self):
+        try:
+            if self.__fp != self.fp:
+                self.__fp.close()
+        except AttributeError:
+            pass
+        finally:
+            self.__fp = None
 
 
 #
