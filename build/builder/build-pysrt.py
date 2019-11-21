@@ -13,11 +13,11 @@ ctx = BuildContext()
 
 MODULES_WIN = ['_asyncio', '_bz2', '_ctypes', '_hashlib', '_lzma', '_overlapped', '_socket', '_sqlite3', '_ssl', 'select', 'sqlite3',
                'libcrypto-1_1', 'libssl-1_1', 'unicodedata']
-PY_LIB_REMOVE_WIN = ['ctypes/test', 'curses', 'dbm', 'distutils', 'email/test', 'ensurepip', 'idlelib', 'lib2to3',
+PY_LIB_REMOVE_WIN = ['ctypes/test', 'curses', 'dbm', 'distutils/test', 'email/tests', 'ensurepip', 'idlelib', 'lib2to3',
                      'lib-dynload', 'pydoc_data', 'site-packages', 'sqlite3/test', 'test', 'tkinter', 'turtledemo',
                      'unittest', 'venv', 'wsgiref', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc.py',
                      'this.py', 'wave.py', 'webbrowser.py', 'zipapp.py']
-PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'dbm', 'distutils', 'ensurepip', 'idlelib', 'lib2to3',
+PY_LIB_REMOVE_LINUX = ['ctypes/test', 'curses', 'dbm', 'distutils/tests', 'ensurepip', 'idlelib', 'lib2to3',
                        'lib-dynload', 'pydoc_data', 'site-packages', 'sqlite3/test', 'test', 'tkinter', 'turtledemo', 'unittest', 'venv',
                        'wsgiref', 'doctest.py', 'pdb.py', 'py_compile.py', 'pydoc.py', 'this.py', 'wave.py', 'webbrowser.py', 'zipapp.py']
 PY_MODULE_REMOVE_LINUX = ['_ctypes_test', '_testbuffer', '_testcapi', '_testimportmultiple', '_testmultiphase', '_xxtestfuzz']
@@ -46,7 +46,7 @@ class PYSBase:
         utils.sys_exec('{} -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pip --upgrade'.format(env.py_exec))
 
         pip = self._get_pip()
-        pypi_modules = ['cryptography', 'ldap3', 'mako', 'Pillow', 'psutil', 'pyasn1', 'pymysql', 'qrcode', 'tornado', 'wheezy.captcha']
+        pypi_modules = ['cffi', 'cryptography', 'ldap3', 'mako', 'Pillow', 'psutil', 'pyasn1', 'pymysql', 'qrcode', 'tornado', 'wheezy.captcha']
         for p in pypi_modules:
             cc.n('install {} ...'.format(p))
             utils.sys_exec('{} install -i https://pypi.tuna.tsinghua.edu.cn/simple {}'.format(pip, p), direct_output=True)
@@ -111,7 +111,7 @@ class PYSBase:
         utils.ensure_file_exists(out_file)
 
         cc.v('remove temp folder...')
-        utils.remove(_tmp_)
+        # utils.remove(_tmp_)
 
     def _make_py_ver_file(self):
         pass
