@@ -54,9 +54,9 @@ typedef struct TS_RECORD_HEADER_BASIC {
 
 typedef struct TS_RECORD_HEADER {
     TS_RECORD_HEADER_INFO info;
-    ex_u8 _reserve1[64 - ts_record_header_info_size];
+    uint8_t _reserve1[64 - ts_record_header_info_size];
     TS_RECORD_HEADER_BASIC basic;
-    ex_u8 _reserve2[512 - 64 - ts_record_header_basic_size];
+    uint8_t _reserve2[512 - 64 - ts_record_header_basic_size];
 }TS_RECORD_HEADER;
 
 // header部分（header-info + header-basic） = 512B

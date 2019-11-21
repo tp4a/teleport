@@ -169,6 +169,8 @@ int main(int argc, char** argv)
 
     ssh_disconnect(sess);
 	ssh_free(sess);
+    ssh_finalize();
+
 	return 0;
 }
 
