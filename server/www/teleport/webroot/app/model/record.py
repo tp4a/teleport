@@ -159,26 +159,13 @@ def read_record_head(protocol_type, record_id):
 
         rec_type, time_used, dat_file_count, = struct.unpack_from('=HII', data, offset)
         offset += 10
-        log.w('yyy: {}, {}, {}\n'.format(rec_type, time_used, dat_file_count))
 
         # TS_RECORD_HEADER_INFO 共计64字节，前面有用的数据读取后，跳过后面补齐用的字节，从第64字节
         # 开始解析 TS_RECORD_HEADER_BASIC
         offset = 64
 
-        # protocol_type, = struct.unpack_from('H', data, offset)
-        # offset += 2
-        # protocol_sub_type, = struct.unpack_from('H', data, offset)
-        # offset += 2
-        # time_start, = struct.unpack_from('Q', data, offset)
-        # offset += 8
-        # width, = struct.unpack_from('H', data, offset)
-        # offset += 2
-        # height, = struct.unpack_from('H', data, offset)
-        # offset += 2
-
         protocol_type, protocol_sub_type, time_start, width, height = struct.unpack_from('=HHQHH', data, offset)
         offset += 16
-        log.w('xxx: {}, {}, {}, {}, {}\n'.format(protocol_type, protocol_sub_type, time_start, width, height))
 
         user_name, = struct.unpack_from('64s', data, offset)
         user_name = _remove_padding_space(user_name).decode()
