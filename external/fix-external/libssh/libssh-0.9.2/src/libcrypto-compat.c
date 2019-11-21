@@ -322,7 +322,7 @@ int HMAC_CTX_reset(HMAC_CTX *ctx)
     return 1;
 }
 
-#if 0 // by Apex
+#if 0 // by apex.liu
 #ifndef HAVE_OPENSSL_EVP_CIPHER_CTX_NEW
 EVP_CIPHER_CTX *EVP_CIPHER_CTX_new(void)
 {
@@ -336,7 +336,7 @@ void EVP_CIPHER_CTX_free(EVP_CIPHER_CTX *ctx)
     OPENSSL_free(ctx);
 }
 #endif
-#endif
+#endif // endif by apex.liu
 
 void DH_get0_pqg(const DH *dh,
                  const BIGNUM **p, const BIGNUM **q, const BIGNUM **g)
