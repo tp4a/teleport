@@ -112,6 +112,16 @@ function step_prepare_source()
 		on_error "Can not prepare source code for build sqlite3 module for Python."
 	fi
 
+	if [ ! -f "${PATH_FIX}/Python-${VER_PYTHON}/Modules/Setup.dist" ]; then
+		on_error "Can not fix source for build Python."
+	fi
+	if [ ! -f "${PATH_FIX}/Python-${VER_PYTHON}/Modules/_sqlite/cache.h" ]; then
+		on_error "Can not fix source for build sqlite3 module for Python."
+	fi
+	if [ ! -f "${PATH_FIX}/Python-${VER_PYTHON}/Modules/_sqlite/prepare_protocol.h" ]; then
+		on_error "Can not fix source for build sqlite3 module for Python."
+	fi
+
 	cp "${PATH_FIX}/Python-${VER_PYTHON}/Modules/Setup.dist" "${PY_PATH_SRC}/Modules/Setup.dist"
 	cp "${PATH_FIX}/Python-${VER_PYTHON}/Modules/Setup.dist" "${PY_PATH_SRC}/Modules/Setup"
 	cp "${PATH_FIX}/Python-${VER_PYTHON}/Modules/_sqlite/cache.h" "${PY_PATH_SRC}/Modules/_sqlite/cache.h"
