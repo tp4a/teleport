@@ -184,7 +184,7 @@ $app.on_table_host_render_created = function (render) {
     // };
 
     render.log_time = function (row_id, fields) {
-        return tp_format_datetime(tp_utc2local(fields.log_time));
+        return tp_format_datetime(fields.log_time);
     };
 
     render.user = function (row, fields) {

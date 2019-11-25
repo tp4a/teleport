@@ -283,7 +283,7 @@ $app.on_table_session_render_created = function (render) {
     };
 
     render.time_begin = function (row_id, fields) {
-        return tp_format_datetime(tp_utc2local(fields.time_begin), 'MM-dd HH:mm:ss');
+        return tp_format_datetime(fields.time_begin, 'MM-dd HH:mm:ss');
     };
 
     render.time_cost = function (row_id, fields) {
@@ -293,7 +293,7 @@ $app.on_table_session_render_created = function (render) {
                 _style = 'warning';
             else if (fields.state === TP_SESS_STAT_STARTED)
                 _style = 'primary';
-            return '<span class="label label-' + _style + '"><i class="fa fa-cog fa-spin"></i> ' + tp_second2str(tp_local2utc() - fields.time_begin) + '</span>';
+            return '<span class="label label-' + _style + '"><i class="fa fa-cog fa-spin"></i> ' + tp_second2str(tp_timestamp_sec() - fields.time_begin) + '</span>';
         } else {
             return tp_second2str(fields.time_end - fields.time_begin);
         }

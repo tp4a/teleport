@@ -3,7 +3,7 @@
 from app.const import *
 from app.base.db import get_db, SQL
 from app.base.logger import log
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 
 
 def sys_log(operator, client_ip, code, message=""):
@@ -13,7 +13,7 @@ def sys_log(operator, client_ip, code, message=""):
               'VALUES ("{user_name}","{user_surname}","{client_ip}",{code},{log_time},"{message}")' \
               ';'.format(db.table_prefix,
                          user_name=operator['username'], user_surname=operator['surname'], client_ip=client_ip, code=code,
-                         log_time=tp_timestamp_utc_now(), message=message
+                         log_time=tp_timestamp_sec(), message=message
                          )
 
         ret = db.exec(sql)

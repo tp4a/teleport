@@ -252,7 +252,7 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.time_begin = function (row_id, fields) {
-        return tp_format_datetime(tp_utc2local(fields.time_begin), 'MM-dd HH:mm:ss');
+        return tp_format_datetime(fields.time_begin, 'MM-dd HH:mm:ss');
     };
 
     render.time_cost = function (row_id, fields) {
@@ -262,7 +262,7 @@ $app.on_table_host_render_created = function (render) {
                 _style = 'warning';
             else if (fields.state === TP_SESS_STAT_STARTED)
                 _style = 'primary';
-            return '<span class="label label-' + _style + '"><i class="fa fa-cog fa-spin"></i> ' + tp_second2str(tp_local2utc() - fields.time_begin) + '</span>';
+            return '<span class="label label-' + _style + '"><i class="fa fa-cog fa-spin"></i> ' + tp_second2str(tp_timestamp_sec() - fields.time_begin) + '</span>';
         } else {
             if (fields.time_end === 0) {
                 return '<span class="label label-danger"><i class="far fa-clock fa-fw"></i> 未知</span>';
@@ -282,7 +282,7 @@ $app.on_table_host_render_created = function (render) {
         //         _style = 'warning';
         //     else if (fields.state === TP_SESS_STAT_STARTED)
         //         _style = 'primary';
-        //     return '<span class="label label-' + _style + '"><i class="fa fa-cog fa-spin"></i> ' + tp_second2str(tp_local2utc() - fields.time_begin) + '</span>';
+        //     return '<span class="label label-' + _style + '"><i class="fa fa-cog fa-spin"></i> ' + tp_second2str(tp_timestamp_sec() - fields.time_begin) + '</span>';
         // } else {
         //     return tp_second2str(fields.time_end - fields.time_begin);
         // }
@@ -371,7 +371,7 @@ $app.do_replay_rdp = function (record_id, user_username, acc_username, host_ip, 
             , user: user_username
             , acc: acc_username
             , host: host_ip
-            , start: time_begin//tp_format_datetime(tp_utc2local(time_begin), 'yyyyMMdd-HHmmss')
+            , start: time_begin//tp_format_datetime(time_begin, 'yyyyMMdd-HHmmss')
         }
         , function () {
             // func_success

@@ -7,7 +7,7 @@ from app.base.logger import log
 from app.base.db import get_db, SQL
 from app.model import syslog
 from app.model import policy
-from app.base.utils import AttrDict, tp_timestamp_utc_now
+from app.base.utils import AttrDict, tp_timestamp_sec
 
 
 def get_by_id(pid):
@@ -72,7 +72,7 @@ def create_policy(handler, args):
     创建一个授权策略
     """
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
 
     # 1. 判断此账号是否已经存在了
     s = SQL(db)
@@ -189,7 +189,7 @@ def add_members(handler, policy_id, policy_type, ref_type, members):
     operator = handler.get_current_user()
 
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
 
     sql = []
     for m in members:

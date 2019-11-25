@@ -7,15 +7,15 @@
 //===================================================
 // constants.
 //===================================================
-var KB = 1024;
-var MB = 1048576;
-var GB = 1073741824;
-var TB = 1099511627776;
-var PB = 1125899906842624;
+const KB = 1024;
+const MB = 1048576;
+const GB = 1073741824;
+const TB = 1099511627776;
+const PB = 1125899906842624;
 
-var SECONDS_PER_DAY = 86400;
-var SECONDS_PER_HOUR = 3600;
-var SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_DAY = 86400;
+const SECONDS_PER_HOUR = 3600;
+const SECONDS_PER_MINUTE = 60;
 
 //===================================================
 // extend prototype functions.
@@ -43,17 +43,17 @@ if (!String.prototype.realLength) {
 // http://jsfiddle.net/ghvj4gy9/embedded/result,js/
 function tp_is_email(email) {
     //var re = /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/;
-    var re = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+    let re = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
     return re.test(email);
 }
 
 function tp_is_ip(ip) {
-    var re = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
+    let re = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
     return re.test(ip);
 }
 
 function tp_is_domain(domain) {
-    var re = /^[a-zA-Z0-9\-]+\.[a-zA-Z]+$/
+    let re = /^[a-zA-Z0-9\-]+\.[a-zA-Z]+$/
     return re.test(domain);
 }
 
@@ -64,11 +64,9 @@ function tp_is_host(host) {
 function tp_is_empty_str(str) {
     if (_.isEmpty(str))
         return true;
-    var regu = "^[ \t]+$";
-    var re = new RegExp(regu);
+    let regu = "^[ \t]+$";
+    let re = new RegExp(regu);
     return re.test(str);
-
-//     return (str.replace(/(^\s*)|(\s*$)/g, "").length !== 0);
 }
 
 //===================================================
@@ -85,29 +83,23 @@ function tp_digital_precision(num, keep) {
 
 function tp_size2str(size, precision) {
     precision = precision || 0;
-    var s = 0;
-    var k = '';
+    let s = 0, k = '';
     if (size < KB) {
         s = size;
         k = 'B';
-    }
-    else if (size < MB) {
+    } else if (size < MB) {
         s = tp_digital_precision(size / KB, precision);
         k = 'KB'
-    }
-    else if (size < GB) {
+    } else if (size < GB) {
         s = tp_digital_precision(size / MB, precision);
         k = 'MB'
-    }
-    else if (size < TB) {
+    } else if (size < TB) {
         s = tp_digital_precision(size / GB, precision);
         k = 'GB'
-    }
-    else if (size < PB) {
+    } else if (size < PB) {
         s = tp_digital_precision(size / TB, precision);
         k = 'TB'
-    }
-    else {
+    } else {
         s = tp_digital_precision(size / PB, precision);
         k = 'PB'
     }
@@ -116,15 +108,15 @@ function tp_size2str(size, precision) {
 }
 
 function tp_second2str(sec) {
-    var _ret = '';
+    let _ret = '';
     if (sec >= SECONDS_PER_DAY) {
-        var _d = Math.floor(sec / SECONDS_PER_DAY);
+        let _d = Math.floor(sec / SECONDS_PER_DAY);
         _ret = '' + _d + '天';
         sec = sec % SECONDS_PER_DAY;
     }
 
     if (sec >= SECONDS_PER_HOUR) {
-        var _h = Math.floor(sec / SECONDS_PER_HOUR);
+        let _h = Math.floor(sec / SECONDS_PER_HOUR);
         _ret += '' + _h + '小时';
         sec = sec % SECONDS_PER_HOUR;
     } else if (_ret.length > 0) {
@@ -132,7 +124,7 @@ function tp_second2str(sec) {
     }
 
     if (sec >= SECONDS_PER_MINUTE) {
-        var _m = Math.floor(sec / SECONDS_PER_MINUTE);
+        let _m = Math.floor(sec / SECONDS_PER_MINUTE);
         _ret += '' + _m + '分';
         sec = sec % SECONDS_PER_MINUTE;
     } else if (_ret.length > 0) {
@@ -144,35 +136,22 @@ function tp_second2str(sec) {
 }
 
 function tp_get_cookie(name) {
-    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    let r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
     return r ? r[1] : undefined;
 }
 
-function tp_utc2local(timestamp) {
-    var d = new Date(timestamp * 1000);
-    var _local = d.getTime() - (d.getTimezoneOffset() * 60000);
-    return Math.round(_local / 1000);
+function tp_timestamp_ms() {
+    return (new Date()).getTime();
 }
 
-function tp_utc2local_ms(timestamp) {
-    var d = new Date(timestamp);
-    var _local = d.getTime() - (d.getTimezoneOffset() * 60000);
-    return Math.round(_local);
-}
-
-function tp_local2utc(timestamp) {
-    var ts = timestamp || Math.floor(Date.now() / 1000);
-    var d = new Date(ts * 1000);
-    var _utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-    return Math.round(_utc / 1000);
+function tp_timestamp_sec() {
+    return Math.floor((new Date()).getTime() / 1000);
 }
 
 function tp_format_datetime_ms(timestamp, format) {
-    var d = new Date(timestamp);
-    //return '' + d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds();
-
-    var fmt = format || 'yyyy-MM-dd HH:mm:ss';
-    var o = {
+    let d = new Date(timestamp);
+    let fmt = format || 'yyyy-MM-dd HH:mm:ss';
+    let o = {
         "M+": d.getMonth() + 1, //月份
         "d+": d.getDate(), //日
         "H+": d.getHours(), //小时
@@ -185,10 +164,10 @@ function tp_format_datetime_ms(timestamp, format) {
     if (/(y+)/.test(fmt)) {
         fmt = fmt.replace(RegExp.$1, (d.getFullYear() + "").substr(4 - RegExp.$1.length));
     }
-    for (var k in o) {
+    for (let k in o) {
         if (new RegExp("(" + k + ")").test(fmt)) {
             if (o.hasOwnProperty(k))
-                fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+                fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
         }
     }
     return fmt;
@@ -198,13 +177,13 @@ function tp_format_datetime(timestamp, format) {
     return tp_format_datetime_ms(timestamp * 1000, format);
 }
 
-var base64KeyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+const base64KeyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
 function tp_base64_encode(input) {
-    var output = "";
-    var chr1, chr2, chr3 = "";
-    var enc1, enc2, enc3, enc4 = "";
-    var i = 0;
+    let output = "";
+    let chr1, chr2, chr3 = "";
+    let enc1, enc2, enc3, enc4 = "";
+    let i = 0;
     do {
         chr1 = input.charCodeAt(i++);
         chr2 = input.charCodeAt(i++);
@@ -226,7 +205,7 @@ function tp_base64_encode(input) {
 }
 
 function tp_base64_to_binarray(data) {
-    var o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
+    let o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
         ac = 0,
         tmp_arr = [];
 
@@ -234,7 +213,7 @@ function tp_base64_to_binarray(data) {
         return tmp_arr;
     }
 
-    do { // unpack four hexets into three octets using index points in b64
+    do {
         h1 = base64KeyStr.indexOf(data.charAt(i++));
         h2 = base64KeyStr.indexOf(data.charAt(i++));
         h3 = base64KeyStr.indexOf(data.charAt(i++));
@@ -262,7 +241,7 @@ function tp_base64_to_binarray(data) {
 }
 
 function tp_base64_decode(data) {
-    var o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
+    let o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
         ac = 0,
         tmp_arr = [];
 
@@ -271,7 +250,7 @@ function tp_base64_decode(data) {
     }
     data += '';
 
-    do { // unpack four hexets into three octets using index points in b64
+    do {
         h1 = base64KeyStr.indexOf(data.charAt(i++));
         h2 = base64KeyStr.indexOf(data.charAt(i++));
         h3 = base64KeyStr.indexOf(data.charAt(i++));
@@ -296,22 +275,16 @@ function tp_base64_decode(data) {
 }
 
 function tp_get_file_name(path) {
-    var reg = /(\\+)/g;
+    let reg = /(\\+)/g;
     path = path.replace(reg, "/");
-    var _path = path.split('/');
+    let _path = path.split('/');
     return _path[_path.length - 1]
 }
 
-var g_unique_id = (new Date()).valueOf();
-
-function tp_generate_id() {
-    return g_unique_id++;
-}
-
-
 function htmlEncode(_s) {
-    if (_s.length === 0) return "";
-    var s = _s.replace(/&/g, "&amp;");
+    if (_s.length === 0)
+        return "";
+    let s = _s.replace(/&/g, "&amp;");
     s = s.replace(/</g, "&lt;");
     s = s.replace(/>/g, "&gt;");
     //s = s.replace(/ /g, "&nbsp;");
@@ -333,43 +306,24 @@ function htmlEncode(_s) {
 //	return s;
 //}
 
-
-function tp_sleep4debug(duration) {
-    var now = new Date().getTime();
-    while (new Date().getTime() < now + duration) { /* do nothing */
-    }
-}
-
-// 获取长度为len的随机字符串
-function tp_gen_random_string(len) {
-    len = len || 32;
-    var _chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678'; // 默认去掉了容易混淆的字符oO,Ll,9gq,Vv,Uu,I1
-    var max_pos = _chars.length;
-    var ret = '';
-    for (var i = 0; i < len; i++) {
-        ret += _chars.charAt(Math.floor(Math.random() * max_pos));
-    }
-    return ret;
-}
-
 // 生成一个随机密码
 function tp_gen_password(len) {
     len = len || 8;
-    var _chars = ['ABCDEFGHJKMNPQRSTWXYZ', 'abcdefhijkmnprstwxyz', '2345678']; // 默认去掉了容易混淆的字符oO,Ll,9gq,Vv,Uu,I1
-    var _chars_len = [];
-    var i = 0;
+    const _chars = ['ABCDEFGHJKMNPQRSTWXYZ', 'abcdefhijkmnprstwxyz', '2345678']; // 默认去掉了容易混淆的字符oO,Ll,9gq,Vv,Uu,I1
+    let _chars_len = [];
+    let i = 0;
     for (i = 0; i < _chars.length; ++i) {
         _chars_len[i] = _chars[i].length;
     }
-    var ret = '';
+    let ret = '';
 
-    var have_CHAR = false;
-    var have_char = false;
-    var have_num = false;
+    let have_CHAR = false;
+    let have_char = false;
+    let have_num = false;
     for (; ;) {
         ret = '';
         for (i = 0; i < len; i++) {
-            var idx = Math.floor(Math.random() * _chars.length);
+            let idx = Math.floor(Math.random() * _chars.length);
             if (idx === 0)
                 have_CHAR = true;
             else if (idx === 1)
@@ -388,12 +342,12 @@ function tp_gen_password(len) {
 
 // 弱密码检测
 function tp_check_strong_password(p) {
-    var s = 0;
     if (p.length < 8)
         return false;
 
-    for (var i = 0; i < p.length; ++i) {
-        var c = p.charCodeAt(i);
+    let i, s = 0;
+    for (i = 0; i < p.length; ++i) {
+        let c = p.charCodeAt(i);
         if (c >= 48 && c <= 57) // 数字
             s |= 1;
         else if (c >= 65 && c <= 90) // 大写字母

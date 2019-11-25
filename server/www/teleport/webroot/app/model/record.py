@@ -10,7 +10,7 @@ from app.const import *
 from app.base.configs import tp_cfg
 from app.base.db import get_db, SQL
 from app.base.logger import log
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 import tornado.gen
 
 
@@ -483,11 +483,11 @@ def session_fix():
     sql_list = []
 
     sql = 'UPDATE `{dbtp}record` SET state={new_state}, time_end={time_end} WHERE state={old_state};' \
-          ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_RESET, old_state=TP_SESS_STAT_RUNNING, time_end=tp_timestamp_utc_now())
+          ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_RESET, old_state=TP_SESS_STAT_RUNNING, time_end=tp_timestamp_sec())
     sql_list.append(sql)
 
     sql = 'UPDATE `{dbtp}record` SET state={new_state},time_end={time_end} WHERE state={old_state};' \
-          ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_START_RESET, old_state=TP_SESS_STAT_STARTED, time_end=tp_timestamp_utc_now())
+          ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_START_RESET, old_state=TP_SESS_STAT_STARTED, time_end=tp_timestamp_sec())
     sql_list.append(sql)
     return db.transaction(sql_list)
 
@@ -499,7 +499,7 @@ def session_begin(sid, user_id, host_id, acc_id, user_username, acc_username, ho
           ';'.format(db.table_prefix,
                      sid=sid, user_id=user_id, host_id=host_id, acc_id=acc_id, user_username=user_username, host_ip=host_ip, conn_ip=conn_ip, conn_port=conn_port,
                      client_ip=client_ip, acc_username=acc_username, auth_type=auth_type, protocol_type=protocol_type, protocol_sub_type=protocol_sub_type,
-                     time_begin=tp_timestamp_utc_now())
+                     time_begin=tp_timestamp_sec())
 
     ret = db.exec(sql)
     if not ret:
@@ -520,7 +520,7 @@ def session_update(record_id, protocol_sub_type, state):
 
 def session_end(record_id, ret_code):
     db = get_db()
-    sql = 'UPDATE `{}record` SET state={}, time_end={} WHERE id={};'.format(db.table_prefix, int(ret_code), tp_timestamp_utc_now(), int(record_id))
+    sql = 'UPDATE `{}record` SET state={}, time_end={} WHERE id={};'.format(db.table_prefix, int(ret_code), tp_timestamp_sec(), int(record_id))
     return db.exec(sql)
 
 
@@ -530,7 +530,7 @@ def cleanup_storage(handler):
     sto = tp_cfg().sys.storage
 
     db = get_db()
-    _now = tp_timestamp_utc_now()
+    _now = tp_timestamp_sec()
     msg = []
     have_error = False
 

@@ -8,7 +8,7 @@ from app.base.logger import log
 from app.base.db import get_db, SQL
 from . import syslog
 from app.base.stats import tp_stats
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 
 
 def get_host_info(host_id):
@@ -100,7 +100,7 @@ def add_host(handler, args):
     添加一个远程主机
     """
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
 
     # 1. 判断此主机是否已经存在了
     if len(args['router_ip']) > 0:

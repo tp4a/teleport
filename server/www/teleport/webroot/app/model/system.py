@@ -4,7 +4,7 @@ import json
 from app.const import *
 from app.base.db import get_db, SQL
 from app.base.logger import log
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 from . import syslog
 
 
@@ -33,7 +33,7 @@ def save_config(handler, msg, name, value):
 
 def add_role(handler, role_name, privilege):
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
     operator = handler.get_current_user()
 
     # 1. 判断是否已经存在了

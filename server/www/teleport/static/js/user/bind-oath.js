@@ -129,7 +129,7 @@ $app.on_init = function (cb_stack) {
         $tp.ajax_post_json('/system/get-time', {},
             function (ret) {
                 if (ret.code === TPE_OK) {
-                    $app.tp_time = tp_utc2local(ret.data);
+                    $app.tp_time = ret.data;
                     $app.show_tp_time();
                 }
             },

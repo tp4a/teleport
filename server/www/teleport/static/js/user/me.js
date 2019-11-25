@@ -15,7 +15,7 @@ $app.on_init = function (cb_stack, cb_args) {
         if (val === 0)
             obj.text('-');
         else
-            obj.text(tp_format_datetime(tp_utc2local(val)));
+            obj.text(tp_format_datetime(val));
     };
 
     $app.fix_time_display('create-time');

@@ -4,7 +4,7 @@ from app.const import *
 from app.base.logger import log
 from app.base.db import get_db, SQL
 from app.model import syslog
-from app.base.utils import AttrDict, tp_timestamp_utc_now
+from app.base.utils import AttrDict, tp_timestamp_sec
 
 
 def rebuild_ops_auz_map():

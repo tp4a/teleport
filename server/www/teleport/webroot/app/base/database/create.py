@@ -2,7 +2,7 @@
 
 from app.const import *
 from app.logic.auth.password import tp_password_generate_secret
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 from app.base.logger import log
 
 
@@ -826,7 +826,7 @@ class DatabaseInit:
         )
 
     def _make_builtin_data(self, sysadmin, email, password):
-        _time_now = tp_timestamp_utc_now()
+        _time_now = tp_timestamp_sec()
 
         self._db_exec(
             '设定数据库版本',

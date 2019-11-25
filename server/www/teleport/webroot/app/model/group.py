@@ -3,7 +3,7 @@
 from app.const import *
 from app.base.logger import log
 from app.base.db import get_db, SQL
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 from app.model import syslog
 from app.model import policy
 
@@ -13,7 +13,7 @@ def create(handler, gtype, name, desc):
         return TPE_PARAM, 0
 
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
 
     # 1. 判断是否已经存在了
     sql = 'SELECT id FROM {dbtp}group WHERE type={gtype} AND name="{gname}";'.format(dbtp=db.table_prefix, gtype=gtype, gname=name)
@@ -251,7 +251,7 @@ def make_groups(handler, gtype, glist, failed):
     根据传入的组列表，查询每个组的名称对应的id，如果没有，则创建之
     """
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
 
     operator = handler.get_current_user()
     name_list = list()

@@ -4,7 +4,7 @@ from app.const import *
 from app.base.logger import log
 from app.base.db import get_db, SQL
 from . import syslog
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 from app.base.stats import tp_stats
 
 
@@ -246,7 +246,7 @@ def add_account(handler, host_id, args):
     添加一个远程账号
     """
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
     operator = handler.get_current_user()
 
     # 1. 判断是否已经存在了

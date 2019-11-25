@@ -239,7 +239,7 @@ $assist.do_rdp_replay = function (args, func_success, func_error) {
     // now fix the args.
     args.web = $tp.web_server; // (string) - teleport server base address, like "http://127.0.0.1:7190", without end-slash.
     args.sid = Cookies.get('_sid'); // (string) - current login user's session-id.
-    args.start = tp_format_datetime(tp_utc2local(args.start), 'yyyyMMdd-HHmmss'); // (string) - convert UTC timestamp to local human-readable string.
+    args.start = tp_format_datetime(args.start, 'yyyyMMdd-HHmmss'); // (string) - convert UTC timestamp to local human-readable string.
 
     console.log('do-rdp-replay:', args);
 

@@ -3,7 +3,7 @@
 from app.base.configs import tp_cfg
 from app.base.db import get_db, SQL
 from app.base.logger import log
-from app.base.utils import tp_timestamp_utc_now, tp_generate_random
+from app.base.utils import tp_timestamp_sec, tp_generate_random
 from app.const import *
 from app.model import syslog
 from app.base.stats import tp_stats
@@ -73,7 +73,7 @@ def login(handler, username, password=None, oath_code=None, check_bind_oath=Fals
     if user_info['state'] == TP_STATE_LOCKED:
         # 用户已经被锁定，如果系统配置为一定时间后自动解锁，则更新一下用户信息
         if sys_cfg.login.lock_timeout != 0:
-            if tp_timestamp_utc_now() - user_info.lock_time > sys_cfg.login.lock_timeout * 60:
+            if tp_timestamp_sec() - user_info.lock_time > sys_cfg.login.lock_timeout * 60:
                 user_info.fail_count = 0
                 user_info.state = TP_STATE_NORMAL
         if user_info['state'] == TP_STATE_LOCKED:
@@ -94,7 +94,7 @@ def login(handler, username, password=None, oath_code=None, check_bind_oath=Fals
         if user_info['type'] == TP_USER_TYPE_LOCAL:
             # 如果系统配置了密码有效期，则检查用户的密码是否失效
             if sys_cfg.password.timeout != 0:
-                _time_now = tp_timestamp_utc_now()
+                _time_now = tp_timestamp_sec()
                 if user_info['last_chpass'] + (sys_cfg.password.timeout * 60 * 60 * 24) < _time_now:
                     msg = '登录失败，用户密码已过期'
                     syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
@@ -269,7 +269,7 @@ def create_users(handler, user_list, success, failed):
     批量创建用户
     """
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
 
     operator = handler.get_current_user()
     name_list = list()
@@ -329,7 +329,7 @@ def create_user(handler, user):
     创建一个用户账号
     """
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
     operator = handler.get_current_user()
 
     if 'type' not in user:
@@ -476,7 +476,7 @@ def set_password(handler, mode, user_id, password):
     if len(surname) == 0:
         surname = name
 
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
 
     sql = 'UPDATE `{}user` SET `password`="{password}", `last_chpass`={last_chpass} WHERE `id`={user_id};' \
           ''.format(db.table_prefix, password=password, last_chpass=_time_now, user_id=user_id)
@@ -499,7 +499,7 @@ def generate_reset_password_token(handler, user_id):
     db = get_db()
     operator = handler.get_current_user()
     s = SQL(db)
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
 
     # 0. query user's email by user_id
     err = s.select_from('user', ['email'], alt_name='u').where('u.id={user_id}'.format(user_id=user_id)).query()
@@ -542,7 +542,7 @@ def generate_reset_password_token(handler, user_id):
 def check_reset_token(token):
     db = get_db()
     # s = SQL(db)
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
 
     # 0. remove expired token (after 3 days)
     sql = 'DELETE FROM `{dbtp}user_rpt` WHERE create_time<{dbph};'.format(dbtp=db.table_prefix, dbph=db.place_holder)
@@ -573,7 +573,7 @@ def remove_reset_token(token):
 
 def update_login_info(handler, user_id):
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
 
     sql = 'UPDATE `{}user` SET ' \
           'fail_count=0, last_login=login_time, last_ip=login_ip, login_time={login_time},' \
@@ -663,7 +663,7 @@ def update_fail_count(handler, user_info):
     if sys_cfg.login.retry != 0 and fail_count >= sys_cfg.login.retry:
         is_locked = True
         sql = 'UPDATE `{}user` SET state={state}, lock_time={lock_time} WHERE id={uid};' \
-              ''.format(db.table_prefix, state=TP_STATE_LOCKED, lock_time=tp_timestamp_utc_now(), uid=user_info.id)
+              ''.format(db.table_prefix, state=TP_STATE_LOCKED, lock_time=tp_timestamp_sec(), uid=user_info.id)
         sql_list.append(sql)
 
     if db.transaction(sql_list):
