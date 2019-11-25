@@ -195,6 +195,8 @@ var TPE_PRIVILEGE = 3;
 var TPE_NOT_IMPLEMENT = 7;  // 尚未实现
 var TPE_EXISTS = 8;
 var TPE_NOT_EXISTS = 9;
+var TPE_NO_MORE_DATA = 10;  // 没有更多的数据了（不一定是错误）
+var TPE_INCOMPATIBLE_VERSION = 11; // 版本不兼容
 
 // 100~299是通用错误值
 

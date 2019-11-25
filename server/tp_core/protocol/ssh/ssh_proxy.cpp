@@ -86,7 +86,7 @@ void SshProxy::kill_sessions(const ex_astrs &sessions) {
         for (size_t i = 0; i < sessions.size(); ++i) {
             if (it->first->sid() == sessions[i]) {
                 EXLOGW("[ssh] try to kill %s\n", sessions[i].c_str());
-                it->first->check_noop_timeout(0, 0); // Á¢¼´½áÊø
+                it->first->check_noop_timeout(0, 0); // ç«‹å³ç»“æŸ
             }
         }
     }
@@ -96,13 +96,15 @@ void SshProxy::_thread_loop() {
     EXLOGI("[ssh] TeleportServer-SSH ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 
     for (;;) {
-        // ×¢Òâ£¬ssh_new()³öÀ´µÄÖ¸Õë£¬Èç¹ûÓöµ½Í£Ö¹±êÖ¾£¬±¾º¯ÊıÄÚ²¿¾ÍÊÍ·ÅÁË£¬·ñÔòÕâ¸öÖ¸Õë½»¸øÁËSshSessionÀàÊµÀı¹ÜÀí£¬ÆäÎö¹¹Ê±»áÊÍ·Å¡£
+        // æ³¨æ„ï¼Œssh_new()å‡ºæ¥çš„æŒ‡é’ˆï¼Œå¦‚æœé‡åˆ°åœæ­¢æ ‡å¿—ï¼Œæœ¬å‡½æ•°å†…éƒ¨å°±é‡Šæ”¾äº†ï¼Œå¦åˆ™è¿™ä¸ªæŒ‡é’ˆäº¤ç»™äº†SshSessionç±»å®ä¾‹ç®¡ç†ï¼Œå…¶ææ„æ—¶ä¼šé‡Šæ”¾ã€‚
         ssh_session sess_to_client = ssh_new();
 
-        // int flag = SSH_LOG_FUNCTIONS;
- 		// ssh_options_set(sess_to_client, SSH_OPTIONS_LOG_VERBOSITY, &flag);
+// #ifdef EX_DEBUG
+//        int flag = SSH_LOG_FUNCTIONS;
+//        ssh_options_set(sess_to_client, SSH_OPTIONS_LOG_VERBOSITY, &flag);
+// #endif
 
-        ssh_set_blocking(sess_to_client, 1);
+        //ssh_set_blocking(sess_to_client, 1);
 
         struct sockaddr_storage sock_client;
         char ip[32] = {0};
@@ -145,14 +147,14 @@ void SshProxy::_thread_loop() {
         sess->start();
     }
 
-    // µÈ´ıËùÓĞ¹¤×÷Ïß³ÌÍË³ö
+    // ç­‰å¾…æ‰€æœ‰å·¥ä½œçº¿ç¨‹é€€å‡º
     //m_thread_mgr.stop_all();
 
     {
         ExThreadSmartLock locker(m_lock);
         ts_ssh_sessions::iterator it = m_sessions.begin();
         for (; it != m_sessions.end(); ++it) {
-            it->first->check_noop_timeout(0, 0); // Á¢¼´½áÊø
+            it->first->check_noop_timeout(0, 0); // ç«‹å³ç»“æŸ
         }
     }
 
@@ -173,7 +175,7 @@ void SshProxy::_on_stop() {
     ExThreadBase::_on_stop();
 
     if (m_is_running) {
-        // ÓÃÒ»¸ö±äÍ¨µÄ·½Ê½À´½áÊø×èÈûÖĞµÄ¼àÌı£¬¾ÍÊÇÁ¬½ÓÒ»ÏÂËü¡£
+        // ç”¨ä¸€ä¸ªå˜é€šçš„æ–¹å¼æ¥ç»“æŸé˜»å¡ä¸­çš„ç›‘å¬ï¼Œå°±æ˜¯è¿æ¥ä¸€ä¸‹å®ƒã€‚
         ex_astr host_ip = m_host_ip;
         if (host_ip == "0.0.0.0")
             host_ip = "127.0.0.1";
@@ -185,14 +187,17 @@ void SshProxy::_on_stop() {
         int _timeout_us = 10;
         ssh_options_set(_session, SSH_OPTIONS_TIMEOUT, &_timeout_us);
         ssh_connect(_session);
+        ssh_disconnect(_session);
         ssh_free(_session);
+
+        ex_sleep_ms(100);
     }
 
 // 	m_thread_mgr.stop_all();
 }
 
 void SshProxy::session_finished(SshSession *sess) {
-    // TODO: ÏòºËĞÄÄ£¿é»ã±¨´Ë»á»°ÖÕÖ¹£¬ÒÔ¼õÉÙ¶ÔÓ¦Á¬½ÓĞÅÏ¢µÄÒıÓÃ¼ÆÊı
+    // TODO: å‘æ ¸å¿ƒæ¨¡å—æ±‡æŠ¥æ­¤ä¼šè¯ç»ˆæ­¢ï¼Œä»¥å‡å°‘å¯¹åº”è¿æ¥ä¿¡æ¯çš„å¼•ç”¨è®¡æ•°
 
     ExThreadSmartLock locker(m_lock);
     ts_ssh_sessions::iterator it = m_sessions.find(sess);

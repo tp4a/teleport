@@ -166,6 +166,7 @@ def get_accounts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
     s = SQL(db)
     # s.select_from('acc', ['id', 'host_id', 'host_ip', 'router_ip', 'router_port', 'username', 'protocol_type', 'auth_type', 'state'], alt_name='a')
     s.select_from('acc', ['id', 'host_id', 'username', 'protocol_type', 'auth_type', 'state', 'username_prompt', 'password_prompt'], alt_name='a')
+    s.left_join('host', ['name', 'desc'], join_on='h.id=a.host_id', alt_name='h', out_map={'name': 'host_name'})
 
     str_where = ''
     _where = list()
@@ -189,7 +190,7 @@ def get_accounts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
     if len(sql_filter) > 0:
         for k in sql_filter:
             if k == 'search':
-                _where.append('(a.username LIKE "%{filter}%" OR a.host_ip LIKE "%{filter}%" OR a.router_ip LIKE "%{filter}%")'.format(filter=sql_filter[k]))
+                _where.append('(a.username LIKE "%{filter}%" OR a.host_ip LIKE "%{filter}%" OR a.router_ip LIKE "%{filter}%" OR h.name LIKE "%{filter}%" OR h.desc LIKE "%{filter}%")'.format(filter=sql_filter[k]))
                 # _where.append('(a.username LIKE "%{filter}%")'.format(filter=sql_filter[k]))
 
     if len(_where) > 0:

@@ -8,7 +8,7 @@ TppTelnetRec::TppTelnetRec()
 
 	memset(&m_head, 0, sizeof(TS_RECORD_HEADER));
 	memcpy((ex_u8*)(&m_head.info.magic), TPP_RECORD_MAGIC, sizeof(ex_u32));
-	m_head.info.ver = 0x03;
+	m_head.info.ver = 0x04;
 	m_header_changed = false;
 	m_save_full_header = false;
 
@@ -42,7 +42,7 @@ bool TppTelnetRec::_on_begin(const TPP_CONNECT_INFO* info)
 
 bool TppTelnetRec::_on_end()
 {
-	// Èç¹û»¹ÓĞÊ£ÏÂÎ´Ğ´ÈëµÄÊı¾İ£¬Ğ´ÈëÎÄ¼şÖĞ¡£
+	// å¦‚æœè¿˜æœ‰å‰©ä¸‹æœªå†™å…¥çš„æ•°æ®ï¼Œå†™å…¥æ–‡ä»¶ä¸­ã€‚
 	save_record();
 
 	if (m_file_info != NULL)
@@ -76,13 +76,14 @@ void TppTelnetRec::record(ex_u8 type, const ex_u8* data, size_t size)
 	{
 		pkg.time_ms = (ex_u32)(ex_get_tick_count() - m_start_time);
 		m_head.info.time_ms = pkg.time_ms;
+		m_header_changed = true;
 	}
 
 	m_cache.append((ex_u8*)&pkg, sizeof(TS_RECORD_PKG));
 	m_cache.append(data, size);
 
-	m_head.info.packages++;
-	m_header_changed = true;
+	// m_head.info.packages++;
+	// m_header_changed = true;
 }
 
 // void TppTelnetRec::record_win_size(int width, int height)

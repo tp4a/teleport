@@ -37,6 +37,7 @@ def attribute_to_dict(attribute):
     except PyAsn1Error:  # invalid encoding, return bytes value
         return {'type': str(attribute['type']), 'values': [bytes(val) for val in attribute['vals']]}
 
+
 def attributes_to_dict(attributes):
     attributes_dict = dict()
     for attribute in attributes:
@@ -46,7 +47,10 @@ def attributes_to_dict(attributes):
 
 
 def referrals_to_list(referrals):
-    return [str(referral) for referral in referrals if referral] if referrals else None
+    if isinstance(referrals, list):
+        return [str(referral) for referral in referrals if referral] if referrals else None
+    else:
+        return [str(referral) for referral in referrals if referral] if referrals is not None and referrals.hasValue() else None
 
 
 def search_refs_to_list(search_refs):
@@ -92,6 +96,7 @@ def ava_to_dict(ava):
             return {'attribute': str(ava['attributeDesc']), 'value': escape_filter_chars(bytes(ava['assertionValue']))}
         except Exception:
             return {'attribute': str(ava['attributeDesc']), 'value': bytes(ava['assertionValue'])}
+
 
 def substring_to_dict(substring):
     return {'initial': substring['initial'] if substring['initial'] else '', 'any': [middle for middle in substring['any']] if substring['any'] else '', 'final': substring['final'] if substring['final'] else ''}

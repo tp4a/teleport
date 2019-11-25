@@ -108,7 +108,7 @@ def add_attributes(attributes, all_base64):
 
     # remaining attributes
     for attr in attributes:
-        if attr != oc_attr:
+        if attr != oc_attr and attr in attributes:
             for val in attributes[attr]:
                 lines.append(_convert_to_ldif(attr, val, all_base64))
 
@@ -123,18 +123,21 @@ def sort_ldif_lines(lines, sort_order):
 
 def search_response_to_ldif(entries, all_base64, sort_order=None):
     lines = []
-    for entry in entries:
-        if 'dn' in entry:
-            lines.append(_convert_to_ldif('dn', entry['dn'], all_base64))
-            lines.extend(add_attributes(entry['raw_attributes'], all_base64))
-        else:
-            raise LDAPLDIFError('unable to convert to LDIF-CONTENT - missing DN')
-        if sort_order:
-            lines = sort_ldif_lines(lines, sort_order)
-        lines.append('')
+    if entries:
+        for entry in entries:
+            if not entry:
+                continue
+            if 'dn' in entry:
+                lines.append(_convert_to_ldif('dn', entry['dn'], all_base64))
+                lines.extend(add_attributes(entry['raw_attributes'], all_base64))
+            else:
+                raise LDAPLDIFError('unable to convert to LDIF-CONTENT - missing DN')
+            if sort_order:
+                lines = sort_ldif_lines(lines, sort_order)
+            lines.append('')
 
-    if lines:
-        lines.append('# total number of entries: ' + str(len(entries)))
+        if lines:
+            lines.append('# total number of entries: ' + str(len(entries)))
 
     return lines
 
@@ -262,8 +265,8 @@ def decode_persistent_search_control(change):
             decoded['changeType'] = 'modify dn'
         else:
             raise LDAPExtensionError('unknown Persistent Search changeType ' + str(decoded_control['changeType']))
-        decoded['changeNumber'] = decoded_control['changeNumber'] if 'changeNumber' in decoded_control else None
-        decoded['previousDN'] = decoded_control['previousDN'] if 'previousDN' in decoded_control else None
+        decoded['changeNumber'] = decoded_control['changeNumber'] if 'changeNumber' in decoded_control and decoded_control['changeNumber'] is not None and decoded_control['changeNumber'].hasValue() else None
+        decoded['previousDN'] = decoded_control['previousDN'] if 'previousDN' in decoded_control and decoded_control['previousDN'] is not None and decoded_control['previousDN'].hasValue() else None
         return decoded
 
     return None

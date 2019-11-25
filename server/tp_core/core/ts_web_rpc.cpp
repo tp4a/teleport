@@ -1,4 +1,4 @@
-#include "ts_web_rpc.h"
+ï»¿#include "ts_web_rpc.h"
 #include "ts_env.h"
 #include "ts_crypto.h"
 #include "ts_http_client.h"
@@ -10,13 +10,18 @@
 
 bool ts_web_rpc_register_core()
 {
-	Json::FastWriter json_writer;
+	//Json::FastWriter json_writer;
 	Json::Value jreq;
 	jreq["method"] = "register_core";
 	jreq["param"]["rpc"] = g_env.core_server_rpc;
 
 	ex_astr json_param;
-	json_param = json_writer.write(jreq);
+	//json_param = json_writer.write(jreq);
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(jreq, &os);
+    json_param = os.str();
 
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
@@ -31,13 +36,18 @@ bool ts_web_rpc_register_core()
 
 int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 {
-	Json::FastWriter json_writer;
+	//Json::FastWriter json_writer;
 	Json::Value jreq;
 	jreq["method"] = "get_conn_info";
 	jreq["param"]["conn_id"] = conn_id;
 
 	ex_astr json_param;
-	json_param = json_writer.write(jreq);
+	//json_param = json_writer.write(jreq);
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(jreq, &os);
+    json_param = os.str();
 
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
@@ -57,10 +67,17 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 		return TPE_NETWORK;
 	}
 
-	Json::Reader jreader;
+	//Json::Reader jreader;
 	Json::Value jret;
 
-	if (!jreader.parse(body.c_str(), jret))
+	//if (!jreader.parse(body.c_str(), jret))
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
+    const char *str_json_begin = body.c_str();
+    ex_astr err;
+
+    //if (!jreader.parse(func_args.c_str(), jsRoot)) {
+    if (!jreader->parse(str_json_begin, str_json_begin + body.length(), &jret, &err))
 		return TPE_PARAM;
 	if (!jret.isObject())
 		return TPE_PARAM;
@@ -135,13 +152,13 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 	int user_id;
 	int host_id;
 	int acc_id;
-	ex_astr user_username;// ÉêÇë±¾´ÎÁ¬½ÓµÄÓÃ»§Ãû
-	ex_astr host_ip;// ÕæÕıµÄÔ¶³ÌÖ÷»úIP£¨Èç¹ûÊÇÖ±½ÓÁ¬½ÓÄ£Ê½£¬ÔòÓëremote_host_ipÏàÍ¬£©
-	ex_astr conn_ip;// ÒªÁ¬½ÓµÄÔ¶³ÌÖ÷»úµÄIP£¨Èç¹ûÊÇ¶Ë¿ÚÓ³ÉäÄ£Ê½£¬ÔòÎªÂ·ÓÉÖ÷»úµÄIP£©
-	int conn_port;// ÒªÁ¬½ÓµÄÔ¶³ÌÖ÷»úµÄ¶Ë¿Ú£¨Èç¹ûÊÇ¶Ë¿ÚÓ³ÉäÄ£Ê½£¬ÔòÎªÂ·ÓÉÖ÷»úµÄ¶Ë¿Ú£©
+	ex_astr user_username;// ç”³è¯·æœ¬æ¬¡è¿æ¥çš„ç”¨æˆ·å
+	ex_astr host_ip;// çœŸæ­£çš„è¿œç¨‹ä¸»æœºIPï¼ˆå¦‚æœæ˜¯ç›´æ¥è¿æ¥æ¨¡å¼ï¼Œåˆ™ä¸remote_host_ipç›¸åŒï¼‰
+	ex_astr conn_ip;// è¦è¿æ¥çš„è¿œç¨‹ä¸»æœºçš„IPï¼ˆå¦‚æœæ˜¯ç«¯å£æ˜ å°„æ¨¡å¼ï¼Œåˆ™ä¸ºè·¯ç”±ä¸»æœºçš„IPï¼‰
+	int conn_port;// è¦è¿æ¥çš„è¿œç¨‹ä¸»æœºçš„ç«¯å£ï¼ˆå¦‚æœæ˜¯ç«¯å£æ˜ å°„æ¨¡å¼ï¼Œåˆ™ä¸ºè·¯ç”±ä¸»æœºçš„ç«¯å£ï¼‰
 	ex_astr client_ip;
-	ex_astr acc_username;	// Ô¶³ÌÖ÷»úµÄÕËºÅ
-	ex_astr acc_secret;// Ô¶³ÌÖ÷»úÕËºÅµÄÃÜÂë£¨»òÕßË½Ô¿£©
+	ex_astr acc_username;	// è¿œç¨‹ä¸»æœºçš„è´¦å·
+	ex_astr acc_secret;// è¿œç¨‹ä¸»æœºè´¦å·çš„å¯†ç ï¼ˆæˆ–è€…ç§é’¥ï¼‰
 	ex_astr username_prompt;
 	ex_astr password_prompt;
 	int protocol_type = 0;
@@ -171,8 +188,8 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 	_enc = _jret["_enc"].asBool();
 
 
-	// ½øÒ»²½ÅĞ¶Ï²ÎÊıÊÇ·ñºÏ·¨
-	// ×¢Òâ£¬account_id¿ÉÒÔÎª-1£¬±íÊ¾ÕâÊÇÒ»´Î²âÊÔÁ¬½Ó¡£
+	// è¿›ä¸€æ­¥åˆ¤æ–­å‚æ•°æ˜¯å¦åˆæ³•
+	// æ³¨æ„ï¼Œaccount_idå¯ä»¥ä¸º-1ï¼Œè¡¨ç¤ºè¿™æ˜¯ä¸€æ¬¡æµ‹è¯•è¿æ¥ã€‚
 	if (user_id <= 0 || host_id <= 0
 		|| user_username.length() == 0
 		|| host_ip.length() == 0 || conn_ip.length() == 0 || client_ip.length() == 0
@@ -216,7 +233,7 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 
 bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id)
 {
-	Json::FastWriter json_writer;
+	//Json::FastWriter json_writer;
 	Json::Value jreq;
 
 	jreq["method"] = "session_begin";
@@ -236,7 +253,12 @@ bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id)
 	jreq["param"]["protocol_sub_type"] = info.protocol_sub_type;
 
 	ex_astr json_param;
-	json_param = json_writer.write(jreq);
+	//json_param = json_writer.write(jreq);
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(jreq, &os);
+    json_param = os.str();
 
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
@@ -254,11 +276,18 @@ bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id)
 		return false;
 	}
 
-	Json::Reader jreader;
+	//Json::Reader jreader;
 	Json::Value jret;
 
-	if (!jreader.parse(body.c_str(), jret))
-		return false;
+	//if (!jreader.parse(body.c_str(), jret))
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
+    const char *str_json_begin = body.c_str();
+    ex_astr err;
+
+    //if (!jreader.parse(func_args.c_str(), jsRoot)) {
+    if (!jreader->parse(str_json_begin, str_json_begin + body.length(), &jret, &err))
+        return false;
 	if (!jret.isObject())
 		return false;
 	if (!jret["data"].isObject())
@@ -272,7 +301,7 @@ bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id)
 }
 
 bool ts_web_rpc_session_update(int record_id, int protocol_sub_type, int state) {
-	Json::FastWriter json_writer;
+	//Json::FastWriter json_writer;
 	Json::Value jreq;
 	jreq["method"] = "session_update";
 	jreq["param"]["rid"] = record_id;
@@ -280,7 +309,12 @@ bool ts_web_rpc_session_update(int record_id, int protocol_sub_type, int state) 
 	jreq["param"]["code"] = state;
 
 	ex_astr json_param;
-	json_param = json_writer.write(jreq);
+	//json_param = json_writer.write(jreq);
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(jreq, &os);
+    json_param = os.str();
 
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
@@ -294,20 +328,25 @@ bool ts_web_rpc_session_update(int record_id, int protocol_sub_type, int state) 
 }
 
 
-//session ½áÊø
+//session ç»“æŸ
 bool ts_web_rpc_session_end(const char* sid, int record_id, int ret_code)
 {
-	// TODO: ¶ÔÖ¸¶¨µÄsidÏà¹ØµÄ»á»°µÄÒıÓÃ¼ÆÊı¼õÒ»£¨µ«¼õµ½0Ê±Ïú»Ù£©
+	// TODO: å¯¹æŒ‡å®šçš„sidç›¸å…³çš„ä¼šè¯çš„å¼•ç”¨è®¡æ•°å‡ä¸€ï¼ˆä½†å‡åˆ°0æ—¶é”€æ¯ï¼‰
 
-	Json::FastWriter json_writer;
+	//Json::FastWriter json_writer;
 	Json::Value jreq;
 	jreq["method"] = "session_end";
 	jreq["param"]["rid"] = record_id;
 	jreq["param"]["code"] = ret_code;
 
 	ex_astr json_param;
-	json_param = json_writer.write(jreq);
-
+	//json_param = json_writer.write(jreq);
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(jreq, &os);
+    json_param = os.str();
+    
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
 

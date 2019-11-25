@@ -12,8 +12,9 @@ import six
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ed25519, ed448
 from cryptography.x509.base import (
-    _UNIX_EPOCH, _convert_to_naive_utc_time, _reject_duplicate_extension
+    _EARLIEST_UTC_TIME, _convert_to_naive_utc_time, _reject_duplicate_extension
 )
 
 
@@ -154,9 +155,9 @@ class _SingleResponse(object):
                 raise TypeError("revocation_time must be a datetime object")
 
             revocation_time = _convert_to_naive_utc_time(revocation_time)
-            if revocation_time <= _UNIX_EPOCH:
-                raise ValueError('The revocation_time must be after the unix'
-                                 ' epoch (1970 January 1).')
+            if revocation_time < _EARLIEST_UTC_TIME:
+                raise ValueError('The revocation_time must be on or after'
+                                 ' 1950 January 1.')
 
             if (
                 revocation_reason is not None and
@@ -241,7 +242,13 @@ class OCSPResponseBuilder(object):
         if self._responder_id is None:
             raise ValueError("You must add a responder_id before signing")
 
-        if not isinstance(algorithm, hashes.HashAlgorithm):
+        if isinstance(private_key,
+                      (ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey)):
+            if algorithm is not None:
+                raise ValueError(
+                    "algorithm must be None when signing via ed25519 or ed448"
+                )
+        elif not isinstance(algorithm, hashes.HashAlgorithm):
             raise TypeError("Algorithm must be a registered hash algorithm.")
 
         return backend.create_ocsp_response(
@@ -312,6 +319,12 @@ class OCSPResponse(object):
     def signature_algorithm_oid(self):
         """
         The ObjectIdentifier of the signature algorithm
+        """
+
+    @abc.abstractproperty
+    def signature_hash_algorithm(self):
+        """
+        Returns a HashAlgorithm corresponding to the type of the digest signed
         """
 
     @abc.abstractproperty

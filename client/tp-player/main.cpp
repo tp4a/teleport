@@ -14,14 +14,10 @@
 //  tp-player.exe  path/contains/tp-rdp.tpr   包含 .tpr 文件的路径
 //
 // ## 从TP服务器上下载
-//	(废弃) tp-player.exe "http://127.0.0.1:7190"   1234      "tp_1491560510_ca67fceb75a78c9d"    "000000256-admin-administrator-218.244.140.14-20171209-020047"
-//  (废弃)               TP服务器地址                记录编号   session-id（仅授权用户可下载）          合成的名称，用于本地生成路径来存放下载的文件
-//
-// ## 从TP服务器上下载
 //	tp-player.exe http://teleport.domain.com:7190/{sub/path/}tp_1491560510_ca67fceb75a78c9d/1234 (注意，并不直接访问此URI，实际上其并不存在)
-//                TP服务器地址(可能包含子路径哦，例如上例中的{sub/path}部分)/session-id(用于判断当前授权用户)/录像会话编号
+//                TP服务器地址(可能包含子路径，例如上例中的{sub/path}部分)/session-id(用于判断当前授权用户)/录像会话编号
 //    按 “/” 进行分割后，去掉最后两个项，剩下部分是TP服务器的WEB地址，用于合成后续的文件下载URL。
-//    根据下载的.tpr文件内容，本地合成类似于 "000000256-admin-administrator-218.244.140.14-20171209-020047" 的路径来存放下载的文件
+//    根据下载的.tpr文件内容，本地合成类似于 "000000256-admin-administrator-123.45.77.88-20191109-020047" 的路径来存放下载的文件
 //    特别注意，如果账号是 domain\user 这种形式，需要将 "\" 替换为下划线，否则此符号作为路径分隔符，会导致路径不存在而无法保存下载的文件。
 //       - 获取文件大小: http://127.0.0.1:7190/audit/get-file?act=size&type=rdp&rid=yyyyy&f=file-name
 //          - 'act'为`size`表示获取文件大小（返回一个数字字符串，就是指定的文件大小）
@@ -41,9 +37,9 @@ void show_usage(QCommandLineParser& parser) {
                          + parser.helpText()
                          + "\n\n"
                          + "RESOURCE could be:\n"
-                         + "    teleport record file (.tpr).\n"
-                         + "    a directory contains .tpr file.\n"
-                         + "    an URL to download teleport record file."
+                         + "   - teleport record file (.tpr).\n"
+                         + "   - a directory contains .tpr file.\n"
+                         + "   - an URL to download teleport record file."
                          + "</pre></body></html>");
 }
 
@@ -82,15 +78,6 @@ int main(int argc, char *argv[])
 
     if(parser.isSet(opt_help)) {
         show_usage(parser);
-//        QMessageBox::warning(nullptr, QGuiApplication::applicationDisplayName(),
-//                             "<html><head/><body><pre>"
-//                             + parser.helpText()
-//                             + "\n\n"
-//                             + "RESOURCE could be:\n"
-//                             + "    teleport record file (.tpr).\n"
-//                             + "    a directory contains .tpr file.\n"
-//                             + "    an URL for download teleport record file."
-//                             + "</pre></body></html>");
         return 2;
     }
 
@@ -103,10 +90,6 @@ int main(int argc, char *argv[])
     QString resource = args.at(0);
     qDebug() << resource;
 
-
-//    QTextCodec::setCodecForTr(QTextCodec::codecForName("GB2312"));
-//    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
-//    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("GB2312"));
 
     MainWindow w;
     w.set_resource(resource);

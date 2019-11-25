@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2019 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -146,6 +146,7 @@ def prepare_for_stream(value):
     else:  # Python 2
         return value.decode()
 
+
 def json_encode_b64(obj):
     try:
         return dict(encoding='base64', encoded=b64encode(obj))
@@ -192,6 +193,9 @@ def format_json(obj):
     if isinstance(obj, int):
         return obj
 
+    if isinstance(obj, datetime.timedelta):
+        return str(obj)
+
     if str is bytes:  # Python 2
         if isinstance(obj, long):  # long exists only in python2
             return obj
@@ -224,18 +228,6 @@ def is_filter_escaped(text):
         raise ValueError('unicode input expected')
 
     return all(c not in text for c in '()*\0') and not re.search('\\\\([^0-9a-fA-F]|(.[^0-9a-fA-F]))', text)
-
-
-# def ldap_escape_to_bytes(text):
-#     bytesequence = bytearray()
-#     if text.startswith('\\'):
-#         byte_values = text.split('\\')
-#         for value in byte_values[1:]:
-#             if len(value) != 2 and not value.isdigit():
-#                 raise LDAPDefinitionError('badly formatted LDAP byte escaped sequence')
-#             bytesequence.append(int(value, 16))
-#         return bytes(bytesequence)
-#     raise LDAPDefinitionError('badly formatted LDAP byte escaped sequence')
 
 
 def ldap_escape_to_bytes(text):

@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2019 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -249,7 +249,7 @@ class ReusableStrategy(BaseStrategy):
                                     if pool.tls_pool and not self.worker.connection.tls_started:
                                         self.worker.connection.start_tls(read_server_info=False)
                                 if self.worker.get_info_from_server and counter:
-                                    self.worker.connection._fire_deferred()
+                                    self.worker.connection.refresh_server_info()
                                     self.worker.get_info_from_server = False
                                 response = None
                                 result = None
@@ -262,7 +262,8 @@ class ReusableStrategy(BaseStrategy):
                                     pool._incoming[counter] = (response, result, BaseStrategy.decode_request(message_type, request, controls))
                             except LDAPOperationResult as e:  # raise_exceptions has raised an exception. It must be redirected to the original connection thread
                                 with pool.pool_lock:
-                                    pool._incoming[counter] = (type(e)(str(e)), None, None)
+                                    pool._incoming[counter] = (e, None, None)
+                                    # pool._incoming[counter] = (type(e)(str(e)), None, None)
                             # except LDAPOperationResult as e:  # raise_exceptions has raised an exception. It must be redirected to the original connection thread
                             #     exc = e
                             # with pool.pool_lock:
@@ -430,6 +431,7 @@ class ReusableStrategy(BaseStrategy):
             self.pool.master_connection.sasl_credentials = self.connection.sasl_credentials
             self.pool.rebind_pool()
         temp_connection = self.pool.workers[0].connection
+        old_lazy = temp_connection.lazy
         temp_connection.lazy = False
         if not self.connection.server.schema or not self.connection.server.info:
             result = self.pool.workers[0].connection.bind(controls=controls)
@@ -437,7 +439,7 @@ class ReusableStrategy(BaseStrategy):
             result = self.pool.workers[0].connection.bind(controls=controls, read_server_info=False)
 
         temp_connection.unbind()
-        temp_connection.lazy = True
+        temp_connection.lazy = old_lazy
         if result:
             self.pool.bind_pool = True  # bind pool if bind is validated
         return result

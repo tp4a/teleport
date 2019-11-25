@@ -79,8 +79,7 @@ __pycache__
 /client/tp_rdp
 /server/tp_core/protocol/rdp
 /client/tools/tprdp
-/client/tp_assist_win_it_doctor
-/dist/client/windows/assist-it-doctor
+/client/build-tp-player-*
 
 # for MacOS.
 .DS_Store
@@ -104,4 +103,5 @@ profile
 
 /server/tp_core/testssh/Debug
 /server/tp_core/testssh/Release
-/client/build-tp-player-*
+/external/zlib
+/client/tools/qt-redist

@@ -17,14 +17,17 @@ include_directories(
 include_directories(
         ${TP_EXTERNAL_RELEASE_DIR}/include
 )
-link_directories(${TP_EXTERNAL_RELEASE_DIR}/lib)
+link_directories(
+    ${TP_EXTERNAL_RELEASE_DIR}/lib
+    ${TP_EXTERNAL_RELEASE_DIR}/lib64
+    )
 
 
 add_executable(testssh ${DIR_SRCS})
 
 if (OS_LINUX)
     set(CMAKE_EXE_LINKER_FLAGS "-export-dynamic")
-    target_link_libraries(testssh ssh ssl crypto dl pthread rt util)
+    target_link_libraries(testssh ssh ssl z crypto dl pthread rt util)
 elseif (OS_MACOS)
-    target_link_libraries(testssh ssh ssl crypto dl pthread util)
+    target_link_libraries(testssh ssh ssl z crypto dl pthread util)
 endif ()

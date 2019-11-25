@@ -34,7 +34,19 @@ def _ec_key_curve_sn(backend, ec_key):
     # an error for now.
     if nid == backend._lib.NID_undef:
         raise NotImplementedError(
-            "ECDSA certificates with unnamed curves are unsupported "
+            "ECDSA keys with unnamed curves are unsupported "
+            "at this time"
+        )
+
+    # This is like the above check, but it also catches the case where you
+    # explicitly encoded a curve with the same parameters as a named curve.
+    # Don't do that.
+    if (
+        backend._lib.CRYPTOGRAPHY_OPENSSL_110_OR_GREATER and
+        backend._lib.EC_GROUP_get_asn1_flag(group) == 0
+    ):
+        raise NotImplementedError(
+            "ECDSA keys with unnamed curves are unsupported "
             "at this time"
         )
 
@@ -62,7 +74,7 @@ def _sn_to_elliptic_curve(backend, sn):
         return ec._CURVE_TYPES[sn]()
     except KeyError:
         raise UnsupportedAlgorithm(
-            "{0} is not a supported elliptic curve".format(sn),
+            "{} is not a supported elliptic curve".format(sn),
             _Reasons.UNSUPPORTED_ELLIPTIC_CURVE
         )
 
@@ -127,12 +139,12 @@ class _ECDSAVerificationContext(object):
 class _EllipticCurvePrivateKey(object):
     def __init__(self, backend, ec_key_cdata, evp_pkey):
         self._backend = backend
-        _mark_asn1_named_ec_curve(backend, ec_key_cdata)
         self._ec_key = ec_key_cdata
         self._evp_pkey = evp_pkey
 
         sn = _ec_key_curve_sn(backend, ec_key_cdata)
         self._curve = _sn_to_elliptic_curve(backend, sn)
+        _mark_asn1_named_ec_curve(backend, ec_key_cdata)
 
     curve = utils.read_only_property("_curve")
 
@@ -229,12 +241,12 @@ class _EllipticCurvePrivateKey(object):
 class _EllipticCurvePublicKey(object):
     def __init__(self, backend, ec_key_cdata, evp_pkey):
         self._backend = backend
-        _mark_asn1_named_ec_curve(backend, ec_key_cdata)
         self._ec_key = ec_key_cdata
         self._evp_pkey = evp_pkey
 
         sn = _ec_key_curve_sn(backend, ec_key_cdata)
         self._curve = _sn_to_elliptic_curve(backend, sn)
+        _mark_asn1_named_ec_curve(backend, ec_key_cdata)
 
     curve = utils.read_only_property("_curve")
 
@@ -244,8 +256,7 @@ class _EllipticCurvePublicKey(object):
 
     def verifier(self, signature, signature_algorithm):
         _warn_sign_verify_deprecated()
-        if not isinstance(signature, bytes):
-            raise TypeError("signature must be bytes.")
+        utils._check_bytes("signature", signature)
 
         _check_signature_algorithm(signature_algorithm)
         _check_not_prehashed(signature_algorithm.algorithm)
@@ -276,19 +287,62 @@ class _EllipticCurvePublicKey(object):
             curve=self._curve
         )
 
+    def _encode_point(self, format):
+        if format is serialization.PublicFormat.CompressedPoint:
+            conversion = self._backend._lib.POINT_CONVERSION_COMPRESSED
+        else:
+            assert format is serialization.PublicFormat.UncompressedPoint
+            conversion = self._backend._lib.POINT_CONVERSION_UNCOMPRESSED
+
+        group = self._backend._lib.EC_KEY_get0_group(self._ec_key)
+        self._backend.openssl_assert(group != self._backend._ffi.NULL)
+        point = self._backend._lib.EC_KEY_get0_public_key(self._ec_key)
+        self._backend.openssl_assert(point != self._backend._ffi.NULL)
+        with self._backend._tmp_bn_ctx() as bn_ctx:
+            buflen = self._backend._lib.EC_POINT_point2oct(
+                group, point, conversion, self._backend._ffi.NULL, 0, bn_ctx
+            )
+            self._backend.openssl_assert(buflen > 0)
+            buf = self._backend._ffi.new("char[]", buflen)
+            res = self._backend._lib.EC_POINT_point2oct(
+                group, point, conversion, buf, buflen, bn_ctx
+            )
+            self._backend.openssl_assert(buflen == res)
+
+        return self._backend._ffi.buffer(buf)[:]
+
     def public_bytes(self, encoding, format):
         if format is serialization.PublicFormat.PKCS1:
             raise ValueError(
                 "EC public keys do not support PKCS1 serialization"
             )
 
-        return self._backend._public_key_bytes(
-            encoding,
-            format,
-            self,
-            self._evp_pkey,
-            None
-        )
+        if (
+            encoding is serialization.Encoding.X962 or
+            format is serialization.PublicFormat.CompressedPoint or
+            format is serialization.PublicFormat.UncompressedPoint
+        ):
+            if (
+                encoding is not serialization.Encoding.X962 or
+                format not in (
+                    serialization.PublicFormat.CompressedPoint,
+                    serialization.PublicFormat.UncompressedPoint
+                )
+            ):
+                raise ValueError(
+                    "X962 encoding must be used with CompressedPoint or "
+                    "UncompressedPoint format"
+                )
+
+            return self._encode_point(format)
+        else:
+            return self._backend._public_key_bytes(
+                encoding,
+                format,
+                self,
+                self._evp_pkey,
+                None
+            )
 
     def verify(self, signature, data, signature_algorithm):
         _check_signature_algorithm(signature_algorithm)

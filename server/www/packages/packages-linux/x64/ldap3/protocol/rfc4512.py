@@ -31,7 +31,7 @@ from .oid import CLASS_ABSTRACT, CLASS_STRUCTURAL, CLASS_AUXILIARY, ATTRIBUTE_US
     ATTRIBUTE_DIRECTORY_OPERATION, ATTRIBUTE_DISTRIBUTED_OPERATION, ATTRIBUTE_DSA_OPERATION
 from .. import SEQUENCE_TYPES, STRING_TYPES, get_config_parameter
 from ..utils.conv import escape_bytes, json_hook, check_json_dict, format_json, to_unicode
-from ..utils.ciDict import CaseInsensitiveDict
+from ..utils.ciDict import CaseInsensitiveWithAliasDict
 from ..protocol.formatters.standard import format_attribute_values
 from .oid import Oids, decode_oids, decode_syntax, oid_to_string
 from ..core.exceptions import LDAPSchemaError, LDAPDefinitionError
@@ -123,7 +123,7 @@ class BaseServerInfo(object):
             raise LDAPDefinitionError('invalid JSON definition')
 
         if conf_case_insensitive_schema:
-            attributes = CaseInsensitiveDict()
+            attributes = CaseInsensitiveWithAliasDict()
         else:
             attributes = dict()
 
@@ -429,10 +429,10 @@ class BaseObjectInfo(object):
         conf_case_insensitive_schema = get_config_parameter('CASE_INSENSITIVE_SCHEMA_NAMES')
         conf_ignore_malformed_schema = get_config_parameter('IGNORE_MALFORMED_SCHEMA')
 
-        ret_dict = CaseInsensitiveDict() if conf_case_insensitive_schema else dict()
+        ret_dict = CaseInsensitiveWithAliasDict() if conf_case_insensitive_schema else dict()
 
         if not definitions:
-            return CaseInsensitiveDict() if conf_case_insensitive_schema else dict()
+            return ret_dict
 
         for object_definition in definitions:
             object_definition = to_unicode(object_definition.strip(), from_server=True)
@@ -523,7 +523,7 @@ class BaseObjectInfo(object):
                         if not conf_ignore_malformed_schema:
                             raise LDAPSchemaError('malformed schema definition key:' + key + ' - use get_info=NONE in Server definition')
                         else:
-                            return CaseInsensitiveDict() if conf_case_insensitive_schema else dict()
+                            return CaseInsensitiveWithAliasDict() if conf_case_insensitive_schema else dict()
                 object_def.raw_definition = object_definition
                 if hasattr(object_def, 'syntax') and object_def.syntax and len(object_def.syntax) == 1:
                     object_def.min_length = None
@@ -538,8 +538,12 @@ class BaseObjectInfo(object):
                     object_def.syntax[0] = object_def.syntax[0].strip("'")
                     object_def.syntax = object_def.syntax[0]
                 if hasattr(object_def, 'name') and object_def.name:
-                    for name in object_def.name:
-                        ret_dict[name] = object_def
+                    if conf_case_insensitive_schema:
+                        ret_dict[object_def.name[0]] = object_def
+                        ret_dict.set_alias(object_def.name[0], object_def.name[1:] + [object_def.oid], ignore_duplicates=True)
+                    else:
+                        for name in object_def.name:
+                            ret_dict[name] = object_def
                 else:
                     ret_dict[object_def.oid] = object_def
 
@@ -547,7 +551,7 @@ class BaseObjectInfo(object):
                 if not conf_ignore_malformed_schema:
                     raise LDAPSchemaError('malformed schema definition, use get_info=NONE in Server definition')
                 else:
-                    return CaseInsensitiveDict() if conf_case_insensitive_schema else dict()
+                    return CaseInsensitiveWithAliasDict() if conf_case_insensitive_schema else dict()
         return ret_dict
 
 

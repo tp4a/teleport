@@ -483,7 +483,7 @@ class NtlmClient(object):
         temp += self.server_target_info_raw
         temp += pack('<I', 0)  # Z(4)
         response_key_nt = self.ntowf_v2()
-        nt_proof_str = hmac.new(response_key_nt, self.server_challenge + temp).digest()
+        nt_proof_str = hmac.new(response_key_nt, self.server_challenge + temp, digestmod=hashlib.md5).digest()
         nt_challenge_response = nt_proof_str + temp
         return nt_challenge_response
 
@@ -494,4 +494,4 @@ class NtlmClient(object):
             password_digest = binascii.unhexlify(passparts[1])
         else:
             password_digest = hashlib.new('MD4', self._password.encode('utf-16-le')).digest()
-        return hmac.new(password_digest, (self.user_name.upper() + self.user_domain).encode('utf-16-le')).digest()
+        return hmac.new(password_digest, (self.user_name.upper() + self.user_domain).encode('utf-16-le'), digestmod=hashlib.md5).digest()

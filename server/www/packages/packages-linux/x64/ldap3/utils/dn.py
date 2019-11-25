@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2019 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -93,7 +93,15 @@ def _find_first_unescaped(dn, char, pos):
             break  # no char found
         if pos > 0 and dn[pos - 1] != '\\':  # unescaped char
             break
-
+        elif pos > 1 and dn[pos - 1] == '\\':  # may be unescaped
+            escaped = True
+            for c in dn[pos - 2:0:-1]:
+                if c == '\\':
+                    escaped = not escaped
+                else:
+                    break
+            if not escaped:
+                break
         pos += 1
 
     return pos
@@ -106,7 +114,15 @@ def _find_last_unescaped(dn, char, start, stop=0):
             break
         if stop >= 0 and dn[stop - 1] != '\\':
             break
-
+        elif stop > 1 and dn[stop - 1] == '\\':  # may be unescaped
+            escaped = True
+            for c in dn[stop - 2:0:-1]:
+                if c == '\\':
+                    escaped = not escaped
+                else:
+                    break
+            if not escaped:
+                break
         if stop < start:
             stop = -1
             break
@@ -174,14 +190,14 @@ def _validate_attribute_value(attribute_value):
 
     if attribute_value[0] == '#':  # only hex characters are valid
         for c in attribute_value:
-            if 'c' not in hexdigits:  # allowed only hex digits as per RFC 4514
+            if c not in hexdigits:  # allowed only hex digits as per RFC 4514
                 raise LDAPInvalidDnError('character ' + c + ' not allowed in hex representation of attribute value')
         if len(attribute_value) % 2 == 0:  # string must be # + HEX HEX (an odd number of chars)
             raise LDAPInvalidDnError('hex representation must be in the form of <HEX><HEX> pairs')
-    if attribute_value[0] == ' ':  # space cannot be used as first or last character
-        raise LDAPInvalidDnError('SPACE not allowed as first character of attribute value')
-    if attribute_value[-1] == ' ':
-        raise LDAPInvalidDnError('SPACE not allowed as last character of attribute value')
+    if attribute_value[0] == ' ':  # unescaped space cannot be used as leading or last character
+        raise LDAPInvalidDnError('SPACE must be escaped as leading character of attribute value')
+    if attribute_value.endswith(' ') and not attribute_value.endswith('\\ '):
+        raise LDAPInvalidDnError('SPACE must be escaped as trailing character of attribute value')
 
     state = STATE_ANY
     for c in attribute_value:
@@ -189,7 +205,7 @@ def _validate_attribute_value(attribute_value):
             if c == '\\':
                 state = STATE_ESCAPE
             elif c in '"#+,;<=>\00':
-                raise LDAPInvalidDnError('special characters ' + c + ' must be escaped')
+                raise LDAPInvalidDnError('special character ' + c + ' must be escaped')
         elif state == STATE_ESCAPE:
             if c in hexdigits:
                 state = STATE_ESCAPE_HEX
@@ -271,7 +287,17 @@ def _escape_attribute_value(attribute_value):
     return escaped
 
 
-def parse_dn(dn, escape=False, strip=True):
+def parse_dn(dn, escape=False, strip=False):
+    """
+    Parses a DN into syntactic components
+    :param dn:
+    :param escape:
+    :param strip:
+    :return:
+    a list of tripels representing `attributeTypeAndValue` elements
+    containing `attributeType`, `attributeValue` and the following separator (`COMMA` or `PLUS`) if given, else an empty `str`.
+    in their original representation, still containing escapes or encoded as hex.
+    """
     rdns = []
     avas = []
     while dn:
@@ -319,7 +345,9 @@ def safe_dn(dn, decompose=False, reverse=False):
 
     if dn.startswith('<GUID=') and dn.endswith('>'):  # Active Directory allows looking up objects by putting its GUID in a specially-formatted DN (e.g. '<GUID=7b95f0d5-a3ed-486c-919c-077b8c9731f2>')
         escaped_dn = dn
-    elif '@' not in dn and '\\' not in dn:  # active directory UPN (User Principal Name) consist of an account, the at sign (@) and a domain, or the domain level logn name domain\username
+    elif dn.startswith('<WKGUID=') and dn.endswith('>'):  # Active Directory allows Binding to Well-Known Objects Using WKGUID in a specially-formatted DN (e.g. <WKGUID=a9d1ca15768811d1aded00c04fd8d5cd,dc=Fabrikam,dc=com>)
+        escaped_dn = dn
+    elif '@' not in dn:  # active directory UPN (User Principal Name) consist of an account, the at sign (@) and a domain, or the domain level logn name domain\username
         for component in parse_dn(dn, escape=True):
             if decompose:
                 escaped_dn.append((component[0], component[1], component[2]))

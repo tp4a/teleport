@@ -1,4 +1,4 @@
-#include "ssh_proxy.h"
+﻿#include "ssh_proxy.h"
 #include "tpp_env.h"
 
 #include <teleport_const.h>
@@ -46,10 +46,15 @@ TPP_API void tpp_timer(void) {
 
 static ex_rv _set_runtime_config(const char* param) {
 	Json::Value jp;
-	Json::Reader jreader;
+	//Json::Reader jreader;
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
+    const char *str_json_begin = param;
+    ex_astr err;
 
-	if (!jreader.parse(param, jp))
-		return TPE_JSON_FORMAT;
+	//if (!jreader.parse(param, jp))
+    if (!jreader->parse(str_json_begin, param + strlen(param), &jp, &err))
+        return TPE_JSON_FORMAT;
 
 	if (!jp.isObject())
 		return TPE_PARAM;
@@ -68,10 +73,16 @@ static ex_rv _set_runtime_config(const char* param) {
 
 static ex_rv _kill_sessions(const char* param) {
 	Json::Value jp;
-	Json::Reader jreader;
+// 	Json::Reader jreader;
+// 	if (!jreader.parse(param, jp))
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
+    const char *str_json_begin = param;
+    ex_astr err;
 
-	if (!jreader.parse(param, jp))
-		return TPE_JSON_FORMAT;
+    //if (!jreader.parse(param, jp))
+    if (!jreader->parse(str_json_begin, param + strlen(param), &jp, &err))
+        return TPE_JSON_FORMAT;
 
 	if (!jp.isArray())
 		return TPE_PARAM;

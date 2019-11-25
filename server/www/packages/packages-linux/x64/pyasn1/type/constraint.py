@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 # Original concept and code by Mike C. Fletcher.
@@ -37,10 +37,11 @@ class AbstractConstraint(object):
             )
 
     def __repr__(self):
-        representation = '%s object at 0x%x' % (self.__class__.__name__, id(self))
+        representation = '%s object' % (self.__class__.__name__)
 
         if self._values:
-            representation += ' consts %s' % ', '.join([repr(x) for x in self._values])
+            representation += ', consts %s' % ', '.join(
+                [repr(x) for x in self._values])
 
         return '<%s>' % representation
 
@@ -102,12 +103,17 @@ class SingleValueConstraint(AbstractConstraint):
     The SingleValueConstraint satisfies any value that
     is present in the set of permitted values.
 
+    Objects of this type are iterable (emitting constraint values) and
+    can act as operands for some arithmetic operations e.g. addition
+    and subtraction. The latter can be used for combining multiple
+    SingleValueConstraint objects into one.
+
     The SingleValueConstraint object can be applied to
     any ASN.1 type.
 
     Parameters
     ----------
-    \*values: :class:`int`
+    *values: :class:`int`
         Full set of values permitted by this constraint object.
 
     Examples
@@ -136,6 +142,23 @@ class SingleValueConstraint(AbstractConstraint):
         if value not in self._set:
             raise error.ValueConstraintError(value)
 
+    # Constrains can be merged or reduced
+
+    def __contains__(self, item):
+        return item in self._set
+
+    def __iter__(self):
+        return iter(self._set)
+
+    def __sub__(self, constraint):
+        return self.__class__(*(self._set.difference(constraint)))
+
+    def __add__(self, constraint):
+        return self.__class__(*(self._set.union(constraint)))
+
+    def __sub__(self, constraint):
+        return self.__class__(*(self._set.difference(constraint)))
+
 
 class ContainedSubtypeConstraint(AbstractConstraint):
     """Create a ContainedSubtypeConstraint object.
@@ -149,7 +172,7 @@ class ContainedSubtypeConstraint(AbstractConstraint):
 
     Parameters
     ----------
-    \*values:
+    *values:
         Full set of values and constraint objects permitted
         by this constraint object.
 
@@ -304,17 +327,21 @@ class PermittedAlphabetConstraint(SingleValueConstraint):
     string for as long as all its characters are present in
     the set of permitted characters.
 
+    Objects of this type are iterable (emitting constraint values) and
+    can act as operands for some arithmetic operations e.g. addition
+    and subtraction.
+
     The PermittedAlphabetConstraint object can only be applied
     to the :ref:`character ASN.1 types <type.char>` such as
     :class:`~pyasn1.type.char.IA5String`.
 
     Parameters
     ----------
-    \*alphabet: :class:`str`
+    *alphabet: :class:`str`
         Full set of characters permitted by this constraint object.
 
-    Examples
-    --------
+    Example
+    -------
     .. code-block:: python
 
         class BooleanValue(IA5String):
@@ -331,6 +358,42 @@ class PermittedAlphabetConstraint(SingleValueConstraint):
 
         # this will raise ValueConstraintError
         garbage = BooleanValue('TAF')
+
+    ASN.1 `FROM ... EXCEPT ...` clause can be modelled by combining multiple
+    PermittedAlphabetConstraint objects into one:
+
+    Example
+    -------
+    .. code-block:: python
+
+        class Lipogramme(IA5String):
+            '''
+            ASN.1 specification:
+
+            Lipogramme ::=
+                IA5String (FROM (ALL EXCEPT ("e"|"E")))
+            '''
+            subtypeSpec = (
+                PermittedAlphabetConstraint(*string.printable) -
+                PermittedAlphabetConstraint('e', 'E')
+            )
+
+        # this will succeed
+        lipogramme = Lipogramme('A work of fiction?')
+
+        # this will raise ValueConstraintError
+        lipogramme = Lipogramme('Eel')
+
+    Note
+    ----
+    Although `ConstraintsExclusion` object could seemingly be used for this
+    purpose, practically, for it to work, it needs to represent its operand
+    constraints as sets and intersect one with the other. That would require
+    the insight into the constraint values (and their types) that are otherwise
+    hidden inside the constraint object.
+
+    Therefore it's more practical to model `EXCEPT` clause at
+    `PermittedAlphabetConstraint` level instead.
     """
     def _setValues(self, values):
         self._values = values
@@ -339,6 +402,151 @@ class PermittedAlphabetConstraint(SingleValueConstraint):
     def _testValue(self, value, idx):
         if not self._set.issuperset(value):
             raise error.ValueConstraintError(value)
+
+
+class ComponentPresentConstraint(AbstractConstraint):
+    """Create a ComponentPresentConstraint object.
+
+    The ComponentPresentConstraint is only satisfied when the value
+    is not `None`.
+
+    The ComponentPresentConstraint object is typically used with
+    `WithComponentsConstraint`.
+
+    Examples
+    --------
+    .. code-block:: python
+
+        present = ComponentPresentConstraint()
+
+        # this will succeed
+        present('whatever')
+
+        # this will raise ValueConstraintError
+        present(None)
+    """
+    def _setValues(self, values):
+        self._values = ('<must be present>',)
+
+        if values:
+            raise error.PyAsn1Error('No arguments expected')
+
+    def _testValue(self, value, idx):
+        if value is None:
+            raise error.ValueConstraintError(
+                'Component is not present:')
+
+
+class ComponentAbsentConstraint(AbstractConstraint):
+    """Create a ComponentAbsentConstraint object.
+
+    The ComponentAbsentConstraint is only satisfied when the value
+    is `None`.
+
+    The ComponentAbsentConstraint object is typically used with
+    `WithComponentsConstraint`.
+
+    Examples
+    --------
+    .. code-block:: python
+
+        absent = ComponentAbsentConstraint()
+
+        # this will succeed
+        absent(None)
+
+        # this will raise ValueConstraintError
+        absent('whatever')
+    """
+    def _setValues(self, values):
+        self._values = ('<must be absent>',)
+
+        if values:
+            raise error.PyAsn1Error('No arguments expected')
+
+    def _testValue(self, value, idx):
+        if value is not None:
+            raise error.ValueConstraintError(
+                'Component is not absent: %r' % value)
+
+
+class WithComponentsConstraint(AbstractConstraint):
+    """Create a WithComponentsConstraint object.
+
+    The `WithComponentsConstraint` satisfies any mapping object that has
+    constrained fields present or absent, what is indicated by
+    `ComponentPresentConstraint` and `ComponentAbsentConstraint`
+    objects respectively.
+
+    The `WithComponentsConstraint` object is typically applied
+    to  :class:`~pyasn1.type.univ.Set` or
+    :class:`~pyasn1.type.univ.Sequence` types.
+
+    Parameters
+    ----------
+    *fields: :class:`tuple`
+        Zero or more tuples of (`field`, `constraint`) indicating constrained
+        fields.
+
+    Notes
+    -----
+    On top of the primary use of `WithComponentsConstraint` (ensuring presence
+    or absence of particular components of a :class:`~pyasn1.type.univ.Set` or
+    :class:`~pyasn1.type.univ.Sequence`), it is also possible to pass any other
+    constraint objects or their combinations. In case of scalar fields, these
+    constraints will be verified in addition to the constraints belonging to
+    scalar components themselves. However, formally, these additional
+    constraints do not change the type of these ASN.1 objects.
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        class Item(Sequence):  #  Set is similar
+            '''
+            ASN.1 specification:
+
+            Item ::= SEQUENCE {
+                id    INTEGER OPTIONAL,
+                name  OCTET STRING OPTIONAL
+            } WITH COMPONENTS id PRESENT, name ABSENT | id ABSENT, name PRESENT
+            '''
+            componentType = NamedTypes(
+                OptionalNamedType('id', Integer()),
+                OptionalNamedType('name', OctetString())
+            )
+            withComponents = ConstraintsUnion(
+                WithComponentsConstraint(
+                    ('id', ComponentPresentConstraint()),
+                    ('name', ComponentAbsentConstraint())
+                ),
+                WithComponentsConstraint(
+                    ('id', ComponentAbsentConstraint()),
+                    ('name', ComponentPresentConstraint())
+                )
+            )
+
+        item = Item()
+
+        # This will succeed
+        item['id'] = 1
+
+        # This will succeed
+        item.reset()
+        item['name'] = 'John'
+
+        # This will fail (on encoding)
+        item.reset()
+        descr['id'] = 1
+        descr['name'] = 'John'
+    """
+    def _testValue(self, value, idx):
+        for field, constraint in self._values:
+            constraint(value.get(field))
+
+    def _setValues(self, values):
+        AbstractConstraint._setValues(self, values)
 
 
 # This is a bit kludgy, meaning two op modes within a single constraint
@@ -352,7 +560,7 @@ class InnerTypeConstraint(AbstractConstraint):
             if idx not in self.__multipleTypeConstraint:
                 raise error.ValueConstraintError(value)
             constraint, status = self.__multipleTypeConstraint[idx]
-            if status == 'ABSENT':  # XXX presense is not checked!
+            if status == 'ABSENT':  # XXX presence is not checked!
                 raise error.ValueConstraintError(value)
             constraint(value)
 
@@ -380,49 +588,41 @@ class ConstraintsExclusion(AbstractConstraint):
 
     Parameters
     ----------
-    constraint:
-        Constraint or logic operator object.
+    *constraints:
+        Constraint or logic operator objects.
 
     Examples
     --------
     .. code-block:: python
 
-        class Lipogramme(IA5STRING):
-            '''
-            ASN.1 specification:
-
-            Lipogramme ::=
-                IA5String (FROM (ALL EXCEPT ("e"|"E")))
-            '''
+        class LuckyNumber(Integer):
             subtypeSpec = ConstraintsExclusion(
-                PermittedAlphabetConstraint('e', 'E')
+                SingleValueConstraint(13)
             )
 
         # this will succeed
-        lipogramme = Lipogramme('A work of fiction?')
+        luckyNumber = LuckyNumber(12)
 
         # this will raise ValueConstraintError
-        lipogramme = Lipogramme('Eel')
+        luckyNumber = LuckyNumber(13)
 
-    Warning
-    -------
-    The above example involving PermittedAlphabetConstraint might
-    not work due to the way how PermittedAlphabetConstraint works.
-    The other constraints might work with ConstraintsExclusion
-    though.
+    Note
+    ----
+    The `FROM ... EXCEPT ...` ASN.1 clause should be modeled by combining
+    constraint objects into one. See `PermittedAlphabetConstraint` for more
+    information.
     """
     def _testValue(self, value, idx):
-        try:
-            self._values[0](value, idx)
-        except error.ValueConstraintError:
-            return
-        else:
+        for constraint in self._values:
+            try:
+                constraint(value, idx)
+
+            except error.ValueConstraintError:
+                continue
+
             raise error.ValueConstraintError(value)
 
     def _setValues(self, values):
-        if len(values) != 1:
-            raise error.PyAsn1Error('Single constraint expected')
-
         AbstractConstraint._setValues(self, values)
 
 
@@ -467,7 +667,7 @@ class ConstraintsIntersection(AbstractConstraintSet):
 
     Parameters
     ----------
-    \*constraints:
+    *constraints:
         Constraint or logic operator objects.
 
     Examples
@@ -500,8 +700,8 @@ class ConstraintsIntersection(AbstractConstraintSet):
 class ConstraintsUnion(AbstractConstraintSet):
     """Create a ConstraintsUnion logic operator object.
 
-    The ConstraintsUnion logic operator only succeeds if
-    *at least a single* operand succeeds.
+    The ConstraintsUnion logic operator succeeds if
+    *at least* a single operand succeeds.
 
     The ConstraintsUnion object can be applied to
     any constraint and logic operator objects.
@@ -511,7 +711,7 @@ class ConstraintsUnion(AbstractConstraintSet):
 
     Parameters
     ----------
-    \*constraints:
+    *constraints:
         Constraint or logic operator objects.
 
     Examples
@@ -525,7 +725,7 @@ class ConstraintsUnion(AbstractConstraintSet):
             CapitalOrSmall ::=
                 IA5String (FROM ("A".."Z") | FROM ("a".."z"))
             '''
-            subtypeSpec = ConstraintsIntersection(
+            subtypeSpec = ConstraintsUnion(
                 PermittedAlphabetConstraint('A', 'Z'),
                 PermittedAlphabetConstraint('a', 'z')
             )

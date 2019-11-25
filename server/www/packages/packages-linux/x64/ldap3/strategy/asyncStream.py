@@ -55,7 +55,11 @@ class AsyncStreamStrategy(AsyncStrategy):
         self.persistent_search_message_id = None
         self.streaming = False
         self.callback = None
-        self.events = Queue()
+        if ldap_connection.pool_size:
+            self.events = Queue(ldap_connection.pool_size)
+        else:
+            self.events = Queue()
+
         del self._requests  # remove _requests dict from Async Strategy
 
     def _start_listen(self):
@@ -77,7 +81,6 @@ class AsyncStreamStrategy(AsyncStrategy):
                 if not self._header_added and self.stream.tell() == 0:
                     header = add_ldif_header(['-'])[0]
                     self.stream.write(prepare_for_stream(header + self.line_separator + self.line_separator))
-
                 ldif_lines = persistent_search_response_to_ldif(change)
                 if self.stream and ldif_lines and not self.connection.closed:
                     fragment = self.line_separator.join(ldif_lines)

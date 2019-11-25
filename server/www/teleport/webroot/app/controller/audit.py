@@ -411,12 +411,15 @@ class RecordHandler(TPBaseHandler):
             return
 
         if not tp_cfg().core.detected:
+            core_running = False
             total_size = 0
             free_size = 0
         else:
+            core_running = True
             total_size, free_size = get_free_space_bytes(tp_cfg().core.replay_path)
 
         param = {
+            'core_running': core_running,
             'total_size': total_size,
             'free_size': free_size,
         }
@@ -659,25 +662,12 @@ class DoGetFileHandler(TPBaseHandler):
 
         require_privilege = TP_PRIVILEGE_OPS_AUZ | TP_PRIVILEGE_AUDIT_AUZ | TP_PRIVILEGE_AUDIT
 
-        # sid = self.get_argument('sid', None)
-        # if sid is None:
-        #     self.set_status(403)
-        #     return self.write('need login first.')
-        #
-        # self._s_id = sid
-        # _user = self.get_session('user')
-        # if _user is None:
-        #     self.set_status(403)
-        #     return self.write('need login first.')
-        # self._user = _user
-
-        # when test, disable auth.
-        # if not self._user['_is_login']:
-        #     self.set_status(401)  # 401=未授权, 要求身份验证
-        #     return self.write('need login first.')
-        # if (self._user['privilege'] & require_privilege) == 0:
-        #     self.set_status(403)  # 403=禁止
-        #     return self.write('you have no such privilege.')
+        if not self._user['_is_login']:
+            self.set_status(401)  # 401=未授权, 要求身份验证
+            return self.write('need login first.')
+        if (self._user['privilege'] & require_privilege) == 0:
+            self.set_status(403)  # 403=禁止
+            return self.write('you have no such privilege.')
 
         act = self.get_argument('act', None)
         _type = self.get_argument('type', None)

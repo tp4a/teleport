@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 # ASN.1 named integers
@@ -23,7 +23,7 @@ class NamedValues(object):
 
     Parameters
     ----------
-    \*args: variable number of two-element :py:class:`tuple`
+    *args: variable number of two-element :py:class:`tuple`
 
         name: :py:class:`str`
             Value label
@@ -109,7 +109,8 @@ class NamedValues(object):
         if len(representation) > 64:
             representation = representation[:32] + '...' + representation[-32:]
 
-        return '<%s object 0x%x enums %s>' % (self.__class__.__name__, id(self), representation)
+        return '<%s object, enums %s>' % (
+            self.__class__.__name__, representation)
 
     def __eq__(self, other):
         return dict(self) == other

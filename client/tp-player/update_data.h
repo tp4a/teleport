@@ -37,29 +37,16 @@ class UpdateData : public QObject
 public:
     explicit UpdateData();
     explicit UpdateData(int data_type);
+    explicit UpdateData(int data_type, uint32_t time_ms);
     explicit UpdateData(const TS_RECORD_HEADER& hdr);
-    explicit UpdateData(uint16_t screen_w, uint16_t screen_h);
     virtual ~UpdateData();
 
-    bool parse(const TS_RECORD_PKG& pkg, const QByteArray& data);
+    void set_pointer(uint32_t ts, const TS_RECORD_RDP_POINTER* p);
+
     TS_RECORD_HEADER* get_header() {return m_hdr;}
     TS_RECORD_RDP_POINTER* get_pointer() {return m_pointer;}
-//    bool get_image(QImage** img, int& x, int& y, int& w, int& h) {
-//        if(m_img == nullptr)
-//            return false;
-//        *img = m_img;
-//        x = m_img_x;
-//        y = m_img_y;
-//        w = m_img_w;
-//        h = m_img_h;
-//        return true;
-//    }
-    bool get_images(UpdateImages& uimgs) const {
-        if(m_images.size() == 0)
-            return false;
-        uimgs = m_images;
-        return true;
-    }
+    UpdateImages& get_images() {return m_images;}
+    const UpdateImages& get_images() const {return m_images;}
 
     uint32_t get_time() {return m_time_ms;}
 
@@ -98,17 +85,7 @@ private:
     // for POINTER
     TS_RECORD_RDP_POINTER* m_pointer;
     // for IMAGE
-//    QImage* m_img;
-//    int m_img_x;
-//    int m_img_y;
-//    int m_img_w;
-//    int m_img_h;
     UpdateImages m_images;
-
-//    TS_RECORD_RDP_IMAGE_INFO* m_img_info;
-
-    uint16_t m_screen_w;
-    uint16_t m_screen_h;
 };
 
 class UpdateDataHelper {

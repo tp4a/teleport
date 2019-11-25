@@ -107,6 +107,10 @@ class EntryState(object):
                         self.status = STATUS_MANDATORY_MISSING
                         break
 
+    @property
+    def entry_raw_attributes(self):
+        return self.raw_attributes
+
 
 class EntryBase(object):
     """The Entry object contains a single LDAP entry.
@@ -273,7 +277,7 @@ class EntryBase(object):
 
     @property
     def entry_raw_attributes(self):
-        return self._state.entry_raw_attributes
+        return self._state.raw_attributes
 
     def entry_raw_attribute(self, name):
         """
@@ -281,7 +285,7 @@ class EntryBase(object):
         :param name: name of the attribute
         :return: raw (unencoded) value of the attribute, None if attribute is not found
         """
-        return self._state.entry_raw_attributes[name] if name in self._state.entry_raw_attributes else None
+        return self._state.raw_attributes[name] if name in self._state.raw_attributes else None
 
     @property
     def entry_mandatory_attributes(self):

@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2019 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -66,7 +66,7 @@ def md5_hmac(k, s):
     if not isinstance(s, bytes):
         s = s.encode()
 
-    return hmac.new(k, s).hexdigest()
+    return hmac.new(k, s, digestmod=hashlib.md5).hexdigest()
 
 
 def sasl_digest_md5(connection, controls):

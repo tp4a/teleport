@@ -18,9 +18,11 @@
 
 from __future__ import print_function
 
-from . import Image, BmpImagePlugin
+from . import BmpImagePlugin, Image
 from ._binary import i8, i16le as i16, i32le as i32
 
+# __version__ is deprecated and will be removed in a future version. Use
+# PIL.__version__ instead.
 __version__ = "0.1"
 
 #
@@ -33,6 +35,7 @@ def _accept(prefix):
 
 ##
 # Image plugin for Windows Cursor files.
+
 
 class CurImageFile(BmpImagePlugin.BmpImageFile):
 
@@ -63,9 +66,9 @@ class CurImageFile(BmpImagePlugin.BmpImageFile):
         self._bitmap(i32(m[12:]) + offset)
 
         # patch up the bitmap height
-        self._size = self.size[0], self.size[1]//2
+        self._size = self.size[0], self.size[1] // 2
         d, e, o, a = self.tile[0]
-        self.tile[0] = d, (0, 0)+self.size, o, a
+        self.tile[0] = d, (0, 0) + self.size, o, a
 
         return
 

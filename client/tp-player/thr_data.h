@@ -7,6 +7,7 @@
 #include <QNetworkReply>
 #include <QFile>
 #include <QEventLoop>
+#include <QImage>
 #include "update_data.h"
 #include "record_format.h"
 #include "thr_download.h"
@@ -33,13 +34,9 @@
 这样，下次需要下载指定文件时，如果发现对应的临时文件存在，可以根据已下载字节数，继续下载。
 */
 
-typedef struct KEYFRAME_INFO {
-    uint32_t time_ms;       // 此关键帧的时间点
-    uint32_t file_index;    // 此关键帧图像数据位于哪一个数据文件中
-    uint32_t offset;        // 此关键帧图像数据在数据文件中的偏移
-}KEYFRAME_INFO;
+typedef std::vector<TS_RECORD_RDP_KEYFRAME_INFO> KeyFrames;
 
-typedef std::vector<KEYFRAME_INFO> KeyFrames;
+typedef std::vector<QImage*> CachedImages;
 
 class MainWindow;
 
@@ -67,7 +64,9 @@ private:
     bool _load_keyframe();
 
     void _clear_data();
-    void _prepare();
+//    void _prepare();
+
+    UpdateData* _parse(const TS_RECORD_PKG& pkg, const QByteArray& data);
 
     void _notify_message(const QString& msg);
     void _notify_error(const QString& err_msg);
@@ -102,8 +101,7 @@ private:
     uint32_t m_file_idx;
     uint32_t m_offset;
 
-//    bool m_xxx;
-//    int m_restart_kf_idx;
+    CachedImages m_cache_imgs;
 };
 
 #endif // THR_DATA_H

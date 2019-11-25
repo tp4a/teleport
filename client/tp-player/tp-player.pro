@@ -3,8 +3,6 @@ TARGET = tp-player
 
 QT += core gui widgets network
 
-#DEFINES += QT_NO_DEBUG_OUTPUT
-
 HEADERS += \
     mainwindow.h \
     bar.h \
@@ -37,3 +35,24 @@ RC_FILE += \
 
 FORMS += \
     mainwindow.ui
+
+
+win32:CONFIG(release, debug|release): {
+    DEFINES += QT_NO_DEBUG_OUTPUT
+    LIBS += -L$$PWD/../../external/zlib/build/release/ -lzlib
+    DESTDIR = $$PWD/../../out/client/x86/Release
+}
+else:win32:CONFIG(debug, debug|release): {
+    LIBS += -L$$PWD/../../external/zlib/build/debug/ -lzlibd
+    DESTDIR = $$PWD/../../out/client/x86/Debug
+}
+
+INCLUDEPATH += $$PWD/../../external/zlib
+INCLUDEPATH += $$PWD/../../external/zlib/build
+DEPENDPATH += $$PWD/../../external/zlib
+DEPENDPATH += $$PWD/../../external/zlib/build
+
+#win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/release/libzlibstatic.a
+#else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/debug/libzlibstaticd.a
+#else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/release/zlibstatic.lib
+#else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/debug/zlibstaticd.lib

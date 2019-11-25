@@ -129,7 +129,7 @@ void SshSession::_record_end(TP_SSH_CHANNEL_PAIR *cp) {
     if (cp->db_id > 0) {
         //EXLOGD("[ssh] [channel:%d] channel end with code: %d\n", cp->channel_id, cp->state);
 
-        // Èç¹û»á»°¹ı³ÌÖĞÃ»ÓĞ·¢Éú´íÎó£¬Ôò½«Æä×´Ì¬¸ÄÎª½áÊø£¬·ñÔò¼ÇÂ¼ÏÂ´íÎóÖµ
+        // å¦‚æœä¼šè¯è¿‡ç¨‹ä¸­æ²¡æœ‰å‘ç”Ÿé”™è¯¯ï¼Œåˆ™å°†å…¶çŠ¶æ€æ”¹ä¸ºç»“æŸï¼Œå¦åˆ™è®°å½•ä¸‹é”™è¯¯å€¼
         if (cp->state == TP_SESS_STAT_RUNNING || cp->state == TP_SESS_STAT_STARTED)
             cp->state = TP_SESS_STAT_END;
 
@@ -257,7 +257,7 @@ void SshSession::_run(void) {
 
     int err = SSH_OK;
 
-    // °²È«Á¬½Ó£¨ÃÜÔ¿½»»»£©
+    // å®‰å…¨è¿æ¥ï¼ˆå¯†é’¥äº¤æ¢ï¼‰
     err = ssh_handle_key_exchange(m_cli_session);
     if (err != SSH_OK) {
         EXLOGE("[ssh] key exchange with client failed: %s\n", ssh_get_error(m_cli_session));
@@ -275,7 +275,7 @@ void SshSession::_run(void) {
         return;
     }
 
-    // ÈÏÖ¤£¬²¢´ò¿ªÒ»¸öÍ¨µÀ
+    // è®¤è¯ï¼Œå¹¶æ‰“å¼€ä¸€ä¸ªé€šé“
     while (!(m_is_logon && !m_channels.empty())) {
         if (m_have_error)
             break;
@@ -296,7 +296,7 @@ void SshSession::_run(void) {
 
     EXLOGW("[ssh] authenticated and got a channel.\n");
 
-    // ÏÖÔÚË«·½µÄÁ¬½ÓÒÑ¾­½¨Á¢ºÃÁË£¬¿ªÊ¼×ª·¢
+    // ç°åœ¨åŒæ–¹çš„è¿æ¥å·²ç»å»ºç«‹å¥½äº†ï¼Œå¼€å§‹è½¬å‘
     ssh_event_add_session(event_loop, m_srv_session);
     do {
         //err = ssh_event_dopoll(event_loop, 5000);
@@ -333,11 +333,11 @@ void SshSession::_run(void) {
     ssh_event_free(event_loop);
 
 
-    // Èç¹ûÒ»±ßÊÇ×ßSSHv1£¬ÁíÒ»±ßÊÇSSHv2£¬·ÅÔÚÍ¬Ò»¸öevent_loopÊ±£¬SSHv1»áÊÕ²»µ½Êı¾İ£¬·Åµ½Ñ­»·ÖĞÊ±£¬SSHv2µÃ²»µ½Êı¾İ
-    // ËùÒÔ£¬µ±SSHv1µÄÔ¶³ÌÖ÷»úÁ¬½Óºó£¬µ½½¨Á¢ºÃshell»·¾³Ö®ºó£¬¾Í½øÈëÁíÒ»ÖÖ¶ÁÈ¡Êı¾İµÄÑ­»·£¬²»ÔÙÊ¹ÓÃssh_event_dopoll()ÁË¡£
+    // å¦‚æœä¸€è¾¹æ˜¯èµ°SSHv1ï¼Œå¦ä¸€è¾¹æ˜¯SSHv2ï¼Œæ”¾åœ¨åŒä¸€ä¸ªevent_loopæ—¶ï¼ŒSSHv1ä¼šæ”¶ä¸åˆ°æ•°æ®ï¼Œæ”¾åˆ°å¾ªç¯ä¸­æ—¶ï¼ŒSSHv2å¾—ä¸åˆ°æ•°æ®
+    // æ‰€ä»¥ï¼Œå½“SSHv1çš„è¿œç¨‹ä¸»æœºè¿æ¥åï¼Œåˆ°å»ºç«‹å¥½shellç¯å¢ƒä¹‹åï¼Œå°±è¿›å…¥å¦ä¸€ç§è¯»å–æ•°æ®çš„å¾ªç¯ï¼Œä¸å†ä½¿ç”¨ssh_event_dopoll()äº†ã€‚
 
     if (m_ssh_ver == 1) {
-        tp_channels::iterator it = m_channels.begin(); // SSHv1Ö»ÄÜ´ò¿ªÒ»¸öchannel
+        tp_channels::iterator it = m_channels.begin(); // SSHv1åªèƒ½æ‰“å¼€ä¸€ä¸ªchannel
         ssh_channel cli = (*it)->cli_channel;
         ssh_channel srv = (*it)->srv_channel;
 
@@ -447,7 +447,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
     EXLOGV("[ssh] try to connect to real SSH server %s:%d\n", _this->m_conn_ip.c_str(), _this->m_conn_port);
     _this->m_srv_session = ssh_new();
 
-    ssh_set_blocking(_this->m_srv_session, 1);
+//    ssh_set_blocking(_this->m_srv_session, 1);
 
     ssh_options_set(_this->m_srv_session, SSH_OPTIONS_HOST, _this->m_conn_ip.c_str());
     int port = (int) _this->m_conn_port;
@@ -460,12 +460,16 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 //    ssh_options_set(_this->m_srv_session, SSH_OPTIONS_LOG_VERBOSITY, &flag);
 //#endif
 
+    int _timeout_cli = 120; // 120 sec.
+    ssh_options_set(_this->m_cli_session, SSH_OPTIONS_TIMEOUT, &_timeout_cli);
+
 
     if (_this->m_auth_type != TP_AUTH_TYPE_NONE)
         ssh_options_set(_this->m_srv_session, SSH_OPTIONS_USER, _this->m_acc_name.c_str());
 
-    // default timeout is 10 seconds, it is too short for connect progress, so set it to 60 sec.
-    int _timeout = 60; // 60 sec.
+    // default timeout is 10 seconds, it is too short for connect progress, so set it to 120 sec.
+    // usually when sshd config to UseDNS.
+    int _timeout = 120; // 120 sec.
     ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
     int rc = 0;
@@ -477,14 +481,19 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
         return SSH_AUTH_ERROR;
     }
 
+    if(ssh_is_blocking(_this->m_cli_session))
+        EXLOGD("[ssh] client session is blocking.\n");
+    if(ssh_is_blocking(_this->m_srv_session))
+        EXLOGD("[ssh] server session is blocking.\n");
+
     // once the server are connected, change the timeout back to default.
-    _timeout = 30; // in seconds.
+    _timeout = 120; // in seconds.
     ssh_options_set(_this->m_srv_session, SSH_OPTIONS_TIMEOUT, &_timeout);
 
     // get ssh version of host, v1 or v2
     // TODO: libssh-0.8.5 does not support sshv1 anymore.
     _this->m_ssh_ver = ssh_get_version(_this->m_srv_session);
-    EXLOGW("[ssh] real host is SSHv%d\n", _this->m_ssh_ver);
+    //EXLOGW("[ssh] real host is SSHv%d\n", _this->m_ssh_ver);
 
 #if 0
     // check supported auth type by host
@@ -634,13 +643,13 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 }
 
 ssh_channel SshSession::_on_new_channel_request(ssh_session session, void *userdata) {
-    // ¿Í»§¶Ë³¢ÊÔ´ò¿ªÒ»¸öÍ¨µÀ£¨È»ºó²ÅÄÜÍ¨¹ıÕâ¸öÍ¨µÀ·¢¿ØÖÆÃüÁî»òÕßÊÕ·¢Êı¾İ£©
+    // å®¢æˆ·ç«¯å°è¯•æ‰“å¼€ä¸€ä¸ªé€šé“ï¼ˆç„¶åæ‰èƒ½é€šè¿‡è¿™ä¸ªé€šé“å‘æ§åˆ¶å‘½ä»¤æˆ–è€…æ”¶å‘æ•°æ®ï¼‰
     EXLOGV("[ssh] client open channel\n");
 
     SshSession *_this = (SshSession *) userdata;
 
-    // TODO: ¿Í»§¶ËÓëTPÁ¬½ÓÊ¹ÓÃµÄ×ÜÊÇSSHv2Ğ­Òé£¬ÒòÎª×î¿ªÊ¼Á¬½ÓÊ±»¹²»ÖªµÀÕæÕıµÄÔ¶³ÌÖ÷»úÊÇ²»ÊÇSSHv1¡£
-    // Òò´Ë´Ë´¦ĞĞÎªÓë¿Í»§¶ËÖ±Á¬Ô¶³ÌÖ÷»úÓĞĞ©²»Ò»Ñù¡£Ö±Á¬Ê±£¬SecureCRTµÄ¿ËÂ¡»á»°¹¦ÄÜ»áÒòÎªÒÔÎªÁ¬½ÓµÄÊÇSSHv1¶ø×Ô¶¯ÖØĞÂÁ¬½Ó£¬¶ø²»ÊÇ´ò¿ªĞÂÍ¨µÀ¡£
+    // TODO: å®¢æˆ·ç«¯ä¸TPè¿æ¥ä½¿ç”¨çš„æ€»æ˜¯SSHv2åè®®ï¼Œå› ä¸ºæœ€å¼€å§‹è¿æ¥æ—¶è¿˜ä¸çŸ¥é“çœŸæ­£çš„è¿œç¨‹ä¸»æœºæ˜¯ä¸æ˜¯SSHv1ã€‚
+    // å› æ­¤æ­¤å¤„è¡Œä¸ºä¸å®¢æˆ·ç«¯ç›´è¿è¿œç¨‹ä¸»æœºæœ‰äº›ä¸ä¸€æ ·ã€‚ç›´è¿æ—¶ï¼ŒSecureCRTçš„å…‹éš†ä¼šè¯åŠŸèƒ½ä¼šå› ä¸ºä»¥ä¸ºè¿æ¥çš„æ˜¯SSHv1è€Œè‡ªåŠ¨é‡æ–°è¿æ¥ï¼Œè€Œä¸æ˜¯æ‰“å¼€æ–°é€šé“ã€‚
     if (_this->m_ssh_ver == 1 && _this->m_channels.size() != 0) {
         EXLOGE("[ssh] SSH1 supports only one execution channel. One has already been opened.\n");
         return NULL;
@@ -653,7 +662,7 @@ ssh_channel SshSession::_on_new_channel_request(ssh_session session, void *userd
     }
     ssh_set_channel_callbacks(cli_channel, &_this->m_cli_channel_cb);
 
-    // ÎÒÃÇÒ²ÒªÏòÕæÕıµÄ·şÎñÆ÷ÉêÇë´ò¿ªÒ»¸öÍ¨µÀ£¬À´½øĞĞ×ª·¢
+    // æˆ‘ä»¬ä¹Ÿè¦å‘çœŸæ­£çš„æœåŠ¡å™¨ç”³è¯·æ‰“å¼€ä¸€ä¸ªé€šé“ï¼Œæ¥è¿›è¡Œè½¬å‘
     ssh_channel srv_channel = ssh_channel_new(_this->m_srv_session);
     if (srv_channel == NULL) {
         EXLOGE("[ssh] can not create channel for server.\n");
@@ -682,7 +691,7 @@ ssh_channel SshSession::_on_new_channel_request(ssh_session session, void *userd
         return NULL;
     }
 
-    // ½«¿Í»§¶ËºÍ·şÎñ¶ËµÄÍ¨µÀ¹ØÁªÆğÀ´
+    // å°†å®¢æˆ·ç«¯å’ŒæœåŠ¡ç«¯çš„é€šé“å…³è”èµ·æ¥
     {
         ExThreadSmartLock locker(_this->m_lock);
         _this->m_channels.push_back(cp);
@@ -794,7 +803,7 @@ int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel
 
     SshSession *_this = (SshSession *) userdata;
 
-    // µ±Ç°Ïß³ÌÕıÔÚ½ÓÊÕ·şÎñ¶Ë·µ»ØµÄÊı¾İ£¬Òò´ËÎÒÃÇÖ±½Ó·µ»Ø£¬ÕâÑù½ô¸ú×Å»áÖØĞÂÔÙ·¢ËÍ´ËÊı¾İµÄ
+    // å½“å‰çº¿ç¨‹æ­£åœ¨æ¥æ”¶æœåŠ¡ç«¯è¿”å›çš„æ•°æ®ï¼Œå› æ­¤æˆ‘ä»¬ç›´æ¥è¿”å›ï¼Œè¿™æ ·ç´§è·Ÿç€ä¼šé‡æ–°å†å‘é€æ­¤æ•°æ®çš„
     if (_this->m_recving_from_srv) {
         // EXLOGD("recving from srv...try again later...\n");
         return 0;
@@ -815,14 +824,14 @@ int SshSession::_on_client_channel_data(ssh_session session, ssh_channel channel
 
     int _len = len;
     if (cp->type == TS_SSH_CHANNEL_TYPE_SHELL) {
-        // ÔÚÊÕÈ¡·şÎñ¶ËÊı¾İÖ±µ½ÏÔÊ¾ÃüÁîĞĞÌáÊ¾·ûÖ®Ç°£¬²»ÔÊĞí·¢ËÍ¿Í»§¶ËÊı¾İµ½·şÎñ¶Ë£¬±ÜÃâÈÕÖ¾¼ÇÂ¼»ìÂÒ¡£
+        // åœ¨æ”¶å–æœåŠ¡ç«¯æ•°æ®ç›´åˆ°æ˜¾ç¤ºå‘½ä»¤è¡Œæç¤ºç¬¦ä¹‹å‰ï¼Œä¸å…è®¸å‘é€å®¢æˆ·ç«¯æ•°æ®åˆ°æœåŠ¡ç«¯ï¼Œé¿å…æ—¥å¿—è®°å½•æ··ä¹±ã€‚
         if (!cp->server_ready) {
             _this->m_recving_from_cli = false;
             return 0;
         }
 
-        // ²»¿ÉÒÔ²ğ·Ö£¡£¡·ñÔòÖ´ĞĞ rz ÃüÁî»á³ö´í£¡
-        // xxxx Èç¹ûÓÃ»§¸´ÖÆÕ³Ìù¶àĞĞÎÄ±¾£¬ÎÒÃÇ½«Æä²ğ·ÖÎªÃ¿Ò»ĞĞ·¢ËÍÒ»´ÎÊı¾İ°ü
+        // ä¸å¯ä»¥æ‹†åˆ†ï¼ï¼å¦åˆ™æ‰§è¡Œ rz å‘½ä»¤ä¼šå‡ºé”™ï¼
+        // xxxx å¦‚æœç”¨æˆ·å¤åˆ¶ç²˜è´´å¤šè¡Œæ–‡æœ¬ï¼Œæˆ‘ä»¬å°†å…¶æ‹†åˆ†ä¸ºæ¯ä¸€è¡Œå‘é€ä¸€æ¬¡æ•°æ®åŒ…
 //         for (unsigned int i = 0; i < len; ++i) {
 //             if (((ex_u8 *) data)[i] == 0x0d) {
 //                 _len = i + 1;
@@ -889,7 +898,7 @@ int SshSession::_on_client_channel_subsystem_request(ssh_session session, ssh_ch
     cp->last_access_timestamp = (ex_u32) time(NULL);
 
 
-    // Ä¿Ç°Ö»Ö§³ÖSFTP×ÓÏµÍ³
+    // ç›®å‰åªæ”¯æŒSFTPå­ç³»ç»Ÿ
     if (strcmp(subsystem, "sftp") != 0) {
         EXLOGE("[ssh] support `sftp` subsystem only, but got `%s`.\n", subsystem);
         cp->state = TP_SESS_STAT_ERR_UNSUPPORT_PROTOCOL;
@@ -961,7 +970,7 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 
     int ret = 0;
 
-    // ÊÕµ½µÚÒ»°ü·şÎñ¶Ë·µ»ØµÄÊı¾İÊ±£¬ÔÚÊä³öÊı¾İÖ®Ç°ÏÔÊ¾Ò»Ğ©×Ô¶¨ÒåµÄĞÅÏ¢
+    // æ”¶åˆ°ç¬¬ä¸€åŒ…æœåŠ¡ç«¯è¿”å›çš„æ•°æ®æ—¶ï¼Œåœ¨è¾“å‡ºæ•°æ®ä¹‹å‰æ˜¾ç¤ºä¸€äº›è‡ªå®šä¹‰çš„ä¿¡æ¯
 #if 1
     if (!is_stderr && cp->is_first_server_data) {
         cp->is_first_server_data = false;
@@ -988,13 +997,15 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
                      "\r\n"\
                 "%s\r\n"\
                 "Teleport SSH Bastion Server...\r\n"\
-                "  - teleport to %s:%d\r\n"\
+                "  - teleport to %s:%d [%d]\r\n"\
                 "  - authroized by %s\r\n"\
                 "%s\r\n"\
                 "\r\n\r\n",
                      line.c_str(),
                      _this->m_conn_ip.c_str(),
-                     _this->m_conn_port, auth_mode,
+                     _this->m_conn_port,
+                     cp->db_id,
+                     auth_mode,
                      line.c_str()
             );
 
@@ -1013,15 +1024,45 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
 #endif
 
 #if 1
-    // Ö±½Ó×ª·¢Êı¾İµ½¿Í»§¶Ë
-    if (is_stderr)
-        ret = ssh_channel_write_stderr(cp->cli_channel, data, len);
-    else
-        ret = ssh_channel_write(cp->cli_channel, data, len);
+    //static int idx = 0;
+
+    ssh_set_blocking(_this->m_cli_session, 0);
+
+    int xx = 0;
+    for(xx = 0; xx < 10; ++xx) {
+
+//        idx++;
+//        EXLOGD(">>>>> %d . %d\n", cp->db_id, idx);
+
+        // ç›´æ¥è½¬å‘æ•°æ®åˆ°å®¢æˆ·ç«¯
+        if (is_stderr)
+            ret = ssh_channel_write_stderr(cp->cli_channel, data, len);
+        else
+            ret = ssh_channel_write(cp->cli_channel, data, len);
+
+//        EXLOGD("<<<<< %d . %d\n", cp->db_id, idx);
+
+        if(ret == SSH_OK) {
+//            EXLOGD("ssh_channel_write() ok.\n");
+            break;
+        }
+        else if(ret == SSH_AGAIN) {
+//            EXLOGD("ssh_channel_write() need again, %d.\n", xx);
+            ex_sleep_ms(500);
+            continue;
+        }
+        else {
+//            EXLOGD("ssh_channel_write() failed.\n");
+            break;
+        }
+    }
+
+    ssh_set_blocking(_this->m_cli_session, 1);
+
 #else
-    // ·ÖÎöÊÕµ½µÄ·şÎñ¶ËÊı¾İ°ü£¬Èç¹û°üº¬ÀàËÆ  \033]0;AABB\007  ÕâÑùµÄÊı¾İ£¬¿Í»§¶Ë»á¸ù¾İ´Ë¸Ä±ä´°¿Ú±êÌâ
-    // ÎÒÃÇĞèÒªÌæ»»Õâ²¿·ÖÊı¾İ£¬Ê¹Ö®ÏÔÊ¾ÀàËÆ \033]0;TP#ssh://remote-ip\007 ÕâÑùµÄ±êÌâ¡£
-    // µ«ÊÇÕâÑù»á½µµÍÒ»Ğ©ĞÔÄÜ£¬Òò´ËÄ¿Ç°²»ÆôÓÃ£¬±£Áô´Ë²¿·Ö´úÂë±¸ÓÃ¡£
+    // åˆ†ææ”¶åˆ°çš„æœåŠ¡ç«¯æ•°æ®åŒ…ï¼Œå¦‚æœåŒ…å«ç±»ä¼¼  \033]0;AABB\007  è¿™æ ·çš„æ•°æ®ï¼Œå®¢æˆ·ç«¯ä¼šæ ¹æ®æ­¤æ”¹å˜çª—å£æ ‡é¢˜
+    // æˆ‘ä»¬éœ€è¦æ›¿æ¢è¿™éƒ¨åˆ†æ•°æ®ï¼Œä½¿ä¹‹æ˜¾ç¤ºç±»ä¼¼ \033]0;TP#ssh://remote-ip\007 è¿™æ ·çš„æ ‡é¢˜ã€‚
+    // ä½†æ˜¯è¿™æ ·ä¼šé™ä½ä¸€äº›æ€§èƒ½ï¼Œå› æ­¤ç›®å‰ä¸å¯ç”¨ï¼Œä¿ç•™æ­¤éƒ¨åˆ†ä»£ç å¤‡ç”¨ã€‚
     if (is_stderr) {
         ret = ssh_channel_write_stderr(cp->cli_channel, data, len);
     }
@@ -1038,7 +1079,7 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
                 {
                     _end++;
 
-                    // Õâ¸ö°üÖĞº¬ÓĞ¸Ä±ä±êÌâµÄÊı¾İ£¬½«±êÌâ»»ÎªÎÒÃÇÏëÒªµÄ
+                    // è¿™ä¸ªåŒ…ä¸­å«æœ‰æ”¹å˜æ ‡é¢˜çš„æ•°æ®ï¼Œå°†æ ‡é¢˜æ¢ä¸ºæˆ‘ä»¬æƒ³è¦çš„
                     EXLOGD("-- found title\n");
                     size_t len_end = len - (_end - (const ex_u8*)data);
                     MemBuffer mbuf;
@@ -1060,7 +1101,7 @@ int SshSession::_on_server_channel_data(ssh_session session, ssh_channel channel
                             if (ret == SSH_ERROR)
                                 break;
                             if (ret == mbuf.size()) {
-                                ret = len; // ±íÊ¾ÎÒÃÇÒÑ¾­´¦ÀíÁËËùÓĞµÄÊı¾İÁË¡£
+                                ret = len; // è¡¨ç¤ºæˆ‘ä»¬å·²ç»å¤„ç†äº†æ‰€æœ‰çš„æ•°æ®äº†ã€‚
                                 break;
                             }
                             else {
@@ -1139,7 +1180,7 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR *cp, int from, const e
     if (TP_SSH_CLIENT_SIDE == from) {
         if (len >= 2) {
             if (((ex_u8 *) data)[len - 1] == 0x0d) {
-                // ÒÉËÆ¸´ÖÆÕ³Ìù¶àĞĞÃüÁîÒ»´ÎĞÔÖ´ĞĞ£¬½«Æä¼ÇÂ¼µ½ÈÕÖ¾ÎÄ¼şÖĞ
+                // ç–‘ä¼¼å¤åˆ¶ç²˜è´´å¤šè¡Œå‘½ä»¤ä¸€æ¬¡æ€§æ‰§è¡Œï¼Œå°†å…¶è®°å½•åˆ°æ—¥å¿—æ–‡ä»¶ä¸­
                 ex_astr str((const char *) data, len - 1);
                 cp->rec.record_command(1, str);
 
@@ -1148,13 +1189,13 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR *cp, int from, const e
             }
         }
 
-        // ¿Í»§¶ËÊäÈë»Ø³µÊ±£¬¿ÉÄÜÊ±Ö´ĞĞÁËÒ»ÌõÃüÁî£¬ĞèÒª¸ù¾İ·şÎñ¶Ë·µ»ØµÄÊı¾İ½øĞĞ½øÒ»²½ÅĞ¶Ï
+        // å®¢æˆ·ç«¯è¾“å…¥å›è½¦æ—¶ï¼Œå¯èƒ½æ—¶æ‰§è¡Œäº†ä¸€æ¡å‘½ä»¤ï¼Œéœ€è¦æ ¹æ®æœåŠ¡ç«¯è¿”å›çš„æ•°æ®è¿›è¡Œè¿›ä¸€æ­¥åˆ¤æ–­
         cp->maybe_cmd = (data[len - 1] == 0x0d);
         // 		if (cp->maybe_cmd)
         // 			EXLOGD("[ssh]   maybe cmd.\n");
 
-        // ÓĞÊ±ÔÚÖ´ĞĞÀàËÆtopÃüÁîµÄÇé¿öÏÂ£¬ÊäÈëÒ»¸ö×ÖÄ¸'q'¾ÍÍË³ö³ÌĞò£¬Ã»ÓĞÊäÈë»Ø³µ£¬¿ÉÄÜ»áµ¼ÖÂºóĞø¼ÇÂ¼ÃüÁîÊ±½«·µ»ØµÄÃüÁîĞĞÌáÊ¾·û×÷ÎªÃüÁî
-        // ¼ÇÂ¼ÏÂÀ´ÁË£¬Òª±ÜÃâÕâÖÖÇé¿ö£¬ÅÅ³ıµÄ·½Ê½ÊÇ£º¿Í»§¶Ëµ¥¸ö×ÖÄ¸£¬ºóĞø·şÎñ¶ËÈç¹ûÊÕµ½µÄÊÇ¿ØÖÆĞòÁĞ 1b 5b xx xx£¬¾Í²»¼Æ×öÃüÁî¡£
+        // æœ‰æ—¶åœ¨æ‰§è¡Œç±»ä¼¼topå‘½ä»¤çš„æƒ…å†µä¸‹ï¼Œè¾“å…¥ä¸€ä¸ªå­—æ¯'q'å°±é€€å‡ºç¨‹åºï¼Œæ²¡æœ‰è¾“å…¥å›è½¦ï¼Œå¯èƒ½ä¼šå¯¼è‡´åç»­è®°å½•å‘½ä»¤æ—¶å°†è¿”å›çš„å‘½ä»¤è¡Œæç¤ºç¬¦ä½œä¸ºå‘½ä»¤
+        // è®°å½•ä¸‹æ¥äº†ï¼Œè¦é¿å…è¿™ç§æƒ…å†µï¼Œæ’é™¤çš„æ–¹å¼æ˜¯ï¼šå®¢æˆ·ç«¯å•ä¸ªå­—æ¯ï¼Œåç»­æœåŠ¡ç«¯å¦‚æœæ”¶åˆ°çš„æ˜¯æ§åˆ¶åºåˆ— 1b 5b xx xxï¼Œå°±ä¸è®¡åšå‘½ä»¤ã€‚
         cp->client_single_char = (len == 1 && isprint(data[0]));
 
         cp->process_srv = true;
@@ -1193,15 +1234,15 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR *cp, int from, const e
 
                     case 0x4b: {    // 'K'
                         if (0 == esc_arg) {
-                            // É¾³ı¹â±êµ½ĞĞÎ²µÄ×Ö·û´®
+                            // åˆ é™¤å…‰æ ‡åˆ°è¡Œå°¾çš„å­—ç¬¦ä¸²
                             cp->cmd_char_list.erase(cp->cmd_char_pos, cp->cmd_char_list.end());
                             cp->cmd_char_pos = cp->cmd_char_list.end();
                         } else if (1 == esc_arg) {
-                            // É¾³ı´Ó¿ªÊ¼µ½¹â±ê´¦µÄ×Ö·û´®
+                            // åˆ é™¤ä»å¼€å§‹åˆ°å…‰æ ‡å¤„çš„å­—ç¬¦ä¸²
                             cp->cmd_char_list.erase(cp->cmd_char_list.begin(), cp->cmd_char_pos);
                             cp->cmd_char_pos = cp->cmd_char_list.end();
                         } else if (2 == esc_arg) {
-                            // É¾³ıÕûĞĞ
+                            // åˆ é™¤æ•´è¡Œ
                             cp->cmd_char_list.clear();
                             cp->cmd_char_pos = cp->cmd_char_list.begin();
                         }
@@ -1210,7 +1251,7 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR *cp, int from, const e
                         break;
                     }
                     case 0x43: {// ^[C
-                        // ¹â±êÓÒÒÆ
+                        // å…‰æ ‡å³ç§»
                         if (esc_arg == 0)
                             esc_arg = 1;
                         for (int j = 0; j < esc_arg; ++j) {
@@ -1221,7 +1262,7 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR *cp, int from, const e
                         break;
                     }
                     case 0x44: { // ^[D
-                        // ¹â±ê×óÒÆ
+                        // å…‰æ ‡å·¦ç§»
                         if (esc_arg == 0)
                             esc_arg = 1;
                         for (int j = 0; j < esc_arg; ++j) {
@@ -1233,7 +1274,7 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR *cp, int from, const e
                         break;
                     }
 
-                    case 0x50: {// 'P' É¾³ıÖ¸¶¨ÊıÁ¿µÄ×Ö·û
+                    case 0x50: {// 'P' åˆ é™¤æŒ‡å®šæ•°é‡çš„å­—ç¬¦
 
                         if (esc_arg == 0)
                             esc_arg = 1;
@@ -1245,7 +1286,7 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR *cp, int from, const e
                         break;
                     }
 
-                    case 0x40: {    // '@' ²åÈëÖ¸¶¨ÊıÁ¿µÄ¿Õ°××Ö·û
+                    case 0x40: {    // '@' æ’å…¥æŒ‡å®šæ•°é‡çš„ç©ºç™½å­—ç¬¦
                         if (esc_arg == 0)
                             esc_arg = 1;
                         for (int j = 0; j < esc_arg; ++j)
@@ -1267,10 +1308,10 @@ void SshSession::_process_ssh_command(TP_SSH_CHANNEL_PAIR *cp, int from, const e
 
             switch (ch) {
                 case 0x07:
-                    // ÏìÁå
+                    // å“é“ƒ
                     break;
                 case 0x08: {
-                    // ¹â±ê×óÒÆ
+                    // å…‰æ ‡å·¦ç§»
                     if (cp->cmd_char_pos != cp->cmd_char_list.begin())
                         cp->cmd_char_pos--;
                     break;
@@ -1343,10 +1384,10 @@ void SshSession::_process_sftp_command(TP_SSH_CHANNEL_PAIR *cp, const ex_u8 *dat
     // SFTP protocol: https://tools.ietf.org/html/draft-ietf-secsh-filexfer-13
     //EXLOG_BIN(data, len, "[sftp] client channel data");
 
-    // TODO: ¸ù¾İ¿Í»§¶ËµÄÇëÇóºÍ·şÎñ¶ËµÄ·µ»Ø£¬¿ÉÒÔ½øÒ»²½ÅĞ¶ÏÓÃ»§ÊÇÈçºÎ²Ù×÷ÎÄ¼şµÄ£¬±ÈÈç¶Á¡¢Ğ´µÈµÈ£¬ÒÔ¼°²Ù×÷µÄ½á¹ûÊÇ³É¹¦»¹ÊÇÊ§°Ü¡£
-    // ¼ÇÂ¼¸ñÊ½£º  time-offset,flag,action,result,file-path,[file-path]
-    //   ÆäÖĞ£¬flagÄ¿Ç°×ÜÊÇÎª0£¬¿ÉÒÔºöÂÔ£¨Îª±£Ö¤Óëssh-cmd¸ñÊ½Ò»ÖÂ£©£¬time-offset/action/result ¶¼ÊÇÊı×Ö
-    //        file-pathÊÇ±»²Ù×÷µÄ¶ÔÏó£¬¹æ¸ñÎª ³¤¶È:Êµ¼ÊÄÚÈİ£¬ÀıÈç£¬  13:/root/abc.txt
+    // TODO: æ ¹æ®å®¢æˆ·ç«¯çš„è¯·æ±‚å’ŒæœåŠ¡ç«¯çš„è¿”å›ï¼Œå¯ä»¥è¿›ä¸€æ­¥åˆ¤æ–­ç”¨æˆ·æ˜¯å¦‚ä½•æ“ä½œæ–‡ä»¶çš„ï¼Œæ¯”å¦‚è¯»ã€å†™ç­‰ç­‰ï¼Œä»¥åŠæ“ä½œçš„ç»“æœæ˜¯æˆåŠŸè¿˜æ˜¯å¤±è´¥ã€‚
+    // è®°å½•æ ¼å¼ï¼š  time-offset,flag,action,result,file-path,[file-path]
+    //   å…¶ä¸­ï¼Œflagç›®å‰æ€»æ˜¯ä¸º0ï¼Œå¯ä»¥å¿½ç•¥ï¼ˆä¸ºä¿è¯ä¸ssh-cmdæ ¼å¼ä¸€è‡´ï¼‰ï¼Œtime-offset/action/result éƒ½æ˜¯æ•°å­—
+    //        file-pathæ˜¯è¢«æ“ä½œçš„å¯¹è±¡ï¼Œè§„æ ¼ä¸º é•¿åº¦:å®é™…å†…å®¹ï¼Œä¾‹å¦‚ï¼Œ  13:/root/abc.txt
 
 
     if (len < 9)
@@ -1364,7 +1405,7 @@ void SshSession::_process_sftp_command(TP_SSH_CHANNEL_PAIR *cp, const ex_u8 *dat
         return;
     }
 
-    // ĞèÒªµÄÊı¾İÖÁÉÙ14×Ö½Ú
+    // éœ€è¦çš„æ•°æ®è‡³å°‘14å­—èŠ‚
     // uint32 + byte + uint32 + (uint32 + char + ...)
     // pkg_len + cmd + req_id + string( length + content...)
     if (len < 14)
@@ -1397,13 +1438,13 @@ void SshSession::_process_sftp_command(TP_SSH_CHANNEL_PAIR *cp, const ex_u8 *dat
             break;
         case 0x12:
             // 0x12 = 18 = SSH_FXP_RENAME
-            // rename²Ù×÷Êı¾İÖĞ°üº¬Á½¸ö×Ö·û´®
+            // renameæ“ä½œæ•°æ®ä¸­åŒ…å«ä¸¤ä¸ªå­—ç¬¦ä¸²
             str2_ptr = str1_ptr + str1_len + 4;
             str2_len = (int) ((str2_ptr[0] << 24) | (str2_ptr[1] << 16) | (str2_ptr[2] << 8) | str2_ptr[3]);
             break;
         case 0x15:
             // 0x15 = 21 = SSH_FXP_LINK
-            // link²Ù×÷Êı¾İÖĞ°üº¬Á½¸ö×Ö·û´®£¬Ç°ÕßÊÇĞÂµÄÁ´½ÓÎÄ¼şÃû£¬ºóÕßÊÇÏÖÓĞ±»Á´½ÓµÄÎÄ¼şÃû
+            // linkæ“ä½œæ•°æ®ä¸­åŒ…å«ä¸¤ä¸ªå­—ç¬¦ä¸²ï¼Œå‰è€…æ˜¯æ–°çš„é“¾æ¥æ–‡ä»¶åï¼Œåè€…æ˜¯ç°æœ‰è¢«é“¾æ¥çš„æ–‡ä»¶å
             str2_ptr = str1_ptr + str1_len + 4;
             str2_len = (int) ((str2_ptr[0] << 24) | (str2_ptr[1] << 16) | (str2_ptr[2] << 8) | str2_ptr[3]);
             break;

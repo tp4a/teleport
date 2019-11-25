@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2019 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -143,7 +143,7 @@ class CaseInsensitiveWithAliasDict(CaseInsensitiveDict):
             if ci_key in self._aliases:
                 self.remove_alias(ci_key)
 
-    def set_alias(self, key, alias):
+    def set_alias(self, key, alias, ignore_duplicates=False):
         if not isinstance(alias, SEQUENCE_TYPES):
             alias = [alias]
         for alias_to_add in alias:
@@ -153,20 +153,20 @@ class CaseInsensitiveWithAliasDict(CaseInsensitiveDict):
                 if ci_alias not in self._case_insensitive_keymap:  # checks if alias is used a key
                     if ci_alias not in self._aliases:  # checks if alias is used as another alias
                         self._aliases[ci_alias] = ci_key
-                        if ci_key in self._alias_keymap:  # extend alias keymap
+                        if ci_key in self._alias_keymap:  # extends alias keymap
                             self._alias_keymap[ci_key].append(self._ci_key(ci_alias))
                         else:
                             self._alias_keymap[ci_key] = list()
                             self._alias_keymap[ci_key].append(self._ci_key(ci_alias))
                     else:
-                        if ci_key == self._ci_key(self._alias_keymap[ci_alias]):  # passes if alias is already defined to the same key
+                        if ci_key in self._alias_keymap and ci_alias in self._alias_keymap[ci_key]:  # passes if alias is already defined to the same key
                             pass
-                        else:
+                        elif not ignore_duplicates:
                             raise KeyError('\'' + str(alias_to_add) + '\' already used as alias')
                 else:
                     if ci_key == self._ci_key(self._case_insensitive_keymap[ci_alias]):  # passes if alias is already defined to the same key
                         pass
-                    else:
+                    elif not ignore_duplicates:
                         raise KeyError('\'' + str(alias_to_add) + '\' already used as key')
             else:
                 raise KeyError('\'' + str(ci_key) + '\' is not an existing key')

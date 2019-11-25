@@ -101,6 +101,8 @@ class LdifProducerStrategy(BaseStrategy):
 
         self.connection.request = BaseStrategy.decode_request(message_type, request, controls)
         self.connection.request['controls'] = controls
+        if self._outstanding is None:
+            self._outstanding = dict()
         self._outstanding[message_id] = self.connection.request
         return message_id
 

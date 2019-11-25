@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import time,datetime
 from app.base.configs import tp_cfg
 from app.base.db import get_db, SQL
 from app.base.logger import log
@@ -38,7 +38,7 @@ def get_by_username(username):
     s.select_from('user',
                   ['id', 'type', 'auth_type', 'username', 'surname', 'ldap_dn', 'password', 'oath_secret', 'role_id',
                    'state', 'fail_count', 'lock_time', 'email', 'create_time', 'last_login', 'last_ip', 'last_chpass',
-                   'mobile', 'qq', 'wechat', 'desc'], alt_name='u')
+                   'mobile', 'qq', 'wechat', 'valid_from', 'valid_to', 'desc'], alt_name='u')
     s.left_join('role', ['name', 'privilege'], join_on='r.id=u.role_id', alt_name='r', out_map={'name': 'role'})
     s.where('u.username="{}"'.format(username))
     err = s.query()
@@ -57,7 +57,9 @@ def get_by_username(username):
 def login(handler, username, password=None, oath_code=None, check_bind_oath=False):
     sys_cfg = tp_cfg().sys
     msg = ''
-
+    current_unix_time = int(time.mktime(datetime.datetime.now().timetuple()))
+#    log.e('current:',current_unix_time,'validfrom:', user_info['valid_from'])
+    
     err, user_info = get_by_username(username)
     if err != TPE_OK:
         return err, None, msg
@@ -86,6 +88,10 @@ def login(handler, username, password=None, oath_code=None, check_bind_oath=Fals
         return TPE_USER_DISABLED, None, msg
     elif user_info['state'] != TP_STATE_NORMAL:
         msg = '登录失败，用户状态异常'
+        syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, msg)
+        return TPE_FAILED, None, msg
+    elif current_unix_time < user_info['valid_from'] or (current_unix_time > user_info['valid_to'] and user_info['valid_to'] != 0):
+        msg = '登录失败，用户已过期'
         syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, msg)
         return TPE_FAILED, None, msg
 
@@ -172,7 +178,7 @@ def login(handler, username, password=None, oath_code=None, check_bind_oath=Fals
 def get_users(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
     dbtp = get_db().table_prefix
     s = SQL(get_db())
-    s.select_from('user', ['id', 'type', 'auth_type', 'username', 'surname', 'role_id', 'state', 'email', 'last_login'],
+    s.select_from('user', ['id', 'type', 'auth_type', 'username', 'surname', 'role_id', 'state', 'email', 'last_login', 'valid_from', 'valid_to'],
                   alt_name='u')
     s.left_join('role', ['name', 'privilege'], join_on='r.id=u.role_id', alt_name='r', out_map={'name': 'role'})
 
@@ -353,14 +359,15 @@ def create_user(handler, user):
 
     sql = 'INSERT INTO `{}user` (' \
           '`role_id`, `username`, `surname`, `type`, `ldap_dn`, `auth_type`, `password`, `state`, ' \
-          '`email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `desc`' \
+          '`email`, `creator_id`, `create_time`, `last_login`, `last_chpass`, `valid_from`, `valid_to`, `desc`' \
           ') VALUES (' \
           '{role}, "{username}", "{surname}", {user_type}, "{ldap_dn}", {auth_type}, "{password}", {state}, ' \
-          '"{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, "{desc}");' \
+          '"{email}", {creator_id}, {create_time}, {last_login}, {last_chpass}, {valid_from}, '\
+          '{valid_to}, "{desc}");' \
           ''.format(db.table_prefix, role=user['role'], username=user['username'], surname=user['surname'],
                     user_type=user['type'], ldap_dn=user['ldap_dn'], auth_type=user['auth_type'], password=_password,
                     state=TP_STATE_NORMAL, email=user['email'], creator_id=operator['id'], create_time=_time_now,
-                    last_login=0, last_chpass=_time_now, desc=user['desc'])
+                    last_login=0, last_chpass=_time_now, valid_from=user['valid_from'], valid_to=user['valid_to'], desc=user['desc'])
     db_ret = db.exec(sql)
     if not db_ret:
         return TPE_DATABASE, 0
@@ -400,12 +407,12 @@ def update_user(handler, args):
     sql = 'UPDATE `{}user` SET ' \
           '`username`="{username}", `surname`="{surname}", `auth_type`={auth_type}, ' \
           '`role_id`={role}, `email`="{email}", `mobile`="{mobile}", `qq`="{qq}", ' \
-          '`wechat`="{wechat}", `desc`="{desc}" WHERE `id`={user_id};' \
+          '`wechat`="{wechat}", `valid_from`={valid_from}, `valid_to`={valid_to}, '\
+          '`desc`="{desc}" WHERE `id`={user_id};' \
           ''.format(db.table_prefix,
                     username=args['username'], surname=args['surname'], auth_type=args['auth_type'], role=args['role'],
-                    email=args['email'],
-                    mobile=args['mobile'], qq=args['qq'], wechat=args['wechat'], desc=args['desc'],
-                    user_id=args['id']
+                    email=args['email'], mobile=args['mobile'], qq=args['qq'], wechat=args['wechat'], 
+                    valid_from=args['valid_from'], valid_to=args['valid_to'], desc=args['desc'], user_id=args['id']
                     )
     db_ret = db.exec(sql)
     if not db_ret:

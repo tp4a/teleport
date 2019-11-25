@@ -1,4 +1,4 @@
-#include "telnet_proxy.h"
+﻿#include "telnet_proxy.h"
 #include "tpp_env.h"
 
 #include <teleport_const.h>
@@ -40,11 +40,17 @@ TPP_API void tpp_timer(void) {
 
 
 static ex_rv _set_runtime_config(const char* param) {
-	Json::Value jp;
-	Json::Reader jreader;
+// 	Json::Value jp;
+// 	Json::Reader jreader;
+// 
+// 	if (!jreader.parse(param, jp))
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
 
-	if (!jreader.parse(param, jp))
-		return TPE_JSON_FORMAT;
+    ex_astr err;
+    Json::Value jp;
+    if (!jreader->parse(param, param + strlen(param), &jp, &err))
+        return TPE_JSON_FORMAT;
 
 	if (!jp.isObject())
 		return TPE_PARAM;
@@ -62,11 +68,17 @@ static ex_rv _set_runtime_config(const char* param) {
 }
 
 static ex_rv _kill_sessions(const char* param) {
-	Json::Value jp;
-	Json::Reader jreader;
+// 	Json::Value jp;
+// 	Json::Reader jreader;
+// 
+// 	if (!jreader.parse(param, jp))
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
 
-	if (!jreader.parse(param, jp))
-		return TPE_JSON_FORMAT;
+    ex_astr err;
+    Json::Value jp;
+    if (!jreader->parse(param, param + strlen(param), &jp, &err))
+        return TPE_JSON_FORMAT;
 
 	if (!jp.isArray())
 		return TPE_PARAM;
