@@ -262,6 +262,8 @@ controllers = [
     (r'/system/do-ldap-get-users', system.DoLdapGetUsersHandler),
     #  - [json] 导入LDAP用户
     (r'/system/do-ldap-import', system.DoLdapImportHandler),
+    #  - [text] 导出数据库
+    (r'/system/export-db', system.DoExportDBHandler),
 
     #
     #  - [json] 获取服务器时间

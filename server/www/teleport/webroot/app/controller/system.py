@@ -4,6 +4,7 @@ import datetime
 import hashlib
 import json
 import shutil
+import time
 
 import app.model.system as system_model
 import tornado.gen
@@ -85,6 +86,18 @@ class RoleHandler(TPBaseHandler):
         if ret != TPE_OK:
             return
         self.render('system/role.mako')
+
+
+class DoExportDBHandler(TPBaseHandler):
+    def get(self):
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
+        if ret != TPE_OK:
+            return
+        sql, err = get_db().export_to_sql()
+        self.set_header('Content-Type', 'application/sql')
+        self.set_header('Content-Disposition', 'attachment; filename="teleport-db-export-{}.sql"'.format(time.strftime('%Y%m%d-%H%M%S')))
+        self.write(sql)
+        self.finish()
 
 
 class DoRoleUpdateHandler(TPBaseJsonHandler):

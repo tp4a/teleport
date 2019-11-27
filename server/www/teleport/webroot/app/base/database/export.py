@@ -14,22 +14,49 @@ def _db_exec(db, step_begin, step_end, msg, sql):
         step_end(_step, 0)
 
 
-def _export_table(db, table_name, fields):
+def _export_table(db, table_name):
+    table_name = '{}{}'.format(db.table_prefix, table_name)
+    f = db.get_fields(table_name)
+    fields = [i[0] for i in f]
+    types = [i[1] for i in f]
+    if fields is None:
+        return '错误：表 {} 不存在'.format(table_name)
+    s = list()
+    for t in types:
+        if (t.lower().find('char') != -1) or (t.lower().find('text') != -1):
+            s.append(True)
+        else:
+            s.append(False)
+
     ret = ['', '-- table: {}'.format(table_name), '-- fields: {}'.format(', '.join(fields)), 'TRUNCATE TABLE `{}`;'.format(table_name)]
 
     fields_str = '`,`'.join(fields)
-    sql = 'SELECT `{}` FROM `{}{}`'.format(fields_str, db.table_prefix, table_name)
+    sql = 'SELECT `{}` FROM `{}`'.format(fields_str, table_name)
     d = db.query(sql)
     if not d or len(d) == 0:
         ret.append('-- table is empty.')
     else:
         fields_count = len(fields)
         for i in range(len(d)):
-            x = []
+            # x = []
+            # for j in range(fields_count):
+            #     x.append(d[i][j].__str__())
+            # val = "','".join(x).replace('\n', '\\n')
+            x = list()
             for j in range(fields_count):
-                x.append(d[i][j].__str__())
-            val = "','".join(x).replace('\n', '\\n')
-            sql = "INSERT INTO `{}` VALUES ('{}');".format(table_name, val)
+                # if j > 0:
+                #     x.append(',')
+                if s[j]:
+                    if d[i][j] is None:
+                        x.append('NULL')
+                    else:
+                        x.append('"{}"'.format(d[i][j].replace(r'"', r'\"')))
+                else:
+                    x.append('{}'.format(d[i][j]))
+            val = ','.join(x)
+            print('VAL:', val, '\n')
+
+            sql = "INSERT INTO `{}` VALUES ({});".format(table_name, val)
             ret.append(sql)
 
     return '\r\n'.join(ret)
@@ -52,21 +79,41 @@ def export_database(db):
     else:
         ret.append('-- DATABASE VERSION {}'.format(db_ret[0][0]))
 
-    _fields = ['account_id', 'account_type', 'account_name', 'account_pwd', 'account_status', 'account_lock', 'account_desc', 'oath_secret']
-    ret.append(_export_table(db, 'account', _fields))
-    _fields = ['auth_id', 'account_name', 'host_id', 'host_auth_id']
-    ret.append(_export_table(db, 'auth', _fields))
-    _fields = ['cert_id', 'cert_name', 'cert_pub', 'cert_pri', 'cert_desc']
-    ret.append(_export_table(db, 'key', _fields))
-    _fields = ['name', 'value']
-    ret.append(_export_table(db, 'config', _fields))
-    _fields = ['group_id', 'group_name']
-    ret.append(_export_table(db, 'group', _fields))
-    _fields = ['host_id', 'group_id', 'host_sys_type', 'host_ip', 'host_port', 'protocol', 'host_lock', 'host_desc']
-    ret.append(_export_table(db, 'host_info', _fields))
-    _fields = ['id', 'host_id', 'auth_mode', 'user_name', 'user_pswd', 'user_param', 'cert_id', 'encrypt', 'log_time']
-    ret.append(_export_table(db, 'auth_info', _fields))
-    _fields = ['id', 'session_id', 'account_name', 'host_ip', 'host_port', 'sys_type', 'auth_type', 'protocol', 'user_name', 'ret_code', 'begin_time', 'end_time', 'log_time']
-    ret.append(_export_table(db, 'log', _fields))
+    # _fields = ['account_id', 'account_type', 'account_name', 'account_pwd', 'account_status', 'account_lock', 'account_desc', 'oath_secret']
+    # ret.append(_export_table(db, 'account', _fields))
+    # _fields = ['auth_id', 'account_name', 'host_id', 'host_auth_id']
+    # ret.append(_export_table(db, 'auth', _fields))
+    # _fields = ['cert_id', 'cert_name', 'cert_pub', 'cert_pri', 'cert_desc']
+    # ret.append(_export_table(db, 'key', _fields))
+    # _fields = ['name', 'value']
+    # ret.append(_export_table(db, 'config', _fields))
+    # _fields = ['group_id', 'group_name']
+    # ret.append(_export_table(db, 'group', _fields))
+    # _fields = ['host_id', 'group_id', 'host_sys_type', 'host_ip', 'host_port', 'protocol', 'host_lock', 'host_desc']
+    # ret.append(_export_table(db, 'host_info', _fields))
+    # _fields = ['id', 'host_id', 'auth_mode', 'user_name', 'user_pswd', 'user_param', 'cert_id', 'encrypt', 'log_time']
+    # ret.append(_export_table(db, 'auth_info', _fields))
+    # _fields = ['id', 'session_id', 'account_name', 'host_ip', 'host_port', 'sys_type', 'auth_type', 'protocol', 'user_name', 'ret_code', 'begin_time', 'end_time', 'log_time']
+    # ret.append(_export_table(db, 'log', _fields))
+
+    ret.append(_export_table(db, 'config'))
+    ret.append(_export_table(db, 'core_server'))
+    ret.append(_export_table(db, 'role'))
+    ret.append(_export_table(db, 'user'))
+    ret.append(_export_table(db, 'user_rpt'))
+    ret.append(_export_table(db, 'host'))
+    ret.append(_export_table(db, 'acc'))
+    ret.append(_export_table(db, 'acc_auth'))
+    ret.append(_export_table(db, 'group'))
+    ret.append(_export_table(db, 'group_map'))
+    ret.append(_export_table(db, 'ops_policy'))
+    ret.append(_export_table(db, 'ops_auz'))
+    ret.append(_export_table(db, 'ops_map'))
+    ret.append(_export_table(db, 'audit_policy'))
+    ret.append(_export_table(db, 'audit_auz'))
+    ret.append(_export_table(db, 'audit_map'))
+    ret.append(_export_table(db, 'syslog'))
+    ret.append(_export_table(db, 'record'))
+    ret.append(_export_table(db, 'record_audit'))
 
     return '\r\n'.join(ret), True

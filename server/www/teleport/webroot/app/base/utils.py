@@ -160,6 +160,10 @@ def tp_second2human(n):
     return ret
 
 
+def tp_timestamp_from_str(t):
+    return 0
+
+
 def tp_timestamp_sec():
     return int(datetime.datetime.now().timestamp())
 

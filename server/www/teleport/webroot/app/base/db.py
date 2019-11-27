@@ -177,6 +177,25 @@ class TPDatabase:
             log.e('Unknown database type.\n')
             return None
 
+    def get_fields(self, table_name):
+        fields = list()
+        if self.db_type == self.DB_TYPE_SQLITE:
+            ret = self.query('PRAGMA table_info(`{}`);'.format(table_name))
+            log.d('[sqlite] fields of {}'.format(table_name), ret, '\n')
+            if ret is None:
+                return None
+            for f in ret:
+                fields.append((f[1], f[2]))  # field_name, field_type, e.g.: ('id', 'integer'), ('desc', 'varchar(255)')
+        elif self.db_type == self.DB_TYPE_MYSQL:
+            ret = self.query('SELECT `column_name` FROM `information_schema`.`columns` WHERE `table_schema`="db" AND `table_name`="{}";'.format(table_name))
+            log.d('[mysql] fields of {}'.format(table_name), ret, '\n')
+            if ret is None:
+                return None
+            for f in ret:
+                fields.append(f)
+
+        return fields
+
     def is_field_exists(self, table_name, field_name):
         if self.db_type == self.DB_TYPE_SQLITE:
             ret = self.query('PRAGMA table_info(`{}`);'.format(table_name))
