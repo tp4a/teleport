@@ -160,8 +160,10 @@ def tp_second2human(n):
     return ret
 
 
-def tp_timestamp_from_str(t):
-    return 0
+def tp_timestamp_from_str(t, fmt='%Y-%m-%d %H:%M:%S'):
+    _fmt = '%Y-%m-%d %H:%M:%S' if fmt is None else fmt
+    d = datetime.datetime.strptime(t, _fmt)
+    return int(d.timestamp())
 
 
 def tp_timestamp_sec():

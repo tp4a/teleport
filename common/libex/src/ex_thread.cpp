@@ -75,9 +75,10 @@ bool ExThreadBase::stop(void) {
     EXLOGV("[thread] wait thread [%s] exit.\n", m_thread_name.c_str());
 
 #ifdef EX_OS_WIN32
-    if (WaitForSingleObject(m_handle, INFINITE) != WAIT_OBJECT_0)
-    {
-        return false;
+    if (m_handle) {
+        if (WaitForSingleObject(m_handle, INFINITE) != WAIT_OBJECT_0) {
+            return false;
+        }
     }
 #else
     if(m_handle != 0) {
