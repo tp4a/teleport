@@ -310,7 +310,7 @@ def update_account(handler, host_id, acc_id, args):
     _router_ip = db_ret[0][2]
     _router_port = db_ret[0][3]
 
-    sql_list = []
+    sql_list = list()
 
     sql = list()
     sql.append('UPDATE `{}acc` SET'.format(db.table_prefix))
@@ -334,7 +334,7 @@ def update_account(handler, host_id, acc_id, args):
     # db_ret = db.exec(' '.join(sql))
     # if not db_ret:
     #     return TPE_DATABASE
-    sql_list.append(' '.join(sql))
+    sql_list.append({'s': ' '.join(sql), 'v': None})
 
     if len(_router_ip) == 0:
         _name = '{}@{}'.format(args['username'], _host_ip)
@@ -342,13 +342,13 @@ def update_account(handler, host_id, acc_id, args):
         _name = '{}@{} （由{}:{}路由）'.format(args['username'], _host_ip, _router_ip, _router_port)
 
     # 运维授权
-    sql = 'UPDATE `{}ops_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, name=_name, rtype=TP_ACCOUNT, rid=acc_id)
-    sql_list.append(sql)
-    sql = 'UPDATE `{}ops_map` SET `a_name`="{name}", `protocol_type`={protocol_type}, `protocol_port`={protocol_port} ' \
-          'WHERE (a_id={aid});'.format(db.table_prefix,
-                                       name=args['username'], protocol_type=args['protocol_type'], protocol_port=args['protocol_port'],
-                                       aid=acc_id)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_auz` SET `name`={ph} WHERE (`rtype`={ph} AND `rid`={ph});'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (_name, TP_ACCOUNT, acc_id)})
+
+    sql_s = 'UPDATE `{tp}ops_map` SET `a_name`={ph},`protocol_type`={ph},`protocol_port`={ph} WHERE (`a_id`={ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (args['username'], args['protocol_type'], args['protocol_port'], acc_id)
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE
@@ -366,20 +366,20 @@ def update_accounts_state(handler, host_id, acc_ids, state):
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
-    sql_list = []
+    sql_list = list()
 
-    sql = 'UPDATE `{}acc` SET state={state} WHERE id IN ({ids});' \
-          ''.format(db.table_prefix, state=state, ids=acc_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}acc` SET `state`={ph} WHERE `id` IN ({ids});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, ids=acc_ids)
+    sql_list.append({'s': sql, 'v': (state, )})
 
     # sync to update the ops-audit table.
-    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE rtype={rtype} AND rid IN ({rid});' \
-          ''.format(db.table_prefix, state=state, rtype=TP_ACCOUNT, rid=acc_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_auz` SET `state`={ph} WHERE `rtype`={ph} AND `rid` IN ({rid});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, rid=acc_ids)
+    sql_list.append({'s': sql, 'v': (state, TP_ACCOUNT)})
 
-    sql = 'UPDATE `{}ops_map` SET a_state={state} WHERE a_id IN ({acc_id});' \
-          ''.format(db.table_prefix, state=state, acc_id=acc_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_map` SET `a_state`={ph} WHERE `a_id` IN ({acc_id});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, acc_id=acc_ids)
+    sql_list.append({'s': sql, 'v': (state, )})
 
     if db.transaction(sql_list):
         return TPE_OK
@@ -424,23 +424,23 @@ def remove_accounts(handler, host_id, acc_ids):
             acc_name += '（由{}:{}路由）'.format(_h_router_ip, _h_router_port)
         acc_names.append(acc_name)
 
-    sql_list = []
+    sql_list = list()
 
-    sql = 'DELETE FROM `{}acc` WHERE host_id={} AND id IN ({});'.format(db.table_prefix, host_id, acc_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}acc` WHERE `host_id`={ph} AND `id` IN ({ids});'.format(tp=db.table_prefix, ph=db.place_holder, ids=acc_ids)
+    sql_list.append({'s': sql, 'v': (host_id, )})
 
-    sql = 'DELETE FROM `{}group_map` WHERE type={} AND mid IN ({});'.format(db.table_prefix, TP_GROUP_ACCOUNT, acc_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}group_map` WHERE `type`={ph} AND `mid` IN ({ids});'.format(tp=db.table_prefix, ph=db.place_holder, ids=acc_ids)
+    sql_list.append({'s': sql, 'v': (TP_GROUP_ACCOUNT, )})
 
     # 更新主机相关账号数量
-    sql = 'UPDATE `{}host` SET acc_count=acc_count-{acc_count} WHERE id={host_id};'.format(db.table_prefix, acc_count=acc_count, host_id=host_id)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}host` SET `acc_count`=`acc_count`-{ph} WHERE `id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (acc_count, host_id)})
 
-    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=acc_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}ops_auz` WHERE `rtype`={ph} AND `rid` IN ({rid});'.format(tp=db.table_prefix, ph=db.place_holder, rid=acc_ids)
+    sql_list.append({'s': sql, 'v': (TP_ACCOUNT, )})
 
-    sql = 'DELETE FROM `{}ops_map` WHERE a_id IN ({acc_id});'.format(db.table_prefix, acc_id=acc_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}ops_map` WHERE `a_id` IN ({acc_id});'.format(tp=db.table_prefix, acc_id=acc_ids)
+    sql_list.append({'s': sql, 'v': None})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE

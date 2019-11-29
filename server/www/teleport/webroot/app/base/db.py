@@ -19,6 +19,7 @@ __all__ = ['get_db', 'SQL']
 
 
 # TODO: use SQLAlchemy
+# https://www.jianshu.com/p/0d234e14b5d3
 
 
 class TPDatabase:
@@ -119,7 +120,7 @@ class TPDatabase:
         self.place_holder = '?'
         self.sqlite_file = db_file
 
-        self._table_prefix = 'tp_'
+        self._table_prefix = tp_cfg().database.db_prefix
         self._conn_pool = TPSqlitePool(db_file)
 
         if not os.path.exists(db_file):
@@ -455,13 +456,19 @@ class TPSqlitePool(TPDatabasePool):
             return False
 
     def _do_transaction(self, conn, sql_list):
+        # s = ''
+        # v = None
         try:
             # 使用context manager，发生异常时会自动rollback，正常执行完毕后会自动commit
             with conn:
-                for sql in sql_list:
-                    conn.execute(sql)
+                for item in sql_list:
+                    # s = item['s']
+                    # v = item['v']
+                    conn.execute(item['s'], item['v'])
             return True
         except Exception as e:
+            # log.d('|||', s, '|||', v, '|||', '\n')
+            # log.d('///', sql_list, '///', '\n')
             log.e('[sqlite] _do_transaction() failed: {}\n'.format(e.__str__()))
             return False
 
@@ -603,8 +610,8 @@ class TPMysqlPool(TPDatabasePool):
             cursor = conn.cursor()
             try:
                 conn.begin()
-                for sql in sql_list:
-                    cursor.execute(sql)
+                for item in sql_list:
+                    conn.execute(item['s'], item['v'])
                 conn.commit()
                 return True
             except pymysql.err.OperationalError as e:
@@ -858,7 +865,7 @@ class SQL:
         sql.append(';')
         return ' '.join(sql)
 
-    def query(self):
+    def query(self, vars=None):
         # 如果要分页，那么需要计算记录总数
         if self._limit is not None:
             sql = self._make_sql_counter_string()
@@ -874,14 +881,15 @@ class SQL:
 
         sql = self._make_sql_query_string()
         # log.d(sql, '\n')
-        db_ret = self._db.query(sql)
+        db_ret = self._db.query(sql, vars)
 
-        for db_item in db_ret:
-            item = AttrDict()
-            for i in range(len(self._output_fields)):
-                item[self._output_fields[i]] = db_item[i]
+        if db_ret is not None:
+            for db_item in db_ret:
+                item = AttrDict()
+                for i in range(len(self._output_fields)):
+                    item[self._output_fields[i]] = db_item[i]
 
-            self._ret_recorder.append(item)
+                self._ret_recorder.append(item)
 
         return TPE_OK
 

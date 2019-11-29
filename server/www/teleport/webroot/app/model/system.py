@@ -93,14 +93,14 @@ def remove_role(handler, role_id):
 
     role_name = s.recorder[0].name
 
-    sql_list = []
+    sql_list = list()
 
-    sql = 'DELETE FROM `{}role` WHERE id={};'.format(db.table_prefix, role_id)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}role` WHERE `id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (role_id, )})
 
     # 更新此角色相关的用户信息
-    sql = 'UPDATE `{}user` SET role_id=0 WHERE role_id={rid};'.format(db.table_prefix, rid=role_id)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}user` SET `role_id`=0 WHERE `role_id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (role_id, )})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE

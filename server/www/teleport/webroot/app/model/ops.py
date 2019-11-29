@@ -135,14 +135,14 @@ def update_policies_state(handler, p_ids, state):
 
     sql_list = []
 
-    sql = 'UPDATE `{}ops_policy` SET `state`={state} WHERE `id` IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_policy` SET `state`={ph} WHERE `id` IN ({p_ids});'.format(tp=db.table_prefix, ph=db.place_holder, p_ids=p_ids)
+    sql_list.append({'s': sql, 'v': (state, )})
 
-    sql = 'UPDATE `{}ops_auz` SET `state`={state} WHERE `policy_id` IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_auz` SET `state`={ph} WHERE `policy_id` IN ({p_ids});'.format(tp=db.table_prefix, ph=db.place_holder, p_ids=p_ids)
+    sql_list.append({'s': sql, 'v': (state, )})
 
-    sql = 'UPDATE `{}ops_map` SET `p_state`={state} WHERE `p_id` IN ({p_ids});'.format(db.table_prefix, state=state, p_ids=p_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_map` SET `p_state`={ph} WHERE `p_id` IN ({p_ids});'.format(tp=db.table_prefix, ph=db.place_holder, p_ids=p_ids)
+    sql_list.append({'s': sql, 'v': (state, )})
 
     if db.transaction(sql_list):
         return TPE_OK
@@ -158,13 +158,13 @@ def remove_policies(handler, p_ids):
     sql_list = []
 
     sql = 'DELETE FROM `{}ops_policy` WHERE `id` IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
-    sql_list.append(sql)
+    sql_list.append({'s': sql, 'v': None})
 
     sql = 'DELETE FROM `{}ops_auz` WHERE `policy_id` IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
-    sql_list.append(sql)
+    sql_list.append({'s': sql, 'v': None})
 
     sql = 'DELETE FROM `{}ops_map` WHERE `p_id` IN ({p_ids});'.format(db.table_prefix, p_ids=p_ids)
-    sql_list.append(sql)
+    sql_list.append({'s': sql, 'v': None})
 
     if db.transaction(sql_list):
         return TPE_OK
@@ -195,13 +195,11 @@ def add_members(handler, policy_id, policy_type, ref_type, members):
     for m in members:
         if m['id'] in exists_ids:
             continue
-        str_sql = 'INSERT INTO `{}ops_auz` (policy_id, type, rtype, rid, `name`, creator_id, create_time) VALUES ' \
-                  '({pid}, {t}, {rtype}, {rid}, "{name}", {creator_id}, {create_time});' \
-                  ''.format(db.table_prefix,
-                            pid=policy_id, t=policy_type, rtype=ref_type,
-                            rid=m['id'], name=m['name'],
-                            creator_id=operator['id'], create_time=_time_now)
-        sql.append(str_sql)
+        sql_s = 'INSERT INTO `{tp}ops_auz` (`policy_id`,`type`,`rtype`,`rid`,`name`,`creator_id`,`create_time`) VALUES ' \
+                '({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph});' \
+                ''.format(tp=db.table_prefix, ph=db.place_holder)
+        sql_v = (policy_id, policy_type, ref_type, m['id'], m['name'], operator['id'], _time_now)
+        sql.append({'s': sql_s, 'v': sql_v})
 
     if db.transaction(sql):
         # return TPE_OK
@@ -221,7 +219,7 @@ def remove_members(handler, policy_id, policy_type, ids):
     if err != TPE_OK:
         return err
 
-    #return TPE_OK
+    # return TPE_OK
     return policy.rebuild_ops_auz_map()
 
 

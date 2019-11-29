@@ -476,15 +476,18 @@ def session_fix():
     if db.need_create or db.need_upgrade:
         return TPE_OK
 
-    sql_list = []
+    sql_list = list()
 
-    sql = 'UPDATE `{dbtp}record` SET state={new_state}, time_end={time_end} WHERE state={old_state};' \
-          ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_RESET, old_state=TP_SESS_STAT_RUNNING, time_end=tp_timestamp_sec())
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}record` SET state={ph}, time_end={ph} WHERE state={ph};' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (TP_SESS_STAT_ERR_RESET, tp_timestamp_sec(), TP_SESS_STAT_RUNNING)
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
-    sql = 'UPDATE `{dbtp}record` SET state={new_state},time_end={time_end} WHERE state={old_state};' \
-          ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_START_RESET, old_state=TP_SESS_STAT_STARTED, time_end=tp_timestamp_sec())
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}record` SET state={ph},time_end={ph} WHERE state={ph};' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (TP_SESS_STAT_ERR_RESET, tp_timestamp_sec(), TP_SESS_STAT_STARTED)
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
     return db.transaction(sql_list)
 
 

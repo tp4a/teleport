@@ -56,20 +56,20 @@ def update_groups_state(handler, gtype, glist, state):
     group_list = ','.join([str(i) for i in glist])
 
     db = get_db()
-    sql_list = []
+    sql_list = list()
 
     # 2. 更新记录
-    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE rtype={rtype} AND rid={rid};' \
-          ''.format(db.table_prefix, state=state, rtype=gtype, rid=group_list)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_auz` SET `state`={ph} WHERE `rtype`={ph} AND `rid` IN ({rid});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, rid=group_list)
+    sql_list.append({'s': sql, 'v': (state, gtype)})
 
-    sql = 'UPDATE `{}ops_map` SET {gname}_state={state} WHERE {gname}_id IN ({gids});' \
-          ''.format(db.table_prefix, state=state, gname=gname, gids=group_list)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_map` SET `{gname}_state`={ph} WHERE `{gname}_id` IN ({gids});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, gname=gname, gids=group_list)
+    sql_list.append({'s': sql, 'v': (state,)})
 
-    sql = 'UPDATE `{dbtp}group` SET state={state} WHERE id IN ({gids});' \
-          ''.format(dbtp=db.table_prefix, state=state, gids=group_list)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}group` SET `state`={ph} WHERE `id` IN ({gids});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, gids=group_list)
+    sql_list.append({'s': sql, 'v': (state,)})
 
     if db.transaction(sql_list):
         return TPE_OK
@@ -96,11 +96,11 @@ def remove(handler, gtype, glist):
 
     name_list = [n['name'] for n in s.recorder]
 
-    sql_list = []
+    sql_list = list()
 
     # 删除组与成员的映射关系
-    sql = 'DELETE FROM `{tpdp}group_map` WHERE `type`={t} AND `gid` IN ({ids});'.format(tpdp=db.table_prefix, t=gtype, ids=group_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}group_map` WHERE `type`={ph} AND `gid` IN ({ids});'.format(tp=db.table_prefix, ph=db.place_holder, ids=group_ids)
+    sql_list.append({'s': sql, 'v': (gtype,)})
 
     # where = 'type={} AND gid IN ({})'.format(gtype, ','.join(group_list))
     # err = s.reset().delete_from('group_map').where(where).exec()
@@ -108,8 +108,8 @@ def remove(handler, gtype, glist):
     #     return err
 
     # 删除组
-    sql = 'DELETE FROM `{tpdp}group` WHERE `type`={t} AND `id` IN ({ids});'.format(tpdp=db.table_prefix, t=gtype, ids=group_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}group` WHERE `type`={ph} AND `id` IN ({ids});'.format(tp=db.table_prefix, ph=db.place_holder, ids=group_ids)
+    sql_list.append({'s': sql, 'v': (gtype,)})
     # where = 'type={gtype} AND id IN ({gids})'.format(gtype=gtype, gids=','.join(group_list))
     # err = s.reset().delete_from('group').where(where).exec()
     # if err != TPE_OK:
@@ -125,17 +125,17 @@ def remove(handler, gtype, glist):
         return TPE_PARAM
 
     # 将组从运维授权中移除
-    sql = 'DELETE FROM `{}ops_auz` WHERE `rtype`={rtype} AND `rid` IN ({ids});'.format(db.table_prefix, rtype=gtype, ids=group_ids)
-    sql_list.append(sql)
-    sql = 'DELETE FROM `{}ops_map` WHERE `{gname}_id` IN ({ids});'.format(db.table_prefix, gname=gname, ids=group_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}ops_auz` WHERE `rtype`={ph} AND `rid` IN ({ids});'.format(tp=db.table_prefix, ph=db.place_holder, ids=group_ids)
+    sql_list.append({'s': sql, 'v': (gtype,)})
+    sql = 'DELETE FROM `{tp}ops_map` WHERE `{gname}_id` IN ({ids});'.format(tp=db.table_prefix, gname=gname, ids=group_ids)
+    sql_list.append({'s': sql, 'v': None})
     # 将组从审计授权中移除
-    sql = 'DELETE FROM `{}audit_auz` WHERE `rtype`={rtype} AND `rid` IN ({ids});'.format(db.table_prefix, rtype=gtype, ids=group_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}audit_auz` WHERE `rtype`={ph} AND `rid` IN ({ids});'.format(tp=db.table_prefix, ph=db.place_holder, ids=group_ids)
+    sql_list.append({'s': sql, 'v': (gtype,)})
     # 注意，审计授权映射表中，没有远程账号相关信息，所以如果是远程账号组，则忽略
     if gtype != TP_GROUP_ACCOUNT:
-        sql = 'DELETE FROM `{}audit_map` WHERE `{gname}_id` IN ({ids});'.format(db.table_prefix, gname=gname, ids=group_ids)
-        sql_list.append(sql)
+        sql = 'DELETE FROM `{tp}audit_map` WHERE `{gname}_id` IN ({ids});'.format(tp=db.table_prefix, gname=gname, ids=group_ids)
+        sql_list.append({'s': sql, 'v': None})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE
@@ -178,20 +178,19 @@ def update(handler, gid, name, desc):
         return TPE_NOT_EXISTS
 
     gtype = db_ret[0][1]
-    sql_list = []
+    sql_list = list()
 
     # 2. 更新记录
-    sql = 'UPDATE `{}group` SET `name`="{name}", `desc`="{desc}" WHERE id={gid};' \
-          ''.format(db.table_prefix, name=name, desc=desc, gid=gid)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}group` SET `name`={ph}, `desc`={ph} WHERE `id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (name, desc, gid)})
 
     # 3. 同步更新授权表和权限映射表
     # 运维授权
-    sql = 'UPDATE `{}ops_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, name=name, rtype=gtype, rid=gid)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_auz` SET `name`={ph} WHERE (`rtype`={ph} AND `rid`={ph});'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (name, gtype, gid)})
     # 审计授权
-    sql = 'UPDATE `{}audit_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, name=name, rtype=gtype, rid=gid)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}audit_auz` SET `name`={ph} WHERE (`rtype`={ph} AND `rid`={ph});'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (name, gtype, gid)})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE
@@ -203,10 +202,12 @@ def add_members(gtype, gid, members):
     # 向指定组中增加成员，同时根据授权策略，更新授权映射表
     db = get_db()
 
-    sql = []
+    sql_list = list()
     for uid in members:
-        sql.append('INSERT INTO `{}group_map` (`type`, `gid`, `mid`) VALUES ({}, {}, {});'.format(db.table_prefix, gtype, gid, uid))
-    if db.transaction(sql):
+        sql = 'INSERT INTO `{tp}group_map` (`type`,`gid`,`mid`) VALUES ({ph},{ph},{ph});'.format(tp=db.table_prefix, ph=db.place_holder)
+        sql_list.append({'s': sql, 'v': (gtype, gid, uid)})
+
+    if db.transaction(sql_list):
         return policy.rebuild_auz_map()
     else:
         return TPE_DATABASE
@@ -229,16 +230,20 @@ def remove_members(gtype, gid, members):
 
     mids = ','.join([str(uid) for uid in members])
 
-    sql_list = []
+    sql_list = list()
 
-    _where = 'WHERE (type={gtype} AND gid={gid} AND mid IN ({mid}))'.format(gtype=gtype, gid=gid, mid=mids)
-    sql = 'DELETE FROM `{dbtp}group_map` {where};'.format(dbtp=db.table_prefix, where=_where)
-    sql_list.append(sql)
-    sql = 'DELETE FROM `{}ops_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}group_map` WHERE (`type`={ph} AND `gid`={ph} AND `mid` IN ({mids}));' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, mids=mids)
+    sql_list.append({'s': sql, 'v': (gtype, gid)})
+
+    sql = 'DELETE FROM `{tp}ops_map` WHERE `{gname}_id`={ph} AND `{name}_id` IN ({ids});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, gname=gname, name=name, ids=mids)
+    sql_list.append({'s': sql, 'v': (gid,)})
+
     if gtype != TP_GROUP_ACCOUNT:
-        sql = 'DELETE FROM `{}audit_map` WHERE {gname}_id={gid} AND {name}_id IN ({ids});'.format(db.table_prefix, gname=gname, name=name, gid=gid, ids=mids)
-        sql_list.append(sql)
+        sql = 'DELETE FROM `{tp}audit_map` WHERE `{gname}_id`={ph} AND `{name}_id` IN ({ids});' \
+              ''.format(tp=db.table_prefix, ph=db.place_holder, gname=gname, name=name, ids=mids)
+        sql_list.append({'s': sql, 'v': (gid,)})
 
     if db.transaction(sql_list):
         return TPE_OK

@@ -424,19 +424,26 @@ def update_user(handler, args):
         _uname += '（' + args['surname'] + '）'
     sql_list = []
     # 运维授权
-    sql = 'UPDATE `{}ops_auz` SET `name`="{uname}" WHERE (`rtype`={rtype} AND `rid`={rid});' \
-          ''.format(db.table_prefix, uname=_uname, rtype=TP_USER, rid=args['id'])
-    sql_list.append(sql)
-    sql = 'UPDATE `{}ops_map` SET `u_name`="{uname}", `u_surname`="{surname}" WHERE (u_id={uid});'.format(
-        db.table_prefix, uname=args['username'], surname=args['surname'], uid=args['id'])
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}ops_auz` SET `name`={ph} WHERE (`rtype`={ph} AND `rid`={ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (_uname, TP_USER, args['id'])
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
+    sql_s = 'UPDATE `{tp}ops_map` SET `u_name`={ph}, `u_surname`={ph} WHERE (u_id={ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (args['username'], args['surname'], args['id'])
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
     # 审计授权
-    sql = 'UPDATE `{}audit_auz` SET `name`="{uname}" WHERE (`rtype`={rtype} AND `rid`={rid});' \
-          ''.format(db.table_prefix, uname=_uname, rtype=TP_USER, rid=args['id'])
-    sql_list.append(sql)
-    sql = 'UPDATE `{}audit_map` SET `u_name`="{uname}", `u_surname`="{surname}" WHERE (u_id={uid});'.format(
-        db.table_prefix, uname=args['username'], surname=args['surname'], uid=args['id'])
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}audit_auz` SET `name`={ph} WHERE (`rtype`={ph} AND `rid`={ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (_uname, TP_USER, args['id'])
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
+    sql_s = 'UPDATE `{tp}audit_map` SET `u_name`={ph}, `u_surname`={ph} WHERE (u_id={ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (args['username'], args['surname'], args['id'])
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE
@@ -630,25 +637,30 @@ def update_users_state(handler, user_ids, state):
 
     sql_list = []
 
-    sql = 'UPDATE `{}user` SET state={state} WHERE id IN ({ids});' \
-          ''.format(db.table_prefix, state=state, ids=user_ids)
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}user` SET `state`={ph} WHERE `id` IN ({ids});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder, ids=user_ids)
+    sql_v = (state, )
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
-    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE rtype={rtype} AND rid IN ({rid});' \
-          ''.format(db.table_prefix, state=state, rtype=TP_USER, rid=user_ids)
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}ops_auz` SET `state`={ph} WHERE `rtype`={ph} AND `rid` IN ({ids});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder, ids=user_ids)
+    sql_v = (state, TP_USER)
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
-    sql = 'UPDATE `{}ops_map` SET u_state={state} WHERE u_id IN ({ids});' \
-          ''.format(db.table_prefix, state=state, ids=user_ids)
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}ops_map` SET `u_state`={ph} WHERE `u_id` IN ({ids});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder, ids=user_ids)
+    sql_v = (state, )
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
-    sql = 'UPDATE `{}audit_auz` SET state={state} WHERE rtype={rtype} AND rid IN ({rid});' \
-          ''.format(db.table_prefix, state=state, rtype=TP_USER, rid=user_ids)
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}audit_auz` SET `state`={ph} WHERE `rtype`={ph} AND `rid` IN ({rid});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder, rid=user_ids)
+    sql_v = (state, TP_USER)
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
-    sql = 'UPDATE `{}audit_map` SET u_state={state} WHERE u_id IN ({ids});' \
-          ''.format(db.table_prefix, state=state, ids=user_ids)
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}audit_map` SET `u_state`={ph} WHERE `u_id` IN ({ids});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder, ids=user_ids)
+    sql_v = (state, )
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
     if db.transaction(sql_list):
         return TPE_OK
@@ -663,15 +675,17 @@ def update_fail_count(handler, user_info):
     is_locked = False
     fail_count = user_info.fail_count + 1
 
-    sql = 'UPDATE `{}user` SET fail_count={count} WHERE id={uid};' \
-          ''.format(db.table_prefix, count=fail_count, uid=user_info.id)
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}user` SET `fail_count`={ph} WHERE `id`={ph};' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (fail_count, user_info.id)
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
     if sys_cfg.login.retry != 0 and fail_count >= sys_cfg.login.retry:
         is_locked = True
-        sql = 'UPDATE `{}user` SET state={state}, lock_time={lock_time} WHERE id={uid};' \
-              ''.format(db.table_prefix, state=TP_STATE_LOCKED, lock_time=tp_timestamp_sec(), uid=user_info.id)
-        sql_list.append(sql)
+        sql_s = 'UPDATE `{tp}user` SET `state`={ph}, `lock_time`={ph} WHERE `id`={ph};' \
+                ''.format(tp=db.table_prefix, ph=db.place_holder)
+        sql_v = (TP_STATE_LOCKED, tp_timestamp_sec(), user_info.id)
+        sql_list.append({'s': sql_s, 'v': sql_v})
 
     if db.transaction(sql_list):
         return TPE_OK, is_locked
@@ -698,24 +712,32 @@ def remove_users(handler, users):
     sql_list = []
 
     # 将用户从所在组中移除
-    sql = 'DELETE FROM `{tpdp}group_map` WHERE type={t} AND mid IN ({ids});' \
-          ''.format(tpdp=db.table_prefix, t=TP_GROUP_USER, ids=str_users)
-    sql_list.append(sql)
+    sql_s = 'DELETE FROM `{tp}group_map` WHERE `type`={ph} AND `mid` IN ({ids});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder, ids=str_users)
+    sql_v = (TP_GROUP_USER, )
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
     # 删除用户
-    sql = 'DELETE FROM `{tpdp}user` WHERE id IN ({ids});'.format(tpdp=db.table_prefix, ids=str_users)
-    sql_list.append(sql)
+    sql_s = 'DELETE FROM `{tp}user` WHERE `id` IN ({ids});'.format(tp=db.table_prefix, ids=str_users)
+    sql_list.append({'s': sql_s, 'v': None})
+
     # 将用户从运维授权中移除
-    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({ids});' \
-          ''.format(db.table_prefix, rtype=TP_USER, ids=str_users)
-    sql_list.append(sql)
-    sql = 'DELETE FROM `{}ops_map` WHERE u_id IN ({ids});'.format(db.table_prefix, ids=str_users)
-    sql_list.append(sql)
+    sql_s = 'DELETE FROM `{tp}ops_auz` WHERE `rtype`={rtype} AND `rid` IN ({ids});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder, ids=str_users)
+    sql_v = (TP_USER, )
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
+    sql_s = 'DELETE FROM `{tp}ops_map` WHERE `u_id` IN ({ids});'.format(tp=db.table_prefix, ids=str_users)
+    sql_list.append({'s': sql_s, 'v': None})
+
     # 将用户从审计授权中移除
-    sql = 'DELETE FROM `{}audit_auz` WHERE rtype={rtype} AND rid IN ({ids});' \
-          ''.format(db.table_prefix, rtype=TP_USER, ids=str_users)
-    sql_list.append(sql)
-    sql = 'DELETE FROM `{}audit_map` WHERE u_id IN ({ids});'.format(db.table_prefix, ids=str_users)
-    sql_list.append(sql)
+    sql_s = 'DELETE FROM `{tp}audit_auz` WHERE `rtype`={ph} AND `rid` IN ({ids});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder, ids=str_users)
+    sql_v = (TP_USER, )
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
+    sql_s = 'DELETE FROM `{tp}audit_map` WHERE `u_id` IN ({ids});'.format(tp=db.table_prefix, ids=str_users)
+    sql_list.append({'s': sql_s, 'v': None})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE

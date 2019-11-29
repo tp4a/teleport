@@ -137,7 +137,7 @@ def remove_hosts(handler, hosts):
 
     host_ids = ','.join([str(i) for i in hosts])
 
-    sql_list = []
+    sql_list = list()
 
     # step 1. 处理主机对应的账号
 
@@ -164,23 +164,23 @@ def remove_hosts(handler, hosts):
     if len(accs) > 0:
         # 1.2 将账号从所在组中移除
         where = 'mid IN ({})'.format(acc_ids)
-        sql = 'DELETE FROM `{}group_map` WHERE (type={} AND {});'.format(db.table_prefix, TP_GROUP_ACCOUNT, where)
-        sql_list.append(sql)
+        sql = 'DELETE FROM `{tp}group_map` WHERE (`type`={ph} AND {w});'.format(tp=db.table_prefix, ph=db.place_holder, w=where)
+        sql_list.append({'s': sql, 'v': (TP_GROUP_ACCOUNT, )})
         # if not db.exec(sql):
         #     return TPE_DATABASE
 
         # 1.3 将账号删除
         where = 'id IN ({})'.format(acc_ids)
-        sql = 'DELETE FROM `{}acc` WHERE {};'.format(db.table_prefix, where)
-        sql_list.append(sql)
+        sql = 'DELETE FROM `{tp}acc` WHERE {w};'.format(tp=db.table_prefix, w=where)
+        sql_list.append({'s': sql, 'v': None})
         # if not db.exec(sql):
         #     return TPE_DATABASE
 
-        sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=acc_ids)
-        sql_list.append(sql)
+        sql = 'DELETE FROM `{tp}ops_auz` WHERE `rtype`={ph} AND `rid` IN ({rid});'.format(tp=db.table_prefix, ph=db.place_holder, rid=acc_ids)
+        sql_list.append({'s': sql, 'v': (TP_ACCOUNT, )})
 
-        sql = 'DELETE FROM `{}ops_map` WHERE a_id IN ({acc_ids});'.format(db.table_prefix, acc_ids=acc_ids)
-        sql_list.append(sql)
+        sql = 'DELETE FROM `{tp}ops_map` WHERE `a_id` IN ({acc_ids});'.format(tp=db.table_prefix, acc_ids=acc_ids)
+        sql_list.append({'s': sql, 'v': None})
 
     # step 2. 处理主机
     s = SQL(db)
@@ -200,18 +200,18 @@ def remove_hosts(handler, hosts):
 
     # 2.1 将主机从所在组中移除
     where = 'mid IN ({})'.format(host_ids)
-    sql = 'DELETE FROM `{}group_map` WHERE (type={} AND {});'.format(db.table_prefix, TP_GROUP_HOST, where)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}group_map` WHERE (`type`={ph} AND {w});'.format(tp=db.table_prefix, ph=db.place_holder, w=where)
+    sql_list.append({'s': sql, 'v': (TP_GROUP_HOST, )})
 
     # 2.2 将主机删除
     where = 'id IN ({})'.format(host_ids)
-    sql = 'DELETE FROM `{}host` WHERE {};'.format(db.table_prefix, where)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}host` WHERE {w};'.format(tp=db.table_prefix, w=where)
+    sql_list.append({'s': sql, 'v': None})
 
-    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_HOST, rid=host_ids)
-    sql_list.append(sql)
-    sql = 'DELETE FROM `{}ops_map` WHERE h_id IN ({host_ids});'.format(db.table_prefix, host_ids=host_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}ops_auz` WHERE `rtype`={ph} AND rid IN ({rid});'.format(tp=db.table_prefix, ph=db.place_holder, rid=host_ids)
+    sql_list.append({'s': sql, 'v': (TP_HOST, )})
+    sql = 'DELETE FROM `{tp}ops_map` WHERE h_id IN ({host_ids});'.format(tp=db.table_prefix, host_ids=host_ids)
+    sql_list.append({'s': sql, 'v': None})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE
@@ -238,19 +238,18 @@ def update_host(handler, args):
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
-    sql_list = []
-    sql = 'UPDATE `{}host` SET `os_type`={os_type}, `name`="{name}", `ip`="{ip}", `router_ip`="{router_ip}", ' \
-          '`router_port`={router_port}, `cid`="{cid}", `desc`="{desc}" WHERE `id`={host_id};' \
-          ''.format(db.table_prefix,
-                    os_type=args['os_type'], name=args['name'], ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'],
-                    cid=args['cid'], desc=args['desc'], host_id=args['id'])
-    sql_list.append(sql)
+    sql_list = list()
+    sql_s = 'UPDATE `{tp}host` SET `os_type`={ph},`name`={ph},`ip`={ph},`router_ip`={ph}, ' \
+            '`router_port`={ph},`cid`={ph},`desc`={ph} WHERE `id`={ph};' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (args['os_type'], args['name'], args['ip'], args['router_ip'], args['router_port'], args['cid'], args['desc'], args['id'])
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
     # 更新所有此主机相关的账号
-    sql = 'UPDATE `{}acc` SET `host_ip`="{ip}", `router_ip`="{router_ip}", `router_port`={router_port} WHERE `host_id`={id};' \
-          ''.format(db.table_prefix,
-                    ip=args['ip'], router_ip=args['router_ip'], router_port=args['router_port'], id=args['id'])
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}acc` SET `host_ip`={ph},`router_ip`={ph},`router_port`={ph} WHERE `host_id`={ph};' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (args['ip'], args['router_ip'], args['router_port'], args['id'])
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
     # 同步更新授权表和权限映射表
     _name = args['ip']
@@ -258,22 +257,26 @@ def update_host(handler, args):
         _name = '{} [{}]'.format(args['name'], args['ip'])
 
     # 运维授权
-    sql = 'UPDATE `{}ops_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});' \
-          ''.format(db.table_prefix, name=_name, rtype=TP_HOST, rid=args['id'])
-    sql_list.append(sql)
-    sql = 'UPDATE `{}ops_map` SET `h_name`="{hname}", `ip`="{ip}", `router_ip`="{router_ip}", `router_port`={router_port} ' \
-          'WHERE (h_id={hid});'.format(db.table_prefix,
-                                       hname=args['name'], ip=args['ip'], hid=args['id'],
-                                       router_ip=args['router_ip'], router_port=args['router_port'])
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}ops_auz` SET `name`={ph} WHERE (`rtype`={ph} AND `rid`={ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (_name, TP_HOST, args['id'])
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
+    sql_s = 'UPDATE `{tp}ops_map` SET `h_name`={ph},`ip`={ph},`router_ip`={ph},`router_port`={ph} WHERE (`h_id`={ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (args['name'], args['ip'], args['router_ip'], args['router_port'], args['id'])
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
     # 审计授权
-    sql = 'UPDATE `{}audit_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, name=_name, rtype=TP_HOST, rid=args['id'])
-    sql_list.append(sql)
-    sql = 'UPDATE `{}audit_map` SET `h_name`="{hname}", `ip`="{ip}", `router_ip`="{router_ip}", `router_port`={router_port} ' \
-          'WHERE (h_id={hid});'.format(db.table_prefix,
-                                       hname=args['name'], ip=args['ip'], hid=args['id'],
-                                       router_ip=args['router_ip'], router_port=args['router_port'])
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}audit_auz` SET `name`={ph} WHERE (`rtype`={ph} AND `rid`={ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (_name, TP_HOST, args['id'])
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
+    sql_s = 'UPDATE `{tp}audit_map` SET `h_name`={ph}, `ip`={ph}, `router_ip`={ph}, `router_port`={ph} WHERE (`h_id`={ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (args['name'], args['ip'], args['router_ip'], args['router_port'], args['id'])
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE
@@ -289,20 +292,20 @@ def update_hosts_state(handler, host_ids, state):
 
     host_ids = ','.join([str(i) for i in host_ids])
 
-    sql_list = []
+    sql_list = list()
 
-    sql = 'UPDATE `{}host` SET `state`={state} WHERE `id` IN ({host_ids});' \
-          ''.format(db.table_prefix, state=state, host_ids=host_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}host` SET `state`={ph} WHERE `id` IN ({host_ids});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, host_ids=host_ids)
+    sql_list.append({'s': sql, 'v': (state, )})
 
     # sync to update the ops-audit table.
-    sql = 'UPDATE `{}ops_auz` SET `state`={state} WHERE `rtype`={rtype} AND `rid` IN ({rid});' \
-          ''.format(db.table_prefix, state=state, rtype=TP_ACCOUNT, rid=host_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_auz` SET `state`={ph} WHERE `rtype`={ph} AND `rid` IN ({rid});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, rid=host_ids)
+    sql_list.append({'s': sql, 'v': (state, TP_ACCOUNT)})
 
-    sql = 'UPDATE `{}ops_map` SET `h_state`={state} WHERE `h_id` IN ({host_ids});' \
-          ''.format(db.table_prefix, state=state, host_ids=host_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_map` SET `h_state`={ph} WHERE `h_id` IN ({host_ids});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, host_ids=host_ids)
+    sql_list.append({'s': sql, 'v': (state, )})
 
     if db.transaction(sql_list):
         return TPE_OK
