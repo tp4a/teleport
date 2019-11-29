@@ -47,6 +47,18 @@ else:win32:CONFIG(debug, debug|release): {
     DESTDIR = $$PWD/../../out/client/x86/Debug
 }
 
+
+macx:CONFIG(release, debug|release): {
+    DEFINES += QT_NO_DEBUG_OUTPUT
+    LIBS += -L$$PWD/../../external/zlib/build/release/ -lzlib
+    DESTDIR = $$PWD/../../out/client/x86/Release
+}
+else:macx:CONFIG(debug, debug|release): {
+    LIBS += -L$$PWD/../../external/zlib/build/debug/ -lzlibd
+    DESTDIR = $$PWD/../../out/client/x86/Debug
+}
+
+
 INCLUDEPATH += $$PWD/../../external/zlib
 INCLUDEPATH += $$PWD/../../external/zlib/build
 DEPENDPATH += $$PWD/../../external/zlib

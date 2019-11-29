@@ -23,7 +23,7 @@ class BuilderBase:
         self._init_path()
 
     def _init_path(self):
-        cc.e("this is a pure-virtual function.")
+        cc.e("_init_path() pure-virtual function.")
 
     def build_jsoncpp(self):
         file_name = 'jsoncpp-{}.zip'.format(env.ver_jsoncpp)
@@ -33,7 +33,7 @@ class BuilderBase:
         return utils.download_file('jsoncpp source tarball', 'https://github.com/open-source-parsers/jsoncpp/archive/{}.zip'.format(env.ver_jsoncpp), PATH_DOWNLOAD, file_name)
 
     def _build_jsoncpp(self, file_name):
-        cc.e("this is a pure-virtual function.")
+        cc.e("_build_jsoncpp() pure-virtual function.")
 
     def build_mongoose(self):
         file_name = 'mongoose-{}.zip'.format(env.ver_mongoose)
@@ -43,7 +43,7 @@ class BuilderBase:
         return utils.download_file('mongoose source tarball', 'https://github.com/cesanta/mongoose/archive/{}.zip'.format(env.ver_mongoose), PATH_DOWNLOAD, file_name)
 
     def _build_mongoose(self, file_name):
-        cc.e("this is a pure-virtual function.")
+        cc.e("_build_mongoose() pure-virtual function.")
 
     def build_openssl(self):
         file_name = 'openssl-{}.zip'.format(env.ver_ossl)
@@ -54,7 +54,7 @@ class BuilderBase:
         return utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name)
 
     def _build_openssl(self, file_name):
-        cc.e("this is a pure-virtual function.")
+        cc.e("_build_openssl() pure-virtual function.")
         # _alt_ver = '_'.join(env.ver_ossl.split('.'))
         # if not utils.download_file('openssl source tarball', 'https://github.com/openssl/openssl/archive/OpenSSL_{}.zip'.format(_alt_ver), PATH_DOWNLOAD, file_name):
         #     cc.e("can not download openssl source tarball.")
@@ -90,7 +90,7 @@ class BuilderBase:
         return utils.download_file('mbedtls source tarball', 'https://www.zlib.net/zlib{}.zip'.format(env.ver_zlib_number), PATH_DOWNLOAD, file_name)
 
     def _build_zlib(self, file_name):
-        cc.e("this is a pure-virtual function.")
+        cc.e("_build_zlib() pure-virtual function.")
 
     def build_libssh(self):
         file_name = 'libssh-{}.zip'.format(env.ver_libssh)
@@ -100,13 +100,13 @@ class BuilderBase:
         return utils.download_file('libssh source tarball', 'https://git.libssh.org/projects/libssh.git/snapshot/libssh-{}.zip'.format(env.ver_libssh), PATH_DOWNLOAD, file_name)
 
     def _build_libssh(self, file_name):
-        cc.e("this is a pure-virtual function.")
+        cc.e("_build_libssh() pure-virtual function.")
 
     def prepare_python(self):
         self._prepare_python()
 
     def _prepare_python(self):
-        cc.e("this is a pure-virtual function.")
+        cc.e("_prepare_python() pure-virtual function.")
 
     def fix_output(self):
         pass
@@ -611,6 +611,7 @@ class BuilderMacOS(BuilderBase):
         self.LIBUV_PATH_SRC = os.path.join(self.PATH_TMP, 'libuv-{}'.format(env.ver_libuv))
         self.MBEDTLS_PATH_SRC = os.path.join(self.PATH_TMP, 'mbedtls-mbedtls-{}'.format(env.ver_mbedtls))
         self.LIBSSH_PATH_SRC = os.path.join(self.PATH_TMP, 'libssh-{}'.format(env.ver_libssh))
+        self.ZLIB_PATH_SRC = os.path.join(self.PATH_TMP, 'zlib-{}'.format(env.ver_zlib))
 
         self.JSONCPP_PATH_SRC = os.path.join(PATH_EXTERNAL, 'jsoncpp')
         self.MONGOOSE_PATH_SRC = os.path.join(PATH_EXTERNAL, 'mongoose')
@@ -619,6 +620,8 @@ class BuilderMacOS(BuilderBase):
             utils.makedirs(self.PATH_TMP)
 
     def _build_jsoncpp(self, file_name):
+        if not self._download_jsoncpp(file_name):
+            return
         cc.n('prepare jsoncpp source code...', end='')
         if not os.path.exists(self.JSONCPP_PATH_SRC):
             cc.v('')
@@ -628,6 +631,8 @@ class BuilderMacOS(BuilderBase):
             cc.w('already exists, skip.')
 
     def _build_mongoose(self, file_name):
+        if not self._download_mongoose(file_name):
+            return
         cc.n('prepare mongoose source code...', end='')
         if not os.path.exists(self.MONGOOSE_PATH_SRC):
             cc.v('')
@@ -637,7 +642,10 @@ class BuilderMacOS(BuilderBase):
             cc.w('already exists, skip.')
 
     def _build_openssl(self, file_name):
-        if not super()._build_openssl(file_name):
+        cc.w('skip build openssl again.')
+        return
+
+        if not self._download_openssl(file_name):
             return
 
         cc.n('prepare openssl source code...', end='')
@@ -665,6 +673,8 @@ class BuilderMacOS(BuilderBase):
         os.chdir(old_p)
 
     def _build_libuv(self, file_name):
+        if not self._download_libuv(file_name):
+            return
         cc.n('prepare libuv source code...', end='')
         if not os.path.exists(self.LIBUV_PATH_SRC):
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
@@ -687,6 +697,8 @@ class BuilderMacOS(BuilderBase):
         os.chdir(old_p)
 
     def _build_mbedtls(self, file_name):
+        if not self._download_mbedtls(file_name):
+            return
         if not os.path.exists(self.MBEDTLS_PATH_SRC):
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
@@ -731,6 +743,11 @@ class BuilderMacOS(BuilderBase):
         os.chdir(old_p)
 
     def _build_libssh(self, file_name):
+        cc.n('skip build libssh on macOS.')
+        return
+        
+        if not self._download_libssh(file_name):
+            return
         if not os.path.exists(self.LIBSSH_PATH_SRC):
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
@@ -748,7 +765,6 @@ class BuilderMacOS(BuilderBase):
                        ' -DOPENSSL_LIBRARIES={path_release}/lib' \
                        ' -DWITH_SFTP=ON' \
                        ' -DWITH_SERVER=ON' \
-                       ' -DWITH_STATIC_LIB=ON' \
                        ' -DWITH_GSSAPI=OFF' \
                        ' -DWITH_ZLIB=OFF' \
                        ' -DWITH_PCAP=OFF' \
@@ -757,6 +773,8 @@ class BuilderMacOS(BuilderBase):
                        ' -DWITH_BENCHMARKS=OFF' \
                        ' -DWITH_NACL=OFF' \
                        ''.format(path_release=self.PATH_RELEASE)
+
+        # ' -DWITH_STATIC_LIB=ON'
 
         try:
             utils.cmake(build_path, 'Release', False, cmake_define)
@@ -770,6 +788,41 @@ class BuilderMacOS(BuilderBase):
         utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh.a')
         # utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', 'threads'), os.path.join(self.PATH_RELEASE, 'lib'), 'libssh_threads.a')
         utils.copy_ex(os.path.join(self.LIBSSH_PATH_SRC, 'include'), os.path.join(self.PATH_RELEASE, 'include'), 'libssh')
+
+    def _build_zlib(self, file_name):
+        # cc.w('skip build zlib again.')
+        if not self._download_zlib(file_name):
+            return
+        if not os.path.exists(self.ZLIB_PATH_SRC):
+            os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
+
+        cc.n('build zlib...', end='')
+        out_file = os.path.join(self.PATH_RELEASE, 'lib', 'libz.a')
+        if os.path.exists(out_file):
+            cc.w('already exists, skip.')
+            return
+        cc.v('')
+
+        build_path = os.path.join(self.ZLIB_PATH_SRC, 'build')
+
+        cmake_define = ' -DCMAKE_INSTALL_PREFIX={path_release}' \
+                       ' ..'.format(path_release=self.PATH_RELEASE)
+
+        old_p = os.getcwd()
+        try:
+            utils.cmake(build_path, 'Release', False, cmake_define=cmake_define, cmake_pre_define='CFLAGS="-fPIC"')
+            os.chdir(build_path)
+            utils.sys_exec('make install')
+        except:
+            pass
+        os.chdir(old_p)
+
+        utils.ensure_file_exists(out_file)
+        files = os.listdir(os.path.join(self.PATH_RELEASE, 'lib'))
+        for i in files:
+            if i.startswith('libz.so'):
+                # use os.unlink() because some file should be a link.
+                os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
 
     def _prepare_python(self):
         pass

@@ -8,7 +8,7 @@
 //=============================================
 // for About Window
 //=============================================
-"version" = "Version: ";
-"app_full_name" = "Teleport Assist for macOS";
+"version" = "";
+"app_full_name" = "Teleport Assist";
 "copyright" = "Copyright © 2017~2019, tp4a.com. All rights reserved.";
 "visit_tp4a_website" = "Visit Teleport Website"

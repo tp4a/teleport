@@ -32,3 +32,11 @@ bool TsEnv::init(const char* cfg_file, const char* res_path)
 	
 	return true;
 }
+
+extern "C" {
+int mg_ssl_if_mbed_random(void *ctx, unsigned char *buf, size_t len) {
+  (void) ctx;
+    while (len--) *buf++ = (arc4random() % 255);
+  return 0;
+}
+}
