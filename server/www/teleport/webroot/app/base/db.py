@@ -366,18 +366,21 @@ class TPDatabasePool:
         return False if self._get_connect() is None else True
 
     def query(self, sql, args):
+        log.d('SQL-QUERY: ', sql, '  args=', args, '\n')
         _conn = self._get_connect()
         if _conn is None:
             return None
         return self._do_query(_conn, sql, args)
 
     def exec(self, sql, args):
+        log.d('SQL-EXEC: ', sql, '  args=', args, '\n')
         _conn = self._get_connect()
         if _conn is None:
             return False
         return self._do_exec(_conn, sql, args)
 
     def transaction(self, sql_list):
+        log.d('SQL-TRANS:', sql_list, '\n')
         _conn = self._get_connect()
         if _conn is None:
             return False
@@ -611,7 +614,7 @@ class TPMysqlPool(TPDatabasePool):
             try:
                 conn.begin()
                 for item in sql_list:
-                    conn.execute(item['s'], item['v'])
+                    cursor.execute(item['s'], item['v'])
                 conn.commit()
                 return True
             except pymysql.err.OperationalError as e:
@@ -870,7 +873,7 @@ class SQL:
         if self._limit is not None:
             sql = self._make_sql_counter_string()
             # log.d(sql, '\n')
-            db_ret = self._db.query(sql)
+            db_ret = self._db.query(sql, vars)
             if db_ret is None or 0 == len(db_ret):
                 self._ret_page_index = 0
                 return TPE_OK
@@ -893,10 +896,10 @@ class SQL:
 
         return TPE_OK
 
-    def exec(self):
+    def exec(self, vars=None):
         sql = self._make_sql_delete_string()
         # log.d(sql, '\n')
-        if not self._db.exec(sql):
+        if not self._db.exec(sql, vars):
             return TPE_DATABASE
         else:
             return TPE_OK

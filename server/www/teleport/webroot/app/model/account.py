@@ -9,20 +9,21 @@ from app.base.stats import tp_stats
 
 
 def get_account_info(acc_id):
-    s = SQL(get_db())
+    db = get_db()
+    s = SQL(db)
     # s.select_from('acc', ['id', 'password', 'pri_key', 'state', 'host_ip', 'router_ip', 'router_port', 'protocol_type', 'protocol_port', 'auth_type', 'username'], alt_name='a')
     s.select_from('acc', ['id', 'password', 'pri_key', 'state', 'host_id', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'username_prompt', 'password_prompt'], alt_name='a')
-    s.where('a.id={}'.format(acc_id))
-    err = s.query()
+    s.where('a.id={ph}'.format(ph=db.place_holder))
+    err = s.query((acc_id, ))
     if err != TPE_OK:
         return err, None
     if len(s.recorder) != 1:
         return TPE_DATABASE, None
 
-    sh = SQL(get_db())
+    sh = SQL(db)
     sh.select_from('host', ['id', 'name', 'ip', 'router_ip', 'router_port', 'state'], alt_name='h')
-    sh.where('h.id={}'.format(s.recorder[0].host_id))
-    err = sh.query()
+    sh.where('h.id={ph}'.format(ph=db.place_holder))
+    err = sh.query((s.recorder[0].host_id, ))
     if err != TPE_OK:
         return err, None
     if len(s.recorder) != 1:
@@ -35,14 +36,15 @@ def get_account_info(acc_id):
 
 def get_host_accounts(host_id):
     # 获取指定主机的所有账号
-    s = SQL(get_db())
+    db = get_db()
+    s = SQL(db)
     # s.select_from('acc', ['id', 'state', 'host_ip', 'router_ip', 'router_port', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'pri_key'], alt_name='a')
     s.select_from('acc', ['id', 'state', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'username_prompt', 'password_prompt'], alt_name='a')
 
-    s.where('a.host_id={}'.format(host_id))
+    s.where('a.host_id={ph}'.format(ph=db.place_holder))
     s.order_by('a.username', True)
 
-    err = s.query()
+    err = s.query((host_id, ))
     return err, s.recorder
 
 
@@ -251,18 +253,18 @@ def add_account(handler, host_id, args):
     operator = handler.get_current_user()
 
     # 1. 判断是否已经存在了
-    sql = 'SELECT id FROM {}acc WHERE host_id={} AND protocol_port={} AND username="{}" AND auth_type={};'.format(db.table_prefix, host_id, args['protocol_port'], args['username'], args['auth_type'])
-    db_ret = db.query(sql)
+    sql = 'SELECT `id` FROM `{tp}acc` WHERE `host_id`={ph} AND `protocol_port`={ph} AND `username`={ph} AND `auth_type`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    db_ret = db.query(sql, (host_id, args['protocol_port'], args['username'], args['auth_type']))
     if db_ret is not None and len(db_ret) > 0:
         return TPE_EXISTS, 0
 
-    sql = 'INSERT INTO `{}acc` (host_id, host_ip, router_ip, router_port, protocol_type, protocol_port, state, auth_type, username, username_prompt, password_prompt, password, pri_key, creator_id, create_time) VALUES ' \
-          '({host_id}, "{host_ip}", "{router_ip}", {router_port}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{username_prompt}", "{password_prompt}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
-          ''.format(db.table_prefix,
-                    host_id=host_id, host_ip=args['host_ip'], router_ip=args['router_ip'], router_port=args['router_port'],
-                    protocol_type=args['protocol_type'], protocol_port=args['protocol_port'], state=TP_STATE_NORMAL,
-                    auth_type=args['auth_type'], username=args['username'], username_prompt=args['username_prompt'], password_prompt=args['password_prompt'],
-                    password=args['password'], pri_key=args['pri_key'], creator_id=operator['id'], create_time=_time_now)
+    sql_s = 'INSERT INTO `{tp}acc` (`host_id`,`host_ip`,`router_ip`,`router_port`,`protocol_type`,`protocol_port`,' \
+            '`state`,`auth_type`,`username`,`username_prompt`,`password_prompt`,`password`,`pri_key`,`creator_id`,`create_time`) VALUES ' \
+            '({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (host_id, args['host_ip'], args['router_ip'], args['router_port'], args['protocol_type'], args['protocol_port'],
+             TP_STATE_NORMAL, args['auth_type'], args['username'], args['username_prompt'], args['password_prompt'],
+             args['password'], args['pri_key'], operator['id'], _time_now)
 
     # sql = 'INSERT INTO `{}acc` (host_id, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
     #       '({host_id}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
@@ -271,7 +273,7 @@ def add_account(handler, host_id, args):
     #                 protocol_type=args['protocol_type'], protocol_port=args['protocol_port'], state=TP_STATE_NORMAL,
     #                 auth_type=args['auth_type'], username=args['username'], password=args['password'], pri_key=args['pri_key'],
     #                 creator_id=operator['id'], create_time=_time_now)
-    db_ret = db.exec(sql)
+    db_ret = db.exec(sql_s, sql_v)
     if not db_ret:
         return TPE_DATABASE, 0
 
@@ -283,9 +285,9 @@ def add_account(handler, host_id, args):
     syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "创建账号：{}".format(acc_name))
 
     # 更新主机相关账号数量
-    sql = 'UPDATE `{}host` SET acc_count=acc_count+1 WHERE id={host_id};' \
-          ''.format(db.table_prefix, host_id=host_id)
-    db_ret = db.exec(sql)
+    sql = 'UPDATE `{tp}host` SET `acc_count`=`acc_count`+1 WHERE `id`={ph};' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder)
+    db.exec(sql, (host_id, ))
     # if not db_ret:
     #     return TPE_DATABASE, 0
 
@@ -301,8 +303,8 @@ def update_account(handler, host_id, acc_id, args):
     db = get_db()
 
     # 1. 判断是否存在
-    sql = 'SELECT `id`, `host_ip`, `router_ip`, `router_port` FROM `{}acc` WHERE `host_id`={host_id} AND `id`={acc_id};'.format(db.table_prefix, host_id=host_id, acc_id=acc_id)
-    db_ret = db.query(sql)
+    sql = 'SELECT `id`,`host_ip`,`router_ip`,`router_port` FROM `{tp}acc` WHERE `host_id`={ph} AND `id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    db_ret = db.query(sql, (host_id, acc_id))
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
