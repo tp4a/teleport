@@ -382,6 +382,7 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 	if ((rv = ts_web_rpc_get_conn_info(conn_id, *info)) != TPE_OK)
 	{
 		_create_json_ret(buf, rv);
+        delete info;
 		return;
 	}
 
@@ -392,6 +393,7 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 	ex_astr sid;
 	if (!g_session_mgr.request_session(sid, info)) {
 		_create_json_ret(buf, TPE_FAILED);
+        delete info;
 		return;
 	}
 

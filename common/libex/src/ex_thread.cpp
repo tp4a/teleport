@@ -72,7 +72,7 @@ bool ExThreadBase::stop(void) {
     m_need_stop = true;
     _on_stop();
 
-    EXLOGV("[thread] wait thread [%s] exit.\n", m_thread_name.c_str());
+    EXLOGV("[thread] wait thread [%s] exit, thread-handle=0x%08x.\n", m_thread_name.c_str(), m_handle);
 
 #ifdef EX_OS_WIN32
     if (m_handle) {
