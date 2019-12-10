@@ -1,4 +1,4 @@
-#include "ts_session.h"
+ï»¿#include "ts_session.h"
 #include "ts_env.h"
 
 #include <mbedtls/sha1.h>
@@ -13,6 +13,7 @@ TsSessionManager::TsSessionManager() :
 TsSessionManager::~TsSessionManager() {
     ts_connections::iterator it_conn = m_connections.begin();
     for (; it_conn != m_connections.end(); ++it_conn) {
+        EXLOGD("[core] m_connections not clean: %s, %s\n", it_conn->first.c_str(), it_conn->second->acc_username.c_str());
         delete it_conn->second;
     }
     m_connections.clear();
@@ -28,7 +29,7 @@ void TsSessionManager::_thread_loop(void) {
 }
 
 void TsSessionManager::_remove_expired_connect_info(void) {
-    // ³¬¹ý15ÃëÎ´½øÐÐÁ¬½ÓµÄconnect-info»á±»ÒÆ³ý
+    // è¶…è¿‡15ç§’æœªè¿›è¡Œè¿žæŽ¥çš„connect-infoä¼šè¢«ç§»é™¤
 
     ExThreadSmartLock locker(m_lock);
 
@@ -87,8 +88,8 @@ bool TsSessionManager::free_connect_info(const ex_astr &sid) {
 
     it->second->ref_count--;
 
-    // ¶ÔÓÚRDPÀ´Ëµ£¬´ËÊ±²»ÒªÒÆ³ýÁ¬½ÓÐÅÏ¢£¬ÏµÍ³×Ô´øRDP¿Í»§¶ËÔÚµÚÒ»´ÎÁ¬½ÓÊ±½øÐÐÐ­ÒéÐ­ÉÌ£¬È»ºóÂíÉÏ»á¶Ï¿ª£¬Ö®ºóÁ¢¼´ÖØÐÂÁ¬½ÓÒ»´Î£¨µÚ¶þ´ÎÁ¬½ÓÖ®Ç°¿ÉÄÜ»áÌáÊ¾Ö¤ÊéÐÅÏ¢£¬Èç¹ûÓÃ»§³¤Ê±¼ä²»²Ù×÷£¬¿ÉÄÜ»áµ¼ÖÂ³¬Ê±£©¡£
-    // Òò´Ë£¬ÎÒÃÇ½«ÆäÒýÓÃ¼ÆÊý¼õµÍ£¬²¢¸üÐÂÒ»ÏÂ×îºó·ÃÎÊÊ±¼ä£¬ÈÃ¶¨Ê±Æ÷À´ÒÆ³ýËü¡£
+    // å¯¹äºŽRDPæ¥è¯´ï¼Œæ­¤æ—¶ä¸è¦ç§»é™¤è¿žæŽ¥ä¿¡æ¯ï¼Œç³»ç»Ÿè‡ªå¸¦RDPå®¢æˆ·ç«¯åœ¨ç¬¬ä¸€æ¬¡è¿žæŽ¥æ—¶è¿›è¡Œåè®®åå•†ï¼Œç„¶åŽé©¬ä¸Šä¼šæ–­å¼€ï¼Œä¹‹åŽç«‹å³é‡æ–°è¿žæŽ¥ä¸€æ¬¡ï¼ˆç¬¬äºŒæ¬¡è¿žæŽ¥ä¹‹å‰å¯èƒ½ä¼šæç¤ºè¯ä¹¦ä¿¡æ¯ï¼Œå¦‚æžœç”¨æˆ·é•¿æ—¶é—´ä¸æ“ä½œï¼Œå¯èƒ½ä¼šå¯¼è‡´è¶…æ—¶ï¼‰ã€‚
+    // å› æ­¤ï¼Œæˆ‘ä»¬å°†å…¶å¼•ç”¨è®¡æ•°å‡ä½Žï¼Œå¹¶æ›´æ–°ä¸€ä¸‹æœ€åŽè®¿é—®æ—¶é—´ï¼Œè®©å®šæ—¶å™¨æ¥ç§»é™¤å®ƒã€‚
     if (it->second->protocol_type != TP_PROTOCOL_TYPE_RDP) {
         if (it->second->ref_count <= 0) {
             EXLOGD("[core] remove connection info, because all connections closed: %s\n", it->first.c_str());
@@ -99,7 +100,7 @@ bool TsSessionManager::free_connect_info(const ex_astr &sid) {
     } else {
         if (it->second->ref_count == 1)
             it->second->ref_count = 0;
-        it->second->ticket_start = ex_get_tick_count() + 45000; // ÎÒÃÇ½«Ê±¼äÏòºóÒÆ¶¯45Ãë£¬ÕâÑùÈç¹ûÃ»ÓÐ·¢ÉúRDPµÄµÚ¶þ´ÎÁ¬½Ó£¬Õâ¸öÁ¬½ÓÐÅÏ¢¾Í»áÔÚÒ»·ÖÖÓºó±»Çå³ý¡£
+        it->second->ticket_start = ex_get_tick_count() + 45000; // æˆ‘ä»¬å°†æ—¶é—´å‘åŽç§»åŠ¨45ç§’ï¼Œè¿™æ ·å¦‚æžœæ²¡æœ‰å‘ç”ŸRDPçš„ç¬¬äºŒæ¬¡è¿žæŽ¥ï¼Œè¿™ä¸ªè¿žæŽ¥ä¿¡æ¯å°±ä¼šåœ¨ä¸€åˆ†é’ŸåŽè¢«æ¸…é™¤ã€‚
     }
 
 
@@ -133,7 +134,7 @@ bool TsSessionManager::request_session(ex_astr &sid, TS_CONNECT_INFO *info) {
 
     sid = _sid;
     if (info->protocol_type == TP_PROTOCOL_TYPE_RDP) {
-        info->ref_count = 1; // ÒòÎªRDPÁ¬½ÓÖ®Ç°¿ÉÄÜ»áÓÐºÜ³¤Ê±¼äÓÃÓÚÈ·ÈÏÊÇ·ñÁ¬½Ó¡¢ÊÇ·ñÐÅÈÎÖ¤Êé£¬ËùÒÔºÜÈÝÒ×³¬Ê±£¬ÎÒÃÇÈÏÎª½«ÒýÓÃ¼ÆÊý+1£¬·ÀÖ¹Òò³¬Ê±±»Çå³ý¡£
+        info->ref_count = 1; // å› ä¸ºRDPè¿žæŽ¥ä¹‹å‰å¯èƒ½ä¼šæœ‰å¾ˆé•¿æ—¶é—´ç”¨äºŽç¡®è®¤æ˜¯å¦è¿žæŽ¥ã€æ˜¯å¦ä¿¡ä»»è¯ä¹¦ï¼Œæ‰€ä»¥å¾ˆå®¹æ˜“è¶…æ—¶ï¼Œæˆ‘ä»¬è®¤ä¸ºå°†å¼•ç”¨è®¡æ•°+1ï¼Œé˜²æ­¢å› è¶…æ—¶è¢«æ¸…é™¤ã€‚
         char szTmp[8] = {0};
         snprintf(szTmp, 8, "%02X", (unsigned char) (info->acc_username.length() + info->acc_secret.length()));
         sid += szTmp;
