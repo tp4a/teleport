@@ -97,7 +97,7 @@ def login(handler, username, password=None, oath_code=None, check_bind_oath=Fals
 
     err_msg = ''
     if password is not None:
-        if user_info['type'] == TP_USER_TYPE_LOCAL:
+        if user_info['type'] == TpUserType.LOCAL:
             # 如果系统配置了密码有效期，则检查用户的密码是否失效
             if sys_cfg.password.timeout != 0:
                 _time_now = tp_timestamp_sec()
