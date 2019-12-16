@@ -120,7 +120,7 @@ class TPDatabase:
         self.place_holder = '?'
         self.sqlite_file = db_file
 
-        self._table_prefix = tp_cfg().database.db_prefix
+        self._table_prefix = tp_cfg().database.mysql_prefix
         self._conn_pool = TPSqlitePool(db_file)
 
         if not os.path.exists(db_file):
