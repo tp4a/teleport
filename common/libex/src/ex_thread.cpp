@@ -20,7 +20,7 @@ void *ExThreadBase::_thread_func(void *pParam)
     _this->m_is_running = false;
     _this->m_handle = 0;
 
-    EXLOGV("  # thread [%s] exit.\n", _this->m_thread_name.c_str());
+    EXLOGV("[thread] - `%s` exit.\n", _this->m_thread_name.c_str());
     _this->_on_stopped();
     return 0;
 }
@@ -34,13 +34,13 @@ ExThreadBase::ExThreadBase(const char *thread_name) :
 
 ExThreadBase::~ExThreadBase() {
     if(m_is_running) {
-        EXLOGE("  # thread [%s] not stop before destroy.\n", m_thread_name.c_str());
+        EXLOGE("[thread] `%s` not stop before destroy.\n", m_thread_name.c_str());
     }
 }
 
 bool ExThreadBase::start(void) {
     m_need_stop = false;
-    EXLOGV("  . thread [%s] starting.\n", m_thread_name.c_str());
+    EXLOGV("[thread] + `%s` starting.\n", m_thread_name.c_str());
 #ifdef WIN32
     HANDLE h = (HANDLE)_beginthreadex(NULL, 0, _thread_func, (void*)this, 0, NULL);
 
@@ -64,15 +64,15 @@ bool ExThreadBase::start(void) {
 
 bool ExThreadBase::stop(void) {
     if (m_handle == 0) {
-        EXLOGW("[thread] thread [%s] already stopped.\n", m_thread_name.c_str());
+        EXLOGW("[thread] `%s` already stopped before stop() call.\n", m_thread_name.c_str());
         return true;
     }
 
-    EXLOGV("[thread] try to stop thread [%s].\n", m_thread_name.c_str());
+    EXLOGV("[thread] - try to stop `%s.\n", m_thread_name.c_str());
     m_need_stop = true;
     _on_stop();
 
-    EXLOGV("[thread] wait thread [%s] exit, thread-handle=0x%08x.\n", m_thread_name.c_str(), m_handle);
+    EXLOGV("[thread] - wait `%s` exit, thread-handle=0x%08x.\n", m_thread_name.c_str(), m_handle);
 
 #ifdef EX_OS_WIN32
     if (m_handle) {
@@ -107,7 +107,7 @@ ExThreadManager::ExThreadManager() {}
 
 ExThreadManager::~ExThreadManager() {
     if (!m_threads.empty()) {
-        EXLOGE("when destroy thread manager, there are %d thread not exit.\n", m_threads.size());
+        EXLOGE("[thread] when destroy thread manager, there are %d thread not exit.\n", m_threads.size());
         stop_all();
     }
 }
@@ -128,7 +128,7 @@ void ExThreadManager::add(ExThreadBase *tb) {
     ex_threads::iterator it = m_threads.begin();
     for (; it != m_threads.end(); ++it) {
         if ((*it) == tb) {
-            EXLOGE("when add thread to manager, it already exist.\n");
+            EXLOGE("[thread] when add thread to manager, it already exist.\n");
             return;
         }
     }
@@ -146,7 +146,7 @@ void ExThreadManager::remove(ExThreadBase *tb) {
             return;
         }
     }
-    EXLOGE("thread not hold by thread-manager while remove it.\n");
+    EXLOGE("[thread] thread not hold by thread-manager while remove it.\n");
 }
 
 //=========================================================
