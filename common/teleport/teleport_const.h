@@ -113,7 +113,8 @@
 #define TPE_UNKNOWN_CMD				124		// 未知的命令
 #define TPE_JSON_FORMAT				125		// 错误的JSON格式（需要JSON格式数据，但是却无法按JSON格式解码）
 #define TPE_PARAM					126		// 参数错误
-#define TPE_DATA					127		// 数据错误
+#define TPE_INVALID_DATA			127		// 数据错误
+#define TPE_UNEXPECTED_DATA			128		// 不是期望的数据
 
 // #define TPE_OPENFILE_ERROR			0x1007	// 无法打开文件
 // #define TPE_GETTEMPPATH_ERROR		0x1007
