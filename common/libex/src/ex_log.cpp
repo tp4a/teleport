@@ -287,19 +287,43 @@ void ex_printf_bin(const ex_u8* bin_data, size_t bin_size, const char* fmt, ...)
 
 	ExThreadSmartLock locker(g_exlog->lock);
 
-	va_list valist;
-	va_start(valist, fmt);
-	g_exlog->log_a(EX_LOG_LEVEL_DEBUG, fmt, valist);
-	va_end(valist);
 
-	ex_printf_d(" (%d/0x%02x Bytes)\n", bin_size, bin_size);
+
+    if (NULL == fmt)
+        return;
+    if (0 == strlen(fmt))
+        return;
+
+    char szTmp[128] = { 0 };
+//     size_t offset = 0;
+
+    va_list valist;
+    va_start(valist, fmt);
+
+#ifdef EX_OS_WIN32
+    vsnprintf_s(szTmp, 128, 127, fmt, valist);
+#else
+    vsnprintf(szTmp, 127, fmt, valist);
+#endif
+    va_end(valist);
+
+//
+//
+//
+//
+//     va_list valist;
+// 	va_start(valist, fmt);
+// 	g_exlog->log_a(EX_LOG_LEVEL_DEBUG, fmt, valist);
+// 	va_end(valist);
+//
+ 	ex_printf_d("%s (%d/0x%02x Bytes)\n", szTmp, bin_size, bin_size);
 
 	const ex_u8* line = bin_data;
 	size_t thisline = 0;
 	size_t offset = 0;
 	unsigned int i = 0;
 
-	char szTmp[128] = { 0 };
+// 	char szTmp[128] = { 0 };
 	size_t _offset = 0;
 
 	while (offset < bin_size)
