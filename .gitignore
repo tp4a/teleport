@@ -9,6 +9,9 @@
 *.aps
 **/ipch
 
+*.tpr
+*.tpd
+
 # for CMake
 CMakeFiles
 cmake_install.cmake

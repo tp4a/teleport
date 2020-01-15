@@ -540,7 +540,7 @@ class BuilderLinux(BuilderBase):
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
                        ' -DWITH_NACL=OFF' \
-                       ' ..'.format(path_release=self.PATH_RELEASE)
+                       ''.format(path_release=self.PATH_RELEASE)
 
         # ' -DWITH_STATIC_LIB=ON'
 
@@ -743,8 +743,8 @@ class BuilderMacOS(BuilderBase):
         os.chdir(old_p)
 
     def _build_libssh(self, file_name):
-        cc.n('skip build libssh on macOS.')
-        return
+        # cc.n('skip build libssh on macOS.')
+        # return
         
         if not self._download_libssh(file_name):
             return
@@ -761,13 +761,16 @@ class BuilderMacOS(BuilderBase):
         build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
 
         cmake_define = ' -DCMAKE_INSTALL_PREFIX={path_release}' \
-                       ' -DOPENSSL_INCLUDE_DIR={path_release}/include' \
-                       ' -DOPENSSL_LIBRARIES={path_release}/lib' \
+                       ' -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include' \
+                       ' -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib' \
+                       ' -DWITH_GCRYPT=OFF' \
+                       ' -DWITH_GEX=OFF' \
                        ' -DWITH_SFTP=ON' \
                        ' -DWITH_SERVER=ON' \
                        ' -DWITH_GSSAPI=OFF' \
-                       ' -DWITH_ZLIB=OFF' \
+                       ' -DWITH_ZLIB=ON' \
                        ' -DWITH_PCAP=OFF' \
+                       ' -DBUILD_SHARED_LIBS=OFF' \
                        ' -DUNIT_TESTING=OFF' \
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
