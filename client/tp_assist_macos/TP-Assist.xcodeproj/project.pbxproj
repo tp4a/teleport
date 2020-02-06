@@ -631,7 +631,10 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/TP-Assist-Prefix.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = MG_ENABLE_SSL;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					MG_ENABLE_SSL,
+					"MG_SSL_IF=MG_SSL_IF_MBEDTLS",
+				);
 				HEADER_SEARCH_PATHS = (
 					../../common/teleport,
 					../../common/libex/include,

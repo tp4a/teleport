@@ -264,7 +264,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 					_this->_process_js_request(method, json_param, ret_buf);
 				}
 
-				mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %ld\r\nContent-Type: application/json\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
+				mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %ld\r\nContent-Type: application/json\r\n\r\n%s", ret_buf.length(), ret_buf.c_str());
 				nc->flags |= MG_F_SEND_AND_CLOSE;
 				return;
 			}
@@ -308,7 +308,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 			ex_wstr page = L"<html lang=\"zh_CN\"><html><head><title>404 Not Found</title></head><body bgcolor=\"white\"><center><h1>404 Not Found</h1></center><hr><center><p>Teleport Assistor configuration page not found.</p></center></body></html>";
 			ex_wstr2astr(page, ret_buf, EX_CODEPAGE_UTF8);
 
-			mg_printf(nc, "HTTP/1.0 404 File Not Found\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %ld\r\nContent-Type: text/html\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
+			mg_printf(nc, "HTTP/1.0 404 File Not Found\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %ld\r\nContent-Type: text/html\r\n\r\n%s", ret_buf.length(), ret_buf.c_str());
 			nc->flags |= MG_F_SEND_AND_CLOSE;
 			return;
 		}
@@ -449,35 +449,41 @@ void TsHttpRpc::_create_json_ret(ex_astr& buf, int errcode)
 {
 	// return {"code":123}
 
-	Json::FastWriter jr_writer;
 	Json::Value jr_root;
-
 	jr_root["code"] = errcode;
-	buf = jr_writer.write(jr_root);
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(jr_root, &os);
+    buf = os.str();
 }
 
 void TsHttpRpc::_create_json_ret(ex_astr& buf, Json::Value& jr_root)
 {
-	Json::FastWriter jr_writer;
-	buf = jr_writer.write(jr_root);
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(jr_root, &os);
+    buf = os.str();
 }
 
-void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
-{
+void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
 	// param: {"ip":"192.168.5.11","port":22,"uname":"root","uauth":"abcdefg","authmode":1,"protocol":2}
 	//   authmode: 1=password, 2=private-key
 	//   protocol: 1=rdp, 2=ssh
 	// SSH return {"code":0, "data":{"sid":"0123abcde"}}
 	// RDP return {"code":0, "data":{"sid":"0123abcde0A"}}
 
-	Json::Reader jreader;
-	Json::Value jsRoot;
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
+    const char *str_json_begin = func_args.c_str();
 
-	if (!jreader.parse(func_args.c_str(), jsRoot))
-	{
-		_create_json_ret(buf, TPE_JSON_FORMAT);
-		return;
-	}
+    Json::Value jsRoot;
+    ex_astr err;
+    if (!jreader->parse(str_json_begin, str_json_begin + func_args.length(), &jsRoot, &err)) {
+        _create_json_ret(buf, TPE_JSON_FORMAT);
+        return;
+    }
 	if (!jsRoot.isObject())
 	{
 		_create_json_ret(buf, TPE_PARAM);
@@ -513,8 +519,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	ex_astrs s_argv;
 
 
-	if (pro_type == TP_PROTOCOL_TYPE_RDP)
-	{
+	if (pro_type == TP_PROTOCOL_TYPE_RDP) {
 		//==============================================
 		// RDP
 		//==============================================
@@ -588,16 +593,27 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 		//w_exe_path = _T("xfreerdp -u {user_name} {size} {console} ");
 		//s_exec = "/usr/local/Cellar/freerdp/1.0.2_1/bin/xfreerdp";
 		s_exec = g_cfg.rdp.application;
-		s_argv.push_back(s_exec.c_str());
+        s_arg = g_cfg.rdp.cmdline;
+
+        sid = "02" + real_sid;
+        s_argv.push_back("/f");
+
+        ex_astr _tmp_pass = "/p:";
+        _tmp_pass += szPwd;
+        s_argv.push_back(_tmp_pass);
+        
+#if 0
+        //s_argv.push_back(s_exec.c_str());
 
 		{
 			ex_astr username = "02" + real_sid;
 
-			s_argv.push_back("-u");
-			s_argv.push_back(username.c_str());
+//			s_argv.push_back("/u:");
+//			s_argv.push_back(username.c_str());
+            
 
 			if (rdp_w == 0 || rdp_h == 0) {
-				s_argv.push_back("-f");
+				s_argv.push_back("/f");
 			}
 			else {
 				char sz_size[64] = {0};
@@ -625,10 +641,9 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 				s_argv.push_back(sz_temp);
 			}
 		}
-
+#endif
 	}
-	else if (pro_type == TP_PROTOCOL_TYPE_SSH)
-	{
+	else if (pro_type == TP_PROTOCOL_TYPE_SSH) {
 		//==============================================
 		// SSH
 		//==============================================
@@ -676,11 +691,9 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
             s_argv.push_back(s_exec.c_str());
 
             s_arg = g_cfg.sftp.cmdline;
-
         }
 	}
-	else if (pro_type == TP_PROTOCOL_TYPE_TELNET)
-	{
+	else if (pro_type == TP_PROTOCOL_TYPE_TELNET) {
 		//==============================================
 		// TELNET
 		//==============================================
@@ -811,31 +824,36 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf)
 	_create_json_ret(buf, root_ret);
 }
 
-
-
-void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf)
-{
+void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf) {
 	_create_json_ret(buf, TPE_NOT_IMPLEMENT);
 }
 
-void TsHttpRpc::_rpc_func_get_config(const ex_astr& func_args, ex_astr& buf)
-{
+void TsHttpRpc::_rpc_func_get_config(const ex_astr& func_args, ex_astr& buf) {
 	Json::Value jr_root;
 	jr_root["code"] = 0;
 	jr_root["data"] = g_cfg.get_root();
 	_create_json_ret(buf, jr_root);
 }
 
-void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf)
-{
-	Json::Reader jreader;
-	Json::Value jsRoot;
-	if (!jreader.parse(func_args.c_str(), jsRoot))
-	{
-		_create_json_ret(buf, TPE_JSON_FORMAT);
-		return;
-	}
+void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf) {
+//	Json::Reader jreader;
+//	Json::Value jsRoot;
+//	if (!jreader.parse(func_args.c_str(), jsRoot))
+//	{
+//		_create_json_ret(buf, TPE_JSON_FORMAT);
+//		return;
+//	}
 
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
+    const char *str_json_begin = func_args.c_str();
+    Json::Value jsRoot;
+    ex_astr err;
+    if (!jreader->parse(str_json_begin, str_json_begin + func_args.length(), &jsRoot, &err)) {
+        _create_json_ret(buf, TPE_JSON_FORMAT);
+        return;
+    }
+    
 	if(!g_cfg.save(func_args))
 		_create_json_ret(buf, TPE_FAILED);
 	else
@@ -883,8 +901,7 @@ void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
 #endif
 }
 
-void TsHttpRpc::_rpc_func_get_version(const ex_astr& func_args, ex_astr& buf)
-{
+void TsHttpRpc::_rpc_func_get_version(const ex_astr& func_args, ex_astr& buf) {
 	Json::Value root_ret;
 	ex_wstr w_version = TP_ASSIST_VER;
 	ex_astr version;

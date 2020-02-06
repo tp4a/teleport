@@ -152,6 +152,9 @@ class BuilderMacOS(BuilderBase):
         utils.xcode_build(proj_file, 'TP-Assist', configuration, False)
         utils.ensure_file_exists(os.path.join(out_file, 'Contents', 'Info.plist'))
 
+    def build_player(self):
+        cc.o('skip build tp_player now...')
+
     def build_installer(self):
         cc.i('make tp_assist dmg file...')
 
