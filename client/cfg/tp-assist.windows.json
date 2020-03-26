@@ -1,9 +1,8 @@
 {
     "ssh": {
         "selected": "putty",
-        "available": [
-            {
-                "name":"putty",
+        "available": [{
+                "name": "putty",
                 "display": "PuTTY（内置）",
                 "app": "{assist_tools_path}\\putty\\putty.exe",
                 "cmdline": "-ssh -pw **** -P {host_port} -l {user_name} {host_ip}"
@@ -30,9 +29,8 @@
     },
     "scp": {
         "selected": "winscp",
-        "available": [
-            {
-                "name":"winscp",
+        "available": [{
+                "name": "winscp",
                 "display": "WinSCP（内置）",
                 "app": "{assist_tools_path}\\winscp\\winscp.exe",
                 "cmdline": "/sessionname=\"TP#{real_ip}\" {user_name}:****@{host_ip}:{host_port}"
@@ -47,9 +45,8 @@
     },
     "telnet": {
         "selected": "putty",
-        "available": [
-            {
-                "name":"putty",
+        "available": [{
+                "name": "putty",
                 "display": "PuTTY（内置）",
                 "app": "{assist_tools_path}\\putty\\putty.exe",
                 "cmdline": "telnet://{user_name}@{host_ip}:{host_port}"
@@ -68,21 +65,20 @@
             }
         ]
     },
-   "rdp" : {
-      "available" : [
-         {
-            "app" : "mstsc.exe",
-            "cmdline" : "\"{tmp_rdp_file}\"",
-            "display" : "微软RDP客户端（系统自带）",
-            "name" : "mstsc"
-         },
-	 {
-            "app" : "{assist_tools_path}\\tprdp\\tprdp-client.exe",
-            "cmdline" : "/v:{host_ip}:{host_port} /u:{user_name} /t:\"TP#{real_ip}\"",
-            "display" : "FreeRDP（内置）",
-            "name" : "freerdp"
-         }
-      ],
-      "selected" : "mstsc"
-   }
+    "rdp": {
+        "available": [{
+                "app": "mstsc.exe",
+                "cmdline": "\"{tmp_rdp_file}\"",
+                "display": "微软RDP客户端（系统自带）",
+                "name": "mstsc"
+            },
+            {
+                "app": "{assist_tools_path}\\tprdp\\wfreerdp.exe",
+                "cmdline": "/v:{host_ip}:{host_port} /u:{user_name} /t:\"TP#{real_ip}\"",
+                "display": "FreeRDP（内置）",
+                "name": "freerdp"
+            }
+        ],
+        "selected": "mstsc"
+    }
 }

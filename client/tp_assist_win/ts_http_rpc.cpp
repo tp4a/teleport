@@ -1174,7 +1174,7 @@ void TsHttpRpc::_rpc_func_file_action(const ex_astr& func_args, ex_astr& buf) {
             return;
         }
     } else {
-        _create_json_ret(buf, TPE_DATA);
+        _create_json_ret(buf, TPE_FAILED);
         return;
     }
 }

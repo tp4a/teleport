@@ -66,7 +66,7 @@ static QImage* _rdpimg2QImage(int w, int h, int bitsPerPixel, bool isCompressed,
     case 24:
     case 32:
     default:
-        qDebug() << "--------NOT support UNKNOWN bitsPerPix" << bitsPerPixel;
+        qDebug() << "--------NOT support " << bitsPerPixel << " bitsPerPix.";
         return nullptr;
     }
 }
