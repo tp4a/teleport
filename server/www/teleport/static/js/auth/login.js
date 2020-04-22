@@ -242,7 +242,7 @@ $app.do_account_login = function (username, password, captcha, oath, is_remember
 
                 if (ret.code === TPE_EXPIRED) {
                     // must change password before login.
-                    window.location.href = '/user/change-expired-password?username=' + username;
+                    window.location.href = '/user/change-expired-password?username=' + encodeURIComponent(username);
                 }
 
                 $app.show_op_box('error', '登录失败：' + tp_error_msg(ret.code, ret.message));
