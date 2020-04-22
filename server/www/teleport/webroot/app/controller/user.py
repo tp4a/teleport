@@ -4,7 +4,7 @@ import csv
 import json
 import os
 import time
-from urllib import parse
+import urllib
 
 import tornado.gen
 from app.base import mail
@@ -117,7 +117,7 @@ class ResetPasswordHandler(TPBaseHandler):
 
 class ChangeExpiredPasswordHandler(TPBaseHandler):
     def get(self):
-        _username = parse.unquote(self.get_argument('username', None))
+        _username = urllib.unquote(self.get_argument('username', None))
         if _username is None:
             return self.redirect('/')
 
