@@ -467,7 +467,10 @@ class TPSqlitePool(TPDatabasePool):
                 for item in sql_list:
                     # s = item['s']
                     # v = item['v']
-                    conn.execute(item['s'], item['v'])
+                    if item['v'] is None:
+                        conn.execute(item['s'])
+                    else:
+                        conn.execute(item['s'], item['v'])
             return True
         except Exception as e:
             # log.d('|||', s, '|||', v, '|||', '\n')
