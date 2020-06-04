@@ -229,7 +229,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
 //         if (uri == "/") {
 //             ex_wstr page = L"<html lang=\"zh_CN\"><head><meta charset=\"utf-8\"/><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>Teleport÷˙ ÷</title>\n<style type=\"text/css\">\n.box{padding:20px;margin:40px;border:1px solid #78b17c;background-color:#e4ffe5;}\n</style>\n</head><body><div class=\"box\">Teleport Assistor works fine.</div></body></html>";
 //             ex_wstr2astr(page, ret_buf, EX_CODEPAGE_UTF8);
-// 
+//
 //             mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: text/html\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
 //             nc->flags |= MG_F_SEND_AND_CLOSE;
 //             return;
@@ -601,7 +601,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
         ex_astr _tmp_pass = "/p:";
         _tmp_pass += szPwd;
         s_argv.push_back(_tmp_pass);
-        
+
 #if 0
         //s_argv.push_back(s_exec.c_str());
 
@@ -610,7 +610,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
 
 //			s_argv.push_back("/u:");
 //			s_argv.push_back(username.c_str());
-            
+
 
 			if (rdp_w == 0 || rdp_h == 0) {
 				s_argv.push_back("/f");
@@ -652,7 +652,7 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
 		{
             if(g_cfg.ssh.name == "terminal" || g_cfg.ssh.name == "iterm2") {
                 char szCmd[1024] = {0};
-                ex_strformat(szCmd, 1023, "ssh %s@%s -p %d", sid.c_str(), teleport_ip.c_str(), teleport_port);
+                ex_strformat(szCmd, 1023, "ssh %s@%s -p %d -o \"StrictHostKeyChecking no\"", sid.c_str(), teleport_ip.c_str(), teleport_port);
 
                 char szTitle[128] = {0};
                 ex_strformat(szTitle, 127, "TP#%s", real_host_ip.c_str());
@@ -853,7 +853,7 @@ void TsHttpRpc::_rpc_func_set_config(const ex_astr& func_args, ex_astr& buf) {
         _create_json_ret(buf, TPE_JSON_FORMAT);
         return;
     }
-    
+
 	if(!g_cfg.save(func_args))
 		_create_json_ret(buf, TPE_FAILED);
 	else
