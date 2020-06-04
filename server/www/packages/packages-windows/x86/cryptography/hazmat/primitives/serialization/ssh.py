@@ -4,40 +4,14 @@
 
 from __future__ import absolute_import, division, print_function
 
-import abc
 import base64
 import struct
-from enum import Enum
 
 import six
 
 from cryptography import utils
 from cryptography.exceptions import UnsupportedAlgorithm
-from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
-
-
-def load_pem_private_key(data, password, backend):
-    return backend.load_pem_private_key(data, password)
-
-
-def load_pem_public_key(data, backend):
-    return backend.load_pem_public_key(data)
-
-
-def load_pem_parameters(data, backend):
-    return backend.load_pem_parameters(data)
-
-
-def load_der_private_key(data, password, backend):
-    return backend.load_der_private_key(data, password)
-
-
-def load_der_public_key(data, backend):
-    return backend.load_der_public_key(data)
-
-
-def load_der_parameters(data, backend):
-    return backend.load_der_parameters(data)
+from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed25519, rsa
 
 
 def load_ssh_public_key(data, backend):
@@ -57,6 +31,8 @@ def load_ssh_public_key(data, backend):
         b'ecdsa-sha2-nistp256', b'ecdsa-sha2-nistp384', b'ecdsa-sha2-nistp521',
     ]:
         loader = _load_ssh_ecdsa_public_key
+    elif key_type == b'ssh-ed25519':
+        loader = _load_ssh_ed25519_public_key
     else:
         raise UnsupportedAlgorithm('Key type is not supported.')
 
@@ -125,8 +101,16 @@ def _load_ssh_ecdsa_public_key(expected_key_type, decoded_data, backend):
             "Compressed elliptic curve points are not supported"
         )
 
-    numbers = ec.EllipticCurvePublicNumbers.from_encoded_point(curve, data)
-    return numbers.public_key(backend)
+    return ec.EllipticCurvePublicKey.from_encoded_point(curve, data)
+
+
+def _load_ssh_ed25519_public_key(expected_key_type, decoded_data, backend):
+    data, rest = _ssh_read_next_string(decoded_data)
+
+    if rest:
+        raise ValueError('Key body contains extra bytes.')
+
+    return ed25519.Ed25519PublicKey.from_public_bytes(data)
 
 
 def _ssh_read_next_string(data):
@@ -167,43 +151,3 @@ def _ssh_write_mpint(value):
     if six.indexbytes(data, 0) & 0x80:
         data = b"\x00" + data
     return _ssh_write_string(data)
-
-
-class Encoding(Enum):
-    PEM = "PEM"
-    DER = "DER"
-    OpenSSH = "OpenSSH"
-
-
-class PrivateFormat(Enum):
-    PKCS8 = "PKCS8"
-    TraditionalOpenSSL = "TraditionalOpenSSL"
-
-
-class PublicFormat(Enum):
-    SubjectPublicKeyInfo = "X.509 subjectPublicKeyInfo with PKCS#1"
-    PKCS1 = "Raw PKCS#1"
-    OpenSSH = "OpenSSH"
-
-
-class ParameterFormat(Enum):
-    PKCS3 = "PKCS3"
-
-
-@six.add_metaclass(abc.ABCMeta)
-class KeySerializationEncryption(object):
-    pass
-
-
-@utils.register_interface(KeySerializationEncryption)
-class BestAvailableEncryption(object):
-    def __init__(self, password):
-        if not isinstance(password, bytes) or len(password) == 0:
-            raise ValueError("Password must be 1 or more bytes.")
-
-        self.password = password
-
-
-@utils.register_interface(KeySerializationEncryption)
-class NoEncryption(object):
-    pass

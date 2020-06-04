@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -81,6 +81,8 @@ class Cursor(object):
             connection._fire_deferred()
 
         if isinstance(object_def, (STRING_TYPES, SEQUENCE_TYPES)):
+            if connection.closed:  # try to open connection if closed to read schema
+                connection.bind()
             object_def = ObjectDef(object_def, connection.server.schema, auxiliary_class=auxiliary_class)
         self.definition = object_def
         if attributes:  # checks if requested attributes are defined in ObjectDef
@@ -311,7 +313,7 @@ class Cursor(object):
 
         entry = self.entry_class(response['dn'], self)  # define an Entry (writable or readonly), as specified in the cursor definition
         entry._state.attributes = self._get_attributes(response, self.definition._attributes, entry)
-        entry._state.entry_raw_attributes = deepcopy(response['raw_attributes'])
+        entry._state.raw_attributes = deepcopy(response['raw_attributes'])
 
         entry._state.response = response
         entry._state.read_time = datetime.now()
@@ -363,7 +365,7 @@ class Cursor(object):
                 self.entries.append(entry)
                 if 'objectClass' in entry:
                     for object_class in entry.objectClass:
-                        if self.schema.object_classes[object_class].kind == CLASS_AUXILIARY and object_class not in self.definition._auxiliary_class:
+                        if self.schema and self.schema.object_classes[object_class].kind == CLASS_AUXILIARY and object_class not in self.definition._auxiliary_class:
                             # add auxiliary class to object definition
                             self.definition._auxiliary_class.append(object_class)
                             self.definition._populate_attr_defs(object_class)

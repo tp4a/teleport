@@ -4,14 +4,22 @@ Implements auth methods
 from ._compat import text_type, PY2
 from .constants import CLIENT
 from .err import OperationalError
+from .util import byte2int, int2byte
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import padding
+
+try:
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import serialization, hashes
+    from cryptography.hazmat.primitives.asymmetric import padding
+    _have_cryptography = True
+except ImportError:
+    _have_cryptography = False
 
 from functools import partial
 import hashlib
+import io
 import struct
+import warnings
 
 
 DEBUG = False
@@ -69,6 +77,8 @@ class RandStruct_323(object):
 
 def scramble_old_password(password, message):
     """Scramble for old_password"""
+    warnings.warn("old password (for MySQL <4.1) is used.  Upgrade your password with newer auth method.\n"
+                  "old password support will be removed in future PyMySQL version")
     hash_pass = _hash_password_323(password)
     hash_message = _hash_password_323(message[:SCRAMBLE_LENGTH_323])
     hash_pass_n = struct.unpack(">LL", hash_pass)
@@ -128,6 +138,8 @@ def sha2_rsa_encrypt(password, salt, public_key):
 
     Used for sha256_password and caching_sha2_password.
     """
+    if not _have_cryptography:
+        raise RuntimeError("cryptography is required for sha256_password or caching_sha2_password")
     message = _xor_password(password + b'\0', salt)
     rsa_key = serialization.load_pem_public_key(public_key, default_backend())
     return rsa_key.encrypt(
