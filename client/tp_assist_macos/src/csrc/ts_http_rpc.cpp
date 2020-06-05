@@ -596,18 +596,25 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
         s_arg = g_cfg.rdp.cmdline;
 
         sid = "02" + real_sid;
-        s_argv.push_back("/f");
+//        s_argv.push_back("/f");
 
-        ex_astr _tmp_pass = "/p:";
-        _tmp_pass += szPwd;
+        s_argv.push_back("/sec:tls");
+        s_argv.push_back("-wallpaper");
+        s_argv.push_back("-themes");
+        // Ignore certificate
+        s_argv.push_back("/cert-ignore");
+        // Automatically accept certificate on first connect
+        s_argv.push_back("/cert-tofu");
+
+        ex_astr _tmp_pass = "/p:PLACEHOLDER";
+        //_tmp_pass += szPwd;
         s_argv.push_back(_tmp_pass);
 
-#if 0
+//#if 0
         //s_argv.push_back(s_exec.c_str());
 
 		{
-			ex_astr username = "02" + real_sid;
-
+//			ex_astr username = "02" + real_sid;
 //			s_argv.push_back("/u:");
 //			s_argv.push_back(username.c_str());
 
@@ -616,11 +623,18 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
 				s_argv.push_back("/f");
 			}
 			else {
-				char sz_size[64] = {0};
-				ex_strformat(sz_size, 63, "%dx%d", rdp_w, rdp_h);
-				s_argv.push_back("-g");
-				s_argv.push_back(sz_size);
-			}
+//				char sz_size[64] = {0};
+//				ex_strformat(sz_size, 63, "%dx%d", rdp_w, rdp_h);
+//				s_argv.push_back("-g");
+//				s_argv.push_back(sz_size);
+                char sz_width[64] = {0};
+                ex_strformat(sz_width, 63, "/w:%d", rdp_w);
+                s_argv.push_back(sz_width);
+            
+                char sz_height[64] = {0};
+                ex_strformat(sz_height, 63, "/h:%d", rdp_h);
+                s_argv.push_back(sz_height);
+            }
 
 			if (flag_console && rdp_console)
 				s_argv.push_back("/admin");
@@ -634,14 +648,14 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
 //				s_argv.push_back("+drives");
 //			else
 //				s_argv.push_back("-drives");
-
-			{
-				char sz_temp[128] = {0};
-				ex_strformat(sz_temp, 127, "%s:%d", teleport_ip.c_str(), teleport_port);
-				s_argv.push_back(sz_temp);
-			}
+//
+//			{
+//				char sz_temp[128] = {0};
+//				ex_strformat(sz_temp, 127, "%s:%d", teleport_ip.c_str(), teleport_port);
+//				s_argv.push_back(sz_temp);
+//			}
 		}
-#endif
+//#endif
 	}
 	else if (pro_type == TP_PROTOCOL_TYPE_SSH) {
 		//==============================================
