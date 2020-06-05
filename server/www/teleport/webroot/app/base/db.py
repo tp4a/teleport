@@ -366,21 +366,21 @@ class TPDatabasePool:
         return False if self._get_connect() is None else True
 
     def query(self, sql, args):
-        log.d('SQL-QUERY: ', sql, '  args=', args, '\n')
+        # log.d('SQL-QUERY: ', sql, '  args=', args, '\n')
         _conn = self._get_connect()
         if _conn is None:
             return None
         return self._do_query(_conn, sql, args)
 
     def exec(self, sql, args):
-        log.d('SQL-EXEC: ', sql, '  args=', args, '\n')
+        # log.d('SQL-EXEC: ', sql, '  args=', args, '\n')
         _conn = self._get_connect()
         if _conn is None:
             return False
         return self._do_exec(_conn, sql, args)
 
     def transaction(self, sql_list):
-        log.d('SQL-TRANS:', sql_list, '\n')
+        # log.d('SQL-TRANS:', sql_list, '\n')
         _conn = self._get_connect()
         if _conn is None:
             return False
