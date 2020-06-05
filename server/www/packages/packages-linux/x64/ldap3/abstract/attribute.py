@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -82,6 +82,11 @@ class Attribute(object):
 
     def __getitem__(self, item):
         return self.values[item]
+
+    def __getstate__(self):
+        cpy = dict(self.__dict__)
+        cpy['cursor'] = None
+        return cpy
 
     def __eq__(self, other):
         try:
@@ -174,7 +179,7 @@ class WritableAttribute(Attribute):
             log(PROTOCOL, 'adding %r to <%s> attribute in <%s> entry', values, self.key, self.entry.entry_dn)
         # new value for attribute to commit with a MODIFY_ADD
         if self.entry._state._initial_status == STATUS_VIRTUAL:
-            error_message = 'cannot add an attribute value in a new entry'
+            error_message = 'cannot perform a modify operation in a new entry'
             if log_enabled(ERROR):
                 log(ERROR, '%s for <%s>', error_message, self)
             raise LDAPCursorError(error_message)

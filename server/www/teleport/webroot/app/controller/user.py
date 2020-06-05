@@ -4,6 +4,7 @@ import csv
 import json
 import os
 import time
+import urllib
 
 import tornado.gen
 from app.base import mail
@@ -11,7 +12,7 @@ from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.logger import *
 from app.base.session import tp_session
-from app.base.utils import tp_check_strong_password, tp_gen_password
+from app.base.utils import tp_check_strong_password, tp_gen_password, tp_timestamp_from_str
 from app.logic.auth.oath import tp_oath_verify_code
 from app.const import *
 from app.logic.auth.oath import tp_oath_generate_secret, tp_oath_generate_qrcode
@@ -114,6 +115,16 @@ class ResetPasswordHandler(TPBaseHandler):
         self.render('user/reset-password.mako', page_param=json.dumps(param))
 
 
+class ChangeExpiredPasswordHandler(TPBaseHandler):
+    def get(self):
+        _username = urllib.unquote(self.get_argument('username', None))
+        if _username is None:
+            return self.redirect('/')
+
+        param = {'username': _username, 'force_strong': tp_cfg().sys.password.force_strong}
+        self.render('user/change-expired-password.mako', page_param=json.dumps(param))
+
+
 class BindOathHandler(TPBaseHandler):
     def get(self):
         self.render('user/bind-oath.mako')
@@ -147,7 +158,7 @@ class DoVerifyUserHandler(TPBaseJsonHandler):
         except:
             check_bind_oath = False
 
-        err, user_info = user.login(self, username, password=password, check_bind_oath=check_bind_oath)
+        err, user_info, msg = user.login(self, username, password=password, check_bind_oath=check_bind_oath)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH
@@ -173,7 +184,7 @@ class DoBindOathHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
-        err, user_info = user.login(self, username, password=password)
+        err, user_info, msg = user.login(self, username, password=password)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH
@@ -578,13 +589,22 @@ class DoUpdateUserHandler(TPBaseJsonHandler):
             args['mobile'] = args['mobile'].strip()
             args['qq'] = args['qq'].strip()
             args['wechat'] = args['wechat'].strip()
+
+            if args['valid_from'] == '':
+                args['valid_from'] = 0
+            else:
+                args['valid_from'] = tp_timestamp_from_str(args['valid_from'].strip(), '%Y-%m-%d %H:%M')
+            if args['valid_to'] == '':
+                args['valid_to'] = 0
+            else:
+                args['valid_to'] = tp_timestamp_from_str(args['valid_to'].strip(), '%Y-%m-%d %H:%M')
             args['desc'] = args['desc'].strip()
         except:
             return self.write_json(TPE_PARAM)
 
         if len(args['username']) == 0:
             return self.write_json(TPE_PARAM)
-
+        
         if args['id'] == -1:
             args['password'] = tp_gen_password(8)
             err, _ = user.create_user(self, args)
@@ -738,6 +758,42 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
                 return self.write_json(TPE_USER_AUTH)
             user_id = user_info['id']
 
+        elif mode == 6:
+            # 用户密码过期，在登录前进行修改
+            try:
+                username = args['username']
+                current_password = args['password']
+                password = args['new_password']
+                captcha = args['captcha']
+            except:
+                return self.write_json(TPE_PARAM)
+
+            code = self.get_session('captcha')
+            if code is None:
+                return self.write_json(TPE_CAPTCHA_EXPIRED, '验证码已失效')
+            if code.lower() != captcha.lower():
+                return self.write_json(TPE_CAPTCHA_MISMATCH, '验证码错误')
+
+            self.del_session('captcha')
+
+            err, user_info = user.get_by_username(username)
+            if err != TPE_OK:
+                return self.write_json(err)
+
+            # xxx 如果是密码过期而在登录前修改密码，需要额外判断用户是否已经被锁定
+            # 如果用户被禁用或锁定，在登录时会被拒绝，因此此处仍然允许其修改密码
+            # if user_info['state'] != TP_STATE_NORMAL:
+            #     if user_info['state'] == TP_STATE_LOCKED:
+            #         return self.write_json(TPE_USER_LOCKED)
+            #     elif user_info['state'] == TP_STATE_DISABLED:
+            #         return self.write_json(TPE_USER_DISABLED)
+            #     else:
+            #         return self.write_json(TPE_FAILED)
+
+            if not tp_password_verify(current_password, user_info['password']):
+                return self.write_json(TPE_USER_AUTH)
+            user_id = user_info['id']
+
         else:
             return self.write_json(TPE_PARAM)
 
@@ -764,7 +820,7 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
 
             return self.write_json(err, msg)
 
-        elif mode == 2 or mode == 4 or mode == 5:
+        elif mode == 2 or mode == 4 or mode == 5 or mode == 6:
             if len(password) == 0:
                 return self.write_json(TPE_PARAM)
 
@@ -774,14 +830,14 @@ class DoResetPasswordHandler(TPBaseJsonHandler):
                     return self.write_json(TPE_FAILED, '密码强度太弱！强密码需要至少8个英文字符，必须包含大写字母、小写字母和数字。')
 
             password = tp_password_generate_secret(password)
-            err = user.set_password(self, user_id, password)
+            err = user.set_password(self, mode, user_id, password)
 
             if mode == 4 and err == TPE_OK:
                 user.remove_reset_token(token)
 
             # 非用户自行修改密码的情况，都默认重置身份认证
-            if mode != 5 and err == TPE_OK:
-                print("reset oath secret")
+            if not (mode == 5 or mode == 6) and err == TPE_OK:
+                # print("reset oath secret")
                 user.update_oath_secret(self, user_id, '')
 
             self.write_json(err)

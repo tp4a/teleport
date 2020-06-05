@@ -17,8 +17,8 @@ class LoginHandler(TPBaseHandler):
         if tp_cfg().app_mode == APP_MODE_MAINTENANCE and get_db().need_create:
             _user = {
                 'id': 0,
-                'username': 'installer',
-                'surname': '安装程序',
+                'username': 'maintainer',
+                'surname': '系统维护-安装',
                 'role_id': 0,
                 'role': '',
                 'privilege': TP_PRIVILEGE_SYS_CONFIG,
@@ -26,6 +26,20 @@ class LoginHandler(TPBaseHandler):
             }
             self.set_session('user', _user)
             self.redirect('/maintenance/install')
+            return
+
+        if tp_cfg().app_mode == APP_MODE_MAINTENANCE and get_db().need_upgrade:
+            _user = {
+                'id': 0,
+                'username': 'maintainer',
+                'surname': '系统维护-升级',
+                'role_id': 0,
+                'role': '',
+                'privilege': TP_PRIVILEGE_SYS_CONFIG,
+                '_is_login': True
+            }
+            self.set_session('user', _user)
+            self.redirect('/maintenance/upgrade')
             return
 
         _user = self.get_current_user()
@@ -115,12 +129,13 @@ class DoLoginHandler(TPBaseJsonHandler):
             syslog.sys_log({'username': '???', 'surname': '???'}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，可能是攻击行为。试图使用用户名 {} 进行登录。'.format(username))
             return self.write_json(err)
 
-        err, user_info = user.login(self, username, password=password, oath_code=oath)
+        err, user_info, msg = user.login(self, username, password=password, oath_code=oath)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH
+                msg = '用户名或密码错误'
                 syslog.sys_log({'username': '???', 'surname': '???'}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
-            return self.write_json(err)
+            return self.write_json(err, msg)
 
         # 判断此用户是否被允许使用当前登录认证方式
         auth_type = user_info.auth_type

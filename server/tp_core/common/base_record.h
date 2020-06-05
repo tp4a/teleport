@@ -1,4 +1,4 @@
-#ifndef __TS_BASE_RECORD_H__
+ï»¿#ifndef __TS_BASE_RECORD_H__
 #define __TS_BASE_RECORD_H__
 
 #include "base_env.h"
@@ -7,95 +7,102 @@
 
 #include <ex.h>
 
-#define MAX_SIZE_PER_FILE 4194304  // 4M = 1024*1024*4
+#define MAX_CACHE_SIZE      1048576  // 1M = 1024*1024*1
+#define MAX_SIZE_PER_FILE   4194304  // 4M = 1024*1024*4
+// for test.
+// #define MAX_CACHE_SIZE      524288  // 512KB = 512*1024
+// #define MAX_SIZE_PER_FILE   1048576  // 1M = 1024*1024*1
 
 #pragma pack(push,1)
 
 /*
- * Â¼Ïñ
+ * å½•åƒ
  *
- * Ò»¸öÂ¼Ïñ·ÖÎªÁ½¸öÎÄ¼ş£¬Ò»¸öĞÅÏ¢ÎÄ¼ş£¬Ò»¸öÊı¾İÎÄ¼ş¡£
- * ·şÎñÄÚ²¿»º´æ×î´ó4M£¬»òÕß5Ãë£¬¾Í½«Êı¾İĞ´ÈëÊı¾İÎÄ¼şÖĞ£¬²¢Í¬Ê±¸üĞÂĞÅÏ¢ÎÄ¼ş¡£
+ * ä¸€ä¸ªå½•åƒåˆ†ä¸ºå¤šä¸ªæ–‡ä»¶ï¼š
+ *  *.tprï¼Œå½•åƒä¿¡æ¯æ–‡ä»¶ï¼Œä¸€ä¸ªï¼Œå›ºå®šå¤§å°ï¼ˆ512å­—èŠ‚ï¼‰
+ *  *.tpdï¼Œæ•°æ®æ–‡ä»¶ï¼Œnä¸ªï¼Œä¾‹å¦‚ tp-rdp-1.tpdï¼Œtp-rdp-2.tpdç­‰ç­‰ï¼Œæ¯ä¸ªæ•°æ®æ–‡ä»¶çº¦4MB
+ *  *.tpkï¼Œå…³é”®å¸§ä¿¡æ¯æ–‡ä»¶ï¼Œä¸€ä¸ªï¼Œä»…RDPå½•åƒï¼Œè®°å½•å„ä¸ªå…³é”®å¸§æ•°æ®æ‰€åœ¨çš„æ•°æ®æ–‡ä»¶åºå·ã€åç§»ã€æ—¶é—´ç‚¹ç­‰ä¿¡æ¯ã€‚
+ *  *-cmd.txtï¼Œsshå‘½ä»¤è®°å½•æ–‡ä»¶ï¼Œä»…SSHã€‚
+ * æœåŠ¡å†…éƒ¨ç¼“å­˜æœ€å¤§4Mï¼Œæˆ–è€…5ç§’ï¼Œå°±å°†æ•°æ®å†™å…¥æ•°æ®æ–‡ä»¶ä¸­ï¼Œå¹¶åŒæ—¶æ›´æ–°ä¿¡æ¯æ–‡ä»¶ã€‚
  *
  */
 
+#define TS_TPPR_TYPE_UNKNOWN    0x0000
+#define TS_TPPR_TYPE_SSH        0x0001
+#define TS_TPPR_TYPE_RDP        0x0101
 
-// Â¼ÏñÎÄ¼şÍ·(Ëæ×ÅÂ¼ÏñÊı¾İĞ´Èë£¬»á¸Ä±äµÄ²¿·Ö)
-typedef struct TS_RECORD_HEADER_INFO
-{
-	ex_u32 magic;		// "TPPR" ±êÖ¾ TelePort Protocol Record
-	ex_u16 ver;			// Â¼ÏñÎÄ¼ş°æ±¾£¬Ä¿Ç°Îª3
-	ex_u32 packages;	// ×Ü°üÊı
-	ex_u32 time_ms;		// ×ÜºÄÊ±£¨ºÁÃë£©
-	//ex_u32 file_size;	// Êı¾İÎÄ¼ş´óĞ¡
+ // å½•åƒæ–‡ä»¶å¤´(éšç€å½•åƒæ•°æ®å†™å…¥ï¼Œä¼šæ”¹å˜çš„éƒ¨åˆ†)
+typedef struct TS_RECORD_HEADER_INFO {
+    ex_u32 magic;       // "TPPR" æ ‡å¿— TelePort Protocol Record
+    ex_u16 ver;         // å½•åƒæ–‡ä»¶ç‰ˆæœ¬ï¼Œv3.5.0å¼€å§‹ä¸º4
+    ex_u16 type;        // å½•åƒå†…å®¹ï¼ŒSSH or RDP
+    // ex_u32 packages;    // æ€»åŒ…æ•°
+    ex_u32 time_ms;	    // æ€»è€—æ—¶ï¼ˆæ¯«ç§’ï¼‰
+    ex_u32 dat_file_count; // æ•°æ®æ–‡ä»¶æ•°é‡
 }TS_RECORD_HEADER_INFO;
 #define ts_record_header_info_size sizeof(TS_RECORD_HEADER_INFO)
 
-// Â¼ÏñÎÄ¼şÍ·(¹Ì¶¨²»±ä²¿·Ö)
-typedef struct TS_RECORD_HEADER_BASIC
-{
-	ex_u16 protocol_type;		// Ğ­Òé£º1=RDP, 2=SSH, 3=Telnet
-	ex_u16 protocol_sub_type;	// ×ÓĞ­Òé£º100=RDP-DESKTOP, 200=SSH-SHELL, 201=SSH-SFTP, 300=Telnet
-	ex_u64 timestamp;	// ±¾´ÎÂ¼ÏñµÄÆğÊ¼Ê±¼ä£¨UTCÊ±¼ä´Á£©
-	ex_u16 width;		// ³õÊ¼ÆÁÄ»³ß´ç£º¿í
-	ex_u16 height;		// ³õÊ¼ÆÁÄ»³ß´ç£º¸ß
-	char user_username[64];	// teleportÕËºÅ
-	char acc_username[64];	// Ô¶³ÌÖ÷»úÓÃ»§Ãû
+// å½•åƒæ–‡ä»¶å¤´(å›ºå®šä¸å˜éƒ¨åˆ†)
+typedef struct TS_RECORD_HEADER_BASIC {
+    ex_u16 protocol_type;       // åè®®ï¼š1=RDP, 2=SSH, 3=Telnet
+    ex_u16 protocol_sub_type;   // å­åè®®ï¼š100=RDP-DESKTOP, 200=SSH-SHELL, 201=SSH-SFTP, 300=Telnet
+    ex_u64 timestamp;   // æœ¬æ¬¡å½•åƒçš„èµ·å§‹æ—¶é—´ï¼ˆUTCæ—¶é—´æˆ³ï¼‰
+    ex_u16 width;       // åˆå§‹å±å¹•å°ºå¯¸ï¼šå®½
+    ex_u16 height;      // åˆå§‹å±å¹•å°ºå¯¸ï¼šé«˜
+    char user_username[64]; // teleportè´¦å·
+    char acc_username[64];  // è¿œç¨‹ä¸»æœºç”¨æˆ·å
 
-	char host_ip[40];	// Ô¶³ÌÖ÷»úIP
-	char conn_ip[40];	// Ô¶³ÌÖ÷»úIP
-	ex_u16 conn_port;	// Ô¶³ÌÖ÷»ú¶Ë¿Ú
+    char host_ip[40];   // è¿œç¨‹ä¸»æœºIP
+    char conn_ip[40];   // è¿œç¨‹ä¸»æœºIP
+    ex_u16 conn_port;   // è¿œç¨‹ä¸»æœºç«¯å£
 
-	char client_ip[40];		// ¿Í»§¶ËIP
+    char client_ip[40]; // å®¢æˆ·ç«¯IP
 
-	// RDP×¨ÓĞ
-	ex_u8 rdp_security;	// 0 = RDP, 1 = TLS
+// 	// RDPä¸“æœ‰ - v3.5.0åºŸå¼ƒå¹¶ç§»é™¤
+// 	ex_u8 rdp_security;	// 0 = RDP, 1 = TLS
 
-	ex_u8 _reserve[512 - 2 - 2 - 8 - 2 - 2 - 64 - 64 - 40 - 40 - 2 - 40 - 1 - ts_record_header_info_size];
 }TS_RECORD_HEADER_BASIC;
 #define ts_record_header_basic_size sizeof(TS_RECORD_HEADER_BASIC)
 
-typedef struct TS_RECORD_HEADER
-{
-	TS_RECORD_HEADER_INFO info;
-	TS_RECORD_HEADER_BASIC basic;
+typedef struct TS_RECORD_HEADER {
+    TS_RECORD_HEADER_INFO info;
+    ex_u8 _reserve1[64 - ts_record_header_info_size];
+    TS_RECORD_HEADER_BASIC basic;
+    ex_u8 _reserve2[512 - 64 - ts_record_header_basic_size];
 }TS_RECORD_HEADER;
 
-// header²¿·Ö£¨header-info + header-basic£© = 512B
+// headeréƒ¨åˆ†ï¼ˆheader-info + header-basicï¼‰ = 512B
 #define ts_record_header_size sizeof(TS_RECORD_HEADER)
 
-
-// Ò»¸öÊı¾İ°üµÄÍ·
-typedef struct TS_RECORD_PKG
-{
-	ex_u8 type;			// °üµÄÊı¾İÀàĞÍ
-	ex_u32 size;		// Õâ¸ö°üµÄ×Ü´óĞ¡£¨²»º¬°üÍ·£©
-	ex_u32 time_ms;		// Õâ¸ö°ü¾àÆğÊ¼Ê±¼äµÄÊ±¼ä²î£¨ºÁÃë£¬ÒâÎ¶×ÅÒ»¸öÁ¬½Ó²»ÄÜ³ÖĞø³¬¹ı49Ìì£©
-	ex_u8 _reserve[3];	// ±£Áô
+// ä¸€ä¸ªæ•°æ®åŒ…çš„å¤´
+typedef struct TS_RECORD_PKG {
+    ex_u8 type;         // åŒ…çš„æ•°æ®ç±»å‹
+    ex_u32 size;        // è¿™ä¸ªåŒ…çš„æ€»å¤§å°ï¼ˆä¸å«åŒ…å¤´ï¼‰
+    ex_u32 time_ms;	    // è¿™ä¸ªåŒ…è·èµ·å§‹æ—¶é—´çš„æ—¶é—´å·®ï¼ˆæ¯«ç§’ï¼Œæ„å‘³ç€ä¸€ä¸ªè¿æ¥ä¸èƒ½æŒç»­è¶…è¿‡49å¤©ï¼‰
+    ex_u8 _reserve[3];  // ä¿ç•™
 }TS_RECORD_PKG;
 
 #pragma pack(pop)
 
-class TppRecBase
-{
+class TppRecBase {
 public:
-	TppRecBase();
-	virtual ~TppRecBase();
+    TppRecBase();
+    virtual ~TppRecBase();
 
-	bool begin(const wchar_t* base_path, const wchar_t* base_fname, int record_id, const TPP_CONNECT_INFO* info);
-	bool end();
-
-protected:
-	virtual bool _on_begin(const TPP_CONNECT_INFO* info) = 0;
-	virtual bool _on_end() = 0;
+    bool begin(const wchar_t* base_path, const wchar_t* base_fname, int record_id, const TPP_CONNECT_INFO* info);
+    bool end();
 
 protected:
-	ex_wstr m_base_path;		// Â¼ÏñÎÄ¼ş»ù´¡Â·¾¶£¬ÀıÈç /usr/local/teleport/data/replay/ssh/123£¬Êı×Ö±àºÅÊÇÄÚ²¿¸½¼ÓµÄ£¬×÷Îª±¾´Î»á»°Â¼ÏñÎÄ¼şµÄÄ¿Â¼Ãû³Æ
-	ex_wstr m_base_fname;		// Â¼ÏñÎÄ¼şµÄÎÄ¼şÃû£¬²»º¬À©Õ¹Ãû²¿·Ö£¬ÄÚ²¿»áÒÔ´ËÎª»ù´¡ºÏ³ÉÎÄ¼şÈ«Ãû£¬²¢½«Â¼ÏñÎÄ¼ş´æ·ÅÔÚ m_base_path Ö¸ÏòµÄÄ¿Â¼ÖĞ
+    virtual bool _on_begin(const TPP_CONNECT_INFO* info) = 0;
+    virtual bool _on_end() = 0;
 
-	ex_u64 m_start_time;
+protected:
+    ex_wstr m_base_path;		// å½•åƒæ–‡ä»¶åŸºç¡€è·¯å¾„ï¼Œä¾‹å¦‚ /usr/local/teleport/data/replay/ssh/123ï¼Œæ•°å­—ç¼–å·æ˜¯å†…éƒ¨é™„åŠ çš„ï¼Œä½œä¸ºæœ¬æ¬¡ä¼šè¯å½•åƒæ–‡ä»¶çš„ç›®å½•åç§°
+    ex_wstr m_base_fname;		// å½•åƒæ–‡ä»¶çš„æ–‡ä»¶åï¼Œä¸å«æ‰©å±•åéƒ¨åˆ†ï¼Œå†…éƒ¨ä¼šä»¥æ­¤ä¸ºåŸºç¡€åˆæˆæ–‡ä»¶å…¨åï¼Œå¹¶å°†å½•åƒæ–‡ä»¶å­˜æ”¾åœ¨ m_base_path æŒ‡å‘çš„ç›®å½•ä¸­
 
-	MemBuffer m_cache;
+    ex_u64 m_start_time;
+
+    MemBuffer m_cache;
 };
 
 #endif // __TS_BASE_RECORD_H__

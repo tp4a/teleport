@@ -4,6 +4,7 @@ import datetime
 import hashlib
 import json
 import shutil
+import time
 
 import app.model.system as system_model
 import tornado.gen
@@ -85,6 +86,18 @@ class RoleHandler(TPBaseHandler):
         if ret != TPE_OK:
             return
         self.render('system/role.mako')
+
+
+class DoExportDBHandler(TPBaseHandler):
+    def get(self):
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
+        if ret != TPE_OK:
+            return
+        sql, err = get_db().export_to_sql()
+        self.set_header('Content-Type', 'application/sql')
+        self.set_header('Content-Disposition', 'attachment; filename="teleport-db-export-{}.sql"'.format(time.strftime('%Y%m%d-%H%M%S')))
+        self.write(sql)
+        self.finish()
 
 
 class DoRoleUpdateHandler(TPBaseJsonHandler):
@@ -259,7 +272,7 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)            
             
-            #增加urlprotocol的配置		
+            # 增加 url-protocol 的配置
             if 'global' in args:
                 processed = True
                 _cfg = args['global']
@@ -555,12 +568,13 @@ class DoLdapGetUsersHandler(TPBaseJsonHandler):
             if ret != TPE_OK:
                 return self.write_json(ret, message=err_msg)
 
-            exits_users = user.get_users_by_type(TP_USER_TYPE_LDAP)
+            exists_users = user.get_users_by_type(TP_USER_TYPE_LDAP)
             bound_users = []
-            for u in exits_users:
-                h = hashlib.sha1()
-                h.update(u['ldap_dn'].encode())
-                bound_users.append(h.hexdigest())
+            if exists_users is not None:
+                for u in exists_users:
+                    h = hashlib.sha1()
+                    h.update(u['ldap_dn'].encode())
+                    bound_users.append(h.hexdigest())
 
             ret_data = []
             for u in data:
@@ -682,7 +696,6 @@ class DoLdapImportHandler(TPBaseJsonHandler):
                 for u in user_list:
                     if u['_id'] == 0 or len(u['email']) == 0:
                         continue
-                    u['email'] = 'apex.liu@qq.com'
 
                     mail_body = '{surname} 您好！\n\n已为您创建teleport系统用户账号，现在可以使用以下信息登录teleport系统：\n\n' \
                                 '登录用户名：{username}\n' \

@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 from pyasn1 import error
@@ -64,8 +64,10 @@ class Tag(object):
         self.__hash = hash(self.__tagClassId)
 
     def __repr__(self):
-        representation = '[%s:%s:%s]' % (self.__tagClass, self.__tagFormat, self.__tagId)
-        return '<%s object at 0x%x tag %s>' % (self.__class__.__name__, id(self), representation)
+        representation = '[%s:%s:%s]' % (
+            self.__tagClass, self.__tagFormat, self.__tagId)
+        return '<%s object, tag %s>' % (
+            self.__class__.__name__, representation)
 
     def __eq__(self, other):
         return self.__tagClassId == other
@@ -199,7 +201,7 @@ class TagSet(object):
         else:
             representation = 'untagged'
 
-        return '<%s object at 0x%x %s>' % (self.__class__.__name__, id(self), representation)
+        return '<%s object, %s>' % (self.__class__.__name__, representation)
 
     def __add__(self, superTag):
         return self.__class__(self.__baseTag, *self.__superTags + (superTag,))
@@ -318,7 +320,7 @@ class TagSet(object):
         Returns
         -------
         : :py:class:`bool`
-            `True` if callee is a supertype of *tagSet*
+            :obj:`True` if callee is a supertype of *tagSet*
         """
         if len(tagSet) < self.__lenOfSuperTags:
             return False

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from enum import IntEnum, unique
+
 TP_LOGIN_AUTH_SYS_DEFAULT = 0    # 系统默认（根据系统配置进行）
 TP_LOGIN_AUTH_USERNAME_PASSWORD = 0x0001    # 用户名+密码
 TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA = 0x0002    # 用户名+密码+验证码
@@ -9,12 +11,27 @@ TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH = 0x0008    # 用户名+密码+OATH
 APP_MODE_NORMAL = 1
 APP_MODE_MAINTENANCE = 2
 
+
+@unique
+class TpAppMode(IntEnum):
+    NORMAL = 1
+    MAINTENANCE = 2
+
+
 # ==========================================================================
 # 用户类型
 # ==========================================================================
 TP_USER_TYPE_NONE = 0
 TP_USER_TYPE_LOCAL = 1
 TP_USER_TYPE_LDAP = 2
+
+
+@unique
+class TpUserType(IntEnum):
+    NONE = 0
+    LOCAL = 1
+    LDAP = 2
+
 
 # ==========================================================================
 # 远程主机账号认证方式
@@ -183,6 +200,8 @@ TPE_PRIVILEGE = 3
 TPE_NOT_IMPLEMENT = 7
 TPE_EXISTS = 8
 TPE_NOT_EXISTS = 9
+TPE_NO_MORE_DATA = 10
+TPE_INCOMPATIBLE_VERSION = 11
 
 TPE_FAILED = 100
 TPE_NETWORK = 101

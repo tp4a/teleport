@@ -1,4 +1,4 @@
-#include <ex/ex_platform.h>
+﻿#include <ex/ex_platform.h>
 #include <ex/ex_str.h>
 #include <ex/ex_util.h>
 
@@ -835,21 +835,48 @@ static int MultiByteToWideChar(UINT CodePage, DWORD dwFlags, LPCSTR lpMultiByteS
 
 #endif
 
-
-
-bool ex_utf8_to_utf16le(const std::string& from, ex_str_utf16le& to)
-{
-	int iSize = MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, NULL, 0);
-	if (iSize <= 0)
-		return false;
-
-	//++iSize;
-	to.resize(iSize);
-	memset(&to[0], 0, sizeof(ex_utf16));
-
-	MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, &to[0], iSize);
-
-	return true;
+ex_str_utf16le::ex_str_utf16le() {
+    m_data.resize(1);
+    memset(&m_data[0], 0, 1);
 }
+
+ex_str_utf16le::~ex_str_utf16le() {}
+
+size_t ex_str_utf16le::length() const {
+    return m_data.size() - 1;
+}
+
+bool ex_str_utf16le::from_utf8(const ex_astr& from) {
+    int iSize = MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, NULL, 0);
+    // 注意iSize包括\0结束符
+    if (iSize <= 0)
+        return false;
+
+    m_data.resize(iSize);
+    memset(&m_data[0], 0, sizeof(ex_utf16));
+
+    MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, (LPWSTR)&m_data[0], iSize);
+
+    return true;
+}
+
+const uint16_t* ex_str_utf16le::c_str() const {
+    return &m_data[0];
+}
+
+// bool ex_utf8_to_utf16le(const ex_astr& from, ex_str_utf16le& to)
+// {
+// 	int iSize = MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, NULL, 0);
+// 	if (iSize <= 0)
+// 		return false;
+// 
+// 	//++iSize;
+// 	to.resize(iSize);
+// 	memset(&to[0], 0, sizeof(ex_utf16));
+// 
+// 	MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, &to[0], iSize);
+// 
+// 	return true;
+// }
 
 #endif

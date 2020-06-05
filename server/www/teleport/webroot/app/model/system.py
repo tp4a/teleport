@@ -4,7 +4,7 @@ import json
 from app.const import *
 from app.base.db import get_db, SQL
 from app.base.logger import log
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 from . import syslog
 
 
@@ -33,7 +33,7 @@ def save_config(handler, msg, name, value):
 
 def add_role(handler, role_name, privilege):
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
     operator = handler.get_current_user()
 
     # 1. 判断是否已经存在了
@@ -93,14 +93,14 @@ def remove_role(handler, role_id):
 
     role_name = s.recorder[0].name
 
-    sql_list = []
+    sql_list = list()
 
-    sql = 'DELETE FROM `{}role` WHERE id={};'.format(db.table_prefix, role_id)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}role` WHERE `id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (role_id, )})
 
     # 更新此角色相关的用户信息
-    sql = 'UPDATE `{}user` SET role_id=0 WHERE role_id={rid};'.format(db.table_prefix, rid=role_id)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}user` SET `role_id`=0 WHERE `role_id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (role_id, )})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE

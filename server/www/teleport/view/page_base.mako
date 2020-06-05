@@ -1,6 +1,7 @@
 <!DOCTYPE html>
     <%!
         import time
+        import app.app_ver as app_ver
         page_icon_class_ = ''
         page_title_ = []
         page_id_ = []
@@ -96,10 +97,10 @@
 
 <script type="text/javascript">
     $app.active_menu(${self.attr.page_id_});
+    $tp.assist.ver_require = "${app_ver.TP_ASSIST_REQUIRE_VER}";
 </script>
 
     <%block name="embed_js" />
-
 
 </body>
 </html>

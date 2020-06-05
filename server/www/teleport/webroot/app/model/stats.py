@@ -3,7 +3,7 @@
 from app.const import *
 from app.base.db import get_db
 from app.base.configs import tp_cfg
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 
 
 def get_basic_stats():
@@ -53,7 +53,7 @@ def update_temp_locked_user_state():
     if sys_cfg.login.lock_timeout == 0:
         return
 
-    _lock_time = tp_timestamp_utc_now() - (sys_cfg.login.lock_timeout * 60)
+    _lock_time = tp_timestamp_sec() - (sys_cfg.login.lock_timeout * 60)
     db = get_db()
     if db.need_create or db.need_upgrade:
         return

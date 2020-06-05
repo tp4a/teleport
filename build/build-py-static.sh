@@ -3,10 +3,10 @@
 ################################################################
 # Basic settings.
 ################################################################
-VER_PYTHON="3.7.0"
+VER_PYTHON="3.7.5"
 VER_PYTHON_SHORT="3.7"
-VER_OPENSSL="1.0.2p"
-VER_SQLITE="3250000"
+VER_OPENSSL="1.1.1d"
+VER_SQLITE="3300100"
 VER_ZLIB="1.2.11"
 VER_PYTHON_LIB="${VER_PYTHON_SHORT}m"
 
@@ -36,15 +36,6 @@ function on_error()
 	echo "==================================================="
 	echo -e "\033[0m"
 	exit 1
-}
-
-function setp_build_git()
-{
-	# su -s
-	# yum install zlib-devel expat-devel libcurl-devel
-	# make prefix=/usr/local
-	# make prefix=/usr/local install
-	echo 'skip build git now.'
 }
 
 function dlfile()
@@ -77,7 +68,7 @@ function step_download_files()
 
 	dlfile "python source tarball"  "https://www.python.org/ftp/python/${VER_PYTHON}/" "Python-${VER_PYTHON}.tgz" ${PATH_DOWNLOAD}
 	dlfile "openssl source tarball" "https://www.openssl.org/source/" "openssl-${VER_OPENSSL}.tar.gz" ${PATH_DOWNLOAD}
-	dlfile "sqlite source tarball"  "http://sqlite.org/2018/" "sqlite-autoconf-${VER_SQLITE}.tar.gz" ${PATH_DOWNLOAD}
+	dlfile "sqlite source tarball"  "http://sqlite.org/2019/" "sqlite-autoconf-${VER_SQLITE}.tar.gz" ${PATH_DOWNLOAD}
 	dlfile "zlib source tarball"    "https://www.zlib.net/" "zlib-${VER_ZLIB}.tar.gz" ${PATH_DOWNLOAD}
 }
 
@@ -119,6 +110,16 @@ function step_prepare_source()
 	fi
 	if [ ! -d "${PATH_TMP}/Python-${VER_PYTHON}/Modules/_sqlite/sqlite3" ]; then
 		on_error "Can not prepare source code for build sqlite3 module for Python."
+	fi
+
+	if [ ! -f "${PATH_FIX}/Python-${VER_PYTHON}/Modules/Setup.dist" ]; then
+		on_error "Can not fix source for build Python."
+	fi
+	if [ ! -f "${PATH_FIX}/Python-${VER_PYTHON}/Modules/_sqlite/cache.h" ]; then
+		on_error "Can not fix source for build sqlite3 module for Python."
+	fi
+	if [ ! -f "${PATH_FIX}/Python-${VER_PYTHON}/Modules/_sqlite/prepare_protocol.h" ]; then
+		on_error "Can not fix source for build sqlite3 module for Python."
 	fi
 
 	cp "${PATH_FIX}/Python-${VER_PYTHON}/Modules/Setup.dist" "${PY_PATH_SRC}/Modules/Setup.dist"

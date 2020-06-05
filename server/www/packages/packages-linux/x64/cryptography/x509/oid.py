@@ -96,6 +96,8 @@ class SignatureAlgorithmOID(object):
     DSA_WITH_SHA1 = ObjectIdentifier("1.2.840.10040.4.3")
     DSA_WITH_SHA224 = ObjectIdentifier("2.16.840.1.101.3.4.3.1")
     DSA_WITH_SHA256 = ObjectIdentifier("2.16.840.1.101.3.4.3.2")
+    ED25519 = ObjectIdentifier("1.3.101.112")
+    ED448 = ObjectIdentifier("1.3.101.113")
 
 
 _SIG_OIDS_TO_HASH = {
@@ -113,7 +115,9 @@ _SIG_OIDS_TO_HASH = {
     SignatureAlgorithmOID.ECDSA_WITH_SHA512: hashes.SHA512(),
     SignatureAlgorithmOID.DSA_WITH_SHA1: hashes.SHA1(),
     SignatureAlgorithmOID.DSA_WITH_SHA224: hashes.SHA224(),
-    SignatureAlgorithmOID.DSA_WITH_SHA256: hashes.SHA256()
+    SignatureAlgorithmOID.DSA_WITH_SHA256: hashes.SHA256(),
+    SignatureAlgorithmOID.ED25519: None,
+    SignatureAlgorithmOID.ED448: None,
 }
 
 
@@ -181,6 +185,8 @@ _OID_NAMES = {
     SignatureAlgorithmOID.DSA_WITH_SHA1: "dsa-with-sha1",
     SignatureAlgorithmOID.DSA_WITH_SHA224: "dsa-with-sha224",
     SignatureAlgorithmOID.DSA_WITH_SHA256: "dsa-with-sha256",
+    SignatureAlgorithmOID.ED25519: "ed25519",
+    SignatureAlgorithmOID.ED448: "ed448",
     ExtendedKeyUsageOID.SERVER_AUTH: "serverAuth",
     ExtendedKeyUsageOID.CLIENT_AUTH: "clientAuth",
     ExtendedKeyUsageOID.CODE_SIGNING: "codeSigning",
@@ -196,6 +202,7 @@ _OID_NAMES = {
     ExtensionOID.PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS: (
         "signedCertificateTimestampList"
     ),
+    ExtensionOID.PRECERT_POISON: "ctPoison",
     CRLEntryExtensionOID.CRL_REASON: "cRLReason",
     CRLEntryExtensionOID.INVALIDITY_DATE: "invalidityDate",
     CRLEntryExtensionOID.CERTIFICATE_ISSUER: "certificateIssuer",

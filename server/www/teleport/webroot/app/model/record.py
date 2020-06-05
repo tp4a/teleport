@@ -10,7 +10,7 @@ from app.const import *
 from app.base.configs import tp_cfg
 from app.base.db import get_db, SQL
 from app.base.logger import log
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 import tornado.gen
 
 
@@ -149,30 +149,23 @@ def read_record_head(protocol_type, record_id):
         data = file.read()
         offset = 0
 
-        magic, = struct.unpack_from('I', data, offset)  # magic must be 1381126228, 'TPPR'
-        offset += 4
-        ver, = struct.unpack_from('H', data, offset)
-        offset += 2
-        pkg_count, = struct.unpack_from('I', data, offset)
-        offset += 4
-        time_used, = struct.unpack_from('I', data, offset)
-        offset += 4
+        # 读取 `TPPR` 标记(1380995156) 和录像文件版本、录像类型
+        magic, ver, = struct.unpack_from('=IH', data, offset)
+        offset += 6
+        if magic != 1380995156:
+            return None, TPE_DATA
+        if ver != 4:    # 从v3.5.0开始录像文件版本为版本4
+            return None, TPE_INCOMPATIBLE_VERSION
 
-        protocol_type, = struct.unpack_from('H', data, offset)
-        offset += 2
-        protocol_sub_type, = struct.unpack_from('H', data, offset)
-        offset += 2
-        time_start, = struct.unpack_from('Q', data, offset)
-        offset += 8
-        width, = struct.unpack_from('H', data, offset)
-        offset += 2
-        height, = struct.unpack_from('H', data, offset)
-        offset += 2
+        rec_type, time_used, dat_file_count, = struct.unpack_from('=HII', data, offset)
+        offset += 10
 
-        # file_count, = struct.unpack_from('H', data, offset)
-        # offset += 2
-        # total_size, = struct.unpack_from('I', data, offset)
-        # offset += 4
+        # TS_RECORD_HEADER_INFO 共计64字节，前面有用的数据读取后，跳过后面补齐用的字节，从第64字节
+        # 开始解析 TS_RECORD_HEADER_BASIC
+        offset = 64
+
+        protocol_type, protocol_sub_type, time_start, width, height = struct.unpack_from('=HHQHH', data, offset)
+        offset += 16
 
         user_name, = struct.unpack_from('64s', data, offset)
         user_name = _remove_padding_space(user_name).decode()
@@ -202,7 +195,7 @@ def read_record_head(protocol_type, record_id):
 
     header = dict()
     header['start'] = time_start
-    header['pkg_count'] = pkg_count
+    # header['pkg_count'] = pkg_count
     header['time_used'] = time_used
     header['width'] = width
     header['height'] = height
@@ -212,6 +205,7 @@ def read_record_head(protocol_type, record_id):
     header['conn_ip'] = conn_ip
     header['conn_port'] = conn_port
     header['client_ip'] = client_ip
+    log.d('header:', header, '\n')
 
     return header, TPE_OK
 
@@ -305,10 +299,11 @@ def read_ssh_record_data(record_id, offset):
     data_list = list()
     data_size = 0
     file = None
+    err = TPE_OK
     try:
         file_size = os.path.getsize(file_data)
         if offset >= file_size:
-            return None, 0, TPE_FAILED
+            return None, 0, TPE_NO_MORE_DATA
 
         file = open(file_data, 'rb')
         if offset > 0:
@@ -356,6 +351,7 @@ def read_ssh_record_data(record_id, offset):
 
             data_list.append(temp)
             if offset + data_size == file_size:
+                err = TPE_NO_MORE_DATA
                 break
 
     except Exception:
@@ -365,7 +361,7 @@ def read_ssh_record_data(record_id, offset):
         if file is not None:
             file.close()
 
-    return data_list, data_size, TPE_OK
+    return data_list, data_size, err
 
 
 def read_telnet_record_data(record_id, offset):
@@ -480,15 +476,18 @@ def session_fix():
     if db.need_create or db.need_upgrade:
         return TPE_OK
 
-    sql_list = []
+    sql_list = list()
 
-    sql = 'UPDATE `{dbtp}record` SET state={new_state}, time_end={time_end} WHERE state={old_state};' \
-          ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_RESET, old_state=TP_SESS_STAT_RUNNING, time_end=tp_timestamp_utc_now())
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}record` SET state={ph}, time_end={ph} WHERE state={ph};' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (TP_SESS_STAT_ERR_RESET, tp_timestamp_sec(), TP_SESS_STAT_RUNNING)
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
-    sql = 'UPDATE `{dbtp}record` SET state={new_state},time_end={time_end} WHERE state={old_state};' \
-          ''.format(dbtp=db.table_prefix, new_state=TP_SESS_STAT_ERR_START_RESET, old_state=TP_SESS_STAT_STARTED, time_end=tp_timestamp_utc_now())
-    sql_list.append(sql)
+    sql_s = 'UPDATE `{tp}record` SET state={ph},time_end={ph} WHERE state={ph};' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (TP_SESS_STAT_ERR_RESET, tp_timestamp_sec(), TP_SESS_STAT_STARTED)
+    sql_list.append({'s': sql_s, 'v': sql_v})
+
     return db.transaction(sql_list)
 
 
@@ -499,7 +498,7 @@ def session_begin(sid, user_id, host_id, acc_id, user_username, acc_username, ho
           ';'.format(db.table_prefix,
                      sid=sid, user_id=user_id, host_id=host_id, acc_id=acc_id, user_username=user_username, host_ip=host_ip, conn_ip=conn_ip, conn_port=conn_port,
                      client_ip=client_ip, acc_username=acc_username, auth_type=auth_type, protocol_type=protocol_type, protocol_sub_type=protocol_sub_type,
-                     time_begin=tp_timestamp_utc_now())
+                     time_begin=tp_timestamp_sec())
 
     ret = db.exec(sql)
     if not ret:
@@ -520,7 +519,7 @@ def session_update(record_id, protocol_sub_type, state):
 
 def session_end(record_id, ret_code):
     db = get_db()
-    sql = 'UPDATE `{}record` SET state={}, time_end={} WHERE id={};'.format(db.table_prefix, int(ret_code), tp_timestamp_utc_now(), int(record_id))
+    sql = 'UPDATE `{}record` SET state={}, time_end={} WHERE id={};'.format(db.table_prefix, int(ret_code), tp_timestamp_sec(), int(record_id))
     return db.exec(sql)
 
 
@@ -530,7 +529,7 @@ def cleanup_storage(handler):
     sto = tp_cfg().sys.storage
 
     db = get_db()
-    _now = tp_timestamp_utc_now()
+    _now = tp_timestamp_sec()
     msg = []
     have_error = False
 

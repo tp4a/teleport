@@ -12,18 +12,20 @@ from app.base.configs import tp_cfg
 from app.base.utils import AttrDict, tp_make_dir
 from app.base.logger import log
 from .database.create import DatabaseInit
-# from .database.upgrade import DatabaseUpgrade
+from .database.upgrade import DatabaseUpgrade
 from .database.export import export_database
 
 __all__ = ['get_db', 'SQL']
 
 
 # TODO: use SQLAlchemy
+# https://www.jianshu.com/p/0d234e14b5d3
 
 
 class TPDatabase:
     # 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
-    DB_VERSION = 6
+    # 20190123: server-v3.2.2, db-v7
+    DB_VERSION = 7
 
     DB_TYPE_UNKNOWN = 0
     DB_TYPE_SQLITE = 1
@@ -118,7 +120,7 @@ class TPDatabase:
         self.place_holder = '?'
         self.sqlite_file = db_file
 
-        self._table_prefix = 'tp_'
+        self._table_prefix = tp_cfg().database.mysql_prefix
         self._conn_pool = TPSqlitePool(db_file)
 
         if not os.path.exists(db_file):
@@ -175,6 +177,25 @@ class TPDatabase:
         else:
             log.e('Unknown database type.\n')
             return None
+
+    def get_fields(self, table_name):
+        fields = list()
+        if self.db_type == self.DB_TYPE_SQLITE:
+            ret = self.query('PRAGMA table_info(`{}`);'.format(table_name))
+            log.d('[sqlite] fields of {}'.format(table_name), ret, '\n')
+            if ret is None:
+                return None
+            for f in ret:
+                fields.append((f[1], f[2]))  # field_name, field_type, e.g.: ('id', 'integer'), ('desc', 'varchar(255)')
+        elif self.db_type == self.DB_TYPE_MYSQL:
+            ret = self.query('SELECT `column_name` FROM `information_schema`.`columns` WHERE `table_schema`="db" AND `table_name`="{}";'.format(table_name))
+            log.d('[mysql] fields of {}'.format(table_name), ret, '\n')
+            if ret is None:
+                return None
+            for f in ret:
+                fields.append(f)
+
+        return fields
 
     def is_field_exists(self, table_name, field_name):
         if self.db_type == self.DB_TYPE_SQLITE:
@@ -267,15 +288,15 @@ class TPDatabase:
             log.e('database create and initialize failed.\n')
             return False
 
-    # def upgrade_database(self, step_begin, step_end):
-    #     log.v('start database upgrade process.\n')
-    #     if DatabaseUpgrade(self, step_begin, step_end).do_upgrade():
-    #         log.v('database upgraded.\n')
-    #         self.need_upgrade = False
-    #         return True
-    #     else:
-    #         log.e('database upgrade failed.\n')
-    #         return False
+    def upgrade_database(self, step_begin, step_end):
+        log.v('start database upgrade process.\n')
+        if DatabaseUpgrade(self, step_begin, step_end).do_upgrade():
+            log.v('database upgraded.\n')
+            self.need_upgrade = False
+            return True
+        else:
+            log.e('database upgrade failed.\n')
+            return False
 
     def alter_table(self, table_names, field_names=None):
         """
@@ -345,18 +366,21 @@ class TPDatabasePool:
         return False if self._get_connect() is None else True
 
     def query(self, sql, args):
+        # log.d('SQL-QUERY: ', sql, '  args=', args, '\n')
         _conn = self._get_connect()
         if _conn is None:
             return None
         return self._do_query(_conn, sql, args)
 
     def exec(self, sql, args):
+        # log.d('SQL-EXEC: ', sql, '  args=', args, '\n')
         _conn = self._get_connect()
         if _conn is None:
             return False
         return self._do_exec(_conn, sql, args)
 
     def transaction(self, sql_list):
+        # log.d('SQL-TRANS:', sql_list, '\n')
         _conn = self._get_connect()
         if _conn is None:
             return False
@@ -435,13 +459,22 @@ class TPSqlitePool(TPDatabasePool):
             return False
 
     def _do_transaction(self, conn, sql_list):
+        # s = ''
+        # v = None
         try:
             # 使用context manager，发生异常时会自动rollback，正常执行完毕后会自动commit
             with conn:
-                for sql in sql_list:
-                    conn.execute(sql)
+                for item in sql_list:
+                    # s = item['s']
+                    # v = item['v']
+                    if item['v'] is None:
+                        conn.execute(item['s'])
+                    else:
+                        conn.execute(item['s'], item['v'])
             return True
         except Exception as e:
+            # log.d('|||', s, '|||', v, '|||', '\n')
+            # log.d('///', sql_list, '///', '\n')
             log.e('[sqlite] _do_transaction() failed: {}\n'.format(e.__str__()))
             return False
 
@@ -583,8 +616,8 @@ class TPMysqlPool(TPDatabasePool):
             cursor = conn.cursor()
             try:
                 conn.begin()
-                for sql in sql_list:
-                    cursor.execute(sql)
+                for item in sql_list:
+                    cursor.execute(item['s'], item['v'])
                 conn.commit()
                 return True
             except pymysql.err.OperationalError as e:
@@ -838,12 +871,12 @@ class SQL:
         sql.append(';')
         return ' '.join(sql)
 
-    def query(self):
+    def query(self, vars=None):
         # 如果要分页，那么需要计算记录总数
         if self._limit is not None:
             sql = self._make_sql_counter_string()
             # log.d(sql, '\n')
-            db_ret = self._db.query(sql)
+            db_ret = self._db.query(sql, vars)
             if db_ret is None or 0 == len(db_ret):
                 self._ret_page_index = 0
                 return TPE_OK
@@ -854,21 +887,22 @@ class SQL:
 
         sql = self._make_sql_query_string()
         # log.d(sql, '\n')
-        db_ret = self._db.query(sql)
+        db_ret = self._db.query(sql, vars)
 
-        for db_item in db_ret:
-            item = AttrDict()
-            for i in range(len(self._output_fields)):
-                item[self._output_fields[i]] = db_item[i]
+        if db_ret is not None:
+            for db_item in db_ret:
+                item = AttrDict()
+                for i in range(len(self._output_fields)):
+                    item[self._output_fields[i]] = db_item[i]
 
-            self._ret_recorder.append(item)
+                self._ret_recorder.append(item)
 
         return TPE_OK
 
-    def exec(self):
+    def exec(self, vars=None):
         sql = self._make_sql_delete_string()
         # log.d(sql, '\n')
-        if not self._db.exec(sql):
+        if not self._db.exec(sql, vars):
             return TPE_DATABASE
         else:
             return TPE_OK

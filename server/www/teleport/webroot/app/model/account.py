@@ -4,25 +4,26 @@ from app.const import *
 from app.base.logger import log
 from app.base.db import get_db, SQL
 from . import syslog
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 from app.base.stats import tp_stats
 
 
 def get_account_info(acc_id):
-    s = SQL(get_db())
+    db = get_db()
+    s = SQL(db)
     # s.select_from('acc', ['id', 'password', 'pri_key', 'state', 'host_ip', 'router_ip', 'router_port', 'protocol_type', 'protocol_port', 'auth_type', 'username'], alt_name='a')
     s.select_from('acc', ['id', 'password', 'pri_key', 'state', 'host_id', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'username_prompt', 'password_prompt'], alt_name='a')
-    s.where('a.id={}'.format(acc_id))
-    err = s.query()
+    s.where('a.id={ph}'.format(ph=db.place_holder))
+    err = s.query((acc_id, ))
     if err != TPE_OK:
         return err, None
     if len(s.recorder) != 1:
         return TPE_DATABASE, None
 
-    sh = SQL(get_db())
+    sh = SQL(db)
     sh.select_from('host', ['id', 'name', 'ip', 'router_ip', 'router_port', 'state'], alt_name='h')
-    sh.where('h.id={}'.format(s.recorder[0].host_id))
-    err = sh.query()
+    sh.where('h.id={ph}'.format(ph=db.place_holder))
+    err = sh.query((s.recorder[0].host_id, ))
     if err != TPE_OK:
         return err, None
     if len(s.recorder) != 1:
@@ -35,14 +36,15 @@ def get_account_info(acc_id):
 
 def get_host_accounts(host_id):
     # 获取指定主机的所有账号
-    s = SQL(get_db())
+    db = get_db()
+    s = SQL(db)
     # s.select_from('acc', ['id', 'state', 'host_ip', 'router_ip', 'router_port', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'pri_key'], alt_name='a')
     s.select_from('acc', ['id', 'state', 'protocol_type', 'protocol_port', 'auth_type', 'username', 'username_prompt', 'password_prompt'], alt_name='a')
 
-    s.where('a.host_id={}'.format(host_id))
+    s.where('a.host_id={ph}'.format(ph=db.place_holder))
     s.order_by('a.username', True)
 
-    err = s.query()
+    err = s.query((host_id, ))
     return err, s.recorder
 
 
@@ -166,6 +168,7 @@ def get_accounts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
     s = SQL(db)
     # s.select_from('acc', ['id', 'host_id', 'host_ip', 'router_ip', 'router_port', 'username', 'protocol_type', 'auth_type', 'state'], alt_name='a')
     s.select_from('acc', ['id', 'host_id', 'username', 'protocol_type', 'auth_type', 'state', 'username_prompt', 'password_prompt'], alt_name='a')
+    s.left_join('host', ['name', 'desc'], join_on='h.id=a.host_id', alt_name='h', out_map={'name': 'host_name'})
 
     str_where = ''
     _where = list()
@@ -189,7 +192,7 @@ def get_accounts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
     if len(sql_filter) > 0:
         for k in sql_filter:
             if k == 'search':
-                _where.append('(a.username LIKE "%{filter}%" OR a.host_ip LIKE "%{filter}%" OR a.router_ip LIKE "%{filter}%")'.format(filter=sql_filter[k]))
+                _where.append('(a.username LIKE "%{filter}%" OR a.host_ip LIKE "%{filter}%" OR a.router_ip LIKE "%{filter}%" OR h.name LIKE "%{filter}%" OR h.desc LIKE "%{filter}%")'.format(filter=sql_filter[k]))
                 # _where.append('(a.username LIKE "%{filter}%")'.format(filter=sql_filter[k]))
 
     if len(_where) > 0:
@@ -246,22 +249,22 @@ def add_account(handler, host_id, args):
     添加一个远程账号
     """
     db = get_db()
-    _time_now = tp_timestamp_utc_now()
+    _time_now = tp_timestamp_sec()
     operator = handler.get_current_user()
 
     # 1. 判断是否已经存在了
-    sql = 'SELECT id FROM {}acc WHERE host_id={} AND protocol_port={} AND username="{}" AND auth_type={};'.format(db.table_prefix, host_id, args['protocol_port'], args['username'], args['auth_type'])
-    db_ret = db.query(sql)
+    sql = 'SELECT `id` FROM `{tp}acc` WHERE `host_id`={ph} AND `protocol_port`={ph} AND `username`={ph} AND `auth_type`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    db_ret = db.query(sql, (host_id, args['protocol_port'], args['username'], args['auth_type']))
     if db_ret is not None and len(db_ret) > 0:
         return TPE_EXISTS, 0
 
-    sql = 'INSERT INTO `{}acc` (host_id, host_ip, router_ip, router_port, protocol_type, protocol_port, state, auth_type, username, username_prompt, password_prompt, password, pri_key, creator_id, create_time) VALUES ' \
-          '({host_id}, "{host_ip}", "{router_ip}", {router_port}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{username_prompt}", "{password_prompt}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
-          ''.format(db.table_prefix,
-                    host_id=host_id, host_ip=args['host_ip'], router_ip=args['router_ip'], router_port=args['router_port'],
-                    protocol_type=args['protocol_type'], protocol_port=args['protocol_port'], state=TP_STATE_NORMAL,
-                    auth_type=args['auth_type'], username=args['username'], username_prompt=args['username_prompt'], password_prompt=args['password_prompt'],
-                    password=args['password'], pri_key=args['pri_key'], creator_id=operator['id'], create_time=_time_now)
+    sql_s = 'INSERT INTO `{tp}acc` (`host_id`,`host_ip`,`router_ip`,`router_port`,`protocol_type`,`protocol_port`,' \
+            '`state`,`auth_type`,`username`,`username_prompt`,`password_prompt`,`password`,`pri_key`,`creator_id`,`create_time`) VALUES ' \
+            '({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (host_id, args['host_ip'], args['router_ip'], args['router_port'], args['protocol_type'], args['protocol_port'],
+             TP_STATE_NORMAL, args['auth_type'], args['username'], args['username_prompt'], args['password_prompt'],
+             args['password'], args['pri_key'], operator['id'], _time_now)
 
     # sql = 'INSERT INTO `{}acc` (host_id, protocol_type, protocol_port, state, auth_type, username, password, pri_key, creator_id, create_time) VALUES ' \
     #       '({host_id}, {protocol_type}, {protocol_port}, {state}, {auth_type}, "{username}", "{password}", "{pri_key}", {creator_id}, {create_time});' \
@@ -270,7 +273,7 @@ def add_account(handler, host_id, args):
     #                 protocol_type=args['protocol_type'], protocol_port=args['protocol_port'], state=TP_STATE_NORMAL,
     #                 auth_type=args['auth_type'], username=args['username'], password=args['password'], pri_key=args['pri_key'],
     #                 creator_id=operator['id'], create_time=_time_now)
-    db_ret = db.exec(sql)
+    db_ret = db.exec(sql_s, sql_v)
     if not db_ret:
         return TPE_DATABASE, 0
 
@@ -282,9 +285,9 @@ def add_account(handler, host_id, args):
     syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "创建账号：{}".format(acc_name))
 
     # 更新主机相关账号数量
-    sql = 'UPDATE `{}host` SET acc_count=acc_count+1 WHERE id={host_id};' \
-          ''.format(db.table_prefix, host_id=host_id)
-    db_ret = db.exec(sql)
+    sql = 'UPDATE `{tp}host` SET `acc_count`=`acc_count`+1 WHERE `id`={ph};' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder)
+    db.exec(sql, (host_id, ))
     # if not db_ret:
     #     return TPE_DATABASE, 0
 
@@ -300,8 +303,8 @@ def update_account(handler, host_id, acc_id, args):
     db = get_db()
 
     # 1. 判断是否存在
-    sql = 'SELECT `id`, `host_ip`, `router_ip`, `router_port` FROM `{}acc` WHERE `host_id`={host_id} AND `id`={acc_id};'.format(db.table_prefix, host_id=host_id, acc_id=acc_id)
-    db_ret = db.query(sql)
+    sql = 'SELECT `id`,`host_ip`,`router_ip`,`router_port` FROM `{tp}acc` WHERE `host_id`={ph} AND `id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    db_ret = db.query(sql, (host_id, acc_id))
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
@@ -309,7 +312,7 @@ def update_account(handler, host_id, acc_id, args):
     _router_ip = db_ret[0][2]
     _router_port = db_ret[0][3]
 
-    sql_list = []
+    sql_list = list()
 
     sql = list()
     sql.append('UPDATE `{}acc` SET'.format(db.table_prefix))
@@ -333,7 +336,7 @@ def update_account(handler, host_id, acc_id, args):
     # db_ret = db.exec(' '.join(sql))
     # if not db_ret:
     #     return TPE_DATABASE
-    sql_list.append(' '.join(sql))
+    sql_list.append({'s': ' '.join(sql), 'v': None})
 
     if len(_router_ip) == 0:
         _name = '{}@{}'.format(args['username'], _host_ip)
@@ -341,13 +344,13 @@ def update_account(handler, host_id, acc_id, args):
         _name = '{}@{} （由{}:{}路由）'.format(args['username'], _host_ip, _router_ip, _router_port)
 
     # 运维授权
-    sql = 'UPDATE `{}ops_auz` SET `name`="{name}" WHERE (`rtype`={rtype} AND `rid`={rid});'.format(db.table_prefix, name=_name, rtype=TP_ACCOUNT, rid=acc_id)
-    sql_list.append(sql)
-    sql = 'UPDATE `{}ops_map` SET `a_name`="{name}", `protocol_type`={protocol_type}, `protocol_port`={protocol_port} ' \
-          'WHERE (a_id={aid});'.format(db.table_prefix,
-                                       name=args['username'], protocol_type=args['protocol_type'], protocol_port=args['protocol_port'],
-                                       aid=acc_id)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_auz` SET `name`={ph} WHERE (`rtype`={ph} AND `rid`={ph});'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (_name, TP_ACCOUNT, acc_id)})
+
+    sql_s = 'UPDATE `{tp}ops_map` SET `a_name`={ph},`protocol_type`={ph},`protocol_port`={ph} WHERE (`a_id`={ph});' \
+            ''.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_v = (args['username'], args['protocol_type'], args['protocol_port'], acc_id)
+    sql_list.append({'s': sql_s, 'v': sql_v})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE
@@ -365,20 +368,20 @@ def update_accounts_state(handler, host_id, acc_ids, state):
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
 
-    sql_list = []
+    sql_list = list()
 
-    sql = 'UPDATE `{}acc` SET state={state} WHERE id IN ({ids});' \
-          ''.format(db.table_prefix, state=state, ids=acc_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}acc` SET `state`={ph} WHERE `id` IN ({ids});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, ids=acc_ids)
+    sql_list.append({'s': sql, 'v': (state, )})
 
     # sync to update the ops-audit table.
-    sql = 'UPDATE `{}ops_auz` SET state={state} WHERE rtype={rtype} AND rid IN ({rid});' \
-          ''.format(db.table_prefix, state=state, rtype=TP_ACCOUNT, rid=acc_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_auz` SET `state`={ph} WHERE `rtype`={ph} AND `rid` IN ({rid});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, rid=acc_ids)
+    sql_list.append({'s': sql, 'v': (state, TP_ACCOUNT)})
 
-    sql = 'UPDATE `{}ops_map` SET a_state={state} WHERE a_id IN ({acc_id});' \
-          ''.format(db.table_prefix, state=state, acc_id=acc_ids)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}ops_map` SET `a_state`={ph} WHERE `a_id` IN ({acc_id});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder, acc_id=acc_ids)
+    sql_list.append({'s': sql, 'v': (state, )})
 
     if db.transaction(sql_list):
         return TPE_OK
@@ -423,23 +426,23 @@ def remove_accounts(handler, host_id, acc_ids):
             acc_name += '（由{}:{}路由）'.format(_h_router_ip, _h_router_port)
         acc_names.append(acc_name)
 
-    sql_list = []
+    sql_list = list()
 
-    sql = 'DELETE FROM `{}acc` WHERE host_id={} AND id IN ({});'.format(db.table_prefix, host_id, acc_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}acc` WHERE `host_id`={ph} AND `id` IN ({ids});'.format(tp=db.table_prefix, ph=db.place_holder, ids=acc_ids)
+    sql_list.append({'s': sql, 'v': (host_id, )})
 
-    sql = 'DELETE FROM `{}group_map` WHERE type={} AND mid IN ({});'.format(db.table_prefix, TP_GROUP_ACCOUNT, acc_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}group_map` WHERE `type`={ph} AND `mid` IN ({ids});'.format(tp=db.table_prefix, ph=db.place_holder, ids=acc_ids)
+    sql_list.append({'s': sql, 'v': (TP_GROUP_ACCOUNT, )})
 
     # 更新主机相关账号数量
-    sql = 'UPDATE `{}host` SET acc_count=acc_count-{acc_count} WHERE id={host_id};'.format(db.table_prefix, acc_count=acc_count, host_id=host_id)
-    sql_list.append(sql)
+    sql = 'UPDATE `{tp}host` SET `acc_count`=`acc_count`-{ph} WHERE `id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (acc_count, host_id)})
 
-    sql = 'DELETE FROM `{}ops_auz` WHERE rtype={rtype} AND rid IN ({rid});'.format(db.table_prefix, rtype=TP_ACCOUNT, rid=acc_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}ops_auz` WHERE `rtype`={ph} AND `rid` IN ({rid});'.format(tp=db.table_prefix, ph=db.place_holder, rid=acc_ids)
+    sql_list.append({'s': sql, 'v': (TP_ACCOUNT, )})
 
-    sql = 'DELETE FROM `{}ops_map` WHERE a_id IN ({acc_id});'.format(db.table_prefix, acc_id=acc_ids)
-    sql_list.append(sql)
+    sql = 'DELETE FROM `{tp}ops_map` WHERE `a_id` IN ({acc_id});'.format(tp=db.table_prefix, acc_id=acc_ids)
+    sql_list.append({'s': sql, 'v': None})
 
     if not db.transaction(sql_list):
         return TPE_DATABASE

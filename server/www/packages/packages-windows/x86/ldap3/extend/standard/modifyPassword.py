@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -67,6 +67,6 @@ class ModifyPassword(ExtendedOperation):
                 self.result[self.response_attribute] = True
             else:  # change was not successful, raises exception if raise_exception = True in connection or returns the operation result, error code is in result['result']
                 self.result[self.response_attribute] = False
-                if not self.connection.raise_exceptions:
+                if self.connection.raise_exceptions:
                     from ...core.exceptions import LDAPOperationResult
                     raise LDAPOperationResult(result=self.result['result'], description=self.result['description'], dn=self.result['dn'], message=self.result['message'], response_type=self.result['type'])

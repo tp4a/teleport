@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -47,7 +47,11 @@ def paged_search_generator(connection,
         search_base = safe_dn(search_base)
 
     responses = []
-    cookie = True  # performs search at least one time
+    original_connection = None
+    original_auto_referrals = connection.auto_referrals
+    connection.auto_referrals = False  # disable auto referrals because it cannot handle paged searches
+    cookie = True  # performs search operation at least one time
+    cachekey = None  # for referrals cache
     while cookie:
         result = connection.search(search_base,
                                    search_filter,
@@ -69,13 +73,19 @@ def paged_search_generator(connection,
             response = connection.response
             result = connection.result
 
+        if result['referrals'] and original_auto_referrals:  # if rererrals are returned start over the loop with a new connection to the referral
+            if not original_connection:
+                original_connection = connection
+            _, connection, cachekey = connection.strategy.create_referral_connection(result['referrals'])   # change connection to a valid referrals
+            continue
+
         responses.extend(response)
         try:
             cookie = result['controls']['1.2.840.113556.1.4.319']['value']['cookie']
         except KeyError:
             cookie = None
 
-        if result and result['result'] not in DO_NOT_RAISE_EXCEPTIONS:
+        if connection.raise_exceptions and result and result['result'] not in DO_NOT_RAISE_EXCEPTIONS:
             if log_enabled(PROTOCOL):
                 log(PROTOCOL, 'paged search operation result <%s> for <%s>', result, connection)
             if result['result'] == RESULT_SIZE_LIMIT_EXCEEDED:
@@ -86,6 +96,14 @@ def paged_search_generator(connection,
         while responses:
             yield responses.pop()
 
+    if original_connection:
+        connection = original_connection
+        if connection.use_referral_cache and cachekey:
+            connection.strategy.referral_cache[cachekey] = connection
+        else:
+            connection.unbind()
+
+    connection.auto_referrals = original_auto_referrals
     connection.response = None
 
 

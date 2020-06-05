@@ -28,7 +28,7 @@ $tp.create_table = function (options) {
     // clear
     // reset_filter
 
-    var _tbl = {};
+    let _tbl = {};
 
     // 此表格绑定的DOM对象的ID，用于JQuery的选择器
     _tbl.dom_id = options.dom_id;
@@ -223,7 +223,6 @@ $tp.create_table = function (options) {
     _tbl.load_data = function (cb_stack, cb_args) {
         cb_stack = cb_stack || CALLBACK_STACK.create();
 
-        //log.v('load table data.', cb_args);
         if (_tbl.paging_ctrl)
             _tbl.per_page = _tbl.paging_ctrl.get_per_page();
         else
@@ -238,7 +237,6 @@ $tp.create_table = function (options) {
                 console.error('filter', name, 'has have no get_filter() interface.');
             }
             var _f = ctrl.get_filter();
-            // console.log('filter from', name, _f);
             $.each(_f, function (k, v) {
                 _filter[k] = v;
             });
@@ -949,7 +947,7 @@ $tp.create_table_render = function (tbl, on_created) {
     _tbl_render.date_time = function (row_id, fields) {
         if (0 === fields.timestamp)
             return '';
-        return '<span class="datetime">' + tp_format_datetime(tp_utc2local(fields.timestamp)) + '</span>';
+        return '<span class="datetime">' + tp_format_datetime(fields.timestamp) + '</span>';
     };
 
     _tbl_render.date_time_local = function (row_id, fields) {

@@ -1,4 +1,4 @@
-#ifndef __LIB_EX_STR_H__
+ï»¿#ifndef __LIB_EX_STR_H__
 #define __LIB_EX_STR_H__
 
 #include "ex_types.h"
@@ -55,13 +55,17 @@ int ex_wcsformat(wchar_t* out_buf, size_t buf_size, const wchar_t* fmt, ...);
 
 #include <string>
 #include <vector>
+//#include <ostream>
+#include <sstream>
 
 typedef std::string ex_astr;
 typedef std::wstring ex_wstr;
+typedef std::ostringstream ex_aoss;
+typedef std::wostringstream ex_woss;
 
 typedef std::vector<ex_astr> ex_astrs;
 typedef std::vector<ex_wstr> ex_wstrs;
-typedef std::vector<ex_utf16> ex_str_utf16le;
+//typedef std::vector<ex_utf16> ex_str_utf16le;
 
 bool ex_wstr2astr(const ex_wstr& in_str, ex_astr& out_str, int code_page = EX_CODEPAGE_DEFAULT);
 bool ex_wstr2astr(const wchar_t* in_str, ex_astr& out_str, int code_page = EX_CODEPAGE_DEFAULT);
@@ -77,8 +81,22 @@ void ex_remove_white_space(ex_wstr& str_fix, int ulFlag = EX_RSC_ALL);
 ex_astr& ex_replace_all(ex_astr& str, const ex_astr& old_value, const ex_astr& new_value);
 ex_wstr& ex_replace_all(ex_wstr& str, const ex_wstr& old_value, const ex_wstr& new_value);
 
-// ½«UTF8×Ö·û´®×ª»»ÎªUTF16-LE×Ö·û´®£¨Êä³ö½á¹û°üº¬\0½áÊø·û£©
-bool ex_utf8_to_utf16le(const std::string& from, ex_str_utf16le& to);
+class ex_str_utf16le {
+public:
+    ex_str_utf16le();
+    ~ex_str_utf16le();
+
+    size_t length() const;
+    bool from_utf8(const ex_astr& from);
+
+    const uint16_t* c_str() const;
+
+protected:
+    std::vector<uint16_t> m_data;
+};
+
+// å°†UTF8å­—ç¬¦ä¸²è½¬æ¢ä¸ºUTF16-LEå­—ç¬¦ä¸²ï¼ˆè¾“å‡ºç»“æœåŒ…å«\0ç»“æŸç¬¦ï¼‰
+//bool ex_utf8_to_utf16le(const ex_astr& from, ex_str_utf16le& to);
 
 #endif
 

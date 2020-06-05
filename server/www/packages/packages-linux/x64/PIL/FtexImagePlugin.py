@@ -20,7 +20,14 @@ has the following structure:
 {format_directory}
 {data}
 Where:
-{header} = { u32:magic, u32:version, u32:width, u32:height, u32:mipmap_count, u32:format_count }
+{header} = {
+    u32:magic,
+    u32:version,
+    u32:width,
+    u32:height,
+    u32:mipmap_count,
+    u32:format_count
+}
 
 * The "magic" number is "FTEX".
 * "width" and "height" are the dimensions of the texture.
@@ -46,8 +53,8 @@ Note: All data is stored in little-Endian (Intel) byte order.
 
 import struct
 from io import BytesIO
-from . import Image, ImageFile
 
+from . import Image, ImageFile
 
 MAGIC = b"FTEX"
 FORMAT_DXT1 = 0
@@ -59,8 +66,8 @@ class FtexImageFile(ImageFile.ImageFile):
     format_description = "Texture File Format (IW2:EOC)"
 
     def _open(self):
-        magic = struct.unpack("<I", self.fp.read(4))
-        version = struct.unpack("<i", self.fp.read(4))
+        struct.unpack("<I", self.fp.read(4))  # magic
+        struct.unpack("<i", self.fp.read(4))  # version
         self._size = struct.unpack("<2i", self.fp.read(8))
         mipmap_count, format_count = struct.unpack("<2i", self.fp.read(8))
 
@@ -72,7 +79,7 @@ class FtexImageFile(ImageFile.ImageFile):
 
         format, where = struct.unpack("<2i", self.fp.read(8))
         self.fp.seek(where)
-        mipmap_size, = struct.unpack("<i", self.fp.read(4))
+        (mipmap_size,) = struct.unpack("<i", self.fp.read(4))
 
         data = self.fp.read(mipmap_size)
 
@@ -80,10 +87,9 @@ class FtexImageFile(ImageFile.ImageFile):
             self.mode = "RGBA"
             self.tile = [("bcn", (0, 0) + self.size, 0, (1))]
         elif format == FORMAT_UNCOMPRESSED:
-            self.tile = [("raw", (0, 0) + self.size, 0, ('RGB', 0, 1))]
+            self.tile = [("raw", (0, 0) + self.size, 0, ("RGB", 0, 1))]
         else:
-            raise ValueError(
-                "Invalid texture compression format: %r" % (format))
+            raise ValueError("Invalid texture compression format: %r" % (format))
 
         self.fp.close()
         self.fp = BytesIO(data)

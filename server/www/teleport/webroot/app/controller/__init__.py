@@ -66,6 +66,8 @@ controllers = [
     (r'/user/get-users', user.DoGetUsersHandler),
     #  - 用户重设密码页面 /auth/reset-password
     (r'/user/reset-password', user.ResetPasswordHandler),
+    #  - 用户密码过期，修改密码页面 /auth/change-password
+    (r'/user/change-expired-password', user.ChangeExpiredPasswordHandler),
     #  - [json] 重置密码
     (r'/user/do-reset-password', user.DoResetPasswordHandler),
     #  - 用户绑定OATH
@@ -260,6 +262,8 @@ controllers = [
     (r'/system/do-ldap-get-users', system.DoLdapGetUsersHandler),
     #  - [json] 导入LDAP用户
     (r'/system/do-ldap-import', system.DoLdapImportHandler),
+    #  - [text] 导出数据库
+    (r'/system/export-db', system.DoExportDBHandler),
 
     #
     #  - [json] 获取服务器时间
@@ -274,7 +278,7 @@ controllers = [
     #  - 初始安装设置（新安装，未创建数据库时自动跳转到此页面）
     (r'/maintenance/install', maintenance.InstallHandler),
     #  - 升级（数据库版本发生变化时跳转到此页面）
-    # (r'/maintenance/upgrade', maintenance.UpgradeHandler),
+    (r'/maintenance/upgrade', maintenance.UpgradeHandler),
     #  - [json] 维护过程中页面与后台的通讯接口
     (r'/maintenance/rpc', maintenance.RpcHandler),
 

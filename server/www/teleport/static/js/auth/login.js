@@ -20,9 +20,8 @@ var SLOGAN = [
     '追求进步，<br/>不求完美。'
 ];
 
-
 $app.on_init = function (cb_stack) {
-    $app.login_type = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA;
+    $app.login_type = -1;
     $app.dom = {
         slogan: $('#msg-slogan'),
         auth_box: $('#auth-box-container'),
@@ -47,9 +46,11 @@ $app.on_init = function (cb_stack) {
     $app.last_img_idx = 0;
     $app.last_slogan_idx = 0;
 
-    // console.log($app.options);
     if ($app.options.username.length > 0) {
         $app.dom.input_username.val($app.options.username);
+        $app.dom.input_password.focus();
+    } else {
+        $app.dom.input_username.focus();
     }
 
     $app.dom.captcha_image.attr('src', '/auth/captcha?h=36&rnd=' + Math.random());
@@ -59,18 +60,10 @@ $app.on_init = function (cb_stack) {
     //$app.init_slogan();
 
     $app.dom.btn_login_type_password.click(function () {
-        $app.login_type = TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA;
-        $app.dom.btn_login_type_oath.removeClass('selected');
-        $(this).addClass('selected');
-        $app.dom.area_oath.slideUp(100);
-        $app.dom.area_captcha.slideDown(100);
+        $app.switch_login_type(TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA, true);
     });
     $app.dom.btn_login_type_oath.click(function () {
-        $app.login_type = TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH;
-        $app.dom.btn_login_type_password.removeClass('selected');
-        $(this).addClass('selected');
-        $app.dom.area_oath.slideDown(100);
-        $app.dom.area_captcha.slideUp(100);
+        $app.switch_login_type(TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH, true);
     });
 
     $app.dom.btn_login.click($app.login_account);
@@ -108,12 +101,41 @@ $app.on_init = function (cb_stack) {
     });
 
     if ($app.options.default_auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA) {
-        $app.dom.btn_login_type_password.click();
+        $app.switch_login_type(TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA, false);
     } else if ($app.options.default_auth & TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH) {
-        $app.dom.btn_login_type_oath.click();
+        $app.switch_login_type(TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH, false);
     }
 
     cb_stack.exec();
+};
+
+$app.switch_login_type = function(login_type, animate) {
+    if($app.login_type === login_type)
+        return;
+
+    if(login_type === TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA) {
+        $app.login_type = login_type;
+        $app.dom.btn_login_type_oath.removeClass('selected');
+        $app.dom.btn_login_type_password.addClass('selected');
+        if(animate) {
+            $app.dom.area_oath.slideUp(100);
+            $app.dom.area_captcha.slideDown(100);
+        } else {
+            $app.dom.area_oath.hide();
+            $app.dom.area_captcha.show();
+        }
+    } else if(login_type === TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH) {
+        $app.login_type = login_type;
+        $app.dom.btn_login_type_password.removeClass('selected');
+        $app.dom.btn_login_type_oath.addClass('selected');
+        if(animate) {
+            $app.dom.area_oath.slideDown(100);
+            $app.dom.area_captcha.slideUp(100);
+        } else {
+            $app.dom.area_oath.show();
+            $app.dom.area_captcha.hide();
+        }
+    }
 };
 
 $app.hide_op_box = function () {
@@ -157,7 +179,7 @@ $app.login_account = function () {
         }
     } else if ($app.login_type === TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH) {
         var test_oath = '' + parseInt(str_oath);
-        if(str_oath.length === 6) {
+        if (str_oath.length === 6) {
             for (; ;) {
                 if (test_oath.length < 6)
                     test_oath = '0' + test_oath;
@@ -216,8 +238,14 @@ $app.do_account_login = function (username, password, captcha, oath, is_remember
                 window.location.href = $app.options.ref;
             } else {
                 $app.hide_op_box();
-                $app.show_op_box('error', '登录失败：' + tp_error_msg(ret.code, ret.message));
                 $app.dom.captcha_image.attr('src', '/auth/captcha?h=36&rnd=' + Math.random());
+
+                if (ret.code === TPE_EXPIRED) {
+                    // must change password before login.
+                    window.location.href = '/user/change-expired-password?username=' + encodeURIComponent(username);
+                }
+
+                $app.show_op_box('error', '登录失败：' + tp_error_msg(ret.code, ret.message));
                 console.log(ret);
             }
 
@@ -239,8 +267,8 @@ $app.on_screen_resize = function () {
 $app.init_blur_bg = function () {
     $app.last_img_idx = Math.floor(Math.random() * (BLUR_BG_IMG.length));
     $('body').backgroundBlur({
-        imageURL: '/static/img/login/' + BLUR_BG_IMG[$app.last_img_idx] + '?' + Math.random(),
-        blurAmount: 15,
+        imageURL: '/static/img/login/' + BLUR_BG_IMG[$app.last_img_idx], // + '?' + Math.random(),
+        blurAmount: 8,
         duration: 1000,
         imageClass: 'bg-blur',
         overlayClass: 'bg-blur-overlay'
@@ -250,13 +278,7 @@ $app.init_blur_bg = function () {
 
     setTimeout(function () {
         $app.init_slogan();
-    }, 2000);
-
-    setTimeout(function () {
-        $app.dom.auth_box.fadeIn(800, function () {
-            $app.dom.input_username.focus();
-        });
-    }, 300);
+    }, 1200);
 };
 
 $app._update_blur_bg = function () {
@@ -267,14 +289,14 @@ $app._update_blur_bg = function () {
             break;
         }
     }
-    $('body').backgroundBlur('/static/img/login/' + BLUR_BG_IMG[$app.last_img_idx] + '?' + Math.random());
+    $('body').backgroundBlur('/static/img/login/' + BLUR_BG_IMG[$app.last_img_idx]);// + '?' + Math.random());
 };
 
 $app.init_slogan = function () {
     $app.last_slogan_idx = Math.floor(Math.random() * SLOGAN.length);
     $app.dom.slogan.html(SLOGAN[$app.last_slogan_idx]).fadeIn(1000);
 
-    setInterval($app._update_slogan, 8100);
+    setInterval($app._update_slogan, 12100);
 };
 
 $app._update_slogan = function () {

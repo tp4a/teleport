@@ -9,6 +9,9 @@
 *.aps
 **/ipch
 
+*.tpr
+*.tpd
+
 # for CMake
 CMakeFiles
 cmake_install.cmake
@@ -28,8 +31,10 @@ __pycache__
 **/.idea/misc.xml
 **/.idea/dictionaries
 **/.idea/watcherTasks.xml
+**/.idea/dataSources.*
 **/.idea/inspectionProfiles
 **/.idea/codeStyles
+**/.idea/dataSources
 **/.idea/inspectionProfiles
 **/.idea/vcs.xml
 **/.idea/modules.xml
@@ -65,7 +70,6 @@ __pycache__
 /server/share/db
 /server/share/log
 /server/share/replay
-/server/testssh
 
 
 # for generated files.
@@ -78,9 +82,7 @@ __pycache__
 /client/tp_rdp
 /server/tp_core/protocol/rdp
 /client/tools/tprdp
-/server/tp_core/testssh
-/client/tp_assist_win_it_doctor
-/dist/client/windows/assist-it-doctor
+/client/build-tp-player-*
 
 # for MacOS.
 .DS_Store
@@ -102,3 +104,7 @@ profile
 *.moved-aside
 /server/share/tmp
 
+/server/tp_core/testssh/Debug
+/server/tp_core/testssh/Release
+/external/zlib
+/client/tools/qt-redist

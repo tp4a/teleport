@@ -320,6 +320,21 @@ def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
         raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
 
 
+def qt_build_win(prj_path, prj_name, bit_path, target_path):
+    cc.n(env.visual_studio_path)
+    if env.qt is None:
+        raise RuntimeError('where is `qt`?')
+
+    if env.is_win:
+        tmp_path = os.path.join(env.root_path, 'out', '_tmp_', prj_name, bit_path)
+        # C:\Windows\System32\cmd.exe /A /Q /K C:\Qt\Qt5.12.0\5.12.0\msvc2017\bin\qtenv2.bat
+        cmd = 'C:\\Windows\\System32\\cmd.exe /A /Q /C ""{}\qt-helper.bat" "{}\\bin\\qtenv2.bat" "{}VC\\Auxiliary\\Build\\vcvarsall.bat" {} "{}" "{}" {}"'.format(env.build_path, env.qt, env.visual_studio_path, bit_path, tmp_path, prj_path, target_path)
+        ret, _ = sys_exec(cmd, direct_output=True)
+        if ret != 0:
+            raise RuntimeError('build XCode project `{}` failed.'.format(proj_name))
+
+
+
 def xcode_build(proj_file, proj_name, target, force_rebuild):
     if force_rebuild:
         cmd = 'xcodebuild -project "{}" -target {} -configuration {} clean'.format(proj_file, proj_name, target)

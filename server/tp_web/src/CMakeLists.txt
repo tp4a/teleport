@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 
 MESSAGE(STATUS "=======================================================")
-MESSAGE(STATUS "               libtptelnet")
+MESSAGE(STATUS "               tp_web")
 MESSAGE(STATUS "=======================================================")
 #MESSAGE(STATUS "operation system is ${CMAKE_SYSTEM}")
 #MESSAGE(STATUS "current source directory is ${CMAKE_CURRENT_SOURCE_DIR}")
 
 include(../../../CMakeCfg.txt)
-
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(CMAKE_EXE_LINKER_FLAGS "-export-dynamic")
 
@@ -23,7 +21,7 @@ include_directories(
 
 include_directories(
         ${TP_EXTERNAL_RELEASE_DIR}/include
-        ${TP_EXTERNAL_RELEASE_DIR}/include/python
+        ${TP_EXTERNAL_RELEASE_DIR}/include/python3.7m
 )
 link_directories(${TP_EXTERNAL_RELEASE_DIR}/lib)
 

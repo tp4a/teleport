@@ -160,16 +160,18 @@ def tp_second2human(n):
     return ret
 
 
-def tp_timestamp_local_to_utc(t):
-    return int(datetime.datetime.utcfromtimestamp(time.mktime(time.localtime(t))).timestamp())
+def tp_timestamp_from_str(t, fmt='%Y-%m-%d %H:%M:%S'):
+    _fmt = '%Y-%m-%d %H:%M:%S' if fmt is None else fmt
+    d = datetime.datetime.strptime(t, _fmt)
+    return int(d.timestamp())
 
 
-def tp_timestamp_utc_now():
-    return int(datetime.datetime.utcnow().timestamp())
+def tp_timestamp_sec():
+    return int(datetime.datetime.now().timestamp())
 
 
-def tp_utc_timestamp_ms():
-    return int(datetime.datetime.utcnow().timestamp() * 1000)
+def tp_timestamp_ms():
+    return int(datetime.datetime.now().timestamp() * 1000)
 
 
 def tp_bytes2string(b, encode='utf8'):
@@ -253,7 +255,7 @@ class UniqueId:
         if '__tp_unique_id__' in builtins.__dict__:
             raise RuntimeError('UniqueId object exists, can not create more than one instance.')
 
-        self._id = tp_timestamp_utc_now()
+        self._id = tp_timestamp_sec()
         self._locker = threading.RLock()
 
     def generate(self):

@@ -706,6 +706,7 @@ $app.create_config_storage = function () {
         storage_size: $('#storage-size'),
         btn_save: $('#btn-save-storage-config'),
         btn_cleanup: $('#btn-clear-storage'),
+        btn_export_db: $('#btn-export-db'),
 
         input_keep_log: $('#storage-keep-log'),
         input_keep_record: $('#storage-keep-record'),
@@ -733,6 +734,10 @@ $app.create_config_storage = function () {
         });
         _sto.dom.btn_cleanup.click(function () {
             _sto.on_btn_cleanup();
+        });
+
+        _sto.dom.btn_export_db.click(function() {
+            _sto.on_export_db();
         });
 
         cb_stack.exec();
@@ -833,6 +838,10 @@ $app.create_config_storage = function () {
             },
             120000
         );
+    };
+
+    _sto.on_export_db = function() {
+        window.location.href = '/system/export-db';
     };
 
     return _sto;

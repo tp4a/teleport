@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import psutil
-from app.base.utils import tp_utc_timestamp_ms
+from app.base.utils import tp_timestamp_ms
 from app.const import *
 from app.base.wss import tp_wss
 from app.base.cron import tp_cron
@@ -35,7 +35,7 @@ class TPStats(object):
         }
 
     def init(self):
-        t = tp_utc_timestamp_ms() - 10 * 60 * 1000
+        t = tp_timestamp_ms() - 10 * 60 * 1000
         cnt = int((10 * 60 + self._INTERVAL - 1) / self._INTERVAL)
         for i in range(cnt):
             val = {
@@ -73,7 +73,7 @@ class TPStats(object):
         return True
 
     def _check_sys_stats(self):
-        val = {'t': tp_utc_timestamp_ms()}
+        val = {'t': tp_timestamp_ms()}
 
         cpu = psutil.cpu_times_percent()
         val['cpu'] = {'u': cpu.user, 's': cpu.system}

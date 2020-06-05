@@ -98,7 +98,7 @@ var TP_POLICY_AUTH_gUSER_gHOST = 8; // 8=用户组:主机组
 // =======================================================
 // 全局配置
 // =======================================================
-var TP_ASSIST_STARTUP_URLPROTO = 1; // 启用urlprotocol功能
+var TP_ASSIST_STARTUP_URLPROTO = 1; // 启用 url-protocol 功能
 
 // =======================================================
 // 授权标记
@@ -195,6 +195,8 @@ var TPE_PRIVILEGE = 3;
 var TPE_NOT_IMPLEMENT = 7;  // 尚未实现
 var TPE_EXISTS = 8;
 var TPE_NOT_EXISTS = 9;
+var TPE_NO_MORE_DATA = 10;  // 没有更多的数据了（不一定是错误）
+var TPE_INCOMPATIBLE_VERSION = 11; // 版本不兼容
 
 // 100~299是通用错误值
 
@@ -285,6 +287,9 @@ function tp_error_msg(error_code, message) {
         case TPE_DATABASE:
             msg = '数据库操作失败';
             break;
+        case TPE_EXPIRED:
+            msg = '已过期';
+            break;
 
 //-------------------------------------------------------
 // HTTP请求相关错误
@@ -329,7 +334,7 @@ function tp_error_msg(error_code, message) {
             break;
         
         case TPE_OATH_ALREADY_BIND:
-            msg = '该账号已经绑定了身份验证器，如无法使用，请联系管理员重置密码或更换登陆方式';
+            msg = '该账号已经绑定了身份验证器，如无法使用，请联系管理员重置密码或更换登录方式';
             break;
 
         case TPE_USER_LOCKED:

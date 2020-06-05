@@ -3,20 +3,18 @@
 from app.const import *
 from app.base.db import get_db, SQL
 from app.base.logger import log
-from app.base.utils import tp_timestamp_utc_now
+from app.base.utils import tp_timestamp_sec
 
 
 def sys_log(operator, client_ip, code, message=""):
     try:
         db = get_db()
-        sql = 'INSERT INTO `{}syslog` (user_name,user_surname,client_ip,code,log_time,message) ' \
-              'VALUES ("{user_name}","{user_surname}","{client_ip}",{code},{log_time},"{message}")' \
-              ';'.format(db.table_prefix,
-                         user_name=operator['username'], user_surname=operator['surname'], client_ip=client_ip, code=code,
-                         log_time=tp_timestamp_utc_now(), message=message
-                         )
+        sql_s = 'INSERT INTO `{tp}syslog` (`user_name`,`user_surname`,`client_ip`,`code`,`log_time`,`message`) ' \
+                'VALUES ({ph},{ph},{ph},{ph},{ph},{ph})' \
+                ';'.format(tp=db.table_prefix, ph=db.place_holder)
+        sql_v = (operator['username'], operator['surname'], client_ip, code, tp_timestamp_sec(), message)
 
-        ret = db.exec(sql)
+        ret = db.exec(sql_s, sql_v)
         if not ret:
             return TPE_DATABASE
 

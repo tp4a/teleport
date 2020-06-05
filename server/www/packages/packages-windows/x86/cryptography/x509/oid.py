@@ -4,66 +4,8 @@
 
 from __future__ import absolute_import, division, print_function
 
-from cryptography import utils
+from cryptography.hazmat._oid import ObjectIdentifier
 from cryptography.hazmat.primitives import hashes
-
-
-class ObjectIdentifier(object):
-    def __init__(self, dotted_string):
-        self._dotted_string = dotted_string
-
-        nodes = self._dotted_string.split(".")
-        intnodes = []
-
-        # There must be at least 2 nodes, the first node must be 0..2, and
-        # if less than 2, the second node cannot have a value outside the
-        # range 0..39.  All nodes must be integers.
-        for node in nodes:
-            try:
-                intnodes.append(int(node, 0))
-            except ValueError:
-                raise ValueError(
-                    "Malformed OID: %s (non-integer nodes)" % (
-                        self._dotted_string))
-
-        if len(nodes) < 2:
-            raise ValueError(
-                "Malformed OID: %s (insufficient number of nodes)" % (
-                    self._dotted_string))
-
-        if intnodes[0] > 2:
-            raise ValueError(
-                "Malformed OID: %s (first node outside valid range)" % (
-                    self._dotted_string))
-
-        if intnodes[0] < 2 and intnodes[1] >= 40:
-            raise ValueError(
-                "Malformed OID: %s (second node outside valid range)" % (
-                    self._dotted_string))
-
-    def __eq__(self, other):
-        if not isinstance(other, ObjectIdentifier):
-            return NotImplemented
-
-        return self.dotted_string == other.dotted_string
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __repr__(self):
-        return "<ObjectIdentifier(oid={0}, name={1})>".format(
-            self.dotted_string,
-            self._name
-        )
-
-    def __hash__(self):
-        return hash(self.dotted_string)
-
-    @property
-    def _name(self):
-        return _OID_NAMES.get(self, "Unknown OID")
-
-    dotted_string = utils.read_only_property("_dotted_string")
 
 
 class ExtensionOID(object):
@@ -82,6 +24,7 @@ class ExtensionOID(object):
     EXTENDED_KEY_USAGE = ObjectIdentifier("2.5.29.37")
     FRESHEST_CRL = ObjectIdentifier("2.5.29.46")
     INHIBIT_ANY_POLICY = ObjectIdentifier("2.5.29.54")
+    ISSUING_DISTRIBUTION_POINT = ObjectIdentifier("2.5.29.28")
     AUTHORITY_INFORMATION_ACCESS = ObjectIdentifier("1.3.6.1.5.5.7.1.1")
     SUBJECT_INFORMATION_ACCESS = ObjectIdentifier("1.3.6.1.5.5.7.1.11")
     OCSP_NO_CHECK = ObjectIdentifier("1.3.6.1.5.5.7.48.1.5")
@@ -91,6 +34,13 @@ class ExtensionOID(object):
     PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS = (
         ObjectIdentifier("1.3.6.1.4.1.11129.2.4.2")
     )
+    PRECERT_POISON = (
+        ObjectIdentifier("1.3.6.1.4.1.11129.2.4.3")
+    )
+
+
+class OCSPExtensionOID(object):
+    NONCE = ObjectIdentifier("1.3.6.1.5.5.7.48.1.2")
 
 
 class CRLEntryExtensionOID(object):
@@ -146,6 +96,8 @@ class SignatureAlgorithmOID(object):
     DSA_WITH_SHA1 = ObjectIdentifier("1.2.840.10040.4.3")
     DSA_WITH_SHA224 = ObjectIdentifier("2.16.840.1.101.3.4.3.1")
     DSA_WITH_SHA256 = ObjectIdentifier("2.16.840.1.101.3.4.3.2")
+    ED25519 = ObjectIdentifier("1.3.101.112")
+    ED448 = ObjectIdentifier("1.3.101.113")
 
 
 _SIG_OIDS_TO_HASH = {
@@ -163,7 +115,9 @@ _SIG_OIDS_TO_HASH = {
     SignatureAlgorithmOID.ECDSA_WITH_SHA512: hashes.SHA512(),
     SignatureAlgorithmOID.DSA_WITH_SHA1: hashes.SHA1(),
     SignatureAlgorithmOID.DSA_WITH_SHA224: hashes.SHA224(),
-    SignatureAlgorithmOID.DSA_WITH_SHA256: hashes.SHA256()
+    SignatureAlgorithmOID.DSA_WITH_SHA256: hashes.SHA256(),
+    SignatureAlgorithmOID.ED25519: None,
+    SignatureAlgorithmOID.ED448: None,
 }
 
 
@@ -231,6 +185,8 @@ _OID_NAMES = {
     SignatureAlgorithmOID.DSA_WITH_SHA1: "dsa-with-sha1",
     SignatureAlgorithmOID.DSA_WITH_SHA224: "dsa-with-sha224",
     SignatureAlgorithmOID.DSA_WITH_SHA256: "dsa-with-sha256",
+    SignatureAlgorithmOID.ED25519: "ed25519",
+    SignatureAlgorithmOID.ED448: "ed448",
     ExtendedKeyUsageOID.SERVER_AUTH: "serverAuth",
     ExtendedKeyUsageOID.CLIENT_AUTH: "clientAuth",
     ExtendedKeyUsageOID.CODE_SIGNING: "codeSigning",
@@ -246,6 +202,7 @@ _OID_NAMES = {
     ExtensionOID.PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS: (
         "signedCertificateTimestampList"
     ),
+    ExtensionOID.PRECERT_POISON: "ctPoison",
     CRLEntryExtensionOID.CRL_REASON: "cRLReason",
     CRLEntryExtensionOID.INVALIDITY_DATE: "invalidityDate",
     CRLEntryExtensionOID.CERTIFICATE_ISSUER: "certificateIssuer",
@@ -258,6 +215,9 @@ _OID_NAMES = {
     ExtensionOID.EXTENDED_KEY_USAGE: "extendedKeyUsage",
     ExtensionOID.FRESHEST_CRL: "freshestCRL",
     ExtensionOID.INHIBIT_ANY_POLICY: "inhibitAnyPolicy",
+    ExtensionOID.ISSUING_DISTRIBUTION_POINT: (
+        "issuingDistributionPoint"
+    ),
     ExtensionOID.AUTHORITY_INFORMATION_ACCESS: "authorityInfoAccess",
     ExtensionOID.SUBJECT_INFORMATION_ACCESS: "subjectInfoAccess",
     ExtensionOID.OCSP_NO_CHECK: "OCSPNoCheck",
@@ -268,4 +228,5 @@ _OID_NAMES = {
     AuthorityInformationAccessOID.CA_ISSUERS: "caIssuers",
     CertificatePoliciesOID.CPS_QUALIFIER: "id-qt-cps",
     CertificatePoliciesOID.CPS_USER_NOTICE: "id-qt-unotice",
+    OCSPExtensionOID.NONCE: "OCSPNonce",
 }

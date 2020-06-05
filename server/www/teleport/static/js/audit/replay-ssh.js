@@ -56,7 +56,7 @@ $app.on_init = function (cb_stack) {
                     $app.record_hdr.height = 24;
                 console.log('header', $app.record_hdr);
 
-                $('#recorder-info').html(tp_format_datetime($app.record_hdr.start) + ': ' + $app.record_hdr.user_name + '@' + $app.record_hdr.client_ip + ' 访问 ' + $app.record_hdr.account + '@' + $app.record_hdr.conn_ip + ':' + $app.record_hdr.conn_port);
+                $('#recorder-info').html(tp_format_datetime($app.record_hdr.start) + '，用户' + $app.record_hdr.user_name + '（来自' + $app.record_hdr.client_ip + '） 访问远程主机 ' + $app.record_hdr.account + '@' + $app.record_hdr.conn_ip + ':' + $app.record_hdr.conn_port);
 
                 $app.req_record_data(record_id, 0);
 
@@ -163,12 +163,13 @@ $app.on_init = function (cb_stack) {
 $app.req_record_data = function (record_id, offset) {
     $tp.ajax_post_json('/audit/get-record-data', {protocol: TP_PROTOCOL_TYPE_SSH, id: record_id, offset: offset},
         function (ret) {
-            if (ret.code === TPE_OK) {
-                // console.log('data', ret.data);
+            if (ret.code === TPE_OK || ret.code === TPE_NO_MORE_DATA) {
+                console.log('data', ret.data);
                 $app.record_data = $app.record_data.concat(ret.data.data_list);
                 $app.record_data_offset += ret.data.data_size;
 
-                if ($app.record_data.length < $app.record_hdr.pkg_count) {
+                //if ($app.record_data.length < $app.record_hdr.pkg_count) {
+                if(ret.code === TPE_OK) {
                     $app.req_record_data(record_id, $app.record_data_offset);
                 }
             } else {
@@ -252,7 +253,8 @@ $app.do_play = function() {
                 $app.player_console_term.write(tp_base64_decode(play_data.d));
             }
 
-            if (($app.played_pkg_count + 1) === $app.record_hdr.pkg_count) {
+            //if (($app.played_pkg_count + 1) === $app.record_hdr.pkg_count) {
+            if (($app.played_pkg_count + 1) === $app.record_data.length) {
                 $app.dom.progress.val(100);
                 $app.dom.status.text('播放完成');
                 $app.dom.time.text(parseInt($app.record_hdr.time_used / 1000) + '秒');
@@ -287,7 +289,8 @@ $app.do_play = function() {
     $app.dom.time.text(temp + '/' + parseInt($app.record_hdr.time_used / 1000) + '秒');
 
     // if all packages played
-    if ($app.played_pkg_count >= $app.record_hdr.pkg_count) {
+    // if ($app.played_pkg_count >= $app.record_hdr.pkg_count) {
+    if ($app.played_pkg_count >= $app.record_data.length) {
         $app.dom.progress.val(100);
         $app.dom.status.text('播放完成');
         $app.dom.time.text(parseInt($app.record_hdr.time_used / 1000) + '秒');

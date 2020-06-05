@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 import sys
@@ -21,21 +21,27 @@ noValue = univ.noValue
 class AbstractCharacterString(univ.OctetString):
     """Creates |ASN.1| schema or value object.
 
-    |ASN.1| objects are immutable and duck-type Python 2 :class:`unicode` or Python 3 :class:`str`.
-    When used in octet-stream context, |ASN.1| type assumes "|encoding|" encoding.
+    |ASN.1| class is based on :class:`~pyasn1.type.base.SimpleAsn1Type`,
+    its objects are immutable and duck-type Python 2 :class:`str` or Python 3
+    :class:`bytes`. When used in octet-stream context, |ASN.1| type assumes
+    "|encoding|" encoding.
 
     Keyword Args
     ------------
     value: :class:`unicode`, :class:`str`, :class:`bytes` or |ASN.1| object
-        unicode object (Python 2) or string (Python 3), alternatively string
-        (Python 2) or bytes (Python 3) representing octet-stream of serialised
-        unicode string (note `encoding` parameter) or |ASN.1| class instance.
+        :class:`unicode` object (Python 2) or :class:`str` (Python 3),
+        alternatively :class:`str` (Python 2) or :class:`bytes` (Python 3)
+        representing octet-stream of serialised unicode string
+        (note `encoding` parameter) or |ASN.1| class instance.
+        If `value` is not given, schema object will be created.
 
     tagSet: :py:class:`~pyasn1.type.tag.TagSet`
         Object representing non-default ASN.1 tag(s)
 
     subtypeSpec: :py:class:`~pyasn1.type.constraint.ConstraintsIntersection`
-        Object representing non-default ASN.1 subtype constraint(s)
+        Object representing non-default ASN.1 subtype constraint(s). Constraints
+        verification for |ASN.1| type occurs automatically on object
+        instantiation.
 
     encoding: :py:class:`str`
         Unicode codec ID to encode/decode :class:`unicode` (Python 2) or
@@ -44,7 +50,7 @@ class AbstractCharacterString(univ.OctetString):
 
     Raises
     ------
-    :py:class:`~pyasn1.error.PyAsn1Error`
+    ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
         On constraint violation or bad initializer.
     """
 
@@ -55,8 +61,10 @@ class AbstractCharacterString(univ.OctetString):
                 return self._value.encode(self.encoding)
 
             except UnicodeEncodeError:
-                raise error.PyAsn1Error(
-                    "Can't encode string '%s' with codec %s" % (self._value, self.encoding)
+                exc = sys.exc_info()[1]
+                raise error.PyAsn1UnicodeEncodeError(
+                    "Can't encode string '%s' with codec "
+                    "%s" % (self._value, self.encoding), exc
                 )
 
         def __unicode__(self):
@@ -76,8 +84,10 @@ class AbstractCharacterString(univ.OctetString):
                     return unicode(value)
 
             except (UnicodeDecodeError, LookupError):
-                raise error.PyAsn1Error(
-                    "Can't decode string '%s' with codec %s" % (value, self.encoding)
+                exc = sys.exc_info()[1]
+                raise error.PyAsn1UnicodeDecodeError(
+                    "Can't decode string '%s' with codec "
+                    "%s" % (value, self.encoding), exc
                 )
 
         def asOctets(self, padding=True):
@@ -95,8 +105,10 @@ class AbstractCharacterString(univ.OctetString):
             try:
                 return self._value.encode(self.encoding)
             except UnicodeEncodeError:
-                raise error.PyAsn1Error(
-                    "Can't encode string '%s' with codec %s" % (self._value, self.encoding)
+                exc = sys.exc_info()[1]
+                raise error.PyAsn1UnicodeEncodeError(
+                    "Can't encode string '%s' with codec "
+                    "%s" % (self._value, self.encoding), exc
                 )
 
         def prettyIn(self, value):
@@ -113,8 +125,10 @@ class AbstractCharacterString(univ.OctetString):
                     return str(value)
 
             except (UnicodeDecodeError, LookupError):
-                raise error.PyAsn1Error(
-                    "Can't decode string '%s' with codec %s" % (value, self.encoding)
+                exc = sys.exc_info()[1]
+                raise error.PyAsn1UnicodeDecodeError(
+                    "Can't decode string '%s' with codec "
+                    "%s" % (value, self.encoding), exc
                 )
 
         def asOctets(self, padding=True):

@@ -54,10 +54,3 @@
     <!-- end of box -->
 
 </div>
-
-
-<%block name="embed_js">
-    <script type="text/javascript">
-##         ywl.add_page_options(${page_param});
-    </script>
-</%block>

@@ -144,6 +144,9 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             if err != TPE_OK:
                 return self.write_json(err)
 
+            if ops_auth['u_id'] != self._user['id']:
+                return self.write_json(TPE_PRIVILEGE)
+
             policy_id = ops_auth['p_id']
             acc_id = ops_auth['a_id']
             host_id = ops_auth['h_id']
@@ -295,6 +298,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         data = dict()
         data['session_id'] = ret_data['sid']
         data['host_ip'] = host_info['ip']
+        data['host_name'] = host_info['name']
         data['protocol_flag'] = acc_info['protocol_flag']
 
         if conn_info['protocol_type'] == TP_PROTOCOL_TYPE_RDP:

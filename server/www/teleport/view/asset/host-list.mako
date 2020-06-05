@@ -31,6 +31,9 @@
 ## Begin Main Body.
 
 <div class="page-content-inner">
+    ## 防止页面搜索框被自动填充
+    <label style="display:none;"><span></span><input type="text" name="hidden1" ></label>
+    <label style="display:none;"><span></span><input type="password" name="hidden2" ></label>
 
     <!-- begin box -->
     <div class="box">

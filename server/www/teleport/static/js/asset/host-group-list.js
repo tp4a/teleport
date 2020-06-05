@@ -174,7 +174,7 @@ $app.on_table_groups_cell_created = function (tbl, row_id, col_key, cell_obj) {
             $app.dlg_edit_group.show_edit(_row_id);
         });
         cell_obj.find('[data-btn-remove]').click(function () {
-            console.log(_row_id);
+            // console.log(_row_id);
             $app.on_btn_remove_group_click(_row_id);
         });
     }
@@ -257,8 +257,6 @@ $app.on_table_groups_render_created = function (render) {
     render.members = function (row_id, fields) {
         if (_.isUndefined(fields.members))
             return '';
-
-        console.log('xxx', fields.members);
 
         var ret = [];
         for (var i = 0; i < fields.members.length; ++i) {
@@ -509,7 +507,7 @@ $app.create_dlg_edit_group = function () {
     };
 
     dlg.on_save = function () {
-        console.log('---save.');
+        // console.log('---save.');
         dlg.hide_error();
         if (!dlg.check_input())
             return;

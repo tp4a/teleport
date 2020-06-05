@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2016 - 2018 Giovanni Cannata
+# Copyright 2016 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -26,7 +26,6 @@
 import json
 import re
 
-from threading import Lock
 from random import SystemRandom
 
 from pyasn1.type.univ import OctetString
@@ -224,7 +223,7 @@ class MockBaseStrategy(object):
                         return False
                     if attribute.lower() == 'objectclass' and self.connection.server.schema:  # builds the objectClass hierarchy only if schema is present
                         class_set = set()
-                        for object_class in attributes['objectClass']:
+                        for object_class in attributes[attribute]:
                             if self.connection.server.schema.object_classes and object_class not in self.connection.server.schema.object_classes:
                                 return False
                             # walkups the class hierarchy and buils a set of all classes in it
@@ -654,6 +653,7 @@ class MockBaseStrategy(object):
         if '+' in attributes:  # operational attributes requested
             attributes.extend(self.operational_attributes)
             attributes.remove('+')
+
         attributes = [attr.lower() for attr in request['attributes']]
 
         filter_root = parse_filter(request['filter'], self.connection.server.schema, auto_escape=True, auto_encode=False, validator=self.connection.server.custom_validator, check_names=self.connection.check_names)
@@ -687,7 +687,11 @@ class MockBaseStrategy(object):
                                        for attribute in self.connection.server.dit[match]
                                        if attribute.lower() in attributes or ALL_ATTRIBUTES in attributes]
                     })
-
+                    if '+' not in attributes:  # remove operational attributes
+                        for op_attr in self.operational_attributes:
+                            for i, attr in enumerate(responses[len(responses)-1]['attributes']):
+                                if attr['type'] == op_attr:
+                                    del responses[len(responses)-1]['attributes'][i]
                 result_code = 0
                 message = ''
 
@@ -724,12 +728,12 @@ class MockBaseStrategy(object):
                     if extension[0] == '2.16.840.1.113719.1.27.100.31':  # getBindDNRequest [NOVELL]
                         result_code = 0
                         message = ''
-                        response_name = '2.16.840.1.113719.1.27.100.32'  # getBindDNResponse [NOVELL]
+                        response_name = OctetString('2.16.840.1.113719.1.27.100.32')  # getBindDNResponse [NOVELL]
                         response_value = OctetString(self.bound)
                     elif extension[0] == '1.3.6.1.4.1.4203.1.11.3':  # WhoAmI [RFC4532]
                         result_code = 0
                         message = ''
-                        response_name = '1.3.6.1.4.1.4203.1.11.3'  # WhoAmI [RFC4532]
+                        response_name = OctetString('1.3.6.1.4.1.4203.1.11.3')  # WhoAmI [RFC4532]
                         response_value = OctetString(self.bound)
                     break
 
@@ -845,7 +849,6 @@ class MockBaseStrategy(object):
             attr_name = node.assertion['attr']
             attr_value = node.assertion['value']
             for candidate in candidates:
-                # if attr_name in self.connection.server.dit[candidate] and attr_value in self.connection.server.dit[candidate][attr_name]:
                 if attr_name in self.connection.server.dit[candidate] and self.equal(candidate, attr_name, attr_value):
                     node.matched.add(candidate)
                 else:

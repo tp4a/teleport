@@ -17,14 +17,11 @@
 from . import Image, ImageFile
 from ._binary import i8
 
-__version__ = "0.1"
-
-
 #
 # Bitstream parser
 
-class BitStream(object):
 
+class BitStream:
     def __init__(self, fp):
         self.fp = fp
         self.bits = 0
@@ -58,6 +55,7 @@ class BitStream(object):
 ##
 # Image plugin for MPEG streams.  This plugin can identify a stream,
 # but it cannot read it.
+
 
 class MpegImageFile(ImageFile.ImageFile):
 

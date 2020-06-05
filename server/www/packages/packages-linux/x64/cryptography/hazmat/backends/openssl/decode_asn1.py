@@ -7,21 +7,16 @@ from __future__ import absolute_import, division, print_function
 import datetime
 import ipaddress
 
-import asn1crypto.core
-
 import six
 
 from cryptography import x509
+from cryptography.hazmat._der import DERReader, INTEGER, NULL, SEQUENCE
 from cryptography.x509.extensions import _TLS_FEATURE_TYPE_TO_ENUM
 from cryptography.x509.name import _ASN1_TYPE_TO_ENUM
 from cryptography.x509.oid import (
     CRLEntryExtensionOID, CertificatePoliciesOID, ExtensionOID,
     OCSPExtensionOID,
 )
-
-
-class _Integers(asn1crypto.core.SequenceOf):
-    _child_spec = asn1crypto.core.Integer
 
 
 def _obj2txt(backend, obj):
@@ -69,7 +64,7 @@ def _decode_x509_name(backend, x509_name):
         attribute = _decode_x509_name_entry(backend, entry)
         set_id = backend._lib.Cryptography_X509_NAME_ENTRY_set(entry)
         if set_id != prev_set_id:
-            attributes.append(set([attribute]))
+            attributes.append({attribute})
         else:
             # is in the same RDN a previous entry
             attributes[-1].add(attribute)
@@ -135,7 +130,7 @@ def _decode_general_name(backend, gn):
             if "1" in bits[prefix:]:
                 raise ValueError("Invalid netmask")
 
-            ip = ipaddress.ip_network(base.exploded + u"/{0}".format(prefix))
+            ip = ipaddress.ip_network(base.exploded + u"/{}".format(prefix))
         else:
             ip = ipaddress.ip_address(data)
 
@@ -160,7 +155,7 @@ def _decode_general_name(backend, gn):
     else:
         # x400Address or ediPartyName
         raise x509.UnsupportedGeneralNameType(
-            "{0} is not a supported type".format(
+            "{} is not a supported type".format(
                 x509._GENERAL_NAMES.get(gn.type, gn.type)
             ),
             gn.type
@@ -202,27 +197,32 @@ class _X509ExtensionParser(object):
             )
             if oid in seen_oids:
                 raise x509.DuplicateExtension(
-                    "Duplicate {0} extension found".format(oid), oid
+                    "Duplicate {} extension found".format(oid), oid
                 )
 
             # These OIDs are only supported in OpenSSL 1.1.0+ but we want
             # to support them in all versions of OpenSSL so we decode them
             # ourselves.
             if oid == ExtensionOID.TLS_FEATURE:
+                # The extension contents are a SEQUENCE OF INTEGERs.
                 data = backend._lib.X509_EXTENSION_get_data(ext)
-                parsed = _Integers.load(_asn1_string_to_bytes(backend, data))
+                data_bytes = _asn1_string_to_bytes(backend, data)
+                features = DERReader(data_bytes).read_single_element(SEQUENCE)
+                parsed = []
+                while not features.is_empty():
+                    parsed.append(features.read_element(INTEGER).as_integer())
+                # Map the features to their enum value.
                 value = x509.TLSFeature(
-                    [_TLS_FEATURE_TYPE_TO_ENUM[x.native] for x in parsed]
+                    [_TLS_FEATURE_TYPE_TO_ENUM[x] for x in parsed]
                 )
                 extensions.append(x509.Extension(oid, critical, value))
                 seen_oids.add(oid)
                 continue
             elif oid == ExtensionOID.PRECERT_POISON:
                 data = backend._lib.X509_EXTENSION_get_data(ext)
-                parsed = asn1crypto.core.Null.load(
-                    _asn1_string_to_bytes(backend, data)
-                )
-                assert parsed == asn1crypto.core.Null()
+                # The contents of the extension must be an ASN.1 NULL.
+                reader = DERReader(_asn1_string_to_bytes(backend, data))
+                reader.read_single_element(NULL).check_empty()
                 extensions.append(x509.Extension(
                     oid, critical, x509.PrecertPoison()
                 ))
@@ -245,7 +245,7 @@ class _X509ExtensionParser(object):
                 if ext_data == backend._ffi.NULL:
                     backend._consume_errors()
                     raise ValueError(
-                        "The {0} extension is invalid and can't be "
+                        "The {} extension is invalid and can't be "
                         "parsed".format(oid)
                     )
 
@@ -379,7 +379,14 @@ def _decode_authority_key_identifier(backend, akid):
 
 def _decode_authority_information_access(backend, aia):
     aia = backend._ffi.cast("Cryptography_STACK_OF_ACCESS_DESCRIPTION *", aia)
-    aia = backend._ffi.gc(aia, backend._lib.sk_ACCESS_DESCRIPTION_free)
+    aia = backend._ffi.gc(
+        aia,
+        lambda x: backend._lib.sk_ACCESS_DESCRIPTION_pop_free(
+            x, backend._ffi.addressof(
+                backend._lib._original_lib, "ACCESS_DESCRIPTION_free"
+            )
+        )
+    )
     num = backend._lib.sk_ACCESS_DESCRIPTION_num(aia)
     access_descriptions = []
     for i in range(num):
@@ -462,6 +469,30 @@ def _decode_general_subtrees(backend, stack_subtrees):
         subtrees.append(name)
 
     return subtrees
+
+
+def _decode_issuing_dist_point(backend, idp):
+    idp = backend._ffi.cast("ISSUING_DIST_POINT *", idp)
+    idp = backend._ffi.gc(idp, backend._lib.ISSUING_DIST_POINT_free)
+    if idp.distpoint != backend._ffi.NULL:
+        full_name, relative_name = _decode_distpoint(backend, idp.distpoint)
+    else:
+        full_name = None
+        relative_name = None
+
+    only_user = idp.onlyuser == 255
+    only_ca = idp.onlyCA == 255
+    indirect_crl = idp.indirectCRL == 255
+    only_attr = idp.onlyattr == 255
+    if idp.onlysomereasons != backend._ffi.NULL:
+        only_some_reasons = _decode_reasons(backend, idp.onlysomereasons)
+    else:
+        only_some_reasons = None
+
+    return x509.IssuingDistributionPoint(
+        full_name, relative_name, only_user, only_ca, only_some_reasons,
+        indirect_crl, only_attr
+    )
 
 
 def _decode_policy_constraints(backend, pc):
@@ -674,7 +705,7 @@ def _decode_crl_reason(backend, enum):
     try:
         return x509.CRLReason(_CRL_ENTRY_REASON_CODE_TO_ENUM[code])
     except KeyError:
-        raise ValueError("Unsupported reason code: {0}".format(code))
+        raise ValueError("Unsupported reason code: {}".format(code))
 
 
 def _decode_invalidity_date(backend, inv_date):
@@ -734,7 +765,7 @@ def _asn1_string_to_utf8(backend, asn1_string):
     res = backend._lib.ASN1_STRING_to_UTF8(buf, asn1_string)
     if res == -1:
         raise ValueError(
-            "Unsupported ASN1 string type. Type: {0}".format(asn1_string.type)
+            "Unsupported ASN1 string type. Type: {}".format(asn1_string.type)
         )
 
     backend.openssl_assert(buf[0] != backend._ffi.NULL)
@@ -814,6 +845,8 @@ _CRL_EXTENSION_HANDLERS = {
     ExtensionOID.AUTHORITY_INFORMATION_ACCESS: (
         _decode_authority_information_access
     ),
+    ExtensionOID.ISSUING_DISTRIBUTION_POINT: _decode_issuing_dist_point,
+    ExtensionOID.FRESHEST_CRL: _decode_freshest_crl,
 }
 
 _OCSP_REQ_EXTENSION_HANDLERS = {
@@ -823,6 +856,10 @@ _OCSP_REQ_EXTENSION_HANDLERS = {
 _OCSP_BASICRESP_EXTENSION_HANDLERS = {
     OCSPExtensionOID.NONCE: _decode_nonce,
 }
+
+# All revoked extensions are valid single response extensions, see:
+# https://tools.ietf.org/html/rfc6960#section-4.4.5
+_OCSP_SINGLERESP_EXTENSION_HANDLERS = _REVOKED_EXTENSION_HANDLERS.copy()
 
 _CERTIFICATE_EXTENSION_PARSER_NO_SCT = _X509ExtensionParser(
     ext_count=lambda backend, x: backend._lib.X509_get_ext_count(x),
@@ -864,4 +901,10 @@ _OCSP_BASICRESP_EXT_PARSER = _X509ExtensionParser(
     ext_count=lambda backend, x: backend._lib.OCSP_BASICRESP_get_ext_count(x),
     get_ext=lambda backend, x, i: backend._lib.OCSP_BASICRESP_get_ext(x, i),
     handlers=_OCSP_BASICRESP_EXTENSION_HANDLERS,
+)
+
+_OCSP_SINGLERESP_EXT_PARSER = _X509ExtensionParser(
+    ext_count=lambda backend, x: backend._lib.OCSP_SINGLERESP_get_ext_count(x),
+    get_ext=lambda backend, x, i: backend._lib.OCSP_SINGLERESP_get_ext(x, i),
+    handlers=_OCSP_SINGLERESP_EXTENSION_HANDLERS,
 )

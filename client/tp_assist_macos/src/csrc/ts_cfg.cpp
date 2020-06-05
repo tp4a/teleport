@@ -41,9 +41,12 @@ bool TsCfg::save(const ex_astr& new_value)
 	if(!_load(new_value))
 		return false;
 	
-	Json::StyledWriter jwriter;
-	ex_astr val = jwriter.write(m_root);
-	
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
+    ex_aoss os;
+    jwriter->write(m_root, &os);
+    ex_astr val = os.str();
+
 	if(!ex_write_text_file(g_env.m_cfg_file, val)) {
 		EXLOGE("can not save config file.\n");
 		return false;
@@ -123,12 +126,21 @@ bool TsCfg::_parse_app(const Json::Value& m_root, const ex_astr& str_app, APP_CO
 
 
 bool TsCfg::_load(const ex_astr& str_json) {
-	Json::Reader jreader;
+//	Json::Reader jreader;
+//
+//	if (!jreader.parse(str_json.c_str(), m_root)) {
+//		EXLOGE("can not parse new config data, not in json format?\n");
+//		return false;
+//	}
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
+    const char *str_json_begin = str_json.c_str();
 
-	if (!jreader.parse(str_json.c_str(), m_root)) {
-		EXLOGE("can not parse new config data, not in json format?\n");
-		return false;
-	}
+    ex_astr err;
+    if (!jreader->parse(str_json_begin, str_json_begin + str_json.length(), &m_root, &err)) {
+        EXLOGE("can not parse new config data, not in json format? %s\n", err.c_str());
+        return false;
+    }
 
 	//===================================
 	// check ssh config

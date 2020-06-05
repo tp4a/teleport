@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -31,6 +31,7 @@ from datetime import datetime, timedelta
 from ...utils.conv import to_unicode
 
 from ...core.timezone import OffsetTzInfo
+
 
 def format_unicode(raw_value):
     try:
@@ -103,21 +104,23 @@ def format_ad_timestamp(raw_value):
     that have elapsed since the 0 hour on January 1, 1601 till the date/time that is being stored.
     The time is always stored in Greenwich Mean Time (GMT) in the Active Directory.
     """
+    utc_timezone = OffsetTzInfo(0, 'UTC')
     if raw_value == b'9223372036854775807':  # max value to be stored in a 64 bit signed int
-        return datetime.max  # returns datetime.datetime(9999, 12, 31, 23, 59, 59, 999999)
+        return datetime.max.replace(tzinfo=utc_timezone)  # returns datetime.datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=OffsetTzInfo(offset=0, name='UTC'))
     try:
         timestamp = int(raw_value)
         if timestamp < 0:  # ad timestamp cannot be negative
-            return raw_value
+            timestamp = timestamp * -1
     except Exception:
         return raw_value
 
     try:
-        return datetime.fromtimestamp(timestamp / 10000000.0 - 11644473600, tz=OffsetTzInfo(0, 'UTC'))  # forces true division in python 2
+        return datetime.fromtimestamp(timestamp / 10000000.0 - 11644473600,
+                                      tz=utc_timezone)  # forces true division in python 2
     except (OSError, OverflowError, ValueError):  # on Windows backwards timestamps are not allowed
         try:
-            unix_epoch = datetime.fromtimestamp(0, tz=OffsetTzInfo(0, 'UTC'))
-            diff_seconds = timedelta(seconds=timestamp/10000000.0 - 11644473600)
+            unix_epoch = datetime.fromtimestamp(0, tz=utc_timezone)
+            diff_seconds = timedelta(seconds=timestamp / 10000000.0 - 11644473600)
             return unix_epoch + diff_seconds
         except Exception:
             pass
@@ -129,6 +132,7 @@ def format_ad_timestamp(raw_value):
 
 try:  # uses regular expressions and the timezone class (python3.2 and later)
     from datetime import timezone
+
     time_format = re.compile(
         r'''
         ^
@@ -157,6 +161,7 @@ try:  # uses regular expressions and the timezone class (python3.2 and later)
         ''',
         re.VERBOSE
     )
+
 
     def format_time(raw_value):
         try:
@@ -218,12 +223,12 @@ except ImportError:
         representing a date and time. The LDAP-specific encoding of a value
         of this syntax is a restriction of the format defined in [ISO8601],
         and is described by the following ABNF:
-    
+
         GeneralizedTime = century year month day hour
                            [ minute [ second / leap-second ] ]
                            [ fraction ]
                            g-time-zone
-    
+
         century = 2(%x30-39) ; "00" to "99"
         year    = 2(%x30-39) ; "00" to "99"
         month   =   ( %x30 %x31-39 ) ; "01" (January) to "09"
@@ -242,7 +247,9 @@ except ImportError:
             MINUS           = %x2D  ; minus sign ("-")
         """
 
-        if len(raw_value) < 10 or not all((c in b'0123456789+-,.Z' for c in raw_value)) or (b'Z' in raw_value and not raw_value.endswith(b'Z')):  # first ten characters are mandatory and must be numeric or timezone or fraction
+        if len(raw_value) < 10 or not all((c in b'0123456789+-,.Z' for c in raw_value)) or (
+                b'Z' in raw_value and not raw_value.endswith(
+                b'Z')):  # first ten characters are mandatory and must be numeric or timezone or fraction
             return raw_value
 
         # sets position for fixed values
@@ -305,9 +312,11 @@ except ImportError:
                 return raw_value
 
             if str is not bytes:  # Python 3
-                timezone = OffsetTzInfo((timezone_hour * 60 + timezone_minute) * (1 if sep == b'+' else -1), 'UTC' + str(sep + offset, encoding='utf-8'))
+                timezone = OffsetTzInfo((timezone_hour * 60 + timezone_minute) * (1 if sep == b'+' else -1),
+                                        'UTC' + str(sep + offset, encoding='utf-8'))
             else:  # Python 2
-                timezone = OffsetTzInfo((timezone_hour * 60 + timezone_minute) * (1 if sep == b'+' else -1), unicode('UTC' + sep + offset, encoding='utf-8'))
+                timezone = OffsetTzInfo((timezone_hour * 60 + timezone_minute) * (1 if sep == b'+' else -1),
+                                        unicode('UTC' + sep + offset, encoding='utf-8'))
 
         try:
             return datetime(year=year,
@@ -322,6 +331,25 @@ except ImportError:
             pass
 
         return raw_value
+
+
+def format_ad_timedelta(raw_value):
+    """
+    Convert a negative filetime value to a timedelta.
+    """
+    # Active Directory stores attributes like "minPwdAge" as a negative
+    # "filetime" timestamp, which is the number of 100-nanosecond intervals that
+    # have elapsed since the 0 hour on January 1, 1601.
+    #
+    # Handle the minimum value that can be stored in a 64 bit signed integer.
+    # See https://docs.microsoft.com/en-us/dotnet/api/system.int64.minvalue
+    # In attributes like "maxPwdAge", this signifies never.
+    if raw_value == b'-9223372036854775808':
+        return timedelta.max
+    # We can reuse format_ad_timestamp to get a datetime object from the
+    # timestamp. Afterwards, we can subtract a datetime representing 0 hour on
+    # January 1, 1601 from the returned datetime to get the timedelta.
+    return format_ad_timestamp(raw_value) - format_ad_timestamp(0)
 
 
 def format_time_with_0_year(raw_value):
@@ -386,7 +414,8 @@ def format_sid(raw_value):
             sub_authority = ''
             i = 0
             while i < sub_authority_count:
-                sub_authority += '-' + str(int.from_bytes(raw_value[8 + (i * 4): 12 + (i * 4)], byteorder='little'))  # little endian
+                sub_authority += '-' + str(
+                    int.from_bytes(raw_value[8 + (i * 4): 12 + (i * 4)], byteorder='little'))  # little endian
                 i += 1
         else:  # Python 2
             revision = int(ord(raw_value[0]))

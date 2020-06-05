@@ -378,6 +378,21 @@
                             <button id="btn-clear-storage" class="btn btn-sm btn-success"><i class="fa fa-leaf fa-fw"></i> 现在立即清理</button>
                         </td>
                     </tr>
+
+                    <tr>
+                        <td colspan="2" class="title">
+                            <hr class="hr-sm"/>
+                            数据库导出
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key"></td>
+                        <td class="value">
+                            <button id="btn-export-db" class="btn btn-sm btn-success"><i class="fa fa-leaf fa-fw"></i> 导出到SQL</button>
+                        </td>
+                    </tr>
+
+
                 </table>
                 <hr/>
                 <button id="btn-save-storage-config" class="btn btn-sm btn-primary"><i class="fa fa-check-circle fa-fw"></i> 保存存储设置</button>

@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -30,8 +30,9 @@ import json
 
 from .. import ANONYMOUS, SIMPLE, SASL, MODIFY_ADD, MODIFY_DELETE, MODIFY_REPLACE, get_config_parameter, DEREF_ALWAYS, \
     SUBTREE, ASYNC, SYNC, NO_ATTRIBUTES, ALL_ATTRIBUTES, ALL_OPERATIONAL_ATTRIBUTES, MODIFY_INCREMENT, LDIF, ASYNC_STREAM, \
-    RESTARTABLE, ROUND_ROBIN, REUSABLE, AUTO_BIND_DEFAULT, AUTO_BIND_NONE, AUTO_BIND_TLS_BEFORE_BIND, AUTO_BIND_TLS_AFTER_BIND, AUTO_BIND_NO_TLS, \
-    STRING_TYPES, SEQUENCE_TYPES, MOCK_SYNC, MOCK_ASYNC, NTLM, EXTERNAL, DIGEST_MD5, GSSAPI, PLAIN
+    RESTARTABLE, ROUND_ROBIN, REUSABLE, AUTO_BIND_DEFAULT, AUTO_BIND_NONE, AUTO_BIND_TLS_BEFORE_BIND,\
+    AUTO_BIND_TLS_AFTER_BIND, AUTO_BIND_NO_TLS, STRING_TYPES, SEQUENCE_TYPES, MOCK_SYNC, MOCK_ASYNC, NTLM, EXTERNAL,\
+    DIGEST_MD5, GSSAPI, PLAIN
 
 from .results import RESULT_SUCCESS, RESULT_COMPARE_TRUE, RESULT_COMPARE_FALSE
 from ..extend import ExtendedOperationsRoot
@@ -64,11 +65,13 @@ from .usage import ConnectionUsage
 from .tls import Tls
 from .exceptions import LDAPUnknownStrategyError, LDAPBindError, LDAPUnknownAuthenticationMethodError, \
     LDAPSASLMechanismNotSupportedError, LDAPObjectClassError, LDAPConnectionIsReadOnlyError, LDAPChangeError, LDAPExceptionError, \
-    LDAPObjectError, LDAPSocketReceiveError, LDAPAttributeError, LDAPInvalidValueError, LDAPConfigurationError
+    LDAPObjectError, LDAPSocketReceiveError, LDAPAttributeError, LDAPInvalidValueError, LDAPConfigurationError, \
+    LDAPInvalidPortError
 
 from ..utils.conv import escape_bytes, prepare_for_stream, check_json_dict, format_json, to_unicode
 from ..utils.log import log, log_enabled, ERROR, BASIC, PROTOCOL, EXTENDED, get_library_log_hide_sensitive_data
 from ..utils.dn import safe_dn
+from ..utils.port_validators import check_port_and_port_list
 
 
 SASL_AVAILABLE_MECHANISMS = [EXTERNAL,
@@ -163,11 +166,20 @@ class Connection(object):
     :type pool_size: int
     :param pool_lifetime: pool lifetime for pooled strategies
     :type pool_lifetime: int
+    :param cred_store: credential store for gssapi
+    :type cred_store: dict
     :param use_referral_cache: keep referral connections open and reuse them
     :type use_referral_cache: bool
     :param auto_escape: automatic escaping of filter values
+    :type auto_escape: bool
     :param auto_encode: automatic encoding of attribute values
-    :type use_referral_cache: bool
+    :type auto_encode: bool
+    :param source_address: the ip address or hostname to use as the source when opening the connection to the server
+    :type source_address: str
+    :param source_port: the source port to use when opening the connection to the server. Cannot be specified with source_port_list
+    :type source_port: int
+    :param source_port_list: a list of source ports to choose from when opening the connection to the server. Cannot be specified with source_port
+    :type source_port_list: list
     """
 
     def __init__(self,
@@ -190,13 +202,17 @@ class Connection(object):
                  pool_name=None,
                  pool_size=None,
                  pool_lifetime=None,
+                 cred_store=None,
                  fast_decoder=True,
                  receive_timeout=None,
                  return_empty_attributes=True,
                  use_referral_cache=False,
                  auto_escape=True,
                  auto_encode=True,
-                 pool_keepalive=None):
+                 pool_keepalive=None,
+                 source_address=None,
+                 source_port=None,
+                 source_port_list=None):
 
         conf_default_pool_name = get_config_parameter('DEFAULT_THREADED_POOL_NAME')
         self.connection_lock = RLock()  # re-entrant lock to ensure that operations in the Connection object are executed atomically in the same thread
@@ -254,6 +270,7 @@ class Connection(object):
             self.lazy = lazy
             self.pool_name = pool_name if pool_name else conf_default_pool_name
             self.pool_size = pool_size
+            self.cred_store = cred_store
             self.pool_lifetime = pool_lifetime
             self.pool_keepalive = pool_keepalive
             self.starting_tls = False
@@ -268,6 +285,23 @@ class Connection(object):
             self.use_referral_cache = use_referral_cache
             self.auto_escape = auto_escape
             self.auto_encode = auto_encode
+
+            port_err = check_port_and_port_list(source_port, source_port_list)
+            if port_err:
+                if log_enabled(ERROR):
+                    log(ERROR, port_err)
+                raise LDAPInvalidPortError(port_err)
+            # using an empty string to bind a socket means "use the default as if this wasn't provided" because socket
+            # binding requires that you pass something for the ip if you want to pass a specific port
+            self.source_address = source_address if source_address is not None else ''
+            # using 0 as the source port to bind a socket means "use the default behavior of picking a random port from
+            # all ports as if this wasn't provided" because socket binding requires that you pass something for the port
+            # if you want to pass a specific ip
+            self.source_port_list = [0]
+            if source_port is not None:
+                self.source_port_list = [source_port]
+            elif source_port_list is not None:
+                self.source_port_list = source_port_list[:]
 
             if isinstance(server, STRING_TYPES):
                 server = Server(server)
@@ -333,7 +367,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'performing automatic bind for <%s>', self)
             if self.closed:
-               self.open(read_server_info=False)
+                self.open(read_server_info=False)
             if self.auto_bind == AUTO_BIND_NO_TLS:
                 self.bind(read_server_info=True)
             elif self.auto_bind == AUTO_BIND_TLS_BEFORE_BIND:
@@ -346,6 +380,7 @@ class Connection(object):
                 self.last_error = 'automatic bind not successful' + (' - ' + self.last_error if self.last_error else '')
                 if log_enabled(ERROR):
                     log(ERROR, '%s for <%s>', self.last_error, self)
+                self.unbind()
                 raise LDAPBindError(self.last_error)
 
     def __str__(self):
@@ -387,6 +422,7 @@ class Connection(object):
         r += '' if self.pool_size is None else ', pool_size={0.pool_size!r}'.format(self)
         r += '' if self.pool_lifetime is None else ', pool_lifetime={0.pool_lifetime!r}'.format(self)
         r += '' if self.pool_keepalive is None else ', pool_keepalive={0.pool_keepalive!r}'.format(self)
+        r += '' if self.cred_store is None else (', cred_store=' + repr(self.cred_store))
         r += '' if self.fast_decoder is None else (', fast_decoder=' + ('True' if self.fast_decoder else 'False'))
         r += '' if self.auto_range is None else (', auto_range=' + ('True' if self.auto_range else 'False'))
         r += '' if self.receive_timeout is None else ', receive_timeout={0.receive_timeout!r}'.format(self)
@@ -425,6 +461,7 @@ class Connection(object):
         r += '' if self.pool_size is None else ', pool_size={0.pool_size!r}'.format(self)
         r += '' if self.pool_lifetime is None else ', pool_lifetime={0.pool_lifetime!r}'.format(self)
         r += '' if self.pool_keepalive is None else ', pool_keepalive={0.pool_keepalive!r}'.format(self)
+        r += '' if self.cred_store is None else (', cred_store=' + repr(self.cred_store))
         r += '' if self.fast_decoder is None else (', fast_decoder=' + 'True' if self.fast_decoder else 'False')
         r += '' if self.auto_range is None else (', auto_range=' + ('True' if self.auto_range else 'False'))
         r += '' if self.receive_timeout is None else ', receive_timeout={0.receive_timeout!r}'.format(self)
@@ -1031,6 +1068,7 @@ class Connection(object):
                     log(ERROR, '%s for <%s>', self.last_error, self)
                 raise LDAPChangeError(self.last_error)
 
+            changelist = dict()
             for attribute_name in changes:
                 if self.server and self.server.schema and self.check_names:
                     if ';' in attribute_name:  # remove tags for checking
@@ -1048,7 +1086,7 @@ class Connection(object):
                             log(ERROR, '%s for <%s>', self.last_error, self)
                         raise LDAPChangeError(self.last_error)
 
-                    changes[attribute_name] = [change]  # insert change in a tuple
+                    changelist[attribute_name] = [change]  # insert change in a list
                 else:
                     for change_operation in change:
                         if len(change_operation) != 2 or change_operation[0] not in [MODIFY_ADD, MODIFY_DELETE, MODIFY_REPLACE, MODIFY_INCREMENT, 0, 1, 2, 3]:
@@ -1056,7 +1094,8 @@ class Connection(object):
                             if log_enabled(ERROR):
                                 log(ERROR, '%s for <%s>', self.last_error, self)
                             raise LDAPChangeError(self.last_error)
-            request = modify_operation(dn, changes, self.auto_encode, self.server.schema if self.server else None, validator=self.server.custom_validator if self.server else None, check_names=self.check_names)
+                    changelist[attribute_name] = change
+            request = modify_operation(dn, changelist, self.auto_encode, self.server.schema if self.server else None, validator=self.server.custom_validator if self.server else None, check_names=self.check_names)
             if log_enabled(PROTOCOL):
                 log(PROTOCOL, 'MODIFY request <%s> sent via <%s>', modify_request_to_dict(request), self)
             response = self.post_send_single_response(self.send('modifyRequest', request, controls))
@@ -1107,11 +1146,11 @@ class Connection(object):
                     log(ERROR, '%s for <%s>', self.last_error, self)
                 raise LDAPConnectionIsReadOnlyError(self.last_error)
 
-            if new_superior and not dn.startswith(relative_dn):  # as per RFC4511 (4.9)
-                self.last_error = 'DN cannot change while performing moving'
-                if log_enabled(ERROR):
-                    log(ERROR, '%s for <%s>', self.last_error, self)
-                raise LDAPChangeError(self.last_error)
+            # if new_superior and not dn.startswith(relative_dn):  # as per RFC4511 (4.9)
+            #     self.last_error = 'DN cannot change while performing moving'
+            #     if log_enabled(ERROR):
+            #         log(ERROR, '%s for <%s>', self.last_error, self)
+            #     raise LDAPChangeError(self.last_error)
 
             request = modify_dn_operation(dn, relative_dn, delete_old_dn, new_superior)
             if log_enabled(PROTOCOL):
@@ -1220,6 +1259,8 @@ class Connection(object):
                     log(BASIC, 'deferring START TLS for <%s>', self)
             else:
                 self._deferred_start_tls = False
+                if self.closed:
+                    self.open()
                 if self.server.tls.start_tls(self) and self.strategy.sync:  # for asynchronous connections _start_tls is run by the strategy
                     if read_server_info:
                         self.refresh_server_info()  # refresh server info as per RFC4515 (3.1.5)
@@ -1269,54 +1310,58 @@ class Connection(object):
             result = None
             if not self.sasl_in_progress:
                 self.sasl_in_progress = True  # ntlm is same of sasl authentication
-                # additional import for NTLM
-                from ..utils.ntlm import NtlmClient
-                domain_name, user_name = self.user.split('\\', 1)
-                ntlm_client = NtlmClient(user_name=user_name, domain=domain_name, password=self.password)
+                try:
+                    # additional import for NTLM
+                    from ..utils.ntlm import NtlmClient
+                    domain_name, user_name = self.user.split('\\', 1)
+                    ntlm_client = NtlmClient(user_name=user_name, domain=domain_name, password=self.password)
 
-                # as per https://msdn.microsoft.com/en-us/library/cc223501.aspx
-                # send a sicilyPackageDiscovery request (in the bindRequest)
-                request = bind_operation(self.version, 'SICILY_PACKAGE_DISCOVERY', ntlm_client)
-                if log_enabled(PROTOCOL):
-                    log(PROTOCOL, 'NTLM SICILY PACKAGE DISCOVERY request sent via <%s>', self)
-                response = self.post_send_single_response(self.send('bindRequest', request, controls))
-                if not self.strategy.sync:
-                    _, result = self.get_response(response)
-                else:
-                    result = response[0]
-                if 'server_creds' in result:
-                    sicily_packages = result['server_creds'].decode('ascii').split(';')
-                    if 'NTLM' in sicily_packages:  # NTLM available on server
-                        request = bind_operation(self.version, 'SICILY_NEGOTIATE_NTLM', ntlm_client)
-                        if log_enabled(PROTOCOL):
-                            log(PROTOCOL, 'NTLM SICILY NEGOTIATE request sent via <%s>', self)
-                        response = self.post_send_single_response(self.send('bindRequest', request, controls))
-                        if not self.strategy.sync:
-                            _, result = self.get_response(response)
-                        else:
+                    # as per https://msdn.microsoft.com/en-us/library/cc223501.aspx
+                    # send a sicilyPackageDiscovery request (in the bindRequest)
+                    request = bind_operation(self.version, 'SICILY_PACKAGE_DISCOVERY', ntlm_client)
+                    if log_enabled(PROTOCOL):
+                        log(PROTOCOL, 'NTLM SICILY PACKAGE DISCOVERY request sent via <%s>', self)
+                    response = self.post_send_single_response(self.send('bindRequest', request, controls))
+                    if not self.strategy.sync:
+                        _, result = self.get_response(response)
+                    else:
+                        result = response[0]
+                    if 'server_creds' in result:
+                        sicily_packages = result['server_creds'].decode('ascii').split(';')
+                        if 'NTLM' in sicily_packages:  # NTLM available on server
+                            request = bind_operation(self.version, 'SICILY_NEGOTIATE_NTLM', ntlm_client)
                             if log_enabled(PROTOCOL):
-                                log(PROTOCOL, 'NTLM SICILY NEGOTIATE response <%s> received via <%s>', response[0], self)
-                            result = response[0]
-
-                        if result['result'] == RESULT_SUCCESS:
-                            request = bind_operation(self.version, 'SICILY_RESPONSE_NTLM', ntlm_client, result['server_creds'])
-                            if log_enabled(PROTOCOL):
-                                log(PROTOCOL, 'NTLM SICILY RESPONSE NTLM request sent via <%s>', self)
+                                log(PROTOCOL, 'NTLM SICILY NEGOTIATE request sent via <%s>', self)
                             response = self.post_send_single_response(self.send('bindRequest', request, controls))
                             if not self.strategy.sync:
                                 _, result = self.get_response(response)
                             else:
                                 if log_enabled(PROTOCOL):
-                                    log(PROTOCOL, 'NTLM BIND response <%s> received via <%s>', response[0], self)
+                                    log(PROTOCOL, 'NTLM SICILY NEGOTIATE response <%s> received via <%s>', response[0],
+                                        self)
                                 result = response[0]
-                else:
-                    result = None
-                self.sasl_in_progress = False
 
-            if log_enabled(BASIC):
-                log(BASIC, 'done SASL NTLM operation, result <%s>', result)
+                            if result['result'] == RESULT_SUCCESS:
+                                request = bind_operation(self.version, 'SICILY_RESPONSE_NTLM', ntlm_client,
+                                                         result['server_creds'])
+                                if log_enabled(PROTOCOL):
+                                    log(PROTOCOL, 'NTLM SICILY RESPONSE NTLM request sent via <%s>', self)
+                                response = self.post_send_single_response(self.send('bindRequest', request, controls))
+                                if not self.strategy.sync:
+                                    _, result = self.get_response(response)
+                                else:
+                                    if log_enabled(PROTOCOL):
+                                        log(PROTOCOL, 'NTLM BIND response <%s> received via <%s>', response[0], self)
+                                    result = response[0]
+                    else:
+                        result = None
+                finally:
+                    self.sasl_in_progress = False
 
-            return result
+                if log_enabled(BASIC):
+                    log(BASIC, 'done SASL NTLM operation, result <%s>', result)
+
+                return result
 
     def refresh_server_info(self):
         # if self.strategy.no_real_dsa:  # do not refresh for mock strategies

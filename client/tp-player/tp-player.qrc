@@ -1,0 +1,38 @@
+<RCC>
+    <qresource prefix="/tp-player">
+        <file>res/bg.png</file>
+        <file>res/cursor.png</file>
+
+        <file>res/bar/bg-left.png</file>
+        <file>res/bar/bg-mid.png</file>
+        <file>res/bar/bg-right.png</file>
+
+        <file>res/bar/btn-normal-left.png</file>
+        <file>res/bar/btn-normal-mid.png</file>
+        <file>res/bar/btn-normal-right.png</file>
+        <file>res/bar/btn-sel-left.png</file>
+        <file>res/bar/btn-sel-mid.png</file>
+        <file>res/bar/btn-sel-right.png</file>
+        <file>res/bar/btn-hover-left.png</file>
+        <file>res/bar/btn-hover-mid.png</file>
+        <file>res/bar/btn-hover-right.png</file>
+
+        <file>res/bar/play-hover.png</file>
+        <file>res/bar/play-normal.png</file>
+        <file>res/bar/pause-hover.png</file>
+        <file>res/bar/pause-normal.png</file>
+
+        <file>res/bar/prgbar-mid.png</file>
+        <file>res/bar/prgbar-right.png</file>
+        <file>res/bar/prgbarh-left.png</file>
+        <file>res/bar/prgbarh-mid.png</file>
+
+        <file>res/bar/prgpt-normal.png</file>
+        <file>res/bar/prgpt-hover.png</file>
+
+        <file>res/bar/chkbox-normal.png</file>
+        <file>res/bar/chkbox-hover.png</file>
+        <file>res/bar/chkbox-sel-normal.png</file>
+        <file>res/bar/chkbox-sel-hover.png</file>
+    </qresource>
+</RCC>

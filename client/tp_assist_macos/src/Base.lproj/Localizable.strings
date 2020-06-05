@@ -3,12 +3,12 @@
   TPAssist
 */
 
-"app_name" = "Teleport助手";
+"app_name" = "Teleport Assist";
 
 //=============================================
 // for About Window
 //=============================================
-"version" = "Version: ";
-"app_full_name" = "Teleport Assist for macOS";
-"copyright" = "Copyright © 2017~2018 TP4A. All rights reserved.";
+"version" = "";
+"app_full_name" = "Teleport Assist";
+"copyright" = "Copyright © 2017~2019, tp4a.com. All rights reserved.";
 "visit_tp4a_website" = "Visit Teleport Website"

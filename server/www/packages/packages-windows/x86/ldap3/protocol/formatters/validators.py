@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2016 - 2018 Giovanni Cannata
+# Copyright 2016 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with ldap3 in the COPYING and COPYING.LESSER files.
 # If not, see <http://www.gnu.org/licenses/>.
-from binascii import a2b_hex
+from binascii import a2b_hex, hexlify
 from datetime import datetime
 from calendar import timegm
 from uuid import UUID
@@ -31,10 +31,20 @@ from struct import pack
 
 from ... import SEQUENCE_TYPES, STRING_TYPES, NUMERIC_TYPES, INTEGER_TYPES
 from .formatters import format_time, format_ad_timestamp
-from ...utils.conv import to_raw, to_unicode, ldap_escape_to_bytes
+from ...utils.conv import to_raw, to_unicode, ldap_escape_to_bytes, escape_bytes
 
 # Validators return True if value is valid, False if value is not valid,
 # or a value different from True and False that is a valid value to substitute to the input value
+
+
+def check_backslash(value):
+    if isinstance(value, (bytearray, bytes)):
+        if b'\\' in value:
+            value = value.replace(b'\\', b'\\5C')
+    elif isinstance(value, STRING_TYPES):
+        if '\\' in value:
+            value = value.replace('\\', '\\5C')
+    return value
 
 
 def check_type(input_value, value_type):
@@ -69,7 +79,7 @@ def validate_generic_single_value(input_value):
 
 
 def validate_zero_and_minus_one_and_positive_int(input_value):
-    """Accept -1 only (used by pwdLastSet in AD)
+    """Accept -1 and 0 only (used by pwdLastSet in AD)
     """
     if not isinstance(input_value, SEQUENCE_TYPES):
         if isinstance(input_value, NUMERIC_TYPES) or isinstance(input_value, STRING_TYPES):
@@ -97,7 +107,7 @@ def validate_integer(input_value):
     valid_values = []  # builds a list of valid int values
     from decimal import Decimal, InvalidOperation
     for element in input_value:
-        try:  # try to convert any type to int, an invalid conversion raise TypeError or ValueError, doublecheck with Decimal type, if both are valid and equal then then int() value is used
+        try:  #try to convert any type to int, an invalid conversion raise TypeError or ValueError, doublecheck with Decimal type, if both are valid and equal then then int() value is used
             value = to_unicode(element) if isinstance(element, bytes) else element
             decimal_value = Decimal(value)
             int_value = int(value)
@@ -259,6 +269,16 @@ def validate_ad_timestamp(input_value):
         return True
 
 
+def validate_ad_timedelta(input_value):
+    """
+    Should be validated like an AD timestamp except that since it is a time
+    delta, it is stored as a negative number.
+    """
+    if not isinstance(input_value, INTEGER_TYPES) or input_value > 0:
+        return False
+    return validate_ad_timestamp(input_value * -1)
+
+
 def validate_guid(input_value):
     """
     object guid in uuid format (Novell eDirectory)
@@ -294,12 +314,14 @@ def validate_guid(input_value):
             return False
 
     if changed:
+        valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:
             return valid_values[0]
     else:
         return True
+
 
 def validate_uuid(input_value):
     """
@@ -336,6 +358,7 @@ def validate_uuid(input_value):
             return False
 
     if changed:
+        valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:
@@ -362,25 +385,43 @@ def validate_uuid_le(input_value):
     valid_values = []
     changed = False
     for element in input_value:
+        error = False
         if isinstance(element, STRING_TYPES):
             if element[0] == '{' and element[-1] == '}':
-                valid_values.append(UUID(hex=element).bytes_le)  # string representation, value in big endian, converts to little endian
-                changed = True
+                try:
+                    valid_values.append(UUID(hex=element).bytes_le)  # string representation, value in big endian, converts to little endian
+                    changed = True
+                except ValueError:
+                    error = True
             elif '-' in element:
-                valid_values.append(UUID(hex=element).bytes_le)  # string representation, value in big endian, converts to little endian
-                changed = True
+                try:
+                    valid_values.append(UUID(hex=element).bytes_le)  # string representation, value in big endian, converts to little endian
+                    changed = True
+                except ValueError:
+                    error = True
             elif '\\' in element:
-                valid_values.append(UUID(bytes_le=ldap_escape_to_bytes(element)).bytes_le)  # byte representation, value in little endian
-                changed = True
-            elif '-' not in element: # value in little endian
-                valid_values.append(UUID(bytes_le=a2b_hex(element)).bytes_le)  # packet representation, value in little endian, converts to little endian
-                changed = True
+                try:
+                    uuid = UUID(bytes_le=ldap_escape_to_bytes(element)).bytes_le
+                    uuid = escape_bytes(uuid)
+                    valid_values.append(uuid)  # byte representation, value in little endian
+                    changed = True
+                except ValueError:
+                    error = True
+            elif '-' not in element:  # value in little endian
+                try:
+                    valid_values.append(UUID(bytes_le=a2b_hex(element)).bytes_le)  # packet representation, value in little endian, converts to little endian
+                    changed = True
+                except ValueError:
+                    error = True
+            if error and str == bytes:  # python2 only assume value is bytes and valid
+                valid_values.append(element)  # value is untouched, must be in little endian
         elif isinstance(element, (bytes, bytearray)):  # assumes bytes are valid uuid
             valid_values.append(element)  # value is untouched, must be in little endian
         else:
             return False
 
     if changed:
+        valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:
@@ -453,6 +494,7 @@ def validate_sid(input_value):
                 changed = True
 
     if changed:
+        valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:

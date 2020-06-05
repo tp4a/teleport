@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2013 - 2018 Giovanni Cannata
+# Copyright 2013 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -38,7 +38,7 @@ from ..operation.bind import referrals_to_list
 from ..protocol.convert import ava_to_dict, attributes_to_list, search_refs_to_list, validate_assertion_value, prepare_filter_for_sending, search_refs_to_list_fast
 from ..protocol.formatters.standard import format_attribute_values
 from ..utils.conv import to_unicode, to_raw
-
+from pyasn1.error import PyAsn1UnicodeDecodeError
 
 ROOT = 0
 AND = 1
@@ -379,8 +379,10 @@ def search_operation(search_base,
 
 
 def decode_vals(vals):
-    return [str(val) for val in vals if val] if vals else None
-
+    try:
+        return [str(val) for val in vals if val] if vals else None
+    except PyAsn1UnicodeDecodeError:
+        return decode_raw_vals(vals)
 
 def decode_vals_fast(vals):
     try:
@@ -393,8 +395,7 @@ def attributes_to_dict(attribute_list):
     conf_case_insensitive_attributes = get_config_parameter('CASE_INSENSITIVE_ATTRIBUTE_NAMES')
     attributes = CaseInsensitiveDict() if conf_case_insensitive_attributes else dict()
     for attribute in attribute_list:
-        attributes[str(attribute['type'])] = decode_vals(attribute['vals'])
-
+            attributes[str(attribute['type'])] = decode_vals(attribute['vals'])
     return attributes
 
 
@@ -525,10 +526,11 @@ def search_result_entry_response_to_dict(response, schema, custom_formatter, che
     entry = dict()
     # entry['dn'] = str(response['object'])
     if response['object']:
-        entry['raw_dn'] = to_raw(response['object'])
         if isinstance(response['object'], STRING_TYPES):  # mock strategies return string not a PyAsn1 object
+            entry['raw_dn'] = to_raw(response['object'])
             entry['dn'] = to_unicode(response['object'])
         else:
+            entry['raw_dn'] = str(response['object'])
             entry['dn'] = to_unicode(bytes(response['object']), from_server=True)
     else:
         entry['raw_dn'] = b''
@@ -555,6 +557,8 @@ def search_result_done_response_to_dict(response):
             result['controls'][control[0]] = control[1]
 
     return result
+
+
 def search_result_reference_response_to_dict(response):
     return {'uri': search_refs_to_list(response)}
 

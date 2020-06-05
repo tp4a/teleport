@@ -66,7 +66,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>Debug</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\..\..\external\libssh-win-static\lib;..\..\..\..\external\openssl\out32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\..\external\libssh\build\src;..\..\..\..\external\openssl\lib\VC\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -86,7 +86,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\..\..\external\libssh-win-static\lib;..\..\..\..\external\openssl\out32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\..\external\libssh\build\src;..\..\..\..\external\openssl\lib\VC\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -103,10 +103,10 @@
     <ClInclude Include="..\..\..\..\common\libex\include\ex\ex_winsrv.h" />
     <ClInclude Include="..\..\..\..\common\teleport\teleport_const.h" />
     <ClInclude Include="..\..\..\..\external\jsoncpp\include\json\json.h" />
-    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\callbacks.h" />
-    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\libssh.h" />
-    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\server.h" />
-    <ClInclude Include="..\..\..\..\external\libssh-win-static\include\libssh\sftp.h" />
+    <ClInclude Include="..\..\..\..\external\libssh\include\libssh\callbacks.h" />
+    <ClInclude Include="..\..\..\..\external\libssh\include\libssh\libssh.h" />
+    <ClInclude Include="..\..\..\..\external\libssh\include\libssh\server.h" />
+    <ClInclude Include="..\..\..\..\external\libssh\include\libssh\sftp.h" />
     <ClInclude Include="..\..\common\base_env.h" />
     <ClInclude Include="..\..\common\base_record.h" />
     <ClInclude Include="..\..\common\protocol_interface.h" />

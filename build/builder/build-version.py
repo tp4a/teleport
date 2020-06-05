@@ -18,6 +18,7 @@ class Builder:
         self.VER_TP_TPCORE = ''
         self.VER_TP_TPWEB = ''
         self.VER_TP_ASSIST = ''
+        self.VER_TP_ASSIST_REQUIRE = ''
 
     def build(self):
         cc.n('update version...')
@@ -43,12 +44,17 @@ class Builder:
                     x = l.split(' ')
                     self.VER_TP_ASSIST = x[1].strip()
                     # self.VER_TP_ASSIST += '.0'
+                elif l.startswith('TP_ASSIST_REQUIRE '):
+                    x = l.split(' ')
+                    self.VER_TP_ASSIST_REQUIRE = x[1].strip()
+                    # self.VER_TP_ASSIST += '.0'
 
         cc.v('new version:')
         cc.v('  Server             : ', self.VER_TP_SERVER)
         cc.v('    - tp_core        : ', self.VER_TP_TPCORE)
         cc.v('    - tp_web         : ', self.VER_TP_TPWEB)
         cc.v('  Assist             : ', self.VER_TP_ASSIST)
+        cc.v('    - Require        : ', self.VER_TP_ASSIST_REQUIRE)
         cc.v('')
 
         self.make_builder_ver()
@@ -100,7 +106,12 @@ class Builder:
     def make_server_ver(self):
         ver_file = os.path.join(env.root_path, 'server', 'www', 'teleport', 'webroot', 'app', 'app_ver.py')
         # ver_content = '# -*- coding: utf8 -*-\n\nTS_VER = "{}"\n'.format(self.VER_TELEPORT_SERVER)
-        ver_content = '# -*- coding: utf8 -*-\nTP_SERVER_VER = "{}"\n'.format(self.VER_TP_SERVER)
+        # ver_content = '# -*- coding: utf8 -*-\nTP_SERVER_VER = "{}"\n'.format(self.VER_TP_SERVER)
+        ver_content = '' \
+                      '# -*- coding: utf8 -*-\n' \
+                      'TP_SERVER_VER = "{}"\n' \
+                      'TP_ASSIST_REQUIRE_VER = "{}"\n' \
+                      ''.format(self.VER_TP_SERVER, self.VER_TP_ASSIST_REQUIRE)
 
         rewrite = False
         if not os.path.exists(ver_file):

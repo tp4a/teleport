@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -27,14 +27,15 @@ import socket
 from threading import Lock
 from datetime import datetime, MINYEAR
 
-from .. import DSA, SCHEMA, ALL, BASE, get_config_parameter, OFFLINE_EDIR_8_8_8, OFFLINE_AD_2012_R2, OFFLINE_SLAPD_2_4, OFFLINE_DS389_1_3_3, SEQUENCE_TYPES, IP_SYSTEM_DEFAULT, IP_V4_ONLY, IP_V6_ONLY, IP_V4_PREFERRED, IP_V6_PREFERRED, STRING_TYPES
-from .exceptions import LDAPInvalidServerError, LDAPDefinitionError, LDAPInvalidPortError, LDAPInvalidTlsSpecificationError, LDAPSocketOpenError
+from .. import DSA, SCHEMA, ALL, BASE, get_config_parameter, OFFLINE_EDIR_8_8_8, OFFLINE_EDIR_9_1_4, OFFLINE_AD_2012_R2, OFFLINE_SLAPD_2_4, OFFLINE_DS389_1_3_3, SEQUENCE_TYPES, IP_SYSTEM_DEFAULT, IP_V4_ONLY, IP_V6_ONLY, IP_V4_PREFERRED, IP_V6_PREFERRED, STRING_TYPES
+from .exceptions import LDAPInvalidServerError, LDAPDefinitionError, LDAPInvalidPortError, LDAPInvalidTlsSpecificationError, LDAPSocketOpenError, LDAPInfoError
 from ..protocol.formatters.standard import format_attribute_values
 from ..protocol.rfc4511 import LDAP_MAX_INT
 from ..protocol.rfc4512 import SchemaInfo, DsaInfo
 from .tls import Tls
-from ..utils.log import log, log_enabled, ERROR, BASIC, PROTOCOL
+from ..utils.log import log, log_enabled, ERROR, BASIC, PROTOCOL, NETWORK
 from ..utils.conv import to_unicode
+from ..utils.port_validators import check_port, check_port_and_port_list
 
 try:
     from urllib.parse import unquote  # Python 3
@@ -68,7 +69,6 @@ class Server(object):
 
     _message_counter = 0
     _message_id_lock = Lock()  # global lock for message_id shared by all Server objects
-
 
     def __init__(self,
                  host,
@@ -148,17 +148,12 @@ class Server(object):
             elif use_ssl and not port:
                 port = 636
 
-            if isinstance(port, int):
-                if port in range(0, 65535):
-                    self.port = port
-                else:
-                    if log_enabled(ERROR):
-                        log(ERROR, 'port <%s> must be in range from 0 to 65535', port)
-                    raise LDAPInvalidPortError('port must in range from 0 to 65535')
-            else:
+            port_err = check_port(port)
+            if port_err:
                 if log_enabled(ERROR):
-                    log(ERROR, 'port <%s> must be an integer', port)
-                raise LDAPInvalidPortError('port must be an integer')
+                    log(ERROR, port_err)
+                raise LDAPInvalidPortError(port_err)
+            self.port = port
 
         if allowed_referral_hosts is None:  # defaults to any server with authentication
             allowed_referral_hosts = [('*', True)]
@@ -244,13 +239,23 @@ class Server(object):
                 if self.ipc:
                     addresses = [(socket.AF_UNIX, socket.SOCK_STREAM, 0, None, self.host, None)]
                 else:
-                    addresses = socket.getaddrinfo(self.host, self.port, socket.AF_UNSPEC, socket.SOCK_STREAM, socket.IPPROTO_TCP, socket.AI_ADDRCONFIG | socket.AI_V4MAPPED)
+                    if self.mode == IP_V4_ONLY:
+                        addresses = socket.getaddrinfo(self.host, self.port, socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, socket.AI_ADDRCONFIG | socket.AI_V4MAPPED)
+                    elif self.mode == IP_V6_ONLY:
+                        addresses = socket.getaddrinfo(self.host, self.port, socket.AF_INET6, socket.SOCK_STREAM, socket.IPPROTO_TCP, socket.AI_ADDRCONFIG | socket.AI_V4MAPPED)
+                    else:
+                        addresses = socket.getaddrinfo(self.host, self.port, socket.AF_UNSPEC, socket.SOCK_STREAM, socket.IPPROTO_TCP, socket.AI_ADDRCONFIG | socket.AI_V4MAPPED)
             except (socket.gaierror, AttributeError):
                 pass
 
             if not addresses:  # if addresses not found or raised an exception (for example for bad flags) tries again without flags
                 try:
-                    addresses = socket.getaddrinfo(self.host, self.port, socket.AF_UNSPEC, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+                    if self.mode == IP_V4_ONLY:
+                        addresses = socket.getaddrinfo(self.host, self.port, socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+                    elif self.mode == IP_V6_ONLY:
+                        addresses = socket.getaddrinfo(self.host, self.port, socket.AF_INET6, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+                    else:
+                        addresses = socket.getaddrinfo(self.host, self.port, socket.AF_UNSPEC, socket.SOCK_STREAM, socket.IPPROTO_TCP)
                 except socket.gaierror:
                     pass
 
@@ -280,12 +285,36 @@ class Server(object):
             address[5] = None
             address[6] = None
 
-    def check_availability(self):
+    def check_availability(self, source_address=None, source_port=None, source_port_list=None):
         """
-        Tries to open, connect and close a socket to specified address
-        and port to check availability. Timeout in seconds is specified in CHECK_AVAILABITY_TIMEOUT if not specified in
-        the Server object
+        Tries to open, connect and close a socket to specified address and port to check availability.
+        Timeout in seconds is specified in CHECK_AVAILABITY_TIMEOUT if not specified in
+        the Server object.
+        If specified, use a specific address, port, or list of possible ports, when attempting to check availability.
+        NOTE: This will only consider multiple ports from the source port list if the first ones we try to bind to are
+              already in use. This will not attempt using different ports in the list if the server is unavailable,
+              as that could result in the runtime of check_availability significantly exceeding the connection timeout.
         """
+        source_port_err = check_port_and_port_list(source_port, source_port_list)
+        if source_port_err:
+            if log_enabled(ERROR):
+                log(ERROR, source_port_err)
+            raise LDAPInvalidPortError(source_port_err)
+
+        # using an empty string to bind a socket means "use the default as if this wasn't provided" because socket
+        # binding requires that you pass something for the ip if you want to pass a specific port
+        bind_address = source_address if source_address is not None else ''
+        # using 0 as the source port to bind a socket means "use the default behavior of picking a random port from
+        # all ports as if this wasn't provided" because socket binding requires that you pass something for the port
+        # if you want to pass a specific ip
+        candidate_bind_ports = [0]
+
+        # if we have either a source port or source port list, convert that into our candidate list
+        if source_port is not None:
+            candidate_bind_ports = [source_port]
+        elif source_port_list is not None:
+            candidate_bind_ports = source_port_list[:]
+
         conf_availability_timeout = get_config_parameter('CHECK_AVAILABILITY_TIMEOUT')
         available = False
         self.reset_availability()
@@ -293,6 +322,33 @@ class Server(object):
             available = True
             try:
                 temp_socket = socket.socket(*address[:3])
+
+                # Go through our candidate bind ports and try to bind our socket to our source address with them.
+                # if no source address or ports were specified, this will have the same success/fail result as if we
+                # tried to connect to the remote server without binding locally first.
+                # This is actually a little bit better, as it lets us distinguish the case of "issue binding the socket
+                # locally" from "remote server is unavailable" with more clarity, though this will only really be an
+                # issue when no source address/port is specified if the system checking server availability is running
+                # as a very unprivileged user.
+                last_bind_exc = None
+                socket_bind_succeeded = False
+                for bind_port in candidate_bind_ports:
+                    try:
+                        temp_socket.bind((bind_address, bind_port))
+                        socket_bind_succeeded = True
+                        break
+                    except Exception as bind_ex:
+                        last_bind_exc = bind_ex
+                        if log_enabled(NETWORK):
+                            log(NETWORK, 'Unable to bind to local address <%s> with source port <%s> due to <%s>',
+                                bind_address, bind_port, bind_ex)
+                if not socket_bind_succeeded:
+                    if log_enabled(ERROR):
+                        log(ERROR, 'Unable to locally bind to local address <%s> with any of the source ports <%s> due to <%s>',
+                            bind_address, candidate_bind_ports, last_bind_exc)
+                    raise LDAPSocketOpenError('Unable to bind socket locally to address {} with any of the source ports {} due to {}'
+                                              .format(bind_address, candidate_bind_ports, last_bind_exc))
+
                 if self.connect_timeout:
                     temp_socket.settimeout(self.connect_timeout)
                 else:
@@ -452,6 +508,10 @@ class Server(object):
             from ..protocol.schemas.edir888 import edir_8_8_8_schema, edir_8_8_8_dsa_info
             self.attach_schema_info(SchemaInfo.from_json(edir_8_8_8_schema))
             self.attach_dsa_info(DsaInfo.from_json(edir_8_8_8_dsa_info))
+        elif self.get_info == OFFLINE_EDIR_9_1_4:
+            from ..protocol.schemas.edir914 import edir_9_1_4_schema, edir_9_1_4_dsa_info
+            self.attach_schema_info(SchemaInfo.from_json(edir_9_1_4_schema))
+            self.attach_dsa_info(DsaInfo.from_json(edir_9_1_4_dsa_info))
         elif self.get_info == OFFLINE_AD_2012_R2:
             from ..protocol.schemas.ad2012R2 import ad_2012_r2_schema, ad_2012_r2_dsa_info
             self.attach_schema_info(SchemaInfo.from_json(ad_2012_r2_schema))
@@ -492,9 +552,9 @@ class Server(object):
         :param host: host name
         :param dsa_info: DsaInfo preloaded object or a json formatted string or a file name
         :param dsa_schema: SchemaInfo preloaded object or a json formatted string or a file name
-        :param port: dummy port
+        :param port: fake port
         :param use_ssl: use_ssl
-        :param formatter: custom formatter
+        :param formatter: custom formatters
         :return: Server object
         """
         if isinstance(host, SEQUENCE_TYPES):
@@ -570,3 +630,34 @@ class Server(object):
                 for candidate in candidates:
                     log(BASIC, 'obtained candidate address for <%s>: <%r> with mode %s', self, candidate[:-2], self.mode)
         return candidates
+
+    def _check_info_property(self, kind, name):
+        if not self._dsa_info:
+            raise LDAPInfoError('server info not loaded')
+
+        if kind == 'control':
+            properties = self.info.supported_controls
+        elif kind == 'extension':
+            properties = self.info.supported_extensions
+        elif kind == 'feature':
+            properties = self.info.supported_features
+        else:
+            raise LDAPInfoError('invalid info category')
+
+        for prop in properties:
+                if name == prop[0] or (prop[2] and name.lower() == prop[2].lower()):  # checks oid and description
+                    return True
+
+        return False
+
+    def has_control(self, control):
+        return self._check_info_property('control', control)
+
+    def has_extension(self, extension):
+        return self._check_info_property('extension', extension)
+
+    def has_feature(self, feature):
+        return self._check_info_property('feature', feature)
+
+
+

@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2018 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -25,10 +25,12 @@
 
 from ... import SEQUENCE_TYPES
 from .formatters import format_ad_timestamp, format_binary, format_boolean,\
-    format_integer, format_sid, format_time, format_unicode, format_uuid, format_uuid_le, format_time_with_0_year
+    format_integer, format_sid, format_time, format_unicode, format_uuid, format_uuid_le, format_time_with_0_year,\
+    format_ad_timedelta
 from .validators import validate_integer, validate_time, always_valid,\
     validate_generic_single_value, validate_boolean, validate_ad_timestamp, validate_sid,\
-    validate_uuid_le, validate_uuid, validate_zero_and_minus_one_and_positive_int, validate_guid, validate_time_with_0_year
+    validate_uuid_le, validate_uuid, validate_zero_and_minus_one_and_positive_int, validate_guid, validate_time_with_0_year,\
+    validate_ad_timedelta
 
 # for each syntax can be specified a format function and a input validation function
 
@@ -115,12 +117,16 @@ standard_formatter = {
     '2.16.840.1.113719.1.1.5.1.25': (format_unicode, None),  # Typed Name (Novell)
     'supportedldapversion': (format_integer, None),  # supportedLdapVersion (Microsoft)
     'octetstring': (format_binary, validate_uuid_le),  # octect string (Microsoft)
-    '1.2.840.113556.1.4.2': (format_uuid_le, validate_uuid_le),  # object guid (Microsoft)
+    '1.2.840.113556.1.4.2': (format_uuid_le, validate_uuid_le),  # objectGUID (Microsoft)
     '1.2.840.113556.1.4.13': (format_ad_timestamp, validate_ad_timestamp),  # builtinCreationTime (Microsoft)
     '1.2.840.113556.1.4.26': (format_ad_timestamp, validate_ad_timestamp),  # creationTime (Microsoft)
     '1.2.840.113556.1.4.49': (format_ad_timestamp, validate_ad_timestamp),  # badPasswordTime (Microsoft)
     '1.2.840.113556.1.4.51': (format_ad_timestamp, validate_ad_timestamp),  # lastLogoff (Microsoft)
     '1.2.840.113556.1.4.52': (format_ad_timestamp, validate_ad_timestamp),  # lastLogon (Microsoft)
+    '1.2.840.113556.1.4.60': (format_ad_timedelta, validate_ad_timedelta),  # lockoutDuration (Microsoft)
+    '1.2.840.113556.1.4.61': (format_ad_timedelta, validate_ad_timedelta),  # lockOutObservationWindow (Microsoft)
+    '1.2.840.113556.1.4.74': (format_ad_timedelta, validate_ad_timedelta),  # maxPwdAge (Microsoft)
+    '1.2.840.113556.1.4.78': (format_ad_timedelta, validate_ad_timedelta),  # minPwdAge (Microsoft)
     '1.2.840.113556.1.4.96': (format_ad_timestamp, validate_zero_and_minus_one_and_positive_int),  # pwdLastSet (Microsoft, can be set to -1 only)
     '1.2.840.113556.1.4.146': (format_sid, validate_sid),  # objectSid (Microsoft)
     '1.2.840.113556.1.4.159': (format_ad_timestamp, validate_ad_timestamp),  # accountExpires (Microsoft)
