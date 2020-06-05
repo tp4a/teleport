@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2019 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -374,6 +374,10 @@ class LDAPAttributeError(LDAPExceptionError, ValueError, TypeError):
 
 
 class LDAPCursorError(LDAPExceptionError):
+    pass
+
+
+class LDAPCursorAttributeError(LDAPCursorError, AttributeError):
     pass
 
 

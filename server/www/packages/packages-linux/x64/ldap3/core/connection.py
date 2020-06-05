@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2019 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -65,11 +65,13 @@ from .usage import ConnectionUsage
 from .tls import Tls
 from .exceptions import LDAPUnknownStrategyError, LDAPBindError, LDAPUnknownAuthenticationMethodError, \
     LDAPSASLMechanismNotSupportedError, LDAPObjectClassError, LDAPConnectionIsReadOnlyError, LDAPChangeError, LDAPExceptionError, \
-    LDAPObjectError, LDAPSocketReceiveError, LDAPAttributeError, LDAPInvalidValueError, LDAPConfigurationError
+    LDAPObjectError, LDAPSocketReceiveError, LDAPAttributeError, LDAPInvalidValueError, LDAPConfigurationError, \
+    LDAPInvalidPortError
 
 from ..utils.conv import escape_bytes, prepare_for_stream, check_json_dict, format_json, to_unicode
 from ..utils.log import log, log_enabled, ERROR, BASIC, PROTOCOL, EXTENDED, get_library_log_hide_sensitive_data
 from ..utils.dn import safe_dn
+from ..utils.port_validators import check_port_and_port_list
 
 
 SASL_AVAILABLE_MECHANISMS = [EXTERNAL,
@@ -169,8 +171,15 @@ class Connection(object):
     :param use_referral_cache: keep referral connections open and reuse them
     :type use_referral_cache: bool
     :param auto_escape: automatic escaping of filter values
+    :type auto_escape: bool
     :param auto_encode: automatic encoding of attribute values
-    :type use_referral_cache: bool
+    :type auto_encode: bool
+    :param source_address: the ip address or hostname to use as the source when opening the connection to the server
+    :type source_address: str
+    :param source_port: the source port to use when opening the connection to the server. Cannot be specified with source_port_list
+    :type source_port: int
+    :param source_port_list: a list of source ports to choose from when opening the connection to the server. Cannot be specified with source_port
+    :type source_port_list: list
     """
 
     def __init__(self,
@@ -200,7 +209,10 @@ class Connection(object):
                  use_referral_cache=False,
                  auto_escape=True,
                  auto_encode=True,
-                 pool_keepalive=None):
+                 pool_keepalive=None,
+                 source_address=None,
+                 source_port=None,
+                 source_port_list=None):
 
         conf_default_pool_name = get_config_parameter('DEFAULT_THREADED_POOL_NAME')
         self.connection_lock = RLock()  # re-entrant lock to ensure that operations in the Connection object are executed atomically in the same thread
@@ -273,6 +285,23 @@ class Connection(object):
             self.use_referral_cache = use_referral_cache
             self.auto_escape = auto_escape
             self.auto_encode = auto_encode
+
+            port_err = check_port_and_port_list(source_port, source_port_list)
+            if port_err:
+                if log_enabled(ERROR):
+                    log(ERROR, port_err)
+                raise LDAPInvalidPortError(port_err)
+            # using an empty string to bind a socket means "use the default as if this wasn't provided" because socket
+            # binding requires that you pass something for the ip if you want to pass a specific port
+            self.source_address = source_address if source_address is not None else ''
+            # using 0 as the source port to bind a socket means "use the default behavior of picking a random port from
+            # all ports as if this wasn't provided" because socket binding requires that you pass something for the port
+            # if you want to pass a specific ip
+            self.source_port_list = [0]
+            if source_port is not None:
+                self.source_port_list = [source_port]
+            elif source_port_list is not None:
+                self.source_port_list = source_port_list[:]
 
             if isinstance(server, STRING_TYPES):
                 server = Server(server)
@@ -351,6 +380,7 @@ class Connection(object):
                 self.last_error = 'automatic bind not successful' + (' - ' + self.last_error if self.last_error else '')
                 if log_enabled(ERROR):
                     log(ERROR, '%s for <%s>', self.last_error, self)
+                self.unbind()
                 raise LDAPBindError(self.last_error)
 
     def __str__(self):

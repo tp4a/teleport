@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2013 - 2018 Giovanni Cannata
+# Copyright 2013 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -188,7 +188,7 @@ def prepare_filter_for_sending(raw_string):
     ints = []
     raw_string = to_raw(raw_string)
     while i < len(raw_string):
-        if (raw_string[i] == 92 or raw_string[i] == '\\') and i < len(raw_string) - 2:  # 92 is backslash
+        if (raw_string[i] == 92 or raw_string[i] == '\\') and i < len(raw_string) - 2:  # 92 (0x5C) is backslash
             try:
                 ints.append(int(raw_string[i + 1: i + 3], 16))
                 i += 2

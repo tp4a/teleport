@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2013 - 2018 Giovanni Cannata
+# Copyright 2013 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -133,14 +133,14 @@ class BaseStrategy(object):
                         # exception_history.append((datetime.now(), exc_type, exc_value, candidate_address[4]))
                         exception_history.append((type(e)(str(e)), candidate_address[4]))
                 if not self.connection.server.current_address and exception_history:
-                    # if len(exception_history) == 1:  # only one exception, reraise
-                    #     if log_enabled(ERROR):
-                    #         log(ERROR, '<%s> for <%s>', exception_history[0][1](exception_history[0][2]), self.connection)
-                    #     raise exception_history[0][1](exception_history[0][2])
-                    # else:
-                    #     if log_enabled(ERROR):
-                    #         log(ERROR, 'unable to open socket for <%s>', self.connection)
-                    #     raise LDAPSocketOpenError('unable to open socket', exception_history)
+                    if len(exception_history) == 1:  # only one exception, reraise
+                        if log_enabled(ERROR):
+                            log(ERROR, '<%s> for <%s>', str(exception_history[0][0]) + ' ' + str((exception_history[0][1])), self.connection)
+                        raise exception_history[0][0]
+                    else:
+                        if log_enabled(ERROR):
+                            log(ERROR, 'unable to open socket for <%s>', self.connection)
+                        raise LDAPSocketOpenError('unable to open socket', exception_history)
                     if log_enabled(ERROR):
                         log(ERROR, 'unable to open socket for <%s>', self.connection)
                     raise LDAPSocketOpenError('unable to open socket', exception_history)
@@ -199,6 +199,37 @@ class BaseStrategy(object):
                 log(ERROR, '<%s> for <%s>', self.connection.last_error, self.connection)
             # raise communication_exception_factory(LDAPSocketOpenError, exc)(self.connection.last_error)
             raise communication_exception_factory(LDAPSocketOpenError, type(e)(str(e)))(self.connection.last_error)
+
+        # Try to bind the socket locally before connecting to the remote address
+        # We go through our connection's source ports and try to bind our socket to our connection's source address
+        # with them.
+        # If no source address or ports were specified, this will have the same success/fail result as if we
+        # tried to connect to the remote server without binding locally first.
+        # This is actually a little bit better, as it lets us distinguish the case of "issue binding the socket
+        # locally" from "remote server is unavailable" with more clarity, though this will only really be an
+        # issue when no source address/port is specified if the system checking server availability is running
+        # as a very unprivileged user.
+        last_bind_exc = None
+        socket_bind_succeeded = False
+        for source_port in self.connection.source_port_list:
+            try:
+                self.connection.socket.bind((self.connection.source_address, source_port))
+                socket_bind_succeeded = True
+                break
+            except Exception as bind_ex:
+                last_bind_exc = bind_ex
+                # we'll always end up logging at error level if we cannot bind any ports to the address locally.
+                # but if some work and some don't you probably don't want the ones that don't at ERROR level
+                if log_enabled(NETWORK):
+                    log(NETWORK, 'Unable to bind to local address <%s> with source port <%s> due to <%s>',
+                        self.connection.source_address, source_port, bind_ex)
+        if not socket_bind_succeeded:
+            self.connection.last_error = 'socket connection error while locally binding: ' + str(last_bind_exc)
+            if log_enabled(ERROR):
+                log(ERROR, 'Unable to locally bind to local address <%s> with any of the source ports <%s> for connection <%s due to <%s>',
+                    self.connection.source_address, self.connection.source_port_list, self.connection, last_bind_exc)
+            raise communication_exception_factory(LDAPSocketOpenError, type(last_bind_exc)(str(last_bind_exc)))(last_bind_exc)
+
         try:  # set socket timeout for opening connection
             if self.connection.server.connect_timeout:
                 self.connection.socket.settimeout(self.connection.server.connect_timeout)
@@ -313,61 +344,54 @@ class BaseStrategy(object):
         Responses without result is stored in connection.response
         A tuple (responses, result) is returned
         """
-        conf_sleep_interval = get_config_parameter('RESPONSE_SLEEPTIME')
         if timeout is None:
             timeout = get_config_parameter('RESPONSE_WAITING_TIMEOUT')
         response = None
         result = None
         request = None
         if self._outstanding and message_id in self._outstanding:
-            while timeout >= 0:  # waiting for completed message to appear in responses
-                responses = self._get_response(message_id)
-                if not responses:
-                    sleep(conf_sleep_interval)
-                    timeout -= conf_sleep_interval
-                    continue
+            responses = self._get_response(message_id, timeout)
 
-                if responses == SESSION_TERMINATED_BY_SERVER:
-                    try:  # try to close the session but don't raise any error if server has already closed the session
-                        self.close()
-                    except (socket.error, LDAPExceptionError):
-                        pass
-                    self.connection.last_error = 'session terminated by server'
-                    if log_enabled(ERROR):
-                        log(ERROR, '<%s> for <%s>', self.connection.last_error, self.connection)
-                    raise LDAPSessionTerminatedByServerError(self.connection.last_error)
-                elif responses == TRANSACTION_ERROR:  # Novell LDAP Transaction unsolicited notification
-                    self.connection.last_error = 'transaction error'
-                    if log_enabled(ERROR):
-                        log(ERROR, '<%s> for <%s>', self.connection.last_error, self.connection)
-                    raise LDAPTransactionError(self.connection.last_error)
-
-                # if referral in response opens a new connection to resolve referrals if requested
-
-                if responses[-2]['result'] == RESULT_REFERRAL:
-                    if self.connection.usage:
-                        self.connection._usage.referrals_received += 1
-                    if self.connection.auto_referrals:
-                        ref_response, ref_result = self.do_operation_on_referral(self._outstanding[message_id], responses[-2]['referrals'])
-                        if ref_response is not None:
-                            responses = ref_response + [ref_result]
-                            responses.append(RESPONSE_COMPLETE)
-                        elif ref_result is not None:
-                            responses = [ref_result, RESPONSE_COMPLETE]
-
-                        self._referrals = []
-
-                if responses:
-                    result = responses[-2]
-                    response = responses[:-2]
-                    self.connection.result = None
-                    self.connection.response = None
-                    break
-
-            if timeout <= 0:
+            if not responses:
                 if log_enabled(ERROR):
                     log(ERROR, 'socket timeout, no response from server for <%s>', self.connection)
                 raise LDAPResponseTimeoutError('no response from server')
+
+            if responses == SESSION_TERMINATED_BY_SERVER:
+                try:  # try to close the session but don't raise any error if server has already closed the session
+                    self.close()
+                except (socket.error, LDAPExceptionError):
+                    pass
+                self.connection.last_error = 'session terminated by server'
+                if log_enabled(ERROR):
+                    log(ERROR, '<%s> for <%s>', self.connection.last_error, self.connection)
+                raise LDAPSessionTerminatedByServerError(self.connection.last_error)
+            elif responses == TRANSACTION_ERROR:  # Novell LDAP Transaction unsolicited notification
+                self.connection.last_error = 'transaction error'
+                if log_enabled(ERROR):
+                    log(ERROR, '<%s> for <%s>', self.connection.last_error, self.connection)
+                raise LDAPTransactionError(self.connection.last_error)
+
+            # if referral in response opens a new connection to resolve referrals if requested
+
+            if responses[-2]['result'] == RESULT_REFERRAL:
+                if self.connection.usage:
+                    self.connection._usage.referrals_received += 1
+                if self.connection.auto_referrals:
+                    ref_response, ref_result = self.do_operation_on_referral(self._outstanding[message_id], responses[-2]['referrals'])
+                    if ref_response is not None:
+                        responses = ref_response + [ref_result]
+                        responses.append(RESPONSE_COMPLETE)
+                    elif ref_result is not None:
+                        responses = [ref_result, RESPONSE_COMPLETE]
+
+                    self._referrals = []
+
+            if responses:
+                result = responses[-2]
+                response = responses[:-2]
+                self.connection.result = None
+                self.connection.response = None
 
             if self.connection.raise_exceptions and result and result['result'] not in DO_NOT_RAISE_EXCEPTIONS:
                 if log_enabled(PROTOCOL):
@@ -850,7 +874,7 @@ class BaseStrategy(object):
         # overridden on strategy class
         raise NotImplementedError
 
-    def _get_response(self, message_id):
+    def _get_response(self, message_id, timeout):
         # overridden in strategy class
         raise NotImplementedError
 

@@ -41,7 +41,7 @@ class OCSPResponseStatus(Enum):
     UNAUTHORIZED = 6
 
 
-_RESPONSE_STATUS_TO_ENUM = dict((x.value, x) for x in OCSPResponseStatus)
+_RESPONSE_STATUS_TO_ENUM = {x.value: x for x in OCSPResponseStatus}
 _ALLOWED_HASHES = (
     hashes.SHA1, hashes.SHA224, hashes.SHA256,
     hashes.SHA384, hashes.SHA512
@@ -61,7 +61,7 @@ class OCSPCertStatus(Enum):
     UNKNOWN = 2
 
 
-_CERT_STATUS_TO_ENUM = dict((x.value, x) for x in OCSPCertStatus)
+_CERT_STATUS_TO_ENUM = {x.value: x for x in OCSPCertStatus}
 
 
 def load_der_ocsp_request(data):
@@ -426,4 +426,10 @@ class OCSPResponse(object):
     def extensions(self):
         """
         The list of response extensions. Not single response extensions.
+        """
+
+    @abc.abstractproperty
+    def single_extensions(self):
+        """
+        The list of single response extensions. Not response extensions.
         """

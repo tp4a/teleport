@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2013 - 2018 Giovanni Cannata
+# Copyright 2013 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -63,6 +63,7 @@ class Tls(object):
     that tries to read the CAs defined at system level
     ca_certs_path and ca_certs_data are valid only when using SSLContext
     local_private_key_password is valid only when using SSLContext
+    ssl_options is valid only when using SSLContext
     sni is the server name for Server Name Indication (when available)
     """
 
@@ -71,6 +72,7 @@ class Tls(object):
                  local_certificate_file=None,
                  validate=ssl.CERT_NONE,
                  version=None,
+                 ssl_options=None,
                  ca_certs_file=None,
                  valid_names=None,
                  ca_certs_path=None,
@@ -78,7 +80,9 @@ class Tls(object):
                  local_private_key_password=None,
                  ciphers=None,
                  sni=None):
-
+        if ssl_options is None:
+            ssl_options = []
+        self.ssl_options = ssl_options
         if validate in [ssl.CERT_NONE, ssl.CERT_OPTIONAL, ssl.CERT_REQUIRED]:
             self.validate = validate
         elif validate:
@@ -185,6 +189,8 @@ class Tls(object):
                 ssl_context.load_cert_chain(self.certificate_file, keyfile=self.private_key_file, password=self.private_key_password)
             ssl_context.check_hostname = False
             ssl_context.verify_mode = self.validate
+            for option in self.ssl_options:
+                ssl_context.options |= option
 
             if self.ciphers:
                 try:

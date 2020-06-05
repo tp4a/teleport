@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2013 - 2018 Giovanni Cannata
+# Copyright 2013 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -23,7 +23,7 @@
 # along with ldap3 in the COPYING and COPYING.LESSER files.
 # If not, see <http://www.gnu.org/licenses/>.
 
-from threading import Thread, Lock
+from threading import Thread, Lock, Event
 import socket
 
 from .. import get_config_parameter
@@ -124,6 +124,8 @@ class AsyncStrategy(BaseStrategy):
                                 self.connection.strategy._responses[message_id] = [dict_response]
                             if dict_response['type'] not in ['searchResEntry', 'searchResRef', 'intermediateResponse']:
                                 self.connection.strategy._responses[message_id].append(RESPONSE_COMPLETE)
+                                self.connection.strategy.set_event_for_message(message_id)
+
                         if self.connection.strategy.can_stream:  # for AsyncStreamStrategy, used for PersistentSearch
                             self.connection.strategy.accumulate_stream(message_id, dict_response)
                         unprocessed = unprocessed[length:]
@@ -149,6 +151,8 @@ class AsyncStrategy(BaseStrategy):
         self.can_stream = False
         self.receiver = None
         self.async_lock = Lock()
+        self.event_lock = Lock()
+        self._events = {}
 
     def open(self, reset_usage=True, read_server_info=True):
         """
@@ -173,6 +177,26 @@ class AsyncStrategy(BaseStrategy):
         with self.connection.connection_lock:
             BaseStrategy.close(self)
 
+    def _add_event_for_message(self, message_id):
+        with self.event_lock:
+            # Should have the check here because the receiver thread may has created it
+            if message_id not in self._events:
+                self._events[message_id] = Event()
+
+    def set_event_for_message(self, message_id):
+        with self.event_lock:
+            # The receiver thread may receive the response before the sender set the event for the message_id,
+            # so we have to check if the event exists
+            if message_id not in self._events:
+                self._events[message_id] = Event()
+            self._events[message_id].set()
+
+    def _get_event_for_message(self, message_id):
+        with self.event_lock:
+            if message_id not in self._events:
+                raise RuntimeError('Event for message[{}] should have been created before accessing'.format(message_id))
+            return self._events[message_id]
+
     def post_send_search(self, message_id):
         """
         Clears connection.response and returns messageId
@@ -180,6 +204,7 @@ class AsyncStrategy(BaseStrategy):
         self.connection.response = None
         self.connection.request = None
         self.connection.result = None
+        self._add_event_for_message(message_id)
         return message_id
 
     def post_send_single_response(self, message_id):
@@ -189,6 +214,7 @@ class AsyncStrategy(BaseStrategy):
         self.connection.response = None
         self.connection.request = None
         self.connection.result = None
+        self._add_event_for_message(message_id)
         return message_id
 
     def _start_listen(self):
@@ -201,15 +227,21 @@ class AsyncStrategy(BaseStrategy):
             self.receiver.daemon = True
             self.receiver.start()
 
-    def _get_response(self, message_id):
+    def _get_response(self, message_id, timeout):
         """
         Performs the capture of LDAP response for this strategy
-        Checks lock to avoid race condition with receiver thread
+        The response is only complete after the event been set
         """
-        with self.async_lock:
-            responses = self._responses.pop(message_id) if message_id in self._responses and self._responses[message_id][-1] == RESPONSE_COMPLETE else None
+        event = self._get_event_for_message(message_id)
+        flag = event.wait(timeout)
+        if not flag:
+            # timeout
+            return None
 
-        return responses
+        # In this stage we could ensure the response is already there
+        self._events.pop(message_id)
+        with self.async_lock:
+            return self._responses.pop(message_id)
 
     def receiving(self):
         raise NotImplementedError

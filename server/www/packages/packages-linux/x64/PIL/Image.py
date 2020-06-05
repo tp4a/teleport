@@ -25,6 +25,7 @@
 #
 
 import atexit
+import builtins
 import io
 import logging
 import math
@@ -32,33 +33,41 @@ import numbers
 import os
 import struct
 import sys
+import tempfile
 import warnings
+from collections.abc import Callable, MutableMapping
+from pathlib import Path
 
 # VERSION was removed in Pillow 6.0.0.
-# PILLOW_VERSION is deprecated and will be removed in Pillow 7.0.0.
+# PILLOW_VERSION is deprecated and will be removed in a future release.
 # Use __version__ instead.
-from . import PILLOW_VERSION, ImageMode, TiffTags, __version__, _plugins
+from . import (
+    ImageMode,
+    TiffTags,
+    UnidentifiedImageError,
+    __version__,
+    _plugins,
+    _raise_version_warning,
+)
 from ._binary import i8, i32le
-from ._util import deferred_error, isPath, isStringType, py3
+from ._util import deferred_error, isPath
 
-try:
-    import builtins
-except ImportError:
-    import __builtin__
+if sys.version_info >= (3, 7):
 
-    builtins = __builtin__
-
-
-try:
-    # Python 3
-    from collections.abc import Callable, MutableMapping
-except ImportError:
-    # Python 2.7
-    from collections import Callable, MutableMapping
+    def __getattr__(name):
+        if name == "PILLOW_VERSION":
+            _raise_version_warning()
+            return __version__
+        raise AttributeError("module '{}' has no attribute '{}'".format(__name__, name))
 
 
-# Silence warning
-assert PILLOW_VERSION
+else:
+
+    from . import PILLOW_VERSION
+
+    # Silence warning
+    assert PILLOW_VERSION
+
 
 logger = logging.getLogger(__name__)
 
@@ -69,12 +78,6 @@ class DecompressionBombWarning(RuntimeWarning):
 
 class DecompressionBombError(Exception):
     pass
-
-
-class _imaging_not_installed(object):
-    # module placeholder
-    def __getattr__(self, id):
-        raise ImportError("The _imaging C module is not installed")
 
 
 # Limit to around a quarter gigabyte for a 24 bit (3 bpp) image
@@ -97,7 +100,7 @@ try:
         )
 
 except ImportError as v:
-    core = _imaging_not_installed()
+    core = deferred_error(ImportError("The _imaging C module is not installed."))
     # Explanations for ways that we know we might have an import error
     if str(v).startswith("Module use of python"):
         # The _imaging C module is present, but not compiled for
@@ -109,22 +112,6 @@ except ImportError as v:
         )
     elif str(v).startswith("The _imaging extension"):
         warnings.warn(str(v), RuntimeWarning)
-    elif "Symbol not found: _PyUnicodeUCS2_" in str(v):
-        # should match _PyUnicodeUCS2_FromString and
-        # _PyUnicodeUCS2_AsLatin1String
-        warnings.warn(
-            "The _imaging extension was built for Python with UCS2 support; "
-            "recompile Pillow or build Python --without-wide-unicode. ",
-            RuntimeWarning,
-        )
-    elif "Symbol not found: _PyUnicodeUCS4_" in str(v):
-        # should match _PyUnicodeUCS4_FromString and
-        # _PyUnicodeUCS4_AsLatin1String
-        warnings.warn(
-            "The _imaging extension was built for Python with UCS4 support; "
-            "recompile Pillow or build Python --with-wide-unicode. ",
-            RuntimeWarning,
-        )
     # Fail here anyway. Don't let people run with a mostly broken Pillow.
     # see docs/porting.rst
     raise
@@ -136,18 +123,6 @@ try:
     import cffi
 except ImportError:
     cffi = None
-
-try:
-    from pathlib import Path
-
-    HAS_PATHLIB = True
-except ImportError:
-    try:
-        from pathlib2 import Path
-
-        HAS_PATHLIB = True
-    except ImportError:
-        HAS_PATHLIB = False
 
 
 def isImageType(t):
@@ -192,6 +167,9 @@ BILINEAR = LINEAR = 2
 HAMMING = 5
 BICUBIC = CUBIC = 3
 LANCZOS = ANTIALIAS = 1
+
+_filters_support = {BOX: 0.5, BILINEAR: 1.0, HAMMING: 1.0, BICUBIC: 2.0, LANCZOS: 3.0}
+
 
 # dithers
 NEAREST = NONE = 0
@@ -447,15 +425,17 @@ def _getdecoder(mode, decoder_name, args, extra=()):
 
     try:
         decoder = DECODERS[decoder_name]
-        return decoder(mode, *args + extra)
     except KeyError:
         pass
+    else:
+        return decoder(mode, *args + extra)
+
     try:
         # get decoder
         decoder = getattr(core, decoder_name + "_decoder")
-        return decoder(mode, *args + extra)
     except AttributeError:
-        raise IOError("decoder %s not available" % decoder_name)
+        raise OSError("decoder %s not available" % decoder_name)
+    return decoder(mode, *args + extra)
 
 
 def _getencoder(mode, encoder_name, args, extra=()):
@@ -468,15 +448,17 @@ def _getencoder(mode, encoder_name, args, extra=()):
 
     try:
         encoder = ENCODERS[encoder_name]
-        return encoder(mode, *args + extra)
     except KeyError:
         pass
+    else:
+        return encoder(mode, *args + extra)
+
     try:
         # get encoder
         encoder = getattr(core, encoder_name + "_encoder")
-        return encoder(mode, *args + extra)
     except AttributeError:
-        raise IOError("encoder %s not available" % encoder_name)
+        raise OSError("encoder %s not available" % encoder_name)
+    return encoder(mode, *args + extra)
 
 
 # --------------------------------------------------------------------
@@ -487,7 +469,7 @@ def coerce_e(value):
     return value if isinstance(value, _E) else _E(value)
 
 
-class _E(object):
+class _E:
     def __init__(self, data):
         self.data = data
 
@@ -528,7 +510,7 @@ def _getscaleoffset(expr):
 # Implementation wrapper
 
 
-class Image(object):
+class Image:
     """
     This class represents an image object.  To create
     :py:class:`~PIL.Image.Image` objects, use the appropriate factory
@@ -624,11 +606,6 @@ class Image(object):
         # object is gone.
         self.im = deferred_error(ValueError("Operation on closed image"))
 
-    if sys.version_info.major >= 3:
-
-        def __del__(self):
-            self.__exit__()
-
     def _copy(self):
         self.load()
         self.im = self.im.copy()
@@ -642,8 +619,6 @@ class Image(object):
             self.load()
 
     def _dump(self, file=None, format=None, **options):
-        import tempfile
-
         suffix = ""
         if format:
             suffix = "." + format
@@ -676,10 +651,6 @@ class Image(object):
             and self.getpalette() == other.getpalette()
             and self.tobytes() == other.tobytes()
         )
-
-    def __ne__(self, other):
-        eq = self == other
-        return not eq
 
     def __repr__(self):
         return "<%s.%s image mode=%s size=%dx%d at 0x%X>" % (
@@ -1186,16 +1157,18 @@ class Image(object):
         """
         Configures the image file loader so it returns a version of the
         image that as closely as possible matches the given mode and
-        size.  For example, you can use this method to convert a color
-        JPEG to greyscale while loading it, or to extract a 128x192
-        version from a PCD file.
+        size. For example, you can use this method to convert a color
+        JPEG to greyscale while loading it.
+
+        If any changes are made, returns a tuple with the chosen ``mode`` and
+        ``box`` with coordinates of the original image within the altered one.
 
         Note that this method modifies the :py:class:`~PIL.Image.Image` object
-        in place.  If the image has already been loaded, this method has no
+        in place. If the image has already been loaded, this method has no
         effect.
 
         Note: This method is not implemented for most images. It is
-        currently implemented only for JPEG and PCD images.
+        currently implemented only for JPEG and MPO images.
 
         :param mode: The requested mode.
         :param size: The requested size.
@@ -1350,10 +1323,7 @@ class Image(object):
 
         self.load()
         try:
-            if py3:
-                return list(self.im.getpalette())
-            else:
-                return [i8(c) for c in self.im.getpalette()]
+            return list(self.im.getpalette())
         except ValueError:
             return None  # no palette
 
@@ -1504,7 +1474,7 @@ class Image(object):
                 raise ValueError("cannot determine region size; use 4-item box")
             box += (box[0] + size[0], box[1] + size[1])
 
-        if isStringType(im):
+        if isinstance(im, str):
             from . import ImageColor
 
             im = ImageColor.getcolor(im, self.mode)
@@ -1704,10 +1674,7 @@ class Image(object):
             palette = ImagePalette.raw(data.rawmode, data.palette)
         else:
             if not isinstance(data, bytes):
-                if py3:
-                    data = bytes(data)
-                else:
-                    data = "".join(chr(x) for x in data)
+                data = bytes(data)
             palette = ImagePalette.raw(rawmode, data)
         self.mode = "PA" if "A" in self.mode else "P"
         self.palette = palette
@@ -1827,7 +1794,24 @@ class Image(object):
 
         return m_im
 
-    def resize(self, size, resample=NEAREST, box=None):
+    def _get_safe_box(self, size, resample, box):
+        """Expands the box so it includes adjacent pixels
+        that may be used by resampling with the given resampling filter.
+        """
+        filter_support = _filters_support[resample] - 0.5
+        scale_x = (box[2] - box[0]) / size[0]
+        scale_y = (box[3] - box[1]) / size[1]
+        support_x = filter_support * scale_x
+        support_y = filter_support * scale_y
+
+        return (
+            max(0, int(box[0] - support_x)),
+            max(0, int(box[1] - support_y)),
+            min(self.size[0], math.ceil(box[2] + support_x)),
+            min(self.size[1], math.ceil(box[3] + support_y)),
+        )
+
+    def resize(self, size, resample=BICUBIC, box=None, reducing_gap=None):
         """
         Returns a resized copy of this image.
 
@@ -1837,13 +1821,26 @@ class Image(object):
            one of :py:attr:`PIL.Image.NEAREST`, :py:attr:`PIL.Image.BOX`,
            :py:attr:`PIL.Image.BILINEAR`, :py:attr:`PIL.Image.HAMMING`,
            :py:attr:`PIL.Image.BICUBIC` or :py:attr:`PIL.Image.LANCZOS`.
-           If omitted, or if the image has mode "1" or "P", it is
-           set :py:attr:`PIL.Image.NEAREST`.
+           Default filter is :py:attr:`PIL.Image.BICUBIC`.
+           If the image has mode "1" or "P", it is
+           always set to :py:attr:`PIL.Image.NEAREST`.
            See: :ref:`concept-filters`.
-        :param box: An optional 4-tuple of floats giving the region
-           of the source image which should be scaled.
-           The values should be within (0, 0, width, height) rectangle.
+        :param box: An optional 4-tuple of floats providing
+           the source image region to be scaled.
+           The values must be within (0, 0, width, height) rectangle.
            If omitted or None, the entire source is used.
+        :param reducing_gap: Apply optimization by resizing the image
+           in two steps. First, reducing the image by integer times
+           using :py:meth:`~PIL.Image.Image.reduce`.
+           Second, resizing using regular resampling. The last step
+           changes size no less than by ``reducing_gap`` times.
+           ``reducing_gap`` may be None (no first step is performed)
+           or should be greater than 1.0. The bigger ``reducing_gap``,
+           the closer the result to the fair resampling.
+           The smaller ``reducing_gap``, the faster resizing.
+           With ``reducing_gap`` greater or equal to 3.0, the result is
+           indistinguishable from fair resampling in most cases.
+           The default value is None (no optimization).
         :returns: An :py:class:`~PIL.Image.Image` object.
         """
 
@@ -1865,6 +1862,9 @@ class Image(object):
                 message + " Use " + ", ".join(filters[:-1]) + " or " + filters[-1]
             )
 
+        if reducing_gap is not None and reducing_gap < 1.0:
+            raise ValueError("reducing_gap must be 1.0 or greater")
+
         size = tuple(size)
 
         if box is None:
@@ -1885,7 +1885,57 @@ class Image(object):
 
         self.load()
 
+        if reducing_gap is not None and resample != NEAREST:
+            factor_x = int((box[2] - box[0]) / size[0] / reducing_gap) or 1
+            factor_y = int((box[3] - box[1]) / size[1] / reducing_gap) or 1
+            if factor_x > 1 or factor_y > 1:
+                reduce_box = self._get_safe_box(size, resample, box)
+                factor = (factor_x, factor_y)
+                if callable(self.reduce):
+                    self = self.reduce(factor, box=reduce_box)
+                else:
+                    self = Image.reduce(self, factor, box=reduce_box)
+                box = (
+                    (box[0] - reduce_box[0]) / factor_x,
+                    (box[1] - reduce_box[1]) / factor_y,
+                    (box[2] - reduce_box[0]) / factor_x,
+                    (box[3] - reduce_box[1]) / factor_y,
+                )
+
         return self._new(self.im.resize(size, resample, box))
+
+    def reduce(self, factor, box=None):
+        """
+        Returns a copy of the image reduced by `factor` times.
+        If the size of the image is not dividable by the `factor`,
+        the resulting size will be rounded up.
+
+        :param factor: A greater than 0 integer or tuple of two integers
+           for width and height separately.
+        :param box: An optional 4-tuple of ints providing
+           the source image region to be reduced.
+           The values must be within (0, 0, width, height) rectangle.
+           If omitted or None, the entire source is used.
+        """
+        if not isinstance(factor, (list, tuple)):
+            factor = (factor, factor)
+
+        if box is None:
+            box = (0, 0) + self.size
+        else:
+            box = tuple(box)
+
+        if factor == (1, 1) and box == (0, 0) + self.size:
+            return self.copy()
+
+        if self.mode in ["LA", "RGBA"]:
+            im = self.convert(self.mode[:-1] + "a")
+            im = im.reduce(factor, box)
+            return im.convert(self.mode)
+
+        self.load()
+
+        return self._new(self.im.reduce(factor, box))
 
     def rotate(
         self,
@@ -1908,7 +1958,7 @@ class Image(object):
            environment), or :py:attr:`PIL.Image.BICUBIC`
            (cubic spline interpolation in a 4x4 environment).
            If omitted, or if the image has mode "1" or "P", it is
-           set :py:attr:`PIL.Image.NEAREST`. See :ref:`concept-filters`.
+           set to :py:attr:`PIL.Image.NEAREST`. See :ref:`concept-filters`.
         :param expand: Optional expansion flag.  If true, expands the output
            image to make it large enough to hold the entire rotated image.
            If false or omitted, make the output image the same size as the
@@ -1993,8 +2043,8 @@ class Image(object):
                 x, y = transform(x, y, matrix)
                 xx.append(x)
                 yy.append(y)
-            nw = int(math.ceil(max(xx)) - math.floor(min(xx)))
-            nh = int(math.ceil(max(yy)) - math.floor(min(yy)))
+            nw = math.ceil(max(xx)) - math.floor(min(xx))
+            nh = math.ceil(max(yy)) - math.floor(min(yy))
 
             # We multiply a translation matrix from the right.  Because of its
             # special form, this is the same as taking the image of the
@@ -2039,7 +2089,7 @@ class Image(object):
         if isPath(fp):
             filename = fp
             open_fp = True
-        elif HAS_PATHLIB and isinstance(fp, Path):
+        elif isinstance(fp, Path):
             filename = str(fp)
             open_fp = True
         if not filename and hasattr(fp, "name") and isPath(fp.name):
@@ -2161,7 +2211,7 @@ class Image(object):
         """
         self.load()
 
-        if isStringType(channel):
+        if isinstance(channel, str):
             try:
                 channel = self.getbands().index(channel)
             except ValueError:
@@ -2177,7 +2227,7 @@ class Image(object):
         """
         return 0
 
-    def thumbnail(self, size, resample=BICUBIC):
+    def thumbnail(self, size, resample=BICUBIC, reducing_gap=2.0):
         """
         Make this image into a thumbnail.  This method modifies the
         image to contain a thumbnail version of itself, no larger than
@@ -2196,27 +2246,47 @@ class Image(object):
            of :py:attr:`PIL.Image.NEAREST`, :py:attr:`PIL.Image.BILINEAR`,
            :py:attr:`PIL.Image.BICUBIC`, or :py:attr:`PIL.Image.LANCZOS`.
            If omitted, it defaults to :py:attr:`PIL.Image.BICUBIC`.
-           (was :py:attr:`PIL.Image.NEAREST` prior to version 2.5.0)
+           (was :py:attr:`PIL.Image.NEAREST` prior to version 2.5.0).
+        :param reducing_gap: Apply optimization by resizing the image
+           in two steps. First, reducing the image by integer times
+           using :py:meth:`~PIL.Image.Image.reduce` or
+           :py:meth:`~PIL.Image.Image.draft` for JPEG images.
+           Second, resizing using regular resampling. The last step
+           changes size no less than by ``reducing_gap`` times.
+           ``reducing_gap`` may be None (no first step is performed)
+           or should be greater than 1.0. The bigger ``reducing_gap``,
+           the closer the result to the fair resampling.
+           The smaller ``reducing_gap``, the faster resizing.
+           With ``reducing_gap`` greater or equal to 3.0, the result is
+           indistinguishable from fair resampling in most cases.
+           The default value is 2.0 (very close to fair resampling
+           while still being faster in many cases).
         :returns: None
         """
 
-        # preserve aspect ratio
-        x, y = self.size
-        if x > size[0]:
-            y = int(max(y * size[0] / x, 1))
-            x = int(size[0])
-        if y > size[1]:
-            x = int(max(x * size[1] / y, 1))
-            y = int(size[1])
-        size = x, y
-
-        if size == self.size:
+        x, y = map(math.floor, size)
+        if x >= self.width and y >= self.height:
             return
 
-        self.draft(None, size)
+        def round_aspect(number, key):
+            return max(min(math.floor(number), math.ceil(number), key=key), 1)
+
+        # preserve aspect ratio
+        aspect = self.width / self.height
+        if x / y >= aspect:
+            x = round_aspect(y * aspect, key=lambda n: abs(aspect - n / y))
+        else:
+            y = round_aspect(x / aspect, key=lambda n: abs(aspect - x / n))
+        size = (x, y)
+
+        box = None
+        if reducing_gap is not None:
+            res = self.draft(None, (size[0] * reducing_gap, size[1] * reducing_gap))
+            if res is not None:
+                box = res[1]
 
         if self.size != size:
-            im = self.resize(size, resample)
+            im = self.resize(size, resample, box=box, reducing_gap=reducing_gap)
 
             self.im = im.im
             self._size = size
@@ -2246,12 +2316,14 @@ class Image(object):
 
           It may also be an :py:class:`~PIL.Image.ImageTransformHandler`
           object::
+
             class Example(Image.ImageTransformHandler):
                 def transform(size, method, data, resample, fill=1):
                     # Return result
 
           It may also be an object with a :py:meth:`~method.getdata` method
           that returns a tuple supplying new **method** and **data** values::
+
             class Example(object):
                 def getdata(self):
                     method = Image.EXTENT
@@ -2297,6 +2369,7 @@ class Image(object):
             raise ValueError("missing method data")
 
         im = new(self.mode, size, fillcolor)
+        im.info = self.info.copy()
         if method == MESH:
             # list of quads
             for box, quad in data:
@@ -2318,8 +2391,8 @@ class Image(object):
         elif method == EXTENT:
             # convert extent to an affine transform
             x0, y0, x1, y1 = data
-            xs = float(x1 - x0) / w
-            ys = float(y1 - y0) / h
+            xs = (x1 - x0) / w
+            ys = (y1 - y0) / h
             method = AFFINE
             data = (xs, 0, x0, 0, ys, y0)
 
@@ -2425,12 +2498,12 @@ class Image(object):
 # Abstract handlers.
 
 
-class ImagePointHandler(object):
+class ImagePointHandler:
     # used as a mixin by point transforms (for use with im.point)
     pass
 
 
-class ImageTransformHandler(object):
+class ImageTransformHandler:
     # used as a mixin by geometry transforms (for use with im.transform)
     pass
 
@@ -2488,7 +2561,7 @@ def new(mode, size, color=0):
         # don't initialize
         return Image()._new(core.new(mode, size))
 
-    if isStringType(color):
+    if isinstance(color, str):
         # css3-style specifier
 
         from . import ImageColor
@@ -2592,17 +2665,10 @@ def frombuffer(mode, size, data, decoder_name="raw", *args):
 
     if decoder_name == "raw":
         if args == ():
-            warnings.warn(
-                "the frombuffer defaults will change in Pillow 7.0.0; "
-                "for portability, change the call to read:\n"
-                "  frombuffer(mode, size, data, 'raw', mode, 0, 1)",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-            args = mode, 0, -1  # may change to (mode, 0, 1) post-1.1.6
+            args = mode, 0, 1
         if args[0] in _MAPMODES:
             im = new(mode, (1, 1))
-            im = im._new(core.map_buffer(data, size, decoder_name, None, 0, args))
+            im = im._new(core.map_buffer(data, size, decoder_name, 0, args))
             im.readonly = 1
             return im
 
@@ -2642,9 +2708,12 @@ def fromarray(obj, mode=None):
     if mode is None:
         try:
             typekey = (1, 1) + shape[2:], arr["typestr"]
-            mode, rawmode = _fromarray_typemap[typekey]
         except KeyError:
             raise TypeError("Cannot handle this data type")
+        try:
+            mode, rawmode = _fromarray_typemap[typekey]
+        except KeyError:
+            raise TypeError("Cannot handle this data type: %s, %s" % typekey)
     else:
         rawmode = mode
     if mode in ["1", "L", "I", "P", "F"]:
@@ -2748,16 +2817,24 @@ def open(fp, mode="r"):
        and be opened in binary mode.
     :param mode: The mode.  If given, this argument must be "r".
     :returns: An :py:class:`~PIL.Image.Image` object.
-    :exception IOError: If the file cannot be found, or the image cannot be
-       opened and identified.
+    :exception FileNotFoundError: If the file cannot be found.
+    :exception PIL.UnidentifiedImageError: If the image cannot be opened and
+       identified.
+    :exception ValueError: If the ``mode`` is not "r", or if a ``StringIO``
+       instance is used for ``fp``.
     """
 
     if mode != "r":
         raise ValueError("bad mode %r" % mode)
+    elif isinstance(fp, io.StringIO):
+        raise ValueError(
+            "StringIO cannot be used to open an image. "
+            "Binary data must be used instead."
+        )
 
     exclusive_fp = False
     filename = ""
-    if HAS_PATHLIB and isinstance(fp, Path):
+    if isinstance(fp, Path):
         filename = str(fp.resolve())
     elif isPath(fp):
         filename = fp
@@ -2815,7 +2892,9 @@ def open(fp, mode="r"):
         fp.close()
     for message in accept_warnings:
         warnings.warn(message)
-    raise IOError("cannot identify image file %r" % (filename if filename else fp))
+    raise UnidentifiedImageError(
+        "cannot identify image file %r" % (filename if filename else fp)
+    )
 
 
 #
@@ -3238,7 +3317,7 @@ class Exif(MutableMapping):
                             continue
                         size = count * unit_size
                         if size > 4:
-                            offset, = struct.unpack("<L", data)
+                            (offset,) = struct.unpack("<L", data)
                             data = ifd_data[offset - 12 : offset + size - 12]
                         else:
                             data = data[:size]
@@ -3268,7 +3347,7 @@ class Exif(MutableMapping):
                         )
                         if ifd_tag == 0x1101:
                             # CameraInfo
-                            offset, = struct.unpack(">L", data)
+                            (offset,) = struct.unpack(">L", data)
                             self.fp.seek(offset)
 
                             camerainfo = {"ModelID": self.fp.read(4)}
@@ -3320,11 +3399,6 @@ class Exif(MutableMapping):
 
     def __contains__(self, tag):
         return tag in self._data or (self._info is not None and tag in self._info)
-
-    if not py3:
-
-        def has_key(self, tag):
-            return tag in self
 
     def __setitem__(self, tag, value):
         if self._info is not None and tag in self._info:

@@ -17,13 +17,17 @@ from . import _common
 from . import _psposix
 from . import _psutil_posix as cext_posix
 from . import _psutil_sunos as cext
+from ._common import AccessDenied
 from ._common import AF_INET6
+from ._common import debug
 from ._common import get_procfs_path
 from ._common import isfile_strict
 from ._common import memoize_when_activated
+from ._common import NoSuchProcess
 from ._common import sockfam_to_enum
 from ._common import socktype_to_enum
 from ._common import usage_percent
+from ._common import ZombieProcess
 from ._compat import b
 from ._compat import FileNotFoundError
 from ._compat import PermissionError
@@ -86,13 +90,6 @@ proc_info_map = dict(
     euid=9,
     gid=10,
     egid=11)
-
-# These objects get set on "import psutil" from the __init__.py
-# file, see: https://github.com/giampaolo/psutil/issues/1402
-NoSuchProcess = None
-ZombieProcess = None
-AccessDenied = None
-TimeoutExpired = None
 
 
 # =====================================================================
@@ -229,7 +226,12 @@ def disk_partitions(all=False):
             # Differently from, say, Linux, we don't have a list of
             # common fs types so the best we can do, AFAIK, is to
             # filter by filesystem having a total size > 0.
-            if not disk_usage(mountpoint).total:
+            try:
+                if not disk_usage(mountpoint).total:
+                    continue
+            except OSError as err:
+                # https://github.com/giampaolo/psutil/issues/1674
+                debug("skipping %r: %r" % (mountpoint, err))
                 continue
         ntuple = _common.sdiskpart(device, mountpoint, fstype, opts)
         retlist.append(ntuple)
@@ -400,6 +402,9 @@ class Process(object):
     @wrap_exceptions
     @memoize_when_activated
     def _proc_basic_info(self):
+        if self.pid == 0 and not \
+                os.path.exists('%s/%s/psinfo' % (self._procfs_path, self.pid)):
+            raise AccessDenied(self.pid)
         ret = cext.proc_basic_info(self.pid, self._procfs_path)
         assert len(ret) == len(proc_info_map)
         return ret

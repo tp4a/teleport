@@ -31,23 +31,17 @@
 #
 # See the README file for information on usage and redistribution.
 #
-
-from __future__ import print_function
-
 import array
 import io
+import os
 import struct
+import subprocess
+import tempfile
 import warnings
 
 from . import Image, ImageFile, TiffImagePlugin
 from ._binary import i8, i16be as i16, i32be as i32, o8
-from ._util import isStringType
 from .JpegPresets import presets
-
-# __version__ is deprecated and will be removed in a future version. Use
-# PIL.__version__ instead.
-__version__ = "0.6"
-
 
 #
 # Parser
@@ -106,27 +100,25 @@ def APP(self, marker):
         # reassemble the profile, rather than assuming that the APP2
         # markers appear in the correct sequence.
         self.icclist.append(s)
-    elif marker == 0xFFED:
-        if s[:14] == b"Photoshop 3.0\x00":
-            blocks = s[14:]
-            # parse the image resource block
-            offset = 0
-            photoshop = {}
-            while blocks[offset : offset + 4] == b"8BIM":
+    elif marker == 0xFFED and s[:14] == b"Photoshop 3.0\x00":
+        # parse the image resource block
+        offset = 14
+        photoshop = self.info.setdefault("photoshop", {})
+        while s[offset : offset + 4] == b"8BIM":
+            try:
                 offset += 4
                 # resource code
-                code = i16(blocks, offset)
+                code = i16(s, offset)
                 offset += 2
                 # resource name (usually empty)
-                name_len = i8(blocks[offset])
-                # name = blocks[offset+1:offset+1+name_len]
-                offset = 1 + offset + name_len
-                if offset & 1:
-                    offset += 1
+                name_len = i8(s[offset])
+                # name = s[offset+1:offset+1+name_len]
+                offset += 1 + name_len
+                offset += offset & 1  # align
                 # resource data block
-                size = i32(blocks, offset)
+                size = i32(s, offset)
                 offset += 4
-                data = blocks[offset : offset + size]
+                data = s[offset : offset + size]
                 if code == 0x03ED:  # ResolutionInfo
                     data = {
                         "XResolution": i32(data[:4]) / 65536,
@@ -135,10 +127,11 @@ def APP(self, marker):
                         "DisplayedUnitsY": i16(data[12:]),
                     }
                 photoshop[code] = data
-                offset = offset + size
-                if offset & 1:
-                    offset += 1
-            self.info["photoshop"] = photoshop
+                offset += size
+                offset += offset & 1  # align
+            except struct.error:
+                break  # insufficient data
+
     elif marker == 0xFFEE and s[:5] == b"Adobe":
         self.info["adobe"] = i16(s, 5)
         # extract Adobe custom properties
@@ -169,10 +162,11 @@ def APP(self, marker):
                 # 1 dpcm = 2.54 dpi
                 dpi *= 2.54
             self.info["dpi"] = int(dpi + 0.5), int(dpi + 0.5)
-        except (KeyError, SyntaxError, ZeroDivisionError):
+        except (KeyError, SyntaxError, ValueError, ZeroDivisionError):
             # SyntaxError for invalid/unreadable EXIF
             # KeyError for dpi not included
             # ZeroDivisionError for invalid dpi rational value
+            # ValueError for x_resolution[0] being an invalid float
             self.info["dpi"] = 72, 72
 
 
@@ -182,6 +176,7 @@ def COM(self, marker):
     n = i16(self.fp.read(2)) - 2
     s = ImageFile._safe_read(self.fp, n)
 
+    self.info["comment"] = s
     self.app["COM"] = s  # compatibility
     self.applist.append(("COM", s))
 
@@ -415,7 +410,8 @@ class JpegImageFile(ImageFile.ImageFile):
             return
 
         d, e, o, a = self.tile[0]
-        scale = 0
+        scale = 1
+        original_size = self.size
 
         if a[0] == "RGB" and mode in ["L", "YCbCr"]:
             self.mode = mode
@@ -438,15 +434,12 @@ class JpegImageFile(ImageFile.ImageFile):
         self.tile = [(d, e, o, a)]
         self.decoderconfig = (scale, 0)
 
-        return self
+        box = (0, 0, original_size[0] / scale, original_size[1] / scale)
+        return (self.mode, box)
 
     def load_djpeg(self):
 
         # ALTERNATIVE: handle JPEGs via the IJG command line utilities
-
-        import subprocess
-        import tempfile
-        import os
 
         f, path = tempfile.mkstemp()
         os.close(f)
@@ -456,9 +449,9 @@ class JpegImageFile(ImageFile.ImageFile):
             raise ValueError("Invalid Filename")
 
         try:
-            _im = Image.open(path)
-            _im.load()
-            self.im = _im.im
+            with Image.open(path) as _im:
+                _im.load()
+                self.im = _im.im
         finally:
             try:
                 os.unlink(path)
@@ -618,23 +611,23 @@ def _save(im, fp, filename):
     try:
         rawmode = RAWMODE[im.mode]
     except KeyError:
-        raise IOError("cannot write mode %s as JPEG" % im.mode)
+        raise OSError("cannot write mode %s as JPEG" % im.mode)
 
     info = im.encoderinfo
 
-    dpi = [int(round(x)) for x in info.get("dpi", (0, 0))]
+    dpi = [round(x) for x in info.get("dpi", (0, 0))]
 
-    quality = info.get("quality", 0)
+    quality = info.get("quality", -1)
     subsampling = info.get("subsampling", -1)
     qtables = info.get("qtables")
 
     if quality == "keep":
-        quality = 0
+        quality = -1
         subsampling = "keep"
         qtables = "keep"
     elif quality in presets:
         preset = presets[quality]
-        quality = 0
+        quality = -1
         subsampling = preset.get("subsampling", -1)
         qtables = preset.get("quantization")
     elif not isinstance(quality, int):
@@ -642,7 +635,7 @@ def _save(im, fp, filename):
     else:
         if subsampling in presets:
             subsampling = presets[subsampling].get("subsampling", -1)
-        if isStringType(qtables) and qtables in presets:
+        if isinstance(qtables, str) and qtables in presets:
             qtables = presets[qtables].get("quantization")
 
     if subsampling == "4:4:4":
@@ -663,7 +656,7 @@ def _save(im, fp, filename):
     def validate_qtables(qtables):
         if qtables is None:
             return qtables
-        if isStringType(qtables):
+        if isinstance(qtables, str):
             try:
                 lines = [
                     int(num)
@@ -757,8 +750,8 @@ def _save(im, fp, filename):
         # CMYK can be bigger
         if im.mode == "CMYK":
             bufsize = 4 * im.size[0] * im.size[1]
-        # keep sets quality to 0, but the actual value may be high.
-        elif quality >= 95 or quality == 0:
+        # keep sets quality to -1, but the actual value may be high.
+        elif quality >= 95 or quality == -1:
             bufsize = 2 * im.size[0] * im.size[1]
         else:
             bufsize = im.size[0] * im.size[1]
@@ -772,9 +765,6 @@ def _save(im, fp, filename):
 
 def _save_cjpeg(im, fp, filename):
     # ALTERNATIVE: handle JPEGs via the IJG command line utilities.
-    import os
-    import subprocess
-
     tempfile = im._dump()
     subprocess.check_call(["cjpeg", "-outfile", filename, tempfile])
     try:

@@ -34,7 +34,6 @@ import math
 import numbers
 
 from . import Image, ImageColor
-from ._util import isStringType
 
 
 """
@@ -45,7 +44,7 @@ directly.
 """
 
 
-class ImageDraw(object):
+class ImageDraw:
     def __init__(self, im, mode=None):
         """
         Create a drawing instance.
@@ -107,13 +106,13 @@ class ImageDraw(object):
                 ink = self.ink
         else:
             if ink is not None:
-                if isStringType(ink):
+                if isinstance(ink, str):
                     ink = ImageColor.getcolor(ink, self.mode)
                 if self.palette and not isinstance(ink, numbers.Number):
                     ink = self.palette.getcolor(ink)
                 ink = self.draw.draw_ink(ink)
             if fill is not None:
-                if isStringType(fill):
+                if isinstance(fill, str):
                     fill = ImageColor.getcolor(fill, self.mode)
                 if self.palette and not isinstance(fill, numbers.Number):
                     fill = self.palette.getcolor(fill)
@@ -135,20 +134,20 @@ class ImageDraw(object):
         if ink is not None:
             self.draw.draw_bitmap(xy, bitmap.im, ink)
 
-    def chord(self, xy, start, end, fill=None, outline=None, width=0):
+    def chord(self, xy, start, end, fill=None, outline=None, width=1):
         """Draw a chord."""
         ink, fill = self._getink(outline, fill)
         if fill is not None:
             self.draw.draw_chord(xy, start, end, fill, 1)
-        if ink is not None and ink != fill:
+        if ink is not None and ink != fill and width != 0:
             self.draw.draw_chord(xy, start, end, ink, 0, width)
 
-    def ellipse(self, xy, fill=None, outline=None, width=0):
+    def ellipse(self, xy, fill=None, outline=None, width=1):
         """Draw an ellipse."""
         ink, fill = self._getink(outline, fill)
         if fill is not None:
             self.draw.draw_ellipse(xy, fill, 1)
-        if ink is not None and ink != fill:
+        if ink is not None and ink != fill and width != 0:
             self.draw.draw_ellipse(xy, ink, 0, width)
 
     def line(self, xy, fill=None, width=0, joint=None):
@@ -220,12 +219,12 @@ class ImageDraw(object):
         if ink is not None and ink != fill:
             self.draw.draw_outline(shape, ink, 0)
 
-    def pieslice(self, xy, start, end, fill=None, outline=None, width=0):
+    def pieslice(self, xy, start, end, fill=None, outline=None, width=1):
         """Draw a pieslice."""
         ink, fill = self._getink(outline, fill)
         if fill is not None:
             self.draw.draw_pieslice(xy, start, end, fill, 1)
-        if ink is not None and ink != fill:
+        if ink is not None and ink != fill and width != 0:
             self.draw.draw_pieslice(xy, start, end, ink, 0, width)
 
     def point(self, xy, fill=None):
@@ -242,12 +241,12 @@ class ImageDraw(object):
         if ink is not None and ink != fill:
             self.draw.draw_polygon(xy, ink, 0)
 
-    def rectangle(self, xy, fill=None, outline=None, width=0):
+    def rectangle(self, xy, fill=None, outline=None, width=1):
         """Draw a rectangle."""
         ink, fill = self._getink(outline, fill)
         if fill is not None:
             self.draw.draw_rectangle(xy, fill, 1)
-        if ink is not None and ink != fill:
+        if ink is not None and ink != fill and width != 0:
             self.draw.draw_rectangle(xy, ink, 0, width)
 
     def _multiline_check(self, text):
@@ -314,7 +313,7 @@ class ImageDraw(object):
                     language=language,
                     stroke_width=stroke_width,
                     *args,
-                    **kwargs
+                    **kwargs,
                 )
                 coord = coord[0] + offset[0], coord[1] + offset[1]
             except AttributeError:
@@ -327,7 +326,7 @@ class ImageDraw(object):
                         language,
                         stroke_width,
                         *args,
-                        **kwargs
+                        **kwargs,
                     )
                 except TypeError:
                     mask = font.getmask(text)

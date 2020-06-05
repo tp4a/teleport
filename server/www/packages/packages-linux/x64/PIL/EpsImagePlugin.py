@@ -23,14 +23,12 @@
 import io
 import os
 import re
+import subprocess
 import sys
+import tempfile
 
 from . import Image, ImageFile
 from ._binary import i32le as i32
-
-# __version__ is deprecated and will be removed in a future version. Use
-# PIL.__version__ instead.
-__version__ = "0.5"
 
 #
 # --------------------------------------------------------------------
@@ -42,15 +40,8 @@ gs_windows_binary = None
 if sys.platform.startswith("win"):
     import shutil
 
-    if hasattr(shutil, "which"):
-        which = shutil.which
-    else:
-        # Python 2
-        import distutils.spawn
-
-        which = distutils.spawn.find_executable
     for binary in ("gswin32c", "gswin64c", "gs"):
-        if which(binary) is not None:
+        if shutil.which(binary) is not None:
             gs_windows_binary = binary
             break
     else:
@@ -61,11 +52,8 @@ def has_ghostscript():
     if gs_windows_binary:
         return True
     if not sys.platform.startswith("win"):
-        import subprocess
-
         try:
-            with open(os.devnull, "wb") as devnull:
-                subprocess.check_call(["gs", "--version"], stdout=devnull)
+            subprocess.check_call(["gs", "--version"], stdout=subprocess.DEVNULL)
             return True
         except OSError:
             # No Ghostscript
@@ -87,12 +75,9 @@ def Ghostscript(tile, size, fp, scale=1):
     size = (size[0] * scale, size[1] * scale)
     # resolution is dependent on bbox and size
     res = (
-        float((72.0 * size[0]) / (bbox[2] - bbox[0])),
-        float((72.0 * size[1]) / (bbox[3] - bbox[1])),
+        72.0 * size[0] / (bbox[2] - bbox[0]),
+        72.0 * size[1] / (bbox[3] - bbox[1]),
     )
-
-    import subprocess
-    import tempfile
 
     out_fd, outfile = tempfile.mkstemp()
     os.close(out_fd)
@@ -146,7 +131,7 @@ def Ghostscript(tile, size, fp, scale=1):
 
     if gs_windows_binary is not None:
         if not gs_windows_binary:
-            raise WindowsError("Unable to locate Ghostscript on paths")
+            raise OSError("Unable to locate Ghostscript on paths")
         command[0] = gs_windows_binary
 
     # push data through Ghostscript
@@ -156,8 +141,8 @@ def Ghostscript(tile, size, fp, scale=1):
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         subprocess.check_call(command, startupinfo=startupinfo)
-        im = Image.open(outfile)
-        im.load()
+        out_im = Image.open(outfile)
+        out_im.load()
     finally:
         try:
             os.unlink(outfile)
@@ -166,10 +151,12 @@ def Ghostscript(tile, size, fp, scale=1):
         except OSError:
             pass
 
-    return im.im.copy()
+    im = out_im.im.copy()
+    out_im.close()
+    return im
 
 
-class PSFile(object):
+class PSFile:
     """
     Wrapper for bytesio object that treats either CR or LF as end of line.
     """
@@ -279,7 +266,7 @@ class EpsImageFile(ImageFile.ImageFile):
                         # tools mistakenly put in the Comments section
                         pass
                     else:
-                        raise IOError("bad EPS header")
+                        raise OSError("bad EPS header")
 
             s_raw = fp.readline()
             s = s_raw.strip("\r\n")
@@ -314,7 +301,7 @@ class EpsImageFile(ImageFile.ImageFile):
                 break
 
         if not box:
-            raise IOError("cannot determine EPS bounding box")
+            raise OSError("cannot determine EPS bounding box")
 
     def _find_offset(self, fp):
 
@@ -378,9 +365,8 @@ def _save(im, fp, filename, eps=1):
     base_fp = fp
     wrapped_fp = False
     if fp != sys.stdout:
-        if sys.version_info.major > 2:
-            fp = io.TextIOWrapper(fp, encoding="latin-1")
-            wrapped_fp = True
+        fp = io.TextIOWrapper(fp, encoding="latin-1")
+        wrapped_fp = True
 
     try:
         if eps:

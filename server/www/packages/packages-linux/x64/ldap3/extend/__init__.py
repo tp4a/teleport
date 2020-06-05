@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2019 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -178,12 +178,9 @@ class StandardExtendedOperations(ExtendedOperationContainer):
                       size_limit=0,
                       time_limit=0,
                       controls=None,
-                      streaming=True,
-                      callback=None,
-                      queue_size=8
+                      streaming=False,
+                      callback=None
                       ):
-        if callback:
-            streaming = False
         return PersistentSearch(self._connection,
                                 search_base,
                                 search_filter,

@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2013 - 2018 Giovanni Cannata
+# Copyright 2013 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -123,7 +123,7 @@ class LdifProducerStrategy(BaseStrategy):
     def post_send_search(self, message_id):
         raise LDAPLDIFError('LDIF-CONTENT cannot be produced for Search operations')
 
-    def _get_response(self, message_id):
+    def _get_response(self, message_id, timeout):
         pass
 
     def accumulate_stream(self, fragment):

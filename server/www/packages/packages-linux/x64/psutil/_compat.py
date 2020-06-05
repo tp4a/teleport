@@ -54,6 +54,9 @@ if PY3:
 else:
     # https://github.com/PythonCharmers/python-future/blob/exceptions/
     #     src/future/types/exceptions/pep3151.py
+    import platform
+
+    _singleton = object()
 
     def instance_checking_exception(base_exception=Exception):
         def wrapped(instance_checker):
@@ -84,28 +87,38 @@ else:
 
     @instance_checking_exception(EnvironmentError)
     def FileNotFoundError(inst):
-        return getattr(inst, 'errno', object()) == errno.ENOENT
+        return getattr(inst, 'errno', _singleton) == errno.ENOENT
 
     @instance_checking_exception(EnvironmentError)
     def ProcessLookupError(inst):
-        return getattr(inst, 'errno', object()) == errno.ESRCH
+        return getattr(inst, 'errno', _singleton) == errno.ESRCH
 
     @instance_checking_exception(EnvironmentError)
     def PermissionError(inst):
-        return getattr(inst, 'errno', object()) in (
+        return getattr(inst, 'errno', _singleton) in (
             errno.EACCES, errno.EPERM)
 
     @instance_checking_exception(EnvironmentError)
     def InterruptedError(inst):
-        return getattr(inst, 'errno', object()) == errno.EINTR
+        return getattr(inst, 'errno', _singleton) == errno.EINTR
 
     @instance_checking_exception(EnvironmentError)
     def ChildProcessError(inst):
-        return getattr(inst, 'errno', object()) == errno.ECHILD
+        return getattr(inst, 'errno', _singleton) == errno.ECHILD
 
     @instance_checking_exception(EnvironmentError)
     def FileExistsError(inst):
-        return getattr(inst, 'errno', object()) == errno.EEXIST
+        return getattr(inst, 'errno', _singleton) == errno.EEXIST
+
+    if platform.python_implementation() != "CPython":
+        try:
+            raise OSError(errno.EEXIST, "perm")
+        except FileExistsError:
+            pass
+        except OSError:
+            raise RuntimeError(
+                "broken / incompatible Python implementation, see: "
+                "https://github.com/giampaolo/psutil/issues/1659")
 
 
 # --- stdlib additions

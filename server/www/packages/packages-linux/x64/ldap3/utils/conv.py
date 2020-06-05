@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2019 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -72,7 +72,7 @@ def to_unicode(obj, encoding=None, from_server=False):
     if isinstance(obj, STRING_TYPES):  # python3 strings, python 2 unicode
         return obj
 
-    raise UnicodeError("Unable to convert type %s to unicode: %r" % (type(obj).__class__.__name__, obj))
+    raise UnicodeError("Unable to convert type %s to unicode: %r" % (obj.__class__.__name__, obj))
 
 
 def to_raw(obj, encoding='utf-8'):

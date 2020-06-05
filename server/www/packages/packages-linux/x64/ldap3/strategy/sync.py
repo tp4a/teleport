@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2013 - 2018 Giovanni Cannata
+# Copyright 2013 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -147,7 +147,7 @@ class SyncStrategy(BaseStrategy):
             log(ERROR, '<%s> for <%s>', self.connection.last_error, self.connection)
         raise LDAPSocketReceiveError(self.connection.last_error)
 
-    def _get_response(self, message_id):
+    def _get_response(self, message_id, timeout):
         """
         Performs the capture of LDAP response for SyncStrategy
         """

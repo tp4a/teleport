@@ -38,10 +38,15 @@ except ImportError:
     pwd = None
 
 from . import _common
+from ._common import AccessDenied
 from ._common import deprecated_method
+from ._common import Error
 from ._common import memoize
 from ._common import memoize_when_activated
+from ._common import NoSuchProcess
+from ._common import TimeoutExpired
 from ._common import wrap_numbers as _wrap_numbers
+from ._common import ZombieProcess
 from ._compat import long
 from ._compat import PermissionError
 from ._compat import ProcessLookupError
@@ -222,7 +227,7 @@ __all__ = [
 
 __all__.extend(_psplatform.__extra__all__)
 __author__ = "Giampaolo Rodola'"
-__version__ = "5.6.5"
+__version__ = "5.7.0"
 version_info = tuple([int(num) for num in __version__.split('.')])
 
 _timer = getattr(time, 'monotonic', time.time)
@@ -252,112 +257,6 @@ if (int(__version__.replace('.', '')) !=
                 "the existing psutil install directory"))
     msg += " or clean the virtual env somehow, then reinstall"
     raise ImportError(msg)
-
-
-# =====================================================================
-# --- Exceptions
-# =====================================================================
-
-
-class Error(Exception):
-    """Base exception class. All other psutil exceptions inherit
-    from this one.
-    """
-
-    def __init__(self, msg=""):
-        Exception.__init__(self, msg)
-        self.msg = msg
-
-    def __repr__(self):
-        ret = "psutil.%s %s" % (self.__class__.__name__, self.msg)
-        return ret.strip()
-
-    __str__ = __repr__
-
-
-class NoSuchProcess(Error):
-    """Exception raised when a process with a certain PID doesn't
-    or no longer exists.
-    """
-
-    def __init__(self, pid, name=None, msg=None):
-        Error.__init__(self, msg)
-        self.pid = pid
-        self.name = name
-        self.msg = msg
-        if msg is None:
-            if name:
-                details = "(pid=%s, name=%s)" % (self.pid, repr(self.name))
-            else:
-                details = "(pid=%s)" % self.pid
-            self.msg = "process no longer exists " + details
-
-
-class ZombieProcess(NoSuchProcess):
-    """Exception raised when querying a zombie process. This is
-    raised on macOS, BSD and Solaris only, and not always: depending
-    on the query the OS may be able to succeed anyway.
-    On Linux all zombie processes are querable (hence this is never
-    raised). Windows doesn't have zombie processes.
-    """
-
-    def __init__(self, pid, name=None, ppid=None, msg=None):
-        NoSuchProcess.__init__(self, msg)
-        self.pid = pid
-        self.ppid = ppid
-        self.name = name
-        self.msg = msg
-        if msg is None:
-            args = ["pid=%s" % pid]
-            if name:
-                args.append("name=%s" % repr(self.name))
-            if ppid:
-                args.append("ppid=%s" % self.ppid)
-            details = "(%s)" % ", ".join(args)
-            self.msg = "process still exists but it's a zombie " + details
-
-
-class AccessDenied(Error):
-    """Exception raised when permission to perform an action is denied."""
-
-    def __init__(self, pid=None, name=None, msg=None):
-        Error.__init__(self, msg)
-        self.pid = pid
-        self.name = name
-        self.msg = msg
-        if msg is None:
-            if (pid is not None) and (name is not None):
-                self.msg = "(pid=%s, name=%s)" % (pid, repr(name))
-            elif (pid is not None):
-                self.msg = "(pid=%s)" % self.pid
-            else:
-                self.msg = ""
-
-
-class TimeoutExpired(Error):
-    """Raised on Process.wait(timeout) if timeout expires and process
-    is still alive.
-    """
-
-    def __init__(self, seconds, pid=None, name=None):
-        Error.__init__(self, "timeout after %s seconds" % seconds)
-        self.seconds = seconds
-        self.pid = pid
-        self.name = name
-        if (pid is not None) and (name is not None):
-            self.msg += " (pid=%s, name=%s)" % (pid, repr(name))
-        elif (pid is not None):
-            self.msg += " (pid=%s)" % self.pid
-
-
-# Push exception classes into platform specific module namespace.
-_psplatform.NoSuchProcess = NoSuchProcess
-_psplatform.ZombieProcess = ZombieProcess
-_psplatform.AccessDenied = AccessDenied
-_psplatform.TimeoutExpired = TimeoutExpired
-if POSIX:
-    from . import _psposix
-    _psposix.TimeoutExpired = TimeoutExpired
 
 
 # =====================================================================
@@ -876,7 +775,7 @@ class Process(object):
             """
             return self._proc.io_counters()
 
-    # Linux and Windows >= Vista only
+    # Linux and Windows
     if hasattr(_psplatform.Process, "ionice_get"):
 
         def ionice(self, ioclass=None, value=None):
@@ -1312,16 +1211,7 @@ class Process(object):
         if POSIX:
             self._send_signal(sig)
         else:  # pragma: no cover
-            if sig == signal.SIGTERM:
-                self._proc.kill()
-            # py >= 2.7
-            elif sig in (getattr(signal, "CTRL_C_EVENT", object()),
-                         getattr(signal, "CTRL_BREAK_EVENT", object())):
-                self._proc.send_signal(sig)
-            else:
-                raise ValueError(
-                    "only SIGTERM, CTRL_C_EVENT and CTRL_BREAK_EVENT signals "
-                    "are supported on Windows")
+            self._proc.send_signal(sig)
 
     @_assert_pid_not_reused
     def suspend(self):
@@ -1369,6 +1259,8 @@ class Process(object):
     def wait(self, timeout=None):
         """Wait for process to terminate and, if process is a children
         of os.getpid(), also return its exit code, else None.
+        On Windows there's no such limitation (exit code is always
+        returned).
 
         If the process is already terminated immediately return None
         instead of raising NoSuchProcess.
@@ -1633,6 +1525,7 @@ def wait_procs(procs, timeout=None, callback=None):
             pass
         else:
             if returncode is not None or not proc.is_running():
+                # Set new Process instance attribute.
                 proc.returncode = returncode
                 gone.add(proc)
                 if callback is not None:

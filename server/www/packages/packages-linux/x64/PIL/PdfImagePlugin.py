@@ -24,12 +24,7 @@ import io
 import os
 import time
 
-from . import Image, ImageFile, ImageSequence, PdfParser
-
-# __version__ is deprecated and will be removed in a future version. Use
-# PIL.__version__ instead.
-__version__ = "0.5"
-
+from . import Image, ImageFile, ImageSequence, PdfParser, __version__
 
 #
 # --------------------------------------------------------------------
@@ -82,7 +77,7 @@ def _save(im, fp, filename, save_all=False):
 
     existing_pdf.start_writing()
     existing_pdf.write_header()
-    existing_pdf.write_comment("created by PIL PDF driver " + __version__)
+    existing_pdf.write_comment("created by Pillow {} PDF driver".format(__version__))
 
     #
     # pages
@@ -219,9 +214,9 @@ def _save(im, fp, filename, save_all=False):
             #
             # page contents
 
-            page_contents = PdfParser.make_bytes(
-                "q %d 0 0 %d 0 0 cm /image Do Q\n"
-                % (int(width * 72.0 / resolution), int(height * 72.0 / resolution))
+            page_contents = b"q %d 0 0 %d 0 0 cm /image Do Q\n" % (
+                int(width * 72.0 / resolution),
+                int(height * 72.0 / resolution),
             )
 
             existing_pdf.write_obj(contents_refs[pageNumber], stream=page_contents)

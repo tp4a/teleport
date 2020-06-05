@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2019 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -117,7 +117,7 @@ standard_formatter = {
     '2.16.840.1.113719.1.1.5.1.25': (format_unicode, None),  # Typed Name (Novell)
     'supportedldapversion': (format_integer, None),  # supportedLdapVersion (Microsoft)
     'octetstring': (format_binary, validate_uuid_le),  # octect string (Microsoft)
-    '1.2.840.113556.1.4.2': (format_uuid_le, validate_uuid_le),  # object guid (Microsoft)
+    '1.2.840.113556.1.4.2': (format_uuid_le, validate_uuid_le),  # objectGUID (Microsoft)
     '1.2.840.113556.1.4.13': (format_ad_timestamp, validate_ad_timestamp),  # builtinCreationTime (Microsoft)
     '1.2.840.113556.1.4.26': (format_ad_timestamp, validate_ad_timestamp),  # creationTime (Microsoft)
     '1.2.840.113556.1.4.49': (format_ad_timestamp, validate_ad_timestamp),  # badPasswordTime (Microsoft)

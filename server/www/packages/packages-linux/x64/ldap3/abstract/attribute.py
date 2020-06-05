@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2014 - 2019 Giovanni Cannata
+# Copyright 2014 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -82,6 +82,11 @@ class Attribute(object):
 
     def __getitem__(self, item):
         return self.values[item]
+
+    def __getstate__(self):
+        cpy = dict(self.__dict__)
+        cpy['cursor'] = None
+        return cpy
 
     def __eq__(self, other):
         try:

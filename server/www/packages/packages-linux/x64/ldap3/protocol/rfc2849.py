@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2013 - 2018 Giovanni Cannata
+# Copyright 2013 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -146,7 +146,9 @@ def add_request_to_ldif(entry, all_base64, sort_order=None):
     lines = []
     if 'entry' in entry:
         lines.append(_convert_to_ldif('dn', entry['entry'], all_base64))
-        lines.extend(add_controls(entry['controls'], all_base64))
+        control_lines = add_controls(entry['controls'], all_base64)
+        if control_lines:
+            lines.extend(control_lines)
         lines.append('changetype: add')
         lines.extend(add_attributes(entry['attributes'], all_base64))
         if sort_order:
@@ -162,7 +164,9 @@ def delete_request_to_ldif(entry, all_base64, sort_order=None):
     lines = []
     if 'entry' in entry:
         lines.append(_convert_to_ldif('dn', entry['entry'], all_base64))
-        lines.append(add_controls(entry['controls'], all_base64))
+        control_lines = add_controls(entry['controls'], all_base64)
+        if control_lines:
+            lines.extend(control_lines)
         lines.append('changetype: delete')
         if sort_order:
             lines = sort_ldif_lines(lines, sort_order)
@@ -176,7 +180,9 @@ def modify_request_to_ldif(entry, all_base64, sort_order=None):
     lines = []
     if 'entry' in entry:
         lines.append(_convert_to_ldif('dn', entry['entry'], all_base64))
-        lines.extend(add_controls(entry['controls'], all_base64))
+        control_lines = add_controls(entry['controls'], all_base64)
+        if control_lines:
+            lines.extend(control_lines)
         lines.append('changetype: modify')
         if 'changes' in entry:
             for change in entry['changes']:
@@ -193,7 +199,9 @@ def modify_dn_request_to_ldif(entry, all_base64, sort_order=None):
     lines = []
     if 'entry' in entry:
         lines.append(_convert_to_ldif('dn', entry['entry'], all_base64))
-        lines.extend(add_controls(entry['controls'], all_base64))
+        control_lines = add_controls(entry['controls'], all_base64)
+        if control_lines:
+            lines.extend(control_lines)
         lines.append('changetype: modrdn') if 'newSuperior' in entry and entry['newSuperior'] else lines.append('changetype: moddn')
         lines.append(_convert_to_ldif('newrdn', entry['newRdn'], all_base64))
         lines.append('deleteoldrdn: ' + ('1' if entry['deleteOldRdn'] else '0'))

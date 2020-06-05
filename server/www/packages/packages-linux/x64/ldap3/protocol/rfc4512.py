@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2013 - 2018 Giovanni Cannata
+# Copyright 2013 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -68,7 +68,7 @@ def attribute_usage_to_constant(value):
         return ATTRIBUTE_DIRECTORY_OPERATION
     elif value == 'distributedOperation':
         return ATTRIBUTE_DISTRIBUTED_OPERATION
-    elif value == 'dsaOperation':
+    elif value == 'dSAOperation':
         return ATTRIBUTE_DSA_OPERATION
     else:
         return 'unknown'

@@ -16,14 +16,17 @@ from . import _common
 from . import _psposix
 from . import _psutil_bsd as cext
 from . import _psutil_posix as cext_posix
+from ._common import AccessDenied
 from ._common import conn_tmap
 from ._common import conn_to_ntuple
 from ._common import FREEBSD
 from ._common import memoize
 from ._common import memoize_when_activated
 from ._common import NETBSD
+from ._common import NoSuchProcess
 from ._common import OPENBSD
 from ._common import usage_percent
+from ._common import ZombieProcess
 from ._compat import FileNotFoundError
 from ._compat import PermissionError
 from ._compat import ProcessLookupError
@@ -134,13 +137,6 @@ kinfo_proc_map = dict(
     cpunum=23,
     name=24,
 )
-
-# These objects get set on "import psutil" from the __init__.py
-# file, see: https://github.com/giampaolo/psutil/issues/1402
-NoSuchProcess = None
-ZombieProcess = None
-AccessDenied = None
-TimeoutExpired = None
 
 
 # =====================================================================
@@ -626,6 +622,8 @@ class Process(object):
     @wrap_exceptions
     def exe(self):
         if FREEBSD:
+            if self.pid == 0:
+                return ''  # else NSP
             return cext.proc_exe(self.pid)
         elif NETBSD:
             if self.pid == 0:
@@ -641,7 +639,7 @@ class Process(object):
             # cmdline arg (may return None).
             cmdline = self.cmdline()
             if cmdline:
-                return which(cmdline[0])
+                return which(cmdline[0]) or ""
             else:
                 return ""
 

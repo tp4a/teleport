@@ -18,10 +18,6 @@ import struct
 
 from . import Image, ImageFile
 
-# __version__ is deprecated and will be removed in a future version. Use
-# PIL.__version__ instead.
-__version__ = "0.1"
-
 
 def _parse_codestream(fp):
     """Parse the JPEG 2000 codestream to extract the size and component
@@ -180,7 +176,7 @@ class Jpeg2KImageFile(ImageFile.ImageFile):
         if self.size is None or self.mode is None:
             raise SyntaxError("unable to determine size/mode")
 
-        self.reduce = 0
+        self._reduce = 0
         self.layers = 0
 
         fd = -1
@@ -204,23 +200,33 @@ class Jpeg2KImageFile(ImageFile.ImageFile):
                 "jpeg2k",
                 (0, 0) + self.size,
                 0,
-                (self.codec, self.reduce, self.layers, fd, length),
+                (self.codec, self._reduce, self.layers, fd, length),
             )
         ]
 
+    @property
+    def reduce(self):
+        # https://github.com/python-pillow/Pillow/issues/4343 found that the
+        # new Image 'reduce' method was shadowed by this plugin's 'reduce'
+        # property. This attempts to allow for both scenarios
+        return self._reduce or super().reduce
+
+    @reduce.setter
+    def reduce(self, value):
+        self._reduce = value
+
     def load(self):
-        if self.reduce:
-            power = 1 << self.reduce
+        if self.tile and self._reduce:
+            power = 1 << self._reduce
             adjust = power >> 1
             self._size = (
                 int((self.size[0] + adjust) / power),
                 int((self.size[1] + adjust) / power),
             )
 
-        if self.tile:
             # Update the reduce and layers settings
             t = self.tile[0]
-            t3 = (t[3][0], self.reduce, self.layers, t[3][3], t[3][4])
+            t3 = (t[3][0], self._reduce, self.layers, t[3][3], t[3][4])
             self.tile = [(t[0], (0, 0) + self.size, t[2], t3)]
 
         return ImageFile.ImageFile.load(self)

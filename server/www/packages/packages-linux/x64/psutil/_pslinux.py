@@ -25,6 +25,8 @@ from . import _common
 from . import _psposix
 from . import _psutil_linux as cext
 from . import _psutil_posix as cext_posix
+from ._common import AccessDenied
+from ._common import debug
 from ._common import decode
 from ._common import get_procfs_path
 from ._common import isfile_strict
@@ -33,12 +35,14 @@ from ._common import memoize_when_activated
 from ._common import NIC_DUPLEX_FULL
 from ._common import NIC_DUPLEX_HALF
 from ._common import NIC_DUPLEX_UNKNOWN
+from ._common import NoSuchProcess
 from ._common import open_binary
 from ._common import open_text
 from ._common import parse_environ_block
 from ._common import path_exists_strict
 from ._common import supports_ipv6
 from ._common import usage_percent
+from ._common import ZombieProcess
 from ._compat import b
 from ._compat import basestring
 from ._compat import FileNotFoundError
@@ -160,13 +164,6 @@ TCP_STATUSES = {
     "0A": _common.CONN_LISTEN,
     "0B": _common.CONN_CLOSING
 }
-
-# These objects get set on "import psutil" from the __init__.py
-# file, see: https://github.com/giampaolo/psutil/issues/1402
-NoSuchProcess = None
-ZombieProcess = None
-AccessDenied = None
-TimeoutExpired = None
 
 
 # =====================================================================
@@ -755,6 +752,8 @@ class Connections:
     """
 
     def __init__(self):
+        # The string represents the basename of the corresponding
+        # /proc/net/{proto_name} file.
         tcp4 = ("tcp", socket.AF_INET, socket.SOCK_STREAM)
         tcp6 = ("tcp6", socket.AF_INET6, socket.SOCK_STREAM)
         udp4 = ("udp", socket.AF_INET, socket.SOCK_DGRAM)
@@ -959,15 +958,14 @@ class Connections:
         else:
             inodes = self.get_all_inodes()
         ret = set()
-        for f, family, type_ in self.tmap[kind]:
+        for proto_name, family, type_ in self.tmap[kind]:
+            path = "%s/net/%s" % (self._procfs_path, proto_name)
             if family in (socket.AF_INET, socket.AF_INET6):
                 ls = self.process_inet(
-                    "%s/net/%s" % (self._procfs_path, f),
-                    family, type_, inodes, filter_pid=pid)
+                    path, family, type_, inodes, filter_pid=pid)
             else:
                 ls = self.process_unix(
-                    "%s/net/%s" % (self._procfs_path, f),
-                    family, inodes, filter_pid=pid)
+                    path, family, inodes, filter_pid=pid)
             for fd, family, type_, laddr, raddr, status, bound_pid in ls:
                 if pid:
                     conn = _common.pconn(fd, family, type_, laddr, raddr,
@@ -1070,6 +1068,7 @@ def disk_io_counters(perdisk=False):
         # "3    1   hda1 8 8 8 8"
         # 4.18+ has 4 fields added:
         # "3    0   hda 8 8 8 8 8 8 8 8 8 8 8 0 0 0 0"
+        # 5.5 has 2 more fields.
         # See:
         # https://www.kernel.org/doc/Documentation/iostats.txt
         # https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats
@@ -1084,7 +1083,7 @@ def disk_io_counters(perdisk=False):
                 reads = int(fields[2])
                 (reads_merged, rbytes, rtime, writes, writes_merged,
                     wbytes, wtime, _, busy_time, _) = map(int, fields[4:14])
-            elif flen == 14 or flen == 18:
+            elif flen == 14 or flen >= 18:
                 # Linux 2.6+, line referring to a disk
                 name = fields[2]
                 (reads, reads_merged, rbytes, rtime, writes, writes_merged,
@@ -1108,7 +1107,7 @@ def disk_io_counters(perdisk=False):
                     fields = f.read().strip().split()
                 name = os.path.basename(root)
                 (reads, reads_merged, rbytes, rtime, writes, writes_merged,
-                    wbytes, wtime, _, busy_time, _) = map(int, fields)
+                    wbytes, wtime, _, busy_time) = map(int, fields[:10])
                 yield (name, reads, writes, rbytes, wbytes, rtime,
                        wtime, reads_merged, writes_merged, busy_time)
 
@@ -1179,6 +1178,7 @@ def disk_partitions(all=False):
                 continue
         ntuple = _common.sdiskpart(device, mountpoint, fstype, opts)
         retlist.append(ntuple)
+
     return retlist
 
 
@@ -1206,6 +1206,8 @@ def sensors_temperatures():
     # https://github.com/giampaolo/psutil/issues/971
     # https://github.com/nicolargo/glances/issues/1060
     basenames.extend(glob.glob('/sys/class/hwmon/hwmon*/device/temp*_*'))
+    basenames.extend(glob.glob(
+        '/sys/devices/platform/coretemp.*/hwmon/hwmon*/temp*_*'))
     basenames = sorted(set([x.split('_')[0] for x in basenames]))
 
     for base in basenames:
@@ -1214,7 +1216,7 @@ def sensors_temperatures():
             current = float(cat(path)) / 1000.0
             path = os.path.join(os.path.dirname(base), 'name')
             unit_name = cat(path, binary=False)
-        except (IOError, OSError, ValueError) as err:
+        except (IOError, OSError, ValueError):
             # A lot of things can go wrong here, so let's just skip the
             # whole entry. Sure thing is Linux's /sys/class/hwmon really
             # is a stinky broken mess.
@@ -1223,8 +1225,6 @@ def sensors_temperatures():
             # https://github.com/giampaolo/psutil/issues/1129
             # https://github.com/giampaolo/psutil/issues/1245
             # https://github.com/giampaolo/psutil/issues/1323
-            warnings.warn("ignoring %r for file %r" % (err, path),
-                          RuntimeWarning)
             continue
 
         high = cat(base + '_max', fallback=None)
@@ -1256,8 +1256,7 @@ def sensors_temperatures():
                 path = os.path.join(base, 'type')
                 unit_name = cat(path, binary=False)
             except (IOError, OSError, ValueError) as err:
-                warnings.warn("ignoring %r for file %r" % (err, path),
-                              RuntimeWarning)
+                debug("ignoring %r for file %r" % (err, path))
                 continue
 
             trip_paths = glob.glob(base + '/trip_point*')
@@ -1649,7 +1648,13 @@ class Process(object):
         sep = '\x00' if data.endswith('\x00') else ' '
         if data.endswith(sep):
             data = data[:-1]
-        return data.split(sep)
+        cmdline = data.split(sep)
+        # Sometimes last char is a null byte '\0' but the args are
+        # separated by spaces, see: https://github.com/giampaolo/psutil/
+        # issues/1179#issuecomment-552984549
+        if sep == '\x00' and len(cmdline) == 1 and ' ' in data:
+            cmdline = data.split(' ')
+        return cmdline
 
     @wrap_exceptions
     def environ(self):
@@ -1839,7 +1844,7 @@ class Process(object):
                         path = path[:-10]
                 ls.append((
                     decode(addr), decode(perms), path,
-                    data[b'Rss:'],
+                    data.get(b'Rss:', 0),
                     data.get(b'Size:', 0),
                     data.get(b'Pss:', 0),
                     data.get(b'Shared_Clean:', 0),

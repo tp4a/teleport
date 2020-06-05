@@ -5,7 +5,7 @@
 #
 # Author: Giovanni Cannata
 #
-# Copyright 2016 - 2018 Giovanni Cannata
+# Copyright 2016 - 2020 Giovanni Cannata
 #
 # This file is part of ldap3.
 #
@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with ldap3 in the COPYING and COPYING.LESSER files.
 # If not, see <http://www.gnu.org/licenses/>.
-from binascii import a2b_hex
+from binascii import a2b_hex, hexlify
 from datetime import datetime
 from calendar import timegm
 from uuid import UUID
@@ -35,6 +35,16 @@ from ...utils.conv import to_raw, to_unicode, ldap_escape_to_bytes, escape_bytes
 
 # Validators return True if value is valid, False if value is not valid,
 # or a value different from True and False that is a valid value to substitute to the input value
+
+
+def check_backslash(value):
+    if isinstance(value, (bytearray, bytes)):
+        if b'\\' in value:
+            value = value.replace(b'\\', b'\\5C')
+    elif isinstance(value, STRING_TYPES):
+        if '\\' in value:
+            value = value.replace('\\', '\\5C')
+    return value
 
 
 def check_type(input_value, value_type):
@@ -304,6 +314,7 @@ def validate_guid(input_value):
             return False
 
     if changed:
+        valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:
@@ -347,6 +358,7 @@ def validate_uuid(input_value):
             return False
 
     if changed:
+        valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:
@@ -409,6 +421,7 @@ def validate_uuid_le(input_value):
             return False
 
     if changed:
+        valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:
@@ -481,6 +494,7 @@ def validate_sid(input_value):
                 changed = True
 
     if changed:
+        valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:

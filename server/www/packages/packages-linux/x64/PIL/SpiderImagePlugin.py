@@ -32,9 +32,6 @@
 # Details about the Spider image format:
 # https://spider.wadsworth.org/spider_doc/spider/docs/image_doc.html
 #
-
-from __future__ import print_function
-
 import os
 import struct
 import sys
@@ -219,7 +216,8 @@ def loadImageSeries(filelist=None):
             print("unable to find %s" % img)
             continue
         try:
-            im = Image.open(img).convert2byte()
+            with Image.open(img) as im:
+                im = im.convert2byte()
         except Exception:
             if not isSpiderImage(img):
                 print(img + " is not a Spider image file")
@@ -273,7 +271,7 @@ def _save(im, fp, filename):
 
     hdr = makeSpiderHeader(im)
     if len(hdr) < 256:
-        raise IOError("Error creating Spider header")
+        raise OSError("Error creating Spider header")
 
     # write the SPIDER header
     fp.writelines(hdr)
@@ -306,21 +304,21 @@ if __name__ == "__main__":
         print("input image must be in Spider format")
         sys.exit()
 
-    im = Image.open(filename)
-    print("image: " + str(im))
-    print("format: " + str(im.format))
-    print("size: " + str(im.size))
-    print("mode: " + str(im.mode))
-    print("max, min: ", end=" ")
-    print(im.getextrema())
+    with Image.open(filename) as im:
+        print("image: " + str(im))
+        print("format: " + str(im.format))
+        print("size: " + str(im.size))
+        print("mode: " + str(im.mode))
+        print("max, min: ", end=" ")
+        print(im.getextrema())
 
-    if len(sys.argv) > 2:
-        outfile = sys.argv[2]
+        if len(sys.argv) > 2:
+            outfile = sys.argv[2]
 
-        # perform some image operation
-        im = im.transpose(Image.FLIP_LEFT_RIGHT)
-        print(
-            "saving a flipped version of %s as %s "
-            % (os.path.basename(filename), outfile)
-        )
-        im.save(outfile, SpiderImageFile.format)
+            # perform some image operation
+            im = im.transpose(Image.FLIP_LEFT_RIGHT)
+            print(
+                "saving a flipped version of %s as %s "
+                % (os.path.basename(filename), outfile)
+            )
+            im.save(outfile, SpiderImageFile.format)

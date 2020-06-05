@@ -18,13 +18,12 @@
 import sys
 
 from . import EpsImagePlugin
-from ._util import py3
 
 ##
 # Simple Postscript graphics interface.
 
 
-class PSDraw(object):
+class PSDraw:
     """
     Sets up printing to the given file. If **fp** is omitted,
     :py:attr:`sys.stdout` is assumed.
@@ -36,7 +35,7 @@ class PSDraw(object):
         self.fp = fp
 
     def _fp_write(self, to_write):
-        if not py3 or self.fp == sys.stdout:
+        if self.fp == sys.stdout:
             self.fp.write(to_write)
         else:
             self.fp.write(bytes(to_write, "UTF-8"))
@@ -72,7 +71,7 @@ class PSDraw(object):
         """
         if font not in self.isofont:
             # reencode font
-            self._fp_write("/PSDraw-%s ISOLatin1Encoding /%s E\n" % (font, font))
+            self._fp_write("/PSDraw-{} ISOLatin1Encoding /{} E\n".format(font, font))
             self.isofont[font] = 1
         # rough
         self._fp_write("/F0 %d /PSDraw-%s F\n" % (size, font))
@@ -120,8 +119,8 @@ class PSDraw(object):
             else:
                 dpi = 100  # greyscale
         # image size (on paper)
-        x = float(im.size[0] * 72) / dpi
-        y = float(im.size[1] * 72) / dpi
+        x = im.size[0] * 72 / dpi
+        y = im.size[1] * 72 / dpi
         # max allowed size
         xmax = float(box[2] - box[0])
         ymax = float(box[3] - box[1])
@@ -133,12 +132,12 @@ class PSDraw(object):
             y = ymax
         dx = (xmax - x) / 2 + box[0]
         dy = (ymax - y) / 2 + box[1]
-        self._fp_write("gsave\n%f %f translate\n" % (dx, dy))
+        self._fp_write("gsave\n{:f} {:f} translate\n".format(dx, dy))
         if (x, y) != im.size:
             # EpsImagePlugin._save prints the image at (0,0,xsize,ysize)
             sx = x / im.size[0]
             sy = y / im.size[1]
-            self._fp_write("%f %f scale\n" % (sx, sy))
+            self._fp_write("{:f} {:f} scale\n".format(sx, sy))
         EpsImagePlugin._save(im, self.fp, None, 0)
         self._fp_write("\ngrestore\n")
 
