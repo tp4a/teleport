@@ -300,7 +300,7 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
 
     ret = p.wait()
 
-    return (ret, output)
+    return ret, output
 
 
 def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
@@ -320,19 +320,43 @@ def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
         raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
 
 
-def qt_build_win(prj_path, prj_name, bit_path, target_path):
-    cc.n(env.visual_studio_path)
+def qt_build(prj_path, prj_name, bit_path, target_path):
+    # cc.n(env.qt)
     if env.qt is None:
         raise RuntimeError('where is `qt`?')
 
     if env.is_win:
         tmp_path = os.path.join(env.root_path, 'out', '_tmp_', prj_name, bit_path)
         # C:\Windows\System32\cmd.exe /A /Q /K C:\Qt\Qt5.12.0\5.12.0\msvc2017\bin\qtenv2.bat
-        cmd = 'C:\\Windows\\System32\\cmd.exe /A /Q /C ""{}\qt-helper.bat" "{}\\bin\\qtenv2.bat" "{}VC\\Auxiliary\\Build\\vcvarsall.bat" {} "{}" "{}" {}"'.format(env.build_path, env.qt, env.visual_studio_path, bit_path, tmp_path, prj_path, target_path)
+        cmd = 'C:\\Windows\\System32\\cmd.exe /A /Q /C ""{}\\qt-helper.bat" "{}\\bin\\qtenv2.bat" "{}VC\\Auxiliary\\Build\\vcvarsall.bat" {} "{}" "{}" {}"'.format(env.build_path, env.qt, env.visual_studio_path, bit_path, tmp_path, prj_path, target_path)
         ret, _ = sys_exec(cmd, direct_output=True)
         if ret != 0:
-            raise RuntimeError('build XCode project `{}` failed.'.format(proj_name))
+            raise RuntimeError('build XCode project `{}` failed.'.format(prj_name))
+    elif env.is_macos:
+        qmake = os.path.join(env.qt, 'qmake')
+        pro_file = prj_name + '.pro'
 
+        old_p = os.getcwd()
+        os.chdir(prj_path)
+
+        cmd = '"{}" "{}"; make'.format(qmake, pro_file)
+        ret, _ = sys_exec(cmd, direct_output=True)
+        if ret != 0:
+            raise RuntimeError('make Makefile for build `{}` failed.'.format(prj_name))
+
+        os.chdir(old_p)
+
+
+def qt_deploy(app):
+    if env.qt is None:
+        raise RuntimeError('where is `qt`?')
+
+    if env.is_macos:
+        qmake = os.path.join(env.qt, 'macdeployqt')
+        cmd = '"{}" "{}"'.format(qmake, app)
+        ret, _ = sys_exec(cmd, direct_output=True)
+        if ret != 0:
+            raise RuntimeError('make deploy for QT failed.')
 
 
 def xcode_build(proj_file, proj_name, target, force_rebuild):

@@ -227,7 +227,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection *nc, int ev, void *ev_dat
         bool b_is_html = false;
 
 //         if (uri == "/") {
-//             ex_wstr page = L"<html lang=\"zh_CN\"><head><meta charset=\"utf-8\"/><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>Teleport����</title>\n<style type=\"text/css\">\n.box{padding:20px;margin:40px;border:1px solid #78b17c;background-color:#e4ffe5;}\n</style>\n</head><body><div class=\"box\">Teleport Assistor works fine.</div></body></html>";
+//             ex_wstr page = L"<html lang=\"zh_CN\"><head><meta charset=\"utf-8\"/><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>Teleport÷˙ ÷</title>\n<style type=\"text/css\">\n.box{padding:20px;margin:40px;border:1px solid #78b17c;background-color:#e4ffe5;}\n</style>\n</head><body><div class=\"box\">Teleport Assistor works fine.</div></body></html>";
 //             ex_wstr2astr(page, ret_buf, EX_CODEPAGE_UTF8);
 //
 //             mg_printf(nc, "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\nContent-Type: text/html\r\n\r\n%s", ret_buf.size() - 1, &ret_buf[0]);
@@ -839,7 +839,102 @@ void TsHttpRpc::_rpc_func_run_client(const ex_astr& func_args, ex_astr& buf) {
 }
 
 void TsHttpRpc::_rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf) {
-	_create_json_ret(buf, TPE_NOT_IMPLEMENT);
+    Json::Value jsRoot;
+
+    Json::CharReaderBuilder jcrb;
+    std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
+    const char *str_json_begin = func_args.c_str();
+    ex_astr err;
+
+    if (!jreader->parse(str_json_begin, str_json_begin + func_args.length(), &jsRoot, &err)) {
+        _create_json_ret(buf, TPE_JSON_FORMAT);
+        return;
+    }
+
+    // 判断参数是否正确
+    if (!jsRoot["rid"].isInt()
+        || !jsRoot["web"].isString()
+        || !jsRoot["sid"].isString()
+        ) {
+        _create_json_ret(buf, TPE_PARAM);
+        return;
+    }
+
+    ex_astrs s_argv;
+
+    ex_wstr w_exec_file = g_env.m_bundle_path;
+    ex_path_join(w_exec_file, false, L"tp-player.app", L"Contents", L"MacOS", L"tp-player", nullptr);
+    ex_astr exec_file;
+    ex_wstr2astr(w_exec_file, exec_file);
+    
+    s_argv.push_back(exec_file);
+
+
+    int rid = jsRoot["rid"].asInt();
+    ex_astr a_url_base = jsRoot["web"].asCString();
+    ex_astr a_sid = jsRoot["sid"].asCString();
+
+    char cmd_args[1024] = { 0 };
+    ex_strformat(cmd_args, 1023, "%s/%s/%d", a_url_base.c_str(), a_sid.c_str(), rid);
+    s_argv.push_back(cmd_args);
+
+    ex_wstr w_cmd_args;
+    ex_astr2wstr(cmd_args, w_cmd_args);
+    
+    char total_cmd[1024] = {0};
+    ex_strformat(total_cmd, 1023, "%s %s", exec_file.c_str(), cmd_args);
+    
+//    ex_wstr w_url_base;
+//    ex_astr2wstr(a_url_base, w_url_base);
+//    ex_wstr w_cmd_args;
+//    ex_astr2wstr(cmd_args, w_cmd_args);
+//
+//    ex_wstr w_exe_path;
+//    w_exe_path = _T("\"");
+//    w_exe_path += g_env.m_exec_path + _T("\\tp-player.exe\"");
+//    w_exe_path += _T(" \"");
+//    w_exe_path += w_url_base;
+//    w_exe_path += _T("/");
+//    w_exe_path += w_cmd_args;
+
+    Json::Value root_ret;
+    ex_astr utf8_path;
+    //ex_wstr2astr(total_cmd, utf8_path, EX_CODEPAGE_UTF8);
+    root_ret["cmdline"] = total_cmd;
+
+    // EXLOGD(utf8_path.c_str());
+
+    // for macOS, Create Process should be fork()/exec()...
+    pid_t processId;
+    if ((processId = fork()) == 0) {
+
+        int i = 0;
+        char** _argv = (char**)calloc(s_argv.size()+1, sizeof(char*));
+        if (!_argv)
+            return;
+
+        for (i = 0; i < s_argv.size(); ++i)
+        {
+            _argv[i] = ex_strdup(s_argv[i].c_str());
+        }
+        _argv[i] = NULL;
+
+        execv(exec_file.c_str(), _argv);
+
+        for(i = 0; i < s_argv.size(); ++i) {
+            if(_argv[i] != NULL) {
+                free(_argv[i]);
+            }
+        }
+        free(_argv);
+
+    } else if (processId < 0) {
+        root_ret["code"] = TPE_FAILED;
+    } else {
+        root_ret["code"] = TPE_OK;
+    }
+
+    _create_json_ret(buf, root_ret);
 }
 
 void TsHttpRpc::_rpc_func_get_config(const ex_astr& func_args, ex_astr& buf) {

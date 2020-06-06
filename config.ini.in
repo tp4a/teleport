@@ -22,13 +22,19 @@ wget = C:\Program Files (x86)\wget\wget.exe
 # if not set msbuild path, default to get it by register.
 #msbuild = C:\Program Files (x86)\MSBuild\14.0\bin\MSBuild.exe
 
-# need qt to build tp-player.
+# need Qt >= 5.12 to build recorder player.
 qt = C:\Qt\Qt5.12.0\5.12.0\msvc2017
 
 # ============================================
-# for Linux and macOS
+# for Linux
 # ============================================
 
 # if not set cmake path, default to '/usr/bin/cmake'
 cmake = /opt/cmake/bin/cmake
 
+# ============================================
+# for MacOS
+# ============================================
+
+# need Qt >= 5.12 to build recorder player.
+qt = /Users/apex/apps/qt5.13.1/5.13.1/clang_64/bin
