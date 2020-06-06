@@ -226,10 +226,10 @@ def make_options():
     # options = list()
     # options_idx = 0
 
-    if ctx.host_os in ['windows', 'macos']:
+    if ctx.host_os in ['windows']:
         add_option('x86', 'ver', 'Update version setting')
         add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % env.py_ver_str)
-        add_option('x64', 'external', 'Build external dependency')
+        add_option('x86', 'external', 'Build external dependency')
         add_split()
         add_option('x86', 'assist-exe', 'Assist Execute [%s]' % ctx.target_path)
         # add_option('x86', 'assist-rdp', 'Teleport RDP [%s]' % ctx.target_path)
@@ -238,6 +238,9 @@ def make_options():
         add_option('x86', 'server', 'Teleport Server [%s]' % ctx.target_path)
         add_split()
         add_option('x86', 'installer', 'Teleport Installer for %s' % ctx.host_os)
+    elif ctx.host_os == 'macos':
+        add_option('x64', 'assist-exe', 'Assist Execute [%s]' % ctx.target_path)
+        add_option('x64', 'assist-installer', 'Assist Installer')
     else:
         add_option('x64', 'ver', 'Update version setting')
         add_option('x64', 'pysrt', 'Make Python-Runtime for python%s-x64' % env.py_ver_str)

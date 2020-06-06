@@ -153,7 +153,11 @@ class Env(object):
             else:
                 self.qt = None
 
-        elif self.is_linux or self.is_macos:
+            if self.qt is None or not os.path.exists(self.qt):
+                if warn_miss_tool:
+                    cc.w(' - can not locate `qt`, so I can not build tp-player.')
+
+        elif self.is_linux:
             if 'cmake' in _tmp:
                 self.cmake = _tmp['cmake']
             else:
@@ -162,6 +166,16 @@ class Env(object):
             if not os.path.exists(self.cmake):
                 if warn_miss_tool:
                     cc.e(' - can not locate `cmake`, so I can not build binary from source.')
+
+        elif self.is_macos:
+            if 'qt' in _tmp:
+                self.qt = _tmp['qt']
+            else:
+                self.qt = None
+
+            if self.qt is None or not os.path.exists(self.qt):
+                if warn_miss_tool:
+                    cc.w(' - can not locate `qt`, so I can not build tp-player.')
 
         return True
 

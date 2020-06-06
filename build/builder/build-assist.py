@@ -45,7 +45,7 @@ class BuilderWin(BuilderBase):
         out_file = os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path, 'tp-player.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
-        utils.qt_build_win(prj_path, 'tp-player', ctx.bits_path, ctx.target_path)
+        utils.qt_build(prj_path, 'tp-player', ctx.bits_path, ctx.target_path)
         utils.ensure_file_exists(out_file)
 
     # def build_rdp(self):
@@ -71,7 +71,6 @@ class BuilderWin(BuilderBase):
         self._build_installer()
 
         utils.ensure_file_exists(out_file)
-
 
     @staticmethod
     def _build_installer():
@@ -155,13 +154,28 @@ class BuilderMacOS(BuilderBase):
         utils.ensure_file_exists(os.path.join(out_file, 'Contents', 'Info.plist'))
 
     def build_player(self):
-        cc.o('skip build tp_player now...')
+        cc.i('build tp-player...')
+        prj_path = os.path.join(env.root_path, 'client', 'tp-player')
+        out_file = os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path, 'tp-player.app')
+        if os.path.exists(out_file):
+            utils.remove(out_file)
+        utils.qt_build(prj_path, 'tp-player', ctx.bits_path, ctx.target_path)
+        utils.ensure_file_exists(os.path.join(out_file, 'Contents', 'Info.plist'))
+
+        # for deployment
+        utils.qt_deploy(out_file)
 
     def build_installer(self):
         cc.i('make tp_assist dmg file...')
 
+        # copy all files of tp-player.
+        configuration = ctx.target_path.capitalize()
+        player_path = os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path)
+        assist_path = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'build', configuration, 'TP-Assist.app')
+        utils.copy_ex(player_path, assist_path, 'tp-player.app')
+
         json_file = os.path.join(env.root_path, 'dist', 'client', 'macos', 'dmg.json')
-        dmg_file = os.path.join(env.root_path, 'out', 'client', 'macos', 'teleport-assist-macos-{}.dmg'.format(VER_TP_ASSIST))
+        dmg_file = os.path.join(env.root_path, 'out', 'installer', 'teleport-assist-macos-{}.dmg'.format(VER_TP_ASSIST))
         if os.path.exists(dmg_file):
             utils.remove(dmg_file)
 

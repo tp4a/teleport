@@ -10,8 +10,8 @@
 #include "csrc/ts_cfg.h"
 #include "csrc/ts_http_rpc.h"
 
-int cpp_main(void* _self, const char* cfg_file, const char* res_path) {
-	if(!g_env.init(cfg_file, res_path))
+int cpp_main(void* _self, const char* bundle_path, const char* cfg_file, const char* res_path) {
+	if(!g_env.init(bundle_path, cfg_file, res_path))
 		return -1;
 	if(!g_cfg.init())
 		return -2;

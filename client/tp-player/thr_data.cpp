@@ -107,8 +107,8 @@ ThrData::ThrData(MainWindow* mainwin, const QString& res) {
     m_offset = 0;
 
 #ifdef __APPLE__
-    m_data_path_base = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-    m_data_path_base += "/tp-testdata/";
+    m_data_path_base = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    m_data_path_base += "/tp-record/";
 #else
     m_data_path_base = QCoreApplication::applicationDirPath() + "/record";
 #endif

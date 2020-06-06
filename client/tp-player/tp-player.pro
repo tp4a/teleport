@@ -36,7 +36,12 @@ RC_FILE += \
 FORMS += \
     mainwindow.ui
 
-
+win32: {
+    INCLUDEPATH += $$PWD/../../external/zlib
+    INCLUDEPATH += $$PWD/../../external/zlib/build
+    DEPENDPATH += $$PWD/../../external/zlib
+    DEPENDPATH += $$PWD/../../external/zlib/build
+}
 win32:CONFIG(release, debug|release): {
     DEFINES += QT_NO_DEBUG_OUTPUT
     LIBS += -L$$PWD/../../external/zlib/build/release/ -lzlib
@@ -48,21 +53,30 @@ else:win32:CONFIG(debug, debug|release): {
 }
 
 
+macx: {
+    INCLUDEPATH += $$PWD/../../external/macos/release/include
+}
 macx:CONFIG(release, debug|release): {
     DEFINES += QT_NO_DEBUG_OUTPUT
-    LIBS += -L$$PWD/../../external/zlib/build/release/ -lzlib
-    DESTDIR = $$PWD/../../out/client/x86/Release
+    LIBS += -L$$PWD/../../external/macos/release/lib/ -lz
+    DESTDIR = $$PWD/../../out/client/x64/release
+
+    UI_DIR += $$PWD/../../out/_tmp_/tp-player/debug
+    RCC_DIR += $$PWD/../../out/_tmp_/tp-player/debug
+    MOC_DIR += $$PWD/../../out/_tmp_/tp-player/debug
+    OBJECTS_DIR += $$PWD/../../out/_tmp_/tp-player/debug
 }
 else:macx:CONFIG(debug, debug|release): {
-    LIBS += -L$$PWD/../../external/zlib/build/debug/ -lzlibd
-    DESTDIR = $$PWD/../../out/client/x86/Debug
+    LIBS += -L$$PWD/../../external/macos/release/lib/ -lz
+    DESTDIR = $$PWD/../../out/client/x64/debug
+
+    UI_DIR += $$PWD/../../out/_tmp_/tp-player/release
+    RCC_DIR += $$PWD/../../out/_tmp_/tp-player/release
+    MOC_DIR += $$PWD/../../out/_tmp_/tp-player/release
+    OBJECTS_DIR += $$PWD/../../out/_tmp_/tp-player/release
 }
 
 
-INCLUDEPATH += $$PWD/../../external/zlib
-INCLUDEPATH += $$PWD/../../external/zlib/build
-DEPENDPATH += $$PWD/../../external/zlib
-DEPENDPATH += $$PWD/../../external/zlib/build
 
 #win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/release/libzlibstatic.a
 #else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../external/zlib/build/debug/libzlibstaticd.a
