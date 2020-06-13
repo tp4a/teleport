@@ -1,4 +1,4 @@
-#ifndef __SSH_PROXY_H__
+﻿#ifndef __SSH_PROXY_H__
 #define __SSH_PROXY_H__
 
 #include "ssh_session.h"
@@ -29,6 +29,7 @@ private:
 	int m_timer_counter;
 
 	ExThreadLock m_lock;
+    bool m_listener_running;
 
 	ex_astr m_host_ip;
 	int m_host_port;

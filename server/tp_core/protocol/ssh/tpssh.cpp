@@ -32,6 +32,7 @@ TPP_API ex_rv tpp_start(void)
 TPP_API ex_rv tpp_stop(void)
 {
 	g_ssh_proxy.stop();
+    ssh_finalize();
 	return 0;
 }
 
@@ -40,19 +41,13 @@ TPP_API void tpp_timer(void) {
 	g_ssh_proxy.timer();
 }
 
-// TPP_API void tpp_set_cfg(TPP_SET_CFG_ARGS* cfg_args) {
-// 	//g_ssh_proxy.set_cfg(cfg_args);
-// }
-
 static ex_rv _set_runtime_config(const char* param) {
 	Json::Value jp;
-	//Json::Reader jreader;
     Json::CharReaderBuilder jcrb;
     std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
     const char *str_json_begin = param;
     ex_astr err;
 
-	//if (!jreader.parse(param, jp))
     if (!jreader->parse(str_json_begin, param + strlen(param), &jp, &err))
         return TPE_JSON_FORMAT;
 
@@ -73,14 +68,11 @@ static ex_rv _set_runtime_config(const char* param) {
 
 static ex_rv _kill_sessions(const char* param) {
 	Json::Value jp;
-// 	Json::Reader jreader;
-// 	if (!jreader.parse(param, jp))
     Json::CharReaderBuilder jcrb;
     std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
     const char *str_json_begin = param;
     ex_astr err;
 
-    //if (!jreader.parse(param, jp))
     if (!jreader->parse(str_json_begin, param + strlen(param), &jp, &err))
         return TPE_JSON_FORMAT;
 

@@ -1,4 +1,4 @@
-#include "ssh_proxy.h"
+﻿#include "ssh_proxy.h"
 #include "tpp_env.h"
 
 SshProxy g_ssh_proxy;
@@ -7,15 +7,15 @@ SshProxy::SshProxy() :
         ExThreadBase("ssh-proxy-thread"),
         m_bind(NULL) {
     m_timer_counter = 0;
-
     m_noop_timeout_sec = 900; // default to 15 minutes.
+    m_listener_running = false;
 }
 
 SshProxy::~SshProxy() {
     if (NULL != m_bind)
         ssh_bind_free(m_bind);
 
-    ssh_finalize();
+    //ssh_finalize();
 }
 
 bool SshProxy::init() {
@@ -52,6 +52,8 @@ bool SshProxy::init() {
         EXLOGE("[ssh] listening to socket: %s\n", ssh_get_error(m_bind));
         return false;
     }
+
+    m_listener_running = true;
 
     return true;
 }
@@ -168,6 +170,7 @@ void SshProxy::_thread_loop() {
         }
     }
 
+    m_listener_running = false;
     EXLOGV("[ssh] main-loop end.\n");
 }
 
@@ -187,10 +190,15 @@ void SshProxy::_on_stop() {
         int _timeout_us = 10;
         ssh_options_set(_session, SSH_OPTIONS_TIMEOUT, &_timeout_us);
         ssh_connect(_session);
+        ex_sleep_ms(500);
+
         ssh_disconnect(_session);
         ssh_free(_session);
+        ex_sleep_ms(500);
+    }
 
-        ex_sleep_ms(100);
+    while (m_listener_running) {
+        ex_sleep_ms(1000);
     }
 
 // 	m_thread_mgr.stop_all();

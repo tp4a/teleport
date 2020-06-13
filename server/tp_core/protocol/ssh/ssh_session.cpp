@@ -1,4 +1,4 @@
-#include "ssh_session.h"
+﻿#include "ssh_session.h"
 #include "ssh_proxy.h"
 #include "tpp_env.h"
 
@@ -60,7 +60,7 @@ SshSession::SshSession(SshProxy *proxy, ssh_session sess_client) :
 
 SshSession::~SshSession() {
 
-    //_on_stop();
+    _on_stop();
 
     if (NULL != m_conn_info) {
         g_ssh_env.free_connect_info(m_conn_info);
@@ -528,6 +528,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
 
     if (_this->m_auth_type == TP_AUTH_TYPE_PASSWORD) {
         if (!(((auth_methods & SSH_AUTH_METHOD_INTERACTIVE) == SSH_AUTH_METHOD_INTERACTIVE) || ((auth_methods & SSH_AUTH_METHOD_PASSWORD) == SSH_AUTH_METHOD_PASSWORD))) {
+            _this->m_have_error = true;
             _this->_session_error(TP_SESS_STAT_ERR_AUTH_TYPE);
             return SSH_AUTH_ERROR;
         }
@@ -565,6 +566,7 @@ int SshSession::_on_auth_password_request(ssh_session session, const char *user,
                     rc = ssh_userauth_kbdint_setanswer(_this->m_srv_session, iprompt, _this->m_acc_secret.c_str());
                     if (rc < 0) {
                         EXLOGE("[ssh] invalid password for interactive mode to login to real SSH server %s:%d.\n", _this->m_conn_ip.c_str(), _this->m_conn_port);
+                        //ssh_send_debug(_this->m_cli_session, "TTTTTESTTTTTTTTTTT", 1);
                         _this->m_have_error = true;
                         _this->_session_error(TP_SESS_STAT_ERR_AUTH_DENIED);
                         return SSH_AUTH_ERROR;
