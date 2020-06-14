@@ -722,7 +722,7 @@ def remove_users(handler, users):
     sql_list.append({'s': sql_s, 'v': None})
 
     # 将用户从运维授权中移除
-    sql_s = 'DELETE FROM `{tp}ops_auz` WHERE `rtype`={rtype} AND `rid` IN ({ids});' \
+    sql_s = 'DELETE FROM `{tp}ops_auz` WHERE `rtype`={ph} AND `rid` IN ({ids});' \
             ''.format(tp=db.table_prefix, ph=db.place_holder, ids=str_users)
     sql_v = (TP_USER, )
     sql_list.append({'s': sql_s, 'v': sql_v})
