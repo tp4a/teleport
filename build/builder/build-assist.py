@@ -85,6 +85,7 @@ class BuilderWin(BuilderBase):
         utils.makedirs(tmp_cfg_path)
 
         utils.copy_file(os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_app_path, 'tp_assist.exe')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'runtime'), tmp_app_path, 'msvcp140.dll')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'runtime'), tmp_app_path, 'vcruntime140.dll')
 
         utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, ('tp-assist.windows.json', 'tp-assist.json'))
@@ -117,6 +118,26 @@ class BuilderWin(BuilderBase):
 
         # qt-redist
         qt_redist_path = os.path.join(env.root_path, 'client', 'tools', 'qt-redist')
+
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-file-l1-2-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-file-l2-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-localization-l1-2-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-processthreads-l1-1-1.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-synch-l1-2-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-timezone-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-convert-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-environment-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-filesystem-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-heap-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-locale-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-math-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-multibyte-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-runtime-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-stdio-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-string-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-time-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-utility-l1-1-0.dll')
+
         utils.copy_file(qt_redist_path, tmp_app_path, 'Qt5Core.dll')
         utils.copy_file(qt_redist_path, tmp_app_path, 'Qt5Gui.dll')
         utils.copy_file(qt_redist_path, tmp_app_path, 'Qt5Network.dll')
