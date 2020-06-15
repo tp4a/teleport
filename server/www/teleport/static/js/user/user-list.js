@@ -752,7 +752,6 @@ $app.create_dlg_edit_user = function () {
         dialog: $('#' + dlg.dom_id)
         , dlg_title: $('#' + dlg.dom_id + ' [data-field="dlg-title"]')
         , select_role: $('#edit-user-role')
-        , selected_role: $('#' + dlg.dom_id + ' span[data-selected-role]')
         , edit_username: $('#edit-user-username')
         , edit_surname: $('#edit-user-surname')
         , edit_email: $('#edit-user-email')
@@ -783,8 +782,10 @@ $app.create_dlg_edit_user = function () {
             _ret.push('<li><a href="javascript:;" data-tp-selector="' + role.id + '"><i class="fa fa-user-circle fa-fw"></i> ' + role.name + '</a></li>');
         });
         _ret.push('</ul>');
-
         dlg.dom.select_role.after($(_ret.join('')));
+
+        // 动态创建的dom对象，需要创建完成后再绑定。
+        dlg.dom.selected_role = $('#' + dlg.dom_id + ' span[data-selected-role]');
 
         // 绑定角色选择框事件
         $('#' + dlg.dom_id + ' li a[data-tp-selector]').click(function () {
@@ -792,6 +793,8 @@ $app.create_dlg_edit_user = function () {
             if (dlg.field_role === select)
                 return;
             // var name = dlg._id2name(select);
+
+            console.log(select);
 
             var name = $app.role_id2name(select);
             if (_.isUndefined(name)) {
