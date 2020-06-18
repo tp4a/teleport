@@ -792,9 +792,6 @@ $app.create_dlg_edit_user = function () {
             var select = parseInt($(this).attr('data-tp-selector'));
             if (dlg.field_role === select)
                 return;
-            // var name = dlg._id2name(select);
-
-            console.log(select);
 
             var name = $app.role_id2name(select);
             if (_.isUndefined(name)) {

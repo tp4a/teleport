@@ -642,6 +642,12 @@ def update_users_state(handler, user_ids, state):
     sql_v = (state, )
     sql_list.append({'s': sql_s, 'v': sql_v})
 
+    # 如果是解锁/解禁，同时要重置失败尝试次数
+    if state == TP_STATE_NORMAL:
+        sql_s = 'UPDATE `{tp}user` SET `fail_count`=0 WHERE `id` IN ({ids});' \
+                ''.format(tp=db.table_prefix, ids=user_ids)
+        sql_list.append({'s': sql_s, 'v': None})
+
     sql_s = 'UPDATE `{tp}ops_auz` SET `state`={ph} WHERE `rtype`={ph} AND `rid` IN ({ids});' \
             ''.format(tp=db.table_prefix, ph=db.place_holder, ids=user_ids)
     sql_v = (state, TP_USER)
