@@ -1,4 +1,4 @@
-#ifndef __SSH_SESSION_H__
+ï»¿#ifndef __SSH_SESSION_H__
 #define __SSH_SESSION_H__
 
 #include "ssh_recorder.h"
@@ -78,6 +78,7 @@ public:
 	void save_record();
 	// 
 	void check_noop_timeout(ex_u32 t_now, ex_u32 timeout);
+    void send_keep_alive();
 
 	const ex_astr& sid() { return m_sid; }
 
@@ -140,13 +141,13 @@ private:
 
 	int m_ssh_ver;
 
-	// Ò»¸össh_sessionÖĞ¿ÉÒÔ´ò¿ª¶à¸össh_channel
+	// ä¸€ä¸ªssh_sessionä¸­å¯ä»¥æ‰“å¼€å¤šä¸ªssh_channel
 	tp_channels m_channels;
 
 	bool m_have_error;
 
-	bool m_recving_from_srv;		// ÊÇ·ñÕıÔÚ´Ó·şÎñÆ÷½ÓÊÕÊı¾İ£¿
-	bool m_recving_from_cli;		// ÊÇ·ñÕıÔÚ´Ó¿Í»§¶Ë½ÓÊÕÊı¾İ£¿
+	bool m_recving_from_srv;		// æ˜¯å¦æ­£åœ¨ä»æœåŠ¡å™¨æ¥æ”¶æ•°æ®ï¼Ÿ
+	bool m_recving_from_cli;		// æ˜¯å¦æ­£åœ¨ä»å®¢æˆ·ç«¯æ¥æ”¶æ•°æ®ï¼Ÿ
 
 	struct ssh_server_callbacks_struct m_srv_cb;
 	struct ssh_channel_callbacks_struct m_cli_channel_cb;

@@ -26,7 +26,8 @@ protected:
 
 private:
 	ssh_bind m_bind;
-	int m_timer_counter;
+    int m_timer_counter_check_noop;
+    int m_timer_counter_send_keep_alive;
 
 	ExThreadLock m_lock;
     bool m_listener_running;

@@ -399,7 +399,7 @@ void SshSession::save_record() {
 }
 
 void SshSession::check_noop_timeout(ex_u32 t_now, ex_u32 timeout) {
-    ExThreadSmartLock locker(m_lock);
+    // ExThreadSmartLock locker(m_lock);
     tp_channels::iterator it = m_channels.begin();
     for (; it != m_channels.end(); ++it) {
         if ((*it)->need_close)
@@ -414,6 +414,15 @@ void SshSession::check_noop_timeout(ex_u32 t_now, ex_u32 timeout) {
         }
     }
 }
+
+void SshSession::send_keep_alive() {
+    EXLOGD("[ssh] send keep-alive.\n");
+    if(m_srv_session)
+        ssh_send_keepalive(m_srv_session);
+    if (m_cli_session)
+        ssh_send_keepalive(m_cli_session);
+}
+
 
 int SshSession::_on_auth_password_request(ssh_session session, const char *user, const char *password, void *userdata) {
     // here, `user` is the session-id we need.
