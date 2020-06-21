@@ -14,7 +14,7 @@ __all__ = ['tp_oath_generate_secret', 'tp_oath_verify_code', 'tp_oath_generate_q
 
 
 def tp_oath_generate_secret():
-    return _convert_secret_to_base32(binascii.b2a_hex(os.urandom(16))).replace('=', '')
+    return _convert_secret_to_base32(binascii.b2a_hex(os.urandom(20))).replace('=', '')
 
 
 def tp_oath_verify_code(secret, code):

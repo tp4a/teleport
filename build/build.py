@@ -27,6 +27,9 @@ def main():
     if not env.init(warn_miss_tool=True):
         return
 
+    # wget = os.environ.get('TP_TOOLCHAIN_WGET')
+    # cc.w(wget)
+
     action = None
     argv = sys.argv[1:]
     if len(argv) >= 1:

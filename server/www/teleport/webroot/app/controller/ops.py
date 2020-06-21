@@ -177,12 +177,12 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
                 return
 
             acc_id = args['acc_id']
-            host_id = args['host_id']
 
             err, acc_info = account.get_account_info(acc_id)
             if err != TPE_OK:
                 return self.write_json(err)
 
+            host_id = acc_info['host_id']
             acc_info['protocol_flag'] = TP_FLAG_ALL
             acc_info['record_flag'] = TP_FLAG_ALL
 

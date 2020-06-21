@@ -769,7 +769,6 @@ $app.create_dlg_edit_user = function () {
         , btn_auth_username_password_captcha: $('#sec-auth-username-password-captcha')
         // , btn_auth_username_oath: $('#sec-auth-username-oath')
         , btn_auth_username_password_oath: $('#sec-auth-username-password-oath')
-
     };
 
     dlg.init = function (cb_stack) {
