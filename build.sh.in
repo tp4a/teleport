@@ -46,7 +46,6 @@ function build_linux
 		fi
 	fi
 
-
 	${PYEXEC} -B "${PATH_ROOT}/build/build.py" $@
 }
 
@@ -57,9 +56,9 @@ function build_macos
 
 SYSTEM=`uname -s`
 if [ $SYSTEM = "Linux" ] ; then
-	build_linux
+	build_linux $@
 elif [ $SYSTEM = "Darwin" ] ; then   
-	build_macos
+	build_macos $@
 else 
 	echo "Unsupported platform."
 fi

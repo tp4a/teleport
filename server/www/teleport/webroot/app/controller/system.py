@@ -23,12 +23,13 @@ from app.model import user
 from app.base.core_server import core_service_async_post_http
 from app.base.session import tp_session
 from app.logic.auth.ldap import Ldap
+from app.base.utils import tp_timestamp_sec
 
 
 class DoGetTimeHandler(TPBaseJsonHandler):
     def post(self):
-        time_now = int(datetime.datetime.utcnow().timestamp())
-        self.write_json(TPE_OK, data=time_now)
+        # time_now = int(datetime.datetime.timestamp())
+        self.write_json(TPE_OK, data=tp_timestamp_sec())
 
 
 class ConfigHandler(TPBaseHandler):

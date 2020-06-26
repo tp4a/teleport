@@ -53,7 +53,7 @@ def _get_totp_token(secret, factor=None):
     # 需要对padding符进行处理
     _len = len(secret)
     _pad = 8 - (_len % 8)
-    if _pad > 0:
+    if 0 < _pad < 8:
         secret += '=' * _pad
 
     key = base64.b32decode(secret)
