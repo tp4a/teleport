@@ -442,3 +442,46 @@ def get_group_with_member(sql_filter, sql_order, sql_limit):
                     g['members'].append(u)
 
     return err, sg.total_count, sg.recorder
+
+
+def api_v1_get_host(hosts_ip):
+    ip_list = ','.join(['"{}"'.format(i) for i in hosts_ip])
+
+    db = get_db()
+    _tp = db.table_prefix
+    _ph = db.place_holder
+    s_host = SQL(get_db())
+    s_host.select_from('host', ['id', 'ip', 'os_type', 'name'], alt_name='h')
+    s_host.where('h.ip IN ({})'.format(ip_list))
+    err = s_host.query()
+    if err != TPE_OK:
+        return err, None
+
+    hid_list = list()
+    for h in s_host.recorder:
+        hid_list.append(h['id'])
+
+    host_list = ','.join([str(h) for h in hid_list])
+    s_acc = SQL(get_db())
+    s_acc.select_from('acc', ['id', 'host_id', 'username', 'protocol_type'], alt_name='a')
+    s_acc.where('a.host_id IN ({})'.format(host_list))
+    err = s_acc.query()
+    if err != TPE_OK:
+        return err, None
+
+    ret = dict()
+    for ip in hosts_ip:
+        ret[ip] = dict()
+        for h in s_host.recorder:
+            if h['ip'] == ip:
+                ret[ip]['id'] = h['id']
+                ret[ip]['os_type'] = h['os_type']
+                ret[ip]['name'] = h['name']
+                if len(ret[ip]['name']) == 0:
+                    ret[ip]['name'] = ip
+                ret[ip]['account'] = list()
+                for a in s_acc.recorder:
+                    if a['host_id'] == h['id']:
+                        ret[ip]['account'].append({'id': a['id'], 'name': a['username'], 'protocol': a['protocol_type']})
+
+    return TPE_OK, ret

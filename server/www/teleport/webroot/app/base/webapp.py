@@ -15,11 +15,13 @@ import tornado.web
 import tornado.platform.asyncio
 from app.const import *
 from app.base.configs import tp_cfg
+from app.base.extsrv import tp_ext_srv_cfg
 from app.base.db import get_db
 from app.base.logger import log
 from app.base.session import tp_session
 from app.base.cron import tp_cron
 from app.base.stats import tp_stats
+from app.app_ver import TP_SERVER_VER
 
 
 class WebApp:
@@ -71,7 +73,13 @@ class WebApp:
     def run(self):
         log.i('\n')
         log.i('###############################################################\n')
+        log.i('Teleport Web Server v{}\n'.format(TP_SERVER_VER))
         log.i('Load config file: {}\n'.format(self._cfg_file))
+
+        ext_srv_cfg = tp_ext_srv_cfg()
+        if not ext_srv_cfg.init():
+            return 0
+
         log.i('Teleport Web Server starting ...\n')
 
         tp_cron().init()
