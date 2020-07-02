@@ -92,54 +92,36 @@ class SessionListsHandler(TPBaseHandler):
 
 @tornado.gen.coroutine
 def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator):
-    # 根据给定的account_id，查询对应的主机ID和账号ID
-
-    # 有三种方式获取会话ID：
-    # 1. 给定一个远程连接授权ID（普通用户进行远程连接）
-    # 2. 给定要连接的主机ID和账号ID（管理员进行远程连接）
-    # 3. 给定要连接的主机ID和账号信息（管理员测试远程连接是否可用）
-    #
-    # WEB服务根据上述信息产生临时的远程连接ID，核心服务通过此远程连接ID来获取远程连接所需数据，生成会话ID。
-
-    # try:
-    #     _mode = int(args['mode'])
-    #     _protocol_type = int(args['protocol_type'])
-    #     _protocol_sub_type = int(args['protocol_sub_type'])
-    # except:
-    #     return self.write_json(TPE_PARAM)
-
-    _mode = 2
+    ret = {
+        'code': TPE_OK,
+        'message': '',
+        'data': {}
+    }
 
     conn_info = dict()
     conn_info['_enc'] = 1
     conn_info['host_id'] = 0
-    conn_info['client_ip'] = client_ip  # self.request.remote_ip
-    conn_info['user_id'] = 1  # self.get_current_user()['id']
-    conn_info['user_username'] = operator  # self.get_current_user()['username']
+    conn_info['client_ip'] = client_ip
+    conn_info['user_id'] = 1
+    conn_info['user_username'] = operator
 
-    # mode = 0:  test connect
-    # mode = 1:  user connect
-    # mode = 2:  admin connect
-    if _mode == 2:
-        # 直接连接（无需授权），必须具有运维授权管理的权限方可进行
-        # ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)
-        # if ret != TPE_OK:
-        #     return
-        #
-        # acc_id = args['acc_id']
+    # 直接连接（无需授权，第三方服务操作，已经经过授权检查了）
+    err, acc_info = account.get_account_info(acc_id)
+    if err != TPE_OK:
+        ret['code'] = err
+        ret['message'] = '无此远程账号'
+        return ret
 
-        err, acc_info = account.get_account_info(acc_id)
-        if err != TPE_OK:
-            return err, None
-
-        host_id = acc_info['host_id']
-        acc_info['protocol_flag'] = TP_FLAG_ALL
-        acc_info['record_flag'] = TP_FLAG_ALL
+    host_id = acc_info['host_id']
+    acc_info['protocol_flag'] = TP_FLAG_ALL
+    acc_info['record_flag'] = TP_FLAG_ALL
 
     # 获取要远程连接的主机信息（要访问的IP地址，如果是路由模式，则是路由主机的IP+端口）
     err, host_info = host.get_host_info(host_id)
     if err != TPE_OK:
-        return err, None
+        ret['code'] = err
+        ret['message'] = '未找到对应远程主机'
+        return ret
 
     conn_info['host_id'] = host_id
     conn_info['host_ip'] = host_info['ip']
@@ -180,14 +162,18 @@ def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator):
     _yr = core_service_async_post_http(req)
     _code, ret_data = yield _yr
     if _code != TPE_OK:
-        return _code,  None
+        ret['code'] = _code
+        ret['message'] = '无法连接到核心服务'
+        return ret
     if ret_data is None:
-        # return self.write_json(TPE_FAILED, '调用核心服务获取会话ID失败')
-        return TPE_FAILED, None
+        ret['code'] = TPE_FAILED
+        ret['message'] = '调用核心服务获取会话ID失败'
+        return ret
 
     if 'sid' not in ret_data:
-        # return self.write_json(TPE_FAILED, '核心服务获取会话ID时返回错误数据')
-        return TPE_FAILED, None
+        ret['code'] = TPE_FAILED
+        ret['message'] = '核心服务获取会话ID时返回错误数据'
+        return ret
 
     data = dict()
     data['session_id'] = ret_data['sid']
@@ -202,8 +188,10 @@ def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator):
     elif conn_info['protocol_type'] == TP_PROTOCOL_TYPE_TELNET:
         data['teleport_port'] = tp_cfg().core.telnet.port
 
-    # return self.write_json(0, data=data)
-    return TPE_OK, data
+    ret['code'] = TPE_OK
+    ret['message'] = ''
+    ret['data'] = data
+    return ret
 
 
 class DoGetSessionIDHandler(TPBaseJsonHandler):

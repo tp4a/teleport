@@ -111,14 +111,14 @@ class RequestSessionHandler(TPBaseJsonHandler):
 
         operator = '[{}] {}'.format(args['_srv_name_'], operator)
 
-        err, info = yield api_request_session_id(
+        ret = yield api_request_session_id(
             acc_id,
             protocol_sub_type,
             self.request.remote_ip,
             operator
         )
 
-        if err != TPE_OK:
-            return self.write_json(err)
+        if ret['code'] != TPE_OK:
+            return self.write_json(ret['code'], ret['message'])
 
-        return self.write_json(TPE_OK, data=info)
+        return self.write_json(TPE_OK, data=ret['data'])
