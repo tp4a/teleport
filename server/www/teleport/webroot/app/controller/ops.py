@@ -90,6 +90,122 @@ class SessionListsHandler(TPBaseHandler):
         self.render('ops/sessions.mako')
 
 
+@tornado.gen.coroutine
+def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator):
+    # 根据给定的account_id，查询对应的主机ID和账号ID
+
+    # 有三种方式获取会话ID：
+    # 1. 给定一个远程连接授权ID（普通用户进行远程连接）
+    # 2. 给定要连接的主机ID和账号ID（管理员进行远程连接）
+    # 3. 给定要连接的主机ID和账号信息（管理员测试远程连接是否可用）
+    #
+    # WEB服务根据上述信息产生临时的远程连接ID，核心服务通过此远程连接ID来获取远程连接所需数据，生成会话ID。
+
+    # try:
+    #     _mode = int(args['mode'])
+    #     _protocol_type = int(args['protocol_type'])
+    #     _protocol_sub_type = int(args['protocol_sub_type'])
+    # except:
+    #     return self.write_json(TPE_PARAM)
+
+    _mode = 2
+
+    conn_info = dict()
+    conn_info['_enc'] = 1
+    conn_info['host_id'] = 0
+    conn_info['client_ip'] = client_ip  # self.request.remote_ip
+    conn_info['user_id'] = 1  # self.get_current_user()['id']
+    conn_info['user_username'] = operator  # self.get_current_user()['username']
+
+    # mode = 0:  test connect
+    # mode = 1:  user connect
+    # mode = 2:  admin connect
+    if _mode == 2:
+        # 直接连接（无需授权），必须具有运维授权管理的权限方可进行
+        # ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)
+        # if ret != TPE_OK:
+        #     return
+        #
+        # acc_id = args['acc_id']
+
+        err, acc_info = account.get_account_info(acc_id)
+        if err != TPE_OK:
+            return err, None
+
+        host_id = acc_info['host_id']
+        acc_info['protocol_flag'] = TP_FLAG_ALL
+        acc_info['record_flag'] = TP_FLAG_ALL
+
+    # 获取要远程连接的主机信息（要访问的IP地址，如果是路由模式，则是路由主机的IP+端口）
+    err, host_info = host.get_host_info(host_id)
+    if err != TPE_OK:
+        return err, None
+
+    conn_info['host_id'] = host_id
+    conn_info['host_ip'] = host_info['ip']
+    if len(host_info['router_ip']) > 0:
+        conn_info['conn_ip'] = host_info['router_ip']
+        conn_info['conn_port'] = host_info['router_port']
+    else:
+        conn_info['conn_ip'] = host_info['ip']
+        conn_info['conn_port'] = acc_info['protocol_port']
+
+    conn_info['acc_id'] = acc_id
+    conn_info['acc_username'] = acc_info['username']
+    conn_info['username_prompt'] = acc_info['username_prompt']
+    conn_info['password_prompt'] = acc_info['password_prompt']
+    conn_info['protocol_flag'] = acc_info['protocol_flag']
+    conn_info['record_flag'] = acc_info['record_flag']
+
+    conn_info['protocol_type'] = acc_info['protocol_type']
+    conn_info['protocol_sub_type'] = protocol_sub_type
+
+    conn_info['auth_type'] = acc_info['auth_type']
+    if acc_info['auth_type'] == TP_AUTH_TYPE_PASSWORD:
+        conn_info['acc_secret'] = acc_info['password']
+    elif acc_info['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY:
+        conn_info['acc_secret'] = acc_info['pri_key']
+    else:
+        conn_info['acc_secret'] = ''
+
+    with tmp_conn_id_lock:
+        global tmp_conn_id_base
+        tmp_conn_id_base += 1
+        conn_id = tmp_conn_id_base
+
+    # log.v('CONN-INFO:', conn_info)
+    tp_session().set('tmp-conn-info-{}'.format(conn_id), conn_info, 10)
+
+    req = {'method': 'request_session', 'param': {'conn_id': conn_id}}
+    _yr = core_service_async_post_http(req)
+    _code, ret_data = yield _yr
+    if _code != TPE_OK:
+        return _code,  None
+    if ret_data is None:
+        # return self.write_json(TPE_FAILED, '调用核心服务获取会话ID失败')
+        return TPE_FAILED, None
+
+    if 'sid' not in ret_data:
+        # return self.write_json(TPE_FAILED, '核心服务获取会话ID时返回错误数据')
+        return TPE_FAILED, None
+
+    data = dict()
+    data['session_id'] = ret_data['sid']
+    data['host_ip'] = host_info['ip']
+    data['host_name'] = host_info['name']
+    data['protocol_flag'] = acc_info['protocol_flag']
+
+    if conn_info['protocol_type'] == TP_PROTOCOL_TYPE_RDP:
+        data['teleport_port'] = tp_cfg().core.rdp.port
+    elif conn_info['protocol_type'] == TP_PROTOCOL_TYPE_SSH:
+        data['teleport_port'] = tp_cfg().core.ssh.port
+    elif conn_info['protocol_type'] == TP_PROTOCOL_TYPE_TELNET:
+        data['teleport_port'] = tp_cfg().core.telnet.port
+
+    # return self.write_json(0, data=data)
+    return TPE_OK, data
+
+
 class DoGetSessionIDHandler(TPBaseJsonHandler):
     @tornado.gen.coroutine
     def post(self):

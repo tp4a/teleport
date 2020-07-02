@@ -12,6 +12,7 @@ from app.base.logger import *
 from app.base.controller import TPBaseJsonHandler
 from app.base.utils import tp_bin, tp_str, tp_timestamp_sec
 from app.base.extsrv import tp_ext_srv_cfg
+from .ops import api_request_session_id
 
 
 @tornado.gen.coroutine
@@ -65,7 +66,9 @@ def _parse_api_args(handler):
     except:
         return False, handler.write_json(TPE_JSON_FORMAT)
 
-    log.d('api:get_host, param=', args, '\n')
+    args['_srv_name_'] = sec_info['name']
+
+    # log.d('api:get_host, param=', args, '\n')
 
     return True, args
 
@@ -97,5 +100,25 @@ class RequestSessionHandler(TPBaseJsonHandler):
         ok, args = yield _parse_api_args(self)
         if not ok:
             return
+        # log.d('api:request_session, param=', args, '\n')
 
-        return self.write_json(TPE_NOT_IMPLEMENT)
+        try:
+            acc_id = args['account_id']
+            operator = args['operator']
+            protocol_sub_type = args['protocol_sub_type']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        operator = '[{}] {}'.format(args['_srv_name_'], operator)
+
+        err, info = yield api_request_session_id(
+            acc_id,
+            protocol_sub_type,
+            self.request.remote_ip,
+            operator
+        )
+
+        if err != TPE_OK:
+            return self.write_json(err)
+
+        return self.write_json(TPE_OK, data=info)
