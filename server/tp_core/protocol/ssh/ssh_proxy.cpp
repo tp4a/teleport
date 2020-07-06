@@ -7,7 +7,7 @@ SshProxy::SshProxy() :
         ExThreadBase("ssh-proxy-thread"),
         m_bind(NULL) {
     m_timer_counter_check_noop = 0;
-    m_timer_counter_send_keep_alive= 0;
+    m_timer_counter_keep_alive= 0;
     m_noop_timeout_sec = 900; // default to 15 minutes.
     m_listener_running = false;
 }
@@ -62,7 +62,7 @@ bool SshProxy::init() {
 void SshProxy::timer() {
     // timer() will be called per one second
     m_timer_counter_check_noop++;
-    m_timer_counter_send_keep_alive++;
+    m_timer_counter_keep_alive++;
 
     // check no-op per 5 seconds.
     if (m_timer_counter_check_noop >= 5) {
@@ -80,12 +80,12 @@ void SshProxy::timer() {
     }
 
     // send keep-alive every 60 seconds
-    if (m_timer_counter_send_keep_alive >= 60) {
-        m_timer_counter_send_keep_alive = 0;
+    if (m_timer_counter_keep_alive >= 60) {
+        m_timer_counter_keep_alive = 0;
         ExThreadSmartLock locker(m_lock);
         ts_ssh_sessions::iterator it;
         for (it = m_sessions.begin(); it != m_sessions.end(); ++it) {
-            it->first->send_keep_alive();
+            it->first->keep_alive();
         }
     }
 }

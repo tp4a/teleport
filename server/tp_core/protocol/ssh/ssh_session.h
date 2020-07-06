@@ -78,7 +78,7 @@ public:
 	void save_record();
 	// 
 	void check_noop_timeout(ex_u32 t_now, ex_u32 timeout);
-    void send_keep_alive();
+    void keep_alive();
 
 	const ex_astr& sid() { return m_sid; }
 
@@ -145,6 +145,8 @@ private:
 	tp_channels m_channels;
 
 	bool m_have_error;
+
+    bool m_need_send_keepalive;
 
 	bool m_recving_from_srv;		// 是否正在从服务器接收数据？
 	bool m_recving_from_cli;		// 是否正在从客户端接收数据？

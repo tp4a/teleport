@@ -39,6 +39,7 @@ SshSession::SshSession(SshProxy *proxy, ssh_session sess_client) :
 
     m_is_logon = false;
     m_have_error = false;
+    m_need_send_keepalive = false;
     m_recving_from_srv = false;
     m_recving_from_cli = false;
 
@@ -323,6 +324,18 @@ void SshSession::_run(void) {
             // timeout.
             _check_channels();
         }
+
+        if (m_need_send_keepalive) {
+            m_need_send_keepalive = false;
+            EXLOGD("[ssh] send keep-alive.\n");
+            if (m_srv_session)
+                //ssh_send_keepalive(m_srv_session);
+                ssh_send_ignore(m_srv_session, "keepalive@openssh.com");
+            if (m_cli_session)
+                //ssh_send_keepalive(m_cli_session);
+                ssh_send_ignore(m_cli_session, "keepalive@openssh.com");
+        }
+
     } while (!m_channels.empty());
 
     if (m_channels.empty())
@@ -415,12 +428,13 @@ void SshSession::check_noop_timeout(ex_u32 t_now, ex_u32 timeout) {
     }
 }
 
-void SshSession::send_keep_alive() {
-    EXLOGD("[ssh] send keep-alive.\n");
-    if(m_srv_session)
-        ssh_send_keepalive(m_srv_session);
-    if (m_cli_session)
-        ssh_send_keepalive(m_cli_session);
+void SshSession::keep_alive() {
+    m_need_send_keepalive = true;
+//     EXLOGD("[ssh] keep-alive.\n");
+//     if(m_srv_session)
+//         ssh_send_keepalive(m_srv_session);
+//     if (m_cli_session)
+//         ssh_send_keepalive(m_cli_session);
 }
 
 
