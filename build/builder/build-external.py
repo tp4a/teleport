@@ -556,11 +556,11 @@ class BuilderLinux(BuilderBase):
         os.chdir(old_p)
 
         utils.ensure_file_exists(out_file)
-        # files = os.listdir(os.path.join(self.PATH_RELEASE, 'lib'))
-        # for i in files:
-        #     if i.startswith('libssh.so'):
-        #         # use os.unlink() because some file should be a link.
-        #         os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
+        files = os.listdir(os.path.join(self.PATH_RELEASE, 'lib'))
+        for i in files:
+            if i.startswith('libssh.so'):
+                # use os.unlink() because some file should be a link.
+                os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
 
     def _build_zlib(self, file_name):
         # cc.w('skip build zlib again.')
