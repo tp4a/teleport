@@ -510,7 +510,7 @@ class BuilderLinux(BuilderBase):
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
         cc.n('build libssh...', end='')
-        out_file = os.path.join(self.PATH_RELEASE, 'lib64', 'libssh.a')
+        out_file = os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a')
         if os.path.exists(out_file):
             cc.w('already exists, skip.')
             return
@@ -535,7 +535,7 @@ class BuilderLinux(BuilderBase):
                        ' -DWITH_GSSAPI=OFF' \
                        ' -DWITH_ZLIB=ON' \
                        ' -DWITH_PCAP=OFF' \
-                       ' -DBUILD_SHARED_LIBS=OFF' \
+                       ' -DWITH_STATIC_LIB=ON' \
                        ' -DUNIT_TESTING=OFF' \
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
@@ -543,6 +543,7 @@ class BuilderLinux(BuilderBase):
                        ''.format(path_release=self.PATH_RELEASE)
 
         # ' -DWITH_STATIC_LIB=ON'
+        # ' -DBUILD_SHARED_LIBS=OFF'
 
 
         old_p = os.getcwd()
