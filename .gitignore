@@ -108,3 +108,4 @@ profile
 /server/tp_core/testssh/Release
 /external/zlib
 /client/tools/qt-redist
+/config.json
