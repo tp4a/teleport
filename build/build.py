@@ -61,15 +61,15 @@ def main():
         if x == 'q':
             break
 
-        if x == 'c':
-            clean_all()
-            continue
-        elif x == 'a':
-            clean_everything()
-            continue
-        elif x == 'e':
-            clean_external()
-            continue
+        # if x == 'c':
+        #     clean_all()
+        #     continue
+        # elif x == 'a':
+        #     clean_everything()
+        #     continue
+        # elif x == 'e':
+        #     clean_external()
+        #     continue
 
         try:
             x = int(x)
@@ -78,10 +78,10 @@ def main():
             continue
 
         opt = select_option_by_id(int(x))
-        if 'config' == opt['name']:
-            if make_config():
-                make_options()
-            continue
+        # if 'config' == opt['name']:
+        #     if make_config():
+        #         make_options()
+        #     continue
 
         if opt is None:
             cc.e('unknown selection: ', x)
@@ -153,9 +153,12 @@ def do_opt(opt):
     elif 'pysrt' == opt['name']:
         script = 'build-pysrt.py'
 
-    elif 'external' == opt['name']:
+    # elif 'external' == opt['name']:
+    #     script = 'build-external.py'
+    #     arg = '%s %s' % (ctx.target_path, opt['bits'])
+    elif opt['name'] in ['ext-client', 'ext-server', 'clear-ext-client', 'clear-ext-server']:
         script = 'build-external.py'
-        arg = '%s %s' % (ctx.target_path, opt['bits'])
+        arg = '%s %s %s' % (opt['name'], ctx.target_path, opt['bits'])
 
     elif 'server' == opt['name']:
         script = 'build-server.py'
@@ -166,13 +169,13 @@ def do_opt(opt):
         # arg = 'installer'
         arg = '%s %s installer' % (ctx.dist, opt['bits'])
 
-    elif 'assist-exe' == opt['name']:
+    elif 'client' == opt['name']:
         script = 'build-assist.py'
         arg = '%s %s exe' % (ctx.target_path, opt['bits'])
     # elif 'assist-rdp' == opt['name']:
     #     script = 'build-assist.py'
     #     arg = '%s rdp' % (opt['bits'])
-    elif 'assist-installer' == opt['name']:
+    elif 'client-installer' == opt['name']:
         script = 'build-assist.py'
         arg = '%s %s installer' % (ctx.dist, opt['bits'])
 
@@ -218,40 +221,52 @@ def add_option(bits, name, disp):
     options.append({'id': options_idx, 'name': name, 'disp': disp, 'bits': bits})
 
 
-def add_split():
+def add_split(title=None):
     global options
-    options.append(None)
+    # options.append(None)
+    options.append({'id': '--SPLIT-LINE--', 'title': title})
 
 
 def make_options():
-    # global options, options_idx
-    #
-    # options = list()
-    # options_idx = 0
-
     if ctx.host_os in ['windows']:
+        add_split('common')
         add_option('x86', 'ver', 'Update version setting')
-        add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % env.py_ver_str)
-        add_option('x86', 'external', 'Build external dependency')
-        add_split()
-        add_option('x86', 'assist-exe', 'Assist Execute [%s]' % ctx.target_path)
+        add_split('client side')
+        # add_option('x86', 'external', '[OBSOLETE] Build external dependency')
+        add_option('x86', 'ext-client', 'Build external libraries for client')
+        # add_option('x86', 'assist-exe', '[OBSOLETE] Assist Execute [%s]' % ctx.target_path)
+        add_option('x86', 'client', 'Build client applications [%s]' % ctx.target_path)
         # add_option('x86', 'assist-rdp', 'Teleport RDP [%s]' % ctx.target_path)
-        add_option('x86', 'assist-installer', 'Assist Installer')
-        add_split()
+        # add_option('x86', 'assist-installer', '[OBSOLETE] Assist Installer')
+        add_option('x86', 'client-installer', 'Make client installer')
+        add_option('x86', 'clear-ext-client', 'Clear external libraries for client')
+        add_split('server side')
+        add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % env.py_ver_str)
+        add_option('x86', 'ext-server', 'Build external libraries for server')
         add_option('x86', 'server', 'Teleport Server [%s]' % ctx.target_path)
-        add_split()
-        add_option('x86', 'installer', 'Teleport Installer for %s' % ctx.host_os)
+        # add_option('x86', 'installer', '[OBSOLETE] Teleport Installer for %s' % ctx.host_os)
+        add_option('x86', 'server-installer', 'Teleport Installer for %s' % ctx.host_os)
+        add_option('x86', 'clear-ext-server', 'Clear external libraries for server')
     elif ctx.host_os == 'macos':
+        add_option('x64', 'ver', 'Update version setting')
+        add_option('x86', 'ext-client', 'Build external libraries for client')
         add_option('x64', 'assist-exe', 'Assist Execute [%s]' % ctx.target_path)
         add_option('x64', 'assist-installer', 'Assist Installer')
+        add_split()
+        add_option('x86', 'clear-ext-client', 'Clear external libraries for client')
     else:
         add_option('x64', 'ver', 'Update version setting')
+        add_split()
         add_option('x64', 'pysrt', 'Make Python-Runtime for python%s-x64' % env.py_ver_str)
-        add_option('x64', 'external', 'Build external dependency')
+        # add_option('x64', 'external', '[OBSOLETE] Build external dependency')
+        # add_option('x86', 'ext-client', 'Build external libraries for client')
+        add_option('x86', 'ext-server', 'Build external libraries for server')
+        add_option('x64', 'server', 'Build server applications [%s]' % ctx.target_path)
+        # add_option('x64', 'installer', '[OBSOLETE] Make server installer for %s' % ctx.host_os)
+        add_option('x86', 'server-installer', 'Make server installer for %s' % ctx.host_os)
         add_split()
-        add_option('x64', 'server', 'Build server app [%s]' % ctx.target_path)
-        add_split()
-        add_option('x64', 'installer', 'Make server installer for %s' % ctx.host_os)
+        add_option('x86', 'clear-ext-client', 'Clear external libraries for client')
+        add_option('x86', 'clear-ext-server', 'Clear external libraries for server')
 
 
 def get_input(msg, log_func=cc.w):
@@ -263,27 +278,36 @@ def get_input(msg, log_func=cc.w):
 
 
 def show_logo():
-    cc.v('[]=======================================================[]')
-    cc.o((cc.CR_VERBOSE, ' | '), (cc.CR_INFO, 'Teleport Projects Builder'), (cc.CR_VERBOSE, '                             |'))
-    cc.v(' | auth: apex.liu@qq.com                                 |')
-    cc.v('[]=======================================================[]')
+    cc.v('[]==========================================================[]')
+    cc.o((cc.CR_VERBOSE, ' | '), (cc.CR_INFO, 'Teleport Projects Builder'), (cc.CR_VERBOSE, '                                |'))
+    cc.v(' | auth: apex.liu@qq.com                                    |')
+    cc.v('[]==========================================================[]')
 
 
 def show_menu():
-    cc.v('')
-    cc.v('=========================================================')
+    cc.v('\n=====================[ MENU ]===============================')
     for o in range(len(options)):
-        if options[o] is None:
-            cc.v('  -------------------------------------------------------')
+        if options[o]['id'] == '--SPLIT-LINE--':
+            if options[o]['title'] is not None:
+                # title = '  {}: '.format(options[o]['title'])
+                # pad = '-' * (60 - len(title))
+                # cc.v('\n{}{}'.format(title, pad))
+                cc.w('\n  {}:'.format(options[o]['title']))
+            else:
+                cc.v('\n  ----------------------------------------------------------')
             continue
+
+        # if options[o] is None:
+        #     cc.v('  -------------------------------------------------------')
+        #     continue
         cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, '%2d' % options[o]['id']), (cc.CR_NORMAL, '] ', options[o]['disp']))
 
-    cc.v('  -------------------------------------------------------')
-    cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' E'), (cc.CR_NORMAL, '] clean external temp. files.'))
-    cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' C'), (cc.CR_NORMAL, '] clean build and dist.'))
-    cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' A'), (cc.CR_NORMAL, '] clean everything.'))
+    # cc.v('  -------------------------------------------------------')
+    # cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' E'), (cc.CR_NORMAL, '] clean external temp. files.'))
+    # cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' C'), (cc.CR_NORMAL, '] clean build and dist.'))
+    # cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' A'), (cc.CR_NORMAL, '] clean everything.'))
 
-    cc.v('  -------------------------------------------------------')
+    cc.v('\n  ----------------------------------------------------------')
     cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' Q'), (cc.CR_NORMAL, '] exit'))
 
     cc.w('\nselect action: ', end='')

@@ -108,9 +108,6 @@ class BuilderBase:
     def _prepare_python(self):
         cc.e("_prepare_python() pure-virtual function.")
 
-    def fix_output(self):
-        pass
-
 
 class BuilderWin(BuilderBase):
     def __init__(self):
@@ -365,9 +362,6 @@ class BuilderWin(BuilderBase):
         else:
             cc.w('already exists, skip.')
 
-    def fix_output(self):
-        pass
-
 
 class BuilderLinux(BuilderBase):
     def __init__(self):
@@ -597,9 +591,6 @@ class BuilderLinux(BuilderBase):
                 # use os.unlink() because some file should be a link.
                 os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
 
-    def fix_output(self):
-        pass
-
 
 class BuilderMacOS(BuilderBase):
     def __init__(self):
@@ -696,6 +687,13 @@ class BuilderMacOS(BuilderBase):
         os.system('make')
         os.system('make install')
         os.chdir(old_p)
+
+        rm = ['libuv.la', 'libuv.dylib', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
+        for i in rm:
+            _path = os.path.join(self.PATH_RELEASE, 'lib', i)
+            if os.path.exists(_path):
+                utils.remove(_path)
+
 
     def _build_mbedtls(self, file_name):
         if not self._download_mbedtls(file_name):
@@ -831,15 +829,6 @@ class BuilderMacOS(BuilderBase):
     def _prepare_python(self):
         pass
 
-    def fix_output(self):
-        # remove .so files, otherwise will link to .so but not .a in default.
-        # rm = ['libsqlite3.la', 'libsqlite3.so.0', 'libsqlite3.so', 'libsqlite3.so.0.8.6', 'libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
-        rm = ['libuv.la', 'libuv.dylib', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
-        for i in rm:
-            _path = os.path.join(self.PATH_RELEASE, 'lib', i)
-            if os.path.exists(_path):
-                utils.remove(_path)
-
 
 def gen_builder(dist):
     if dist == 'windows':
@@ -862,9 +851,12 @@ def main():
     builder = None
 
     argv = sys.argv[1:]
+    command = ''
 
     for i in range(len(argv)):
-        if 'debug' == argv[i]:
+        if argv[i] in ['ext-client', 'ext-server', 'clear-ext-client', 'clear-ext-server']:
+            command = argv[i]
+        elif 'debug' == argv[i]:
             ctx.set_target(TARGET_DEBUG)
         elif 'x86' == argv[i]:
             ctx.set_bits(BITS_32)
@@ -876,17 +868,16 @@ def main():
     if builder is None:
         builder = gen_builder(ctx.host_os)
 
-    builder.prepare_python()
-
-    builder.build_jsoncpp()
-    builder.build_mongoose()
-    builder.build_openssl()
-    builder.build_libuv()
-    builder.build_mbedtls()
-    builder.build_zlib()
-    builder.build_libssh()
-
-    builder.fix_output()
+    if command == 'ext-client':
+        builder.build_jsoncpp()
+        builder.build_mongoose()
+        builder.build_openssl()
+    elif command == 'ext-server':
+        builder.prepare_python()
+        builder.build_mbedtls()
+        builder.build_libuv()
+        builder.build_zlib()
+        builder.build_libssh()
 
 
 if __name__ == '__main__':
