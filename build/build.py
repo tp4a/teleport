@@ -164,10 +164,10 @@ def do_opt(opt):
         script = 'build-server.py'
         arg = '%s %s server' % (ctx.target_path, opt['bits'])
 
-    elif 'installer' == opt['name']:
+    elif 'server-installer' == opt['name']:
         script = 'build-installer.py'
         # arg = 'installer'
-        arg = '%s %s installer' % (ctx.dist, opt['bits'])
+        arg = '%s %s server-installer' % (ctx.dist, opt['bits'])
 
     elif 'client' == opt['name']:
         script = 'build-assist.py'
@@ -229,44 +229,54 @@ def add_split(title=None):
 
 def make_options():
     if ctx.host_os in ['windows']:
-        add_split('common')
-        add_option('x86', 'ver', 'Update version setting')
-        add_split('client side')
+        add_split('prepare for client [build once]')
         # add_option('x86', 'external', '[OBSOLETE] Build external dependency')
         add_option('x86', 'ext-client', 'Build external libraries for client')
+        add_split('prepare for server [build once]')
+        add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % env.py_ver_str)
+        add_option('x86', 'ext-server', 'Build external libraries for server')
+        add_split('version [build every release]')
+        add_option('x86', 'ver', 'Update version setting')
+        add_split('client side')
         # add_option('x86', 'assist-exe', '[OBSOLETE] Assist Execute [%s]' % ctx.target_path)
         add_option('x86', 'client', 'Build client applications [%s]' % ctx.target_path)
         # add_option('x86', 'assist-rdp', 'Teleport RDP [%s]' % ctx.target_path)
         # add_option('x86', 'assist-installer', '[OBSOLETE] Assist Installer')
         add_option('x86', 'client-installer', 'Make client installer')
-        add_option('x86', 'clear-ext-client', 'Clear external libraries for client')
         add_split('server side')
         add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % env.py_ver_str)
         add_option('x86', 'ext-server', 'Build external libraries for server')
-        add_option('x86', 'server', 'Teleport Server [%s]' % ctx.target_path)
-        # add_option('x86', 'installer', '[OBSOLETE] Teleport Installer for %s' % ctx.host_os)
+        # add_option('x86', 'server', 'Teleport Server [%s]' % ctx.target_path)
         add_option('x86', 'server-installer', 'Teleport Installer for %s' % ctx.host_os)
+        # add_option('x86', 'installer', '[OBSOLETE] Teleport Installer for %s' % ctx.host_os)
+        add_split('clear')
+        add_option('x86', 'clear-ext-client', 'Clear external libraries for client')
         add_option('x86', 'clear-ext-server', 'Clear external libraries for server')
     elif ctx.host_os == 'macos':
+        add_split('prepare for client [build once]')
+        add_option('x64', 'ext-client', 'Build external libraries for client')
+        add_split('version [build every release]')
         add_option('x64', 'ver', 'Update version setting')
-        add_option('x86', 'ext-client', 'Build external libraries for client')
+        add_split('client side')
         add_option('x64', 'assist-exe', 'Assist Execute [%s]' % ctx.target_path)
         add_option('x64', 'assist-installer', 'Assist Installer')
-        add_split()
+        add_split('clear')
         add_option('x86', 'clear-ext-client', 'Clear external libraries for client')
     else:
-        add_option('x64', 'ver', 'Update version setting')
-        add_split()
+        add_split('prepare for server [build once]')
         add_option('x64', 'pysrt', 'Make Python-Runtime for python%s-x64' % env.py_ver_str)
         # add_option('x64', 'external', '[OBSOLETE] Build external dependency')
         # add_option('x86', 'ext-client', 'Build external libraries for client')
-        add_option('x86', 'ext-server', 'Build external libraries for server')
+        add_option('x64', 'ext-server', 'Build external libraries for server')
+        add_split('version [build every release]')
+        add_option('x64', 'ver', 'Update version setting')
+        add_split('server side')
         add_option('x64', 'server', 'Build server applications [%s]' % ctx.target_path)
         # add_option('x64', 'installer', '[OBSOLETE] Make server installer for %s' % ctx.host_os)
-        add_option('x86', 'server-installer', 'Make server installer for %s' % ctx.host_os)
-        add_split()
-        add_option('x86', 'clear-ext-client', 'Clear external libraries for client')
-        add_option('x86', 'clear-ext-server', 'Clear external libraries for server')
+        add_option('x64', 'server-installer', 'Make server installer for %s' % ctx.host_os)
+        add_split('clear')
+        # add_option('x64', 'clear-ext-client', 'Clear external libraries for client')
+        add_option('x64', 'clear-ext-server', 'Clear external libraries for server')
 
 
 def get_input(msg, log_func=cc.w):

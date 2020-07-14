@@ -88,7 +88,7 @@ class BuilderWin(BuilderBase):
 
         utils.copy_ex(os.path.join(env.root_path, 'out', 'pysrt'), bin_path, (ctx.dist_path, 'pysrt'))
 
-        # 复制安装所需的脚本
+        # copy scripts
         utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'setup.bat')
         utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'script')
 
@@ -140,7 +140,7 @@ class BuilderLinux(BuilderBase):
 
         utils.copy_ex(os.path.join(env.root_path, 'out', 'pysrt'), bin_path, (ctx.dist_path, 'pysrt'))
 
-        # 复制安装所需的脚本
+        # copy scripts
         utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'setup.sh')
         utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'script')
         utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'daemon')
@@ -186,7 +186,7 @@ def main():
     if builder is None:
         builder = gen_builder(ctx.host_os)
 
-    if 'installer' in argv:
+    if 'server-installer' in argv:
         builder.build_installer()
 
 

@@ -91,8 +91,17 @@ class BuilderLinux(BuilderBase):
 
         utils.makedirs(out_path)
 
-        utils.cmake(os.path.join(env.root_path, 'cmake-build'), ctx.target_path, False)
+        build_path = os.path.join(env.root_path, 'cmake-build')
+        if not os.path.exists(build_path):
+            utils.makedirs(build_path)
+
+        old_p = os.getcwd()
+        os.chdir(build_path)
+        utils.cmake(build_path, ctx.target_path, False)
+        os.chdir(build_path)
+        utils.sys_exec('make')
         # utils.strip(out_file)
+        os.chdir(old_p)
 
         for f in out_files:
             if os.path.exists(f):
