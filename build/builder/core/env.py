@@ -3,6 +3,7 @@
 import os
 import platform
 import sys
+import json
 import configparser
 
 from . import colorconsole as cc
@@ -74,14 +75,27 @@ class Env(object):
         return True
 
     def _load_config(self, warn_miss_tool):
-        _cfg_file = os.path.join(self.root_path, 'config.ini')
+        # _cfg_file = os.path.join(self.root_path, 'config.ini')
+        _cfg_file = os.path.join(self.root_path, 'config.json')
         if not os.path.exists(_cfg_file):
-            cc.e('can not load configuration.\n\nplease copy `config.ini.in` to `config.ini` and modify it to fit your condition and try again.')
+            # cc.e('can not load configuration.\n\nplease copy `config.ini.in` to `config.ini` and modify it to fit your condition and try again.')
+            cc.e('can not load configuration.\n\nplease copy `config.json.in` to `config.json` and modify it to fit your condition and try again.')
             return False
 
-        _cfg = configparser.ConfigParser()
-        _cfg.read(_cfg_file)
-        if 'toolchain' not in _cfg.sections():
+        try:
+            with open(_cfg_file, 'r') as f:
+                _cfg = json.loads(f.read())
+        except:
+            cc.e('can ot load configuration file, not in JSON format.')
+            return False
+
+        # _cfg = configparser.ConfigParser()
+        # _cfg.read(_cfg_file)
+        # if 'toolchain' not in _cfg.sections():
+        #     cc.e('invalid configuration file: need `toolchain` section.')
+        #     return False
+
+        if 'toolchain' not in _cfg:
             cc.e('invalid configuration file: need `toolchain` section.')
             return False
 
@@ -148,14 +162,19 @@ class Env(object):
                 if warn_miss_tool:
                     cc.w(' - can not locate `nsis`, so I can not make installer.')
 
-            if 'qt' in _tmp:
-                self.qt = _tmp['qt']
+            if 'cmake' in _tmp:
+                self.cmake = _tmp['cmake']
+            else:
+                self.cmake = 'c:\\cmake\\bin\\cmake.exe'
+
+            if 'qt_path' in _tmp:
+                self.qt = _tmp['qt_path']
             else:
                 self.qt = None
 
             if self.qt is None or not os.path.exists(self.qt):
                 if warn_miss_tool:
-                    cc.w(' - can not locate `qt`, so I can not build tp-player.')
+                    cc.w(' - can not locate `qt_path`, so I can not build tp-player.')
 
         elif self.is_linux:
             if 'cmake' in _tmp:

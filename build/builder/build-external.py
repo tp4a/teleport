@@ -172,6 +172,20 @@ class BuilderWin(BuilderBase):
         if x == 'q':
             return
 
+        _chk_output = [
+            os.path.join(self.OPENSSL_PATH_SRC, 'include', 'openssl', 'aes.h'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'include', 'openssl', 'opensslv.h'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'libcrypto32MT.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'libeay32MT.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'ssleay32MT.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'static', 'libcrypto32MT.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'static', 'libeay32MT.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'static', 'ssleay32MT.lib'),
+            ]
+
+        for f in _chk_output:
+            if not os.path.exists(f):
+                raise RuntimeError('build openssl static library from source code failed.')
 
         # cc.n('build openssl static library from source code... ')
 
@@ -245,15 +259,57 @@ class BuilderWin(BuilderBase):
             return
         cc.v('')
 
-        cc.w('On Windows, when build libssh, need you use cmake-gui.exe to generate solution file')
-        cc.w('for Visual Studio 2017. Visit https://docs.tp4a.com for more details.')
-        cc.w('\nOnce the libssh.sln generated, press Enter to continue or Q to quit...', end='')
+
+
+        build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
+        if not os.path.exists(build_path):
+            utils.makedirs(build_path)
+
+        openssl_path = os.path.join(PATH_EXTERNAL, 'OpenSSL')
+
+        cmake_define = ' -DOPENSSL_INCLUDE_DIR={path_release}\include' \
+                       ' -DOPENSSL_LIBRARIES={path_release}\lib\VC\static' \
+                       ' -DWITH_SFTP=ON' \
+                       ' -DWITH_SERVER=ON' \
+                       ' -DWITH_GSSAPI=OFF' \
+                       ' -DWITH_ZLIB=OFF' \
+                       ' -DWITH_PCAP=OFF' \
+                       ' -DWITH_STATIC_LIB=ON' \
+                       ' -DUNIT_TESTING=OFF' \
+                       ' -DWITH_EXAMPLES=OFF' \
+                       ' -DWITH_BENCHMARKS=OFF' \
+                       ' -DWITH_NACL=OFF' \
+                       ''.format(path_release=openssl_path)
+
+        # ' -DCMAKE_INSTALL_PREFIX={path_release}'
+        # ' -DWITH_STATIC_LIB=ON'
+        # ' -DBUILD_SHARED_LIBS=OFF'
+
+
+        old_p = os.getcwd()
         try:
-            x = env.input()
-        except EOFError:
-            x = 'q'
-        if x == 'q':
-            return
+            os.chdir(build_path)
+            utils.cmake(build_path, 'Release', False, cmake_define=cmake_define)
+            os.chdir(build_path)
+            # utils.sys_exec('make install')
+        except:
+            cc.e('can not make')
+            raise
+        os.chdir(old_p)
+
+
+
+
+
+        # cc.w('On Windows, when build libssh, need you use cmake-gui.exe to generate solution file')
+        # cc.w('for Visual Studio 2017. Visit https://docs.tp4a.com for more details.')
+        # cc.w('\nOnce the libssh.sln generated, press Enter to continue or Q to quit...', end='')
+        # try:
+        #     x = env.input()
+        # except EOFError:
+        #     x = 'q'
+        # if x == 'q':
+        #     return
 
         cc.i('build libssh...')
         sln_file = os.path.join(self.LIBSSH_PATH_SRC, 'build', 'libssh.sln')
@@ -544,6 +600,7 @@ class BuilderLinux(BuilderBase):
         try:
             utils.cmake(build_path, 'Release', False, cmake_define=cmake_define, cmake_pre_define='CFLAGS="-fPIC"')
             os.chdir(build_path)
+            utils.sys_exec('make')
             utils.sys_exec('make install')
         except:
             pass
@@ -579,6 +636,7 @@ class BuilderLinux(BuilderBase):
         try:
             utils.cmake(build_path, 'Release', False, cmake_define=cmake_define, cmake_pre_define='CFLAGS="-fPIC"')
             os.chdir(build_path)
+            utils.sys_exec('make')
             utils.sys_exec('make install')
         except:
             pass
@@ -814,6 +872,7 @@ class BuilderMacOS(BuilderBase):
         try:
             utils.cmake(build_path, 'Release', False, cmake_define=cmake_define, cmake_pre_define='CFLAGS="-fPIC"')
             os.chdir(build_path)
+            utils.sys_exec('make')
             utils.sys_exec('make install')
         except:
             pass

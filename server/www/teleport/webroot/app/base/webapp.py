@@ -162,7 +162,7 @@ class WebApp:
         _app = tornado.web.Application(controllers, **settings)
 
         server = tornado.httpserver.HTTPServer(_app, xheaders=True)
-        # server = tornado.httpserver.HTTPServer(_app, ssl_options={
+        # server = tornado.httpserver.HTTPServer(_app, xheaders=True, ssl_options={
         #     "certfile": os.path.join(cfg.data_path, 'cert', "server.pem"),
         #     "keyfile": os.path.join(cfg.data_path, 'cert', "server.key"),
         # })

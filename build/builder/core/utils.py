@@ -413,9 +413,16 @@ def cmake(work_path, target, force_rebuild, cmake_define='', cmake_pre_define=''
         target = 'Debug'
     else:
         target = 'Release'
-    cmd = '{} "{}" -DCMAKE_BUILD_TYPE={} {} ..;make'.format(cmake_pre_define, env.cmake, target, cmake_define)
+    cmd = '{} "{}" -DCMAKE_BUILD_TYPE={} {} ..'.format(cmake_pre_define, env.cmake, target, cmake_define)
     cc.o(cmd)
     ret, _ = sys_exec(cmd, direct_output=True)
+    # if ret != 0:
+    #     raise RuntimeError('build with cmake failed, ret={}. [{}]'.format(ret, target))
+
+    # cmd = 'make'
+    # cc.o(cmd)
+    # ret, _ = sys_exec(cmd, direct_output=True)
+
     os.chdir(old_p)
     if ret != 0:
         raise RuntimeError('build with cmake failed, ret={}. [{}]'.format(ret, target))

@@ -2,6 +2,7 @@
 #define DOWNLOADER_H
 
 #include <QFile>
+#include <QSslError>
 #include <QNetworkAccessManager>
 
 class Downloader : public QObject {
@@ -19,6 +20,8 @@ public:
 private:
     bool _request(const QString& url, const QString& sid, const QString& filename, QByteArray* data);
 
+    void _on_ssl_errors(QNetworkReply *, const QList<QSslError> &errors);
+
 private slots:
     void _on_data_ready();  // 有数据可读了，读取并写入文件
     void _on_finished();    // 下载结束了
@@ -28,6 +31,7 @@ private:
     QByteArray* m_data;
 
     bool m_result;
+    QNetworkAccessManager m_nam;
     QNetworkReply* m_reply;
 };
 
