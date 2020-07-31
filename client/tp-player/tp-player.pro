@@ -61,19 +61,19 @@ macx:CONFIG(release, debug|release): {
     LIBS += -L$$PWD/../../external/macos/release/lib/ -lz
     DESTDIR = $$PWD/../../out/client/x64/release
 
-    UI_DIR += $$PWD/../../out/_tmp_/tp-player/debug
-    RCC_DIR += $$PWD/../../out/_tmp_/tp-player/debug
-    MOC_DIR += $$PWD/../../out/_tmp_/tp-player/debug
-    OBJECTS_DIR += $$PWD/../../out/_tmp_/tp-player/debug
+    UI_DIR += $$PWD/../../out/_tmp_/tp-player/release
+    RCC_DIR += $$PWD/../../out/_tmp_/tp-player/release
+    MOC_DIR += $$PWD/../../out/_tmp_/tp-player/release
+    OBJECTS_DIR += $$PWD/../../out/_tmp_/tp-player/release
 }
 else:macx:CONFIG(debug, debug|release): {
     LIBS += -L$$PWD/../../external/macos/release/lib/ -lz
     DESTDIR = $$PWD/../../out/client/x64/debug
 
-    UI_DIR += $$PWD/../../out/_tmp_/tp-player/release
-    RCC_DIR += $$PWD/../../out/_tmp_/tp-player/release
-    MOC_DIR += $$PWD/../../out/_tmp_/tp-player/release
-    OBJECTS_DIR += $$PWD/../../out/_tmp_/tp-player/release
+    UI_DIR += $$PWD/../../out/_tmp_/tp-player/debug
+    RCC_DIR += $$PWD/../../out/_tmp_/tp-player/debug
+    MOC_DIR += $$PWD/../../out/_tmp_/tp-player/debug
+    OBJECTS_DIR += $$PWD/../../out/_tmp_/tp-player/debug
 }
 
 
