@@ -119,10 +119,11 @@ export TP_BUILD_SYSTEM="start"
 
 SYSTEM=`uname -s`
 SYSTEM=${SYSTEM:0:4}	# cut first 4 char.
-SYSTEM=${SYSTEM^^}		# upper case
-if [ $SYSTEM = "LINU" ] ; then
+echo $SYSTEM
+# SYSTEM=${SYSTEM^^}		# upper case
+if [ $SYSTEM = "Linu" ] ; then
 	build_linux $@
-elif [ $SYSTEM = "DARW" ] ; then   
+elif [ $SYSTEM = "Darw" ] ; then   
 	build_macos $@
 elif [ $SYSTEM == "MSYS" ] ; then
 	build_win $@
