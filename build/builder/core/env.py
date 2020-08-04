@@ -187,8 +187,8 @@ class Env(object):
                     cc.e(' - can not locate `cmake`, so I can not build binary from source.')
 
         elif self.is_macos:
-            if 'qt' in _tmp:
-                self.qt = _tmp['qt']
+            if 'qt_path' in _tmp:
+                self.qt = _tmp['qt_path']
             else:
                 self.qt = None
 

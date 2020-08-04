@@ -258,8 +258,8 @@ def make_options():
         add_split('version [build every release]')
         add_option('x64', 'ver', 'Update version setting')
         add_split('client side')
-        add_option('x64', 'assist-exe', 'Assist Execute [%s]' % ctx.target_path)
-        add_option('x64', 'assist-installer', 'Assist Installer')
+        add_option('x64', 'client', 'Assist Execute [%s]' % ctx.target_path)
+        add_option('x64', 'client-installer', 'Assist Installer')
         add_split('clear')
         add_option('x86', 'clear-ext-client', 'Clear external libraries for client')
     else:

@@ -934,6 +934,8 @@ def main():
     elif command == 'ext-server':
         builder.prepare_python()
         builder.build_mbedtls()
+        builder.build_jsoncpp()
+        builder.build_mongoose()
         builder.build_libuv()
         builder.build_zlib()
         builder.build_libssh()
