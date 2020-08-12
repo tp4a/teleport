@@ -1,10 +1,22 @@
 #!/bin/bash
 
 PATH_ROOT=$(cd "$(dirname "$0")"; pwd)
-CFG_FILE=config.json
+#CFG_FILE=config.json
+
+function check_cfg_file
+{
+    if [ ! -f "./${CFG_FILE}" ] ; then
+        on_error_begin "\`${CFG_FILE}\` does not exists."
+        echo "please copy \`config.json.in\` into \`${CFG_FILE}\`"
+        echo "and modify it to fit your condition, then try again."
+        on_error_end
+    fi
+}
 
 function build_win
 {
+    check_cfg_file
+
 	# find pyexec from json file
 	pyexec=$(grep -P '"pyexec":' ./${CFG_FILE} | grep -Po '(?<="pyexec":)([[:space:]]*)"(.*)"')
 	# remove left "
@@ -41,6 +53,8 @@ function build_win
 
 function build_linux
 {
+    check_cfg_file
+
 	if [ `id -u` -eq 0 ]; then
 		on_error "Do not build as root."
 	fi
@@ -49,20 +63,21 @@ function build_linux
 		on_error "Sorry, build script works on CentOS 7 only."
 	fi
 
-	X=$(yum list installed | grep "libffi-devel")
-	if [ "$X-x" = "-x" ] ; then
-		on_error "Need libffi-devel to build Python, try:\r\n    sudo yum install libffi-devel"
-	fi
-
-	X=$(yum list installed | grep "zlib-devel")
-	if [ "$X-x" = "-x" ] ; then
-		on_error "Need zlib-devel to build Python, try:\r\n    sudo yum install zlib-devel"
-	fi
-
 	PYEXEC=${PATH_ROOT}/external/linux/release/bin/python3.7
 	PYSTATIC=${PATH_ROOT}/external/linux/release/lib/libpython3.7m.a
 
 	if [ ! -f "${PYSTATIC}" ] ; then
+
+        X=$(yum list installed | grep "libffi-devel")
+        if [ "$X-x" = "-x" ] ; then
+            on_error "Need libffi-devel to build Python, try:\r\n    sudo yum install libffi-devel"
+        fi
+
+        X=$(yum list installed | grep "zlib-devel")
+        if [ "$X-x" = "-x" ] ; then
+            on_error "Need zlib-devel to build Python, try:\r\n    sudo yum install zlib-devel"
+        fi
+
 		echo "python static not found, now build it..."
 		"${PATH_ROOT}/build/build-py-static.sh"
 
@@ -77,6 +92,8 @@ function build_linux
 
 function build_macos
 {
+    check_cfg_file
+
 	python3 -B "${PATH_ROOT}/build/build.py" $@
 }
 
@@ -108,24 +125,21 @@ function on_error_end()
 # main
 ##############################################
 
-if [ ! -f "./${CFG_FILE}" ] ; then
-	on_error_begin "\`${CFG_FILE}\` does not exists."
-	echo "please copy \`${CFG_FILE}.in\` into \`${CFG_FILE}\`"
-	echo "and modify it to fit your condition, then try again."
-	on_error_end
-fi
-
 export TP_BUILD_SYSTEM="start"
 
-SYSTEM=`uname -s`
-SYSTEM=${SYSTEM:0:4}	# cut first 4 char.
-echo $SYSTEM
+SYS_NAME=`uname -s`
+SYS_NAME=${SYS_NAME:0:4}	# cut first 4 char.
+# echo ${SYS_NAME}
 # SYSTEM=${SYSTEM^^}		# upper case
-if [ $SYSTEM = "Linu" ] ; then
+
+if [ ${SYS_NAME} = "Linu" ] ; then
+    export CFG_FILE=config.linux.json
 	build_linux $@
-elif [ $SYSTEM = "Darw" ] ; then   
+elif [ ${SYS_NAME} = "Darw" ] ; then   
+    export CFG_FILE=config.macos.json
 	build_macos $@
-elif [ $SYSTEM == "MSYS" ] ; then
+elif [ ${SYS_NAME} == "MSYS" ] ; then
+    export CFG_FILE=config.win.json
 	build_win $@
 else 
 	on_error_begin "Unsupported platform."

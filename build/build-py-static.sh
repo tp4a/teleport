@@ -45,11 +45,18 @@ function dlfile()
 		echo ""
 		# curl --insecure https://www.python.org/ftp/python/3.7.0/${VER_PYTHON}.tgz -o "${PATH_PYTHON}/${VER_PYTHON}.tgz"
 		echo wget $2$3 -O "$4/$3"
-		wget --no-check-certificate $2$3 -O "$4/$3"
 
-		if [ ! -f "$4/$3" ]; then
+        if [ -f "$4/$3._tmp_" ]; then
+            rm -rf "$4/$3._tmp_"
+        fi
+
+		wget --no-check-certificate $2$3 -O "$4/$3._tmp_"
+
+		if [ ! -f "$4/$3._tmp_" ]; then
 			on_error "Can not download $1: $3"
 		fi
+
+        mv "$4/$3._tmp_" "$4/$3"
 	else
 		echo " already exists, skip."
 	fi

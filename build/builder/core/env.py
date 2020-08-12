@@ -75,11 +75,12 @@ class Env(object):
         return True
 
     def _load_config(self, warn_miss_tool):
+        _cfg_file = 'config.{}.json'.format(self.plat)
         # _cfg_file = os.path.join(self.root_path, 'config.ini')
-        _cfg_file = os.path.join(self.root_path, 'config.json')
+        _cfg_file = os.path.join(self.root_path, _cfg_file)
         if not os.path.exists(_cfg_file):
             # cc.e('can not load configuration.\n\nplease copy `config.ini.in` to `config.ini` and modify it to fit your condition and try again.')
-            cc.e('can not load configuration.\n\nplease copy `config.json.in` to `config.json` and modify it to fit your condition and try again.')
+            cc.e('can not load configuration.\n\nplease copy `config.json.in` to `config.{}.json` and modify it to fit your condition and try again.'.format(self.plat))
             return False
 
         try:
@@ -195,6 +196,15 @@ class Env(object):
             if self.qt is None or not os.path.exists(self.qt):
                 if warn_miss_tool:
                     cc.w(' - can not locate `qt`, so I can not build tp-player.')
+
+            if 'cmake' in _tmp:
+                self.cmake = _tmp['cmake']
+            else:
+                self.cmake = '/usr/local/bin/cmake'
+
+            if not os.path.exists(self.cmake):
+                if warn_miss_tool:
+                    cc.e(' - can not locate `cmake`, so I can not build binary from source.')
 
         return True
 

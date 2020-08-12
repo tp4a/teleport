@@ -268,8 +268,8 @@ def ensure_file_exists(filename):
         raise RuntimeError('path exists but not a file: {}'.format(filename))
 
 
-def sys_exec(cmd, direct_output=False, output_codec=None):
-    print(cmd)
+def sys_exec(cmd, direct_output=True, output_codec=None):
+    cc.o(cmd)
     if output_codec is None:
         if env.is_win:
             output_codec = 'gb2312'
@@ -280,9 +280,11 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
     if env.is_win:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
 
+    # elif env.is_macos:
+    #     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
+
     else:
-        p = subprocess.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                             universal_newlines=True, shell=True)
+        p = subprocess.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
 
     output = list()
     f = p.stdout
@@ -310,12 +312,12 @@ def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
     if force_rebuild:
         cmd = '"{}" "{}" "/target:clean" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, target,
                                                                                           platform)
-        ret, _ = sys_exec(cmd, direct_output=True)
+        ret, _ = sys_exec(cmd)
         cc.v('ret:', ret)
 
     cmd = '"{}" "{}" "/target:{}" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, proj_name,
                                                                                    target, platform)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
 
@@ -329,7 +331,7 @@ def qt_build(prj_path, prj_name, bit_path, target_path):
         tmp_path = os.path.join(env.root_path, 'out', '_tmp_', prj_name, bit_path)
         # C:\Windows\System32\cmd.exe /A /Q /K C:\Qt\Qt5.12.0\5.12.0\msvc2017\bin\qtenv2.bat
         cmd = 'C:\\Windows\\System32\\cmd.exe /A /Q /C ""{}\\qt-helper.bat" "{}\\bin\\qtenv2.bat" "{}VC\\Auxiliary\\Build\\vcvarsall.bat" {} "{}" "{}" {}"'.format(env.build_path, env.qt, env.visual_studio_path, bit_path, tmp_path, prj_path, target_path)
-        ret, _ = sys_exec(cmd, direct_output=True)
+        ret, _ = sys_exec(cmd)
         if ret != 0:
             raise RuntimeError('build XCode project `{}` failed.'.format(prj_name))
     elif env.is_macos:
@@ -340,7 +342,7 @@ def qt_build(prj_path, prj_name, bit_path, target_path):
         os.chdir(prj_path)
 
         cmd = '"{}" "{}"; make'.format(qmake, pro_file)
-        ret, _ = sys_exec(cmd, direct_output=True)
+        ret, _ = sys_exec(cmd)
         if ret != 0:
             raise RuntimeError('make Makefile for build `{}` failed.'.format(prj_name))
 
@@ -354,7 +356,7 @@ def qt_deploy(app):
     if env.is_macos:
         qmake = os.path.join(env.qt, 'macdeployqt')
         cmd = '"{}" "{}"'.format(qmake, app)
-        ret, _ = sys_exec(cmd, direct_output=True)
+        ret, _ = sys_exec(cmd)
         if ret != 0:
             raise RuntimeError('make deploy for QT failed.')
 
@@ -362,11 +364,11 @@ def qt_deploy(app):
 def xcode_build(proj_file, proj_name, target, force_rebuild):
     if force_rebuild:
         cmd = 'xcodebuild -project "{}" -target {} -configuration {} clean'.format(proj_file, proj_name, target)
-        ret, _ = sys_exec(cmd, direct_output=True)
+        ret, _ = sys_exec(cmd)
         cc.v('ret:', ret)
 
     cmd = 'xcodebuild -project "{}" -target {} -configuration {}'.format(proj_file, proj_name, target)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('build XCode project `{}` failed.'.format(proj_name))
 
@@ -379,7 +381,7 @@ def make_dmg(json_file, dmg_file):
         makedirs(out_path)
 
     cmd = 'appdmg "{}" "{}"'.format(json_file, dmg_file)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('make dmg failed.')
 
@@ -389,7 +391,7 @@ def nsis_build(nsi_file, _define=''):
         raise RuntimeError('where is `nsis`?')
 
     cmd = '"{}" /V2 {} /X"SetCompressor /SOLID /FINAL lzma" "{}"'.format(env.nsis, _define, nsi_file)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('make installer with nsis failed. [{}]'.format(nsi_file))
 
@@ -414,14 +416,14 @@ def cmake(work_path, target, force_rebuild, cmake_define='', cmake_pre_define=''
     else:
         target = 'Release'
     cmd = '{} "{}" -DCMAKE_BUILD_TYPE={} {} ..'.format(cmake_pre_define, env.cmake, target, cmake_define)
-    cc.o(cmd)
-    ret, _ = sys_exec(cmd, direct_output=True)
-    # if ret != 0:
-    #     raise RuntimeError('build with cmake failed, ret={}. [{}]'.format(ret, target))
-
-    # cmd = 'make'
     # cc.o(cmd)
-    # ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
+    if ret != 0:
+        raise RuntimeError('build with cmake failed, ret={}. [{}]'.format(ret, target))
+
+    cmd = 'make'
+    # cc.o(cmd)
+    ret, _ = sys_exec(cmd)
 
     os.chdir(old_p)
     if ret != 0:
@@ -433,7 +435,7 @@ def strip(filename):
     if not os.path.exists(filename):
         return False
     cmd = 'strip {}'.format(filename)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('failed to strip binary file [{}], ret={}.'.format(filename, ret))
     return True
@@ -444,7 +446,7 @@ def fix_new_line_flag(filename):
     if not os.path.exists(filename):
         return False
     cmd = 'dos2unix {}'.format(filename)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('failed to dos2unix file [{}], ret={}.'.format(filename, ret))
     return True
@@ -499,7 +501,7 @@ def make_targz(work_path, folder, to_file):
 
     os.chdir(work_path)
     cmd = 'tar zcf "{}" "{}"'.format(to_file, folder)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     ensure_file_exists(to_file)
     os.chdir(old_p)
 

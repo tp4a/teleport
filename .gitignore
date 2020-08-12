@@ -15,8 +15,8 @@
 # for CMake
 CMakeFiles
 cmake_install.cmake
-cmake-build
-cmake-build-debug
+cmake-build-*
+# cmake-build-debug
 client/tp_assist_macos/build
 **/xcode_build
 **/DerivedData
@@ -109,3 +109,4 @@ profile
 /external/zlib
 /client/tools/qt-redist
 /config.json
+/config.*.json
