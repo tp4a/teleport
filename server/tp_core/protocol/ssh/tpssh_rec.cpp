@@ -1,4 +1,4 @@
-﻿#include "ssh_recorder.h"
+﻿#include "tpssh_rec.h"
 //#include <teleport_const.h>
 
 static ex_u8 TPP_RECORD_MAGIC[4] = {'T', 'P', 'P', 'R'};

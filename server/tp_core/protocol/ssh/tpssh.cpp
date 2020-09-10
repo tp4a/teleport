@@ -1,4 +1,4 @@
-﻿#include "ssh_proxy.h"
+﻿#include "tpssh_proxy.h"
 #include "tpp_env.h"
 
 #include <teleport_const.h>

@@ -1,11 +1,11 @@
 ﻿#ifndef __SSH_PROXY_H__
 #define __SSH_PROXY_H__
 
-#include "ssh_session.h"
+#include "tpssh_session.h"
 
 #include <ex.h>
 
-typedef std::map<SshSession*, unsigned char> ts_ssh_sessions;
+typedef std::list<SshSession*> tp_ssh_sessions;
 
 class SshProxy : public ExThreadBase
 {
@@ -18,11 +18,12 @@ public:
 	void set_cfg(ex_u32 noop_timeout);
 	void kill_sessions(const ex_astrs& sessions);
 
-	void session_finished(SshSession* sess);
-
 protected:
 	void _thread_loop();
 	void _on_stop();
+
+	// 异步方式清理已经结束的会话实例
+	void _clean_closed_session();
 
 private:
 	ssh_bind m_bind;
@@ -35,12 +36,10 @@ private:
 	ex_astr m_host_ip;
 	int m_host_port;
 
-	ts_ssh_sessions m_sessions;
+	tp_ssh_sessions m_sessions;
 
-// 	ExThreadManager m_thread_mgr;
-
-	// 
-	ex_u32 m_noop_timeout_sec;
+	//
+	ex_u32 m_cfg_noop_timeout_sec;
 };
 
 extern SshProxy g_ssh_proxy;

@@ -38,7 +38,7 @@ ExThreadBase::~ExThreadBase() {
     }
 }
 
-bool ExThreadBase::start(void) {
+bool ExThreadBase::start() {
     m_need_stop = false;
     EXLOGV("[thread] + `%s` starting.\n", m_thread_name.c_str());
 #ifdef WIN32
@@ -62,7 +62,7 @@ bool ExThreadBase::start(void) {
     return true;
 }
 
-bool ExThreadBase::stop(void) {
+bool ExThreadBase::stop() {
     if (m_handle == 0) {
         EXLOGW("[thread] `%s` already stopped before stop() call.\n", m_thread_name.c_str());
         return true;
@@ -91,7 +91,7 @@ bool ExThreadBase::stop(void) {
     return true;
 }
 
-bool ExThreadBase::terminate(void) {
+bool ExThreadBase::terminate() {
 #ifdef EX_OS_WIN32
     return (TerminateThread(m_handle, 1) == TRUE);
 #else
@@ -112,7 +112,7 @@ ExThreadManager::~ExThreadManager() {
     }
 }
 
-void ExThreadManager::stop_all(void) {
+void ExThreadManager::stop_all() {
     ExThreadSmartLock locker(m_lock);
 
     ex_threads::iterator it = m_threads.begin();
@@ -173,7 +173,7 @@ ExThreadLock::~ExThreadLock() {
 #endif
 }
 
-void ExThreadLock::lock(void) {
+void ExThreadLock::lock() {
 #ifdef EX_OS_WIN32
     EnterCriticalSection(&m_locker);
 #else
@@ -181,7 +181,7 @@ void ExThreadLock::lock(void) {
 #endif
 }
 
-void ExThreadLock::unlock(void) {
+void ExThreadLock::unlock() {
 #ifdef EX_OS_WIN32
     LeaveCriticalSection(&m_locker);
 #else
@@ -218,7 +218,7 @@ int ex_atomic_dec(volatile int *pt) {
 }
 
 
-ex_u64 ex_get_thread_id(void) {
+ex_u64 ex_get_thread_id() {
 #ifdef EX_OS_WIN32
     return GetCurrentThreadId();
 #else

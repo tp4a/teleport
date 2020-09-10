@@ -21,22 +21,22 @@ public:
 	ExThreadBase(const char* thread_name);
 	virtual ~ExThreadBase();
 
-	bool is_running(void) { return m_is_running; }
+	bool is_running() { return m_is_running; }
 
 	// 创建并启动线程（执行被重载了的run()函数）
-	bool start(void);
+	bool start();
 	// 结束线程（等待wait_timeout_ms毫秒，如果wait_timeout_ms为0，则无限等待）
-	bool stop(void);
+	bool stop();
 	// 直接结束线程（强杀，不建议使用）
-	bool terminate(void);
+	bool terminate();
 
 protected:
 	// main loop of this thread.
-	virtual void _thread_loop(void) = 0;
+	virtual void _thread_loop() = 0;
 	// called by another thread when thread ready to stop.
-    virtual void _on_stop(void) {};
+    virtual void _on_stop() {};
     // called inside thread when thread fully stopped.
-    virtual void _on_stopped(void) {};
+    virtual void _on_stopped() {};
 
 #ifdef EX_OS_WIN32
 	static unsigned int WINAPI _thread_func(LPVOID lpParam);
@@ -59,8 +59,8 @@ public:
 	ExThreadLock();
 	virtual ~ExThreadLock();
 
-	void lock(void);
-	void unlock(void);
+	void lock();
+	void unlock();
 
 private:
 #ifdef EX_OS_WIN32
@@ -97,7 +97,7 @@ public:
 	ExThreadManager();
 	virtual ~ExThreadManager();
 
-	void stop_all(void);
+	void stop_all();
 
 //private:
 	void add(ExThreadBase* tb);
@@ -115,6 +115,6 @@ int ex_atomic_inc(volatile int* pt);
 int ex_atomic_dec(volatile int* pt);
 
 // 线程相关操作
-ex_u64 ex_get_thread_id(void);
+ex_u64 ex_get_thread_id();
 
 #endif // __EX_THREAD_H__
