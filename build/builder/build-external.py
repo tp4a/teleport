@@ -802,7 +802,7 @@ class BuilderMacOS(BuilderBase):
     def _build_libssh(self, file_name):
         # cc.n('skip build libssh on macOS.')
         # return
-        
+
         if not self._download_libssh(file_name):
             return
         if not os.path.exists(self.LIBSSH_PATH_SRC):
@@ -815,11 +815,20 @@ class BuilderMacOS(BuilderBase):
             return
         cc.v('')
 
+        cc.n('fix libssh source code... ', end='')
+        s_name = 'libssh-{}'.format(env.ver_libssh)
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'session.c'))
+        # ## utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto.c'))
+        # # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto-compat.c'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'session.c')
+        # ## utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto.c')
+        # # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto-compat.c')
+
         build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
 
+        # because on MacOS, I install openssl 1.1.1g by homebrew, it localted at /usr/local/opt/openssl
         cmake_define = ' -DCMAKE_INSTALL_PREFIX={path_release}' \
-                       ' -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include' \
-                       ' -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib' \
+                       ' -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl' \
                        ' -DWITH_GCRYPT=OFF' \
                        ' -DWITH_GEX=OFF' \
                        ' -DWITH_SFTP=ON' \
@@ -832,9 +841,12 @@ class BuilderMacOS(BuilderBase):
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
                        ' -DWITH_NACL=OFF' \
+                       ' -DWITH_STATIC_LIB=ON' \
                        ''.format(path_release=self.PATH_RELEASE)
 
         # ' -DWITH_STATIC_LIB=ON'
+        # ' -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include'
+        # ' -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib'
 
         try:
             utils.cmake(build_path, 'Release', False, cmake_define)

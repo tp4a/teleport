@@ -42,7 +42,7 @@ TPP_API void tpp_timer(void) {
 static ex_rv _set_runtime_config(const char* param) {
 // 	Json::Value jp;
 // 	Json::Reader jreader;
-// 
+//
 // 	if (!jreader.parse(param, jp))
     Json::CharReaderBuilder jcrb;
     std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
@@ -70,7 +70,7 @@ static ex_rv _set_runtime_config(const char* param) {
 static ex_rv _kill_sessions(const char* param) {
 // 	Json::Value jp;
 // 	Json::Reader jreader;
-// 
+//
 // 	if (!jreader.parse(param, jp))
     Json::CharReaderBuilder jcrb;
     std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
@@ -104,11 +104,11 @@ TPP_API ex_rv tpp_command(ex_u32 cmd, const char* param) {
 	case TPP_CMD_SET_RUNTIME_CFG:
 		if (param == NULL || strlen(param) == 0)
 			return TPE_PARAM;
-		return _set_runtime_config(param);
+		return tpp_cmd_set_runtime_config(param);
 	case TPP_CMD_KILL_SESSIONS:
 		if (param == NULL || strlen(param) == 0)
 			return TPE_PARAM;
-		return _kill_sessions(param);
+		return tpp_cmd_kill_sessions(param);
 	default:
 		return TPE_UNKNOWN_CMD;
 	}
