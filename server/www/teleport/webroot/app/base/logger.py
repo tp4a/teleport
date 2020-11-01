@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 import traceback
+import builtins
 
 __all__ = ['log']
 
@@ -14,6 +15,7 @@ USE_TPWEB_LOG = False
 
 try:
     import tpweb
+
     USE_TPWEB_LOG = True
 except ImportError:
     pass
@@ -626,7 +628,5 @@ del Logger
 
 # log._test()
 # print('test built-in `print` function.')
-
-import builtins
 
 builtins.__dict__['print'] = log.log_print

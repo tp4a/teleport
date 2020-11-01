@@ -214,11 +214,17 @@ int ex_atomic_dec(volatile int *pt) {
 #endif
 }
 
-
-ex_u64 ex_get_thread_id() {
-#ifdef EX_OS_WIN32
-    return GetCurrentThreadId();
+uint64_t ex_get_thread_id()
+{
+#if defined(EX_OS_WIN32)
+    return (uint64_t)GetCurrentThreadId();
+#elif defined(EX_OS_LINUX)
+    return pthread_self();
+#elif defined(EX_OS_MACOS)
+    uint64_t tid = 0;
+    pthread_threadid_np(nullptr, &tid);
+    return tid;
 #else
-    return (ex_u64) pthread_self();
+#   error "unsupport platform."
 #endif
 }

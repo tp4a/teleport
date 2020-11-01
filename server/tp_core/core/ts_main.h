@@ -3,7 +3,7 @@
 
 #include "../common/protocol_interface.h"
 
-int ts_main(void);
+int ts_main();
 
 TPP_CONNECT_INFO* tpp_get_connect_info(const char* sid);
 void tpp_free_connect_info(TPP_CONNECT_INFO* info);

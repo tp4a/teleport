@@ -28,7 +28,7 @@ static ex_u8 g_run_type = RUN_UNKNOWN;
 
 #define EOM_CORE_SERVICE_NAME	L"Teleport Core Service"
 
-static bool _run_daemon(void);
+static bool _run_daemon();
 
 #ifdef EX_OS_WIN32
 static int service_install()
@@ -113,7 +113,7 @@ static bool _process_cmd_line(int argc, wchar_t** argv)
 }
 
 
-static int _main_loop(void)
+static int _main_loop()
 {
 	if (g_run_type == RUN_CORE)
 		return ts_main();
@@ -163,7 +163,7 @@ int _app_main(int argc, wchar_t** argv)
 
 	if (g_run_type == RUN_STOP) {
 		char url[1024] = {0};
-		ex_strformat(url, 1023, "http://%s:%d/rpc?{\"method\":\"exit\"}", g_env.rpc_bind_ip.c_str(), g_env.rpc_bind_port);
+		ex_strformat(url, 1023, R"(http://%s:%d/rpc?{"method":"exit"})", g_env.rpc_bind_ip.c_str(), g_env.rpc_bind_port);
 		ex_astr body;
 		ts_http_get(url, body);
 		ex_printf("%s\n", body.c_str());
@@ -195,8 +195,8 @@ int _app_main(int argc, wchar_t** argv)
 #endif
 
 static SERVICE_STATUS g_ServiceStatus = { 0 };
-static SERVICE_STATUS_HANDLE g_hServiceStatusHandle = NULL;
-HANDLE g_hWorkerThread = NULL;
+static SERVICE_STATUS_HANDLE g_hServiceStatusHandle = nullptr;
+HANDLE g_hWorkerThread = nullptr;
 
 VOID WINAPI service_main(DWORD argc, wchar_t** argv);
 void WINAPI service_handler(DWORD fdwControl);
@@ -212,9 +212,9 @@ int main()
 	wchar_t** _argv = ::CommandLineToArgvW(szCmdLine, &_argc); //拆分命令行参数字符串；
 
 	ret = _app_main(_argc, _argv);
-	
+
 	LocalFree(_argv);
-	_argv = NULL;
+	_argv = nullptr;
 
 	return ret;
 }
@@ -224,8 +224,8 @@ static bool _run_daemon(void)
 	SERVICE_TABLE_ENTRY DispatchTable[2];
 	DispatchTable[0].lpServiceName = EOM_CORE_SERVICE_NAME;
 	DispatchTable[0].lpServiceProc = service_main;
-	DispatchTable[1].lpServiceName = NULL;
-	DispatchTable[1].lpServiceProc = NULL;
+	DispatchTable[1].lpServiceName = nullptr;
+	DispatchTable[1].lpServiceProc = nullptr;
 
 	if (!StartServiceCtrlDispatcher(DispatchTable))
 	{
@@ -262,7 +262,7 @@ static void WINAPI service_handler(DWORD fdwControl)
 		if (g_hWorkerThread)
 		{
 			// TerminateThread(g_hWorkerThread, 1);
-			// g_hWorkerThread = NULL;
+			// g_hWorkerThread = nullptr;
 			g_exit_flag = true;
 
 			g_ServiceStatus.dwWin32ExitCode = 0;
@@ -307,8 +307,8 @@ VOID WINAPI service_main(DWORD argc, wchar_t** argv)
 	}
 
 	DWORD tid = 0;
-	g_hWorkerThread = CreateThread(NULL, 0, service_thread_func, NULL, 0, &tid);
-	if (NULL == g_hWorkerThread)
+	g_hWorkerThread = CreateThread(nullptr, 0, service_thread_func, nullptr, 0, &tid);
+	if (nullptr == g_hWorkerThread)
 	{
 		EXLOGE_WIN("CreateThread()");
 
@@ -345,7 +345,7 @@ int main(int argc, char** argv)
 	memset(&act, 0, sizeof(act));
 	act.sa_sigaction = _sig_handler;
 	act.sa_flags = SA_SIGINFO;
-	sigaction(SIGINT, &act, NULL);
+	sigaction(SIGINT, &act, nullptr);
 
 	wchar_t** wargv = ex_make_wargv(argc, argv);
 	int ret = _app_main(argc, wargv);
@@ -359,12 +359,12 @@ void _sig_handler(int signum, siginfo_t* info, void* ptr)
 {
 	if (signum == SIGINT || signum == SIGTERM)
 	{
-		EXLOGW("\n[core] received signal SIGINT, exit now.\n");
+		EXLOGW("[core] received signal SIGINT, exit now.\n");
 		g_exit_flag = true;
 	}
 }
 
-static bool _run_daemon(void)
+static bool _run_daemon()
 {
 	pid_t pid = fork();
 	if (pid < 0)
@@ -382,7 +382,7 @@ static bool _run_daemon(void)
 	{
 		EXLOGE("[core] setsid() failed.\n");
 		assert(0);
-		exit(EXIT_FAILURE);
+		// exit(EXIT_FAILURE);
 	}
 
 	umask(0);
@@ -399,14 +399,14 @@ static bool _run_daemon(void)
 	}
 
 	// now I'm second children.
-	int ret = chdir("/");
+	chdir("/");
 	close(STDIN_FILENO);
 
-	int stdfd = open("/dev/null", O_RDWR);
+	int std_fd = open("/dev/null", O_RDWR);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
-	dup2(stdfd, STDOUT_FILENO);
-	dup2(stdfd, STDERR_FILENO);
+	dup2(std_fd, STDOUT_FILENO);
+	dup2(std_fd, STDERR_FILENO);
 
 	return true;
 }

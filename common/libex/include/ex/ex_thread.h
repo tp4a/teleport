@@ -206,6 +206,6 @@ int ex_atomic_inc(volatile int* pt);
 int ex_atomic_dec(volatile int* pt);
 
 // 线程相关操作
-ex_u64 ex_get_thread_id();
+uint64_t ex_get_thread_id();
 
 #endif // __EX_THREAD_H__

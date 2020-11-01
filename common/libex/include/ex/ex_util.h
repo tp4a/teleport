@@ -32,7 +32,6 @@ void ex_sleep_ms(int ms);
 
 EX_BOOL ex_localtime_now(int* t, struct tm* dt);
 
-
 FILE* ex_fopen(const ex_wstr& filename, const wchar_t* mode);
 FILE* ex_fopen(const ex_astr& filename, const char* mode);
 

@@ -11,7 +11,7 @@ TsSessionManager::TsSessionManager() :
 }
 
 TsSessionManager::~TsSessionManager() {
-    ts_connections::iterator it_conn = m_connections.begin();
+    auto it_conn = m_connections.begin();
     for (; it_conn != m_connections.end(); ++it_conn) {
         EXLOGD("[core] m_connections not clean: %s, %s\n", it_conn->first.c_str(), it_conn->second->acc_username.c_str());
         delete it_conn->second;
@@ -19,7 +19,7 @@ TsSessionManager::~TsSessionManager() {
     m_connections.clear();
 }
 
-void TsSessionManager::_thread_loop(void) {
+void TsSessionManager::_thread_loop() {
     for (;;) {
         ex_sleep_ms(1000);
         if (m_need_stop)
@@ -28,13 +28,13 @@ void TsSessionManager::_thread_loop(void) {
     }
 }
 
-void TsSessionManager::_remove_expired_connect_info(void) {
+void TsSessionManager::_remove_expired_connect_info() {
     // 超过15秒未进行连接的connect-info会被移除
 
     ExThreadSmartLock locker(m_lock);
 
     ex_u64 _now = ex_get_tick_count();
-    ts_connections::iterator it = m_connections.begin();
+    auto it = m_connections.begin();
     for (; it != m_connections.end();) {
         //EXLOGD("[core] check expired connect info: [%s] %d, %d %d %d\n", it->first.c_str(), it->second->ref_count, int(_now), int(it->second->ticket_start), int(_now - it->second->ticket_start));
         if (it->second->ref_count == 0 && _now - 15000 > it->second->ticket_start) {
@@ -42,16 +42,17 @@ void TsSessionManager::_remove_expired_connect_info(void) {
             delete it->second;
             m_connections.erase(it++);
             EXLOGD("[core] there are %d connection info exists.\n", m_connections.size());
-        } else {
+        }
+        else {
             ++it;
         }
     }
 }
 
-bool TsSessionManager::get_connect_info(const ex_astr &sid, TS_CONNECT_INFO &info) {
+bool TsSessionManager::get_connect_info(const ex_astr& sid, TS_CONNECT_INFO& info) {
     ExThreadSmartLock locker(m_lock);
 
-    ts_connections::iterator it = m_connections.find(sid);
+    auto it = m_connections.find(sid);
     if (it == m_connections.end())
         return false;
 
@@ -79,10 +80,10 @@ bool TsSessionManager::get_connect_info(const ex_astr &sid, TS_CONNECT_INFO &inf
     return true;
 }
 
-bool TsSessionManager::free_connect_info(const ex_astr &sid) {
+bool TsSessionManager::free_connect_info(const ex_astr& sid) {
     ExThreadSmartLock locker(m_lock);
 
-    ts_connections::iterator it = m_connections.find(sid);
+    auto it = m_connections.find(sid);
     if (it == m_connections.end())
         return false;
 
@@ -97,7 +98,8 @@ bool TsSessionManager::free_connect_info(const ex_astr &sid) {
             m_connections.erase(it);
             EXLOGD("[core] there are %d connection info exists.\n", m_connections.size());
         }
-    } else {
+    }
+    else {
         if (it->second->ref_count == 1)
             it->second->ref_count = 0;
         it->second->ticket_start = ex_get_tick_count() + 45000; // 我们将时间向后移动45秒，这样如果没有发生RDP的第二次连接，这个连接信息就会在一分钟后被清除。
@@ -107,11 +109,14 @@ bool TsSessionManager::free_connect_info(const ex_astr &sid) {
     return true;
 }
 
-bool TsSessionManager::request_session(ex_astr &sid, TS_CONNECT_INFO *info) {
+bool TsSessionManager::request_session(ex_astr& sid, TS_CONNECT_INFO* info) {
     ExThreadSmartLock locker(m_lock);
 
-    EXLOGD("[core] request session: account: [%s], protocol: [%d], auth-mode: [%d]\n", info->acc_username.c_str(),
-           info->protocol_type, info->auth_type);
+    EXLOGD(
+            "[core] request session: account: [%s], protocol: [%d], auth-mode: [%d]\n",
+            info->acc_username.c_str(),
+            info->protocol_type, info->auth_type
+    );
 
     ex_astr _sid;
     int retried = 0;
@@ -143,7 +148,7 @@ bool TsSessionManager::request_session(ex_astr &sid, TS_CONNECT_INFO *info) {
     return true;
 }
 
-void TsSessionManager::_gen_session_id(ex_astr &sid, const TS_CONNECT_INFO *info, int len) {
+void TsSessionManager::_gen_session_id(ex_astr& sid, const TS_CONNECT_INFO* info, int len) {
     mbedtls_sha1_context sha;
     ex_u8 sha_digist[20] = {0};
 
@@ -152,11 +157,11 @@ void TsSessionManager::_gen_session_id(ex_astr &sid, const TS_CONNECT_INFO *info
 
     mbedtls_sha1_init(&sha);
     mbedtls_sha1_starts(&sha);
-    mbedtls_sha1_update(&sha, (const unsigned char *) &_tick, sizeof(ex_u64));
-    mbedtls_sha1_update(&sha, (const unsigned char *) &_tid, sizeof(ex_u64));
-    mbedtls_sha1_update(&sha, (const unsigned char *) info->conn_ip.c_str(), info->conn_ip.length());
-    mbedtls_sha1_update(&sha, (const unsigned char *) info->client_ip.c_str(), info->client_ip.length());
-    mbedtls_sha1_update(&sha, (const unsigned char *) info->acc_username.c_str(), info->acc_username.length());
+    mbedtls_sha1_update(&sha, (const unsigned char*) &_tick, sizeof(ex_u64));
+    mbedtls_sha1_update(&sha, (const unsigned char*) &_tid, sizeof(ex_u64));
+    mbedtls_sha1_update(&sha, (const unsigned char*) info->conn_ip.c_str(), info->conn_ip.length());
+    mbedtls_sha1_update(&sha, (const unsigned char*) info->client_ip.c_str(), info->client_ip.length());
+    mbedtls_sha1_update(&sha, (const unsigned char*) info->acc_username.c_str(), info->acc_username.length());
     mbedtls_sha1_finish(&sha, sha_digist);
     mbedtls_sha1_free(&sha);
 

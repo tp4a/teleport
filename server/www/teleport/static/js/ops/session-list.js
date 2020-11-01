@@ -324,6 +324,9 @@ $app.on_table_session_render_created = function (render) {
             case TP_SESS_STAT_ERR_UNSUPPORT_PROTOCOL:
                 msg = '协议不支持';
                 break;
+            case TP_SESS_STAT_ERR_CREATE_CHANNEL:
+                msg = '无法创建数据通道';
+                break;
             case TP_SESS_STAT_ERR_BAD_PKG:
             case TP_SESS_STAT_ERR_START_BAD_PKG:
                 msg = '数据格式错误';

@@ -4,78 +4,66 @@
 
 #include <teleport_const.h>
 
-SshChannelPair::SshChannelPair(SshSession *_owner, ssh_channel _rsc_tp2cli, ssh_channel _rsc_tp2srv) :
-    m_owner(_owner),
-    rsc_tp2cli(_rsc_tp2cli),
-    rsc_tp2srv(_rsc_tp2srv)
-{
+SshChannelPair::SshChannelPair(SshSession* _owner, uint32_t dbg_id, ssh_channel _rsc_tp2cli, ssh_channel _rsc_tp2srv) :
+        m_owner(_owner),
+        m_dbg_id(dbg_id),
+        type(TS_SSH_CHANNEL_TYPE_UNKNOWN),
+        win_width(0),
+        rsc_tp2cli(_rsc_tp2cli),
+        rsc_tp2srv(_rsc_tp2srv) {
     last_access_timestamp = (ex_u32) time(nullptr);
+    ex_strformat(m_dbg_name, 128, "%s-%d", m_owner->dbg_name().c_str(), dbg_id);
 
-    state      = TP_SESS_STAT_RUNNING;
-    db_id      = 0;
-    channel_id = 0;
+    state = TP_SESS_STAT_RUNNING;
+    db_id = 0;
 
-    win_width            = 0;
     is_first_server_data = true;
-    need_close           = false;
-
-    m_is_cmd_mode      = false;
-    m_recv_prompt      = false;
-    m_client_last_char = 0;
+    need_close = false;
 
     m_pty_stat = PTY_STAT_NORMAL_WAIT_PROMPT;
 }
 
-SshChannelPair::~SshChannelPair()
-{
-}
+SshChannelPair::~SshChannelPair() = default;
 
-void SshChannelPair::process_pty_data_from_client(const uint8_t *data, uint32_t len)
-{
+void SshChannelPair::process_pty_data_from_client(const uint8_t* data, uint32_t len) {
     if (data == nullptr || len == 0)
         return;
 
-    if (len == 1)
-    {
-        if (data[0] == 0x0d)
-        {
+    if (len == 1) {
+        if (data[0] == 0x0d) {
             // 0x0d 回车键
-            if (!m_cmd.empty())
-                EXLOGD("[%s] CMD=[%s]\n", m_owner->dbg_name().c_str(), m_cmd.str().c_str());
+            if (!m_cmd.empty()) {
+                // EXLOGD("[%s] CMD=[%s]\n", m_owner->dbg_name().c_str(), m_cmd.str().c_str());
+                rec.record_command(0, m_cmd.str());
+            }
             m_cmd.reset();
             m_pty_stat = PTY_STAT_NORMAL_WAIT_PROMPT;
             // EXLOGD("------ turn to PTY_STAT_NORMAL_WAIT_PROMPT, input single RETURN.\n");
             return;
         }
-        else if (data[0] == 0x03)
-        {
+        else if (data[0] == 0x03) {
             // 0x03 Ctrl-C
             m_pty_stat = PTY_STAT_NORMAL_WAIT_PROMPT;
             // EXLOGD("------ turn to PTY_STAT_NORMAL_WAIT_PROMPT, input Ctrl-C.\n");
             return;
         }
-        else if (data[0] == 0x09)
-        {
+        else if (data[0] == 0x09) {
             // 0x09 TAB键
-            if (m_pty_stat == PTY_STAT_WAIT_CLIENT_INPUT || m_pty_stat == PTY_STAT_TAB_WAIT_PROMPT || m_pty_stat == PTY_STAT_TAB_PRESSED)
-            {
+            if (m_pty_stat == PTY_STAT_WAIT_CLIENT_INPUT || m_pty_stat == PTY_STAT_TAB_WAIT_PROMPT || m_pty_stat == PTY_STAT_TAB_PRESSED) {
                 m_pty_stat = PTY_STAT_TAB_PRESSED;
                 // EXLOGD("------ turn to PTY_STAT_TAB_PRESSED, input TAB.\n");
                 return;
             }
         }
-        else if (data[0] == 0x7f)
-        {
+        else if (data[0] == 0x7f) {
             // 7f backspace 回删键
             m_pty_stat = PTY_STAT_WAIT_SERVER_ECHO;
             // EXLOGD("------ turn to PTY_STAT_WAIT_SERVER_ECHO, input BACKSPACE.\n");
             return;
         }
     }
-    else if (len == 3)
-    {
-        if (data[0] == 0x1b && data[1] == 0x5b && (data[2] == 0x41 || data[2] == 0x42 || data[2] == 0x43 || data[2] == 0x44))
-        {
+    else if (len == 3) {
+        if (data[0] == 0x1b && data[1] == 0x5b && (data[2] == 0x41 || data[2] == 0x42 || data[2] == 0x43 || data[2] == 0x44)) {
             // 1b 5b 41 (上箭头)
             // 1b 5b 42 (下箭头)
             // 1b 5b 43 (右箭头)
@@ -85,10 +73,8 @@ void SshChannelPair::process_pty_data_from_client(const uint8_t *data, uint32_t 
             return;
         }
     }
-    else if (len == 4)
-    {
-        if (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x33 && data[3] == 0x7e)
-        {
+    else if (len == 4) {
+        if (data[0] == 0x1b && data[1] == 0x5b && data[2] == 0x33 && data[3] == 0x7e) {
             // 1b 5b 33 7e (删除一个字符)
             m_pty_stat = PTY_STAT_WAIT_SERVER_ECHO;
             // EXLOGD("------ turn to PTY_STAT_WAIT_SERVER_ECHO, input DEL.\n");
@@ -96,44 +82,36 @@ void SshChannelPair::process_pty_data_from_client(const uint8_t *data, uint32_t 
         }
     }
 
-    if (len >= 512)
-    {
-        if (m_pty_stat != PTY_STAT_EXEC_MULTI_LINE_CMD)
-        {
+    if (len >= 512) {
+        if (m_pty_stat != PTY_STAT_EXEC_MULTI_LINE_CMD) {
             m_pty_stat = PTY_STAT_NORMAL_WAIT_PROMPT;
             // EXLOGD("------ turn to PTY_STAT_NORMAL_WAIT_PROMPT, input too large.\n");
         }
         return;
     }
 
-    int  return_count = 0;
-    bool valid_input  = true;
+    int return_count = 0;
+    bool valid_input = true;
 
-    int offset          = 0;
+    int offset = 0;
     int last_return_pos = 0;
-    for (; offset < len;)
-    {
+    for (; offset < len;) {
         uint8_t ch = data[offset];
 
-        switch (ch)
-        {
+        switch (ch) {
         case 0x1b:
-            if (offset + 1 < len)
-            {
-                if (data[offset + 1] == 0x5b)
-                {
+            if (offset + 1 < len) {
+                if (data[offset + 1] == 0x5b) {
                     valid_input = false;
                     break;
                 }
             }
 
             break;
-        case 0x0d:
-            return_count++;
+        case 0x0d:return_count++;
             last_return_pos = offset;
             break;
-        default:
-            break;
+        default:break;
         }
 
         if (!valid_input)
@@ -142,33 +120,29 @@ void SshChannelPair::process_pty_data_from_client(const uint8_t *data, uint32_t 
         offset++;
     }
 
-    if (!valid_input)
-    {
-        if (m_pty_stat != PTY_STAT_EXEC_MULTI_LINE_CMD)
-        {
+    if (!valid_input) {
+        if (m_pty_stat != PTY_STAT_EXEC_MULTI_LINE_CMD) {
             m_pty_stat = PTY_STAT_NORMAL_WAIT_PROMPT;
             // EXLOGD("------ turn to PTY_STAT_NORMAL_WAIT_PROMPT, input invalid.\n");
         }
         return;
     }
 
-    if (return_count > 0)
-    {
-        std::string tmp_cmd((const char *) data, last_return_pos + 1);
+    if (return_count > 0) {
+        std::string tmp_cmd((const char*) data, last_return_pos + 1);
         EXLOGD("[%s] Paste CMD=[%s]\n", m_owner->dbg_name().c_str(), tmp_cmd.c_str());
+        rec.record_command(1, tmp_cmd);
 
         m_pty_stat = PTY_STAT_EXEC_MULTI_LINE_CMD;
         // EXLOGD("------ turn to PTY_STAT_EXEC_MULTI_LINE_CMD, maybe paste.\n");
     }
-    else
-    {
+    else {
         m_pty_stat = PTY_STAT_WAIT_SERVER_ECHO;
         // EXLOGD("------ turn to PTY_STAT_WAIT_SERVER_ECHO, input something.\n");
     }
 }
 
-void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t len)
-{
+void SshChannelPair::process_pty_data_from_server(const uint8_t* data, uint32_t len) {
     if (data == nullptr || len == 0)
         return;
 
@@ -176,32 +150,26 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
     if (m_pty_stat == PTY_STAT_NORMAL_WAIT_PROMPT
         || m_pty_stat == PTY_STAT_TAB_WAIT_PROMPT
         || m_pty_stat == PTY_STAT_MULTI_CMD_WAIT_PROMPT
-        || m_pty_stat == PTY_STAT_WAIT_SERVER_ECHO)
-    {
-        if (_contains_cmd_prompt(data, len))
-        {
+        || m_pty_stat == PTY_STAT_WAIT_SERVER_ECHO) {
+        if (_contains_cmd_prompt(data, len)) {
             contains_prompt = true;
 
-            if (m_pty_stat == PTY_STAT_NORMAL_WAIT_PROMPT)
-            {
+            if (m_pty_stat == PTY_STAT_NORMAL_WAIT_PROMPT) {
                 // EXLOGD("------ turn to PTY_STAT_WAIT_CLIENT_INPUT, recv prompt after exec.\n");
                 m_pty_stat = PTY_STAT_WAIT_CLIENT_INPUT;
                 return;
             }
-            else if (m_pty_stat == PTY_STAT_TAB_WAIT_PROMPT)
-            {
+            else if (m_pty_stat == PTY_STAT_TAB_WAIT_PROMPT) {
                 // EXLOGD("------ turn to PTY_STAT_WAIT_CLIENT_INPUT, recv prompt after TAB.\n");
                 m_pty_stat = PTY_STAT_WAIT_CLIENT_INPUT;
                 return;
             }
-            else if (m_pty_stat == PTY_STAT_MULTI_CMD_WAIT_PROMPT)
-            {
+            else if (m_pty_stat == PTY_STAT_MULTI_CMD_WAIT_PROMPT) {
                 // EXLOGD("------ turn to PTY_STAT_MULTI_CMD_WAIT_PROMPT, recv prompt while multi-exec.\n");
                 m_pty_stat = PTY_STAT_EXEC_MULTI_LINE_CMD;
                 return;
             }
-            else if (m_pty_stat == PTY_STAT_WAIT_SERVER_ECHO)
-            {
+            else if (m_pty_stat == PTY_STAT_WAIT_SERVER_ECHO) {
                 // EXLOGD("------ turn to PTY_STAT_WAIT_CLIENT_INPUT, recv prompt while wait echo.\n");
                 m_pty_stat = PTY_STAT_WAIT_CLIENT_INPUT;
                 m_cmd.reset();
@@ -210,46 +178,39 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
         }
     }
 
-    if (!contains_prompt)
-    {
+    if (!contains_prompt) {
         if (m_pty_stat == PTY_STAT_NORMAL_WAIT_PROMPT
             || m_pty_stat == PTY_STAT_TAB_WAIT_PROMPT
-            || m_pty_stat == PTY_STAT_MULTI_CMD_WAIT_PROMPT)
-        {
+            || m_pty_stat == PTY_STAT_MULTI_CMD_WAIT_PROMPT) {
             return;
         }
     }
 
     if (!(
-        m_pty_stat == PTY_STAT_WAIT_SERVER_ECHO
-        || m_pty_stat == PTY_STAT_EXEC_MULTI_LINE_CMD
-        || m_pty_stat == PTY_STAT_MULTI_CMD_WAIT_PROMPT
-        || m_pty_stat == PTY_STAT_TAB_WAIT_PROMPT
-        || m_pty_stat == PTY_STAT_TAB_PRESSED
-    ))
-    {
+            m_pty_stat == PTY_STAT_WAIT_SERVER_ECHO
+            || m_pty_stat == PTY_STAT_EXEC_MULTI_LINE_CMD
+            || m_pty_stat == PTY_STAT_MULTI_CMD_WAIT_PROMPT
+            || m_pty_stat == PTY_STAT_TAB_WAIT_PROMPT
+            || m_pty_stat == PTY_STAT_TAB_PRESSED
+    )) {
         // EXLOGD("------ keep PTY_STAT, recv but not in ECHO or multi-cmd mode.\n");
         return;
     }
 
-    if (len > 512)
-    {
+    if (len > 512) {
         // EXLOGD("------ keep PTY_STAT, recv too large.\n");
         return;
     }
 
     // 处理输入回显，合成最终的命令行字符串
-    int  offset   = 0;
+    int offset = 0;
     bool esc_mode = false;
-    int  esc_arg  = 0;
-    for (; offset < len;)
-    {
+    int esc_arg = 0;
+    for (; offset < len;) {
         uint8_t ch = data[offset];
 
-        if (esc_mode)
-        {
-            switch (ch)
-            {
+        if (esc_mode) {
+            switch (ch) {
             case '0':
             case '1':
             case '2':
@@ -259,30 +220,24 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
             case '6':
             case '7':
             case '8':
-            case '9':
-                esc_arg = esc_arg * 10 + (ch - '0');
+            case '9':esc_arg = esc_arg * 10 + (ch - '0');
                 break;
 
             case 0x3f:
             case ';':
-            case '>':
-                m_cmd.reset();
+            case '>':m_cmd.reset();
                 return;
 
-            case 0x4b:
-            {    // 'K'
-                if (0 == esc_arg)
-                {
+            case 0x4b: {    // 'K'
+                if (0 == esc_arg) {
                     // 删除光标到行尾的字符串
                     m_cmd.erase_to_end();
                 }
-                else if (1 == esc_arg)
-                {
+                else if (1 == esc_arg) {
                     // 删除从开始到光标处的字符串
                     m_cmd.erase_to_begin();
                 }
-                else if (2 == esc_arg)
-                {
+                else if (2 == esc_arg) {
                     // 删除整行
                     m_cmd.reset();
                 }
@@ -290,8 +245,7 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
                 esc_mode = false;
                 break;
             }
-            case 0x43:
-            {// ^[C
+            case 0x43: {// ^[C
                 // 光标右移
                 if (esc_arg == 0)
                     esc_arg = 1;
@@ -299,8 +253,7 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
                 esc_mode = false;
                 break;
             }
-            case 0x44:
-            { // ^[D
+            case 0x44: { // ^[D
                 // 光标左移
                 if (esc_arg == 0)
                     esc_arg = 1;
@@ -309,8 +262,7 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
                 break;
             }
 
-            case 0x50:
-            {
+            case 0x50: {
                 // 'P' 删除指定数量的字符
                 if (esc_arg == 0)
                     esc_arg = 1;
@@ -319,8 +271,7 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
                 break;
             }
 
-            case 0x40:
-            {    // '@' 插入指定数量的空白字符
+            case 0x40: {    // '@' 插入指定数量的空白字符
                 if (esc_arg == 0)
                     esc_arg = 1;
                 m_cmd.insert_white_space(esc_arg);
@@ -328,8 +279,7 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
                 break;
             }
 
-            default:
-                esc_mode = false;
+            default:esc_mode = false;
                 break;
             }
 
@@ -337,25 +287,20 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
             continue;
         }
 
-        switch (ch)
-        {
+        switch (ch) {
         case 0x07:
             // 响铃
             break;
-        case 0x08:
-        {
+        case 0x08: {
             // 光标左移
             m_cmd.cursor_move_left(1);
             break;
         }
-        case 0x1b:
-        {
-            if (offset + 1 < len)
-            {
-                if (data[offset + 1] == 0x5b)
-                {
+        case 0x1b: {
+            if (offset + 1 < len) {
+                if (data[offset + 1] == 0x5b) {
                     esc_mode = true;
-                    esc_arg  = 0;
+                    esc_arg = 0;
 
                     offset += 1;
                 }
@@ -363,12 +308,9 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
 
             break;
         }
-        case 0x0d:
-        {
-            if (offset + 1 < len && data[offset + 1] == 0x0a)
-            {
-                if (m_pty_stat == PTY_STAT_EXEC_MULTI_LINE_CMD)
-                {
+        case 0x0d: {
+            if (offset + 1 < len && data[offset + 1] == 0x0a) {
+                if (m_pty_stat == PTY_STAT_EXEC_MULTI_LINE_CMD) {
                     if (!m_cmd.empty())
                         EXLOGD("[%s] one of multi-cmd, CMD=[%s]\n", m_owner->dbg_name().c_str(), m_cmd.str().c_str());
                     m_cmd.reset();
@@ -376,14 +318,12 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
                     m_pty_stat = PTY_STAT_MULTI_CMD_WAIT_PROMPT;
                     // EXLOGD("------ turn to PTY_STAT_MULTI_CMD_WAIT_PROMPT, recv 0x0d0a after multi-exec.\n");
 
-                    if (_contains_cmd_prompt(data, len))
-                    {
+                    if (_contains_cmd_prompt(data, len)) {
                         m_pty_stat = PTY_STAT_EXEC_MULTI_LINE_CMD;
                         // EXLOGD("------ turn to PTY_STAT_EXEC_MULTI_LINE_CMD, recv prompt after multi-exec.\n");
                     }
                 }
-                else if (m_pty_stat == PTY_STAT_TAB_PRESSED)
-                {
+                else if (m_pty_stat == PTY_STAT_TAB_PRESSED) {
                     m_pty_stat = PTY_STAT_TAB_WAIT_PROMPT;
                     // EXLOGD("------ turn to PTY_STAT_TAB_WAIT_PROMPT, recv 0d0a after TAB pressed.\n");
                 }
@@ -392,10 +332,8 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
 
             break;
         }
-        default:
-            m_cmd.replace(ch);
-            if (m_pty_stat == PTY_STAT_WAIT_SERVER_ECHO)
-            {
+        default:m_cmd.replace(ch);
+            if (m_pty_stat == PTY_STAT_WAIT_SERVER_ECHO) {
                 m_pty_stat = PTY_STAT_WAIT_CLIENT_INPUT;
                 // EXLOGD("------ turn to PTY_STAT_WAIT_CLIENT_INPUT, recv something.\n");
             }
@@ -405,15 +343,13 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t *data, uint32_t 
         offset++;
     }
 
-    if (m_pty_stat == PTY_STAT_MULTI_CMD_WAIT_PROMPT && contains_prompt)
-    {
+    if (m_pty_stat == PTY_STAT_MULTI_CMD_WAIT_PROMPT && contains_prompt) {
         m_pty_stat = PTY_STAT_EXEC_MULTI_LINE_CMD;
         // EXLOGD("------ turn to PTY_STAT_EXEC_MULTI_LINE_CMD, recv prompt.\n");
     }
 }
 
-bool SshChannelPair::_contains_cmd_prompt(const uint8_t *data, uint32_t len)
-{
+bool SshChannelPair::_contains_cmd_prompt(const uint8_t* data, uint32_t len) {
     // 正常情况下，收到的服务端数据（一包数据不会太大，可以考虑限定在512字节范围内），从后向前查找 0x07，它的位置
     // 应该位于倒数256字节范围内（这之后的数据可能是命令行提示符的内容了，不会太长的）。继续向前找，应该能够找到正
     // 序为 1b 5d 30/31/32/33 3b ... 直到刚才的 07。满足这样格式的，99%可能处于命令行模式了，还有1%可能是Mac
@@ -434,21 +370,19 @@ bool SshChannelPair::_contains_cmd_prompt(const uint8_t *data, uint32_t len)
 
     bool found_0x07 = false;
     bool found_0x3b = false;
-    bool found_Ps   = false;
+    bool found_Ps = false;
     bool found_0x5d = false;
 
     int offset = static_cast<int>(len) - 1;
 
-    for (int i = 0; offset >= 0; i++)
-    {
+    for (int i = 0; offset >= 0; i++) {
         if (i > 256)
             return false;
 
         if (found_0x5d)
             return (data[offset] == 0x1b);
 
-        if (found_Ps)
-        {
+        if (found_Ps) {
             found_0x5d = (data[offset] == 0x5d);
             if (!found_0x5d)
                 return false;
@@ -456,8 +390,7 @@ bool SshChannelPair::_contains_cmd_prompt(const uint8_t *data, uint32_t len)
             continue;
         }
 
-        if (found_0x3b)
-        {
+        if (found_0x3b) {
             found_Ps = (data[offset] == 0x30 || data[offset] == 0x31 || data[offset] == 0x32);
             if (!found_Ps)
                 return false;
@@ -465,8 +398,7 @@ bool SshChannelPair::_contains_cmd_prompt(const uint8_t *data, uint32_t len)
             continue;
         }
 
-        if (!found_0x07)
-        {
+        if (!found_0x07) {
             found_0x07 = (data[offset] == 0x07);
             offset--;
             continue;
@@ -479,8 +411,7 @@ bool SshChannelPair::_contains_cmd_prompt(const uint8_t *data, uint32_t len)
     return false;
 }
 
-void SshChannelPair::process_sftp_command(ssh_channel ch, const uint8_t *data, uint32_t len)
-{
+void SshChannelPair::process_sftp_command(ssh_channel ch, const uint8_t* data, uint32_t len) {
     // SFTP protocol: https://tools.ietf.org/html/draft-ietf-secsh-filexfer-13
     // EXLOG_BIN(data, len, "[sftp] client channel data");
 
@@ -502,8 +433,7 @@ void SshChannelPair::process_sftp_command(ssh_channel ch, const uint8_t *data, u
 
     ex_u8 sftp_cmd = data[4];
 
-    if (sftp_cmd == 0x01)
-    {
+    if (sftp_cmd == 0x01) {
         // 0x01 = 1 = SSH_FXP_INIT
         rec.record_command(0, "SFTP INITIALIZE\r\n");
         EXLOGD("[sftp-%s] SFTP INITIALIZE\n", m_owner->dbg_name().c_str());
@@ -516,16 +446,15 @@ void SshChannelPair::process_sftp_command(ssh_channel ch, const uint8_t *data, u
     if (len < 14)
         return;
 
-    ex_u8 *str1_ptr = (ex_u8 *) data + 9;
-    int   str1_len  = (int) ((str1_ptr[0] << 24) | (str1_ptr[1] << 16) | (str1_ptr[2] << 8) | str1_ptr[3]);
+    ex_u8* str1_ptr = (ex_u8*) data + 9;
+    int str1_len = (int) ((str1_ptr[0] << 24) | (str1_ptr[1] << 16) | (str1_ptr[2] << 8) | str1_ptr[3]);
     // 	if (str1_len + 9 != pkg_len)
     // 		return;
-    ex_u8 *str2_ptr = nullptr;// (ex_u8*)data + 13;
-    int   str2_len  = 0;// (int)((data[9] << 24) | (data[10] << 16) | (data[11] << 8) | data[12]);
+    ex_u8* str2_ptr = nullptr;// (ex_u8*)data + 13;
+    int str2_len = 0;// (int)((data[9] << 24) | (data[10] << 16) | (data[11] << 8) | data[12]);
 
 
-    switch (sftp_cmd)
-    {
+    switch (sftp_cmd) {
     case 0x03:
         // 0x03 = 3 = SSH_FXP_OPEN
         EXLOGD("[sftp-%s] SSH_FXP_OPEN\n", m_owner->dbg_name().c_str());
@@ -560,8 +489,7 @@ void SshChannelPair::process_sftp_command(ssh_channel ch, const uint8_t *data, u
         str2_len = (int) ((str2_ptr[0] << 24) | (str2_ptr[1] << 16) | (str2_ptr[2] << 8) | str2_ptr[3]);
         EXLOGD("[sftp-%s] SSH_FXP_LINK\n", m_owner->dbg_name().c_str());
         break;
-    default:
-        return;
+    default:return;
     }
 
     int total_len = 5 + str1_len + 4;
@@ -570,16 +498,14 @@ void SshChannelPair::process_sftp_command(ssh_channel ch, const uint8_t *data, u
     if (total_len > pkg_len)
         return;
 
-    char msg[2048] = { 0 };
-    if (str2_len == 0)
-    {
-        ex_astr str1((char *) ((ex_u8 *) data + 13), str1_len);
+    char msg[2048] = {0};
+    if (str2_len == 0) {
+        ex_astr str1((char*) ((ex_u8*) data + 13), str1_len);
         ex_strformat(msg, 2048, "%d,%d,%s", sftp_cmd, 0, str1.c_str());
     }
-    else
-    {
-        ex_astr str1((char *) (str1_ptr + 4), str1_len);
-        ex_astr str2((char *) (str2_ptr + 4), str2_len);
+    else {
+        ex_astr str1((char*) (str1_ptr + 4), str1_len);
+        ex_astr str2((char*) (str2_ptr + 4), str2_len);
         ex_strformat(msg, 2048, "%d,%d,%s:%s", sftp_cmd, 0, str1.c_str(), str2.c_str());
     }
 
@@ -587,21 +513,20 @@ void SshChannelPair::process_sftp_command(ssh_channel ch, const uint8_t *data, u
     rec.record_command(0, msg);
 }
 
-bool SshChannelPair::record_begin(const TPP_CONNECT_INFO *conn_info)
-{
+bool SshChannelPair::record_begin(const TPP_CONNECT_INFO* conn_info) {
 #ifndef TEST_SSH_SESSION_000000
     if (!g_ssh_env.session_begin(conn_info, &db_id)) {
-        EXLOGE("[ssh] can not save to database, channel begin failed.\n");
+        EXLOGE("[%s] can not save to database, channel begin failed.\n", m_dbg_name.c_str());
         return false;
     }
-    else {
-        channel_id = db_id;
-        // EXLOGD("[ssh] [channel:%d] channel begin\n", cp->channel_id);
-    }
+    // else {
+    //     channel_id = db_id;
+    //     // EXLOGD("[ssh] [channel:%d] channel begin\n", cp->channel_id);
+    // }
 
 
     if (!g_ssh_env.session_update(db_id, conn_info->protocol_sub_type, TP_SESS_STAT_STARTED)) {
-        EXLOGE("[ssh] [channel:%d] can not update state, cannel begin failed.\n", channel_id);
+        EXLOGE("[%s] can not update state, cannel begin failed.\n", m_dbg_name.c_str());
         return false;
     }
 
@@ -611,11 +536,10 @@ bool SshChannelPair::record_begin(const TPP_CONNECT_INFO *conn_info)
     return true;
 }
 
-void SshChannelPair::record_end()
-{
+void SshChannelPair::record_end() {
 #ifndef TEST_SSH_SESSION_000000
     if (db_id > 0) {
-        // EXLOGD("[ssh] [channel:%d] channel end with code: %d\n", cp->channel_id, cp->state);
+        EXLOGD("[%s] channel end with code: %d\n", m_dbg_name.c_str(), state);
 
         // 如果会话过程中没有发生错误，则将其状态改为结束，否则记录下错误值
         if (state == TP_SESS_STAT_RUNNING || state == TP_SESS_STAT_STARTED)
@@ -626,7 +550,7 @@ void SshChannelPair::record_end()
         db_id = 0;
     }
     else {
-        // EXLOGD("[ssh] [channel:%d] when channel end, no db-id.\n", cp->channel_id);
+        EXLOGD("[%s] when channel end, no db-id.\n", m_dbg_name.c_str());
     }
 #endif
 }
@@ -636,17 +560,13 @@ void SshChannelPair::record_end()
 // SshCommand
 // ==================================================
 
-SshCommand::SshCommand()
-{
+SshCommand::SshCommand() {
     m_cmd.clear();
     m_pos = m_cmd.begin();
 }
 
-SshCommand::~SshCommand()
-{
-}
+SshCommand::~SshCommand() = default;
 
-void SshCommand::_dump(const char *msg)
-{
+void SshCommand::_dump(const char* msg) {
     // EXLOGD("CMD-BUFFER: %s [%s]\n", msg, str().c_str());
 }

@@ -2,11 +2,11 @@
 
 from enum import IntEnum, unique
 
-TP_LOGIN_AUTH_SYS_DEFAULT = 0    # 系统默认（根据系统配置进行）
-TP_LOGIN_AUTH_USERNAME_PASSWORD = 0x0001    # 用户名+密码
-TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA = 0x0002    # 用户名+密码+验证码
-TP_LOGIN_AUTH_USERNAME_OATH = 0x0004    # 用户名+OATH
-TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH = 0x0008    # 用户名+密码+OATH
+TP_LOGIN_AUTH_SYS_DEFAULT = 0  # 系统默认（根据系统配置进行）
+TP_LOGIN_AUTH_USERNAME_PASSWORD = 0x0001  # 用户名+密码
+TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA = 0x0002  # 用户名+密码+验证码
+TP_LOGIN_AUTH_USERNAME_OATH = 0x0004  # 用户名+OATH
+TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH = 0x0008  # 用户名+密码+OATH
 
 APP_MODE_NORMAL = 1
 APP_MODE_MAINTENANCE = 2
@@ -67,7 +67,7 @@ TP_OS_TYPE_LINUX = 2
 # 远程连接会话状态
 # =======================================================
 TP_SESS_STAT_RUNNING = 0  # 会话开始了，尚未结束
-TP_SESS_STAT_END = 9999  # 会话成功结束
+
 TP_SESS_STAT_ERR_AUTH_DENIED = 1  # 会话结束，因为认证失败
 TP_SESS_STAT_ERR_CONNECT = 2  # 会话结束，因为无法连接到远程主机
 TP_SESS_STAT_ERR_BAD_SSH_KEY = 3  # 会话结束，因为无法识别SSH私钥
@@ -77,11 +77,17 @@ TP_SESS_STAT_ERR_BAD_PKG = 6  # 会话结束，因为收到错误的报文
 TP_SESS_STAT_ERR_RESET = 7  # 会话结束，因为teleport核心服务重置了
 TP_SESS_STAT_ERR_IO = 8  # 会话结束，因为网络中断
 TP_SESS_STAT_ERR_SESSION = 9  # 会话结束，因为无效的会话ID
+TP_SESS_STAT_ERR_AUTH_TYPE = 10  # 会话结束，因为服务端不支持此认证方式
+TP_SESS_STAT_ERR_CREATE_CHANNEL = 11  # 会话结束，因为创建通道失败
+
 TP_SESS_STAT_STARTED = 100  # 已经连接成功了，开始记录录像了
+
 TP_SESS_STAT_ERR_START_INTERNAL = 104  # 会话结束，因为内部错误
 TP_SESS_STAT_ERR_START_BAD_PKG = 106  # 会话结束，因为收到错误的报文
 TP_SESS_STAT_ERR_START_RESET = 107  # 会话结束，因为teleport核心服务重置了
 TP_SESS_STAT_ERR_START_IO = 108  # 会话结束，因为网络中断
+
+TP_SESS_STAT_END = 9999  # 会话成功结束
 
 # ==========================================================================
 # 分组类型
@@ -228,7 +234,7 @@ TPE_CAPTCHA_EXPIRED = 10000
 TPE_CAPTCHA_MISMATCH = 10001
 TPE_OATH_MISMATCH = 10002
 TPE_SYS_MAINTENANCE = 10003
-TPE_OATH_ALREADY_BIND = 10004 
+TPE_OATH_ALREADY_BIND = 10004
 
 TPE_USER_LOCKED = 10100
 TPE_USER_DISABLED = 10101
