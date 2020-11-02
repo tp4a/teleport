@@ -5,10 +5,9 @@
 
 #include <ex.h>
 
-typedef std::map<SshSession *, unsigned char> ts_ssh_sessions;
+typedef std::map<SshSession*, unsigned char> ts_ssh_sessions;
 
-class SshProxy : public ExThreadBase
-{
+class SshProxy : public ExThreadBase {
 public:
     SshProxy() noexcept;
 
@@ -20,7 +19,7 @@ public:
 
     void set_cfg(ex_u32 noop_timeout);
 
-    void kill_sessions(const ex_astrs &sessions);
+    void kill_sessions(const ex_astrs& sessions);
 
 protected:
     void _thread_loop() override;
@@ -29,14 +28,14 @@ protected:
 
 private:
     ssh_bind m_bind;
-    int      m_timer_counter_check_noop;
-    int      m_timer_counter_keep_alive;
+    int m_timer_counter_check_noop;
+    int m_timer_counter_keep_alive;
 
     ExThreadLock m_lock;
-    bool         m_listener_running;
+    bool m_listener_running;
 
     ex_astr m_host_ip;
-    int     m_host_port;
+    int m_host_port;
 
     ts_ssh_sessions m_sessions;
 

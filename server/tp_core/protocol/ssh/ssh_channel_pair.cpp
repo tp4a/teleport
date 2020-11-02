@@ -108,10 +108,12 @@ void SshChannelPair::process_pty_data_from_client(const uint8_t* data, uint32_t 
             }
 
             break;
-        case 0x0d:return_count++;
+        case 0x0d:
+            return_count++;
             last_return_pos = offset;
             break;
-        default:break;
+        default:
+            break;
         }
 
         if (!valid_input)
@@ -220,12 +222,14 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t* data, uint32_t 
             case '6':
             case '7':
             case '8':
-            case '9':esc_arg = esc_arg * 10 + (ch - '0');
+            case '9':
+                esc_arg = esc_arg * 10 + (ch - '0');
                 break;
 
             case 0x3f:
             case ';':
-            case '>':m_cmd.reset();
+            case '>':
+                m_cmd.reset();
                 return;
 
             case 0x4b: {    // 'K'
@@ -279,7 +283,8 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t* data, uint32_t 
                 break;
             }
 
-            default:esc_mode = false;
+            default:
+                esc_mode = false;
                 break;
             }
 
@@ -332,7 +337,8 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t* data, uint32_t 
 
             break;
         }
-        default:m_cmd.replace(ch);
+        default:
+            m_cmd.replace(ch);
             if (m_pty_stat == PTY_STAT_WAIT_SERVER_ECHO) {
                 m_pty_stat = PTY_STAT_WAIT_CLIENT_INPUT;
                 // EXLOGD("------ turn to PTY_STAT_WAIT_CLIENT_INPUT, recv something.\n");
@@ -489,7 +495,8 @@ void SshChannelPair::process_sftp_command(ssh_channel ch, const uint8_t* data, u
         str2_len = (int) ((str2_ptr[0] << 24) | (str2_ptr[1] << 16) | (str2_ptr[2] << 8) | str2_ptr[3]);
         EXLOGD("[sftp-%s] SSH_FXP_LINK\n", m_owner->dbg_name().c_str());
         break;
-    default:return;
+    default:
+        return;
     }
 
     int total_len = 5 + str1_len + 4;

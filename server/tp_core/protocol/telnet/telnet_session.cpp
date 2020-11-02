@@ -3,25 +3,25 @@
 #include "tpp_env.h"
 #include <teleport_const.h>
 
-#define TELNET_IAC        0xFF
-#define TELNET_DONT        0xFE
-#define TELNET_DO        0xFD
-#define TELNET_WONT        0xFC
-#define TELNET_WILL        0xFB
-#define TELNET_SB        0xFA
-#define TELNET_SE        0xF0
+#define TELNET_IAC          0xFF
+#define TELNET_DONT         0xFE
+#define TELNET_DO           0xFD
+#define TELNET_WONT         0xFC
+#define TELNET_WILL         0xFB
+#define TELNET_SB           0xFA
+#define TELNET_SE           0xF0
 
 
-TelnetSession::TelnetSession(TelnetProxy *proxy) :
+TelnetSession::TelnetSession(TelnetProxy* proxy) :
         m_proxy(proxy),
-        m_conn_info(NULL) {
+        m_conn_info(nullptr) {
     m_state = TP_SESS_STAT_RUNNING;
     m_startup_win_size_recorded = false;
     m_db_id = 0;
     m_is_relay = false;
     m_is_closed = false;
     m_first_client_pkg = true;
-    m_last_access_timestamp = (ex_u32) time(NULL);
+    m_last_access_timestamp = (ex_u32) time(nullptr);
 
     m_win_width = 0;
     m_win_height = 0;
@@ -43,7 +43,7 @@ TelnetSession::~TelnetSession() {
     delete m_conn_client;
     delete m_conn_server;
 
-    if (NULL != m_conn_info) {
+    if (nullptr != m_conn_info) {
         g_telnet_env.free_connect_info(m_conn_info);
     }
 
@@ -102,7 +102,7 @@ bool TelnetSession::_on_session_end() {
     return true;
 }
 
-uv_loop_t *TelnetSession::get_loop(void) {
+uv_loop_t* TelnetSession::get_loop() {
     return m_proxy->get_loop();
 }
 
@@ -110,47 +110,47 @@ void TelnetSession::close(int err_code) {
     _do_close(err_code);
 }
 
-void TelnetSession::do_next(TelnetConn *conn, sess_state status) {
+void TelnetSession::do_next(TelnetConn* conn, sess_state status) {
     if (m_status < s_close)
         m_status = status;
 
     do_next(conn);
 }
 
-void TelnetSession::do_next(TelnetConn *conn) {
+void TelnetSession::do_next(TelnetConn* conn) {
     sess_state new_status;
     ASSERT(m_status != s_dead);
 
     switch (m_status) {
-        case s_noop:
-            return;
+    case s_noop:
+        return;
 
-        case s_client_connect:
-            new_status = _do_client_connect(conn);
-            break;
+    case s_client_connect:
+        new_status = _do_client_connect(conn);
+        break;
 
-        case s_negotiation_with_client:
-            new_status = _do_negotiation_with_client(conn);
-            break;
-        case s_server_connected:
-            new_status = _do_server_connected();
-            break;
-        case s_relay:
-            new_status = _do_relay(conn);
-            break;
+    case s_negotiation_with_client:
+        new_status = _do_negotiation_with_client(conn);
+        break;
+    case s_server_connected:
+        new_status = _do_server_connected();
+        break;
+    case s_relay:
+        new_status = _do_relay(conn);
+        break;
 
-        case s_close:
-            new_status = _do_close(m_state);
-            break;
-        case s_closing:
-            new_status = _do_check_closing();
-            break;
-        case s_all_conn_closed:
-            new_status = s_dead;
-            break;
-        default:
-            //UNREACHABLE();
-            return;
+    case s_close:
+        new_status = _do_close(m_state);
+        break;
+    case s_closing:
+        new_status = _do_check_closing();
+        break;
+    case s_all_conn_closed:
+        new_status = s_dead;
+        break;
+    default:
+        //UNREACHABLE();
+        return;
     }
 
     m_status = new_status;
@@ -179,14 +179,16 @@ sess_state TelnetSession::_do_close(int state) {
             m_state = TP_SESS_STAT_ERR_INTERNAL;
         else
             m_state = state;
-    } else {
+    }
+    else {
         if (!m_is_relay)
             _session_error(state);
         m_state = state;
     }
     EXLOGV("[telnet] close session.\n");
-    EXLOGD("[telnet]   _do_close(), conn_client::state=%d, conn_server:state=%d\n", m_conn_client->state(),
-           m_conn_server->state());
+    EXLOGD(
+            "[telnet]   _do_close(), conn_client::state=%d, conn_server:state=%d\n", m_conn_client->state(),
+            m_conn_server->state());
 
     m_conn_client->close();
     m_conn_server->close();
@@ -202,21 +204,22 @@ sess_state TelnetSession::_do_check_closing() {
 }
 
 void TelnetSession::on_conn_close() {
-    EXLOGD("[telnet]   on_conn_close(), conn_client::state=%d, conn_server:state=%d\n", m_conn_client->state(),
-           m_conn_server->state());
+    EXLOGD(
+            "[telnet]   on_conn_close(), conn_client::state=%d, conn_server:state=%d\n", m_conn_client->state(),
+            m_conn_server->state());
     if (m_conn_client->state() == TELNET_CONN_STATE_FREE && m_conn_server->state() == TELNET_CONN_STATE_FREE) {
         m_status = s_all_conn_closed;
         do_next(m_conn_client);
     }
 }
 
-sess_state TelnetSession::_do_client_connect(TelnetConn *conn) {
+sess_state TelnetSession::_do_client_connect(TelnetConn* conn) {
     // putty会率先发第一个包，SecureCRT会通过脚本发第一个包
     return _do_negotiation_with_client(conn);
 }
 
-sess_state TelnetSession::_do_negotiation_with_client(TelnetConn *conn) {
-    if (NULL == conn)
+sess_state TelnetSession::_do_negotiation_with_client(TelnetConn* conn) {
+    if (nullptr == conn)
         return s_negotiation_with_client;
 
     if (0 == conn->data().size())
@@ -225,7 +228,7 @@ sess_state TelnetSession::_do_negotiation_with_client(TelnetConn *conn) {
     if (m_first_client_pkg) {
         m_first_client_pkg = false;
 
-        MemBuffer &mbuf = conn->data();
+        MemBuffer& mbuf = conn->data();
 
         if (mbuf.size() > 14 && 0 == memcmp(mbuf.data(), "session:", 8)) {
             m_is_putty_mode = false;
@@ -238,11 +241,12 @@ sess_state TelnetSession::_do_negotiation_with_client(TelnetConn *conn) {
                     break;
             }
 
-            mbuf.append((ex_u8 *) "\x00", 1);
-            m_sid = (char *) mbuf.data();
+            mbuf.append((ex_u8*) "\x00", 1);
+            m_sid = (char*) mbuf.data();
 
             return _do_connect_server();
-        } else {
+        }
+        else {
             m_is_putty_mode = true;
         }
     }
@@ -287,36 +291,44 @@ sess_state TelnetSession::_do_negotiation_with_client(TelnetConn *conn) {
                             if (s.get_u8() == TELNET_SE) {
                                 have_SE = true;
                                 break;
-                            } else
+                            }
+                            else
                                 return _do_close(TP_SESS_STAT_ERR_BAD_PKG);
                         }
-                    } else {
+                    }
+                    else {
                         ms_sub.put_u8(ch_sub);
                     }
                 }
 
                 if (!have_SE)
                     return _do_close(TP_SESS_STAT_ERR_BAD_PKG);
-            } else if (ch_cmd == TELNET_DONT) {
+            }
+            else if (ch_cmd == TELNET_DONT) {
                 ms_resp.put_u8(TELNET_IAC);
                 ms_resp.put_u8(TELNET_WONT);
                 ms_resp.put_u8(s.get_u8());
-            } else if (ch_cmd == TELNET_DO) {
+            }
+            else if (ch_cmd == TELNET_DO) {
                 ms_resp.put_u8(TELNET_IAC);
                 ms_resp.put_u8(TELNET_WILL);
                 ms_resp.put_u8(s.get_u8());
-            } else if (ch_cmd == TELNET_WONT) {
+            }
+            else if (ch_cmd == TELNET_WONT) {
                 ms_resp.put_u8(TELNET_IAC);
                 ms_resp.put_u8(TELNET_DONT);
                 ms_resp.put_u8(s.get_u8());
-            } else if (ch_cmd == TELNET_WILL) {
+            }
+            else if (ch_cmd == TELNET_WILL) {
                 ms_resp.put_u8(TELNET_IAC);
                 ms_resp.put_u8(TELNET_DO);
                 ms_resp.put_u8(s.get_u8());
-            } else {
+            }
+            else {
                 s.skip(1);
             }
-        } else {
+        }
+        else {
             ms_msg.put_u8(ch);
         }
     }
@@ -350,7 +362,7 @@ sess_state TelnetSession::_do_negotiation_with_client(TelnetConn *conn) {
                 0x03, 0x53, 0x46, 0x55, 0x54, 0x4c, 0x4e, 0x54, 0x56, 0x45, 0x52, 0x03, 0x53, 0x46, 0x55, 0x54,
                 0x4c, 0x4e, 0x54, 0x4d, 0x4f, 0x44, 0x45, 0xff, 0xf0
         };
-        m_conn_client->send((ex_u8 *) _d, sizeof(_d));
+        m_conn_client->send((ex_u8*) _d, sizeof(_d));
         return s_negotiation_with_client;
     }
 
@@ -366,8 +378,8 @@ sess_state TelnetSession::_do_negotiation_with_client(TelnetConn *conn) {
                     break;
             }
 
-            mbuf_sub.append((ex_u8 *) "\x00", 1);
-            m_sid = (char *) mbuf_sub.data();
+            mbuf_sub.append((ex_u8*) "\x00", 1);
+            m_sid = (char*) mbuf_sub.data();
         }
     }
 
@@ -384,10 +396,11 @@ sess_state TelnetSession::_do_connect_server() {
 
     m_conn_info = g_telnet_env.get_connect_info(m_sid.c_str());
 
-    if (NULL == m_conn_info) {
+    if (nullptr == m_conn_info) {
         EXLOGE("[telnet] no such session: %s\n", m_sid.c_str());
         return _do_close(TP_SESS_STAT_ERR_SESSION);
-    } else {
+    }
+    else {
         m_conn_ip = m_conn_info->conn_ip;
         m_conn_port = m_conn_info->conn_port;
         m_acc_name = m_conn_info->acc_username;
@@ -454,7 +467,7 @@ sess_state TelnetSession::_do_server_connected() {
 
     char buf[512] = {0};
 
-    const char *auth_mode = NULL;
+    const char* auth_mode = nullptr;
     if (m_conn_info->auth_type == TP_AUTH_TYPE_PASSWORD)
         auth_mode = "password";
     else if (m_conn_info->auth_type == TP_AUTH_TYPE_NONE)
@@ -464,29 +477,30 @@ sess_state TelnetSession::_do_server_connected() {
 
     ex_astr line(w, '=');
 
-    snprintf(buf, sizeof(buf),
-             "\r\n"\
+    snprintf(
+            buf, sizeof(buf),
+            "\r\n"\
         "%s\r\n"\
         "Teleport TELNET Bastion Server...\r\n"\
         "  - teleport to %s:%d\r\n"\
         "  - authroized by %s\r\n"\
         "%s\r\n"\
         "\r\n\r\n",
-             line.c_str(),
-             m_conn_ip.c_str(),
-             m_conn_port, auth_mode,
-             line.c_str()
+            line.c_str(),
+            m_conn_ip.c_str(),
+            m_conn_port, auth_mode,
+            line.c_str()
     );
 
-    m_conn_client->send((ex_u8 *) buf, strlen(buf));
+    m_conn_client->send((ex_u8*) buf, strlen(buf));
 
     if (m_is_putty_mode) {
         if (m_conn_info->auth_type != TP_AUTH_TYPE_NONE) {
             ex_astr login_info = "login: ";
             login_info += m_conn_info->acc_username;
             login_info += "\r\n";
-            m_conn_client->send((ex_u8 *) login_info.c_str(), login_info.length());
-            m_rec.record(TS_RECORD_TYPE_TELNET_DATA, (ex_u8 *) login_info.c_str(), login_info.length());
+            m_conn_client->send((ex_u8*) login_info.c_str(), login_info.length());
+            m_rec.record(TS_RECORD_TYPE_TELNET_DATA, (ex_u8*) login_info.c_str(), login_info.length());
         }
 
         ex_u8 _d[] = "\xff\xfb\x1f\xff\xfb\x20\xff\xfb\x18\xff\xfb\x27\xff\xfd\x01\xff\xfb\x03\xff\xfd\x03";
@@ -496,10 +510,10 @@ sess_state TelnetSession::_do_server_connected() {
     return s_relay;
 }
 
-sess_state TelnetSession::_do_relay(TelnetConn *conn) {
-    m_last_access_timestamp = (ex_u32) time(NULL);
+sess_state TelnetSession::_do_relay(TelnetConn* conn) {
+    m_last_access_timestamp = (ex_u32) time(nullptr);
 
-    TelnetSession *_this = conn->session();
+    TelnetSession* _this = conn->session();
     bool is_processed = false;
 
     if (conn->is_server_side()) {
@@ -528,7 +542,8 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
 
         m_conn_server->send(m_conn_client->data().data(), m_conn_client->data().size());
         m_conn_client->data().empty();
-    } else {
+    }
+    else {
 //         EXLOG_BIN(m_conn_server->data().data(), m_conn_server->data().size(), "--> server:");
 
         // 收到了服务端返回的数据
@@ -536,15 +551,17 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
             m_rec.record(TS_RECORD_TYPE_TELNET_DATA, m_conn_server->data().data(), m_conn_server->data().size());
 
         if (!_this->m_username_sent && _this->m_acc_name.length() > 0) {
-            if (_this->_parse_find_and_send(m_conn_server, m_conn_client, _this->m_username_prompt.c_str(),
-                                            _this->m_acc_name.c_str())) {
+            if (_this->_parse_find_and_send(
+                    m_conn_server, m_conn_client, _this->m_username_prompt.c_str(),
+                    _this->m_acc_name.c_str())) {
 //				_this->m_username_sent = true;
                 is_processed = true;
             }
         }
         if (!_this->m_password_sent && _this->m_password_prompt.length() > 0) {
-            if (_this->_parse_find_and_send(m_conn_server, m_conn_client, _this->m_password_prompt.c_str(),
-                                            _this->m_acc_secret.c_str())) {
+            if (_this->_parse_find_and_send(
+                    m_conn_server, m_conn_client, _this->m_password_prompt.c_str(),
+                    _this->m_acc_secret.c_str())) {
                 _this->m_username_sent = true;
                 _this->m_password_sent = true;
                 _this->m_username_sent = true;
@@ -564,8 +581,10 @@ sess_state TelnetSession::_do_relay(TelnetConn *conn) {
     return s_relay;
 }
 
-bool TelnetSession::_parse_find_and_send(TelnetConn *conn_recv, TelnetConn *conn_remote, const char *find,
-                                         const char *send) {
+bool TelnetSession::_parse_find_and_send(
+        TelnetConn* conn_recv, TelnetConn* conn_remote, const char* find,
+        const char* send
+) {
 //     EXLOGV("find prompt and send: [%s] => [%s]\n", find, send);
 //     EXLOG_BIN(conn_recv->data().data(), conn_recv->data().size(), "find prompt in data:");
 
@@ -583,8 +602,8 @@ bool TelnetSession::_parse_find_and_send(TelnetConn *conn_recv, TelnetConn *conn
 
             MemBuffer mbuf_msg;
             mbuf_msg.reserve(128);
-            mbuf_msg.append((ex_u8 *) send, send_len);
-            mbuf_msg.append((ex_u8 *) "\x0d\x0a", 2);
+            mbuf_msg.append((ex_u8*) send, send_len);
+            mbuf_msg.append((ex_u8*) "\x0d\x0a", 2);
 //             EXLOG_BIN(mbuf_msg.data(), mbuf_msg.size(), "find prompt and send:");
             conn_recv->send(mbuf_msg.data(), mbuf_msg.size());
             return true;
@@ -668,7 +687,7 @@ bool TelnetSession::_parse_find_and_send(TelnetConn *conn_recv, TelnetConn *conn
     return false;
 }
 
-bool TelnetSession::_putty_replace_username(TelnetConn *conn_recv, TelnetConn *conn_remote) {
+bool TelnetSession::_putty_replace_username(TelnetConn* conn_recv, TelnetConn* conn_remote) {
     bool replaced = false;
 
     MemBuffer mbuf_msg;
@@ -701,7 +720,8 @@ bool TelnetSession::_putty_replace_username(TelnetConn *conn_recv, TelnetConn *c
                             if (s.get_u8() == TELNET_SE) {
                                 have_SE = true;
                                 break;
-                            } else
+                            }
+                            else
                                 return false;
                         }
                     }
@@ -724,20 +744,22 @@ bool TelnetSession::_putty_replace_username(TelnetConn *conn_recv, TelnetConn *c
 
                 ms_msg.put_u8(TELNET_IAC);
                 ms_msg.put_u8(TELNET_SB);
-                ms_msg.put_bin((ex_u8 *) "\x27\x00\x00\x55\x53\x45\x52\x01", 8);
+                ms_msg.put_bin((ex_u8*) "\x27\x00\x00\x55\x53\x45\x52\x01", 8);
 
-                ms_msg.put_bin((ex_u8 *) m_acc_name.c_str(), m_acc_name.length());
+                ms_msg.put_bin((ex_u8*) m_acc_name.c_str(), m_acc_name.length());
 
                 ms_msg.put_u8(TELNET_IAC);
                 ms_msg.put_u8(TELNET_SE);
 
                 replaced = true;
-            } else {
+            }
+            else {
                 ms_msg.put_u8(ch);
                 ms_msg.put_u8(ch_cmd);
                 ms_msg.put_u8(s.get_u8());
             }
-        } else {
+        }
+        else {
             ms_msg.put_u8(ch);
         }
     }
@@ -750,7 +772,7 @@ bool TelnetSession::_putty_replace_username(TelnetConn *conn_recv, TelnetConn *c
     return false;
 }
 
-bool TelnetSession::_parse_win_size(TelnetConn *conn) {
+bool TelnetSession::_parse_win_size(TelnetConn* conn) {
     if (conn->data().size() < 9)
         return false;
     if (conn->data().data()[0] != TELNET_IAC)
@@ -777,7 +799,8 @@ bool TelnetSession::_parse_win_size(TelnetConn *conn) {
                             if (s.get_u8() == TELNET_SE) {
                                 have_SE = true;
                                 break;
-                            } else
+                            }
+                            else
                                 return false;
                         }
                     }

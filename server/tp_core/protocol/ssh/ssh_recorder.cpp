@@ -67,7 +67,6 @@ void TppSshRec::record(ex_u8 type, const ex_u8* data, size_t size) {
         _save_to_data_file();
 
     TS_RECORD_PKG pkg = {0};
-    //memset(&pkg, 0, sizeof(TS_RECORD_PKG));
     pkg.type = type;
     pkg.size = (ex_u32) size;
 
@@ -79,9 +78,6 @@ void TppSshRec::record(ex_u8 type, const ex_u8* data, size_t size) {
 
     m_cache.append((ex_u8*) &pkg, sizeof(TS_RECORD_PKG));
     m_cache.append(data, size);
-
-    //m_head.info.packages++;
-    //m_header_changed = true;
 }
 
 void TppSshRec::record_win_size_startup(int width, int height) {
@@ -100,20 +96,6 @@ void TppSshRec::record_win_size_change(int width, int height) {
 // 为了录像回放和命令历史能够对应（比如点击命令直接跳到录像的对应时点），仿照录像数据包的方式记录相对时间偏移，而不是绝对时间。
 void TppSshRec::record_command(int flag, const ex_astr& cmd) {
     char szTime[100] = {0};
-#ifdef EX_OS_WIN32
-    // 	SYSTEMTIME st;
-    // 	GetLocalTime(&st);
-    // 	sprintf_s(szTime, 100, "[%04d-%02d-%02d %02d:%02d:%02d %d] ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, flag);
-#else
-// 	time_t timep;
-// 	struct tm *p;
-// 	time(&timep);
-// 	p = localtime(&timep);
-// 	if (p == nullptr)
-// 		return;
-// 	sprintf(szTime, "[%04d-%02d-%02d %02d:%02d:%02d %d] ", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, flag);
-#endif
-
     ex_strformat(szTime, 99, "%d,%d,", (ex_u32) (ex_get_tick_count() - m_start_time), flag);
     size_t lenTime = strlen(szTime);
 

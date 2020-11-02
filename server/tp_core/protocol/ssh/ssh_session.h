@@ -33,8 +33,7 @@ class SshProxy;
 
 class SshSession;
 
-class SshSession :
-        public ExThreadBase {
+class SshSession : public ExThreadBase {
 public:
     SshSession(SshProxy* proxy, ssh_session rs_tp2cli, uint32_t dbg_id, const char* client_ip, uint16_t client_port);
 

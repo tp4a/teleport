@@ -96,8 +96,11 @@ TPP_API ex_rv tpp_command(ex_u32 cmd, const char* param) {
         return TPE_PARAM;
 
     switch (cmd) {
-    case TPP_CMD_SET_RUNTIME_CFG:return tpp_cmd_set_runtime_config(param);
-    case TPP_CMD_KILL_SESSIONS:return tpp_cmd_kill_sessions(param);
-    default:return TPE_UNKNOWN_CMD;
+    case TPP_CMD_SET_RUNTIME_CFG:
+        return tpp_cmd_set_runtime_config(param);
+    case TPP_CMD_KILL_SESSIONS:
+        return tpp_cmd_kill_sessions(param);
+    default:
+        return TPE_UNKNOWN_CMD;
     }
 }

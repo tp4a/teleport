@@ -46,8 +46,8 @@ void TelnetProxy::timer() {
     m_timer_counter = 0;
 
     ExThreadSmartLock locker(m_lock);
-    ex_u32 t_now = (ex_u32) time(NULL);
-    ts_telnet_sessions::iterator it = m_sessions.begin();
+    auto t_now = (ex_u32) time(nullptr);
+    auto it = m_sessions.begin();
     for (; it != m_sessions.end(); ++it) {
         it->first->save_record();
         if (0 != m_noop_timeout_sec)
@@ -59,9 +59,9 @@ void TelnetProxy::set_cfg(ex_u32 noop_timeout) {
     m_noop_timeout_sec = noop_timeout;
 }
 
-void TelnetProxy::kill_sessions(const ex_astrs &sessions) {
+void TelnetProxy::kill_sessions(const ex_astrs& sessions) {
     ExThreadSmartLock locker(m_lock);
-    ts_telnet_sessions::iterator it = m_sessions.begin();
+    auto it = m_sessions.begin();
     for (; it != m_sessions.end(); ++it) {
         for (size_t i = 0; i < sessions.size(); ++i) {
             if (it->first->sid() == sessions[i]) {
@@ -72,20 +72,20 @@ void TelnetProxy::kill_sessions(const ex_astrs &sessions) {
     }
 }
 
-void TelnetProxy::_thread_loop(void) {
+void TelnetProxy::_thread_loop() {
     struct sockaddr_in addr;
     if (0 != uv_ip4_addr(m_host_ip.c_str(), m_host_port, &addr)) {
         EXLOGE("[telnet] invalid ip/port for TELNET listener.\n");
         return;
     }
 
-    if (0 != uv_tcp_bind(&m_listener_handle, (const struct sockaddr *) &addr, 0)) {
+    if (0 != uv_tcp_bind(&m_listener_handle, (const struct sockaddr*) &addr, 0)) {
         EXLOGE("[telnet] can not bind %s:%d.\n", m_host_ip.c_str(), m_host_port);
         return;
     }
 
     // 开始监听，有客户端连接到来时，会回调 _on_client_connect()
-    if (0 != uv_listen((uv_stream_t *) &m_listener_handle, 8, _on_client_connect)) {
+    if (0 != uv_listen((uv_stream_t*) &m_listener_handle, 8, _on_client_connect)) {
         EXLOGE("[telnet] can not listen on %s:%d.\n", m_host_ip.c_str(), m_host_port);
         return;
     }
@@ -114,7 +114,7 @@ void TelnetProxy::_thread_loop(void) {
 }
 
 // static
-void TelnetProxy::_on_stop(void) {
+void TelnetProxy::_on_stop() {
     ExThreadBase::_on_stop();
 
     if (m_is_running) {
@@ -123,19 +123,18 @@ void TelnetProxy::_on_stop(void) {
 }
 
 // static
-void TelnetProxy::_on_listener_closed(uv_handle_t *handle) {
-    TelnetProxy *_this = (TelnetProxy *) handle->data;
+void TelnetProxy::_on_listener_closed(uv_handle_t* handle) {
+    auto _this = (TelnetProxy*) handle->data;
     EXLOGV("[telnet] listener close.\n");
 
-    uv_close((uv_handle_t *) &_this->m_stop_handle, _on_stop_handle_closed);
-//    _this->_close_all_sessions();
+    uv_close((uv_handle_t*) &_this->m_stop_handle, _on_stop_handle_closed);
 }
 
 void TelnetProxy::clean_session() {
     uv_async_send(&m_clean_session_handle);
 }
 
-void TelnetProxy::_close_all_sessions(void) {
+void TelnetProxy::_close_all_sessions() {
     ExThreadSmartLock locker(m_lock);
 
     if (m_sessions.empty()) {
@@ -143,26 +142,27 @@ void TelnetProxy::_close_all_sessions(void) {
         return;
     }
 
-    ts_telnet_sessions::iterator it = m_sessions.begin();
+    auto it = m_sessions.begin();
     for (; it != m_sessions.end(); ++it) {
         it->first->close(TP_SESS_STAT_ERR_RESET);
     }
 }
 
 // static
-void TelnetProxy::_on_clean_session_cb(uv_async_t *handle) {
-    TelnetProxy *_this = (TelnetProxy *) handle->data;
+void TelnetProxy::_on_clean_session_cb(uv_async_t* handle) {
+    auto _this = (TelnetProxy*) handle->data;
 
     // check closed session
     ExThreadSmartLock locker(_this->m_lock);
 
-    ts_telnet_sessions::iterator it = _this->m_sessions.begin();
+    auto it = _this->m_sessions.begin();
     for (; it != _this->m_sessions.end();) {
         if (it->first->is_closed()) {
             delete it->first;
             _this->m_sessions.erase(it++);
             EXLOGD("[telnet]   - removed one session.\n");
-        } else {
+        }
+        else {
             it++;
         }
     }
@@ -177,29 +177,29 @@ void TelnetProxy::_on_clean_session_cb(uv_async_t *handle) {
 //}
 
 //static
-void TelnetProxy::_on_stop_handle_closed(uv_handle_t *handle) {
-    TelnetProxy *_this = (TelnetProxy *) handle->data;
+void TelnetProxy::_on_stop_handle_closed(uv_handle_t* handle) {
+    auto _this = (TelnetProxy*) handle->data;
     _this->_close_all_sessions();
 }
 
 //static
-void TelnetProxy::_on_stop_cb(uv_async_t *handle) {
-    TelnetProxy *_this = (TelnetProxy *) handle->data;
-    uv_close((uv_handle_t *) &_this->m_listener_handle, _on_listener_closed);
+void TelnetProxy::_on_stop_cb(uv_async_t* handle) {
+    auto _this = (TelnetProxy*) handle->data;
+    uv_close((uv_handle_t*) &_this->m_listener_handle, _on_listener_closed);
 }
 
 
 // static
-void TelnetProxy::_on_client_connect(uv_stream_t *server, int status) {
+void TelnetProxy::_on_client_connect(uv_stream_t* server, int status) {
     if (0 != status)
         return;
 
-    TelnetProxy *_this = (TelnetProxy *) server->data;
+    auto _this = (TelnetProxy*) server->data;
     _this->_on_accept(server);
 }
 
-bool TelnetProxy::_on_accept(uv_stream_t *server) {
-    TelnetSession *sess = new TelnetSession(this);
+bool TelnetProxy::_on_accept(uv_stream_t* server) {
+    auto sess = new TelnetSession(this);
 
     if (0 != uv_accept(server, sess->client()->stream_handle())) {
         EXLOGE("[telnet] socket accept failed.\n");
@@ -216,7 +216,7 @@ bool TelnetProxy::_on_accept(uv_stream_t *server) {
     struct sockaddr sock_client;
     int namelen = sizeof(sock_client);
     if (0 == uv_tcp_getpeername(sess->client()->tcp_handle(), &sock_client, &namelen)) {
-        sockaddr_in *addrin = (sockaddr_in *) &sock_client;
+        auto addrin = (sockaddr_in*) &sock_client;
         char ip[17] = {0};
         if (0 == uv_ip4_name(addrin, ip, sizeof(ip))) {
             char client_addr[64] = {0};
@@ -238,5 +238,5 @@ bool TelnetProxy::_on_accept(uv_stream_t *server) {
 }
 
 void TelnetProxy::_close_clean_session_handle() {
-    uv_close((uv_handle_t *) &m_clean_session_handle, NULL);
+    uv_close((uv_handle_t*) &m_clean_session_handle, nullptr);
 }

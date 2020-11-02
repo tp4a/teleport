@@ -3,52 +3,56 @@
 
 #include "../../common/base_record.h"
 
-#define TS_RECORD_TYPE_TELNET_TERM_SIZE		0x01		// ÖÕ¶Ë´óĞ¡£¨ĞĞÊıÓëÁĞÊı£©
-#define TS_RECORD_TYPE_TELNET_DATA			0x02		// ÓÃÓÚÕ¹Ê¾µÄÊı¾İÄÚÈİ
+#define TS_RECORD_TYPE_TELNET_TERM_SIZE     0x01        // ç»ˆç«¯å¤§å°ï¼ˆè¡Œæ•°ä¸åˆ—æ•°ï¼‰
+#define TS_RECORD_TYPE_TELNET_DATA          0x02        // ç”¨äºå±•ç¤ºçš„æ•°æ®å†…å®¹
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
 
-// ¼ÇÂ¼´°¿Ú´óĞ¡¸Ä±äµÄÊı¾İ°ü
-typedef struct TS_RECORD_WIN_SIZE
-{
-	ex_u16 width;
-	ex_u16 height;
-}TS_RECORD_WIN_SIZE;
+// è®°å½•çª—å£å¤§å°æ”¹å˜çš„æ•°æ®åŒ…
+typedef struct TS_RECORD_WIN_SIZE {
+    ex_u16 width;
+    ex_u16 height;
+} TS_RECORD_WIN_SIZE;
 
 #pragma pack(pop)
 
-class TppTelnetRec : public TppRecBase
-{
+class TppTelnetRec : public TppRecBase {
 public:
-	TppTelnetRec();
-	virtual ~TppTelnetRec();
+    TppTelnetRec();
 
-	void record(ex_u8 type, const ex_u8* data, size_t size);
+    virtual ~TppTelnetRec();
+
+    void record(ex_u8 type, const ex_u8* data, size_t size);
+
 // 	void record_win_size(int width, int height);
-	void record_win_size_startup(int width, int height);
-	void record_win_size_change(int width, int height);
+    void record_win_size_startup(int width, int height);
 
-	void save_record();
+    void record_win_size_change(int width, int height);
 
-protected:
-	bool _on_begin(const TPP_CONNECT_INFO* info);
-	bool _on_end();
-
-	bool _save_to_info_file();
-	bool _save_to_data_file();
-	bool _save_to_cmd_file();
+    void save_record();
 
 protected:
-	TS_RECORD_HEADER m_head;
-	bool m_header_changed;
+    bool _on_begin(const TPP_CONNECT_INFO* info) override;
 
-	MemBuffer m_cmd_cache;
+    bool _on_end() override;
 
-	bool m_save_full_header;
+    bool _save_to_info_file();
 
-	FILE* m_file_info;
-	FILE* m_file_data;
-	FILE* m_file_cmd;
+    bool _save_to_data_file();
+
+    bool _save_to_cmd_file();
+
+protected:
+    TS_RECORD_HEADER m_head;
+    bool m_header_changed;
+
+    MemBuffer m_cmd_cache;
+
+    bool m_save_full_header;
+
+    FILE* m_file_info;
+    FILE* m_file_data;
+    FILE* m_file_cmd;
 };
 
 #endif // __TELNET_RECORDER_H__

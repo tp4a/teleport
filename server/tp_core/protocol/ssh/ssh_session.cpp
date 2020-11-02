@@ -82,8 +82,7 @@ void SshSession::_on_stopped() {
 void SshSession::_set_last_error(int err_code) {
 #ifndef TEST_SSH_SESSION_000000
     int db_id = 0;
-    if (!g_ssh_env.session_begin(m_conn_info, &db_id) || db_id == 0)
-    {
+    if (!g_ssh_env.session_begin(m_conn_info, &db_id) || db_id == 0) {
         EXLOGE("[%s] can not write session error to database.\n", m_dbg_name.c_str());
         return;
     }
@@ -323,7 +322,7 @@ bool SshSession::make_channel_pair(ssh_channel ch_tp2cli, ssh_channel ch_tp2srv)
     uint32_t dbg_id = m_pair_id++;
     auto _pair = new SshChannelPair(this, dbg_id, ch_tp2cli, ch_tp2srv);
 
-    if(!_pair->record_begin(m_conn_info)) {
+    if (!_pair->record_begin(m_conn_info)) {
         delete _pair;
         return false;
     }
@@ -784,7 +783,7 @@ int SshSession::_on_client_pty_request(ssh_session /*session*/, ssh_channel chan
     }
 
     cp->win_width = x;
-    cp->rec.record_win_size_change(x, y);
+    cp->rec.record_win_size_startup(x, y);
 
     int rc = ssh_channel_request_pty_size(cp->rsc_tp2srv, term, x, y);
     while (rc == SSH_AGAIN) {
