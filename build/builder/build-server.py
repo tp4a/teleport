@@ -91,9 +91,11 @@ class BuilderLinux(BuilderBase):
 
         utils.makedirs(out_path)
 
-        build_path = os.path.join(env.root_path, 'cmake-build-linux')
-        if not os.path.exists(build_path):
-            utils.makedirs(build_path)
+        # build_path = os.path.join(env.root_path, 'cmake-build-linux')
+        # if not os.path.exists(build_path):
+        #     utils.makedirs(build_path)
+
+        utils.cmake(os.path.join(env.root_path, 'cmake-build-linux'), ctx.target_path, False)
 
         # old_p = os.getcwd()
         # os.chdir(build_path)

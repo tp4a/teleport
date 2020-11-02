@@ -18,7 +18,7 @@ void *ExThreadBase::_thread_func(void *pParam)
     _this->m_is_running = true;
     _this->_thread_loop();
     _this->m_is_running = false;
-    _this->m_handle = nullptr;
+    _this->m_handle = EX_THREAD_NULL;
 
     _this->_on_stopped();
     EXLOGV("[thread] - `%s` exit.\n", _this->m_thread_name.c_str());
@@ -26,7 +26,7 @@ void *ExThreadBase::_thread_func(void *pParam)
 }
 
 ExThreadBase::ExThreadBase(const char *thread_name) :
-        m_handle(0),
+        m_handle(EX_THREAD_NULL),
         m_is_running(false),
         m_need_stop(false) {
     m_thread_name = thread_name;
@@ -50,7 +50,7 @@ bool ExThreadBase::start() {
     }
     m_handle = h;
 #else
-    pthread_t tid = nullptr;
+    pthread_t tid = EX_THREAD_NULL;
     int ret = pthread_create(&tid, nullptr, _thread_func, (void *) this);
     if (ret != 0) {
         return false;
@@ -63,7 +63,7 @@ bool ExThreadBase::start() {
 }
 
 bool ExThreadBase::stop() {
-    if (m_handle == 0) {
+    if (m_handle == EX_THREAD_NULL) {
         EXLOGW("[thread] `%s` already stopped before stop() call.\n", m_thread_name.c_str());
         return true;
     }
@@ -81,7 +81,7 @@ bool ExThreadBase::stop() {
         }
     }
 #else
-    if(m_handle != 0) {
+    if(m_handle != EX_THREAD_NULL) {
         if (pthread_join(m_handle, nullptr) != 0) {
             return false;
         }

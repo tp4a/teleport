@@ -15,7 +15,7 @@
 # for CMake
 CMakeFiles
 cmake_install.cmake
-cmake-build-*
+cmake-build*
 # cmake-build-debug
 client/tp_assist_macos/build
 **/xcode_build

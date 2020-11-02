@@ -8,12 +8,20 @@
 #ifdef EX_OS_WIN32
 #   include <process.h>
 typedef HANDLE EX_THREAD_HANDLE;
+#   define EX_THREAD_NULL NULL
 #else
 
 #   include <pthread.h>
 #   include <sys/time.h>
 
 typedef pthread_t EX_THREAD_HANDLE;
+
+#   if defined(EX_OS_LINUX)
+#       define EX_THREAD_NULL 0
+#   elif defined(EX_OS_MACOS)
+#       define EX_THREAD_NULL nullptr
+#   endif
+
 #endif
 
 class ExThreadBase
