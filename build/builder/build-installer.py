@@ -141,13 +141,14 @@ class BuilderLinux(BuilderBase):
         utils.copy_ex(os.path.join(env.root_path, 'out', 'pysrt'), bin_path, (ctx.dist_path, 'pysrt'))
 
         # copy scripts
-        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'setup.sh')
-        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'script')
-        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'daemon')
+        utils.copy_ex(self.dist_path, self.path_tmp, 'setup.sh')
+        utils.copy_ex(self.dist_path, self.path_tmp, 'script')
+        utils.copy_ex(self.dist_path, self.path_tmp, 'daemon')
 
         if os.path.exists(self._final_file):
             utils.remove(self._final_file)
 
+        utils.sys_exec('chmod +x {}'.format(os.path.join(self.path_tmp, 'setup.sh')))
         utils.make_targz(self.base_tmp, self.name, self._final_file)
 
         # utils.remove(self.base_tmp)

@@ -72,7 +72,8 @@ void SshProxy::timer() {
             // 检查通道是否已经关闭
             it->first->check_channels();
             // 检查会话是否已经关闭，如果会话已经完全关闭，则销毁之
-            if (it->first->closed()) {
+            if (it->first->all_channel_closed()) {
+                it->first->stop();
                 delete it->first;
                 m_sessions.erase(it++);
             }

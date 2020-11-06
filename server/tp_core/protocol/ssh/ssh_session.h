@@ -21,7 +21,7 @@
 #define TS_SSH_CHANNEL_TYPE_SFTP        2
 
 enum SSH_SESSION_STATUS {
-    SSH_SESSION_STATE_CLOSED = 0,
+    SSH_SESSION_STATE_NO_CHANNEL = 0,
     SSH_SESSION_STATE_STARTING,
     SSH_SESSION_STATE_AUTHING,
     SSH_SESSION_STATE_AUTH_END,
@@ -64,8 +64,8 @@ public:
 
     void keep_alive();
 
-    bool closed() const {
-        return m_state == SSH_SESSION_STATE_CLOSED;
+    bool all_channel_closed() const {
+        return m_state == SSH_SESSION_STATE_NO_CHANNEL;
     }
 
     ssh_session get_peer_raw_session(ssh_session session) {

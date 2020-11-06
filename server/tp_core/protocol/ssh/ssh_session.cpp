@@ -73,6 +73,7 @@ void SshSession::_on_stop() {
 
     if (m_conn_info) {
         g_ssh_env.free_connect_info(m_conn_info);
+        m_conn_info = nullptr;
     }
 }
 
@@ -158,7 +159,8 @@ void SshSession::check_channels() {
 
     if (m_pairs.empty()) {
         EXLOGV("[%s] all channels closed, should close and destroy this session.\n", m_dbg_name.c_str());
-        m_fault = true;
+        // m_fault = true;
+        m_state = SSH_SESSION_STATE_NO_CHANNEL;
     }
 }
 
@@ -253,7 +255,7 @@ void SshSession::_thread_loop() {
             continue;
 
         if (err == SSH_ERROR) {
-            EXLOGE("[%s] event poll failed. [cli] %s. [srv] %s\n", m_dbg_name.c_str(), ssh_get_error(m_rs_tp2cli), ssh_get_error(m_rs_tp2srv));
+            EXLOGW("[%s] event poll failed. [client: %s] [server: %s]\n", m_dbg_name.c_str(), ssh_get_error(m_rs_tp2cli), ssh_get_error(m_rs_tp2srv));
             m_fault = true;
         }
     } while (!m_pairs.empty());
@@ -265,7 +267,7 @@ void SshSession::_thread_loop() {
     ssh_event_remove_session(event_loop, m_rs_tp2srv);
     ssh_event_free(event_loop);
 
-    m_state = SSH_SESSION_STATE_CLOSED;
+    // m_state = SSH_SESSION_STATE_CLOSED;
 
     EXLOGV("[%s] session event loop end.\n", m_dbg_name.c_str());
 }
@@ -449,12 +451,6 @@ int SshSession::_do_auth(const char* user, const char* secret) {
             m_conn_info->acc_secret = "*******";
             // m_conn_info->acc_username = "INTERACTIVE_USER";
             // m_conn_info->acc_secret = "";
-
-            // m_conn_info->host_ip = "47.99.60.237";
-            // m_conn_info->conn_ip = "47.99.60.237";
-            // m_conn_info->conn_port = 40022;
-            // m_conn_info->acc_username = "trops";
-            // m_conn_info->acc_secret = "******";
         }
         else {
             m_conn_info->host_ip = "127.0.0.1";
