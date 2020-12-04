@@ -26,14 +26,6 @@ class Env(object):
         self.build_path = os.path.abspath(os.path.join(_this_path, '..', '..'))
         self.builder_path = os.path.join(self.build_path, 'builder')
 
-        self.is_py2 = sys.version_info[0] == 2
-        self.is_py3 = sys.version_info[0] == 3
-
-        if self.is_py2:
-            self.input = raw_input
-        else:
-            self.input = input
-
         self.py_ver = platform.python_version_tuple()
         self.py_ver_str = '%s%s' % (self.py_ver[0], self.py_ver[1])
         self.py_ver_dot = '%s.%s' % (self.py_ver[0], self.py_ver[1])
@@ -76,10 +68,8 @@ class Env(object):
 
     def _load_config(self, warn_miss_tool):
         _cfg_file = 'config.{}.json'.format(self.plat)
-        # _cfg_file = os.path.join(self.root_path, 'config.ini')
         _cfg_file = os.path.join(self.root_path, _cfg_file)
         if not os.path.exists(_cfg_file):
-            # cc.e('can not load configuration.\n\nplease copy `config.ini.in` to `config.ini` and modify it to fit your condition and try again.')
             cc.e('can not load configuration.\n\nplease copy `config.json.in` to `config.{}.json` and modify it to fit your condition and try again.'.format(self.plat))
             return False
 
@@ -89,12 +79,6 @@ class Env(object):
         except:
             cc.e('can ot load configuration file, not in JSON format.')
             return False
-
-        # _cfg = configparser.ConfigParser()
-        # _cfg.read(_cfg_file)
-        # if 'toolchain' not in _cfg.sections():
-        #     cc.e('invalid configuration file: need `toolchain` section.')
-        #     return False
 
         if 'toolchain' not in _cfg:
             cc.e('invalid configuration file: need `toolchain` section.')

@@ -129,7 +129,7 @@ class BuilderLinux(BuilderBase):
         utils.fix_new_line_flag(os.path.join(self.path_tmp_data, 'tmp', 'etc', 'web.ini'))
         utils.fix_new_line_flag(os.path.join(self.path_tmp_data, 'tmp', 'etc', 'core.ini'))
 
-        out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
+        out_path = os.path.join(env.root_path, 'out', 'server', 'linux', 'bin')
         bin_path = os.path.join(self.path_tmp_data, 'bin')
         utils.copy_ex(out_path, bin_path, 'tp_web')
         utils.copy_ex(out_path, bin_path, 'tp_core')

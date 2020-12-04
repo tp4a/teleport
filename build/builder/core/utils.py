@@ -9,11 +9,8 @@ import time
 from . import colorconsole as cc
 from .env import env
 
-if env.is_py2:
-    import imp
-elif env.is_py3:
-    import importlib
-    import importlib.machinery
+import importlib
+import importlib.machinery
 
 
 def _check_download_file(file_name):
@@ -96,13 +93,7 @@ def extension_suffixes():
     #   type为文件类型, 1代表PY_SOURCE, 2代表PY_COMPILED, 3代表C_EXTENSION
 
     EXTENSION_SUFFIXES = list()
-    if env.is_py2:
-        suf = imp.get_suffixes()
-        for s in suf:
-            if s[2] == 3:
-                EXTENSION_SUFFIXES.append(s[0])
-    else:
-        EXTENSION_SUFFIXES = importlib.machinery.EXTENSION_SUFFIXES
+    EXTENSION_SUFFIXES = importlib.machinery.EXTENSION_SUFFIXES
 
     if env.is_win:
         if '.dll' not in EXTENSION_SUFFIXES:

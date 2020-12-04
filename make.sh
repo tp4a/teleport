@@ -94,7 +94,7 @@ function build_macos
 {
     check_cfg_file
 
-	python3 -B "${PATH_ROOT}/build/build.py" $@
+    python3 -B "${PATH_ROOT}/build/build.py" $@
 }
 
 function on_error()

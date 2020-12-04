@@ -194,7 +194,7 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 		|| user_username.length() == 0
 		|| host_ip.length() == 0 || conn_ip.length() == 0 || client_ip.length() == 0
 		|| conn_port <= 0 || conn_port >= 65535
-		|| acc_username.length() == 0 || acc_secret.length() == 0
+		|| acc_username.length() == 0
 		|| !(protocol_type == TP_PROTOCOL_TYPE_RDP || protocol_type == TP_PROTOCOL_TYPE_SSH || protocol_type == TP_PROTOCOL_TYPE_TELNET)
 		|| !(auth_type == TP_AUTH_TYPE_NONE || auth_type == TP_AUTH_TYPE_PASSWORD || auth_type == TP_AUTH_TYPE_PRIVATE_KEY)
 		)
@@ -202,7 +202,11 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 		return TPE_PARAM;
 	}
 
-	if (_enc) {
+	if(auth_type != TP_AUTH_TYPE_NONE && acc_secret.length() == 0) {
+	    return TPE_PARAM;
+	}
+
+	if (_enc && !acc_secret.empty()) {
 		ex_astr _auth;
 		if (!ts_db_field_decrypt(acc_secret, _auth))
 			return TPE_FAILED;

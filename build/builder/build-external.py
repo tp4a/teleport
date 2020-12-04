@@ -166,7 +166,7 @@ class BuilderWin(BuilderBase):
         cc.w('please install OpenSSL into "{}".'.format(self.OPENSSL_PATH_SRC))
         cc.w('\nOnce the OpenSSL installed, press Enter to continue or Q to quit...', end='')
         try:
-            x = env.input()
+            x = input()
         except EOFError:
             x = 'q'
         if x == 'q':
@@ -349,7 +349,7 @@ class BuilderWin(BuilderBase):
         cc.w('for Visual Studio 2017. Visit https://docs.tp4a.com for more details.')
         cc.w('\nOnce the zlib.sln generated, press Enter to continue or Q to quit...', end='')
         try:
-            x = env.input()
+            x = input()
         except EOFError:
             x = 'q'
         if x == 'q':
