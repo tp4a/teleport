@@ -9,6 +9,7 @@ from app.base.db import get_db, SQL
 from . import syslog
 from app.base.stats import tp_stats
 from app.base.utils import tp_timestamp_sec
+import app.base.host_alive
 
 
 def get_host_info(host_id):
@@ -141,6 +142,11 @@ def add_host(handler, args):
     if not db_ret:
         return TPE_DATABASE, 0
 
+    if len(args['router_ip']) > 0:
+        app.base.host_alive.tp_host_alive().add_host(args['router_ip'], check_now=True)
+    else:
+        app.base.host_alive.tp_host_alive().add_host(args['ip'], check_now=True)
+
     _id = db.last_insert_id()
 
     h_name = args['ip']
@@ -215,6 +221,9 @@ def remove_hosts(handler, hosts):
         h_name = h['ip']
         if len(h['router_ip']) > 0:
             h_name += '（由{}:{}路由）'.format(h['router_ip'], h['router_port'])
+            app.base.host_alive.tp_host_alive().remove_host(h['router_ip'])
+        else:
+            app.base.host_alive.tp_host_alive().remove_host(h['ip'])
         if h_name not in host_names:
             host_names.append(h_name)
 
@@ -253,10 +262,22 @@ def update_host(handler, args):
     db = get_db()
 
     # 1. 判断是否存在
-    sql = 'SELECT `id` FROM `{}host` WHERE `id`={};'.format(db.table_prefix, args['id'])
+    sql = 'SELECT `id`,`ip`,`router_ip` FROM `{}host` WHERE `id`={};'.format(db.table_prefix, args['id'])
     db_ret = db.query(sql)
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS
+
+    old_ip = db_ret[0][1]
+    old_router_ip = db_ret[0][2]
+    if len(old_router_ip) > 0:
+        app.base.host_alive.tp_host_alive().remove_host(old_router_ip)
+    else:
+        app.base.host_alive.tp_host_alive().remove_host(old_ip)
+
+    if len(args['router_ip']) > 0:
+        app.base.host_alive.tp_host_alive().add_host(args['router_ip'], check_now=True)
+    else:
+        app.base.host_alive.tp_host_alive().add_host(args['ip'], check_now=True)
 
     sql_list = list()
     sql_s = 'UPDATE `{tp}host` SET `os_type`={ph},`name`={ph},`ip`={ph},`router_ip`={ph}, ' \
@@ -485,3 +506,14 @@ def api_v1_get_host(hosts_ip):
                         ret[ip]['account'].append({'id': a['id'], 'name': a['username'], 'protocol': a['protocol_type']})
 
     return TPE_OK, ret
+
+
+def get_all_hosts_for_check_state():
+    """查询所有主机"""
+    s = SQL(get_db())
+    s.select_from('host', ['ip', 'router_ip'], alt_name='h')
+    err = s.query()
+    if err != TPE_OK:
+        return None
+
+    return s.recorder

@@ -23,8 +23,8 @@ class SessionManager(object):
 
         self._expire = 0
         self._lock = threading.RLock()
-        self._stop_flag = False
-        self._timer_cond = threading.Condition()
+        # self._stop_flag = False
+        # self._timer_cond = threading.Condition()
 
     def init(self):
         self.update_default_expire()
@@ -35,7 +35,7 @@ class SessionManager(object):
         self._expire = tp_cfg().sys.login.session_timeout * 60
 
     def _check_expire(self):
-        _now = int(datetime.datetime.utcnow().timestamp())
+        _now = int(datetime.datetime.now().timestamp())
         with self._lock:
             _keys = [k for k in self._session_dict]
             for k in _keys:
@@ -61,7 +61,7 @@ class SessionManager(object):
                 if s_id in self._session_dict:
                     del self._session_dict[s_id]
         else:
-            self._session_dict[s_id] = {'v': value, 't': int(datetime.datetime.utcnow().timestamp()), 'e': expire}
+            self._session_dict[s_id] = {'v': value, 't': int(datetime.datetime.now().timestamp()), 'e': expire}
 
     def get(self, s_id, _default=None):
         # 从session中获取一个数据（读取并更新最后访问时间）
@@ -70,11 +70,11 @@ class SessionManager(object):
                 if self._session_dict[s_id]['e'] == 0:
                     return self._session_dict[s_id]['v']
                 else:
-                    if int(datetime.datetime.utcnow().timestamp()) - self._session_dict[s_id]['t'] > self._session_dict[s_id]['e']:
+                    if int(datetime.datetime.now().timestamp()) - self._session_dict[s_id]['t'] > self._session_dict[s_id]['e']:
                         del self._session_dict[s_id]
                         return _default
                     else:
-                        self._session_dict[s_id]['t'] = int(datetime.datetime.utcnow().timestamp())
+                        self._session_dict[s_id]['t'] = int(datetime.datetime.now().timestamp())
                         return self._session_dict[s_id]['v']
 
             else:

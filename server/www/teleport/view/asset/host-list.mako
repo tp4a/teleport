@@ -18,6 +18,25 @@
 
 <%block name="embed_css">
     <style>
+        .alive {
+            font-size:24px;
+        }
+        .popover hr {
+            padding:0;
+            margin:3px 0;
+        }
+        .alive-online, a.alive-online:hover {
+            color: #3c763d;
+        }
+        .alive-unknown, a.alive-unknown:hover {
+            color: #cdcdcd;
+        }
+        .alive-warning, a.alive-warning:hover {
+            color: #eabc61;
+        }
+        .alive-offline, a.alive-offline:hover {
+            color: #d65a5a;
+        }
     </style>
 </%block>
 
