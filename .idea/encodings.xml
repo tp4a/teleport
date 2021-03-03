@@ -8,9 +8,10 @@
     <file url="file://$PROJECT_DIR$/common/libex/src/ex_ini.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/src/ex_log.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/src/ex_util.cpp" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/common/pyshell/include/pys.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/pyshell/include/pys.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/pyshell/src/pys_api.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/pyshell/src/pys_core.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/common/pyshell/src/pys_core.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/teleport/teleport_const.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/common/base_env.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/common/base_record.cpp" charset="GBK" />
@@ -46,7 +47,7 @@
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/telnet/telnet_recorder.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/telnet/telnet_session.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/telnet/telnet_session.h" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/server/tp_web/src/main.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_web/src/main.cpp" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/tp_web/src/ts_env.cpp" charset="GBK" />
   </component>
 </project>

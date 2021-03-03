@@ -26,6 +26,9 @@ extern "C" {
 #elif defined(EX_OS_LINUX)
 #	define PYS_USE_PYLIB_STATIC
 #	include <Python.h>
+#elif defined(EX_OS_MACOS)
+#	define PYS_USE_PYLIB_SHARED
+#	include <Python.h>
 #else
 #	error This platform not supported yet.
 #endif
@@ -200,73 +203,73 @@ extern "C" {
 
 	typedef void* PYS_HANDLE;
 
-	// ����һ��PyShell��������в�������Ӧ�˾�����У�һ�����̽���һ�������
+	// 创建一个PyShell句柄，所有操作均对应此句柄进行（一个进程仅有一个句柄）
 	PYS_HANDLE pys_create(void);
-	// ����һ��PyShell���
+	// 销毁一个PyShell句柄
 	void pys_destroy(PYS_HANDLE* pysh);
 
-	// ʹ��ָ��������ʱ·�����г�ʼ��������ʱ·���а���pythonXX.dll/python.zip/modules�ȵȣ�
+	// 使用指定的运行时路径进行初始化（运行时路径中包含pythonXX.dll/python.zip/modules等等）
 	PYS_BOOL pys_init_runtime(PYS_HANDLE pysh, const wchar_t* exec_file, const wchar_t* runtime_path);
 
-	// ����python������·�����ɶ�ε��ý���׷�ӣ���ʡ�ԣ�
+	// 设置python包搜索路径，可多次调用进行追加（可省略）
 	PYS_BOOL pys_add_search_path(PYS_HANDLE pysh, const wchar_t* path);
 
-	// ����python����ʱ�������в�������ʡ�ԣ�
+	// 设置python运行时的命令行参数（可省略）
 	void pys_set_argv(PYS_HANDLE pysh, int argc, wchar_t** argv);
-	// ׷��python����ʱ�������в�������ʡ�ԣ�
+	// 追加python运行时的命令行参数（可省略）
 	void pys_add_arg(PYS_HANDLE pysh, const wchar_t* arg);
-	// ����python���������ƣ���ʡ�ԣ�Ĭ��Ϊ��ǰ��ִ�г����ļ����ľ���·����
+	// 设置python解释器名称（可省略，默认为当前可执行程序文件名的绝对路径）
 	void pys_set_program(PYS_HANDLE pysh, const wchar_t* program_name);
 
-	// ������ڽű��ļ�����������һ��.py�ļ���Ҳ������һ��.zip�ļ�
+	// 设置入口脚本文件名，可以是一个.py文件，也可以是一个.zip文件
 	void pys_set_startup_file(PYS_HANDLE pysh, const wchar_t* filename);
 
-	// ��������ģ��������ں�������func_nameΪNULLʱĬ��ִ��ָ��ģ���е�main����
-	// ����������ʡ�ԣ�Ĭ������£�
-	// ���startup_file��һ��.py�ļ�����Ĭ��module_name����.py�ļ����ļ���������
-	// ���startup_file��һ��.zip�ļ�����Ĭ��module_name��`pysmain`��
+	// 设置启动模块名和入口函数名，func_name为NULL时默认执行指定模块中的main函数
+	// 本函数可以省略，默认情况下：
+	// 如果startup_file是一个.py文件，则默认module_name就是.py文件的文件名本身，
+	// 如果startup_file是一个.zip文件，则默认module_name是`pysmain`。
 	void pys_set_bootstrap_module(PYS_HANDLE pysh, const char* module_name, const char* func_name);
 
-	// ��ʼ��ģ��ĺ���ԭ��
+	// 初始化模块的函数原型
 	typedef PyObject* (*pys_init_module_func)(void);
 
 	typedef struct PYS_BUILTIN_FUNC
 	{
-		const char* py_func_name;	// Python�е���ʱʹ�õĺ�����
-		PyCFunction c_func_addr;	// ��Ӧ��C�ĺ���
-		PYS_BOOL have_args;			// �˺����Ƿ���Ҫ����
-		const char* py_func_desc;	// �˺������ĵ�ע�ͣ�����ΪNULL��
+		const char* py_func_name;	// Python中调用时使用的函数名
+		PyCFunction c_func_addr;	// 对应的C的函数
+		PYS_BOOL have_args;			// 此函数是否需要参数
+		const char* py_func_desc;	// 此函数的文档注释，可以为NULL。
 	}PYS_BUILTIN_FUNC;
 
 	typedef enum PYS_CONST_TYPE
 	{
-		PYS_CONST_BOOL,		// Python�еõ� True/False ��ֵ
-		PYS_CONST_LONG,		// Python�еõ�һ������
-		PYS_CONST_STRING,	// Python�еõ�һ���ַ���
-		PYS_CONST_BYTES		// Python�еõ�һ��Bytes��������
+		PYS_CONST_BOOL,		// Python中得到 True/False 的值
+		PYS_CONST_LONG,		// Python中得到一个整数
+		PYS_CONST_STRING,	// Python中得到一个字符串
+		PYS_CONST_BYTES		// Python中得到一个Bytes类型数据
 	}PYS_CONST_TYPE;
 
 	typedef struct PYS_BUILTIN_CONST
 	{
-		char* py_const_name;	// Python�е���ʱʹ�õı�����
-		PYS_CONST_TYPE type;	// ��������
-		size_t size;			// �������ݵĳ���
-		void* buffer;			// �������ݵ�����
+		char* py_const_name;	// Python中调用时使用的变量名
+		PYS_CONST_TYPE type;	// 常量类型
+		size_t size;			// 常量数据的长度
+		void* buffer;			// 常量数据的内容
 	}PYS_BUILTIN_CONST;
 
-	// ����һ���ڽ�ģ�飬���У����û�к�����������ô��Ӧ��funcs/consts����ΪNULL��
-	// �ɶ�ε��ñ���������������ڽ�ģ�顣�����ε���ʱʹ����ͬ��ģ�����������ͳ�����׷�ӵ���ģ����
-	// ͬһ��ģ���У��������ͳ����������ظ���������ͨ����Сд���֣�
+	// 增加一个内建模块，其中，如果没有函数或常量，那么对应的funcs/consts可以为NULL。
+	// 可多次调用本函数来创建多个内建模块。如果多次调用时使用相同的模块名，则函数和常量会追加到此模块中
+	// 同一个模块中，函数名和常量名不能重复（但可以通过大小写区分）
 	PYS_BOOL pys_add_builtin_module(PYS_HANDLE pysh, const char* module_name, pys_init_module_func init_func);
 
 	PyObject* pys_create_module(const char* module_name, PYS_BUILTIN_FUNC* funcs);
 	void pys_builtin_const_bool(PyObject* mod, const char* name, PYS_BOOL val);
 	void pys_builtin_const_long(PyObject* mod, const char* name, long val);
-	void pys_builtin_const_utf8(PyObject* mod, const char* name, const char* val);		// val ������utf8������ַ���
+	void pys_builtin_const_utf8(PyObject* mod, const char* name, const char* val);		// val 必须是utf8编码的字符串
 	void pys_builtin_const_wcs(PyObject* mod, const char* name, const wchar_t* val);
 	void pys_builtin_const_bin(PyObject* mod, const char* name, const ex_u8* val, size_t size);
 
-	// ����python������
+	// 运行python解释器
 	int pys_run(PYS_HANDLE pysh);
 
 #ifdef __cplusplus

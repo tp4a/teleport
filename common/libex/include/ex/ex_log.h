@@ -66,11 +66,11 @@ void EXLOG_FILE(const wchar_t *log_file, const wchar_t *log_path = nullptr, ex_u
 
 void EXLOG_CONSOLE(bool output_to_console);
 
+#define EXLOGD ex_printf_d
 #define EXLOGV ex_printf_v
 #define EXLOGI ex_printf_i
 #define EXLOGW ex_printf_w
 #define EXLOGE ex_printf_e
-#define EXLOGD ex_printf_d
 #define EXLOG_BIN ex_printf_bin
 
 #ifdef EX_OS_WIN32

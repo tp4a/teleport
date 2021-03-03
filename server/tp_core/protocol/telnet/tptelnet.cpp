@@ -49,8 +49,8 @@ static ex_rv tpp_cmd_set_runtime_config(const char* param) {
 		return TPE_PARAM;
 
 	ex_u32 noop_timeout = jp["noop_timeout"].asUInt();
-	if (noop_timeout == 0)
-		return TPE_PARAM;
+	// if (noop_timeout == 0)
+	// 	return TPE_PARAM;
 
 	g_telnet_proxy.set_cfg(noop_timeout * 60);
 

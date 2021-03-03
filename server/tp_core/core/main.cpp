@@ -63,11 +63,10 @@ static bool _process_cmd_line(int argc, wchar_t** argv)
 	}
 
 	g_run_type = RUN_UNKNOWN;
-	bool is_py_arg = false;
 
 	if (0 == wcscmp(argv[1], L"--version"))
 	{
-		EXLOGV("\nTeleport Server, version %ls.\n\n", TP_SERVER_VER);
+		EXLOGI("\nTeleport Server, version %ls.\n\n", TP_SERVER_VER);
 		return false;
 	}
 	else if (0 == wcscmp(argv[1], L"-i"))

@@ -80,7 +80,7 @@ public:
     // --------------------------
     // 通道管理
     // --------------------------
-    void set_channel_tp2srv_callbacks(ssh_channel ch_tp2srv);
+    // void set_channel_tp2srv_callbacks(ssh_channel ch_tp2srv);
 
     bool make_channel_pair(ssh_channel ch_tp2cli, ssh_channel ch_tp2srv);
 
@@ -156,6 +156,8 @@ private:
     bool m_first_auth;
     // 远程主机认证是否通过
     bool m_auth_passed;
+    // 如果认证过程中发生了错误，记录错误提示，后续建立通道后可以发送给客户端进行提示
+    std::string m_auth_err_msg;
     // 发生了不可逆的错误，需要关闭整个会话（包括所有的通道）
     bool m_fault;
 

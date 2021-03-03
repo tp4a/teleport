@@ -4,28 +4,28 @@
 #include <ex.h>
 #include <pys.h>
 
-// �����в���˵�������������������Է���ʽ������
+// 命令行参数说明（不带参数运行则以服务方式启动）
 // tp_web [-i|-u|--version] [ [-d] start] [...]
-//   -d          �����������������Ϣ����������Ϊ�ػ�����/����ģʽ��
-//   -i          ��װ����Ȼ���˳�������Winƽ̨��
-//   -u          ж�ط���Ȼ���˳�������Winƽ̨��
-//   --version  ��ӡ�汾��Ȼ���˳�
-//   start       �Է���ʽ����
-//   ...         ʣ������в��������ݸ�python�ű�
+//   -d          启动程序并输出调试信息（不会运行为守护进程/服务模式）
+//   -i          安装服务然后退出（仅限Win平台）
+//   -u          卸载服务然后退出（仅限Win平台）
+//   --version  打印版本号然后退出
+//   start       以服务方式运行
+//   ...         剩余的所有参数均传递给python脚本
 //
 // 
-// ִ��ָ����Python�ű���
+// 执行指定的Python脚本：
 // tp_web --py [-f FuncName] script_file.py ...
-//   --py             ����Ϊ��һ����������ʾ����ִ��Ϊִ��ָ���ű�
-//   -f FuncName      ָ����ں�����Ĭ��Ϊmain��
-//   script-file.py   ��ִ�еĽű��ļ�
-//   ...              ʣ������в��������ݸ�Python�ű�
+//   --py             必须为第一个参数，表示本次执行为执行指定脚本
+//   -f FuncName      指定入口函数，默认为main。
+//   script-file.py   被执行的脚本文件
+//   ...              剩余的所有参数均传递给Python脚本
 
 ExLogger g_ex_logger;
 bool g_is_debug = false;
 static ex_wstrs g_py_args;
 
-// �����ִ��ָ���ű�
+// 如果是执行指定脚本
 static ex_wstr g_py_script_file;
 static ex_wstr g_py_main_func;
 
@@ -40,8 +40,8 @@ static ex_u8 g_run_type = RUN_UNKNOWN;
 
 static bool _run_daemon(void);
 
-// ����������Python�ű�ʹ�ã���Ҫ��Ϊ�˼�¼��־��
-//   Windowsƽ̨�ϣ�tp_web�������־�ļ�д֮��Python�ű�����д�뷽ʽ�򿪴���־�ļ�ʱ��ʧ�ܡ�
+// 导出函数给Python脚本使用（主要是为了记录日志）
+//   Windows平台上，tp_web程序打开日志文件写之后，Python脚本尝试写入方式打开此日志文件时会失败。
 PyObject* init_web_builtin_module(void);
 
 #ifdef EX_OS_WIN32
@@ -186,7 +186,7 @@ static int _main_loop(void)
 		return 1;
 	}
 
-	// ����web��·��
+	// 设置web的路径
 	ex_wstr sf_path;
 	if (g_run_type == RUN_WEB)
 	{
@@ -344,10 +344,10 @@ static DWORD WINAPI service_thread_func(LPVOID lpParam);
 int main()
 {
 	int ret = 0;
-	LPWSTR szCmdLine = (LPWSTR)::GetCommandLineW(); //��ȡ�����в�����
+	LPWSTR szCmdLine = (LPWSTR)::GetCommandLineW(); //获取命令行参数；
 
 	int _argc = 0;
-	wchar_t** _argv = ::CommandLineToArgvW(szCmdLine, &_argc); //��������в����ַ�����
+	wchar_t** _argv = ::CommandLineToArgvW(szCmdLine, &_argc); //拆分命令行参数字符串；
 
 	ret = _app_main(_argc, _argv);
 	
@@ -379,7 +379,7 @@ static DWORD WINAPI service_thread_func(LPVOID lpParam)
 {
 	int ret = _main_loop();
 
-	// ���·���״̬��������������У���������Ϊֹͣ״̬��
+	// 更新服务状态（如果服务还在运行，将其设置为停止状态）
 	g_ServiceStatus.dwWin32ExitCode = 0;
 	g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
 	g_ServiceStatus.dwCheckPoint = 0;
@@ -552,7 +552,7 @@ static bool _run_daemon(void)
 
 
 //===============================================================
-// �����ڽ�ģ�鹩�ű�����
+// 加入内建模块供脚本调用
 //===============================================================
 PyObject* _py_log_output(PyObject* self, PyObject* args)
 {
@@ -629,10 +629,10 @@ PyObject* _py_log_console(PyObject* self, PyObject* args)
 
 PYS_BUILTIN_FUNC _demo_funcs[] = {
 	{
-		"log_output",			// �ű����������ڽű���ʹ��
-		_py_log_output,		// ��Ӧ��C���뺯����
-		PYS_TRUE,		// �����Ļ�����Ϣ���Ƿ���Ҫ�������ȵȣ�
-		"write log."	// ������˵���ĵ�����ѡ�������ǿ��ַ�����
+		"log_output",			// 脚本函数名，在脚本中使用
+		_py_log_output,		// 对应的C代码函数名
+		PYS_TRUE,		// 函数的基本信息（是否需要参数，等等）
+		"write log."	// 函数的说明文档，可选（可以是空字符串）
 	},
 
 	{
@@ -649,7 +649,7 @@ PYS_BUILTIN_FUNC _demo_funcs[] = {
 		"set log to console or not."
 	},
 
-	// ���һ�飬��һ����ԱΪ��ָ�룬��ʾ����
+	// 最后一组，第一个成员为空指针，表示结束
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -666,7 +666,7 @@ PyObject* init_web_builtin_module(void)
 	pys_builtin_const_long(mod, "EX_LOG_LEVEL_ERROR", EX_LOG_LEVEL_ERROR);
 
 // 	pys_builtin_const_bool(mod, "DEMO_CONST_2", PYS_TRUE);
-// 	//pys_builtin_const_wcs(mod, "DEMO_CONST_3", L"STRING ���Ĳ��� this is string.");
+// 	//pys_builtin_const_wcs(mod, "DEMO_CONST_3", L"STRING 中文测试 this is string.");
 // 	pys_builtin_const_wcs(mod, "DEMO_CONST_3", L"STRING this is string.");
 // 	pys_builtin_const_utf8(mod, "DEMO_CONST_4", "this is string.");
 //

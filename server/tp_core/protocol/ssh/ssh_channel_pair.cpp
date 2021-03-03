@@ -205,6 +205,7 @@ void SshChannelPair::process_pty_data_from_server(const uint8_t* data, uint32_t 
     }
 
     // 处理输入回显，合成最终的命令行字符串
+    // https://www.systutorials.com/docs/linux/man/4-console_codes/
     int offset = 0;
     bool esc_mode = false;
     int esc_arg = 0;
