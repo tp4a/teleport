@@ -139,7 +139,7 @@ elif [ ${SYS_NAME} = "Darw" ] ; then
     export CFG_FILE=config.macos.json
 	build_macos $@
 elif [ ${SYS_NAME} == "MSYS" ] ; then
-    export CFG_FILE=config.win.json
+    export CFG_FILE=config.windows.json
 	build_win $@
 else 
 	on_error_begin "Unsupported platform."

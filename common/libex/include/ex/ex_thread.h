@@ -147,17 +147,25 @@ public:
 
     ~ExEvent()
     {
+#ifdef EX_OS_WIN32
+#else
         pthread_mutex_destroy(&m_mutex);
         pthread_cond_destroy(&m_cond);
+#endif
     }
 
     void wait()
     {
+#ifdef EX_OS_WIN32
+#else
         pthread_cond_wait(&m_cond, &m_mutex);
+#endif
     }
 
     void wait_timeout_ms(int timeout_ms)
     {
+#ifdef EX_OS_WIN32
+#else
         // timeval.tv_usec ==== ms
         // timespec.tv_nsec === nano-second
         struct timeval  now      = { 0 };
@@ -169,11 +177,15 @@ public:
         out_time.tv_nsec = (long)((abs_time_ms % 1000ll) * 1000ll);
 
         pthread_cond_timedwait(&m_cond, &m_mutex, &out_time);
+#endif
     }
 
     void signal()
     {
+#ifdef EX_OS_WIN32
+#else
         pthread_cond_signal(&m_cond);
+#endif
     }
 
 private:

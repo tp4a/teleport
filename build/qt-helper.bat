@@ -16,6 +16,6 @@ echo %target%
 call %qtenv%
 call %vcvarsall% %bits%
 
-cd %tmp_path%
+cd /D %tmp_path%
 qmake %prj_path%
 nmake %target%

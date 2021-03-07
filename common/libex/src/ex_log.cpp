@@ -501,6 +501,7 @@ bool ExLogger::write_a(const char* buf) {
         return false;
 
 #ifdef EX_OS_WIN32
+    DWORD dwWritten = 0;
     WriteFile(m_file, buf, len, &dwWritten, nullptr);
     m_filesize += len;
     FlushFileBuffers(m_file);

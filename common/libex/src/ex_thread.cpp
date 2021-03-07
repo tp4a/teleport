@@ -22,7 +22,12 @@ void *ExThreadBase::_thread_func(void *pParam)
 
     _this->_on_stopped();
     EXLOGV("[thread] - `%s` exit.\n", _this->m_thread_name.c_str());
+    
+#ifdef  EX_OS_WIN32
+    return 0;
+#else
     return nullptr;
+#endif
 }
 
 ExThreadBase::ExThreadBase(const char *thread_name) :
