@@ -83,7 +83,7 @@ class BuilderBase:
         cc.e("this is a pure-virtual function.")
 
     def build_zlib(self):
-        file_name = 'zlilb{}.zip'.format(env.ver_zlib_number)
+        file_name = 'zlib{}.zip'.format(env.ver_zlib_number)
         self._build_zlib(file_name)
 
     def _download_zlib(self, file_name):

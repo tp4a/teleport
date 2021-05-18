@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 PATH_ROOT=$(cd "$(dirname "$0")"; pwd)
 #CFG_FILE=config.json
 
