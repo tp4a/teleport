@@ -49,7 +49,7 @@ class PYSBase:
         pypi_modules = ['cffi', 'cryptography', 'ldap3', 'mako', 'Pillow', 'psutil', 'pyasn1', 'pymysql', 'qrcode', 'tornado', 'wheezy.captcha']
         for p in pypi_modules:
             cc.n('install {} ...'.format(p))
-            utils.sys_exec('{} install -i https://pypi.tuna.tsinghua.edu.cn/simple {}'.format(pip, p), direct_output=True)
+            utils.sys_exec('{} install -i https://pypi.tuna.tsinghua.edu.cn/simple {}'.format(pip, p))
 
         self._make_base()
         self._make_python_zip()

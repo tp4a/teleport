@@ -148,7 +148,7 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 		EXLOGE("got connection info from web-server, but not all info valid.\n");
 		return TPE_PARAM;
 	}
-	
+
 	int user_id;
 	int host_id;
 	int acc_id;
@@ -194,7 +194,7 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 		|| user_username.length() == 0
 		|| host_ip.length() == 0 || conn_ip.length() == 0 || client_ip.length() == 0
 		|| conn_port <= 0 || conn_port >= 65535
-		|| acc_username.length() == 0 || acc_secret.length() == 0
+		|| acc_username.length() == 0
 		|| !(protocol_type == TP_PROTOCOL_TYPE_RDP || protocol_type == TP_PROTOCOL_TYPE_SSH || protocol_type == TP_PROTOCOL_TYPE_TELNET)
 		|| !(auth_type == TP_AUTH_TYPE_NONE || auth_type == TP_AUTH_TYPE_PASSWORD || auth_type == TP_AUTH_TYPE_PRIVATE_KEY)
 		)
@@ -202,7 +202,11 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 		return TPE_PARAM;
 	}
 
-	if (_enc) {
+	if(auth_type != TP_AUTH_TYPE_NONE && acc_secret.length() == 0) {
+	    return TPE_PARAM;
+	}
+
+	if (_enc && !acc_secret.empty()) {
 		ex_astr _auth;
 		if (!ts_db_field_decrypt(acc_secret, _auth))
 			return TPE_FAILED;
@@ -253,7 +257,6 @@ bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id)
 	jreq["param"]["protocol_sub_type"] = info.protocol_sub_type;
 
 	ex_astr json_param;
-	//json_param = json_writer.write(jreq);
     Json::StreamWriterBuilder jwb;
     std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
     ex_aoss os;
@@ -276,16 +279,13 @@ bool ts_web_rpc_session_begin(TS_CONNECT_INFO& info, int& record_id)
 		return false;
 	}
 
-	//Json::Reader jreader;
 	Json::Value jret;
 
-	//if (!jreader.parse(body.c_str(), jret))
     Json::CharReaderBuilder jcrb;
     std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
     const char *str_json_begin = body.c_str();
     ex_astr err;
 
-    //if (!jreader.parse(func_args.c_str(), jsRoot)) {
     if (!jreader->parse(str_json_begin, str_json_begin + body.length(), &jret, &err))
         return false;
 	if (!jret.isObject())
@@ -346,7 +346,7 @@ bool ts_web_rpc_session_end(const char* sid, int record_id, int ret_code)
     ex_aoss os;
     jwriter->write(jreq, &os);
     json_param = os.str();
-    
+
 	ex_astr param;
 	ts_url_encode(json_param.c_str(), param);
 

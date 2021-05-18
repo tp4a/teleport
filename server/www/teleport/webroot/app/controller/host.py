@@ -10,6 +10,7 @@ import tornado.gen
 import tornado.httpclient
 
 from app.base.configs import tp_cfg
+from app.base.host_alive import tp_host_alive
 from app.const import *
 from app.model import host
 from app.model import account
@@ -27,7 +28,8 @@ class HostListHandler(TPBaseHandler):
 
         err, groups = group.get_host_groups_for_user(self.current_user['id'], self.current_user['privilege'])
         param = {
-            'host_groups': groups
+            'host_groups': groups,
+            '_check_host_alive': tp_cfg().common.check_host_alive
         }
 
         self.render('asset/host-list.mako', page_param=json.dumps(param))
@@ -102,10 +104,29 @@ class DoGetHostsHandler(TPBaseJsonHandler):
 
         err, total_count, page_index, row_data = \
             host.get_hosts(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude)
+
+        ip_list = list()
+        for x in range(len(row_data)):
+            if row_data[x]['router_ip'] != '':
+                ip_list.append(row_data[x]['router_ip'])
+            else:
+                ip_list.append(row_data[x]['ip'])
+        ip_list = list(set(ip_list))
+
+        if tp_cfg().common.check_host_alive:
+            host_states = tp_host_alive().get_states(ip_list)
+            for x in range(len(row_data)):
+                if row_data[x]['router_ip'] != '':
+                    row_data[x]['_alive_info'] = host_states[row_data[x]['router_ip']]
+                else:
+                    row_data[x]['_alive_info'] = host_states[row_data[x]['ip']]
+                row_data[x]['_alive'] = row_data[x]['_alive_info']['state']
+
         ret = dict()
         ret['page_index'] = page_index
         ret['total'] = total_count
         ret['data'] = row_data
+
         self.write_json(err, data=ret)
 
 

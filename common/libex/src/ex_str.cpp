@@ -377,6 +377,29 @@ ex_wstr& ex_replace_all(ex_wstr& str, const ex_wstr& old_value, const ex_wstr& n
 	return str;
 }
 
+bool ex_strformat(ex_astr& out, size_t max_size, const char* fmt, ...) {
+	auto tmp = (char*)calloc(max_size, 1);
+	if (!tmp)
+		return false;
+
+	int ret = 0;
+	va_list valist;
+	va_start(valist, fmt);
+	//_ts_printf_a(level, EX_COLOR_BLACK, fmt, valist);
+#ifdef EX_OS_WIN32
+	ret = vsnprintf(tmp, max_size-1, fmt, valist);
+#else
+	ret = vsnprintf(tmp, max_size-1, fmt, valist);
+#endif
+	va_end(valist);
+
+	if (ret >= max_size)
+		return false;
+
+	out = tmp;
+	free(tmp);
+	return true;
+}
 
 
 #ifndef EX_OS_WIN32
@@ -869,13 +892,13 @@ const uint16_t* ex_str_utf16le::c_str() const {
 // 	int iSize = MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, NULL, 0);
 // 	if (iSize <= 0)
 // 		return false;
-// 
+//
 // 	//++iSize;
 // 	to.resize(iSize);
 // 	memset(&to[0], 0, sizeof(ex_utf16));
-// 
+//
 // 	MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, &to[0], iSize);
-// 
+//
 // 	return true;
 // }
 

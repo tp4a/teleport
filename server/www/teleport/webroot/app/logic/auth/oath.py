@@ -14,7 +14,7 @@ __all__ = ['tp_oath_generate_secret', 'tp_oath_verify_code', 'tp_oath_generate_q
 
 
 def tp_oath_generate_secret():
-    return _convert_secret_to_base32(binascii.b2a_hex(os.urandom(16))).replace('=', '')
+    return _convert_secret_to_base32(binascii.b2a_hex(os.urandom(20))).replace('=', '')
 
 
 def tp_oath_verify_code(secret, code):
@@ -53,7 +53,7 @@ def _get_totp_token(secret, factor=None):
     # 需要对padding符进行处理
     _len = len(secret)
     _pad = 8 - (_len % 8)
-    if _pad > 0:
+    if 0 < _pad < 8:
         secret += '=' * _pad
 
     key = base64.b32decode(secret)

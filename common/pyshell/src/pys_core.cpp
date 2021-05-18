@@ -3,6 +3,9 @@
 #include "pys_util.h"
 
 #ifdef PYS_USE_PYLIB_SHARED
+
+#if defined(EX_OS_WIN32)
+
 //========================================================
 // WIN32
 //========================================================
@@ -29,6 +32,39 @@ if(!pylib_ ## name) { \
         EXLOGE("[pys] can not GetProcAddress for " #name "\n"); \
         return -1; \
     }
+
+#else
+
+//========================================================
+// Unix
+//========================================================
+
+#define DECLPROC(name) \
+    __PROC__ ## name pylib_ ## name = NULL;
+
+#define GETPROCOPT(lib, name, sym) \
+	pylib_ ## name = (__PROC__ ## name)dlsym(lib, #sym)
+
+#define GETPROC(lib, name) \
+	GETPROCOPT(lib, name, name); \
+if(!pylib_ ## name) { \
+	EXLOGE("[pys] can not GetProcAddress for " #name "\n"); \
+	return -1;\
+}
+
+#pragma warning(disable:4054)
+
+#define DECLVAR(name) \
+    __VAR__ ## name* pylib_ ## name = NULL;
+#define GETVAR(lib, name) \
+    pylib_ ## name = (__VAR__ ## name*)dlsym(lib, #name); \
+    if (!pylib_ ## name) { \
+        EXLOGE("[pys] can not GetProcAddress for " #name "\n"); \
+        return -1; \
+    }
+
+
+#endif
 
 
 static int _pys_map_python_lib(DYLIB_HANDLE handle);
@@ -70,7 +106,7 @@ DYLIB_HANDLE _pys_dlopen(const wchar_t* dylib_path)
 		return NULL;
 	}
 
-	EXLOGD("[pys] py-lib-a: %s\n", path);
+	EXLOGD("[pys] py-lib-a: %s\n", path.c_str());
 
 	handle = dlopen(path.c_str(), RTLD_NOW | RTLD_GLOBAL);
 

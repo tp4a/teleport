@@ -18,10 +18,10 @@ namespace pys
 		Core();
 		~Core();
 
-		// µ÷ÓÃ¸÷¸ö³ÉÔ±º¯ÊıÉèÖÃ±ØÒªĞÅÏ¢Ö®ºóÔÙÔËĞĞ
-		int run(void);
+		// è°ƒç”¨å„ä¸ªæˆå‘˜å‡½æ•°è®¾ç½®å¿…è¦ä¿¡æ¯ä¹‹åå†è¿è¡Œ
+		int run();
 
-		// ³õÊ¼»¯ÎªÄ¬ÈÏÉèÖÃ
+		// åˆå§‹åŒ–ä¸ºé»˜è®¤è®¾ç½®
 		bool init(const wchar_t* exec_file, const wchar_t* runtime_path);
 
 		bool add_search_path(const wchar_t* wpath);
@@ -32,27 +32,27 @@ namespace pys
 		bool get_builtin_module_by_init_func(pys_init_module_func init_func, ex_astr& module_name);
 
 	private:
-		bool _load_dylib(void);
+		bool _load_dylib();
 
-		bool _run_init_builtin_modules(void);
-		bool _run_prepare(void);
-		void _run_set_program(void);
-		void _run_set_path(void);
-		void _run_set_argv(void);
+		bool _run_init_builtin_modules();
+		bool _run_prepare();
+		void _run_set_program();
+		void _run_set_path();
+		void _run_set_argv();
 
 
 	public:
-		ex_wstr m_prog_name;	// ´«µİ¸øPython½âÊÍÆ÷µÄ£¬Èç¹ûÃ»ÓĞÉèÖÃ´ËÖµ£¬ÔòÄ¬ÈÏÊ¹ÓÃm_exec_file¡£
+		ex_wstr m_prog_name;	// ä¼ é€’ç»™Pythonè§£é‡Šå™¨çš„ï¼Œå¦‚æœæ²¡æœ‰è®¾ç½®æ­¤å€¼ï¼Œåˆ™é»˜è®¤ä½¿ç”¨m_exec_fileã€‚
 		ex_astr m_bootstrap_module;
 		ex_astr m_bootstrap_func;
-		pys_wstr_list m_py_args;		// ´«µİ¸øPython½Å±¾µÄ²ÎÊı
+		pys_wstr_list m_py_args;		// ä¼ é€’ç»™Pythonè„šæœ¬çš„å‚æ•°
 
 	private:
 		bool m_is_zipped_app;
 
-		ex_wstr m_exec_file;	// µ±Ç°¿ÉÖ´ĞĞ³ÌĞòµÄÎÄ¼şÃû£¨¾ø¶ÔÂ·¾¶£©
-		ex_wstr m_exec_path;	// µ±Ç°¿ÉÖ´ĞĞ³ÌĞòËùÔÚµÄÂ·¾¶£¨¾ø¶ÔÂ·¾¶£©
-		ex_wstr m_runtime_path;	// pythonÔËĞĞ»·¾³Â·¾¶£¬Ä¬ÈÏÎª¿ÉÖ´ĞĞ³ÌĞòËùÔÚÂ·¾¶ÏÂµÄ `pysrt` Ä¿Â¼¡£
+		ex_wstr m_exec_file;	// å½“å‰å¯æ‰§è¡Œç¨‹åºçš„æ–‡ä»¶åï¼ˆç»å¯¹è·¯å¾„ï¼‰
+		ex_wstr m_exec_path;	// å½“å‰å¯æ‰§è¡Œç¨‹åºæ‰€åœ¨çš„è·¯å¾„ï¼ˆç»å¯¹è·¯å¾„ï¼‰
+		ex_wstr m_runtime_path;	// pythonè¿è¡Œç¯å¢ƒè·¯å¾„ï¼Œé»˜è®¤ä¸ºå¯æ‰§è¡Œç¨‹åºæ‰€åœ¨è·¯å¾„ä¸‹çš„ `pysrt` ç›®å½•ã€‚
 		ex_wstr m_start_file;
 		ex_wstr m_search_path_tmp;
 

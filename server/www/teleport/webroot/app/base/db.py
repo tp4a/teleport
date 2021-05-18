@@ -228,9 +228,9 @@ class TPDatabase:
             args = ()
 
         # log.d('[db] {}, {}\n'.format(sql, args))
-        # _start = datetime.datetime.utcnow().timestamp()
+        # _start = datetime.datetime.now().timestamp()
         ret = self._conn_pool.query(sql, args)
-        # _end = datetime.datetime.utcnow().timestamp()
+        # _end = datetime.datetime.now().timestamp()
         # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
         return ret
 
@@ -239,9 +239,9 @@ class TPDatabase:
             args = ()
         # log.d('[db] {}\n'.format(sql, args))
         # print('[db]', sql, args)
-        # _start = datetime.datetime.utcnow().timestamp()
+        # _start = datetime.datetime.now().timestamp()
         ret = self._conn_pool.exec(sql, args)
-        # _end = datetime.datetime.utcnow().timestamp()
+        # _end = datetime.datetime.now().timestamp()
         # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
         return ret
 
@@ -250,9 +250,9 @@ class TPDatabase:
         # for sql in sql_list:
         #     log.d('[db]  * {}\n'.format(sql))
 
-        # _start = datetime.datetime.utcnow().timestamp()
+        # _start = datetime.datetime.now().timestamp()
         ret = self._conn_pool.transaction(sql_list)
-        # _end = datetime.datetime.utcnow().timestamp()
+        # _end = datetime.datetime.now().timestamp()
         # log.d('[db] transaction\n')
         # log.d('[db]   cost {} seconds.\n'.format(_end - _start))
         return ret

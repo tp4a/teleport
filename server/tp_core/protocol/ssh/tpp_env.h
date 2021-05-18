@@ -3,18 +3,18 @@
 
 #include "../../common/base_env.h"
 
-class TppSshEnv : public TppEnvBase
-{
+class TppSshEnv : public TppEnvBase {
 public:
-	TppSshEnv();
-	~TppSshEnv();
+    TppSshEnv() noexcept;
+
+    ~TppSshEnv() override;
 
 public:
-	ex_astr bind_ip;
-	int bind_port;
+    ex_astr bind_ip;
+    int bind_port;
 
 private:
-	bool _on_init(TPP_INIT_ARGS* args);
+    bool _on_init(TPP_INIT_ARGS* args) override;
 };
 
 extern TppSshEnv g_ssh_env;

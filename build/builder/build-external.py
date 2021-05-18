@@ -83,7 +83,7 @@ class BuilderBase:
         cc.e("this is a pure-virtual function.")
 
     def build_zlib(self):
-        file_name = 'zlilb{}.zip'.format(env.ver_zlib_number)
+        file_name = 'zlib{}.zip'.format(env.ver_zlib_number)
         self._build_zlib(file_name)
 
     def _download_zlib(self, file_name):
@@ -107,9 +107,6 @@ class BuilderBase:
 
     def _prepare_python(self):
         cc.e("_prepare_python() pure-virtual function.")
-
-    def fix_output(self):
-        pass
 
 
 class BuilderWin(BuilderBase):
@@ -169,12 +166,26 @@ class BuilderWin(BuilderBase):
         cc.w('please install OpenSSL into "{}".'.format(self.OPENSSL_PATH_SRC))
         cc.w('\nOnce the OpenSSL installed, press Enter to continue or Q to quit...', end='')
         try:
-            x = env.input()
+            x = input()
         except EOFError:
             x = 'q'
         if x == 'q':
             return
 
+        _chk_output = [
+            os.path.join(self.OPENSSL_PATH_SRC, 'include', 'openssl', 'aes.h'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'include', 'openssl', 'opensslv.h'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'libcrypto32MT.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'libeay32MT.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'ssleay32MT.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'static', 'libcrypto32MT.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'static', 'libeay32MT.lib'),
+            os.path.join(self.OPENSSL_PATH_SRC, 'lib', 'VC', 'static', 'ssleay32MT.lib'),
+            ]
+
+        for f in _chk_output:
+            if not os.path.exists(f):
+                raise RuntimeError('build openssl static library from source code failed.')
 
         # cc.n('build openssl static library from source code... ')
 
@@ -234,11 +245,11 @@ class BuilderWin(BuilderBase):
             cc.n('fix libssh source code... ', end='')
             s_name = 'libssh-{}'.format(env.ver_libssh)
             utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'session.c'))
-            # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto.c'))
-            utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto-compat.c'))
+            # # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto.c'))
+            # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto-compat.c'))
             utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'session.c')
-            # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto.c')
-            utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto-compat.c')
+            # ## utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto.c')
+            # # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto-compat.c')
 
         out_file_lib = os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path, 'ssh.lib')
         out_file_dll = os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path, 'ssh.dll')
@@ -248,19 +259,61 @@ class BuilderWin(BuilderBase):
             return
         cc.v('')
 
-        cc.w('On Windows, when build libssh, need you use cmake-gui.exe to generate solution file')
-        cc.w('for Visual Studio 2017. Visit https://docs.tp4a.com for more details.')
-        cc.w('\nOnce the libssh.sln generated, press Enter to continue or Q to quit...', end='')
+
+
+        build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
+        if not os.path.exists(build_path):
+            utils.makedirs(build_path)
+
+        openssl_path = os.path.join(PATH_EXTERNAL, 'OpenSSL')
+
+        cmake_define = ' -DOPENSSL_INCLUDE_DIR={path_release}\include' \
+                       ' -DOPENSSL_LIBRARIES={path_release}\lib\VC\static' \
+                       ' -DWITH_SFTP=ON' \
+                       ' -DWITH_SERVER=ON' \
+                       ' -DWITH_GSSAPI=OFF' \
+                       ' -DWITH_ZLIB=OFF' \
+                       ' -DWITH_PCAP=OFF' \
+                       ' -DWITH_STATIC_LIB=ON' \
+                       ' -DUNIT_TESTING=OFF' \
+                       ' -DWITH_EXAMPLES=OFF' \
+                       ' -DWITH_BENCHMARKS=OFF' \
+                       ' -DWITH_NACL=OFF' \
+                       ''.format(path_release=openssl_path)
+
+        # ' -DCMAKE_INSTALL_PREFIX={path_release}'
+        # ' -DWITH_STATIC_LIB=ON'
+        # ' -DBUILD_SHARED_LIBS=OFF'
+
+
+        old_p = os.getcwd()
         try:
-            x = env.input()
-        except EOFError:
-            x = 'q'
-        if x == 'q':
-            return
+            os.chdir(build_path)
+            utils.cmake(build_path, 'Release', False, cmake_define=cmake_define)
+            os.chdir(build_path)
+            # utils.sys_exec('make install')
+        except:
+            cc.e('can not make')
+            raise
+        os.chdir(old_p)
+
+
+
+
+
+        # cc.w('On Windows, when build libssh, need you use cmake-gui.exe to generate solution file')
+        # cc.w('for Visual Studio 2017. Visit https://docs.tp4a.com for more details.')
+        # cc.w('\nOnce the libssh.sln generated, press Enter to continue or Q to quit...', end='')
+        # try:
+        #     x = env.input()
+        # except EOFError:
+        #     x = 'q'
+        # if x == 'q':
+        #     return
 
         cc.i('build libssh...')
         sln_file = os.path.join(self.LIBSSH_PATH_SRC, 'build', 'libssh.sln')
-        utils.msvc_build(sln_file, 'ssh', ctx.target_path, 'win32', False)
+        utils.msvc_build(sln_file, 'ssh_shared', ctx.target_path, 'win32', False)
         utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', ctx.target_path, 'ssh.lib'))
         utils.ensure_file_exists(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', ctx.target_path, 'ssh.dll'))
         utils.copy_file(os.path.join(self.LIBSSH_PATH_SRC, 'build', 'src', ctx.target_path), os.path.join(self.LIBSSH_PATH_SRC, 'lib', ctx.target_path), 'ssh.lib')
@@ -296,7 +349,7 @@ class BuilderWin(BuilderBase):
         cc.w('for Visual Studio 2017. Visit https://docs.tp4a.com for more details.')
         cc.w('\nOnce the zlib.sln generated, press Enter to continue or Q to quit...', end='')
         try:
-            x = env.input()
+            x = input()
         except EOFError:
             x = 'q'
         if x == 'q':
@@ -364,9 +417,6 @@ class BuilderWin(BuilderBase):
             os.rename(os.path.join(PATH_EXTERNAL, 'libuv-{}'.format(env.ver_libuv)), self.LIBUV_PATH_SRC)
         else:
             cc.w('already exists, skip.')
-
-    def fix_output(self):
-        pass
 
 
 class BuilderLinux(BuilderBase):
@@ -510,7 +560,7 @@ class BuilderLinux(BuilderBase):
             os.system('unzip "{}/{}" -d "{}"'.format(PATH_DOWNLOAD, file_name, self.PATH_TMP))
 
         cc.n('build libssh...', end='')
-        out_file = os.path.join(self.PATH_RELEASE, 'lib64', 'libssh.a')
+        out_file = os.path.join(self.PATH_RELEASE, 'lib', 'libssh.a')
         if os.path.exists(out_file):
             cc.w('already exists, skip.')
             return
@@ -519,11 +569,11 @@ class BuilderLinux(BuilderBase):
         cc.n('fix libssh source code... ', end='')
         s_name = 'libssh-{}'.format(env.ver_libssh)
         utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'session.c'))
-        # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto.c'))
-        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto-compat.c'))
+        # ## utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto.c'))
+        # # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto-compat.c'))
         utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'session.c')
-        # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto.c')
-        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto-compat.c')
+        # ## utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto.c')
+        # # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto-compat.c')
 
         build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
 
@@ -535,7 +585,7 @@ class BuilderLinux(BuilderBase):
                        ' -DWITH_GSSAPI=OFF' \
                        ' -DWITH_ZLIB=ON' \
                        ' -DWITH_PCAP=OFF' \
-                       ' -DBUILD_SHARED_LIBS=OFF' \
+                       ' -DWITH_STATIC_LIB=ON' \
                        ' -DUNIT_TESTING=OFF' \
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
@@ -543,23 +593,25 @@ class BuilderLinux(BuilderBase):
                        ''.format(path_release=self.PATH_RELEASE)
 
         # ' -DWITH_STATIC_LIB=ON'
+        # ' -DBUILD_SHARED_LIBS=OFF'
 
 
         old_p = os.getcwd()
         try:
             utils.cmake(build_path, 'Release', False, cmake_define=cmake_define, cmake_pre_define='CFLAGS="-fPIC"')
             os.chdir(build_path)
+            utils.sys_exec('make')
             utils.sys_exec('make install')
         except:
             pass
         os.chdir(old_p)
 
         utils.ensure_file_exists(out_file)
-        # files = os.listdir(os.path.join(self.PATH_RELEASE, 'lib'))
-        # for i in files:
-        #     if i.startswith('libssh.so'):
-        #         # use os.unlink() because some file should be a link.
-        #         os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
+        files = os.listdir(os.path.join(self.PATH_RELEASE, 'lib'))
+        for i in files:
+            if i.startswith('libssh.so'):
+                # use os.unlink() because some file should be a link.
+                os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
 
     def _build_zlib(self, file_name):
         # cc.w('skip build zlib again.')
@@ -584,6 +636,7 @@ class BuilderLinux(BuilderBase):
         try:
             utils.cmake(build_path, 'Release', False, cmake_define=cmake_define, cmake_pre_define='CFLAGS="-fPIC"')
             os.chdir(build_path)
+            utils.sys_exec('make')
             utils.sys_exec('make install')
         except:
             pass
@@ -595,9 +648,6 @@ class BuilderLinux(BuilderBase):
             if i.startswith('libz.so'):
                 # use os.unlink() because some file should be a link.
                 os.unlink(os.path.join(self.PATH_RELEASE, 'lib', i))
-
-    def fix_output(self):
-        pass
 
 
 class BuilderMacOS(BuilderBase):
@@ -696,6 +746,13 @@ class BuilderMacOS(BuilderBase):
         os.system('make install')
         os.chdir(old_p)
 
+        rm = ['libuv.la', 'libuv.dylib', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
+        for i in rm:
+            _path = os.path.join(self.PATH_RELEASE, 'lib', i)
+            if os.path.exists(_path):
+                utils.remove(_path)
+
+
     def _build_mbedtls(self, file_name):
         if not self._download_mbedtls(file_name):
             return
@@ -745,7 +802,7 @@ class BuilderMacOS(BuilderBase):
     def _build_libssh(self, file_name):
         # cc.n('skip build libssh on macOS.')
         # return
-        
+
         if not self._download_libssh(file_name):
             return
         if not os.path.exists(self.LIBSSH_PATH_SRC):
@@ -758,11 +815,20 @@ class BuilderMacOS(BuilderBase):
             return
         cc.v('')
 
+        cc.n('fix libssh source code... ', end='')
+        s_name = 'libssh-{}'.format(env.ver_libssh)
+        utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'session.c'))
+        # ## utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto.c'))
+        # # utils.ensure_file_exists(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src', 'libcrypto-compat.c'))
+        utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'session.c')
+        # ## utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto.c')
+        # # utils.copy_file(os.path.join(PATH_EXTERNAL, 'fix-external', 'libssh', s_name, 'src'), os.path.join(self.LIBSSH_PATH_SRC, 'src'), 'libcrypto-compat.c')
+
         build_path = os.path.join(self.LIBSSH_PATH_SRC, 'build')
 
+        # because on MacOS, I install openssl 1.1.1g by homebrew, it localted at /usr/local/opt/openssl
         cmake_define = ' -DCMAKE_INSTALL_PREFIX={path_release}' \
-                       ' -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include' \
-                       ' -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib' \
+                       ' -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl' \
                        ' -DWITH_GCRYPT=OFF' \
                        ' -DWITH_GEX=OFF' \
                        ' -DWITH_SFTP=ON' \
@@ -775,9 +841,12 @@ class BuilderMacOS(BuilderBase):
                        ' -DWITH_EXAMPLES=OFF' \
                        ' -DWITH_BENCHMARKS=OFF' \
                        ' -DWITH_NACL=OFF' \
+                       ' -DWITH_STATIC_LIB=ON' \
                        ''.format(path_release=self.PATH_RELEASE)
 
         # ' -DWITH_STATIC_LIB=ON'
+        # ' -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include'
+        # ' -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib'
 
         try:
             utils.cmake(build_path, 'Release', False, cmake_define)
@@ -815,6 +884,7 @@ class BuilderMacOS(BuilderBase):
         try:
             utils.cmake(build_path, 'Release', False, cmake_define=cmake_define, cmake_pre_define='CFLAGS="-fPIC"')
             os.chdir(build_path)
+            utils.sys_exec('make')
             utils.sys_exec('make install')
         except:
             pass
@@ -829,15 +899,6 @@ class BuilderMacOS(BuilderBase):
 
     def _prepare_python(self):
         pass
-
-    def fix_output(self):
-        # remove .so files, otherwise will link to .so but not .a in default.
-        # rm = ['libsqlite3.la', 'libsqlite3.so.0', 'libsqlite3.so', 'libsqlite3.so.0.8.6', 'libuv.la', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
-        rm = ['libuv.la', 'libuv.dylib', 'libuv.so.1', 'libuv.so', 'libuv.so.1.0.0']
-        for i in rm:
-            _path = os.path.join(self.PATH_RELEASE, 'lib', i)
-            if os.path.exists(_path):
-                utils.remove(_path)
 
 
 def gen_builder(dist):
@@ -861,9 +922,12 @@ def main():
     builder = None
 
     argv = sys.argv[1:]
+    command = ''
 
     for i in range(len(argv)):
-        if 'debug' == argv[i]:
+        if argv[i] in ['ext-client', 'ext-server', 'clear-ext-client', 'clear-ext-server']:
+            command = argv[i]
+        elif 'debug' == argv[i]:
             ctx.set_target(TARGET_DEBUG)
         elif 'x86' == argv[i]:
             ctx.set_bits(BITS_32)
@@ -875,17 +939,18 @@ def main():
     if builder is None:
         builder = gen_builder(ctx.host_os)
 
-    builder.prepare_python()
-
-    builder.build_jsoncpp()
-    builder.build_mongoose()
-    builder.build_openssl()
-    builder.build_libuv()
-    builder.build_mbedtls()
-    builder.build_zlib()
-    builder.build_libssh()
-
-    builder.fix_output()
+    if command == 'ext-client':
+        builder.build_jsoncpp()
+        builder.build_mongoose()
+        builder.build_openssl()
+    elif command == 'ext-server':
+        builder.prepare_python()
+        builder.build_mbedtls()
+        builder.build_jsoncpp()
+        builder.build_mongoose()
+        builder.build_libuv()
+        builder.build_zlib()
+        builder.build_libssh()
 
 
 if __name__ == '__main__':

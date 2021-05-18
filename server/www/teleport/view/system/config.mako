@@ -254,9 +254,16 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="key">会话超时</td>
+                        <td></td>
                         <td class="value">
-                            <input id="sess-noop-timeout" type="text" value="15"/><span class="unit">分钟</span><span class="desc">0~60。指定时间内远程会话没有任何数据包收发时，将此会话断开，为0则不检查。默认为15分钟。</span>
+                            <div>指定时间内远程会话没有任何数据包收发时，teleport将主动断开此会话。</div>
+                            <div class="alert alert-info">常用于ssh会话，客户端或主机端配置了KeepAlive（比如使用NO-OP防空闲指令）时，即使会话上没有任何操作和数据交互，仍然能保持连接不会中断。使用这里的会话超时设置可以将指定时间内无操作的会话强行关闭。</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td class="value">
+                            <input id="sess-noop-timeout" type="text" value="15"/><span class="unit">分钟内无数据收发则主动断开</span><span class="desc">0~60。为0则不做超时检查，保留会话的原始超时设置。默认为15分钟。</span>
                         </td>
                     </tr>
 

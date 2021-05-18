@@ -2,6 +2,7 @@
 #define __LIB_EX_TYPE_H__
 
 #include "ex_platform.h"
+#include <cstdint>
 
 #include <vector>
 
@@ -31,7 +32,7 @@ typedef int EX_BOOL;
 typedef std::vector<ex_u8> ex_bin;
 typedef std::vector<char> ex_chars;
 
-typedef ex_u32 ex_rv;
+typedef uint32_t ex_rv;
 
 
 #if defined(EX_OS_WIN32)

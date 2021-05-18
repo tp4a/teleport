@@ -9,9 +9,10 @@ public:
 	TsEnv();
 	~TsEnv();
 
-	bool init(const char* cfg_file, const char* res_path);
+	bool init(const char* bundle_path, const char* cfg_file, const char* res_path);
 
 public:
+    ex_wstr m_bundle_path;
 	ex_wstr m_cfg_file;
 	ex_wstr m_res_path;
 	

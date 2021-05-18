@@ -27,9 +27,9 @@ public:
     void clean_session();
 
 protected:
-    void _thread_loop();
+    void _thread_loop() override;
 
-    void _on_stop();
+    void _on_stop() override;
 
     void _close_all_sessions();
 

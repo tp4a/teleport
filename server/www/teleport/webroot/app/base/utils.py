@@ -44,6 +44,18 @@ def tp_convert_to_attr_dict(d):
     return ret
 
 
+def tp_bin(d):
+    if isinstance(d, str):
+        return d.encode('utf-8')
+    return d
+
+
+def tp_str(s):
+    if isinstance(s, bytes):
+        return s.decode('utf-8')
+    return s
+
+
 def tp_make_dir(path):
     """
     创建目录

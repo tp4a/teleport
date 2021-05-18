@@ -32,7 +32,6 @@ void ex_sleep_ms(int ms);
 
 EX_BOOL ex_localtime_now(int* t, struct tm* dt);
 
-
 FILE* ex_fopen(const ex_wstr& filename, const wchar_t* mode);
 FILE* ex_fopen(const ex_astr& filename, const char* mode);
 
@@ -51,5 +50,13 @@ int ex_ip4_name(const struct sockaddr_in* src, char* dst, size_t size);
 #define EX_IPV4_NAME_LEN   16
 #define EX_IPV6_NAME_LEN   46
 const char* ex_inet_ntop(int af, const void *src, char *dst, size_t size);
+
+#ifndef MIN
+#   ifdef EX_OS_WIN32
+#       define MIN(x, y) min((x), (y))
+#   else
+#       define MIN(x, y) std::min((x), (y))
+#   endif
+#endif
 
 #endif // __LIB_EX_UTIL_H__

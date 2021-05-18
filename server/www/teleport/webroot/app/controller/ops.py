@@ -90,6 +90,110 @@ class SessionListsHandler(TPBaseHandler):
         self.render('ops/sessions.mako')
 
 
+@tornado.gen.coroutine
+def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator):
+    ret = {
+        'code': TPE_OK,
+        'message': '',
+        'data': {}
+    }
+
+    conn_info = dict()
+    conn_info['_enc'] = 1
+    conn_info['host_id'] = 0
+    conn_info['client_ip'] = client_ip
+    conn_info['user_id'] = 1
+    conn_info['user_username'] = operator
+
+    # 直接连接（无需授权，第三方服务操作，已经经过授权检查了）
+    err, acc_info = account.get_account_info(acc_id)
+    if err != TPE_OK:
+        ret['code'] = err
+        ret['message'] = '无此远程账号'
+        return ret
+
+    host_id = acc_info['host_id']
+    acc_info['protocol_flag'] = TP_FLAG_ALL
+    acc_info['record_flag'] = TP_FLAG_ALL
+
+    # 获取要远程连接的主机信息（要访问的IP地址，如果是路由模式，则是路由主机的IP+端口）
+    err, host_info = host.get_host_info(host_id)
+    if err != TPE_OK:
+        ret['code'] = err
+        ret['message'] = '未找到对应远程主机'
+        return ret
+
+    conn_info['host_id'] = host_id
+    conn_info['host_ip'] = host_info['ip']
+    if len(host_info['router_ip']) > 0:
+        conn_info['conn_ip'] = host_info['router_ip']
+        conn_info['conn_port'] = host_info['router_port']
+    else:
+        conn_info['conn_ip'] = host_info['ip']
+        conn_info['conn_port'] = acc_info['protocol_port']
+
+    conn_info['acc_id'] = acc_id
+    conn_info['acc_username'] = acc_info['username']
+    conn_info['username_prompt'] = acc_info['username_prompt']
+    conn_info['password_prompt'] = acc_info['password_prompt']
+    conn_info['protocol_flag'] = acc_info['protocol_flag']
+    conn_info['record_flag'] = acc_info['record_flag']
+
+    conn_info['protocol_type'] = acc_info['protocol_type']
+    conn_info['protocol_sub_type'] = protocol_sub_type
+
+    conn_info['auth_type'] = acc_info['auth_type']
+    if acc_info['auth_type'] == TP_AUTH_TYPE_PASSWORD:
+        conn_info['acc_secret'] = acc_info['password']
+    elif acc_info['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY:
+        conn_info['acc_secret'] = acc_info['pri_key']
+    else:
+        conn_info['acc_secret'] = ''
+
+    with tmp_conn_id_lock:
+        global tmp_conn_id_base
+        tmp_conn_id_base += 1
+        conn_id = tmp_conn_id_base
+
+    # log.v('CONN-INFO:', conn_info)
+    tp_session().set('tmp-conn-info-{}'.format(conn_id), conn_info, 10)
+
+    req = {'method': 'request_session', 'param': {'conn_id': conn_id}}
+    _yr = core_service_async_post_http(req)
+    _code, ret_data = yield _yr
+    if _code != TPE_OK:
+        ret['code'] = _code
+        ret['message'] = '无法连接到核心服务'
+        return ret
+    if ret_data is None:
+        ret['code'] = TPE_FAILED
+        ret['message'] = '调用核心服务获取会话ID失败'
+        return ret
+
+    if 'sid' not in ret_data:
+        ret['code'] = TPE_FAILED
+        ret['message'] = '核心服务获取会话ID时返回错误数据'
+        return ret
+
+    data = dict()
+    data['session_id'] = ret_data['sid']
+    data['host_ip'] = host_info['ip']
+    data['host_name'] = host_info['name']
+    data['protocol_flag'] = acc_info['protocol_flag']
+
+    if conn_info['protocol_type'] == TP_PROTOCOL_TYPE_RDP:
+        data['teleport_port'] = tp_cfg().core.rdp.port
+    elif conn_info['protocol_type'] == TP_PROTOCOL_TYPE_SSH:
+        data['teleport_port'] = tp_cfg().core.ssh.port
+    elif conn_info['protocol_type'] == TP_PROTOCOL_TYPE_TELNET:
+        data['teleport_port'] = tp_cfg().core.telnet.port
+
+    ret['code'] = TPE_OK
+    ret['message'] = ''
+    ret['data'] = data
+    return ret
+
+
 class DoGetSessionIDHandler(TPBaseJsonHandler):
     @tornado.gen.coroutine
     def post(self):
@@ -177,12 +281,12 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
                 return
 
             acc_id = args['acc_id']
-            host_id = args['host_id']
 
             err, acc_info = account.get_account_info(acc_id)
             if err != TPE_OK:
                 return self.write_json(err)
 
+            host_id = acc_info['host_id']
             acc_info['protocol_flag'] = TP_FLAG_ALL
             acc_info['record_flag'] = TP_FLAG_ALL
 

@@ -31,7 +31,7 @@ class TPCron(threading.Thread):
             if name in self._jobs:
                 return False
             self._jobs[name] = {'f': func, 't': 0, 'i': interval_seconds}
-            _now = int(datetime.datetime.utcnow().timestamp())
+            _now = int(datetime.datetime.now().timestamp())
             if first_interval_seconds is not None:
                 self._jobs[name]['t'] = _now + first_interval_seconds - interval_seconds
 
@@ -45,7 +45,7 @@ class TPCron(threading.Thread):
             time.sleep(1)
 
             with self._lock:
-                _now = int(datetime.datetime.utcnow().timestamp())
+                _now = int(datetime.datetime.now().timestamp())
                 for j in self._jobs:
                     # log.v('--now: {}, job-name: {}, job-t: {}, job-i: {}\n'.format(_now, j, self._jobs[j]['t'], self._jobs[j]['i']))
                     if _now - self._jobs[j]['t'] >= self._jobs[j]['i']:

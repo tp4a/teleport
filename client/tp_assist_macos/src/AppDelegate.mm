@@ -70,11 +70,14 @@ int AppDelegate_select_app (void *_self) {
     // Needed to trigger the menuWillOpen event
     [menu setDelegate:self];
 	
-	NSString *resPath = [[NSBundle mainBundle] resourcePath];
+    NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
+    std::string bundle_path = [bundlePath cStringUsingEncoding:NSUTF8StringEncoding];
+
+    NSString *resPath = [[NSBundle mainBundle] resourcePath];
 	std::string cpp_res_path = [resPath cStringUsingEncoding:NSUTF8StringEncoding];
 	std::string cpp_cfg_file = [cfgFile cStringUsingEncoding:NSUTF8StringEncoding];
 	
-	int ret = cpp_main((__bridge void*)self, cpp_cfg_file.c_str(), cpp_res_path.c_str());
+    int ret = cpp_main((__bridge void*)self, bundle_path.c_str(), cpp_cfg_file.c_str(), cpp_res_path.c_str());
 	if(ret != 0) {
         http_rpc_stop();
 

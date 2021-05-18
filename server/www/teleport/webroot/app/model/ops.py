@@ -482,7 +482,7 @@ def get_auth(auth_id):
 
 def get_all_remotes(handler, sql_filter, sql_order, sql_limit):
     s = SQL(get_db())
-    s.select_from('host', ['id', 'name', 'ip', 'router_ip', 'router_port', 'state'], alt_name='h')
+    s.select_from('host', ['id', 'name', 'ip', 'router_ip', 'router_port', 'desc', 'cid', 'state'], alt_name='h')
 
     str_where = ''
     _where = list()
@@ -492,7 +492,7 @@ def get_all_remotes(handler, sql_filter, sql_order, sql_limit):
             if k == 'state':
                 _where.append('h.state={}'.format(sql_filter[k]))
             elif k == 'search':
-                _where.append('(h.name LIKE "%{k}%" OR h.ip LIKE "%{k}%" OR h.router_ip LIKE "%{k}%")'.format(k=sql_filter[k]))
+                _where.append('(h.name LIKE "%{k}%" OR h.ip LIKE "%{k}%" OR h.router_ip LIKE "%{k}%" OR h.desc LIKE "%{k}%" OR h.cid LIKE "%{k}%")'.format(k=sql_filter[k]))
             elif k == 'host_group':
                 shg = SQL(get_db())
                 shg.select_from('group_map', ['mid'], alt_name='g')
@@ -617,7 +617,7 @@ def get_remotes(handler, sql_filter, sql_order, sql_limit):
             if k == 'search':
                 ss = SQL(get_db())
                 ss.select_from('host', ['id'], alt_name='h')
-                ss.where('(h.name LIKE "%{k}%" OR h.ip LIKE "%{k}%" OR h.router_ip LIKE "%{k}%")'.format(k=sql_filter[k]))
+                ss.where('(h.name LIKE "%{k}%" OR h.ip LIKE "%{k}%" OR h.router_ip LIKE "%{k}%" OR h.desc LIKE "%{k}%" OR h.cid LIKE "%{k}%")'.format(k=sql_filter[k]))
                 err = ss.query()
                 if err != TPE_OK:
                     return err, 0, 1, []

@@ -9,11 +9,8 @@ import time
 from . import colorconsole as cc
 from .env import env
 
-if env.is_py2:
-    import imp
-elif env.is_py3:
-    import importlib
-    import importlib.machinery
+import importlib
+import importlib.machinery
 
 
 def _check_download_file(file_name):
@@ -96,13 +93,7 @@ def extension_suffixes():
     #   type为文件类型, 1代表PY_SOURCE, 2代表PY_COMPILED, 3代表C_EXTENSION
 
     EXTENSION_SUFFIXES = list()
-    if env.is_py2:
-        suf = imp.get_suffixes()
-        for s in suf:
-            if s[2] == 3:
-                EXTENSION_SUFFIXES.append(s[0])
-    else:
-        EXTENSION_SUFFIXES = importlib.machinery.EXTENSION_SUFFIXES
+    EXTENSION_SUFFIXES = importlib.machinery.EXTENSION_SUFFIXES
 
     if env.is_win:
         if '.dll' not in EXTENSION_SUFFIXES:
@@ -268,8 +259,8 @@ def ensure_file_exists(filename):
         raise RuntimeError('path exists but not a file: {}'.format(filename))
 
 
-def sys_exec(cmd, direct_output=False, output_codec=None):
-    print(cmd)
+def sys_exec(cmd, direct_output=True, output_codec=None):
+    cc.o(cmd)
     if output_codec is None:
         if env.is_win:
             output_codec = 'gb2312'
@@ -280,9 +271,11 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
     if env.is_win:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
 
+    # elif env.is_macos:
+    #     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
+
     else:
-        p = subprocess.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                             universal_newlines=True, shell=True)
+        p = subprocess.Popen(cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
 
     output = list()
     f = p.stdout
@@ -300,7 +293,7 @@ def sys_exec(cmd, direct_output=False, output_codec=None):
 
     ret = p.wait()
 
-    return (ret, output)
+    return ret, output
 
 
 def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
@@ -310,39 +303,64 @@ def msvc_build(sln_file, proj_name, target, platform, force_rebuild):
     if force_rebuild:
         cmd = '"{}" "{}" "/target:clean" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, target,
                                                                                           platform)
-        ret, _ = sys_exec(cmd, direct_output=True)
+        ret, _ = sys_exec(cmd)
         cc.v('ret:', ret)
 
     cmd = '"{}" "{}" "/target:{}" "/property:Configuration={};Platform={}"'.format(env.msbuild, sln_file, proj_name,
                                                                                    target, platform)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('build MSVC project `{}` failed.'.format(proj_name))
 
 
-def qt_build_win(prj_path, prj_name, bit_path, target_path):
-    cc.n(env.visual_studio_path)
+def qt_build(prj_path, prj_name, bit_path, target_path):
+    # cc.n(env.qt)
     if env.qt is None:
         raise RuntimeError('where is `qt`?')
 
     if env.is_win:
         tmp_path = os.path.join(env.root_path, 'out', '_tmp_', prj_name, bit_path)
+        makedirs(tmp_path)
         # C:\Windows\System32\cmd.exe /A /Q /K C:\Qt\Qt5.12.0\5.12.0\msvc2017\bin\qtenv2.bat
-        cmd = 'C:\\Windows\\System32\\cmd.exe /A /Q /C ""{}\qt-helper.bat" "{}\\bin\\qtenv2.bat" "{}VC\\Auxiliary\\Build\\vcvarsall.bat" {} "{}" "{}" {}"'.format(env.build_path, env.qt, env.visual_studio_path, bit_path, tmp_path, prj_path, target_path)
-        ret, _ = sys_exec(cmd, direct_output=True)
+        cmd = 'C:\\Windows\\System32\\cmd.exe /A /Q /C ""{}\\qt-helper.bat" "{}\\bin\\qtenv2.bat" "{}VC\\Auxiliary\\Build\\vcvarsall.bat" {} "{}" "{}" {}"'.format(env.build_path, env.qt, env.visual_studio_path, bit_path, tmp_path, prj_path, target_path)
+        ret, _ = sys_exec(cmd)
         if ret != 0:
-            raise RuntimeError('build XCode project `{}` failed.'.format(proj_name))
+            raise RuntimeError('build Qt project `{}` failed.'.format(prj_name))
+    elif env.is_macos:
+        qmake = os.path.join(env.qt, 'qmake')
+        pro_file = prj_name + '.pro'
 
+        old_p = os.getcwd()
+        os.chdir(prj_path)
+
+        cmd = '"{}" "{}"; make'.format(qmake, pro_file)
+        ret, _ = sys_exec(cmd)
+        if ret != 0:
+            raise RuntimeError('make Makefile for build `{}` failed.'.format(prj_name))
+
+        os.chdir(old_p)
+
+
+def qt_deploy(app):
+    if env.qt is None:
+        raise RuntimeError('where is `qt`?')
+
+    if env.is_macos:
+        qmake = os.path.join(env.qt, 'macdeployqt')
+        cmd = '"{}" "{}"'.format(qmake, app)
+        ret, _ = sys_exec(cmd)
+        if ret != 0:
+            raise RuntimeError('make deploy for QT failed.')
 
 
 def xcode_build(proj_file, proj_name, target, force_rebuild):
     if force_rebuild:
         cmd = 'xcodebuild -project "{}" -target {} -configuration {} clean'.format(proj_file, proj_name, target)
-        ret, _ = sys_exec(cmd, direct_output=True)
+        ret, _ = sys_exec(cmd)
         cc.v('ret:', ret)
 
     cmd = 'xcodebuild -project "{}" -target {} -configuration {}'.format(proj_file, proj_name, target)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('build XCode project `{}` failed.'.format(proj_name))
 
@@ -355,7 +373,7 @@ def make_dmg(json_file, dmg_file):
         makedirs(out_path)
 
     cmd = 'appdmg "{}" "{}"'.format(json_file, dmg_file)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('make dmg failed.')
 
@@ -365,7 +383,7 @@ def nsis_build(nsi_file, _define=''):
         raise RuntimeError('where is `nsis`?')
 
     cmd = '"{}" /V2 {} /X"SetCompressor /SOLID /FINAL lzma" "{}"'.format(env.nsis, _define, nsi_file)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('make installer with nsis failed. [{}]'.format(nsi_file))
 
@@ -389,9 +407,16 @@ def cmake(work_path, target, force_rebuild, cmake_define='', cmake_pre_define=''
         target = 'Debug'
     else:
         target = 'Release'
-    cmd = '{} "{}" -DCMAKE_BUILD_TYPE={} {} ..;make'.format(cmake_pre_define, env.cmake, target, cmake_define)
-    cc.o(cmd)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    cmd = '{} "{}" -DCMAKE_BUILD_TYPE={} {} ..'.format(cmake_pre_define, env.cmake, target, cmake_define)
+    # cc.o(cmd)
+    ret, _ = sys_exec(cmd)
+    if ret != 0:
+        raise RuntimeError('build with cmake failed, ret={}. [{}]'.format(ret, target))
+
+    cmd = 'make'
+    # cc.o(cmd)
+    ret, _ = sys_exec(cmd)
+
     os.chdir(old_p)
     if ret != 0:
         raise RuntimeError('build with cmake failed, ret={}. [{}]'.format(ret, target))
@@ -402,7 +427,7 @@ def strip(filename):
     if not os.path.exists(filename):
         return False
     cmd = 'strip {}'.format(filename)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('failed to strip binary file [{}], ret={}.'.format(filename, ret))
     return True
@@ -413,7 +438,7 @@ def fix_new_line_flag(filename):
     if not os.path.exists(filename):
         return False
     cmd = 'dos2unix {}'.format(filename)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     if ret != 0:
         raise RuntimeError('failed to dos2unix file [{}], ret={}.'.format(filename, ret))
     return True
@@ -468,7 +493,7 @@ def make_targz(work_path, folder, to_file):
 
     os.chdir(work_path)
     cmd = 'tar zcf "{}" "{}"'.format(to_file, folder)
-    ret, _ = sys_exec(cmd, direct_output=True)
+    ret, _ = sys_exec(cmd)
     ensure_file_exists(to_file)
     os.chdir(old_p)
 

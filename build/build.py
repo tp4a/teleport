@@ -11,11 +11,6 @@ import builder.core.colorconsole as cc
 import builder.core.utils as utils
 from builder.core.context import *
 
-if env.is_py2:
-    _input = raw_input
-else:
-    _input = input
-
 options = list()
 options_idx = 0
 ctx = BuildContext()
@@ -43,7 +38,21 @@ def main():
     make_options()
 
     if action is not None:
-        cc.v(action)
+        if action == '-h' or action == '--help':
+            max_name_len = 0
+            for x in options:
+                if x['id'] != '--SPLIT-LINE--':
+                    max_name_len = max(len(x['name']), max_name_len)
+            max_name_len += 4
+
+            for x in options:
+                if x['id'] != '--SPLIT-LINE--':
+                    name_pad = max_name_len - len(x['name'])
+                    cc.o((cc.CR_INFO, x['name']), (cc.CR_VERBOSE, ' ' * name_pad), (cc.CR_VERBOSE, x['disp']))
+
+            return
+
+        # cc.v(action)
         opt = select_option_by_name(action)
         if opt is None:
             cc.e('unknown config: ', action)
@@ -58,16 +67,6 @@ def main():
         if x == 'q':
             break
 
-        if x == 'c':
-            clean_all()
-            continue
-        elif x == 'a':
-            clean_everything()
-            continue
-        elif x == 'e':
-            clean_external()
-            continue
-
         try:
             x = int(x)
         except:
@@ -75,10 +74,10 @@ def main():
             continue
 
         opt = select_option_by_id(int(x))
-        if 'config' == opt['name']:
-            if make_config():
-                make_options()
-            continue
+        # if 'config' == opt['name']:
+        #     if make_config():
+        #         make_options()
+        #     continue
 
         if opt is None:
             cc.e('unknown selection: ', x)
@@ -88,7 +87,7 @@ def main():
 
         cc.w('\ntask finished, press Enter to continue or Q to quit...', end='')
         try:
-            x = _input()
+            x = input()
         except EOFError:
             x = 'q'
         if x == 'q':
@@ -121,16 +120,16 @@ def clean_everything():
 
 
 def clean_external():
-    #utils.remove(os.path.join(env.root_path, 'out'))
+    # utils.remove(os.path.join(env.root_path, 'out'))
     utils.remove(os.path.join(env.root_path, 'external', 'jsoncpp'))
     utils.remove(os.path.join(env.root_path, 'external', 'libuv'))
     utils.remove(os.path.join(env.root_path, 'external', 'mbedtls'))
     utils.remove(os.path.join(env.root_path, 'external', 'mongoose'))
-    #utils.remove(os.path.join(env.root_path, 'external', 'openssl'))
-    #utils.remove(os.path.join(env.root_path, 'external', 'python'))
-    #utils.remove(os.path.join(env.root_path, 'external', 'libssh-win-static', 'lib'))
-    #utils.remove(os.path.join(env.root_path, 'external', 'libssh-win-static', 'src'))
-    #utils.remove(os.path.join(env.root_path, 'external', 'linux', 'tmp'))
+    # utils.remove(os.path.join(env.root_path, 'external', 'openssl'))
+    # utils.remove(os.path.join(env.root_path, 'external', 'python'))
+    # utils.remove(os.path.join(env.root_path, 'external', 'libssh-win-static', 'lib'))
+    # utils.remove(os.path.join(env.root_path, 'external', 'libssh-win-static', 'src'))
+    # utils.remove(os.path.join(env.root_path, 'external', 'linux', 'tmp'))
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libmbedcrypto.a'))
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libmbedtls.a'))
     utils.remove(os.path.join(env.root_path, 'external', 'linux', 'release', 'lib', 'libmbedx509.a'))
@@ -150,26 +149,23 @@ def do_opt(opt):
     elif 'pysrt' == opt['name']:
         script = 'build-pysrt.py'
 
-    elif 'external' == opt['name']:
+    elif opt['name'] in ['ext-client', 'ext-server', 'clear-ext-client', 'clear-ext-server']:
         script = 'build-external.py'
-        arg = '%s %s' % (ctx.target_path, opt['bits'])
+        arg = '%s %s %s' % (opt['name'], ctx.target_path, opt['bits'])
 
     elif 'server' == opt['name']:
         script = 'build-server.py'
         arg = '%s %s server' % (ctx.target_path, opt['bits'])
 
-    elif 'installer' == opt['name']:
+    elif 'server-installer' == opt['name']:
         script = 'build-installer.py'
-        # arg = 'installer'
-        arg = '%s %s installer' % (ctx.dist, opt['bits'])
+        arg = '%s %s server-installer' % (ctx.dist, opt['bits'])
 
-    elif 'assist-exe' == opt['name']:
+    elif 'client' == opt['name']:
         script = 'build-assist.py'
         arg = '%s %s exe' % (ctx.target_path, opt['bits'])
-    # elif 'assist-rdp' == opt['name']:
-    #     script = 'build-assist.py'
-    #     arg = '%s rdp' % (opt['bits'])
-    elif 'assist-installer' == opt['name']:
+
+    elif 'client-installer' == opt['name']:
         script = 'build-assist.py'
         arg = '%s %s installer' % (ctx.dist, opt['bits'])
 
@@ -177,112 +173,123 @@ def do_opt(opt):
         cc.e('unknown option: ', opt['name'])
         return
 
-    # cmd = '"%s" -B "%s" %s' % (utils.cfg.py_exec, os.path.join(BUILDER_PATH, script), arg)
     cmd = '%s -B %s %s' % (env.py_exec, os.path.join(env.builder_path, script), arg)
-    print(cmd)
     os.system(cmd)
 
 
 def select_option_by_name(name):
-    global options
-
-    for o in range(len(options)):
-        if options[o] is None:
-            continue
-
-        if name == options[o]['name']:
-            return options[o]
+    for x in options:
+        if x['id'] != '--SPLIT-LINE--':
+            if name == x['name']:
+                return x
 
     return None
 
 
 def select_option_by_id(_id):
-    global options
+    for x in options:
+        if x['id'] == _id:
+            return x
 
-    for o in range(len(options)):
-        if options[o] is None:
-            continue
-        if options[o]['id'] == _id:
-            return options[o]
     return None
 
 
 def add_option(bits, name, disp):
     global options, options_idx
     options_idx += 1
-    # if bits is not None:
-    #     disp = '[%s] %s' % (bits, disp)
     options.append({'id': options_idx, 'name': name, 'disp': disp, 'bits': bits})
 
 
-def add_split():
+def add_split(title=None):
     global options
-    options.append(None)
+    options.append({'id': '--SPLIT-LINE--', 'title': title})
 
 
 def make_options():
-    # global options, options_idx
-    #
-    # options = list()
-    # options_idx = 0
-
-    if ctx.host_os in ['windows', 'macos']:
+    if ctx.host_os in ['windows']:
+        add_split('prepare external [build once]')
+        # add_option('x86', 'external', '[OBSOLETE] Build external dependency')
+        add_option('x86', 'ext-client', '[client] Build external libraries for client')
+        # add_split('prepare for server [build once]')
+        add_option('x86', 'pysrt', '[server] Make Python-Runtime for python%s-x86' % env.py_ver_str)
+        add_option('x86', 'ext-server', '[server] Build external libraries for server')
+        add_split('version [build every release]')
         add_option('x86', 'ver', 'Update version setting')
-        add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % env.py_ver_str)
-        add_option('x64', 'external', 'Build external dependency')
-        add_split()
-        add_option('x86', 'assist-exe', 'Assist Execute [%s]' % ctx.target_path)
+        add_split('client side')
+        # add_option('x86', 'assist-exe', '[OBSOLETE] Assist Execute [%s]' % ctx.target_path)
+        add_option('x86', 'client', 'Build client applications [%s]' % ctx.target_path)
         # add_option('x86', 'assist-rdp', 'Teleport RDP [%s]' % ctx.target_path)
-        add_option('x86', 'assist-installer', 'Assist Installer')
-        add_split()
-        add_option('x86', 'server', 'Teleport Server [%s]' % ctx.target_path)
-        add_split()
-        add_option('x86', 'installer', 'Teleport Installer for %s' % ctx.host_os)
+        # add_option('x86', 'assist-installer', '[OBSOLETE] Assist Installer')
+        add_option('x86', 'client-installer', 'Make client installer')
+        add_split('server side')
+        add_option('x86', 'pysrt', 'Make Python-Runtime for python%s-x86' % env.py_ver_str)
+        add_option('x86', 'ext-server', 'Build external libraries for server')
+        # add_option('x86', 'server', 'Teleport Server [%s]' % ctx.target_path)
+        add_option('x86', 'server-installer', 'Teleport Installer for %s' % ctx.host_os)
+        # add_option('x86', 'installer', '[OBSOLETE] Teleport Installer for %s' % ctx.host_os)
+        add_split('clear')
+        add_option('x86', 'clear-ext-client', 'Clear external libraries for client')
+        add_option('x86', 'clear-ext-server', 'Clear external libraries for server')
+    elif ctx.host_os == 'macos':
+        add_split('client side')
+        add_option('x64', 'ext-client', 'build external libraries for client')
+        add_option('x64', 'client', 'build client applications [%s]' % ctx.target_path)
+        add_option('x64', 'client-installer', 'make client installer')
+        add_split('server side')
+        add_option('x64', 'ext-server', '(DEV-ONLY) build external libraries for server')
+        add_option('x64', 'server', '(DEV-ONLY) build server applications for MacOS [%s]' % ctx.target_path)
+        add_split('clear')
+        add_option('x64', 'clear-ext-client', 'clear external libraries for client')
+        add_option('x64', 'clear-ext-server', 'clear external libraries for server')
+        add_split('misc')
+        add_option('x64', 'ver', 'update version setting')
     else:
-        add_option('x64', 'ver', 'Update version setting')
+        add_split('prepare for server [build once]')
         add_option('x64', 'pysrt', 'Make Python-Runtime for python%s-x64' % env.py_ver_str)
-        add_option('x64', 'external', 'Build external dependency')
-        add_split()
-        add_option('x64', 'server', 'Build server app [%s]' % ctx.target_path)
-        add_split()
-        add_option('x64', 'installer', 'Make server installer for %s' % ctx.host_os)
+        add_split('server side')
+        add_option('x64', 'ext-server', 'build external libraries for server')
+        add_option('x64', 'server', 'build server applications [%s]' % ctx.target_path)
+        add_option('x64', 'server-installer', 'make server installer for %s' % ctx.host_os)
+        add_split('clear')
+        # add_option('x64', 'clear-ext-client', 'Clear external libraries for client')
+        add_option('x64', 'clear-ext-server', 'clear external libraries for server')
+        add_split('misc')
+        add_option('x64', 'ver', 'update version setting')
 
 
 def get_input(msg, log_func=cc.w):
     log_func(msg, end=' ')
     try:
-        return _input()
+        return input()
     except EOFError:
         return ''
 
 
 def show_logo():
-    cc.v('[]=======================================================[]')
-    cc.o((cc.CR_VERBOSE, ' | '), (cc.CR_INFO, 'Teleport Projects Builder'), (cc.CR_VERBOSE, '                             |'))
-    cc.v(' | auth: apex.liu@qq.com                                 |')
-    cc.v('[]=======================================================[]')
+    cc.v('[]==========================================================[]')
+    cc.v(' | Teleport Projects Builder v2.0                           |')
+    cc.v(' | auth: apex.liu@qq.com                                    |')
+    cc.v('[]==========================================================[]')
 
 
 def show_menu():
-    cc.v('')
-    cc.v('=========================================================')
-    for o in range(len(options)):
-        if options[o] is None:
-            cc.v('  -------------------------------------------------------')
+    cc.v('\n=====================[ MENU ]===============================')
+    for o in options:
+        if o['id'] == '--SPLIT-LINE--':
+            if o['title'] is not None:
+                cc.w('\n  {}:'.format(o['title']))
+            else:
+                cc.v('\n  ----------------------------------------------------------')
             continue
-        cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, '%2d' % options[o]['id']), (cc.CR_NORMAL, '] ', options[o]['disp']))
 
-    cc.v('  -------------------------------------------------------')
-    cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' E'), (cc.CR_NORMAL, '] clean external temp. files.'))
-    cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' C'), (cc.CR_NORMAL, '] clean build and dist.'))
-    cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' A'), (cc.CR_NORMAL, '] clean everything.'))
+        cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, '%2d' % o['id']), (cc.CR_NORMAL, '] ', o['disp']))
 
-    cc.v('  -------------------------------------------------------')
+    cc.v('\n  ----------------------------------------------------------')
     cc.o((cc.CR_NORMAL, '  ['), (cc.CR_INFO, ' Q'), (cc.CR_NORMAL, '] exit'))
 
     cc.w('\nselect action: ', end='')
     try:
-        x = _input()
+        x = input()
     except EOFError:
         x = 'q'
 
@@ -298,4 +305,4 @@ if __name__ == '__main__':
     except RuntimeError as e:
         cc.e(e.__str__())
     except:
-        cc.f('got exception.')
+        cc.f('got an exception.')

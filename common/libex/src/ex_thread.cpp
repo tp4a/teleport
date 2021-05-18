@@ -13,20 +13,25 @@ unsigned int WINAPI ExThreadBase::_thread_func(LPVOID pParam)
 void *ExThreadBase::_thread_func(void *pParam)
 #endif
 {
-    ExThreadBase *_this = (ExThreadBase *) pParam;
+    auto _this = (ExThreadBase *) pParam;
 
     _this->m_is_running = true;
     _this->_thread_loop();
     _this->m_is_running = false;
-    _this->m_handle = 0;
+    _this->m_handle = EX_THREAD_NULL;
 
-    EXLOGV("[thread] - `%s` exit.\n", _this->m_thread_name.c_str());
     _this->_on_stopped();
+    EXLOGV("[thread] - `%s` exit.\n", _this->m_thread_name.c_str());
+    
+#ifdef  EX_OS_WIN32
     return 0;
+#else
+    return nullptr;
+#endif
 }
 
 ExThreadBase::ExThreadBase(const char *thread_name) :
-        m_handle(0),
+        m_handle(EX_THREAD_NULL),
         m_is_running(false),
         m_need_stop(false) {
     m_thread_name = thread_name;
@@ -38,7 +43,7 @@ ExThreadBase::~ExThreadBase() {
     }
 }
 
-bool ExThreadBase::start(void) {
+bool ExThreadBase::start() {
     m_need_stop = false;
     EXLOGV("[thread] + `%s` starting.\n", m_thread_name.c_str());
 #ifdef WIN32
@@ -50,20 +55,20 @@ bool ExThreadBase::start(void) {
     }
     m_handle = h;
 #else
-    pthread_t ptid = 0;
-    int ret = pthread_create(&ptid, NULL, _thread_func, (void *) this);
+    pthread_t tid = EX_THREAD_NULL;
+    int ret = pthread_create(&tid, nullptr, _thread_func, (void *) this);
     if (ret != 0) {
         return false;
     }
-    m_handle = ptid;
+    m_handle = tid;
 
 #endif
 
     return true;
 }
 
-bool ExThreadBase::stop(void) {
-    if (m_handle == 0) {
+bool ExThreadBase::stop() {
+    if (m_handle == EX_THREAD_NULL) {
         EXLOGW("[thread] `%s` already stopped before stop() call.\n", m_thread_name.c_str());
         return true;
     }
@@ -81,8 +86,8 @@ bool ExThreadBase::stop(void) {
         }
     }
 #else
-    if(m_handle != 0) {
-        if (pthread_join(m_handle, NULL) != 0) {
+    if(m_handle != EX_THREAD_NULL) {
+        if (pthread_join(m_handle, nullptr) != 0) {
             return false;
         }
     }
@@ -91,7 +96,7 @@ bool ExThreadBase::stop(void) {
     return true;
 }
 
-bool ExThreadBase::terminate(void) {
+bool ExThreadBase::terminate() {
 #ifdef EX_OS_WIN32
     return (TerminateThread(m_handle, 1) == TRUE);
 #else
@@ -112,12 +117,11 @@ ExThreadManager::~ExThreadManager() {
     }
 }
 
-void ExThreadManager::stop_all(void) {
+void ExThreadManager::stop_all() {
     ExThreadSmartLock locker(m_lock);
 
-    ex_threads::iterator it = m_threads.begin();
-    for (; it != m_threads.end(); ++it) {
-        (*it)->stop();
+    for (auto & t : m_threads) {
+        t->stop();
     }
     m_threads.clear();
 }
@@ -125,9 +129,8 @@ void ExThreadManager::stop_all(void) {
 void ExThreadManager::add(ExThreadBase *tb) {
     ExThreadSmartLock locker(m_lock);
 
-    ex_threads::iterator it = m_threads.begin();
-    for (; it != m_threads.end(); ++it) {
-        if ((*it) == tb) {
+    for (auto & t : m_threads) {
+        if (t == tb) {
             EXLOGE("[thread] when add thread to manager, it already exist.\n");
             return;
         }
@@ -139,8 +142,7 @@ void ExThreadManager::add(ExThreadBase *tb) {
 void ExThreadManager::remove(ExThreadBase *tb) {
     ExThreadSmartLock locker(m_lock);
 
-    ex_threads::iterator it = m_threads.begin();
-    for (; it != m_threads.end(); ++it) {
+    for (auto it = m_threads.begin(); it != m_threads.end(); ++it) {
         if ((*it) == tb) {
             m_threads.erase(it);
             return;
@@ -173,7 +175,7 @@ ExThreadLock::~ExThreadLock() {
 #endif
 }
 
-void ExThreadLock::lock(void) {
+void ExThreadLock::lock() {
 #ifdef EX_OS_WIN32
     EnterCriticalSection(&m_locker);
 #else
@@ -181,7 +183,7 @@ void ExThreadLock::lock(void) {
 #endif
 }
 
-void ExThreadLock::unlock(void) {
+void ExThreadLock::unlock() {
 #ifdef EX_OS_WIN32
     LeaveCriticalSection(&m_locker);
 #else
@@ -217,11 +219,17 @@ int ex_atomic_dec(volatile int *pt) {
 #endif
 }
 
-
-ex_u64 ex_get_thread_id(void) {
-#ifdef EX_OS_WIN32
-    return GetCurrentThreadId();
+uint64_t ex_get_thread_id()
+{
+#if defined(EX_OS_WIN32)
+    return (uint64_t)GetCurrentThreadId();
+#elif defined(EX_OS_LINUX)
+    return pthread_self();
+#elif defined(EX_OS_MACOS)
+    uint64_t tid = 0;
+    pthread_threadid_np(nullptr, &tid);
+    return tid;
 #else
-    return (ex_u64) pthread_self();
+#   error "unsupport platform."
 #endif
 }

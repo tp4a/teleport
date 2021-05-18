@@ -2,6 +2,7 @@
     <qresource prefix="/tp-player">
         <file>res/bg.png</file>
         <file>res/cursor.png</file>
+        <file>res/tp-player.png</file>
 
         <file>res/bar/bg-left.png</file>
         <file>res/bar/bg-mid.png</file>

@@ -9,6 +9,8 @@ Downloader::Downloader() : QObject () {
     m_data = nullptr;
     m_reply = nullptr;
     m_result = false;
+
+    connect(&m_nam, &QNetworkAccessManager::sslErrors, this, &Downloader::_on_ssl_errors);
 }
 
 Downloader::~Downloader() {
@@ -44,9 +46,10 @@ bool Downloader::_request(const QString& url, const QString& sid, const QString&
     req.setUrl(QUrl(url));
     req.setRawHeader("Cookie", cookie.toLatin1());
 
-    QNetworkAccessManager* nam = new QNetworkAccessManager();
+    //QNetworkAccessManager* nam = new QNetworkAccessManager();
     QEventLoop eloop;
-    m_reply = nam->get(req);
+    //m_reply = nam->get(req);
+    m_reply = m_nam.get(req);
 
     connect(m_reply, &QNetworkReply::finished, &eloop, &QEventLoop::quit);
     connect(m_reply, &QNetworkReply::finished, this, &Downloader::_on_finished);
@@ -62,7 +65,7 @@ bool Downloader::_request(const QString& url, const QString& sid, const QString&
 
     delete m_reply;
     m_reply = nullptr;
-    delete nam;
+    //delete nam;
 
     qDebug("Downloader::_request() end.");
     return m_result;
@@ -117,4 +120,20 @@ void Downloader::_on_finished() {
     reply->deleteLater();
 
     m_result = true;
+}
+
+void Downloader::_on_ssl_errors(QNetworkReply *reply, const QList<QSslError> &errors) {
+    QString errorString;
+    foreach (const QSslError &error, errors) {
+        if (!errorString.isEmpty())
+            errorString += '\n';
+        errorString += error.errorString();
+    }
+
+//    if (QMessageBox::warning(this, tr("SSL Errors"),
+//                             tr("One or more SSL errors has occurred:\n%1").arg(errorString),
+//                             QMessageBox::Ignore | QMessageBox::Abort) == QMessageBox::Ignore) {
+//        reply->ignoreSslErrors();
+//    }
+    reply->ignoreSslErrors();
 }

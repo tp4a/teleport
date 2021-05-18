@@ -1,0 +1,29 @@
+{
+    "toolchain": {
+        "pyexec": "C:\\Program Files(x86)\\python-3.7\\python.exe",
+        "qt_path": "C:\\Qt\\Qt5.12.0\\5.12.0\\msvc2017",
+        "cmake": "C:\\Program Files(x86)\\CMake\\bin\\cmake.exe"
+    },
+    "remote": {
+        "short-name-1": {
+            "type": "linux",
+            "name": "centos7",
+            "desc": "CentOS 7 x64 for build TP server package.",
+            "addr": "1.2.3.4",
+            "port": 22,
+            "user": "your-account-name",
+            "key": "C:\\path\\to\\your\\key.file",
+            "tp_root_path": "~/source/path/to/tp4a/teleport"
+        },
+        "mbp": {
+            "type": "macos",
+            "name": "macbookpro",
+            "desc": "MacBook Pro for build TP assist for MacOS.",
+            "addr": "1.2.3.5",
+            "port": 22,
+            "user": "your-account-name",
+            "key": "C:\\path\\to\\your\\key.file",
+            "tp_root_path": "/Full/source/path/to/tp4a/teleport"
+        }
+    }
+}

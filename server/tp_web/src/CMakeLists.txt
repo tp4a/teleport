@@ -19,11 +19,23 @@ include_directories(
         ../../../common/pyshell/include
 )
 
-include_directories(
-        ${TP_EXTERNAL_RELEASE_DIR}/include
-        ${TP_EXTERNAL_RELEASE_DIR}/include/python3.7m
-)
-link_directories(${TP_EXTERNAL_RELEASE_DIR}/lib)
+if (OS_LINUX)
+    include_directories(
+            ${TP_EXTERNAL_RELEASE_DIR}/include
+            ${TP_EXTERNAL_RELEASE_DIR}/include/python3.7m
+    )
+    link_directories(${TP_EXTERNAL_RELEASE_DIR}/lib)
+    add_executable(tp_web ${DIR_SRCS})
+    target_link_libraries(tp_web python3.7m ssl crypto dl pthread rt util)
+elseif (OS_MACOS)
+    include_directories(
+            /usr/local/Cellar/python@3.9/3.9.0_1/Frameworks/Python.framework/Versions/3.9/include/python3.9
+    )
+    link_directories(
+#            /usr/local/Cellar/python@3.9/3.9.0_1/Frameworks/Python.framework/Versions/3.9/lib
+            /usr/local/opt/python@3.9/Frameworks/Python.framework/Versions/3.9/lib/python3.9/config-3.9-darwin
+    )
+    add_executable(tp_web ${DIR_SRCS})
+    target_link_libraries(tp_web python3.9 intl dl)
+endif ()
 
-add_executable(tp_web ${DIR_SRCS})
-target_link_libraries(tp_web python3.7m ssl crypto dl pthread rt util)

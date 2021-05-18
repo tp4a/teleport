@@ -48,7 +48,7 @@ $app.init_sys_status_info = function (data) {
             fontSize: 11,
             fontFamily: 'Monaco, Lucida Console, Consolas, Courier',
             formatter: function (value, index) {
-                return tp_format_datetime(value, 'HH:mm');
+                return tp_format_datetime_ms(value, 'HH:mm');
             }
         }
     };
@@ -95,8 +95,8 @@ $app.init_sys_status_info = function (data) {
     $app.bar_cpu_user = [];
     $app.bar_cpu_sys = [];
     for (i = 0; i < data.length; i++) {
-        $app.bar_cpu_user.push({name: tp_format_datetime(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].cpu.u]});
-        $app.bar_cpu_sys.push({name: tp_format_datetime(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].cpu.s]});
+        $app.bar_cpu_user.push({name: tp_format_datetime_ms(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].cpu.u]});
+        $app.bar_cpu_sys.push({name: tp_format_datetime_ms(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].cpu.s]});
     }
 
     var clr_cpu_user = '#e2524c';
@@ -191,7 +191,7 @@ $app.init_sys_status_info = function (data) {
 
     $app.bar_mem_used = [];
     for (i = 0; i < data.length; i++) {
-        $app.bar_mem_used.push({name: tp_format_datetime(data[i].t, 'HH:mm:ss'), value: [data[i].t, tp_digital_precision(data[i].mem.u * 100 / data[i].mem.t, 1)]});
+        $app.bar_mem_used.push({name: tp_format_datetime_ms(data[i].t, 'HH:mm:ss'), value: [data[i].t, tp_digital_precision(data[i].mem.u * 100 / data[i].mem.t, 1)]});
     }
 
     var clr_mem = '#5671e2';
@@ -269,8 +269,8 @@ $app.init_sys_status_info = function (data) {
     $app.bar_net_recv = [];
     $app.bar_net_sent = [];
     for (i = 0; i < data.length; i++) {
-        $app.bar_net_recv.push({name: tp_format_datetime(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].net.r]});
-        $app.bar_net_sent.push({name: tp_format_datetime(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].net.s]});
+        $app.bar_net_recv.push({name: tp_format_datetime_ms(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].net.r]});
+        $app.bar_net_sent.push({name: tp_format_datetime_ms(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].net.s]});
     }
 
     var clr_net_sent = '#558c5a';
@@ -342,8 +342,8 @@ $app.init_sys_status_info = function (data) {
     $app.bar_disk_read = [];
     $app.bar_disk_write = [];
     for (i = 0; i < data.length; i++) {
-        $app.bar_disk_read.push({name: tp_format_datetime(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].disk.r]});
-        $app.bar_disk_write.push({name: tp_format_datetime(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].disk.w]});
+        $app.bar_disk_read.push({name: tp_format_datetime_ms(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].disk.r]});
+        $app.bar_disk_write.push({name: tp_format_datetime_ms(data[i].t, 'HH:mm:ss'), value: [data[i].t, data[i].disk.w]});
     }
 
     var clr_disk_read = '#558c5a';
@@ -489,31 +489,31 @@ $app.init_ws = function () {
 
         if (t.method === 'subscribe' && t.param === 'sys_status') {
             $app.bar_cpu_user.shift();
-            $app.bar_cpu_user.push({name: tp_format_datetime(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.cpu.u]});
+            $app.bar_cpu_user.push({name: tp_format_datetime_ms(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.cpu.u]});
             $app.bar_cpu_sys.shift();
-            $app.bar_cpu_sys.push({name: tp_format_datetime(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.cpu.s]});
+            $app.bar_cpu_sys.push({name: tp_format_datetime_ms(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.cpu.s]});
             $app.bar_cpu.setOption(
                 {series: [{data: $app.bar_cpu_sys}, {data: $app.bar_cpu_user}]}
             );
 
             $app.bar_mem_used.shift();
-            $app.bar_mem_used.push({name: tp_format_datetime(t.data.t, 'HH:mm:ss'), value: [t.data.t, Math.round(t.data.mem.u / t.data.mem.t * 100, 2)]});
+            $app.bar_mem_used.push({name: tp_format_datetime_ms(t.data.t, 'HH:mm:ss'), value: [t.data.t, Math.round(t.data.mem.u / t.data.mem.t * 100, 2)]});
             $app.bar_mem.setOption(
                 {series: [{data: $app.bar_mem_used}]}
             );
 
             $app.bar_net_recv.shift();
-            $app.bar_net_recv.push({name: tp_format_datetime(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.net.r]});
+            $app.bar_net_recv.push({name: tp_format_datetime_ms(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.net.r]});
             $app.bar_net_sent.shift();
-            $app.bar_net_sent.push({name: tp_format_datetime(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.net.s]});
+            $app.bar_net_sent.push({name: tp_format_datetime_ms(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.net.s]});
             $app.bar_net.setOption(
                 {series: [{data: $app.bar_net_sent}, {data: $app.bar_net_recv}]}
             );
 
             $app.bar_disk_read.shift();
-            $app.bar_disk_read.push({name: tp_format_datetime(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.disk.r]});
+            $app.bar_disk_read.push({name: tp_format_datetime_ms(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.disk.r]});
             $app.bar_disk_write.shift();
-            $app.bar_disk_write.push({name: tp_format_datetime(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.disk.w]});
+            $app.bar_disk_write.push({name: tp_format_datetime_ms(t.data.t, 'HH:mm:ss'), value: [t.data.t, t.data.disk.w]});
             $app.bar_disk.setOption(
                 {series: [{data: $app.bar_disk_read}, {data: $app.bar_disk_write}]}
             );

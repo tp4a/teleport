@@ -48,6 +48,8 @@ MainWindow::MainWindow(QWidget *parent) :
 //    setWindowFlags(Qt::FramelessWindowHint | Qt::MSWindowsFixedSizeDialogHint | windowFlags());
 //#endif //__APPLE__
 
+    setWindowIcon(QIcon(":/tp-player/res/tp-player.png"));
+
     m_pt_normal.load(":/tp-player/res/cursor.png");
     m_default_bg.load(":/tp-player/res/bg.png");
 

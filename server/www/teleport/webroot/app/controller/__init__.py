@@ -14,6 +14,7 @@ from . import rpc
 from . import system
 from . import user
 from . import ws
+from . import api_v1
 
 __all__ = ['controllers', 'fix_controller']
 
@@ -285,6 +286,10 @@ controllers = [
     # WebSocket for real-time information
     # ws-client call 'http://ip:7190/ws/action/'
     (r'/ws/(.*)', ws.WebSocketHandler),
+
+    # api v1
+    (r'/api/v1/get_host', api_v1.GetHostHandler),
+    (r'/api/v1/request_session', api_v1.RequestSessionHandler),
 
     (r'/.*', index.CatchAllHandler),
 ]

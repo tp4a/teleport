@@ -45,7 +45,7 @@ class BuilderWin(BuilderBase):
         out_file = os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path, 'tp-player.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
-        utils.qt_build_win(prj_path, 'tp-player', ctx.bits_path, ctx.target_path)
+        utils.qt_build(prj_path, 'tp-player', ctx.bits_path, ctx.target_path)
         utils.ensure_file_exists(out_file)
 
     # def build_rdp(self):
@@ -72,7 +72,6 @@ class BuilderWin(BuilderBase):
 
         utils.ensure_file_exists(out_file)
 
-
     @staticmethod
     def _build_installer():
         tmp_path = os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist')
@@ -86,6 +85,7 @@ class BuilderWin(BuilderBase):
         utils.makedirs(tmp_cfg_path)
 
         utils.copy_file(os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_app_path, 'tp_assist.exe')
+        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'runtime'), tmp_app_path, 'msvcp140.dll')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'runtime'), tmp_app_path, 'vcruntime140.dll')
 
         utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, ('tp-assist.windows.json', 'tp-assist.json'))
@@ -118,6 +118,26 @@ class BuilderWin(BuilderBase):
 
         # qt-redist
         qt_redist_path = os.path.join(env.root_path, 'client', 'tools', 'qt-redist')
+
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-file-l1-2-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-file-l2-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-localization-l1-2-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-processthreads-l1-1-1.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-synch-l1-2-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-core-timezone-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-convert-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-environment-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-filesystem-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-heap-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-locale-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-math-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-multibyte-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-runtime-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-stdio-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-string-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-time-l1-1-0.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-utility-l1-1-0.dll')
+
         utils.copy_file(qt_redist_path, tmp_app_path, 'Qt5Core.dll')
         utils.copy_file(qt_redist_path, tmp_app_path, 'Qt5Gui.dll')
         utils.copy_file(qt_redist_path, tmp_app_path, 'Qt5Network.dll')
@@ -155,13 +175,28 @@ class BuilderMacOS(BuilderBase):
         utils.ensure_file_exists(os.path.join(out_file, 'Contents', 'Info.plist'))
 
     def build_player(self):
-        cc.o('skip build tp_player now...')
+        cc.i('build tp-player...')
+        prj_path = os.path.join(env.root_path, 'client', 'tp-player')
+        out_file = os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path, 'tp-player.app')
+        if os.path.exists(out_file):
+            utils.remove(out_file)
+        utils.qt_build(prj_path, 'tp-player', ctx.bits_path, ctx.target_path)
+        utils.ensure_file_exists(os.path.join(out_file, 'Contents', 'Info.plist'))
+
+        # for deployment
+        utils.qt_deploy(out_file)
 
     def build_installer(self):
         cc.i('make tp_assist dmg file...')
 
+        # copy all files of tp-player.
+        configuration = ctx.target_path.capitalize()
+        player_path = os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path)
+        assist_path = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'build', configuration, 'TP-Assist.app')
+        utils.copy_ex(player_path, assist_path, 'tp-player.app')
+
         json_file = os.path.join(env.root_path, 'dist', 'client', 'macos', 'dmg.json')
-        dmg_file = os.path.join(env.root_path, 'out', 'client', 'macos', 'teleport-assist-macos-{}.dmg'.format(VER_TP_ASSIST))
+        dmg_file = os.path.join(env.root_path, 'out', 'installer', 'teleport-assist-macos-{}.dmg'.format(VER_TP_ASSIST))
         if os.path.exists(dmg_file):
             utils.remove(dmg_file)
 

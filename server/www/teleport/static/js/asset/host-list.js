@@ -85,6 +85,15 @@ $app.create_controls = function (cb_stack) {
                 render: 'account',
                 fields: {count: 'acc_count'}
             },
+            // {
+            //     title: "在线",
+            //     key: "_alive",
+            //     sort: false,
+            //     width: 90,
+            //     align: 'center',
+            //     render: 'host_alive',
+            //     fields: {id: 'id', alive: '_alive', alive_info: '_alive_info'}
+            // },
             {
                 title: "状态",
                 key: "state",
@@ -111,6 +120,18 @@ $app.create_controls = function (cb_stack) {
         on_render_created: $app.on_table_host_render_created,
         on_cell_created: $app.on_table_host_cell_created
     };
+
+    if ($app.options._check_host_alive) {
+        table_host_options.columns.splice(-2, 0, {
+            title: "在线",
+            key: "_alive",
+            sort: false,
+            width: 60,
+            align: 'center',
+            render: 'host_alive',
+            fields: {id: 'id', alive: '_alive', alive_info: '_alive_info'}
+        })
+    }
 
     $app.table_host = $tp.create_table(table_host_options);
     cb_stack
@@ -232,6 +253,12 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
         cell_obj.find('[data-action="edit-account"]').click(function () {
             $app.dlg_accounts.show(row_id);
         });
+    } else if (col_key === '_alive') {
+        cell_obj.find('[data-toggle="popover"]').popover({trigger: 'hover'});
+        // } else if (col_key === 'account') {
+        //     cell_obj.find('[data-action="add-account"]').click(function () {
+        //         $app.dlg_accounts.show(row_id);
+        //     });
     }
 };
 
@@ -335,6 +362,44 @@ $app.on_table_host_render_created = function (render) {
         }
 
         return '<span class="label label-sm label-' + _style + '">' + _state + '</span>'
+    };
+
+    render.host_alive = function (row_id, fields) {
+        var _style, _alive;
+
+        if (fields.alive === -1) {
+            _style = 'alive-unknown';
+            _alive = '功能未启用';
+        } else if (fields.alive === 0) {
+            _style = 'alive-unknown';
+            _alive = '正在检测，请稍后刷新页面';
+        } else if (fields.alive === 1) {
+            _style = 'alive-online';
+            _alive = '在线<hr/>最后检测：' + tp_second2str(fields.alive_info.last_check) + '前';
+        } else if (fields.alive === 2) {
+            _style = 'alive-warning';
+            _alive = '可能离线<hr/>最后检测：' + tp_second2str(fields.alive_info.last_check) + '前';
+        } else if (fields.alive === 3) {
+            _style = 'alive-offline';
+            _alive = '离线<hr/>最后在线：';
+            if (fields.alive_info.last_online === 0)
+                _alive = _alive + '未发现曾经上线';
+            else
+                _alive = _alive + tp_format_datetime(fields.alive_info.last_online);
+        } else {
+            _style = 'alive-unknown';
+            _alive = '正在检测';
+        }
+
+        var ret = [];
+
+        ret.push('<div><a class="alive ' + _style + '" data-toggle="popover" data-placement="left"');
+        ret.push(' data-html="true"');
+        ret.push(' data-content="' + _alive + '"');
+        ret.push('><i class="fa fa-circle"></i></a>');
+        ret.push('</div>');
+
+        return ret.join('');
     };
 
     render.make_host_action_btn = function (row_id, fields) {
@@ -1505,8 +1570,7 @@ $app.create_dlg_edit_account = function () {
                     dlg.dom.protocol_port.val(23);
                     dlg.dom.prompt_username.val('ogin:');
                     dlg.dom.prompt_password.val('assword:');
-                }
-                else {
+                } else {
                     dlg.dom.protocol_port.val(dlg.account.protocol_port);
                     dlg.dom.prompt_username.val(dlg.account.username_prompt);
                     dlg.dom.prompt_password.val(dlg.account.password_prompt);
@@ -1520,7 +1584,7 @@ $app.create_dlg_edit_account = function () {
 
         dlg.dom.auth_type.empty().append($(html.join('')));
 
-        if(!_.isNull(dlg.account))
+        if (!_.isNull(dlg.account))
             dlg.dom.auth_type.val(dlg.account.auth_type);
 
         dlg.on_auth_change();

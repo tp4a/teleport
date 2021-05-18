@@ -88,7 +88,7 @@ class BuilderWin(BuilderBase):
 
         utils.copy_ex(os.path.join(env.root_path, 'out', 'pysrt'), bin_path, (ctx.dist_path, 'pysrt'))
 
-        # 复制安装所需的脚本
+        # copy scripts
         utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'setup.bat')
         utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'script')
 
@@ -129,7 +129,7 @@ class BuilderLinux(BuilderBase):
         utils.fix_new_line_flag(os.path.join(self.path_tmp_data, 'tmp', 'etc', 'web.ini'))
         utils.fix_new_line_flag(os.path.join(self.path_tmp_data, 'tmp', 'etc', 'core.ini'))
 
-        out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, 'bin')
+        out_path = os.path.join(env.root_path, 'out', 'server', 'linux', 'bin')
         bin_path = os.path.join(self.path_tmp_data, 'bin')
         utils.copy_ex(out_path, bin_path, 'tp_web')
         utils.copy_ex(out_path, bin_path, 'tp_core')
@@ -140,14 +140,15 @@ class BuilderLinux(BuilderBase):
 
         utils.copy_ex(os.path.join(env.root_path, 'out', 'pysrt'), bin_path, (ctx.dist_path, 'pysrt'))
 
-        # 复制安装所需的脚本
-        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'setup.sh')
-        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'script')
-        utils.copy_ex(os.path.join(self.dist_path), self.path_tmp, 'daemon')
+        # copy scripts
+        utils.copy_ex(self.dist_path, self.path_tmp, 'setup.sh')
+        utils.copy_ex(self.dist_path, self.path_tmp, 'script')
+        utils.copy_ex(self.dist_path, self.path_tmp, 'daemon')
 
         if os.path.exists(self._final_file):
             utils.remove(self._final_file)
 
+        utils.sys_exec('chmod +x {}'.format(os.path.join(self.path_tmp, 'setup.sh')))
         utils.make_targz(self.base_tmp, self.name, self._final_file)
 
         # utils.remove(self.base_tmp)
@@ -186,7 +187,7 @@ def main():
     if builder is None:
         builder = gen_builder(ctx.host_os)
 
-    if 'installer' in argv:
+    if 'server-installer' in argv:
         builder.build_installer()
 
 

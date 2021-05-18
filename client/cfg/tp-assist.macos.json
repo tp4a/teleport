@@ -102,7 +102,7 @@
                 "name": "FreeRDP",
                 "display": "FreeRDP",
                 "app": "",
-                "cmdline": "/u:{user_name} /v:{host_ip} /port:{host_port}",
+                "cmdline": "/u:{user_name} /v:{host_ip} /port:{host_port} +glyph-cache /relax-order-checks",
                 "desc": [
                     "建议使用homebrew安装freerdp，安装后freerdp默认路径在：/usr/local/Cellar/freerdp/x.y.z/bin/xfreerdp",
                     "首次安装freerdp后需要重新启动计算机"

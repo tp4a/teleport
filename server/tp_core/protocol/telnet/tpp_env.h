@@ -7,14 +7,14 @@ class TppTelnetEnv : public TppEnvBase
 {
 public:
 	TppTelnetEnv();
-	~TppTelnetEnv();
+	virtual ~TppTelnetEnv();
 
 public:
 	ex_astr bind_ip;
 	int bind_port;
 
 private:
-	bool _on_init(TPP_INIT_ARGS* args);
+	bool _on_init(TPP_INIT_ARGS* args) override;
 };
 
 extern TppTelnetEnv g_telnet_env;

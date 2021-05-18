@@ -298,6 +298,12 @@ class AppConfig(BaseAppConfig):
                          'DO NOT FORGET update this setting if you modified rpc::bind-port in core.ini.\n'
                          'core-server-rpc=http://127.0.0.1:52080/rpc'
                          )
+        # check_host_alive
+        self.set_default('common::check-host-alive', 0,
+                         '0/1,  default to 0.\n\n'
+                         'when enable, tp-web will check alive state of remote host with ICMP(ping).\n'
+                         'check-host-alive=0'
+                         )
         self.set_default('database::type', 'sqlite',
                          'database in use, should be sqlite/mysql, default to sqlite.\n'
                          'type=sqlite'
@@ -354,6 +360,9 @@ class AppConfig(BaseAppConfig):
         _tmp_str = _sec.get('core-server-rpc', None)
         if _tmp_str is not None:
             self.set_kv('common::core-server-rpc', _tmp_str)
+
+        _tmp_bool = _sec.getint('check-host-alive', False)
+        self.set_kv('common::check-host-alive', _tmp_bool)
 
         _sec = cfg_parser['database']
 

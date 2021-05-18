@@ -143,7 +143,7 @@ bool ts_http_get(const ex_astr& url, ex_astr& body)
     mg_mgr_init(&_mgr, NULL);
 
 	mg_connection* nc = mg_connect_http(&_mgr, ev_handler, url.c_str(), NULL, NULL);
-	if (NULL == nc) {
+	if (nc == nullptr) {
         mg_mgr_free(&_mgr);
         return false;
     }

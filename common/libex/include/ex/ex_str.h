@@ -81,6 +81,8 @@ void ex_remove_white_space(ex_wstr& str_fix, int ulFlag = EX_RSC_ALL);
 ex_astr& ex_replace_all(ex_astr& str, const ex_astr& old_value, const ex_astr& new_value);
 ex_wstr& ex_replace_all(ex_wstr& str, const ex_wstr& old_value, const ex_wstr& new_value);
 
+bool ex_strformat(ex_astr& out, size_t max_size, const char* fmt, ...);
+
 class ex_str_utf16le {
 public:
     ex_str_utf16le();
