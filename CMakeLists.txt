@@ -3,11 +3,9 @@ project(teleport)
 
 include(CMakeCfg.txt)
 
-#if (OS_LINUX)
-#    add_subdirectory(server/tp_web/src)
-#endif()
-
-add_subdirectory(server/tp_web/src)
+if (OS_LINUX)
+    add_subdirectory(server/tp_web/src)
+endif()
 
 add_subdirectory(server/tp_core/core)
 add_subdirectory(server/tp_core/protocol/ssh)

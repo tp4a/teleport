@@ -54,6 +54,7 @@ else:win32:CONFIG(debug, debug|release): {
 
 
 macx: {
+    CONFIG+=sdk_no_version_check
     INCLUDEPATH += $$PWD/../../external/macos/release/include
 }
 macx:CONFIG(release, debug|release): {

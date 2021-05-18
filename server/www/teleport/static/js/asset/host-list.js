@@ -85,15 +85,15 @@ $app.create_controls = function (cb_stack) {
                 render: 'account',
                 fields: {count: 'acc_count'}
             },
-            {
-                title: "在线",
-                key: "_alive",
-                sort: false,
-                width: 90,
-                align: 'center',
-                render: 'host_alive',
-                fields: {id: 'id', alive: '_alive', alive_info: '_alive_info'}
-            },
+            // {
+            //     title: "在线",
+            //     key: "_alive",
+            //     sort: false,
+            //     width: 90,
+            //     align: 'center',
+            //     render: 'host_alive',
+            //     fields: {id: 'id', alive: '_alive', alive_info: '_alive_info'}
+            // },
             {
                 title: "状态",
                 key: "state",
@@ -120,6 +120,18 @@ $app.create_controls = function (cb_stack) {
         on_render_created: $app.on_table_host_render_created,
         on_cell_created: $app.on_table_host_cell_created
     };
+
+    if ($app.options._check_host_alive) {
+        table_host_options.columns.splice(-2, 0, {
+            title: "在线",
+            key: "_alive",
+            sort: false,
+            width: 60,
+            align: 'center',
+            render: 'host_alive',
+            fields: {id: 'id', alive: '_alive', alive_info: '_alive_info'}
+        })
+    }
 
     $app.table_host = $tp.create_table(table_host_options);
     cb_stack
@@ -355,7 +367,10 @@ $app.on_table_host_render_created = function (render) {
     render.host_alive = function (row_id, fields) {
         var _style, _alive;
 
-        if (fields.alive === 0) {
+        if (fields.alive === -1) {
+            _style = 'alive-unknown';
+            _alive = '功能未启用';
+        } else if (fields.alive === 0) {
             _style = 'alive-unknown';
             _alive = '正在检测，请稍后刷新页面';
         } else if (fields.alive === 1) {

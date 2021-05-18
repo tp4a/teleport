@@ -548,11 +548,11 @@ int SshSession::_do_auth(const char* user, const char* secret)
 
         if (!m_conn_info)
         {
-            EXLOGE("[%s] no such session id: %s\n", m_dbg_name.c_str(), m_sid.c_str());
             _set_last_error(TP_SESS_STAT_ERR_SESSION);
             m_auth_err_msg = "invalid session id: '";
             m_auth_err_msg += m_sid;
             m_auth_err_msg += "'.";
+            EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
             return SSH_AUTH_SUCCESS;
         }
 
@@ -565,11 +565,11 @@ int SshSession::_do_auth(const char* user, const char* secret)
 
         if (m_conn_info->protocol_type != TP_PROTOCOL_TYPE_SSH)
         {
-            EXLOGE("[ssh] session '%s' is not for SSH.\n", m_sid.c_str());
             _set_last_error(TP_SESS_STAT_ERR_INTERNAL);
             m_auth_err_msg = "session ";
             m_auth_err_msg += m_sid;
             m_auth_err_msg += " is not for SSH.";
+            EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
             return SSH_AUTH_SUCCESS;
         }
 
@@ -577,9 +577,9 @@ int SshSession::_do_auth(const char* user, const char* secret)
         if ((m_acc_name.empty() && _name == "INTERACTIVE_USER")
             || (!m_acc_name.empty() && _name != "INTERACTIVE_USER"))
         {
-            EXLOGE("[%s] conflict account info.\n", m_dbg_name.c_str());
             _set_last_error(TP_SESS_STAT_ERR_SESSION);
             m_auth_err_msg = "account name of remote host should not be 'INTERACTIVE_USER'.";
+            EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
 
             return SSH_AUTH_SUCCESS;
         }
@@ -640,13 +640,13 @@ int SshSession::_do_auth(const char* user, const char* secret)
     int rc = ssh_connect(m_rs_tp2srv);
     if (rc != SSH_OK)
     {
-        EXLOGE("[%s] can not connect to real SSH server %s. %s\n", m_dbg_name.c_str(), m_dbg_server.c_str(), ssh_get_error(m_rs_tp2srv));
         _set_last_error(TP_SESS_STAT_ERR_CONNECT);
         m_auth_err_msg = "can not connect to remote host ";
         m_auth_err_msg += m_dbg_server;
         m_auth_err_msg += ", ";
         m_auth_err_msg += ssh_get_error(m_rs_tp2srv);
         m_auth_err_msg += ".";
+        EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
         return SSH_AUTH_SUCCESS;
     }
 
@@ -693,11 +693,11 @@ int SshSession::_do_auth(const char* user, const char* secret)
     {
         if (!(((auth_methods & SSH_AUTH_METHOD_INTERACTIVE) == SSH_AUTH_METHOD_INTERACTIVE) || ((auth_methods & SSH_AUTH_METHOD_PASSWORD) == SSH_AUTH_METHOD_PASSWORD)))
         {
-            EXLOGE("[%s] configure to auth by password, but remote host not allow such auth mode.\n", m_dbg_name.c_str());
             _set_last_error(TP_SESS_STAT_ERR_AUTH_TYPE);
             m_auth_err_msg = "both password and interactive authorize methods are not allowed by remote host ";
             m_auth_err_msg += m_dbg_server;
             m_auth_err_msg += ".";
+            EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
             return SSH_AUTH_SUCCESS;
         }
 
@@ -734,6 +734,7 @@ int SshSession::_do_auth(const char* user, const char* secret)
                     m_auth_err_msg += m_dbg_server;
                     m_auth_err_msg += " with interactive authorize method failed, ";
                     m_auth_err_msg += ssh_get_error(m_rs_tp2srv);
+                    EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
                     break;
                 }
 
@@ -760,7 +761,6 @@ int SshSession::_do_auth(const char* user, const char* secret)
                     rc = ssh_userauth_kbdint_setanswer(m_rs_tp2srv, i, m_acc_secret.c_str());
                     if (rc < 0)
                     {
-                        EXLOGE("[%s] invalid password for interactive mode to login to remote host %s.\n", m_dbg_name.c_str(), m_dbg_server.c_str());
                         _set_last_error(TP_SESS_STAT_ERR_AUTH_DENIED);
 
                         if (!m_auth_err_msg.empty())
@@ -770,9 +770,7 @@ int SshSession::_do_auth(const char* user, const char* secret)
                         m_auth_err_msg += " with interactive authorize method failed, ";
                         m_auth_err_msg += ssh_get_error(m_rs_tp2srv);
 
-                        // m_auth_err_msg = "failed to login remote host ";
-                        // m_auth_err_msg += m_dbg_server;
-                        // m_auth_err_msg += " with interactive authorize method, access denied.";
+                        EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
                         return SSH_AUTH_SUCCESS;
                     }
 
@@ -819,77 +817,93 @@ int SshSession::_do_auth(const char* user, const char* secret)
             }
         }
 
-        EXLOGE("[%s] auth failed, mode=password/interactive, remote-host=%s.\n", m_dbg_name.c_str(), m_dbg_server.c_str());
         _set_last_error(TP_SESS_STAT_ERR_AUTH_DENIED);
-
-        // if(!m_auth_err_msg.empty())
-        //     m_auth_err_msg += "\r\n";
-        // m_auth_err_msg += "login remote host ";
-        // m_auth_err_msg += m_dbg_server;
-        // m_auth_err_msg += " failed, ";
-        // m_auth_err_msg += ssh_get_error(m_rs_tp2srv);
 
         m_auth_err_msg += "failed to login remote host ";
         m_auth_err_msg += m_dbg_server;
         m_auth_err_msg += " with interactive and password authorize methods, access denied.";
+        EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
         return SSH_AUTH_SUCCESS;
     }
     else if (m_auth_type == TP_AUTH_TYPE_PRIVATE_KEY)
     {
         if ((auth_methods & SSH_AUTH_METHOD_PUBLICKEY) != SSH_AUTH_METHOD_PUBLICKEY)
         {
-            EXLOGE("[%s] configure to use public-key auth, but remote host not allow such auth mode.\n", m_dbg_name.c_str());
             _set_last_error(TP_SESS_STAT_ERR_AUTH_TYPE);
             m_auth_err_msg = "public-key-authorize method is not allowed by remote host ";
             m_auth_err_msg += m_dbg_server;
             m_auth_err_msg += ".";
+            EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
             return SSH_AUTH_SUCCESS;
         }
 
         ssh_key key = nullptr;
         if (SSH_OK != ssh_pki_import_privkey_base64(m_acc_secret.c_str(), nullptr, nullptr, nullptr, &key))
         {
-            EXLOGE("[%s] can not import private-key for auth.\n", m_dbg_name.c_str());
             _set_last_error(TP_SESS_STAT_ERR_BAD_SSH_KEY);
             m_auth_err_msg = "can not load private key for login remote host ";
             m_auth_err_msg += m_dbg_server;
-            m_auth_err_msg += ".";
+            m_auth_err_msg += ", ";
+            EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
             return SSH_AUTH_SUCCESS;
         }
 
+        int retry_count = 0;
         rc = ssh_userauth_publickey(m_rs_tp2srv, nullptr, key);
+        for (;;)
+        {
+            if (rc == SSH_AUTH_SUCCESS)
+            {
+                EXLOGW("[%s] login with public-key mode succeeded.\n", m_dbg_name.c_str());
+                m_auth_passed = true;
+                ssh_key_free(key);
+                return SSH_AUTH_SUCCESS;
+            }
+            else if (rc == SSH_AUTH_AGAIN)
+            {
+                retry_count += 1;
+                if (retry_count >= 5)
+                    break;
+                ex_sleep_ms(100);
+                rc = ssh_userauth_publickey(m_rs_tp2srv, nullptr, key);
+                continue;
+            }
+
+            EXLOGE("[%s] failed to login with password mode, got %d.\n", m_dbg_name.c_str(), rc);
+
+            break;
+        }
+
         ssh_key_free(key);
 
-        if (rc == SSH_AUTH_SUCCESS)
-        {
-            EXLOGW("[%s] login with public-key mode succeeded.\n", m_dbg_name.c_str());
-            m_auth_passed = true;
-            return SSH_AUTH_SUCCESS;
-        }
-
-        EXLOGE("[%s] auth failed, mode=public-key, remote-host=%s.\n", m_dbg_name.c_str(), m_dbg_server.c_str());
         _set_last_error(TP_SESS_STAT_ERR_AUTH_DENIED);
-        m_auth_err_msg = "failed to login remote host ";
+
+        if (!m_auth_err_msg.empty())
+            m_auth_err_msg += "\r\n";
+        m_auth_err_msg += "login remote host ";
         m_auth_err_msg += m_dbg_server;
-        m_auth_err_msg += " with public-key authorize method, access denied.";
+        m_auth_err_msg += " with public-key authorize method failed. ";
+        m_auth_err_msg += ssh_get_error(m_rs_tp2srv);
+        EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
+
         return SSH_AUTH_SUCCESS;
     }
     else if (m_auth_type == TP_AUTH_TYPE_NONE)
     {
-        EXLOGE("[%s] configure to login without auth, not allowed.\n", m_dbg_name.c_str());
         _set_last_error(TP_SESS_STAT_ERR_AUTH_DENIED);
         m_auth_err_msg = "no authorize method for login remote host ";
         m_auth_err_msg += m_dbg_server;
         m_auth_err_msg += ".";
+        EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
         return SSH_AUTH_SUCCESS;
     }
     else
     {
-        EXLOGE("[%s] unknown auth mode: %d.\n", m_dbg_name.c_str(), m_auth_type);
         _set_last_error(TP_SESS_STAT_ERR_AUTH_DENIED);
         m_auth_err_msg = "unknown authorize method for login remote host ";
         m_auth_err_msg += m_dbg_server;
         m_auth_err_msg += ".";
+        EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
         return SSH_AUTH_SUCCESS;
     }
 }

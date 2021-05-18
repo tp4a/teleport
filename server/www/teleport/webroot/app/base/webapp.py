@@ -129,12 +129,15 @@ class WebApp:
         if not tp_session().init():
             log.e('can not initialize session manager.\n')
             return 0
+
         if not tp_stats().init():
             log.e('can not initialize system status collector.\n')
             return 0
-        # if not tp_host_alive().init():
-        #     log.e('can not initialize host state inspector.\n')
-        #     return 0
+
+        if cfg.common.check_host_alive:
+            if not tp_host_alive().init():
+                log.e('can not initialize host state inspector.\n')
+                return 0
 
         settings = {
             #
@@ -189,7 +192,8 @@ class WebApp:
         except:
             log.e('\n')
 
-        # tp_host_alive().stop()
+        if tp_cfg().common.check_host_alive:
+            tp_host_alive().stop()
         tp_cron().stop()
         return 0
 

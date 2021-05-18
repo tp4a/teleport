@@ -85,6 +85,9 @@ class HostAlive(object):
         self._lock = threading.RLock()
 
     def init(self):
+        if not tp_cfg().common.check_host_alive:
+            return True
+
         icmp_protocol = socket.getprotobyname('icmp')
         try:
             self._socket_ping = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp_protocol)
@@ -112,11 +115,17 @@ class HostAlive(object):
         return True
 
     def stop(self):
+        if not tp_cfg().common.check_host_alive:
+            return
+
         self._need_stop = True
         if self._thread_recv_ping_result is not None:
             self._thread_recv_ping_result.join()
 
     def add_host(self, host_ip, method=0, param=None, check_now=False):
+        if not tp_cfg().common.check_host_alive:
+            return True
+
         if param is None:
             param = {}
 
@@ -139,12 +148,18 @@ class HostAlive(object):
                     log.w('Warning: check alive method not implement.\n')
 
     def remove_host(self, host_ip):
+        if not tp_cfg().common.check_host_alive:
+            return
+
         with self._lock:
             if host_ip not in self._states:
                 return
             del self._states[host_ip]
 
     def get_states(self, host_ip_list):
+        if not tp_cfg().common.check_host_alive:
+            return {}
+
         with self._lock:
             ret = dict()
             time_now = int(time.time())
