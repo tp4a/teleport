@@ -119,7 +119,8 @@ def tp_send_mail(recipient, message, subject=None, sender=None, cc=None, bcc=Non
                 except:
                     pass
 
-        _smtp.login(_username, _password)
+        if _password is not None and len(_password) > 0:
+            _smtp.login(_username, _password)
 
         _smtp.set_debuglevel(0)
         send_errors = _smtp.sendmail(

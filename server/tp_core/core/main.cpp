@@ -5,14 +5,14 @@
 
 #include <ex.h>
 
-// ÃüÁîĞĞ²ÎÊıËµÃ÷£¨²»´ø²ÎÊıÔËĞĞÔòÒÔ·şÎñ·½Ê½Æô¶¯£©
+// å‘½ä»¤è¡Œå‚æ•°è¯´æ˜ï¼ˆä¸å¸¦å‚æ•°è¿è¡Œåˆ™ä»¥æœåŠ¡æ–¹å¼å¯åŠ¨ï¼‰
 // tp_core [-i|-u|--version] [ [-d] start]
-//   -d          Æô¶¯³ÌĞò²¢Êä³öµ÷ÊÔĞÅÏ¢£¨²»»áÔËĞĞÎªÊØ»¤½ø³Ì/·şÎñÄ£Ê½£©
-//   -i          °²×°·şÎñÈ»ºóÍË³ö£¨½öÏŞWinÆ½Ì¨£©
-//   -u          Ğ¶ÔØ·şÎñÈ»ºóÍË³ö£¨½öÏŞWinÆ½Ì¨£©
-//   --version  ´òÓ¡°æ±¾ºÅÈ»ºóÍË³ö
-//   start       ÒÔ·şÎñ·½Ê½ÔËĞĞ
-//   stop        Í£Ö¹ÔËĞĞÖĞµÄ³ÌĞò
+//   -d          å¯åŠ¨ç¨‹åºå¹¶è¾“å‡ºè°ƒè¯•ä¿¡æ¯ï¼ˆä¸ä¼šè¿è¡Œä¸ºå®ˆæŠ¤è¿›ç¨‹/æœåŠ¡æ¨¡å¼ï¼‰
+//   -i          å®‰è£…æœåŠ¡ç„¶åé€€å‡ºï¼ˆä»…é™Winå¹³å°ï¼‰
+//   -u          å¸è½½æœåŠ¡ç„¶åé€€å‡ºï¼ˆä»…é™Winå¹³å°ï¼‰
+//   --version  æ‰“å°ç‰ˆæœ¬å·ç„¶åé€€å‡º
+//   start       ä»¥æœåŠ¡æ–¹å¼è¿è¡Œ
+//   stop        åœæ­¢è¿è¡Œä¸­çš„ç¨‹åº
 //
 ExLogger g_ex_logger;
 
@@ -205,10 +205,10 @@ static DWORD WINAPI service_thread_func(LPVOID lpParam);
 int main()
 {
 	int ret = 0;
-	LPWSTR szCmdLine = (LPWSTR)::GetCommandLineW(); //»ñÈ¡ÃüÁîĞĞ²ÎÊı£»
+	LPWSTR szCmdLine = (LPWSTR)::GetCommandLineW(); //è·å–å‘½ä»¤è¡Œå‚æ•°ï¼›
 
 	int _argc = 0;
-	wchar_t** _argv = ::CommandLineToArgvW(szCmdLine, &_argc); //²ğ·ÖÃüÁîĞĞ²ÎÊı×Ö·û´®£»
+	wchar_t** _argv = ::CommandLineToArgvW(szCmdLine, &_argc); //æ‹†åˆ†å‘½ä»¤è¡Œå‚æ•°å­—ç¬¦ä¸²ï¼›
 
 	ret = _app_main(_argc, _argv);
 
@@ -240,7 +240,7 @@ static DWORD WINAPI service_thread_func(LPVOID lpParam)
 {
 	int ret = _main_loop();
 
-	// ¸üĞÂ·şÎñ×´Ì¬£¨Èç¹û·şÎñ»¹ÔÚÔËĞĞ£¬½«ÆäÉèÖÃÎªÍ£Ö¹×´Ì¬£©
+	// æ›´æ–°æœåŠ¡çŠ¶æ€ï¼ˆå¦‚æœæœåŠ¡è¿˜åœ¨è¿è¡Œï¼Œå°†å…¶è®¾ç½®ä¸ºåœæ­¢çŠ¶æ€ï¼‰
 	g_ServiceStatus.dwWin32ExitCode = 0;
 	g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
 	g_ServiceStatus.dwCheckPoint = 0;

@@ -284,7 +284,6 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                     tp_cfg().sys.glob.url_proto = _url_proto
                 else:
                     return self.write_json(err)
-            
 
             if 'password' in args:
                 processed = True
@@ -371,6 +370,7 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 # _password = _cfg['password']
                 _server = _cfg['server']
                 _port = _cfg['port']
+                _use_ssl = _cfg['use_ssl']
                 _domain = _cfg['domain']
                 _admin = _cfg['admin']
                 _base_dn = _cfg['base_dn']
@@ -391,6 +391,7 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 if err == TPE_OK:
                     tp_cfg().sys.ldap.server = _server
                     tp_cfg().sys.ldap.port = _port
+                    tp_cfg().sys.ldap.use_ssl = _use_ssl
                     tp_cfg().sys.ldap.domain = _domain
                     tp_cfg().sys.ldap.admin = _admin
                     tp_cfg().sys.ldap.base_dn = _base_dn
@@ -478,7 +479,7 @@ class DoLdapListUserAttrHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         try:
-            ldap = Ldap(cfg['server'], cfg['port'], cfg['base_dn'])
+            ldap = Ldap(cfg['server'], cfg['port'], cfg['base_dn'], cfg['use_ssl'])
             ret, data, err_msg = ldap.get_all_attr(cfg['admin'], cfg['password'], cfg['filter'])
             if ret != TPE_OK:
                 return self.write_json(ret, message=err_msg)
@@ -516,7 +517,7 @@ class DoLdapConfigTestHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         try:
-            ldap = Ldap(cfg['server'], cfg['port'], cfg['base_dn'])
+            ldap = Ldap(cfg['server'], cfg['port'], cfg['base_dn'], cfg['use_ssl'])
             ret, data, err_msg = ldap.list_users(
                 cfg['admin'], cfg['password'], cfg['filter'],
                 cfg['attr_username'], cfg['attr_surname'], cfg['attr_email'],
@@ -554,6 +555,7 @@ class DoLdapGetUsersHandler(TPBaseJsonHandler):
                 _password = tp_cfg().sys_ldap_password
             _server = tp_cfg().sys.ldap.server
             _port = tp_cfg().sys.ldap.port
+            _use_ssl = tp_cfg().sys.ldap.use_ssl
             _admin = tp_cfg().sys.ldap.admin
             _base_dn = tp_cfg().sys.ldap.base_dn
             _filter = tp_cfg().sys.ldap.filter
@@ -564,7 +566,7 @@ class DoLdapGetUsersHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         try:
-            ldap = Ldap(_server, _port, _base_dn)
+            ldap = Ldap(_server, _port, _base_dn, _use_ssl)
             ret, data, err_msg = ldap.list_users(_admin, _password, _filter, _attr_username, _attr_surname, _attr_email)
             if ret != TPE_OK:
                 return self.write_json(ret, message=err_msg)
@@ -618,6 +620,7 @@ class DoLdapImportHandler(TPBaseJsonHandler):
                 _password = tp_cfg().sys_ldap_password
             _server = tp_cfg().sys.ldap.server
             _port = tp_cfg().sys.ldap.port
+            _use_ssl = tp_cfg().sys.ldap.use_ssl
             _admin = tp_cfg().sys.ldap.admin
             _base_dn = tp_cfg().sys.ldap.base_dn
             _filter = tp_cfg().sys.ldap.filter
@@ -628,7 +631,7 @@ class DoLdapImportHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         try:
-            ldap = Ldap(_server, _port, _base_dn)
+            ldap = Ldap(_server, _port, _base_dn, _use_ssl)
             ret, data, err_msg = ldap.list_users(_admin, _password, _filter, _attr_username, _attr_surname, _attr_email)
 
             if ret != TPE_OK:

@@ -45,8 +45,8 @@
 
 <div class="page-content-inner">
     ## 防止页面搜索框被自动填充
-    <label style="display:none;"><span></span><input type="text" name="hidden1" ></label>
-    <label style="display:none;"><span></span><input type="password" name="hidden2" ></label>
+    <label style="display:none;"><span></span><input type="text" name="hidden1"></label>
+    <label style="display:none;"><span></span><input type="password" name="hidden2"></label>
 
     <!-- begin box -->
     <div class="box">
@@ -67,7 +67,7 @@
                         <li><a href="javascript:;" data-action="ldap-import"><i class="fas fa-arrow-alt-circle-left fa-fw"></i> 导入LDAP用户</a></li>
                         <li role="separator" class="divider"></li>
                         <li><a href="javascript:;" data-action="ldap-config"><i class="fas fa-cog fa-fw"></i> 设置LDAP</a></li>
-##                         <li><a href="javascript:;" data-action="ldap-sync"><i class="fas fa-link fa-fw"></i> 同步LDAP</a></li>
+                        ##                         <li><a href="javascript:;" data-action="ldap-sync"><i class="fas fa-link fa-fw"></i> 同步LDAP</a></li>
                     </ul>
                 </div>
             </div>
@@ -236,15 +236,15 @@
                                 <input id="edit-user-wechat" type="text" class="form-control"/>
                             </div>
                         </div>
-                        
+
                         <div class="form-group form-group-sm">
                             <label class="col-sm-2 control-label">生效时间：</label>
                             <div class="col-sm-5">
                                 <div class="input-group date" id="edit-user-valid-from">
-                					<input type='text' class="form-control" readonly />
-                					<span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
-                					<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
-					            </div>
+                                    <input type='text' class="form-control" readonly/>
+                                    <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
+                                    <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                                </div>
                             </div>
                             <div class="col-sm-5">
                                 <div class="control-desc">开始</div>
@@ -253,11 +253,11 @@
                         <div class="form-group form-group-sm">
                             <label class="col-sm-2"></label>
                             <div class="col-sm-5">
-					            <div class='input-group date' id='edit-user-valid-to'>
-                					<input type='text' class="form-control" readonly />
-                					<span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
-                					<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
-					            </div>
+                                <div class='input-group date' id='edit-user-valid-to'>
+                                    <input type='text' class="form-control" readonly/>
+                                    <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
+                                    <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                                </div>
                             </div>
                             <div class="col-sm-5">
                                 <div class="control-desc">结束</div>
@@ -285,9 +285,15 @@
                                         <hr class="hr-sm"/>
                                     </li>
                                     ## <li><div id="sec-auth-username-password" class="tp-checkbox">用户名 + 密码</div></li>
-                                    <li><div id="sec-auth-username-password-captcha" class="tp-checkbox">用户名 + 密码 + 验证码</div></li>
+
+                                    <li>
+                                        <div id="sec-auth-username-password-captcha" class="tp-checkbox">用户名 + 密码 + 验证码</div>
+                                    </li>
                                     ## <li><div id="sec-auth-username-oath" class="tp-checkbox">用户名 + 身份认证器动态密码</div></li>
-                                    <li><div id="sec-auth-username-password-oath" class="tp-checkbox">用户名 + 密码 + 身份认证器动态密码</div></li>
+
+                                    <li>
+                                        <div id="sec-auth-username-password-oath" class="tp-checkbox">用户名 + 密码 + 身份认证器动态密码</div>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -464,6 +470,9 @@
                             <div class="col-sm-4">
                                 <input id="edit-ldap-server" type="text" class="form-control"
                                        placeholder="LDAP服务器IP或域名"/>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-check-label"><input id="edit-ldap-ssl" type="checkbox" class="form-check-input"/> 使用 SSL</label>
                             </div>
                         </div>
 

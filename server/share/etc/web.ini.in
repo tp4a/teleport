@@ -28,6 +28,8 @@ debug-mode=0
 ; DO NOT FORGET update this setting if you modified rpc::bind-port in core.ini.
 core-server-rpc=http://127.0.0.1:52080/rpc
 
+;
+check-host-alive=0
 
 [database]
 

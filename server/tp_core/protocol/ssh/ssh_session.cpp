@@ -297,8 +297,9 @@ void SshSession::_thread_loop()
             if (t_now - t_last_send_keepalive >= 60)
             {
                 t_last_send_keepalive = t_now;
-                EXLOGD("[%s] send keepalive to client.\n", m_dbg_name.c_str());
+                EXLOGD("[%s] send keepalive.\n", m_dbg_name.c_str());
                 ssh_send_ignore(m_rs_tp2cli, "keepalive@openssh.com");
+                ssh_send_ignore(m_rs_tp2srv, "keepalive@openssh.com");
             }
 
             continue;

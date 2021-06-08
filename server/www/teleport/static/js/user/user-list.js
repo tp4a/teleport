@@ -224,9 +224,7 @@ $app.on_table_users_cell_created = function (tbl, row_id, col_key, cell_obj) {
         cell_obj.find('[data-check-box]').click(function () {
             $app.check_user_list_all_selected();
         });
-    }
-
-    else if (col_key === 'action') {
+    } else if (col_key === 'action') {
         cell_obj.find('[data-action]').click(function () {
             var user = $app.table_users.get_row(row_id);
             var action = $(this).attr('data-action');
@@ -234,7 +232,7 @@ $app.on_table_users_cell_created = function (tbl, row_id, col_key, cell_obj) {
                 $app.dlg_edit_user.show_edit(row_id);
             } else if (action === 'reset-password') {
                 // console.log(user);
-                if(user.type === TP_USER_TYPE_LDAP)
+                if (user.type === TP_USER_TYPE_LDAP)
                     return;
                 $app.dlg_reset_password.show_edit(row_id);
             } else if (action === 'reset-oath-bind') {
@@ -419,7 +417,7 @@ $app.on_table_users_render_created = function (render) {
         } else {
             class_user_type = '';
         }
-        h.push('<li' + class_user_type +'><a href="javascript:;" data-action="reset-password"><i class="fa fa-street-view fa-fw"></i> 重置密码</a></li>');
+        h.push('<li' + class_user_type + '><a href="javascript:;" data-action="reset-password"><i class="fa fa-street-view fa-fw"></i> 重置密码</a></li>');
 
         h.push('<li><a href="javascript:;" data-action="reset-oath-bind"><i class="fa fa-street-view fa-fw"></i> 重置身份验证器</a></li>');
         h.push('<li role="separator" class="divider"></li>');
@@ -808,16 +806,16 @@ $app.create_dlg_edit_user = function () {
         dlg.dom.edit_valid_from.datetimepicker({format: "yyyy-mm-dd hh:ii", autoclose: true, todayHighlight: true, todayBtn: true, language: "zh-CN"});
         dlg.dom.edit_valid_to.datetimepicker({format: "yyyy-mm-dd hh:ii", autoclose: true, todayHighlight: true, todayBtn: true, language: "zh-CN"});
 
-        dlg.dom.edit_valid_from.on('changeDate', function(ev){
+        dlg.dom.edit_valid_from.on('changeDate', function (ev) {
             var start_time = dlg.dom.edit_valid_from.find('input').val();
-            if(start_time === '')
+            if (start_time === '')
                 dlg.dom.edit_valid_to.datetimepicker('setStartDate', '1000-01-01 00:00');
             else
                 dlg.dom.edit_valid_to.datetimepicker('setStartDate', start_time);
         });
-        dlg.dom.edit_valid_to.on('changeDate', function(ev){
+        dlg.dom.edit_valid_to.on('changeDate', function (ev) {
             var end_time = dlg.dom.edit_valid_to.find('input').val();
-            if(end_time === '')
+            if (end_time === '')
                 dlg.dom.edit_valid_from.datetimepicker('setEndDate', '9999-12-12 00:00');
             else
                 dlg.dom.edit_valid_from.datetimepicker('setEndDate', end_time);
@@ -892,7 +890,7 @@ $app.create_dlg_edit_user = function () {
         var role_name = '选择角色';
         dlg.field_role = -1;
         dlg.field_auth_type = 0;
-        
+
         // dlg.dom.btn_auth_use_sys_config.removeClass('tp-selected');
         // dlg.dom.btn_auth_username_password.removeClass('tp-selected');
         // dlg.dom.btn_auth_username_password_captcha.removeClass('tp-selected');
@@ -930,22 +928,22 @@ $app.create_dlg_edit_user = function () {
             dlg.dom.edit_qq.val(user.qq);
             dlg.dom.edit_wechat.val(user.wechat);
             dlg.dom.edit_desc.val(user.desc);
-            if (user.valid_from === 0 ) {
-            	dlg.dom.edit_valid_from.find('input').val('');
-               	dlg.dom.edit_valid_to.datetimepicker('setStartDate', '9999-12-12 00:00');
-            }else{
+            if (user.valid_from === 0) {
+                dlg.dom.edit_valid_from.find('input').val('');
+                dlg.dom.edit_valid_to.datetimepicker('setStartDate', '9999-12-12 00:00');
+            } else {
                 var start_time = tp_format_datetime(user.valid_from, 'yyyy-MM-dd HH:mm');
-            	dlg.dom.edit_valid_from.find('input').val(start_time);
-               	dlg.dom.edit_valid_to.datetimepicker('setStartDate', start_time);
+                dlg.dom.edit_valid_from.find('input').val(start_time);
+                dlg.dom.edit_valid_to.datetimepicker('setStartDate', start_time);
             }
-            if (user.valid_to === 0 ) {
-            	dlg.dom.edit_valid_to.find('input').val('');
-            	dlg.dom.edit_valid_from.datetimepicker('setEndDate', '1000-01-01 00:00');
-            }else{
+            if (user.valid_to === 0) {
+                dlg.dom.edit_valid_to.find('input').val('');
+                dlg.dom.edit_valid_from.datetimepicker('setEndDate', '1000-01-01 00:00');
+            } else {
                 var end_time = tp_format_datetime(user.valid_to, 'yyyy-MM-dd HH:mm');
-            	dlg.dom.edit_valid_to.find('input').val(end_time);
-            	dlg.dom.edit_valid_from.datetimepicker('setEndDate', end_time);
-          	}
+                dlg.dom.edit_valid_to.find('input').val(end_time);
+                dlg.dom.edit_valid_from.datetimepicker('setEndDate', end_time);
+            }
         }
         dlg.dom.selected_role.text(role_name);
 
@@ -1290,6 +1288,7 @@ $app.create_dlg_ldap_config = function () {
     dlg.ldap_config = {
         server: '',
         port: '',
+        use_ssl: false,
         domain: '',
         admin: '',
         password: '',
@@ -1315,6 +1314,7 @@ $app.create_dlg_ldap_config = function () {
         attr_surname: $('#edit-ldap-attr-surname'),
         attr_email: $('#edit-ldap-attr-email'),
 
+        btn_use_ssl: $('#edit-ldap-ssl'),
         btn_switch_password: $('#btn-switch-ldap-password'),
         btn_switch_password_icon: $('#btn-switch-ldap-password i'),
 
@@ -1338,6 +1338,10 @@ $app.create_dlg_ldap_config = function () {
             }
         });
 
+        // dlg.dom.btn_use_ssl.click(function () {
+        //     dlg.ldap_config.use_ssl = $(this).is(':checked')
+        // });
+
         cb_stack.exec();
     };
 
@@ -1346,6 +1350,8 @@ $app.create_dlg_ldap_config = function () {
             dlg.mode = 'set';
         } else {
             dlg.ldap_config = $app.options.sys_cfg.ldap;
+            if (_.isUndefined(dlg.ldap_config.use_ssl))
+                dlg.ldap_config.use_ssl = false;
 
             dlg.mode = 'edit';
             // dlg.dom.password.val();
@@ -1359,6 +1365,11 @@ $app.create_dlg_ldap_config = function () {
             dlg.dom.attr_username.val(dlg.ldap_config.attr_username);
             dlg.dom.attr_surname.val(dlg.ldap_config.attr_surname);
             dlg.dom.attr_email.val(dlg.ldap_config.attr_email);
+
+            if (dlg.ldap_config.use_ssl)
+                dlg.dom.btn_use_ssl.prop('checked', true);
+            else
+                dlg.dom.btn_use_ssl.prop('checked', false);
         }
     };
 
@@ -1407,6 +1418,9 @@ $app.create_dlg_ldap_config = function () {
             $tp.notify_error('请填写LDAP的管理员用户名！');
             return false;
         }
+
+        // dlg.ldap_config.use_ssl = dlg.dom.btn_use_ssl.hasClass('tp-selected');
+        dlg.ldap_config.use_ssl = $(this).is(':checked')
 
         if (dlg.mode === 'set') {
             if (tp_is_empty_str(dlg.ldap_config.password)) {
@@ -1582,9 +1596,9 @@ $app.create_dlg_ldap_test_result = function () {
         h.push('<th style="text-align:left;" class="mono">邮箱</th>');
         h.push('</thead>');
 
-        var _mktd = function(h, d) {
-            if((!_.isUndefined(d)) && !_.isEmpty(d))
-                h.push('<td style="text-align:left;" class="mono">'+d+'</td>');
+        var _mktd = function (h, d) {
+            if ((!_.isUndefined(d)) && !_.isEmpty(d))
+                h.push('<td style="text-align:left;" class="mono">' + d + '</td>');
             else
                 h.push('<td></td>');
         };

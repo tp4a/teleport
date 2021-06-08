@@ -103,7 +103,8 @@ class BuilderWin(BuilderBase):
 class BuilderLinux(BuilderBase):
     def __init__(self):
         super().__init__()
-        self.name = 'teleport-server-linux-{}-{}'.format(ctx.bits_path, VER_TP_SERVER)
+        state = '' if VER_TP_STATE == 'release' else '-{}'.format(VER_TP_STATE)
+        self.name = 'teleport-server-linux-{}-{}{}'.format(ctx.bits_path, VER_TP_SERVER, state)
         self._final_file = os.path.join(env.root_path, 'out', 'installer', '{}.tar.gz'.format(self.name))
 
         self.dist_path = os.path.join(env.root_path, 'dist', 'server')
