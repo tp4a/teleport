@@ -1,0 +1,44 @@
+#/bin/bash
+
+# 请设置一个目录用于teleport保存数据，包括配置文件、录像、服务日志等
+# TP_DATA=/var/data/teleport
+
+TP_VER=3.5.6-rc6
+
+PATH_ROOT=$(cd "$(dirname "$0")/../.."; pwd)
+PATH_DOCKER=${PATH_ROOT}/dist/docker
+INSTALLER_FILE_NAME=teleport-server-linux-x64-${TP_VER}.tar.gz
+
+cd ${PATH_DOCKER}
+
+container_id=$(docker ps -a | grep "teleport-${TP_VER}" | awk '{print $1}')
+if [ "x-${container_id}" != "x-" ]; then
+    flag=$(docker ps | grep ${container_id})
+
+    if [ "x-${flag}" != "x-" ]; then
+        echo "stop running container..."
+        docker stop ${container_id}
+    fi
+
+    echo "remove container..."
+    docker rm ${container_id}
+fi
+
+image_id=$(docker images | grep "tp4a/teleport" | grep "${TP_VER}" | awk '{print $3}')
+if [ "x-${image_id}" != "x-" ]; then
+    echo "remove old image..."
+    docker rmi ${image_id}
+fi
+
+echo "copying teleport installer package..."
+rm -rf ${PATH_DOCKER}/res/${INSTALLER_FILE_NAME}
+cp ${PATH_ROOT}/out/installer/${INSTALLER_FILE_NAME} ${PATH_DOCKER}/res/.
+
+echo "building docker-image tp4a/teleport:${TP_VER} ..."
+docker build -t="tp4a/teleport:${TP_VER}" .
+
+echo "starting container..."
+docker run --name=teleport-${TP_VER} -d \
+  -v ${TP_DATA}:/usr/local/teleport/data \
+  -p 7190:7190 -p 52089:52089 -p 52189:52189 -p 52389:52389 \
+  tp4a/teleport:${TP_VER}

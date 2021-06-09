@@ -8,8 +8,8 @@ from app.const import *
 
 
 class Ldap(object):
-    def __init__(self, ldap_host, ldap_port, base_dn):
-        self._server = ldap3.Server(ldap_host, ldap_port, connect_timeout=5, use_ssl=False)
+    def __init__(self, ldap_host, ldap_port, base_dn, use_ssl):
+        self._server = ldap3.Server(ldap_host, ldap_port, connect_timeout=5, use_ssl=use_ssl)
         self._base_dn = base_dn
 
     @staticmethod

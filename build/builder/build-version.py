@@ -19,6 +19,7 @@ class Builder:
         self.VER_TP_TPWEB = ''
         self.VER_TP_ASSIST = ''
         self.VER_TP_ASSIST_REQUIRE = ''
+        self.VER_TP_STATE = ''
 
     def build(self):
         cc.n('update version...')
@@ -48,6 +49,10 @@ class Builder:
                     x = l.split(' ')
                     self.VER_TP_ASSIST_REQUIRE = x[1].strip()
                     # self.VER_TP_ASSIST += '.0'
+                elif l.startswith('TP_STATE '):
+                    x = l.split(' ')
+                    self.VER_TP_STATE = x[1].strip()
+                    # self.VER_TP_ASSIST += '.0'
 
         cc.v('new version:')
         cc.v('  Server             : ', self.VER_TP_SERVER)
@@ -55,6 +60,7 @@ class Builder:
         cc.v('    - tp_web         : ', self.VER_TP_TPWEB)
         cc.v('  Assist             : ', self.VER_TP_ASSIST)
         cc.v('    - Require        : ', self.VER_TP_ASSIST_REQUIRE)
+        cc.v('  State              : ', self.VER_TP_STATE)
         cc.v('')
 
         self.make_builder_ver()
@@ -66,7 +72,7 @@ class Builder:
 
     def make_builder_ver(self):
         ver_file = os.path.join(env.root_path, 'build', 'builder', 'core', 'ver.py')
-        ver_content = '# -*- coding: utf8 -*-\nVER_TP_SERVER = "{}"\nVER_TP_ASSIST = "{}"\n'.format(self.VER_TP_SERVER, self.VER_TP_ASSIST)
+        ver_content = '# -*- coding: utf8 -*-\nVER_TP_SERVER = "{}"\nVER_TP_ASSIST = "{}"\nVER_TP_STATE = "{}"\n'.format(self.VER_TP_SERVER, self.VER_TP_ASSIST, self.VER_TP_STATE)
 
         rewrite = False
         if not os.path.exists(ver_file):
@@ -111,7 +117,8 @@ class Builder:
                       '# -*- coding: utf8 -*-\n' \
                       'TP_SERVER_VER = "{}"\n' \
                       'TP_ASSIST_REQUIRE_VER = "{}"\n' \
-                      ''.format(self.VER_TP_SERVER, self.VER_TP_ASSIST_REQUIRE)
+                      'TP_STATE_VER = "{}"\n' \
+                      ''.format(self.VER_TP_SERVER, self.VER_TP_ASSIST_REQUIRE, self.VER_TP_STATE)
 
         rewrite = False
         if not os.path.exists(ver_file):

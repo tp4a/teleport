@@ -15,3 +15,4 @@ TP_TPCORE 3.5.5           # 核心服务 tp_core 的版本
 TP_TPWEB 3.1.0            # web服务 tp_web 的版本（一般除非升级Python，否则不会变化）
 TP_ASSIST 3.5.6           # 助手版本
 TP_ASSIST_REQUIRE 3.5.5   # 适配的助手最低版本
+TP_STATE rc6              # 版本状态，可以是 beta1，rc2 等，用于打包文件名及部分界面。如果是 release 则忽略。

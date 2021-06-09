@@ -70,7 +70,7 @@ class DatabaseInit:
         # name: 配置项名称
         f.append('`name` varchar(64) NOT NULL')
         # name: 配置项内容
-        f.append('`value` varchar(255) NOT NULL')
+        f.append('`value` TEXT')
 
         # 设置主键
         f.append('PRIMARY KEY (`name` ASC)')

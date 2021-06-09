@@ -1,0 +1,17 @@
+#/bin/bash
+
+# 请设置一个目录用于teleport保存数据，包括配置文件、录像、服务日志等
+# TP_DATA=/var/data/teleport
+
+#=============================================
+
+TP_VER=3.5.6-rc6
+
+if [ ! -d ${TP_DATA} ]; then
+    mkdir -p ${TP_DATA}
+fi
+
+echo "starting teleport server ${TP_VER} ..."
+docker start $(docker ps -n 100 | grep "tp4a/teleport:${TP_VER}" | awk '{print $1}')
+
+# docker run -v /Users/apex/tmp/docker-tp-data:/usr/local/teleport/data -p 7190:7190 -p 52089:52089 -p 52189:52189 -p 52389:52389 -it tp4a/teleport:3.5.6-rc6 /bin/bash
