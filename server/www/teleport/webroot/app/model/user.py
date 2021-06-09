@@ -124,13 +124,14 @@ def login(handler, username, password=None, oath_code=None, check_bind_oath=Fals
                 _ldap_server = tp_cfg().sys.ldap.server
                 _ldap_port = tp_cfg().sys.ldap.port
                 _ldap_base_dn = tp_cfg().sys.ldap.base_dn
+                _ldap_use_ssl = tp_cfg().sys.ldap.use_ssl
             except:
                 msg = 'LDAP尚未正确配置'
                 syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
                 return TPE_USER_AUTH, None, msg
 
             try:
-                ldap = Ldap(_ldap_server, _ldap_port, _ldap_base_dn)
+                ldap = Ldap(_ldap_server, _ldap_port, _ldap_base_dn, _ldap_use_ssl)
                 ret, err_msg = ldap.valid_user(user_info['ldap_dn'], password)
                 if ret != TPE_OK:
                     if ret == TPE_USER_AUTH:
