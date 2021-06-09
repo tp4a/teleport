@@ -596,7 +596,7 @@ class AppConfig(BaseAppConfig):
         if not self.sys.ldap.is_exists('port'):
             self.sys.ldap.port = 389
         if not self.sys.ldap.is_exists('use_ssl'):
-            self.sys.ldap.use = False
+            self.sys.ldap.use_ssl = False
         if not self.sys.ldap.is_exists('domain'):
             self.sys.ldap.domain = ''
         if not self.sys.ldap.is_exists('admin'):

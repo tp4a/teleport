@@ -1420,7 +1420,7 @@ $app.create_dlg_ldap_config = function () {
         }
 
         // dlg.ldap_config.use_ssl = dlg.dom.btn_use_ssl.hasClass('tp-selected');
-        dlg.ldap_config.use_ssl = $(this).is(':checked')
+        dlg.ldap_config.use_ssl = dlg.dom.btn_use_ssl.is(':checked')
 
         if (dlg.mode === 'set') {
             if (tp_is_empty_str(dlg.ldap_config.password)) {

@@ -38,6 +38,9 @@ __pycache__
 **/.idea/inspectionProfiles
 **/.idea/vcs.xml
 **/.idea/modules.xml
+**/.idea/deployment.xml
+**/.idea/sshConfigs.xml
+**/.idea/webServers.xml
 
 *.css.map
 
@@ -61,6 +64,8 @@ __pycache__
 
 # for dist folder
 **/_tmp_
+/dist/docker/*.sh
+/dist/docker/res/*.tar.gz
 /dist/server/data
 /dist/client/windows/assist/apps
 /dist/client/windows/assist/cfg

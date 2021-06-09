@@ -3,6 +3,7 @@
 import tornado.ioloop
 from app.base.controller import TPBaseHandler
 from app.base.logger import log
+from app.base.configs import tp_cfg
 from app.const import *
 from tornado.escape import json_encode
 
@@ -25,6 +26,11 @@ class IndexHandler(TPBaseHandler):
 
 class CatchAllHandler(TPBaseHandler):
     def get(self):
+        if self.request.uri == tp_cfg().random_exit_uri:
+            tornado.ioloop.IOLoop.instance().stop()
+            self.write('EXIT')
+            return
+
         log.w('catch all, GET: {}\n'.format(self.request.uri))
         self.show_error_page(TPE_HTTP_404_NOT_FOUND)
 

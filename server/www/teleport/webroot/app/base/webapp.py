@@ -2,6 +2,7 @@
 
 import json
 import os
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -22,6 +23,7 @@ from app.base.session import tp_session
 from app.base.cron import tp_cron
 from app.base.stats import tp_stats
 from app.base.host_alive import tp_host_alive
+from app.base.utils import tp_generate_random
 from app.app_ver import TP_SERVER_VER
 
 
@@ -30,6 +32,10 @@ class WebApp:
         import builtins
         if '__web_app__' in builtins.__dict__:
             raise RuntimeError('WebApp object exists, you can not create more than one instance.')
+
+        self._need_stop = False
+        self._thread = None
+
         self._cfg_file = ''
 
     def init(self, path_app_root, path_data):
@@ -51,6 +57,8 @@ class WebApp:
         if not cfg.load(self._cfg_file):
             return False
 
+        cfg.random_exit_uri = '/exit_{}'.format(tp_generate_random(16))
+
         return True
 
     def _get_core_server_config(self):
@@ -71,12 +79,26 @@ class WebApp:
         except:
             log.w('can not connect to core-server to get config, maybe it not start yet, ignore.\n')
 
+    def finalize(self):
+        print('DONE')
+
+        log.finalize()
+
     def run(self):
         log.i('\n')
         log.i('###############################################################\n')
         log.i('Teleport Web Server v{}\n'.format(TP_SERVER_VER))
         log.i('Load config file: {}\n'.format(self._cfg_file))
 
+        self._thread = threading.Thread(target=self._run_loop)
+        self._thread.start()
+        while not self._need_stop:
+            time.sleep(1)
+        self._thread.join()
+
+        return 0
+
+    def _run_loop(self):
         ext_srv_cfg = tp_ext_srv_cfg()
         if not ext_srv_cfg.init():
             return 0
@@ -196,6 +218,17 @@ class WebApp:
             tp_host_alive().stop()
         tp_cron().stop()
         return 0
+
+    def stop(self):
+        if self._need_stop:
+            return
+        self._need_stop = True
+        cfg = tp_cfg()
+        try:
+            c = urllib.request.urlopen('http://127.0.0.1:{}{}'.format(cfg.common.port, cfg.random_exit_uri))
+            c.read()
+        except:
+            log.e('\n')
 
 
 def tp_web_app():
