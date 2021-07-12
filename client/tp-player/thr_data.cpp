@@ -278,8 +278,10 @@ void ThrData::_run() {
 
             // 如果数据文件尚未打开，则打开它
             if(fdata == nullptr) {
-                str_fidx.sprintf("%d", m_file_idx+1);
-                QString tpd_fname = QString("%1/tp-rdp-%2.tpd").arg(m_data_path, str_fidx);
+                //str_fidx.sprintf("%d", m_file_idx+1);
+                //QString tpd_fname = QString("%1/tp-rdp-%2.tpd").arg(m_data_path, str_fidx);
+                QString tpd_fname;
+                QTextStream(&tpd_fname) << m_data_path << "/tp-rdp-" << (m_file_idx+1) << ".tpd";
                 tpd_fname = QDir::toNativeSeparators(tpd_fname);
 
                 QFileInfo fi_tpd(tpd_fname);

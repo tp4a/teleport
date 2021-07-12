@@ -1,9 +1,27 @@
 {
-    "toolchain": {
-        "pyexec": "C:\\Program Files(x86)\\python-3.7\\python.exe",
-        "qt_path": "C:\\Qt\\Qt5.12.0\\5.12.0\\msvc2017",
-        "cmake": "C:\\Program Files(x86)\\CMake\\bin\\cmake.exe"
+    "#.comment": {
+        "#.0": "This is configure file for build teleport project. You should copy this file to",
+        "#.1": "config.PLATFORM.json and modify it to fit your development environment.",
+        "#.3": "PLATFORM should be one of windows/linux/macos."
     },
+
+    "#.toolchain": "path of toolchain, if not set, default to find them from register(win), /usr/bin or /usr/local/bin (linux/macos).",
+    "#.toolchain.example.macos": {
+        "qt_path": "/opt/Qt/5.15.2/clang_64/bin",
+        "cmake": "/usr/local/bin/cmake"
+    },
+    "#.toolchain.example.linux": {
+        "qt_path": "",
+        "cmake": "/opt/cmake/bin/cmake"
+    },
+    "#.toolchain.example.windows": {
+        "qt_path": "C:\\Qt\\Qt5.15.2\\5.15.2\\msvc2017",
+        "cmake": "C:\\Program Files(x86)\\CMake\\bin\\cmake.exe",
+        "wget": "",
+        "7z": "",
+    },
+
+
     "remote": {
         "short-name-1": {
             "type": "linux",

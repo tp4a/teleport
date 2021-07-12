@@ -168,12 +168,12 @@ public:
 #else
         // timeval.tv_usec ==== ms
         // timespec.tv_nsec === nano-second
-        struct timeval  now      = { 0 };
-        struct timespec out_time = { 0 };
+        struct timeval now = {0};
+        struct timespec out_time = {0};
         gettimeofday(&now, nullptr);
 
         uint64_t abs_time_ms = now.tv_sec * 1000ll + now.tv_usec + timeout_ms;
-        out_time.tv_sec  = abs_time_ms / 1000ll;
+        out_time.tv_sec = abs_time_ms / 1000ll;
         out_time.tv_nsec = (long)((abs_time_ms % 1000ll) * 1000ll);
 
         pthread_cond_timedwait(&m_cond, &m_mutex, &out_time);
@@ -192,7 +192,7 @@ private:
 #ifdef EX_OS_WIN32
 #else
     pthread_mutex_t m_mutex;
-    pthread_cond_t  m_cond;
+    pthread_cond_t m_cond;
 #endif
 };
 
@@ -200,7 +200,7 @@ class ExEventHelper
 {
 public:
     explicit ExEventHelper(ExEvent& event) :
-        m_event(event)
+            m_event(event)
     {
 #ifdef EX_OS_WIN32
 #else
@@ -222,7 +222,9 @@ private:
 
 // 原子操作
 int ex_atomic_add(volatile int* pt, int t);
+
 int ex_atomic_inc(volatile int* pt);
+
 int ex_atomic_dec(volatile int* pt);
 
 // 线程相关操作

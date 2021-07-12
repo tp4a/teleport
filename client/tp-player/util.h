@@ -1,7 +1,7 @@
 ﻿#ifndef TP_PLAYER_UTIL_H
 #define TP_PLAYER_UTIL_H
 
-#include <QTime>
+#include <QElapsedTimer>
 
 class TimeUseTest {
 public:
@@ -23,7 +23,7 @@ public:
     uint32_t count() const {return m_count;}
 
 private:
-    QTime m_time;
+    QElapsedTimer m_time;
     uint32_t m_used_ms;
     uint32_t m_count;
 };

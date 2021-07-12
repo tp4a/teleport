@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.18)
 
 MESSAGE(STATUS "operation system is ${CMAKE_SYSTEM}")
 MESSAGE(STATUS "root source directory is ${PROJECT_SOURCE_DIR}")

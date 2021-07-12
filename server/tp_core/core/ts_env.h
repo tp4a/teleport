@@ -11,7 +11,7 @@ public:
 
 	bool init(bool load_config);
 
-	ExIniFile& get_ini(void) { return m_ini; }
+	ExIniFile& get_ini() { return m_ini; }
 
 public:
 	ex_wstr m_exec_file;

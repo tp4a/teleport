@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.18)
 project(teleport)
 
 include(CMakeCfg.txt)
@@ -14,4 +14,8 @@ add_subdirectory(server/tp_core/testssh)
 
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/server/tp_core/protocol/rdp")
     add_subdirectory(server/tp_core/protocol/rdp)
+endif ()
+
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/server/tools/tpr2mp4")
+    add_subdirectory(server/tools/tpr2mp4)
 endif ()

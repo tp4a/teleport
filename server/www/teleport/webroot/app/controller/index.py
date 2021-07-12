@@ -31,10 +31,12 @@ class CatchAllHandler(TPBaseHandler):
             self.write('EXIT')
             return
 
+        self.set_status(404)
         log.w('catch all, GET: {}\n'.format(self.request.uri))
         self.show_error_page(TPE_HTTP_404_NOT_FOUND)
 
     def post(self):
+        self.set_status(404)
         log.w('catch all, POST: {}\n'.format(self.request.uri))
         _ret = {'code': TPE_HTTP_404_NOT_FOUND, 'message': '错误的URI', 'data': {}}
         self.set_header("Content-Type", "application/json")

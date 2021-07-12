@@ -98,7 +98,8 @@ void ThrDownload::_run() {
         if(m_need_stop)
             break;
         QString str_fidx;
-        str_fidx.sprintf("%d", file_idx+1);
+        QTextStream(&str_fidx) << (file_idx+1);
+        // str_fidx.asprintf("%d", file_idx+1);
 
         QString tpd_fname = QString("%1/tp-rdp-%2.tpd").arg(m_data_path, str_fidx);
         tpd_fname = QDir::toNativeSeparators(tpd_fname);

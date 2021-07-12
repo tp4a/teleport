@@ -103,7 +103,8 @@ bool Bar::init(MainWindow* owner) {
     int i = 0;
     for(i = 0; i < res__max; ++i) {
         QString name;
-        name.sprintf(":/tp-player/res/bar/%s.png", img_res[i].name);
+        QTextStream(&name) << ":/tp-player/res/bar/" << img_res[i].name << ".png";
+        // name.asprintf(":/tp-player/res/bar/%s.png", img_res[i].name);
         if(!m_res[i].load(name))
             return false;
     }
@@ -223,7 +224,8 @@ void Bar::_init_imgages() {
             int h = fm.height();
             if(h < m_res[res_chkbox_normal].height())
                 h = m_res[res_chkbox_normal].height();
-            m_rc_skip = QRect(0, 0, fm.width(LOCAL8BIT("无操作则跳过")) + CHKBOX_RIGHT_PADDING + m_res[res_chkbox_normal].width(), h);
+            // m_rc_skip = QRect(0, 0, fm.width(LOCAL8BIT("无操作则跳过")) + CHKBOX_RIGHT_PADDING + m_res[res_chkbox_normal].width(), h);
+            m_rc_skip = QRect(0, 0, fm.horizontalAdvance(LOCAL8BIT("无操作则跳过")) + CHKBOX_RIGHT_PADDING + m_res[res_chkbox_normal].width(), h);
         }
 
         int w = m_rc_skip.width();
@@ -272,7 +274,8 @@ void Bar::_init_imgages() {
         pp.setFont(font);
         {
             QFontMetrics fm = pp.fontMetrics();
-            m_rc_time_passed = QRect(0, 0, fm.width("00:00:00"), fm.height());
+            // m_rc_time_passed = QRect(0, 0, fm.width("00:00:00"), fm.height());
+            m_rc_time_passed = QRect(0, 0, fm.horizontalAdvance("00:00:00"), fm.height());
             m_rc_time_total = m_rc_time_passed;
         }
 
@@ -330,9 +333,11 @@ void Bar::_ms_to_str(uint32_t ms, QString& str) {
     s = s % 60;
 
     if(h > 0)
-        str.sprintf("%02d:%02d:%02d", h, m, s);
+        // str.sprintf("%02d:%02d:%02d", h, m, s);
+        str = QString("%1:%2:%3").arg(h, 2, 10, QLatin1Char('0')).arg(m, 2, 10, QLatin1Char('0')).arg(s, 2, 10, QLatin1Char('0'));
     else
-        str.sprintf("%02d:%02d", m, s);
+        // str.sprintf("%02d:%02d", m, s);
+        str = QString("%1:%2").arg(m, 2, 10, QLatin1Char('0')).arg(s, 2, 10, QLatin1Char('0'));
 }
 
 void Bar::update_passed_time(uint32_t ms) {
@@ -714,5 +719,3 @@ void Bar::draw(QPainter& painter, const QRect& rc_draw){
         }
     }
 }
-
-

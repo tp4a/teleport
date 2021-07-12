@@ -35,7 +35,6 @@ __pycache__
 **/.idea/inspectionProfiles
 **/.idea/codeStyles
 **/.idea/dataSources
-**/.idea/inspectionProfiles
 **/.idea/vcs.xml
 **/.idea/modules.xml
 **/.idea/deployment.xml
@@ -88,6 +87,7 @@ __pycache__
 /server/tp_core/protocol/rdp
 /client/tools/tprdp
 /client/build-tp-player-*
+/server/tools/tpr2mp4
 
 # for MacOS.
 .DS_Store

@@ -338,7 +338,8 @@ void MainWindow::_do_update_data(UpdateData* dat) {
         }
         else {
             QString _port;
-            _port.sprintf("%d", m_rec_hdr.basic.conn_port);
+            QTextStream(&_port) << m_rec_hdr.basic.conn_port;
+            // _port.sprintf("%d", m_rec_hdr.basic.conn_port);
             title = QString(LOCAL8BIT("用户 %1 访问 %2:%3 的 %4 账号").arg(m_rec_hdr.basic.user_username, m_rec_hdr.basic.conn_ip, _port, m_rec_hdr.basic.acc_username));
         }
 
