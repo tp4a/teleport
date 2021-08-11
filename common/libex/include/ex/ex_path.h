@@ -11,13 +11,16 @@
 // e.g.: "C:/abc/def\\..\\test.txt" => "C:\\abc\\def\\..\\test.txt"
 wchar_t* ex_fix_path(const wchar_t* in_path);
 
-wchar_t* ex_exec_file(void);						// must use ex_free() to release returned value.
+wchar_t* ex_exec_file();						// must use ex_free() to release returned value.
 EX_BOOL ex_is_abspath(const wchar_t* in_path);
 wchar_t* ex_abspath(const wchar_t* in_path);		// must use ex_free() to release returned value.
 wchar_t* ex_dirname(const wchar_t* in_filename);	// must use ex_free() to release returned value.
 
 EX_BOOL ex_is_dir_exists(const wchar_t* in_path);
 EX_BOOL ex_is_file_exists(const wchar_t* in_file);
+
+EX_BOOL ex_rename_file(const wchar_t* from_name, const wchar_t* to_name);
+EX_BOOL ex_remove_file(const wchar_t* file_name);
 
 EX_BOOL ex_copy_file(const wchar_t* from_file, const wchar_t* to_file);
 

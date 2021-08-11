@@ -325,7 +325,7 @@ void ThrData::_run() {
             // 读取一个数据包
             //----------------------------------
             if(file_size - file_processed < sizeof(TS_RECORD_PKG)) {
-                qDebug("invaid tp-rdp-%d.tpd file, filesize=%" PRId64 ", processed=%" PRId64 ", need=%d.", m_file_idx+1, file_size, file_processed, sizeof(TS_RECORD_PKG));
+                qDebug("invalid tp-rdp-%d.tpd file, filesize=%" PRId64 ", processed=%" PRId64 ", need=%d.", m_file_idx+1, file_size, file_processed, sizeof(TS_RECORD_PKG));
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
@@ -333,14 +333,14 @@ void ThrData::_run() {
             TS_RECORD_PKG pkg;
             read_len = fdata->read(reinterpret_cast<char*>(&pkg), sizeof(TS_RECORD_PKG));
             if(read_len != sizeof(TS_RECORD_PKG)) {
-                qDebug("invaid tp-rdp-%d.tpd file, read_len=%" PRId64 " (1).", m_file_idx+1, read_len);
+                qDebug("invalid tp-rdp-%d.tpd file, read_len=%" PRId64 " (1).", m_file_idx+1, read_len);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
             file_processed += sizeof(TS_RECORD_PKG);
 
             if(file_size - file_processed < pkg.size) {
-                qDebug("invaid tp-rdp-%d.tpd file (2).", m_file_idx+1);
+                qDebug("invalid tp-rdp-%d.tpd file (2).", m_file_idx+1);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
@@ -351,7 +351,7 @@ void ThrData::_run() {
 
             QByteArray pkg_data = fdata->read(pkg.size);
             if(pkg_data.size() != static_cast<int>(pkg.size)) {
-                qDebug("invaid tp-rdp-%d.tpd file, read_len=%" PRId64 " (3).", m_file_idx+1, read_len);
+                qDebug("invalid tp-rdp-%d.tpd file, read_len=%" PRId64 " (3).", m_file_idx+1, read_len);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
@@ -359,7 +359,7 @@ void ThrData::_run() {
 
             UpdateData* dat = _parse(pkg, pkg_data);
             if(dat == nullptr) {
-                qDebug("invaid tp-rdp-%d.tpd file (4).", m_file_idx+1);
+                qDebug("invalid tp-rdp-%d.tpd file (4).", m_file_idx+1);
                 _notify_error(QString("%1\ntp-rdp-%2.tpd").arg(LOCAL8BIT("错误的录像数据文件！"), str_fidx));
                 return;
             }
@@ -633,7 +633,7 @@ bool ThrData::_load_header() {
     }
 
     if(m_hdr.info.ver != 4) {
-        qDebug() << "invaid .tpr file.";
+        qDebug() << "invalid .tpr file.";
         _notify_error(QString("%1 %2%3").arg(LOCAL8BIT("不支持的录像文件版本 "), QString(m_hdr.info.ver), LOCAL8BIT("！\n\n此播放器支持录像文件版本 4。")));
         return false;
     }

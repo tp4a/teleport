@@ -1,9 +1,16 @@
 #!/bin/bash
 
-set -e
-
 PATH_ROOT=$(cd "$(dirname "$0")"; pwd)
-#CFG_FILE=config.json
+
+# =================================================================
+# Please change the following 2 lines to fit your development
+# environment if you want to build teleport components for such
+# platforms.
+# =================================================================
+PY_EXEC_WINDOWS="C:\\Program Files(x86)\\python-3.7\\python.exe"
+PY_EXEC_MACOS="/usr/local/bin/python3"
+
+set -e
 
 function check_cfg_file
 {
@@ -20,11 +27,13 @@ function build_win
     check_cfg_file
 
 	# find pyexec from json file
-	pyexec=$(grep -P '"pyexec":' ./${CFG_FILE} | grep -Po '(?<="pyexec":)([[:space:]]*)"(.*)"')
+	# pyexec=$(grep -P '"pyexec":' ./${CFG_FILE} | grep -Po '(?<="pyexec":)([[:space:]]*)"(.*)"')
 	# remove left "
-	pyexec=${pyexec#*\"}
+	#pyexec=${pyexec#*\"}
 	# remove right "
-	pyexec=${pyexec%\"*}
+	#pyexec=${pyexec%\"*}
+
+    pyexec=${PY_EXEC_WINDOWS}
 
 	# make sure configuration item exists.
 	if [ "${pyexec}-x" = "-x" ] ; then
@@ -96,7 +105,7 @@ function build_macos
 {
     check_cfg_file
 
-    python3 -B "${PATH_ROOT}/build/build.py" $@
+    ${PY_EXEC_MACOS} -B "${PATH_ROOT}/build/build.py" $@
 }
 
 function on_error()
@@ -137,13 +146,13 @@ SYS_NAME=${SYS_NAME:0:4}	# cut first 4 char.
 if [ ${SYS_NAME} = "Linu" ] ; then
     export CFG_FILE=config.linux.json
 	build_linux $@
-elif [ ${SYS_NAME} = "Darw" ] ; then   
+elif [ ${SYS_NAME} = "Darw" ] ; then
     export CFG_FILE=config.macos.json
 	build_macos $@
 elif [ ${SYS_NAME} == "MSYS" ] ; then
     export CFG_FILE=config.windows.json
 	build_win $@
-else 
+else
 	on_error_begin "Unsupported platform."
 	echo "To build teleport on Windows, please read document at:"
 	echo "    https://docs.tp4a.com/develop/windows"
