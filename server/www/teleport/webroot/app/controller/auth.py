@@ -129,7 +129,8 @@ class DoLoginHandler(TPBaseJsonHandler):
             syslog.sys_log({'username': '???', 'surname': '???'}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，可能是攻击行为。试图使用用户名 {} 进行登录。'.format(username))
             return self.write_json(err)
 
-        err, user_info, msg = user.login(self, username, password=password, oath_code=oath)
+        # 验证
+        err, user_info, msg = user.login(self, username, login_type=login_type, password=password, oath_code=oath)
         if err != TPE_OK:
             if err == TPE_NOT_EXISTS:
                 err = TPE_USER_AUTH
@@ -137,18 +138,8 @@ class DoLoginHandler(TPBaseJsonHandler):
                 syslog.sys_log({'username': '???', 'surname': '???'}, self.request.remote_ip, TPE_NOT_EXISTS, '登录失败，用户`{}`不存在'.format(username))
             return self.write_json(err, msg)
 
-        # 判断此用户是否被允许使用当前登录认证方式
-        auth_type = user_info.auth_type
-        if auth_type == 0:
-            auth_type = sys_cfg.login.auth
-
-        if (auth_type & login_type) != login_type:
-            return self.write_json(TPE_USER_AUTH, '不允许使用此身份认证方式')
-
         self._user = user_info
         self._user['_is_login'] = True
-        # del self._user['password']
-        # del self._user['oath_secret']
 
         if remember:
             self.set_session('user', self._user, 12 * 60 * 60)
