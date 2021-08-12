@@ -7,7 +7,7 @@ PATH_ROOT=$(cd "$(dirname "$0")"; pwd)
 # environment if you want to build teleport components for such
 # platforms.
 # =================================================================
-PY_EXEC_WINDOWS="C:\\Program Files(x86)\\python-3.7\\python.exe"
+PY_EXEC_WINDOWS="C:\\apps\\py37-x86\\python.exe"
 PY_EXEC_MACOS="/usr/local/bin/python3"
 
 set -e

@@ -115,3 +115,4 @@ profile
 /client/tools/qt-redist
 /config.json
 /config.*.json
+/client/tools/ms-redist

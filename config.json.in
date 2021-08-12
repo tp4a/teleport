@@ -19,10 +19,11 @@
         "cmake": "C:\\Program Files(x86)\\CMake\\bin\\cmake.exe",
         "wget": "",
         "7z": "",
+	"nsis": ""
     },
 
 
-    "remote": {
+    "#.remote": {
         "short-name-1": {
             "type": "linux",
             "name": "centos7",
