@@ -24,6 +24,7 @@ client/tp_assist_macos/build
 # for Python
 __pycache__
 *.pyc
+*.pyi
 
 
 # for JetBrains IDEs.

@@ -245,10 +245,28 @@ class BuilderLinux(BuilderBase):
         super().__init__()
 
     def build_assist(self):
-        cc.e('not support linux.')
+        # cc.e('not support linux.')
+        cc.n('build tp_assist...')
 
-    # def build_rdp(self):
-    #     cc.e('not support linux.')
+        out_path = os.path.join(env.root_path, 'out', 'client', 'linux', 'bin')
+        out_files = list()
+        out_files.append(os.path.join(out_path, 'tp_assist'))
+
+        for f in out_files:
+            if os.path.exists(f):
+                utils.remove(f)
+
+        utils.makedirs(out_path)
+
+        projects = ['tp_assist']
+        utils.cmake(os.path.join(env.root_path, 'cmake-build-linux'), ctx.target_path, False, projects=projects)
+
+        for f in out_files:
+            if os.path.exists(f):
+                utils.ensure_file_exists(f)
+
+    def build_player(self):
+        cc.e("this is no player for Linux platform yet.")
 
     def build_installer(self):
         cc.e('not support linux.')

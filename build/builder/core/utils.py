@@ -388,7 +388,7 @@ def nsis_build(nsi_file, _define=''):
         raise RuntimeError('make installer with nsis failed. [{}]'.format(nsi_file))
 
 
-def cmake(work_path, target, force_rebuild, cmake_define='', cmake_pre_define=''):
+def cmake(work_path, target, force_rebuild, projects=None, cmake_define='', cmake_pre_define=''):
     # I use cmake v3.5 which shipped with CLion.
     if env.cmake is None:
         raise RuntimeError('where is `cmake`?')
@@ -413,13 +413,23 @@ def cmake(work_path, target, force_rebuild, cmake_define='', cmake_pre_define=''
     if ret != 0:
         raise RuntimeError('build with cmake failed, ret={}. [{}]'.format(ret, target))
 
-    cmd = 'make'
-    # cc.o(cmd)
-    ret, _ = sys_exec(cmd)
+    if projects is None:
+        cmd = 'make'
+        # cc.o(cmd)
+        ret, _ = sys_exec(cmd)
+        if ret != 0:
+            os.chdir(old_p)
+            raise RuntimeError('build with cmake failed, ret={}. [{}]'.format(ret, target))
+    else:
+        for p in projects:
+            cmd = 'make {}'.format(p)
+            # cc.o(cmd)
+            ret, _ = sys_exec(cmd)
+            if ret != 0:
+                os.chdir(old_p)
+                raise RuntimeError('build with cmake {} failed, ret={}. [{}]'.format(ret, p, target))
 
     os.chdir(old_p)
-    if ret != 0:
-        raise RuntimeError('build with cmake failed, ret={}. [{}]'.format(ret, target))
 
 
 def strip(filename):

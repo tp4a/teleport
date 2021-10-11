@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/client/tp_assist_linux/ts_const.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/client/tp_assist_win/msocketx.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_log.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_path.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_thread.h" charset="GBK" />
@@ -13,6 +15,15 @@
     <file url="file://$PROJECT_DIR$/common/pyshell/src/pys_core.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/pyshell/src/pys_core.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/teleport/teleport_const.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/external/macos/release/include/FreeImage.h" charset="ISO-8859-1" />
+    <file url="file://$PROJECT_DIR$/external/macos/tmp/FreeImage/Source/FreeImage.h" charset="ISO-8859-1" />
+    <file url="file://$PROJECT_DIR$/external/macos/tmp/FreeImage/Source/FreeImage/BitmapAccess.cpp" charset="ISO-8859-1" />
+    <file url="file://$PROJECT_DIR$/external/macos/tmp/FreeImage/Source/FreeImage/GetType.cpp" charset="ISO-8859-1" />
+    <file url="file://$PROJECT_DIR$/external/macos/tmp/FreeImage/Source/FreeImageToolkit/CopyPaste.cpp" charset="ISO-8859-1" />
+    <file url="file://$PROJECT_DIR$/external/macos/tmp/FreeImage/Source/FreeImageToolkit/Display.cpp" charset="ISO-8859-1" />
+    <file url="file://$PROJECT_DIR$/external/macos/tmp/FreeImage/Source/FreeImageToolkit/Rescale.cpp" charset="ISO-8859-1" />
+    <file url="file://$PROJECT_DIR$/external/macos/tmp/FreeImage/Source/FreeImageToolkit/Resize.cpp" charset="ISO-8859-1" />
+    <file url="file://$PROJECT_DIR$/external/macos/tmp/FreeImage/Source/FreeImageToolkit/Resize.h" charset="ISO-8859-1" />
     <file url="file://$PROJECT_DIR$/server/tp_core/common/base_env.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/common/base_record.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/common/base_record.h" charset="GBK" />
@@ -34,6 +45,7 @@
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_proxy.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_session.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp/rdp_session.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp_mstsc/rdp_conn.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/rdp_mstsc/rdp_proxy.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/ssh/ssh_recorder.h" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/tp_core/protocol/ssh/tpssh_proxy.cpp" charset="GBK" />

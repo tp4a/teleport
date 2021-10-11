@@ -141,7 +141,7 @@ class WebApp:
             body = rep.read().decode()
             x = json.loads(body)
             if 'code' not in x or x['code'] != 0:
-                print(x)
+                # print(x)
                 log.e('connect core-server for set runtime-config failed.\n')
             else:
                 log.d('set runtime-config for core-server succeeded.\n')

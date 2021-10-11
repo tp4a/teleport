@@ -13,7 +13,7 @@
 //   start       以服务方式运行
 //   ...         剩余的所有参数均传递给python脚本
 //
-// 
+//
 // 执行指定的Python脚本：
 // tp_web --py [-f FuncName] script_file.py ...
 //   --py             必须为第一个参数，表示本次执行为执行指定脚本
@@ -36,7 +36,7 @@ static ex_wstr g_py_main_func;
 #define RUN_UNINST_SRV		4
 static ex_u8 g_run_type = RUN_UNKNOWN;
 
-#define EOM_WEB_SERVICE_NAME		L"Teleport Web Service"
+#define TP_WEB_SERVICE_NAME		L"Teleport Web Service"
 
 static bool _run_daemon(void);
 
@@ -50,7 +50,7 @@ static int service_install()
 	ex_wstr exec_file(g_env.m_exec_file);
 	exec_file += L" start";
 
-	if (EXRV_OK == ex_winsrv_install(EOM_WEB_SERVICE_NAME, EOM_WEB_SERVICE_NAME, exec_file))
+	if (EXRV_OK == ex_winsrv_install(TP_WEB_SERVICE_NAME, TP_WEB_SERVICE_NAME, exec_file))
 		return 0;
 	else
 		return 1;
@@ -58,10 +58,10 @@ static int service_install()
 
 static int service_uninstall()
 {
-	if (EXRV_OK != ex_winsrv_stop(EOM_WEB_SERVICE_NAME))
+	if (EXRV_OK != ex_winsrv_stop(TP_WEB_SERVICE_NAME))
 		return 1;
 
-	if (EXRV_OK != ex_winsrv_uninstall(EOM_WEB_SERVICE_NAME))
+	if (EXRV_OK != ex_winsrv_uninstall(TP_WEB_SERVICE_NAME))
 		return 2;
 
 	return 0;
@@ -350,7 +350,7 @@ int main()
 	wchar_t** _argv = ::CommandLineToArgvW(szCmdLine, &_argc); //拆分命令行参数字符串；
 
 	ret = _app_main(_argc, _argv);
-	
+
 	LocalFree(_argv);
 	_argv = NULL;
 
@@ -360,7 +360,7 @@ int main()
 static bool _run_daemon(void)
 {
 	SERVICE_TABLE_ENTRY DispatchTable[2];
-	DispatchTable[0].lpServiceName = EOM_WEB_SERVICE_NAME;
+	DispatchTable[0].lpServiceName = TP_WEB_SERVICE_NAME;
 	DispatchTable[0].lpServiceProc = service_main;
 	DispatchTable[1].lpServiceName = NULL;
 	DispatchTable[1].lpServiceProc = NULL;
@@ -430,7 +430,7 @@ VOID WINAPI service_main(DWORD argc, wchar_t** argv)
 	g_ServiceStatus.dwServiceSpecificExitCode = 0;
 	g_ServiceStatus.dwCheckPoint = 0;
 	g_ServiceStatus.dwWaitHint = 0;
-	g_hServiceStatusHandle = RegisterServiceCtrlHandler(EOM_WEB_SERVICE_NAME, service_handler);
+	g_hServiceStatusHandle = RegisterServiceCtrlHandler(TP_WEB_SERVICE_NAME, service_handler);
 	if (g_hServiceStatusHandle == 0)
 	{
 		EXLOGE_WIN("RegisterServiceCtrlHandler()");

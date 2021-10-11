@@ -28,7 +28,7 @@ static ex_u8 g_run_type = RUN_UNKNOWN;
 
 #define EOM_CORE_SERVICE_NAME	L"Teleport Core Service"
 
-static bool _run_daemon();
+static bool run_daemon_();
 
 #ifdef EX_OS_WIN32
 static int service_install()
@@ -54,7 +54,7 @@ static int service_uninstall()
 }
 #endif
 
-static bool _process_cmd_line(int argc, wchar_t** argv)
+static bool process_cmd_line_(int argc, wchar_t** argv)
 {
 	if (argc <= 1)
 	{
@@ -112,7 +112,7 @@ static bool _process_cmd_line(int argc, wchar_t** argv)
 }
 
 
-static int _main_loop()
+static int main_loop_()
 {
 	if (g_run_type == RUN_CORE)
 		return ts_main();
@@ -120,11 +120,11 @@ static int _main_loop()
 		return 1;
 }
 
-int _app_main(int argc, wchar_t** argv)
+int app_main_(int argc, wchar_t** argv)
 {
 	EXLOG_USE_LOGGER(&g_ex_logger);
 
-	if (!_process_cmd_line(argc, argv))
+	if (!process_cmd_line_(argc, argv))
 		return 1;
 
 #ifdef EX_DEBUG
@@ -171,7 +171,7 @@ int _app_main(int argc, wchar_t** argv)
 
 	if (!g_is_debug)
 	{
-		if (!_run_daemon())
+		if (!run_daemon_())
 		{
 			EXLOGE("[core] can not run in daemon mode.\n");
 			return 1;
@@ -182,7 +182,7 @@ int _app_main(int argc, wchar_t** argv)
 #endif
 	}
 
-	return _main_loop();
+	return main_loop_();
 }
 
 
@@ -334,27 +334,27 @@ VOID WINAPI service_main(DWORD argc, wchar_t** argv)
 #else
 // not EX_OS_WIN32
 #include <fcntl.h>
-#include <signal.h>
+#include <csignal>
 
-static void _sig_handler(int signum, siginfo_t* info, void* ptr);
+static void sig_handler_(int signum, siginfo_t* info, void* ptr);
 
 int main(int argc, char** argv)
 {
-	struct sigaction act;
+	struct sigaction act{};
 	memset(&act, 0, sizeof(act));
-	act.sa_sigaction = _sig_handler;
+	act.sa_sigaction = sig_handler_;
 	act.sa_flags = SA_SIGINFO;
 	sigaction(SIGINT, &act, nullptr);
 
 	wchar_t** wargv = ex_make_wargv(argc, argv);
-	int ret = _app_main(argc, wargv);
+	int ret = app_main_(argc, wargv);
 
 	ex_free_wargv(argc, wargv);
 
 	return ret;
 }
 
-void _sig_handler(int signum, siginfo_t* info, void* ptr)
+void sig_handler_(int signum, siginfo_t* info, void* ptr)
 {
 	if (signum == SIGINT || signum == SIGTERM)
 	{
@@ -363,7 +363,7 @@ void _sig_handler(int signum, siginfo_t* info, void* ptr)
 	}
 }
 
-static bool _run_daemon()
+static bool run_daemon_()
 {
 	pid_t pid = fork();
 	if (pid < 0)

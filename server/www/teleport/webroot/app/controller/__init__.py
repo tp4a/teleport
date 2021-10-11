@@ -15,6 +15,7 @@ from . import system
 from . import user
 from . import ws
 from . import api_v1
+from . import api_v2
 
 __all__ = ['controllers', 'fix_controller']
 
@@ -290,6 +291,9 @@ controllers = [
     # api v1
     (r'/api/v1/get_host', api_v1.GetHostHandler),
     (r'/api/v1/request_session', api_v1.RequestSessionHandler),
+
+    # api v2
+    (r'/api/v2/request_session', api_v2.RequestSessionHandler),
 
     (r'/.*', index.CatchAllHandler),
 ]

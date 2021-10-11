@@ -31,8 +31,17 @@ class TPBaseHandler(tornado.web.RequestHandler):
         self._user = None
 
     def initialize(self):
+        self.set_header('Access-Control-Allow-Origin', '*')
+        # self.set_header('Access-Control-Allow-Headers', 'X-Requested-With')
+        self.set_header('Access-Control-Allow-Headers', '*')
+        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+        # self.set_header('Content-Type', 'application/json; charset=UTF-8')
+        # self.set_header('Access-Control-Allow-Headers', 'Content-Type')
         template_path = self.get_template_path()
         self.lookup = mako.lookup.TemplateLookup(directories=[template_path], input_encoding='utf-8', output_encoding='utf-8')
+
+    def options(self, *args, **kwargs):
+        pass
 
     def render_string(self, template_name, **kwargs):
         template = self.lookup.get_template(template_name)
@@ -64,7 +73,8 @@ class TPBaseHandler(tornado.web.RequestHandler):
 
         _ret = {'code': code, 'message': message, 'data': data}
 
-        self.set_header("Content-Type", "application/json")
+        # self.set_header("Content-Type", "application/json")
+        self.set_header('Content-Type', 'application/json; charset=UTF-8')
         self.write(json_encode(_ret))
         self.finish()
 
@@ -77,7 +87,8 @@ class TPBaseHandler(tornado.web.RequestHandler):
         if data is None:
             data = list()
 
-        self.set_header("Content-Type", "application/json")
+        # self.set_header("Content-Type", "application/json")
+        self.set_header('Content-Type', 'application/json; charset=UTF-8')
         self.write(json_encode(data))
         self.finish()
 

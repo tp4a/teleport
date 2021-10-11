@@ -29,3 +29,6 @@ else ()
     MESSAGE(FATAL_ERROR "unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif ()
 
+IF (CMAKE_BUILD_TYPE STREQUAL Debug)
+    ADD_DEFINITIONS(-D_DEBUG)
+ENDIF()

@@ -5,6 +5,7 @@ import threading
 import time
 
 import tornado.httpclient
+import tornado.gen
 from app.base.logger import log
 from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
@@ -180,6 +181,85 @@ def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator):
     data['host_ip'] = host_info['ip']
     data['host_name'] = host_info['name']
     data['protocol_flag'] = acc_info['protocol_flag']
+
+    if conn_info['protocol_type'] == TP_PROTOCOL_TYPE_RDP:
+        data['teleport_port'] = tp_cfg().core.rdp.port
+    elif conn_info['protocol_type'] == TP_PROTOCOL_TYPE_SSH:
+        data['teleport_port'] = tp_cfg().core.ssh.port
+    elif conn_info['protocol_type'] == TP_PROTOCOL_TYPE_TELNET:
+        data['teleport_port'] = tp_cfg().core.telnet.port
+
+    ret['code'] = TPE_OK
+    ret['message'] = ''
+    ret['data'] = data
+    return ret
+
+
+@tornado.gen.coroutine
+def api_v2_request_session_id(
+        remote_ip, remote_port, remote_auth_type, remote_user, remote_secret,
+        protocol_type, protocol_sub_type, client_ip, operator):
+    ret = {
+        'code': TPE_OK,
+        'message': '',
+        'data': {}
+    }
+
+    # 直接连接（无需授权，第三方服务操作，已经经过授权检查了）
+    conn_info = dict()
+    conn_info['_enc'] = 0
+    conn_info['host_id'] = 1
+    conn_info['client_ip'] = client_ip
+    conn_info['user_id'] = 1
+    conn_info['user_username'] = operator
+
+    conn_info['host_ip'] = remote_ip
+    conn_info['conn_ip'] = remote_ip
+    conn_info['conn_port'] = remote_port
+
+    conn_info['acc_id'] = 0
+    conn_info['acc_username'] = remote_user
+    conn_info['username_prompt'] = ''
+    conn_info['password_prompt'] = ''
+    conn_info['protocol_flag'] = TP_FLAG_ALL
+    conn_info['record_flag'] = TP_FLAG_ALL
+
+    conn_info['protocol_type'] = protocol_type
+    conn_info['protocol_sub_type'] = protocol_sub_type
+
+    conn_info['auth_type'] = remote_auth_type
+    conn_info['acc_secret'] = remote_secret
+
+    with tmp_conn_id_lock:
+        global tmp_conn_id_base
+        tmp_conn_id_base += 1
+        conn_id = tmp_conn_id_base
+
+    # log.v('CONN-INFO:', conn_info)
+    tp_session().set('tmp-conn-info-{}'.format(conn_id), conn_info, 10)
+
+    req = {'method': 'request_session', 'param': {'conn_id': conn_id}}
+    _yr = core_service_async_post_http(req)
+    _code, ret_data = yield _yr
+    if _code != TPE_OK:
+        ret['code'] = _code
+        ret['message'] = '无法连接到核心服务'
+        return ret
+    if ret_data is None:
+        ret['code'] = TPE_FAILED
+        ret['message'] = '调用核心服务获取会话ID失败'
+        return ret
+
+    if 'sid' not in ret_data:
+        ret['code'] = TPE_FAILED
+        ret['message'] = '核心服务获取会话ID时返回错误数据'
+        return ret
+
+    data = dict()
+    data['session_id'] = ret_data['sid']
+    data['host_ip'] = remote_ip
+    data['host_name'] = ''
+    data['protocol_flag'] = TP_FLAG_ALL
 
     if conn_info['protocol_type'] == TP_PROTOCOL_TYPE_RDP:
         data['teleport_port'] = tp_cfg().core.rdp.port

@@ -784,7 +784,7 @@ class SQL:
 
         for k in _o:
             if k in self._output_fields:
-                print('---', k, '---', self._output_fields)
+                # print('---', k, '---', self._output_fields)
                 raise RuntimeError('duplicated output field: {}'.format(k))
 
         self._select_fields.extend(['{}.{}'.format(_j['a'], k) for k in fields])

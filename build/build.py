@@ -246,6 +246,10 @@ def make_options():
     else:
         add_split('prepare for server [build once]')
         add_option('x64', 'pysrt', 'Make Python-Runtime for python%s-x64' % env.py_ver_str)
+        add_split('client side')
+        # add_option('x64', 'ext-client', 'build external libraries for client')
+        add_option('x64', 'client', 'build client applications [%s]' % ctx.target_path)
+        # add_option('x64', 'client-installer', 'make client installer')
         add_split('server side')
         add_option('x64', 'ext-server', 'build external libraries for server')
         add_option('x64', 'server', 'build server applications [%s]' % ctx.target_path)
