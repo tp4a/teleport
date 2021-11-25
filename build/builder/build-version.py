@@ -159,8 +159,12 @@ class Builder:
         self._update_ver_nsi(nsi_file, self.VER_TP_ASSIST)
 
     def make_assist_macos_ver(self):
-        plist_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'src', 'TP-Assist-Info.plist')
-        self._update_ver_plist(plist_file, self.VER_TP_ASSIST)
+        # plist_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'src', 'TP-Assist-Info.plist')
+        # self._update_ver_plist(plist_file, self.VER_TP_ASSIST)
+
+        # Xcode 13.1, version string moved to file named "project.pbxproj".
+        pbxproj_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'TP-Assist.xcodeproj', 'project.pbxproj')
+        self._update_ver_pbxproj(pbxproj_file, self.VER_TP_ASSIST)
 
         ver_file = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'src', 'csrc', 'ts_ver.h')
         ver_content = '#ifndef __TS_ASSIST_VER_H__\n#define __TS_ASSIST_VER_H__\n\n#define TP_ASSIST_VER\tL"{}"\n\n#endif // __TS_ASSIST_VER_H__\n'.format(self.VER_TP_ASSIST)
@@ -419,6 +423,58 @@ class Builder:
             if bOK:
                 cc.v('  update {}...'.format(plist_file))
                 wrcFile = codecs.open(plist_file, 'w', 'utf8')
+                wrcFile.writelines(lines)
+                wrcFile.close()
+
+        except IOError:
+            raise RuntimeError('can not process plist file.')
+
+    def _update_ver_pbxproj(self, pbxproj_file, ver):
+        """ update pbxproj file version info for macOS app."""
+        t_ver = ver.split('.')
+        if len(t_ver) < 3:
+            raise RuntimeError('Invalid version for .pbxproj file.')
+
+        ver_flags = ['MARKETING_VERSION', 'CURRENT_PROJECT_VERSION']
+
+        bOK = False
+        try:
+            f = codecs.open(pbxproj_file, 'r', 'utf8')
+            lines = f.readlines()
+            f.close()
+
+            for x in range(len(lines)):
+                line = lines[x]
+
+                is_ver_line = False
+                for flag in ver_flags:
+                    if line.find(flag) != -1:
+                        is_ver_line = True
+                        break
+                if not is_ver_line:
+                    continue
+
+                # e.g.:
+                # MARKETING_VERSION = 3.6.0;
+                # CURRENT_PROJECT_VERSION = 3.6.0;
+
+                ver_array = line.split(' = ')
+                if len(ver_array) != 2:
+                    raise RuntimeError('Invalid .pbxproj file.')
+
+                _ver = ver_array[1].strip()[:-1].strip()
+                v = _ver.split(".")
+                if len(v) < 3:
+                    raise RuntimeError('Invalid .pbxproj file.')
+                old_ver = '.'.join(v)
+                if old_ver == ver:
+                    continue
+                lines[x] = '{flag} = {ver};\n'.format(flag=ver_array[0], ver=ver)
+                bOK = True
+
+            if bOK:
+                cc.v('  update {}...'.format(pbxproj_file))
+                wrcFile = codecs.open(pbxproj_file, 'w', 'utf8')
                 wrcFile.writelines(lines)
                 wrcFile.close()
 
