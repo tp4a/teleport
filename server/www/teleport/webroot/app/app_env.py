@@ -25,7 +25,8 @@ if PLATFORM not in ['windows', 'linux', 'darwin']:
 PATH_DATA = ''
 
 # 将Python安装的扩展库移除，避免开发调试与正式发布所依赖的库文件不一致导致发布的版本无法运行
-if PLATFORM != 'darwin':
+# if PLATFORM != 'darwin':
+if PLATFORM not in ['windows', 'darwin']:
     x = []
     for p in sys.path:
         if p.find('site-packages') != -1 or p.find('dist-packages') != -1:
