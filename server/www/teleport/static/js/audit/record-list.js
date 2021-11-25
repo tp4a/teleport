@@ -371,8 +371,8 @@ $app.do_replay_rdp = function (record_id, user_username, acc_username, host_ip, 
         return;
     }
 
-    if(!$assist.check())
-        return;
+    // if(!$assist.check())
+    //     return;
 
     $assist.do_rdp_replay(
         record_id
@@ -381,8 +381,7 @@ $app.do_replay_rdp = function (record_id, user_username, acc_username, host_ip, 
         }
         , function (code, message) {
             if (code === TPE_NO_ASSIST) {
-                $assist.errcode = TPE_NO_ASSIST;
-                $assist.alert_assist_not_found();
+                $assist.alert_assist_not_found(code);
             }
             else
                 $tp.notify_error('播放RDP操作录像失败：' + tp_error_msg(code, message));

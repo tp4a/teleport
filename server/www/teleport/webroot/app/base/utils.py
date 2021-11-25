@@ -216,7 +216,8 @@ def tp_gen_password(length=8):
     random.seed()
 
     # 生成一个随机密码
-    _chars = ['ABCDEFGHJKMNPQRSTWXYZ', 'abcdefhijkmnprstwxyz', '2345678']  # 默认去掉了容易混淆的字符oO,Ll,9gq,Vv,Uu,I1
+    # 默认去掉了容易混淆的字符oO,Ll,9gq,Vv,Uu,I1
+    _chars = ['ABCDEFGHJKMNPQRSTWXYZ', 'abcdefhijkmnprstwxyz', '2345678']
 
     have_CHAR = False
     have_char = False
@@ -263,11 +264,11 @@ def tp_check_strong_password(p):
 
 class UniqueId:
     def __init__(self):
-        import builtins
-        if '__tp_unique_id__' in builtins.__dict__:
-            raise RuntimeError('UniqueId object exists, can not create more than one instance.')
+        # import builtins
+        # if '__tp_unique_id__' in builtins.__dict__:
+        #     raise RuntimeError('UniqueId object exists, can not create more than one instance.')
 
-        self._id = tp_timestamp_sec()
+        self._id = tp_timestamp_sec() % 100000
         self._locker = threading.RLock()
 
     def generate(self):
@@ -276,8 +277,13 @@ class UniqueId:
             return self._id
 
 
+g_unique_id_generator = UniqueId()
+del UniqueId
+
+
 def tp_unique_id():
-    import builtins
-    if '__tp_unique_id__' not in builtins.__dict__:
-        builtins.__dict__['__tp_unique_id__'] = UniqueId()
-    return builtins.__dict__['__tp_unique_id__'].generate()
+    # import builtins
+    # if '__tp_unique_id__' not in builtins.__dict__:
+    #     builtins.__dict__['__tp_unique_id__'] = UniqueId()
+    # return builtins.__dict__['__tp_unique_id__'].generate()
+    return g_unique_id_generator.generate()

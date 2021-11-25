@@ -600,9 +600,6 @@ $tp.create_table = function (options) {
             }
 
             if (!_is_duplicated) {
-                //if(_.isUndefined(rows[i].ywl_row_id)) {
-                //	rows[i].ywl_row_id = _.uniqueId();
-                //}
                 rows[i]._row_id = _.uniqueId();
                 ret_row_id.push(rows[i]._row_id);
 
@@ -915,29 +912,6 @@ $tp.create_table_render = function (tbl, on_created) {
     // console.log('create_table_render', tbl, on_created);
     var _tbl_render = {};
 
-    // _tbl_render.fs_name = function (row_id, fields) {
-    //     //if(fields.type == 2) {
-    //     //	return '<a href="javascript:void(0);" onclick="open_folder();"><span class="icon icon16 icon-' + fields.icon + '"></span> <span ywl-field="name">' + fields.name + '</span></a>';
-    //     //}
-    //     //
-    //     return '<span ywl-field="icon-and-name"><span class="icon icon16 icon-' + fields.icon + '"></span> <span ywl-field="name">' + fields.name + '</span></span>';
-    // };
-    // _tbl_render.pl_desc = function (row_id, fields) {
-    //     //if(fields.type == 2) {
-    //     //	return '<a href="javascript:void(0);" onclick="open_folder();"><span class="icon icon16 icon-' + fields.icon + '"></span> <span ywl-field="name">' + fields.name + '</span></a>';
-    //     //}
-    //     //
-    //     var _desc = '未知';
-    //     if (fields.pl == 0) {
-    //         _desc = '来宾';
-    //     } else if (fields.pl == 1) {
-    //         _desc = '普通用户';
-    //     } else if (fields.pl == 2) {
-    //         _desc = '管理员';
-    //     }
-    //     return '<span ywl-field="pl-desc">' + _desc + '</span>';
-    // };
-
     _tbl_render.fs_size = function (row_id, fields) {
         if (fields.type === 0 || fields.type === 2)
             return '';
@@ -956,38 +930,12 @@ $tp.create_table_render = function (tbl, on_created) {
         return '<span class="datetime">' + tp_format_datetime(fields.timestamp) + '</span>';
     };
 
-    // _tbl_render.log_content = function (row_id, fields) {
-    //     var _func = ywl_log_analysis[fields.cmd_id];
-    //     var _content;
-    //     if (_.isFunction(_func)) {
-    //         _content = _func(fields.content);
-    //     } else {
-    //         _content = fields.content;
-    //     }
-    //     return '<span class="log-content">' + _content + '</span>';
-    // };
-
     _tbl_render.host_id = function (row_id, fields) {
         var ret = '';
         ret = '<span class="host-id">' + fields.id + '</span>';
         ret += '<span class="host-desc">' + fields.desc + '</span>';
         return ret;
     };
-
-//	_tbl_render.host_status = function (row_id, fields) {
-//		if (fields.status == HOST_STAT_ACTIVE) {
-//			switch (fields.online) {
-//				case AGENT_STAT_ONLINE:
-//					return '<span class="badge badge-success">在线</span>';
-//				case AGENT_STAT_OFFLINE:
-//					return '<span class="badge badge-danger">离线</span>';
-//				default:
-//					return '<span class="badge badge-warning">未知</span>';
-//			}
-//		} else {
-//			return '<span class="badge badge-ignore">- 未使用 -</span>';
-//		}
-//	};
 
     _tbl_render.os_type = function (row_id, fields) {
         switch (fields.os_type) {
@@ -1015,162 +963,12 @@ $tp.create_table_render = function (tbl, on_created) {
     };
 
     _tbl_render.record_id = function (row_id, fields) {
-        return '<span ywl-record-id="' + row_id + '">' + fields.r_id + '</span>';
+        return '<span tp-record-id="' + row_id + '">' + fields.r_id + '</span>';
     };
 
-    // _tbl_render.host_group = function (row_id, fields) {
-    //     if (fields.status == HOST_STAT_NOT_ACTIVE)
-    //         return '-';
-    //     var g = get_host_group_by_id(fields.group);
-    //     if (g.id == 0)
-    //         return '- 未知分组 -';
-    //     else
-    //         return g.group_name;
-    // };
-
-//	_tbl_render.command_info = function (row_id, fields) {
-//		var command = get_command_name_by_id(fields.cmd_id);
-//		if (command === null)
-//			return '命令 ' + fields.cmd_id;
-//		else
-//			//return '<a href="#" data-toggle="tooltip" title=\"' + command.cmd_name + '\">' + command.cmd_desc + '</a>';
-//			return '<span data-toggle="tooltip" title=\"' + command.cmd_name + '\">' + command.cmd_desc + '</span>';
-//		//var info = command.cmd_name + ' '+ command.cmd_desc;
-//		//return info;
-//	};
-//     _tbl_render.user_info = function (row_id, fields) {
-//         var user_info = get_user_info_by_id(fields.u_id);
-//         if (user_info === null)
-//             return '用户名:' + fields.u_id;
-//         else
-//             return user_info.nickname;
-//         //var info = command.cmd_name + ' '+ command.cmd_desc;
-//         //return info;
-//     };
-// //	_tbl_render.event_type = function (row_id, fields) {
-// //		var _e_id = fields.id1 + '-' + fields.id2 + '-' + fields.id3 + '-' + fields.id4;
-// //		var content = '';
-// //		if (_e_id == '3-1-1-100') {
-// //			content = '系统性能监控';
-// //			return '<a href="#"> ' + content + '</a>';
-// //		} else if (_e_id == '3-1-1-107') {
-// //			content = 'TCP监听白名单监控';
-// //			return '<a href="#"> ' + content + '</a>';
-// //		} else if (_e_id == '3-1-1-108') {
-// //			content = 'UDP白名单监控';
-// //			return '<a href="#"> ' + content + '</a>';
-// //		} else if (_e_id == '3-1-1-109') {
-// //			content = 'TCP连接白名单监控';
-// //			return '<a href="#"> ' + content + '</a>';
-// //		} else if (_e_id == '3-1-1-110') {
-// //			content = '进程白名单监控';
-// //			return '<a href="#"> ' + content + '</a>';
-// //		} else if (_e_id == '3-1-1-7') {
-// //			content = '系统用户监控';
-// //			return '<a href="#"> ' + content + '</a>';
-// //		} else {
-// //			content = '未知';
-// //			return '<a href="#"> ' + content + '</a>';
-// //		}
-// //
-// //
-// //		//var info = command.cmd_name + ' '+ command.cmd_desc;
-// //		//return info;
-// //	};
-// //     _tbl_render.event_code = function (row_id, fields) {
-// //         var _e_id = fields.id1 + '-' + fields.id2 + '-' + fields.id3 + '-' + fields.id4;
-// //         var _e_info = get_event_code_by_id(_e_id);
-// //         var _tip = '';
-// //         if (_e_info === null)
-// //             _tip = '未知';
-// //         else
-// //             _tip = _e_info.event_desc;
-// //
-// //         return '<a href="#" ywl-eventcode=\"' + _e_id + '\" data-toggle="tooltip" title=\"' + _tip + '\">' + _e_id + '</a>';
-// //     };
-// //
-//     // _tbl_render.ret_code = function (row_id, fields) {
-//     //     if (fields.code === 0)
-//     //         return '<span class="label label-success">成功</span>';
-//     //     else
-//     //         var message = '失败(' + fields.code + ',' + fields.param1 + ',' + fields.param2 + ')';
-//     //     return '<span class="label label-danger"  data-toggle="tooltip" title= \"' + message + '\">' + message + '</span>';
-//     //     //var info = command.cmd_name + ' '+ command.cmd_desc;
-//     //     //return info;
-//     // };
-//     //
-//     // _tbl_render.memory = function (row_id, fields) {
-//     //     if (fields.status == HOST_STAT_NOT_ACTIVE)
-//     //         return '-';
-//     //     if (0 == fields.value)
-//     //         return '';
-//     //     return '<span class="badge bg-normal">' + size2str(fields.value, 0) + '</span>';
-//     // };
-// //
-//     // _tbl_render.ip = function (row_id, fields) {
-//     //     if (fields.status == HOST_STAT_NOT_ACTIVE)
-//     //         return '-';
-//     //
-//     //     var ret = '';
-//     //     var _this_id = _.uniqueId('ip-list-');
-//     //
-//     //     if (fields.ip.length > 2) {
-//     //         ret += '<div class="td-ip-show-more"><a href="javascript:;" onclick="$tp.toggle_display(\'#' + _this_id + '\');"><i class="fa fa-angle-down"></i></a></div>';
-//     //     }
-//     //
-//     //     ret += '<div class="td-ip-list"><div class="td-ip">';
-//     //
-//     //     var idx, loop;
-//     //     (fields.ip.length > 2) ? loop = 2 : loop = fields.ip.length;
-//     //     for (idx = 0; idx < loop; ++idx) {
-//     //         ret += '<div class="td-ip-item"><span>' + fields.ip[idx] + '</span>';
-//     //         if (fields.ip.length > 1) {
-//     //             // TODO：暂不支持调整IP列表顺序功能
-//     //             //ret += '<a href="#"><i class="fa fa-arrow-circle-up fa-fw"></i></a>';
-//     //         }
-//     //         ret += '</div>';
-//     //     }
-//     //
-//     //     ret += '</div>';
-//     //
-//     //     if (fields.ip.length > 2) {
-//     //         ret += '<div id="' + _this_id + '" class="td-ip-more" style="display:none;">';
-//     //         for (idx = 2; idx < fields.ip.length; ++idx) {
-//     //             ret += '<div class="td-ip-item"><span>' + fields.ip[idx] + '</span>';
-//     //             // TODO：暂不支持调整IP列表顺序功能
-//     //             //ret += '<a href="#"><i class="fa fa-arrow-circle-up fa-fw"></i></a>';
-//     //             ret += '</div>';
-//     //         }
-//     //         ret += '</div>';
-//     //     }
-//     //
-//     //     return ret;
-//     // };
-// //
-//     // _tbl_render.disk = function (row_id, fields) {
-//     //     if (fields.status == HOST_STAT_NOT_ACTIVE)
-//     //         return '-';
-//     //
-//     //     var ret = '';
-//     //     $.each(fields.disk, function (i, disk_size) {
-//     //         ret += '<span class="badge bg-normal">' + size2str(disk_size, 2) + '</span> ';
-//     //     });
-//     //     return ret;
-//     // };
-// //
     _tbl_render.second2str = function (row_id, fields) {
         return '<i class="far fa-clock fa-fw"></i> ' + tp_second2str(fields.seconds);
     };
-
-    // _tbl_render.host_rate_show = function (row_id, fields) {
-    //     if (fields.value >= 90) {
-    //         return '<span class="badge badge-danger">' + fields.value + '</span>';
-    //     } else if (fields.value >= 50) {
-    //         return '<span class="badge badge-warning">' + fields.value + '</span>';
-    //     } else {
-    //         return '<span class="badge badge-success">' + fields.value + '</span>';
-    //     }
-    // };
 
     if (_.isFunction(on_created)) {
         on_created(_tbl_render);

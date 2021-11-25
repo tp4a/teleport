@@ -7,7 +7,7 @@
     |- app
     |- res
     |- static
-    \- view
+    -- view
 """
 
 import os
@@ -46,11 +46,5 @@ if _ext_path not in sys.path:
 
 # 确定一些路径
 PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share'))
-# if os.path.exists(os.path.join(os.path.dirname(sys.executable), 'dev_mode')):
-#     # 开发调试模式
-#     PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share'))
-#
-# else:
-#     PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'data'))
 if not os.path.exists(PATH_DATA):
     PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'data'))

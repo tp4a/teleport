@@ -76,6 +76,9 @@ class BuilderWin(BuilderBase):
         utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), ('web.ini.in', 'web.ini'))
         utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), ('core.ini.in', 'core.ini'))
         utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), 'tp_ssh_server.key')
+        utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), 'tp_rdp_ca.crt')
+        utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), 'tp_rdp_server.crt')
+        utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), 'tp_rdp_server.key')
 
         out_path = os.path.join(env.root_path, 'out', 'server', ctx.bits_path, ctx.target_path)
         bin_path = os.path.join(self.path_tmp_data, 'bin')
@@ -125,6 +128,9 @@ class BuilderLinux(BuilderBase):
         utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), ('web.ini.in', 'web.ini'))
         utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), ('core.ini.in', 'core.ini'))
         utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), 'tp_ssh_server.key')
+        utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), 'tp_rdp_ca.crt')
+        utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), 'tp_rdp_server.crt')
+        utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), 'tp_rdp_server.key')
 
         # fix new line flag
         utils.fix_new_line_flag(os.path.join(self.path_tmp_data, 'tmp', 'etc', 'web.ini'))

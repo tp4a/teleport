@@ -40,6 +40,8 @@
 		7AAE4B242390EE5C007EDDE7 /* libmbedtls.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF222199E32B00BE5DBC /* libmbedtls.a */; };
 		7AAE4B252390EE7D007EDDE7 /* libmbedcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF232199E32B00BE5DBC /* libmbedcrypto.a */; };
 		7AAE4B262390EE7D007EDDE7 /* libmbedx509.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF212199E32B00BE5DBC /* libmbedx509.a */; };
+		7AF6593E27398C7400057A00 /* ts_ws_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6593C27398C7400057A00 /* ts_ws_client.cpp */; };
+		7AF659412739939E00057A00 /* ts_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6593F2739939E00057A00 /* ts_utils.cpp */; };
 		A1B7B9DD1DB53ED200809327 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A1B7B9DF1DB53ED200809327 /* Localizable.strings */; };
 		A1D700071A5DCE8D003563E4 /* AboutWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1D700061A5DCE8D003563E4 /* AboutWindowController.m */; };
 		C149EBFE15D5214600B1F558 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C149EBFD15D5214600B1F558 /* Cocoa.framework */; };
@@ -109,6 +111,10 @@
 		7AA2CD561F6ABA2E0074C92B /* mongoose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mongoose.c; path = ../../../../external/mongoose/mongoose.c; sourceTree = "<group>"; };
 		7AA2CD581F6AC0DA0074C92B /* site */ = {isa = PBXFileReference; lastKnownFileType = folder; path = site; sourceTree = "<group>"; };
 		7AAE4B232390E642007EDDE7 /* mongoose.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mongoose.h; path = ../../../../external/mongoose/mongoose.h; sourceTree = "<group>"; };
+		7AF6593C27398C7400057A00 /* ts_ws_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ts_ws_client.cpp; sourceTree = "<group>"; };
+		7AF6593D27398C7400057A00 /* ts_ws_client.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ts_ws_client.h; sourceTree = "<group>"; };
+		7AF6593F2739939E00057A00 /* ts_utils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ts_utils.cpp; sourceTree = "<group>"; };
+		7AF659402739939E00057A00 /* ts_utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ts_utils.h; sourceTree = "<group>"; };
 		7AF9BF212199E32B00BE5DBC /* libmbedx509.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmbedx509.a; path = ../../external/macos/release/lib/libmbedx509.a; sourceTree = "<group>"; };
 		7AF9BF222199E32B00BE5DBC /* libmbedtls.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmbedtls.a; path = ../../external/macos/release/lib/libmbedtls.a; sourceTree = "<group>"; };
 		7AF9BF232199E32B00BE5DBC /* libmbedcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmbedcrypto.a; path = ../../external/macos/release/lib/libmbedcrypto.a; sourceTree = "<group>"; };
@@ -246,6 +252,10 @@
 				7A27E4A81F6A8EEC004FDE5D /* ts_env.h */,
 				7A27E4A61F6A899B004FDE5D /* ts_const.h */,
 				7A7C6CA12197786B006869D9 /* ts_ver.h */,
+				7AF6593C27398C7400057A00 /* ts_ws_client.cpp */,
+				7AF6593D27398C7400057A00 /* ts_ws_client.h */,
+				7AF6593F2739939E00057A00 /* ts_utils.cpp */,
+				7AF659402739939E00057A00 /* ts_utils.h */,
 			);
 			path = csrc;
 			sourceTree = "<group>";
@@ -428,6 +438,7 @@
 				7AA2CD4A1F6AB9750074C92B /* ex_winsrv.cpp in Sources */,
 				7AA2CD3B1F6A955A0074C92B /* ts_cfg.cpp in Sources */,
 				A1D700071A5DCE8D003563E4 /* AboutWindowController.m in Sources */,
+				7AF659412739939E00057A00 /* ts_utils.cpp in Sources */,
 				7AA2CD521F6AB9F10074C92B /* json_value.cpp in Sources */,
 				C149EC0A15D5214600B1F558 /* main.m in Sources */,
 				7AA2CD381F6A92620074C92B /* ts_http_rpc.cpp in Sources */,
@@ -441,6 +452,7 @@
 				7AA2CD461F6AB9750074C92B /* ex_path.cpp in Sources */,
 				7AA2CD441F6AB9750074C92B /* ex_ini.cpp in Sources */,
 				7AA2CD451F6AB9750074C92B /* ex_log.cpp in Sources */,
+				7AF6593E27398C7400057A00 /* ts_ws_client.cpp in Sources */,
 				7AA2CD491F6AB9750074C92B /* ex_util.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -600,6 +612,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 3.6.0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/TP-Assist-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -617,6 +630,7 @@
 				INFOPLIST_FILE = "src/TP-Assist-Info.plist";
 				LIBRARY_SEARCH_PATHS = ../../external/macos/release/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 3.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "teleport.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VALID_ARCHS = x86_64;
@@ -629,6 +643,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 3.6.0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/TP-Assist-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -645,6 +660,7 @@
 				INFOPLIST_FILE = "src/TP-Assist-Info.plist";
 				LIBRARY_SEARCH_PATHS = ../../external/macos/release/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 3.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "teleport.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VALID_ARCHS = x86_64;

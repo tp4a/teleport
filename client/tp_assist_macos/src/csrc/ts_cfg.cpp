@@ -42,6 +42,8 @@ bool TsCfg::save(const ex_astr& new_value)
 		return false;
 	
     Json::StreamWriterBuilder jwb;
+    jwb["indentation"] = "    ";
+    jwb["emitUTF8"] = true;
     std::unique_ptr<Json::StreamWriter> jwriter(jwb.newStreamWriter());
     ex_aoss os;
     jwriter->write(m_root, &os);

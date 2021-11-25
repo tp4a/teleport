@@ -8,7 +8,7 @@ fi
 DAEMON_PATH={daemon_path}
 
 if [ $SRV == all ] || [ $SRV == web ] ; then
-	echo -n "stoping teleport web ... "
+	echo -n "stopping teleport web ... "
 	result=$( ps ax | grep "$DAEMON_PATH/bin/tp_web start" | grep -v grep | wc -l )
 	if [ $result -gt 0 ]; then
 		ps ax | grep "$DAEMON_PATH/bin/tp_web start" | grep -v grep | kill `awk '{{print $1}}'`
@@ -19,7 +19,7 @@ if [ $SRV == all ] || [ $SRV == web ] ; then
 fi
 
 if [ $SRV == all ] || [ $SRV == core ] ; then
-	echo -n "stoping teleport core server ... "
+	echo -n "stopping teleport core server ... "
 	result=$( ps ax | grep "$DAEMON_PATH/bin/tp_core start" | grep -v grep | wc -l )
 	if [ $result -gt 0 ]; then
 		ps ax | grep "$DAEMON_PATH/bin/tp_core start" | grep -v grep | kill `awk '{{print $1}}'`

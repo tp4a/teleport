@@ -125,10 +125,29 @@ EX_BOOL ex_is_dir_exists(const wchar_t* in_path)
     if (!PathIsDirectory(in_path))
         return false;
 #else
-    struct stat si;
+    struct stat si{};
     ex_astr _in_path;
     ex_wstr2astr(in_path, _in_path);
     if (0 != stat(_in_path.c_str(), &si))
+        return false;
+    if (!S_ISDIR(si.st_mode))
+        return false;
+#endif
+    return true;
+}
+
+EX_BOOL ex_is_dir_exists(const char* in_path)
+{
+#ifdef EX_OS_WIN32
+    ex_wstr _in_path;
+    ex_astr2wstr(in_path, _in_path);
+    if (!PathFileExists(_in_path.c_str()))
+        return false;
+    if (!PathIsDirectory(_in_path.c_str()))
+        return false;
+#else
+    struct stat si{};
+    if (0 != stat(in_path, &si))
         return false;
     if (!S_ISDIR(si.st_mode))
         return false;
@@ -144,10 +163,29 @@ EX_BOOL ex_is_file_exists(const wchar_t* in_file)
     if (PathIsDirectory(in_file))
         return EX_FALSE;
 #else
-    struct stat si;
+    struct stat si{};
     ex_astr _in_file;
     ex_wstr2astr(in_file, _in_file);
     if (0 != stat(_in_file.c_str(), &si))
+        return EX_FALSE;
+    if (!S_ISREG(si.st_mode))
+        return EX_FALSE;
+#endif
+    return EX_TRUE;
+}
+
+EX_BOOL ex_is_file_exists(const char* in_file)
+{
+#ifdef EX_OS_WIN32
+    ex_wstr _in_path;
+    ex_astr2wstr(in_path, _in_path);
+    if (!PathFileExists(_in_file.c_str()))
+        return EX_FALSE;
+    if (PathIsDirectory(_in_file.c_str()))
+        return EX_FALSE;
+#else
+    struct stat si{};
+    if (0 != stat(in_file, &si))
         return EX_FALSE;
     if (!S_ISREG(si.st_mode))
         return EX_FALSE;

@@ -459,7 +459,7 @@ $app.connect_remote = function (uni_id, acc_id, host_id, protocol_type, protocol
         },
         function (code, message) {
             if (code === TPE_NO_ASSIST)
-                $assist.alert_assist_not_found();
+                $assist.alert_assist_not_found(code);
             else
                 $tp.notify_error('远程连接失败：' + tp_error_msg(code, message));
         }

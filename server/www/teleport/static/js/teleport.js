@@ -1,9 +1,9 @@
 "use strict";
 
 // 构造一个回调函数栈，遵循先进后出的原则进行顺序调用。
-var CALLBACK_STACK = {
+let CALLBACK_STACK = {
     create: function () {
-        var self = {};
+        let self = {};
 
         self.cb_stack = [];
 
@@ -24,7 +24,7 @@ var CALLBACK_STACK = {
             self.add(cb_func, cb_args);
             // 然后加一个定时器来做等待
             self.add(function (cb_stack, cb_args) {
-                var _delay_ms = cb_args.delay_ms || 500;
+                let _delay_ms = cb_args.delay_ms || 500;
                 setTimeout(function () {
                     cb_stack.exec();
                 }, _delay_ms);
@@ -35,8 +35,8 @@ var CALLBACK_STACK = {
 
         self.exec = function (ex_args) {
             if (self.cb_stack.length > 0) {
-                var cb = self.cb_stack.pop();
-                var ex_ = ex_args || {};
+                let cb = self.cb_stack.pop();
+                let ex_ = ex_args || {};
                 cb.func(self, cb.args, ex_);
             }
         };
@@ -56,7 +56,7 @@ var CALLBACK_STACK = {
 // console.log(window.location, window.location.protocol+'://'+window.location.host);
 
 // Teleport核心JS
-var $tp = {
+let $tp = {
     web_server: window.location.protocol+'//'+window.location.host
 
     // Teleport页面应用对象，放置页面自身特有的属性和函数
@@ -95,7 +95,7 @@ $tp.init = function () {
         // {id: 3, name: '其它', style: 'info'}
     ];
 
-    var cs = CALLBACK_STACK.create();
+    let cs = CALLBACK_STACK.create();
 
 
     if(!_.isUndefined($tp.assist)) {
@@ -112,8 +112,8 @@ $tp.logout = function () {
 };
 
 $tp.ajax_post_json = function (url, args, success, error, timeout) {
-    var timeout_ = timeout || 3000;
-    var _args = JSON.stringify(args);
+    let timeout_ = timeout || 3000;
+    let _args = JSON.stringify(args);
 
     $.ajax({
         url: url,
@@ -127,7 +127,7 @@ $tp.ajax_post_json = function (url, args, success, error, timeout) {
 };
 
 // $app 是 $tp.app 的别名，方便使用。
-var $app = $tp.app;
+let $app = $tp.app;
 
 $app.add_options = function (options) {
     _.extend($app.options, options);
@@ -146,12 +146,12 @@ $app.init = function (cb_stack) {
 $app.active_menu = function (menu_id) {
     if (_.isUndefined($app._make_sidebar_menu)) {
         $app._make_sidebar_menu = function (menu_id) {
-            var _menu = {};
+            let _menu = {};
             _menu.active_menu_id = menu_id;
             _menu.current_expand_menu_id = '';
 
             _menu.toggle_submenu = function (id_) {
-                var obj = $('#sidebar_menu_' + id_);
+                let obj = $('#sidebar_menu_' + id_);
                 if (obj.hasClass('expand')) {
                     obj.removeClass('expand');
                     $('#sidebar_submenu_' + id_).slideUp(300);
@@ -234,7 +234,7 @@ $app.id2name = function(_list, _id) {
         return undefined;
     }
 
-    for (var i = 0; i < _list.length; ++i) {
+    for (let i = 0; i < _list.length; ++i) {
         if (_list[i].id === _id)
             return _list[i].name;
     }
@@ -248,7 +248,7 @@ $app.role_id2name = function (id) {
         return undefined;
     }
 
-    for (var i = 0; i < $app.role_list.length; ++i) {
+    for (let i = 0; i < $app.role_list.length; ++i) {
         if ($app.role_list[i].id === id)
             return $app.role_list[i].name;
     }

@@ -72,7 +72,7 @@
 <!-- end #page-content -->
 
     <%block name="extend_content" />
-<script type="text/javascript" src="${ static_url('plugins/underscore/underscore.js') }"></script>
+<script type="text/javascript" src="${ static_url('plugins/underscore/underscore-min.js') }"></script>
 <script type="text/javascript" src="${ static_url('plugins/jquery/jquery-2.2.3.min.js') }"></script>
 <script type="text/javascript" src="${ static_url('plugins/jquery/js.cookie.js') }"></script>
 <script type="text/javascript" src="${ static_url('plugins/bootstrap/js/bootstrap.min.js') }"></script>

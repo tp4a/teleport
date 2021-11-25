@@ -29,8 +29,8 @@ if (!String.prototype.startsWith) {
 
 if (!String.prototype.realLength) {
     String.prototype.realLength = function () {
-        var _len = 0;
-        for (var i = 0; i < this.length; i++) {
+        let _len = 0;
+        for (let i = 0; i < this.length; i++) {
             if (this.charCodeAt(i) > 255) _len += 2; else _len += 1;
         }
         return _len;
@@ -42,7 +42,7 @@ if (!String.prototype.realLength) {
 //===================================================
 // http://jsfiddle.net/ghvj4gy9/embedded/result,js/
 function tp_is_email(email) {
-    //var re = /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/;
+    //let re = /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/;
     let re = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
     return re.test(email);
 }
@@ -204,7 +204,7 @@ function tp_base64_encode(input) {
     return output;
 }
 
-function tp_base64_to_binarray(data) {
+function tp_base64_to_bin(data) {
     let o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
         ac = 0,
         tmp_arr = [];
@@ -297,7 +297,7 @@ function htmlEncode(_s) {
 ///*2.用正则表达式实现html解码*/
 //function htmlDecode(_s) {
 //	if (_s.length == 0) return "";
-//	var s = str.replace(/&amp;/g, "&");
+//	let s = str.replace(/&amp;/g, "&");
 //	s = s.replace(/&lt;/g, "<");
 //	s = s.replace(/&gt;/g, ">");
 //	s = s.replace(/&nbsp;/g, " ");
@@ -359,4 +359,22 @@ function tp_check_strong_password(p) {
     }
 
     return !!((s & 1) && (s & 2) && (s & 4));
+}
+
+// 简单判断操作系统
+function tp_get_os_type() {
+    let p = navigator.platform;
+    console.log('navigator.platform:', p);
+    let isWin = (p === "Win32") || (p === "Windows");
+    let isMac = (p === "Mac68K") || (p === "MacPPC") || (p === "Macintosh") || (p === "MacIntel");
+    if (isMac)
+        return "macos";
+    let isUnix = (p === "X11") && !isWin;
+    let isLinux = (String(p).indexOf("Linux") > -1);
+    if (isLinux || isUnix)
+        return "linux";
+    if (isWin)
+        return 'windows'
+
+    return "UNKNOWN";
 }

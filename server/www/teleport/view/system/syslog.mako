@@ -9,12 +9,6 @@
     <script type="text/javascript" src="${ static_url('js/system/syslog.js') }"></script>
 </%block>
 
-## <%block name="breadcrumb">
-##     <ol class="breadcrumb">
-##         <li><i class="fa fa-database fa-fw"></i> ${self.attr.page_title_}</li>
-##     </ol>
-## </%block>
-
 ## Begin Main Body.
 
 <div class="page-content-inner">

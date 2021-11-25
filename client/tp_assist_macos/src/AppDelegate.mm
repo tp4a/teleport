@@ -24,7 +24,8 @@
 #import "AboutWindowController.h"
 
 #include "AppDelegate-C-Interface.h"
-#include "csrc/ts_http_rpc.h"
+// #include "csrc/ts_http_rpc.h"
+#include "csrc/ts_ws_client.h"
 
 @implementation AppDelegate
 
@@ -79,7 +80,8 @@ int AppDelegate_select_app (void *_self) {
 	
     int ret = cpp_main((__bridge void*)self, bundle_path.c_str(), cpp_cfg_file.c_str(), cpp_res_path.c_str());
 	if(ret != 0) {
-        http_rpc_stop();
+        // http_rpc_stop();
+        TsWsClient::stop_all_client();
 
         NSString *msg = Nil;
 		if(ret == -1)
@@ -216,10 +218,43 @@ int AppDelegate_select_app (void *_self) {
 }
 
 - (IBAction)quit:(id)sender {
-	http_rpc_stop();
+	// http_rpc_stop();
+    TsWsClient::stop_all_client();
 	
 	[[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
     [NSApp terminate:NSApp];
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    // once the program start, register URL scheme handler.
+    [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self andSelector:@selector(handleURLEvent:withReplyEvent:) forEventClass:kInternetEventClass andEventID:kAEGetURL];
+}
+
+- (void)handleURLEvent:(NSAppleEventDescriptor*)theEvent withReplyEvent:(NSAppleEventDescriptor*)replyEvent {
+    // Process URL Request
+    NSString* url = [[theEvent paramDescriptorForKeyword:keyDirectObject] stringValue];
+//    unsigned long long pid = cpp_getpid();
+//
+//    NSAlert *alert = [[NSAlert alloc] init];
+//    alert.icon = [NSImage imageNamed:@"tpassist"];
+//    [alert addButtonWithTitle:@"确定"];
+//    [alert setMessageText:@"URL Request"];
+//    [alert setInformativeText:[NSString stringWithFormat:@"%@, pid=%llu", url, pid]];
+//    [alert runModal];
+//
+//    [self my_alert:@"URL Request" msg:url];
+    std::string _url = [url cStringUsingEncoding:NSUTF8StringEncoding];
+    url_scheme_handler(_url);
+}
+
+- (void)my_alert:(NSString*) title msg:(NSString*)message {
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.icon = [NSImage imageNamed:@"tpassist"];
+        [alert addButtonWithTitle:@"确定"];
+        [alert setMessageText:title];
+        [alert setInformativeText:[NSString stringWithFormat:@"%@", message]];
+        [alert runModal];
 }
 
 @end

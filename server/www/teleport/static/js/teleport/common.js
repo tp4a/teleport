@@ -5,8 +5,8 @@
 "use strict";
 
 $tp.notify_error = function (message_, title_, timeout_) {
-    var _title = title_ || '';
-    var _t = timeout_ || 15000;
+    let _title = title_ || '';
+    let _t = timeout_ || 15000;
     $.gritter.add({
         //sticky:true,
         class_name: 'gritter-error',
@@ -18,7 +18,7 @@ $tp.notify_error = function (message_, title_, timeout_) {
 };
 
 $tp.notify_success = function (message_, title_) {
-    var _title = title_ || null;
+    let _title = title_ || null;
     if (_title !== null)
         _title = '<i class="far fa-check-square fa-fw"></i> ' + _title;
     $.gritter.add({
@@ -32,7 +32,7 @@ $tp.notify_success = function (message_, title_) {
 
 // 切换一个dom节点显示与否
 $tp.toggle_display = function (selector) {
-    var obj = $(selector);
+    let obj = $(selector);
     if (_.isUndefined(obj))
         return;
 
@@ -45,18 +45,18 @@ $tp.toggle_display = function (selector) {
 
 $tp.disable_dom = function (dom_selector, message) {
     // 计算被禁用的DOM对象的位置和大小
-    var obj = $(dom_selector);
-    var pad_left = parseInt(obj.css("padding-left"), 10);
-    var pad_right = parseInt(obj.css("padding-right"), 10);
-    var pad_top = parseInt(obj.css("padding-top"), 10);
-    var pad_bottom = parseInt(obj.css("padding-bottom"), 10);
-    var w = obj.width() + pad_left + pad_right;
-    var h = obj.height() + pad_top + pad_bottom;
+    let obj = $(dom_selector);
+    let pad_left = parseInt(obj.css("padding-left"), 10);
+    let pad_right = parseInt(obj.css("padding-right"), 10);
+    let pad_top = parseInt(obj.css("padding-top"), 10);
+    let pad_bottom = parseInt(obj.css("padding-bottom"), 10);
+    let w = obj.width() + pad_left + pad_right;
+    let h = obj.height() + pad_top + pad_bottom;
 
-    // var html = '<div id="tp-dom-disable-obj" class="disable-bg"></div>';
-    var html = [];
+    // let html = '<div id="tp-dom-disable-obj" class="disable-bg"></div>';
+    let html = [];
     html.push('<div id="tp-dom-disable-overlay" class="disable-bg"></div>');
-    var has_message = false;
+    let has_message = false;
     if (!_.isUndefined(message) && !_.isNull(message) && message.length > 0) {
         html.push('<div id="tp-dom-disable-message" class="disable-message"><i class="fas fa-exclamation-triangle fa-fw"></i> ' + message + '</div>');
         has_message = true;
@@ -71,13 +71,13 @@ $tp.disable_dom = function (dom_selector, message) {
     );
 
     if (has_message) {
-        var obj_msg = $('#tp-dom-disable-message');
-        var _pad_left = parseInt(obj_msg.css("padding-left"), 10);
-        var _pad_right = parseInt(obj_msg.css("padding-right"), 10);
-        var _pad_top = parseInt(obj_msg.css("padding-top"), 10);
-        var _pad_bottom = parseInt(obj_msg.css("padding-bottom"), 10);
-        var _w = obj_msg.width() + _pad_left + _pad_right;
-        var _h = obj_msg.height() + _pad_top + _pad_bottom;
+        let obj_msg = $('#tp-dom-disable-message');
+        let _pad_left = parseInt(obj_msg.css("padding-left"), 10);
+        let _pad_right = parseInt(obj_msg.css("padding-right"), 10);
+        let _pad_top = parseInt(obj_msg.css("padding-top"), 10);
+        let _pad_bottom = parseInt(obj_msg.css("padding-bottom"), 10);
+        let _w = obj_msg.width() + _pad_left + _pad_right;
+        let _h = obj_msg.height() + _pad_top + _pad_bottom;
 
         console.log(_w, _h);
 
@@ -95,7 +95,7 @@ $tp.disable_dom = function (dom_selector, message) {
 // Dialog-box for confirm operation.
 //======================================================
 $tp.dlg_confirm = function (cb_stack, cb_args) {
-    var self = {};
+    let self = {};
     self._cb_stack = cb_stack;
     self._title = cb_args.title || '<i class="fas fa-exclamation-triangle"></i> 操作确认';
     self._msg = cb_args.msg || '';
@@ -108,7 +108,7 @@ $tp.dlg_confirm = function (cb_stack, cb_args) {
     self.dom = {};
 
     self._make_message_box = function () {
-        var _html = [
+        let _html = [
             '<div class="modal fade" id="' + self._dlg_id + '" tabindex="-1">',
             '<div class="modal-dialog" role="document">',
             '<div class="modal-content">',
@@ -173,7 +173,7 @@ $tp.dlg_confirm = function (cb_stack, cb_args) {
 // Dialog-box for modify host description
 //======================================================
 $tp.create_dlg_modify_host_desc = function (tbl, row_id, host_id, host_ip, host_desc) {
-    var self = {};
+    let self = {};
 
     self.dlg_id = _.uniqueId('dlg-modify-host-desc-');
     self._table_ctrl = tbl;
@@ -195,19 +195,19 @@ $tp.create_dlg_modify_host_desc = function (tbl, row_id, host_id, host_ip, host_
             self._destroy();
         });
 
-        var t_obj = $('#' + self.dlg_id + ' .popover');
+        let t_obj = $('#' + self.dlg_id + ' .popover');
         t_obj.css({
             'top': pos_obj.offset().top + pos_obj.height() - 5,
             'left': pos_obj.offset().left
         }).show();
 
-        $('#' + self.dlg_id + " [ywl-input='desc']").focus();
+        $('#' + self.dlg_id + " [tp-input='desc']").focus();
     };
 
     self._save = function () {
-        var dlg_dom_id = "[ywl-dlg='modify-host-desc']";
+        let dlg_dom_id = "[tp-dlg='modify-host-desc']";
 
-        var val = $(dlg_dom_id + " input[ywl-input='desc']").val();
+        let val = $(dlg_dom_id + " input[tp-input='desc']").val();
         if (val === self.host_desc) {
             self._destroy();
             return;
@@ -239,20 +239,20 @@ $tp.create_dlg_modify_host_desc = function (tbl, row_id, host_id, host_ip, host_
     };
 
     self._make_dialog_box = function () {
-        var _html = [
+        let _html = [
             '<div class="popover-inline-edit" id="' + self.dlg_id + '">',
-            '	<div class="popover fade bottom in" ywl-dlg="modify-host-desc">',
+            '	<div class="popover fade bottom in" tp-dlg="modify-host-desc">',
             '		<div class="arrow" style="left:70px;"></div>',
             '		<h3 class="popover-title">编辑备注</h3>',
             '		<div class="popover-content">',
             '           <div>为主机 ' + self.host_ip + ' 设置备注，以便识别：</div>',
             '			<div style="display:inline-block;float:right;">',
-//            '				<a href="javascript:;" class="btn btn-success btn-sm" ywl-btn="ok"><i class="glyphicon glyphicon-ok"></i></a>',
-            '				<a href="javascript:;" class="btn btn-success btn-sm" ywl-btn="ok"><i class="fa fa-check"></i> 确定</a>',
-            '				<a href="javascript:;" class="btn btn-danger btn-sm" ywl-btn="cancel"><i class="fa fa-times"></i> 取消</a>',
+//            '				<a href="javascript:;" class="btn btn-success btn-sm" tp-btn="ok"><i class="glyphicon glyphicon-ok"></i></a>',
+            '				<a href="javascript:;" class="btn btn-success btn-sm" tp-btn="ok"><i class="fa fa-check"></i> 确定</a>',
+            '				<a href="javascript:;" class="btn btn-danger btn-sm" tp-btn="cancel"><i class="fa fa-times"></i> 取消</a>',
             '			</div>',
             '			<div style="padding-right:120px;">',
-            '				<input type="text" ywl-input="desc" class="form-control" value="' + self.host_desc + '">',
+            '				<input type="text" tp-input="desc" class="form-control" value="' + self.host_desc + '">',
             '			</div>',
             '		</div>',
             '	</div>',
@@ -261,14 +261,14 @@ $tp.create_dlg_modify_host_desc = function (tbl, row_id, host_id, host_ip, host_
         $('body').append($(_html));
 
         // “修改主机描述” 对话框上的两个按钮的点击事件
-        $('#' + self.dlg_id + " [ywl-btn='ok']").click(function () {
+        $('#' + self.dlg_id + " [tp-btn='ok']").click(function () {
             self._save();
         });
-        $('#' + self.dlg_id + " [ywl-btn='cancel']").click(function () {
+        $('#' + self.dlg_id + " [tp-btn='cancel']").click(function () {
             self._destroy();
         });
         // 绑定“修改主机描述” 对话框中的输入框的回车事件
-        $('#' + self.dlg_id + " [ywl-input='desc']").keydown(function (event) {
+        $('#' + self.dlg_id + " [tp-input='desc']").keydown(function (event) {
             if (event.which === 13) {
                 self._save();
             } else if (event.which === 27) {
@@ -282,7 +282,7 @@ $tp.create_dlg_modify_host_desc = function (tbl, row_id, host_id, host_ip, host_
 };
 
 $tp.create_dlg_show_rdp_advance = function (row_data) {
-    var self = {};
+    let self = {};
 
     self.dlg_id = _.uniqueId('dlg-rdp-advance-');
 //	self._table_ctrl = tbl;
@@ -304,19 +304,19 @@ $tp.create_dlg_show_rdp_advance = function (row_data) {
             self._destroy();
         });
 
-        var t_obj = $('#' + self.dlg_id + ' .popover');
+        let t_obj = $('#' + self.dlg_id + ' .popover');
         t_obj.css({
             'top': pos_obj.offset().top + pos_obj.height() + 5,
             'left': pos_obj.offset().left - 10
         }).show();
 
-        //$('#' + self.dlg_id + " [ywl-input='desc']").focus();
+        //$('#' + self.dlg_id + " [tp-input='desc']").focus();
     };
 
     self._save = function () {
-        var dlg_dom_id = '[data-dlg="show-rdp-advance"]';
+        let dlg_dom_id = '[data-dlg="show-rdp-advance"]';
 
-        var val = $(dlg_dom_id + " input[ywl-input='desc']").val();
+        let val = $(dlg_dom_id + " input[tp-input='desc']").val();
         if (val === self.host_desc) {
             self._destroy();
             return;
@@ -348,14 +348,14 @@ $tp.create_dlg_show_rdp_advance = function (row_data) {
     };
 
     self._make_dialog_box = function () {
-        var _html = [
+        let _html = [
             '<div class="xx-popover-inline-edit" id="' + self.dlg_id + '">',
             '	<div class="popover fade bottom in" role="tooltip" data-dlg="show-rdp-advance" style="width:300px;">',
             '		<div class="arrow" style="left:50px;"></div>',
             '		<h3 class="popover-title" style="font-weight:bold;">RDP连接选项（仅本次连接有效）</h3>',
             '		<div class="popover-content">',
 //			'			<div style="">',
-//			'				<input type="text" ywl-input="desc" class="form-control" value="' + self.host_desc + '">',
+//			'				<input type="text" tp-input="desc" class="form-control" value="' + self.host_desc + '">',
 //			'			</div>',
 
             '			<div style="">',
@@ -398,7 +398,7 @@ $tp.create_dlg_show_rdp_advance = function (row_data) {
         });
 
 //		// 绑定“修改主机描述” 对话框中的输入框的回车事件
-//		$('#' + self.dlg_id + " [ywl-input='desc']").keydown(function (event) {
+//		$('#' + self.dlg_id + " [tp-input='desc']").keydown(function (event) {
 //			if (event.which == 13) {
 //				self._save();
 //			} else if (event.which == 27) {

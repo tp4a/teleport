@@ -806,14 +806,6 @@ int SshSession::_do_auth(const char* user, const char* secret)
                 }
 
                 EXLOGE("[%s] failed to login with password mode, got %d.\n", m_dbg_name.c_str(), rc);
-
-                // if(!m_auth_err_msg.empty())
-                //     m_auth_err_msg += "\r\n";
-                // m_auth_err_msg += "login remote host ";
-                // m_auth_err_msg += m_dbg_server;
-                // m_auth_err_msg += " with password authorize method failed, ";
-                // m_auth_err_msg += ssh_get_error(m_rs_tp2srv);
-
                 break;
             }
         }

@@ -21,8 +21,8 @@ public:
 	virtual ~TsCfg();
 
 	bool init(void);
-	bool save(const ex_astr& new_value);
-	
+    bool save(const ex_astr& new_value);
+
 	Json::Value& get_root() {return m_root;}
 	
     APP_CONFIG ssh;

@@ -12,6 +12,7 @@
 #include "ts_ver.h"
 #include "ts_env.h"
 #include "ts_cfg.h"
+#include "ts_utils.h"
 
 // #define RDP_CLIENT_SYSTEM_BUILTIN
 // #define RDP_CLIENT_SYSTEM_ACTIVE_CONTROL
@@ -20,7 +21,7 @@
 TsHttpRpc g_http_interface;
 TsHttpRpc g_https_interface;
 
-void* g_app = NULL;
+//void* g_app = NULL;
 
 int http_rpc_start(void* app) {
 	g_app = app;
@@ -56,43 +57,6 @@ void http_rpc_stop(void)
 {
     g_http_interface.stop();
     g_https_interface.stop();
-}
-
-#define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
-
-int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_form_url_encoded)
-{
-	int i, j, a, b;
-
-	for (i = j = 0; i < src_len && j < dst_len - 1; i++, j++)
-	{
-		if (src[i] == '%')
-		{
-			if (i < src_len - 2 && isxdigit(*(const unsigned char *)(src + i + 1)) &&
-				isxdigit(*(const unsigned char *)(src + i + 2))) {
-				a = tolower(*(const unsigned char *)(src + i + 1));
-				b = tolower(*(const unsigned char *)(src + i + 2));
-				dst[j] = (char)((HEXTOI(a) << 4) | HEXTOI(b));
-				i += 2;
-			}
-			else
-			{
-				return -1;
-			}
-		}
-		else if (is_form_url_encoded && src[i] == '+')
-		{
-			dst[j] = ' ';
-		}
-		else
-		{
-			dst[j] = src[i];
-		}
-	}
-
-	dst[j] = '\0'; /* Null-terminate the destination */
-
-	return i >= src_len ? j : -1;
 }
 
 TsHttpRpc::TsHttpRpc() :

@@ -2,7 +2,9 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/client/tp_assist_linux/ts_const.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/client/tp_assist_win/dlg_main.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/client/tp_assist_win/msocketx.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/client/tp_assist_win/tp_assist.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_log.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_path.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_thread.h" charset="GBK" />
@@ -34,6 +36,7 @@
     <file url="file://$PROJECT_DIR$/server/tp_core/common/ts_memstream.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/core/main.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/core/tp_tpp_mgr.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_crypto.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_env.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_http_rpc.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/server/tp_core/core/ts_http_rpc.h" charset="GBK" />

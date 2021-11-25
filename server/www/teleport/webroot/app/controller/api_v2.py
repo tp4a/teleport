@@ -27,12 +27,12 @@ def pkcs7unpadding(data):
 
 @tornado.gen.coroutine
 def _parse_api_args(handler):
-    raw_req = handler.request.body.decode('utf-8')
-    if raw_req == '':
+    req_body = handler.request.body.decode('utf-8')
+    if req_body == '':
         return False, handler.write_json(TPE_PARAM)
 
     try:
-        raw_req = json.loads(raw_req)
+        raw_req = json.loads(req_body)
 
         if 'auth' not in raw_req or 'arg' not in raw_req or 'sign' not in raw_req:
             return False, handler.write_json(TPE_PARAM)
@@ -43,7 +43,7 @@ def _parse_api_args(handler):
     if len(_auth) <= 1:
         return False, handler.write_json(TPE_PARAM)
 
-    if _auth[0] == '2':  # 目前的API请求格式版本为1
+    if _auth[0] == '2':  # 目前的API请求格式版本为2
         if len(_auth) != 4:  # VERSION:ACCESS_KEY:TIMESTAMP:EXPIRES
             return False, handler.write_json(TPE_PARAM)
         req_access_key = _auth[1]
@@ -59,8 +59,8 @@ def _parse_api_args(handler):
     access_secret = sec_info['secret']
 
     # 是否超时
-    # if tp_timestamp_sec() > req_timestamp + req_expires:
-    #     return False, handler.write_json(TPE_EXPIRED)
+    if tp_timestamp_sec() > req_timestamp + req_expires:
+        return False, handler.write_json(TPE_EXPIRED)
 
     # 验证
     be_sign = '{}|{}'.format(raw_req['auth'], raw_req['arg'])

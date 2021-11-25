@@ -1,4 +1,4 @@
-﻿#ifndef __LIB_EX_PATH_H__
+#ifndef __LIB_EX_PATH_H__
 #define __LIB_EX_PATH_H__
 
 #include "ex_platform.h"
@@ -18,6 +18,8 @@ wchar_t* ex_dirname(const wchar_t* in_filename);	// must use ex_free() to releas
 
 EX_BOOL ex_is_dir_exists(const wchar_t* in_path);
 EX_BOOL ex_is_file_exists(const wchar_t* in_file);
+EX_BOOL ex_is_dir_exists(const char* in_path);
+EX_BOOL ex_is_file_exists(const char* in_file);
 
 EX_BOOL ex_rename_file(const wchar_t* from_name, const wchar_t* to_name);
 EX_BOOL ex_remove_file(const wchar_t* file_name);

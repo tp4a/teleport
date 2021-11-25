@@ -1772,7 +1772,7 @@ $app.create_dlg_edit_account = function () {
             },
             function (code, message) {
                 if (code === TPE_NO_ASSIST)
-                    $assist.alert_assist_not_found();
+                    $assist.alert_assist_not_found(code);
                 else
                     $tp.notify_error('远程连接失败：' + tp_error_msg(code, message));
             }

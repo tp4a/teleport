@@ -137,7 +137,7 @@
 	{
 		'privilege': const.TP_PRIVILEGE_LOGIN_WEB,
 		'id': 'assist',
-		'link': 'http://127.0.0.1:50022/config',
+		'link': '/assist/config',
 		'target': '_blank',
 		'name': '助手设置',
 		'icon': 'fas fa-bolt'
@@ -217,7 +217,7 @@
 <hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:0;"/>
 <div style="color:#717171;font-size:90%;margin-top:5px;text-align:center;">
     <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:50px;text-align: right">服务端：</span><span class="mono">v${app_ver.TP_SERVER_VER}${_ver_state}</span></div>
-    <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:50px;text-align: right">助手：</span><span class="mono"><span id="sidebar-tp-assist-ver"><i class="fa fa-cog fa-spin"></i></span></span></div>
+    <div style="color:#717171;font-size:90%;margin-top:5px;"><span style="display:inline-block;width:50px;text-align: right">助手：</span><span class="mono"><span id="sidebar-tp-assist-ver">未连接</span></span></div>
 </div>
 <hr style="border:none;border-bottom:1px dotted #4a4a4a;margin-bottom:20px;margin-top:5px;"/>
 

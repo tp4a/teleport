@@ -58,8 +58,6 @@ def get_by_username(username):
 def login(handler, username, login_type=None, password=None, oath_code=None, check_bind_oath=False):
     sys_cfg = tp_cfg().sys
     msg = ''
-    current_unix_time = int(time.mktime(datetime.datetime.now().timetuple()))
-    #    log.e('current:',current_unix_time,'validfrom:', user_info['valid_from'])
 
     err, user_info = get_by_username(username)
     if err != TPE_OK:
@@ -83,10 +81,11 @@ def login(handler, username, login_type=None, password=None, oath_code=None, che
     if check_bind_oath and len(oath_db) != 0:
         return TPE_OATH_ALREADY_BIND, None, msg
 
+    time_now = tp_timestamp_sec()
     if user_info['state'] == TP_STATE_LOCKED:
         # 用户已经被锁定，如果系统配置为一定时间后自动解锁，则更新一下用户信息
         if sys_cfg.login.lock_timeout != 0:
-            if tp_timestamp_sec() - user_info.lock_time > sys_cfg.login.lock_timeout * 60:
+            if time_now - user_info.lock_time > sys_cfg.login.lock_timeout * 60:
                 user_info.fail_count = 0
                 user_info.state = TP_STATE_NORMAL
                 update_fail_count(handler, user_info)
@@ -99,7 +98,7 @@ def login(handler, username, login_type=None, password=None, oath_code=None, che
     elif user_info['state'] != TP_STATE_NORMAL:
         syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, msg)
         return TPE_FAILED, None, '登录失败，用户状态异常'
-    elif current_unix_time < user_info['valid_from'] or (current_unix_time > user_info['valid_to'] and user_info['valid_to'] != 0):
+    elif (time_now < user_info['valid_from']) or (time_now > user_info['valid_to'] != 0):
         syslog.sys_log(user_info, handler.request.remote_ip, TPE_FAILED, msg)
         return TPE_FAILED, None, '登录失败，用户已过期'
 
@@ -108,8 +107,7 @@ def login(handler, username, login_type=None, password=None, oath_code=None, che
         if user_info['type'] == TpUserType.LOCAL:
             # 如果系统配置了密码有效期，则检查用户的密码是否失效
             if sys_cfg.password.timeout != 0:
-                _time_now = tp_timestamp_sec()
-                if user_info['last_chpass'] + (sys_cfg.password.timeout * 60 * 60 * 24) < _time_now:
+                if user_info['last_chpass'] + (sys_cfg.password.timeout * 60 * 60 * 24) < time_now:
                     syslog.sys_log(user_info, handler.request.remote_ip, TPE_USER_AUTH, msg)
                     return TPE_EXPIRED, None, '登录失败，用户密码已过期'
 
@@ -180,7 +178,7 @@ def login(handler, username, login_type=None, password=None, oath_code=None, che
 def get_users(sql_filter, sql_order, sql_limit, sql_restrict, sql_exclude):
     dbtp = get_db().table_prefix
     s = SQL(get_db())
-    s.select_from('user', ['id', 'type', 'auth_type', 'username', 'surname', 'role_id', 'state', 'email', 'last_login', 'valid_from', 'valid_to'],
+    s.select_from('user', ['id', 'type', 'auth_type', 'username', 'surname', 'role_id', 'state', 'email', 'last_login', 'valid_from', 'valid_to', 'desc'],
                   alt_name='u')
     s.left_join('role', ['name', 'privilege'], join_on='r.id=u.role_id', alt_name='r', out_map={'name': 'role'})
 

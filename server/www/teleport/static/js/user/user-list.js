@@ -41,7 +41,7 @@ $app.create_controls = function (cb_stack) {
     //-------------------------------
     // 用户列表表格
     //-------------------------------
-    var table_users_options = {
+    let table_users_options = {
         dom_id: 'table-user-list',
         data_source: {
             type: 'ajax-post',
@@ -166,7 +166,7 @@ $app.create_controls = function (cb_stack) {
         $app.dom.dlg_import_user.modal({backdrop: 'static'});
     });
     $app.dom.chkbox_user_list_select_all.click(function () {
-        var _objects = $('#' + $app.table_users.dom_id + ' tbody').find('[data-check-box]');
+        let _objects = $('#' + $app.table_users.dom_id + ' tbody').find('[data-check-box]');
         if ($(this).is(':checked')) {
             $.each(_objects, function (i, _obj) {
                 $(_obj).prop('checked', true);
@@ -206,13 +206,13 @@ $app.create_controls = function (cb_stack) {
     $app.dom.btn_unlock_user.click($app.on_btn_unlock_user_click);
     $app.dom.btn_remove_user.click($app.on_btn_remove_user_click);
 
-    var html = [];
+    let html = [];
     $.each($app.role_list, function (i, role) {
         html.push('<li><a href="javascript:;" data-tp-selector="' + role.id + '" data-name="' + role.name + '"><i class="fa fa-caret-right fa-fw"></i> ' + role.name + '</a></li>');
     });
     $app.dom.role_list_for_set.append($(html.join('')));
     $app.dom.role_list_for_set.find('a[data-tp-selector]').click(function () {
-        var obj = $(this);
+        let obj = $(this);
         $app.set_selected_to_role(parseInt(obj.attr('data-tp-selector')), obj.attr('data-name'));
     });
 
@@ -226,8 +226,8 @@ $app.on_table_users_cell_created = function (tbl, row_id, col_key, cell_obj) {
         });
     } else if (col_key === 'action') {
         cell_obj.find('[data-action]').click(function () {
-            var user = $app.table_users.get_row(row_id);
-            var action = $(this).attr('data-action');
+            let user = $app.table_users.get_row(row_id);
+            let action = $(this).attr('data-action');
             if (action === 'edit') {
                 $app.dlg_edit_user.show_edit(row_id);
             } else if (action === 'reset-password') {
@@ -253,8 +253,8 @@ $app.on_table_users_cell_created = function (tbl, row_id, col_key, cell_obj) {
 };
 
 $app.check_user_list_all_selected = function (cb_stack) {
-    var _all_checked = true;
-    var _objs = $('#' + $app.table_users.dom_id + ' tbody').find('[data-check-box]');
+    let _all_checked = true;
+    let _objs = $('#' + $app.table_users.dom_id + ' tbody').find('[data-check-box]');
     if (_objs.length === 0) {
         _all_checked = false;
     } else {
@@ -278,12 +278,12 @@ $app.check_user_list_all_selected = function (cb_stack) {
 
 $app.on_table_users_render_created = function (render) {
     render.filter_role = function (header, title, col) {
-        var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+        let _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
         _ret.push('<div class="tp-table-filter-inner">');
         _ret.push('<div class="search-title">' + title + '</div>');
 
         // 表格内嵌过滤器的DOM实体在这时生成
-        var filter_ctrl = header._table_ctrl.get_filter_ctrl('role');
+        let filter_ctrl = header._table_ctrl.get_filter_ctrl('role');
         _ret.push(filter_ctrl.render());
 
         _ret.push('</div></div>');
@@ -292,12 +292,12 @@ $app.on_table_users_render_created = function (render) {
     };
 
     render.filter_type = function (header, title, col) {
-        var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+        let _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
         _ret.push('<div class="tp-table-filter-inner">');
         _ret.push('<div class="search-title">' + title + '</div>');
 
         // 表格内嵌过滤器的DOM实体在这时生成
-        var filter_ctrl = header._table_ctrl.get_filter_ctrl('type');
+        let filter_ctrl = header._table_ctrl.get_filter_ctrl('type');
         _ret.push(filter_ctrl.render());
 
         _ret.push('</div></div>');
@@ -306,12 +306,12 @@ $app.on_table_users_render_created = function (render) {
     };
 
     render.filter_state = function (header, title, col) {
-        var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+        let _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
         _ret.push('<div class="tp-table-filter-inner">');
         _ret.push('<div class="search-title">' + title + '</div>');
 
         // 表格内嵌过滤器的DOM实体在这时生成
-        var filter_ctrl = header._table_ctrl.get_filter_ctrl('state');
+        let filter_ctrl = header._table_ctrl.get_filter_ctrl('state');
         _ret.push(filter_ctrl.render());
 
         _ret.push('</div></div>');
@@ -320,12 +320,12 @@ $app.on_table_users_render_created = function (render) {
     };
 
     render.filter_search = function (header, title, col) {
-        var _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
+        let _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
         _ret.push('<div class="tp-table-filter-inner">');
         _ret.push('<div class="search-title">' + title + '</div>');
 
         // 表格内嵌过滤器的DOM实体在这时生成
-        var filter_ctrl = header._table_ctrl.get_filter_ctrl('search');
+        let filter_ctrl = header._table_ctrl.get_filter_ctrl('search');
         _ret.push(filter_ctrl.render());
 
         _ret.push('</div></div>');
@@ -340,7 +340,7 @@ $app.on_table_users_render_created = function (render) {
     };
 
     render.user_info = function (row_id, fields) {
-        var ret = [];
+        let ret = [];
         ret.push('<a href="javascript:;" onclick="$app.show_user_info(' + row_id + ');" class="user-username">');
         ret.push(fields.username);
         ret.push('</a><span class="user-surname">');
@@ -363,7 +363,7 @@ $app.on_table_users_render_created = function (render) {
     };
 
     render.role = function (row_id, fields) {
-        for (var i = 0; i < $app.role_list.length; ++i) {
+        for (let i = 0; i < $app.role_list.length; ++i) {
             if ($app.role_list[i].id === fields.role_id)
                 return $app.role_list[i].name;
         }
@@ -371,9 +371,10 @@ $app.on_table_users_render_created = function (render) {
     };
 
     render.user_state = function (row_id, fields) {
-        var _style, _state;
+        let _style, _state;
 
-        for (var i = 0; i < $app.obj_states.length; ++i) {
+        let i = 0;
+        for (i = 0; i < $app.obj_states.length; ++i) {
             if ($app.obj_states[i].id === fields.state) {
                 _style = $app.obj_states[i].style;
                 _state = $app.obj_states[i].name;
@@ -392,14 +393,14 @@ $app.on_table_users_render_created = function (render) {
         if (fields.id === 1) {
             return '';
         }
-        var h = [];
+        let h = [];
         h.push('<div class="btn-group btn-group-sm">');
         h.push('<button type="button" class="btn btn-no-border dropdown-toggle" data-toggle="dropdown">');
         h.push('<span data-selected-action>操作</span> <i class="fa fa-caret-right"></i></button>');
         h.push('<ul class="dropdown-menu dropdown-menu-right dropdown-menu-sm">');
         h.push('<li><a href="javascript:;" data-action="edit"><i class="fa fa-edit fa-fw"></i> 编辑</a></li>');
 
-        var class_lock = '', class_unlock = '';
+        let class_lock = '', class_unlock = '';
         if (fields.state === TP_STATE_NORMAL) {
             class_unlock = ' class="disabled"';
         } else {
@@ -411,7 +412,7 @@ $app.on_table_users_render_created = function (render) {
 
         h.push('<li role="separator" class="divider"></li>');
 
-        var class_user_type = '';
+        let class_user_type = '';
         if (fields.user_type === TP_USER_TYPE_LDAP) {
             class_user_type = ' class="disabled"';
         } else {
@@ -438,7 +439,7 @@ $app.on_table_users_header_created = function (header) {
     });
 
     // // TODO: 当过滤器不是默认值时，让“重置过滤器按钮”有呼吸效果，避免用户混淆 - 实验性质
-    // var t1 = function(){
+    // let t1 = function(){
     //     $app.dom.btn_table_users_reset_filter.fadeTo(1000, 1.0, function(){
     //         $app.dom.btn_table_users_reset_filter.fadeTo(1000, 0.2, t1);
     //     });
@@ -454,18 +455,18 @@ $app.on_table_users_header_created = function (header) {
 
 $app.on_btn_select_file_click = function () {
 
-    var html = '<input id="file-selector" type="file" name="csvfile" accept=".csv,text/csv,text/comma-separated-values" class="hidden" value="" style="display: none;"/>';
+    let html = '<input id="file-selector" type="file" name="csvfile" accept=".csv,text/csv,text/comma-separated-values" class="hidden" value="" style="display: none;"/>';
     $('body').after($(html));
-    var btn_file_selector = $("#file-selector");
+    let btn_file_selector = $("#file-selector");
 
     btn_file_selector.change(function () {
         $app.dom.upload_file_message.hide();
-        // var dom_file_name = $('#upload-file-name');
+        // let dom_file_name = $('#upload-file-name');
 
         // console.log(btn_file_selector[0]);
         // console.log(btn_file_selector[0].files);
 
-        var file = null;
+        let file = null;
         if (btn_file_selector[0].files && btn_file_selector[0].files[0]) {
             file = btn_file_selector[0].files[0];
         } else if (btn_file_selector[0].files && btn_file_selector[0].files.item(0)) {
@@ -479,7 +480,7 @@ $app.on_btn_select_file_click = function () {
             return;
         }
 
-        var _ext = file.name.substring(file.name.lastIndexOf('.')).toLocaleLowerCase();
+        let _ext = file.name.substring(file.name.lastIndexOf('.')).toLocaleLowerCase();
         if (_ext !== '.csv') {
             $app.dom.upload_file_info.html('抱歉，仅支持导入 csv 格式的文件！');
             return;
@@ -490,7 +491,7 @@ $app.on_btn_select_file_click = function () {
             return;
         }
 
-        var fileInfo = '';
+        let fileInfo = '';
         fileInfo += file.name;
         fileInfo += '<br/>';
         fileInfo += tp_size2str(file.size, 2);
@@ -512,7 +513,7 @@ $app.on_btn_do_upload_click = function () {
         .html('<i class="fa fa-cog fa-spin fa-fw"></i> 正在导入，请稍候...')
         .show();
 
-    var param = {};
+    let param = {};
     $.ajaxFileUpload({
         url: "/user/upload-import",// 需要链接到服务器地址
         fileElementId: "file-selector", // 文件选择框的id属性
@@ -523,7 +524,7 @@ $app.on_btn_do_upload_click = function () {
         success: function (data) {
             $('#file-selector').remove();
 
-            var ret = JSON.parse(data);
+            let ret = JSON.parse(data);
 
             // console.log('import ret', ret);
 
@@ -535,10 +536,10 @@ $app.on_btn_do_upload_click = function () {
 
                 $app.table_users.load_data();
             } else {
-                var err_msg = ['<i class="far fa-times-circle fa-fw"></i> 用户导入失败：' + ret.message];
+                let err_msg = ['<i class="far fa-times-circle fa-fw"></i> 用户导入失败：' + ret.message];
                 if (!_.isUndefined(ret.data)) {
                     err_msg.push('<div style="max-height:280px;overflow:auto;margin-left:20px;">');
-                    var err_lines = [];
+                    let err_lines = [];
                     $.each(ret.data, function (i, item) {
                         err_lines.push('第' + item.line + '行：' + item.error);
                     });
@@ -566,11 +567,11 @@ $app.show_user_info = function (row_id) {
 };
 
 $app.get_selected_user = function () {
-    var items = [];
-    var _objs = $('#' + $app.table_users.dom_id + ' tbody tr td input[data-check-box]');
+    let items = [];
+    let _objs = $('#' + $app.table_users.dom_id + ' tbody tr td input[data-check-box]');
     $.each(_objs, function (i, _obj) {
         if ($(_obj).is(':checked')) {
-            var _row_data = $app.table_users.get_row(_obj);
+            let _row_data = $app.table_users.get_row(_obj);
             items.push(_row_data.id);
         }
     });
@@ -578,7 +579,7 @@ $app.get_selected_user = function () {
 };
 
 $app.on_btn_set_role_click = function () {
-    var items = $app.get_selected_user();
+    let items = $app.get_selected_user();
     if (items.length === 0) {
         $tp.notify_error('请先选择用户！');
         return false;
@@ -586,12 +587,12 @@ $app.on_btn_set_role_click = function () {
 };
 
 $app.set_selected_to_role = function (role_id, role_name) {
-    var users = $app.get_selected_user($app.table_users);
+    let users = $app.get_selected_user($app.table_users);
     if (users.length === 0) {
         return;
     }
 
-    var _fn_sure = function (cb_stack, cb_args) {
+    let _fn_sure = function (cb_stack, cb_args) {
         $tp.ajax_post_json('/user/set-role', {users: users, role_id: role_id},
             function (ret) {
                 if (ret.code === TPE_OK) {
@@ -611,7 +612,7 @@ $app.set_selected_to_role = function (role_id, role_name) {
         );
     };
 
-    var cb_stack = CALLBACK_STACK.create();
+    let cb_stack = CALLBACK_STACK.create();
     $tp.dlg_confirm(cb_stack, {
         msg: '<p>您确定要将选定的 <strong>' + users.length + '个</strong> 用户设置为 <strong>' + role_name + '</strong> 角色吗？</p>',
         fn_yes: _fn_sure
@@ -654,7 +655,7 @@ $app._lock_users = function (users) {
 };
 
 $app.on_btn_lock_user_click = function () {
-    var users = $app.get_selected_user($app.table_users);
+    let users = $app.get_selected_user($app.table_users);
     if (users.length === 0) {
         $tp.notify_error('请选择要禁用的用户！');
         return;
@@ -683,7 +684,7 @@ $app._unlock_users = function (users) {
 };
 
 $app.on_btn_unlock_user_click = function () {
-    var users = $app.get_selected_user($app.table_users);
+    let users = $app.get_selected_user($app.table_users);
     if (users.length === 0) {
         $tp.notify_error('请选择要解禁的用户！');
         return;
@@ -693,7 +694,7 @@ $app.on_btn_unlock_user_click = function () {
 };
 
 $app._remove_users = function (users) {
-    var _fn_sure = function (cb_stack, cb_args) {
+    let _fn_sure = function (cb_stack, cb_args) {
         $tp.ajax_post_json('/user/update-users', {action: 'remove', users: users},
             function (ret) {
                 if (ret.code === TPE_OK) {
@@ -713,7 +714,7 @@ $app._remove_users = function (users) {
         );
     };
 
-    var cb_stack = CALLBACK_STACK.create();
+    let cb_stack = CALLBACK_STACK.create();
     $tp.dlg_confirm(cb_stack, {
         msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除用户账号将同时将其从所在用户组中移除，并且删除所有分配给此用户的授权！</p></div><p>如果您希望禁止某个用户登录本系统，可对其进行“禁用”操作！</p><p>您确定要移除所有选定的 <strong>' + users.length + '个</strong> 用户账号吗？</p>',
         fn_yes: _fn_sure
@@ -721,7 +722,7 @@ $app._remove_users = function (users) {
 };
 
 $app.on_btn_remove_user_click = function () {
-    var users = $app.get_selected_user($app.table_users);
+    let users = $app.get_selected_user($app.table_users);
     if (users.length === 0) {
         $tp.notify_error('请选择要删除的用户！');
         return;
@@ -731,7 +732,7 @@ $app.on_btn_remove_user_click = function () {
 };
 
 $app.create_dlg_edit_user = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-edit-user';
     dlg.field_id = -1;  // 用户id（仅编辑模式）
     dlg.field_role = -1;
@@ -770,8 +771,9 @@ $app.create_dlg_edit_user = function () {
     };
 
     dlg.init = function (cb_stack) {
+        console.log('init');
         // 创建角色选择框
-        var _ret = [];
+        let _ret = [];
         _ret.push('<button type="button" class="btn btn-sm dropdown-toggle" data-toggle="dropdown">');
         _ret.push('<span data-selected-role>选择角色</span> <i class="fa fa-caret-right"></i></button>');
         _ret.push('<ul class="dropdown-menu dropdown-menu-sm">');
@@ -786,11 +788,11 @@ $app.create_dlg_edit_user = function () {
 
         // 绑定角色选择框事件
         $('#' + dlg.dom_id + ' li a[data-tp-selector]').click(function () {
-            var select = parseInt($(this).attr('data-tp-selector'));
+            let select = parseInt($(this).attr('data-tp-selector'));
             if (dlg.field_role === select)
                 return;
 
-            var name = $app.role_id2name(select);
+            let name = $app.role_id2name(select);
             if (_.isUndefined(name)) {
                 name = '选择角色';
                 dlg.field_role = -1;
@@ -806,19 +808,28 @@ $app.create_dlg_edit_user = function () {
         dlg.dom.edit_valid_from.datetimepicker({format: "yyyy-mm-dd hh:ii", autoclose: true, todayHighlight: true, todayBtn: true, language: "zh-CN"});
         dlg.dom.edit_valid_to.datetimepicker({format: "yyyy-mm-dd hh:ii", autoclose: true, todayHighlight: true, todayBtn: true, language: "zh-CN"});
 
-        dlg.dom.edit_valid_from.on('changeDate', function (ev) {
-            var start_time = dlg.dom.edit_valid_from.find('input').val();
+        dlg._on_valid_time_changed = function () {
+            let start_time = dlg.dom.edit_valid_from.find('input').val();
+            let end_time = dlg.dom.edit_valid_to.find('input').val();
+            console.log('[' + start_time + '],[' + end_time + ']');
+
             if (start_time === '')
-                dlg.dom.edit_valid_to.datetimepicker('setStartDate', '1000-01-01 00:00');
+                dlg.dom.edit_valid_to.datetimepicker('setStartDate', '1970-01-01 00:00');
             else
                 dlg.dom.edit_valid_to.datetimepicker('setStartDate', start_time);
+
+            if (end_time === '') {
+                console.log('end-time: [' + end_time + ']');
+
+                dlg.dom.edit_valid_from.datetimepicker('setEndDate', '9999-12-30 23:59');
+            } else
+                dlg.dom.edit_valid_from.datetimepicker('setEndDate', end_time);
+        };
+        dlg.dom.edit_valid_from.on('changeDate', function (ev) {
+            dlg._on_valid_time_changed();
         });
         dlg.dom.edit_valid_to.on('changeDate', function (ev) {
-            var end_time = dlg.dom.edit_valid_to.find('input').val();
-            if (end_time === '')
-                dlg.dom.edit_valid_from.datetimepicker('setEndDate', '9999-12-12 00:00');
-            else
-                dlg.dom.edit_valid_from.datetimepicker('setEndDate', end_time);
+            dlg._on_valid_time_changed();
         });
 
         dlg.dom.btn_auth_use_sys_config.click(function () {
@@ -859,7 +870,7 @@ $app.create_dlg_edit_user = function () {
             // dlg.dom.btn_auth_username_oath.removeClass('tp-editable tp-selected');
             dlg.dom.btn_auth_username_password_oath.removeClass('tp-editable tp-selected');
 
-            var auth_type = $app.options.sys_cfg.login.auth;
+            let auth_type = $app.options.sys_cfg.login.auth;
             // if (auth_type & TP_LOGIN_AUTH_USERNAME_PASSWORD)
             //     dlg.dom.btn_auth_username_password.addClass('tp-selected');
             if (auth_type & TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA)
@@ -887,7 +898,8 @@ $app.create_dlg_edit_user = function () {
     };
 
     dlg.init_fields = function (user) {
-        var role_name = '选择角色';
+        console.log('init_fields');
+        let role_name = '选择角色';
         dlg.field_role = -1;
         dlg.field_auth_type = 0;
 
@@ -896,6 +908,8 @@ $app.create_dlg_edit_user = function () {
         // dlg.dom.btn_auth_username_password_captcha.removeClass('tp-selected');
         // dlg.dom.btn_auth_username_oath.removeClass('tp-selected');
         // dlg.dom.btn_auth_username_password_oath.removeClass('tp-selected');
+
+        let time_now = tp_timestamp_sec();
 
         if (_.isUndefined(user)) {
             dlg.dom.dlg_title.html('创建用户账号');
@@ -910,12 +924,14 @@ $app.create_dlg_edit_user = function () {
             dlg.dom.edit_desc.val('');
             dlg.dom.edit_valid_from.find('input').val('');
             dlg.dom.edit_valid_to.find('input').val('');
+            dlg.dom.edit_valid_to.datetimepicker('setStartDate', null);
+            dlg.dom.edit_valid_to.datetimepicker('setEndDate', null);
         } else {
             dlg.field_id = user.id;
             dlg.field_auth_type = user.auth_type;
             dlg.dom.dlg_title.html('编辑：' + user.surname);
 
-            var _name = $app.role_id2name(user.role_id);
+            let _name = $app.role_id2name(user.role_id);
             if (!_.isUndefined(_name)) {
                 role_name = _name;
                 dlg.field_role = user.role_id;
@@ -930,17 +946,17 @@ $app.create_dlg_edit_user = function () {
             dlg.dom.edit_desc.val(user.desc);
             if (user.valid_from === 0) {
                 dlg.dom.edit_valid_from.find('input').val('');
-                dlg.dom.edit_valid_to.datetimepicker('setStartDate', '9999-12-12 00:00');
+                dlg.dom.edit_valid_to.datetimepicker('setStartDate', '1970-01-01 00:00');
             } else {
-                var start_time = tp_format_datetime(user.valid_from, 'yyyy-MM-dd HH:mm');
+                let start_time = tp_format_datetime(user.valid_from, 'yyyy-MM-dd HH:mm');
                 dlg.dom.edit_valid_from.find('input').val(start_time);
                 dlg.dom.edit_valid_to.datetimepicker('setStartDate', start_time);
             }
             if (user.valid_to === 0) {
                 dlg.dom.edit_valid_to.find('input').val('');
-                dlg.dom.edit_valid_from.datetimepicker('setEndDate', '1000-01-01 00:00');
+                dlg.dom.edit_valid_from.datetimepicker('setEndDate', '9999-12-30 23:59');
             } else {
-                var end_time = tp_format_datetime(user.valid_to, 'yyyy-MM-dd HH:mm');
+                let end_time = tp_format_datetime(user.valid_to, 'yyyy-MM-dd HH:mm');
                 dlg.dom.edit_valid_to.find('input').val(end_time);
                 dlg.dom.edit_valid_from.datetimepicker('setEndDate', end_time);
             }
@@ -951,7 +967,7 @@ $app.create_dlg_edit_user = function () {
             dlg._use_sys_auth_config(true);
         } else {
             dlg._use_sys_auth_config(false);
-            var auth_type = dlg.field_auth_type;
+            let auth_type = dlg.field_auth_type;
             // if (auth_type & TP_LOGIN_AUTH_USERNAME_PASSWORD)
             //     dlg.dom.btn_auth_username_password.addClass('tp-selected');
             if (auth_type & TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA)
@@ -969,7 +985,7 @@ $app.create_dlg_edit_user = function () {
     };
 
     dlg.show_edit = function (row_id) {
-        var user = $app.table_users.get_row(row_id);
+        let user = $app.table_users.get_row(row_id);
         // console.log(user);
         dlg.init_fields(user);
         dlg.dom.dialog.modal({backdrop: 'static'});
@@ -1029,8 +1045,8 @@ $app.create_dlg_edit_user = function () {
         if (!dlg.check_input())
             return;
 
-        var action = (dlg.field_id === -1) ? '创建' : '更新';
-        var timeout = (dlg.field_id === -1) ? 60000 : 30000;
+        let action = (dlg.field_id === -1) ? '创建' : '更新';
+        let timeout = (dlg.field_id === -1) ? 60000 : 30000;
 
         // 如果id为-1表示创建，否则表示更新
         $tp.ajax_post_json('/user/update-user', {
@@ -1071,7 +1087,7 @@ $app.create_dlg_edit_user = function () {
 };
 
 $app.create_dlg_user_info = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-user-info';
     dlg.row_id = -1;
     dlg.need_edit = false;
@@ -1102,7 +1118,7 @@ $app.create_dlg_user_info = function () {
         dlg.row_id = row_id;
         dlg.need_edit = false;
 
-        var _row_data = $app.table_users.get_row(dlg.row_id);
+        let _row_data = $app.table_users.get_row(dlg.row_id);
 
         // 表格加载时，是不会读取用户的 desc 字段的，因此可以判断此用户是否已经读取过详细信息了
         if (_.isUndefined(_row_data.desc)) {
@@ -1129,16 +1145,18 @@ $app.create_dlg_user_info = function () {
         // 更新对话框中显示的信息
         dlg.dom.dlg_title.html('<i class="far fa-id-card fa-fw"></i> ' + user.surname);
 
-        var info = [];
+        let info = [];
 
-        var not_set = '<span class="label label-sm label-ignore">未设置</span>';
-        var mobile = (user.mobile.length === 0) ? not_set : user.mobile;
-        var qq = (user.qq.length === 0) ? not_set : user.qq;
-        var wechat = (user.wechat.length === 0) ? not_set : user.wechat;
-        var desc = (user.desc.length === 0) ? not_set : user.desc;
+        let not_set = '<span class="label label-sm label-ignore">未设置</span>';
+        let surname = (_.isUndefined(user.surname) || (user.surname.length === 0)) ? not_set : user.surname;
+        let email = (_.isUndefined(user.email) || (user.email.length === 0)) ? not_set : user.email;
+        let mobile = (_.isUndefined(user.mobile) || (user.mobile.length === 0)) ? not_set : user.mobile;
+        let qq = (_.isUndefined(user.qq) || (user.qq.length === 0)) ? not_set : user.qq;
+        let wechat = (_.isUndefined(user.wechat) || (user.wechat.length === 0)) ? not_set : user.wechat;
+        let desc = (_.isUndefined(user.desc) || (user.desc.length === 0)) ? not_set : user.desc;
         info.push('<tr><td class="key">账号：</td><td class="value">' + user.username + '</td></tr>');
-        info.push('<tr><td class="key">姓名：</td><td class="value">' + user.surname + '</td></tr>');
-        info.push('<tr><td class="key">邮箱：</td><td class="value">' + user.email + '</td></tr>');
+        info.push('<tr><td class="key">姓名：</td><td class="value">' + surname + '</td></tr>');
+        info.push('<tr><td class="key">邮箱：</td><td class="value">' + email + '</td></tr>');
         info.push('<tr><td class="key">电话：</td><td class="value">' + mobile + '</td></tr>');
         info.push('<tr><td class="key">QQ：</td><td class="value">' + qq + '</td></tr>');
         info.push('<tr><td class="key">微信：</td><td class="value">' + wechat + '</td></tr>');
@@ -1153,7 +1171,7 @@ $app.create_dlg_user_info = function () {
 };
 
 $app.create_dlg_reset_password = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-reset-password';
     dlg.field_id = -1;
     dlg.field_email = '';
@@ -1221,7 +1239,7 @@ $app.create_dlg_reset_password = function () {
     };
 
     dlg.show_edit = function (row_id) {
-        var user = $app.table_users.get_row(row_id);
+        let user = $app.table_users.get_row(row_id);
         dlg.init_fields(user);
         dlg.dom.dialog.modal({backdrop: 'static'});
     };
@@ -1282,7 +1300,7 @@ $app.create_dlg_reset_password = function () {
 };
 
 $app.create_dlg_ldap_config = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-ldap-config';
     dlg.mode = 'set'; // edit or set
     dlg.ldap_config = {
@@ -1401,7 +1419,7 @@ $app.create_dlg_ldap_config = function () {
             $tp.notify_error('请正确填写LDAP主机端口！');
             return false;
         } else {
-            var _port = parseInt(dlg.ldap_config.port);
+            let _port = parseInt(dlg.ldap_config.port);
             if (_port <= 0 || _port >= 65535) {
                 dlg.dom.port.focus();
                 $tp.notify_error('请正确填写LDAP主机端口！');
@@ -1539,7 +1557,7 @@ $app.create_dlg_ldap_config = function () {
 };
 
 $app.create_dlg_ldap_list_attr_result = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-ldap-list-attr-result';
 
     dlg.dom = {
@@ -1554,9 +1572,9 @@ $app.create_dlg_ldap_list_attr_result = function () {
     dlg.show = function (data) {
         dlg.dom.msg_ret.html('');
 
-        var h = [];
+        let h = [];
 
-        var attr_name;
+        let attr_name;
         for (attr_name in data) {
             h.push('<div style="white-space:nowrap;"><span class="mono important">' + attr_name + '</span>: ');
             // h.push('<span>'+data[attr_name]+'</span></div>');
@@ -1574,7 +1592,7 @@ $app.create_dlg_ldap_list_attr_result = function () {
 };
 
 $app.create_dlg_ldap_test_result = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-ldap-test-result';
 
     dlg.dom = {
@@ -1589,21 +1607,21 @@ $app.create_dlg_ldap_test_result = function () {
     dlg.show = function (data) {
         dlg.dom.table.empty();
 
-        var h = [];
+        let h = [];
         h.push('<thead>');
         h.push('<th style="text-align:left;" class="mono">登录名</th>');
         h.push('<th style="text-align:left;" class="mono">姓名</th>');
         h.push('<th style="text-align:left;" class="mono">邮箱</th>');
         h.push('</thead>');
 
-        var _mktd = function (h, d) {
+        let _mktd = function (h, d) {
             if ((!_.isUndefined(d)) && !_.isEmpty(d))
                 h.push('<td style="text-align:left;" class="mono">' + d + '</td>');
             else
                 h.push('<td></td>');
         };
 
-        var dn;
+        let dn;
         for (dn in data) {
             h.push('<tr>');
             // console.log(data[dn]);
@@ -1621,7 +1639,7 @@ $app.create_dlg_ldap_test_result = function () {
 };
 
 $app.create_dlg_ldap_import = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-ldap-import';
 
     dlg.dom = {
@@ -1639,7 +1657,7 @@ $app.create_dlg_ldap_import = function () {
         //-------------------------------
         // LDAP用户列表表格
         //-------------------------------
-        var table_ldap_users_options = {
+        let table_ldap_users_options = {
             dom_id: 'table-ldap-user-list',
             data_source: {
                 type: 'none'
@@ -1699,7 +1717,7 @@ $app.create_dlg_ldap_import = function () {
         });
 
         dlg.dom.chkbox_user_list_select_all.click(function () {
-            var _objects = $('#' + $app.table_ldap_users.dom_id + ' tbody').find('[data-check-box]');
+            let _objects = $('#' + $app.table_ldap_users.dom_id + ' tbody').find('[data-check-box]');
             if ($(this).is(':checked')) {
                 $.each(_objects, function (i, _obj) {
                     $(_obj).prop('checked', true);
@@ -1717,11 +1735,11 @@ $app.create_dlg_ldap_import = function () {
     };
 
     dlg.get_selected_user = function (tbl) {
-        var items = [];
-        var _objs = $('#' + tbl.dom_id + ' tbody tr td input[data-check-box]');
+        let items = [];
+        let _objs = $('#' + tbl.dom_id + ' tbody tr td input[data-check-box]');
         $.each(_objs, function (i, _obj) {
             if ($(_obj).is(':checked')) {
-                var _row_data = tbl.get_row(_obj);
+                let _row_data = tbl.get_row(_obj);
                 items.push(_row_data.id);
             }
         });
@@ -1750,8 +1768,8 @@ $app.create_dlg_ldap_import = function () {
     };
 
     dlg.check_user_list_all_selected = function (cb_stack) {
-        var _all_checked = true;
-        var _objs = $('#' + $app.table_ldap_users.dom_id + ' tbody').find('[data-check-box]');
+        let _all_checked = true;
+        let _objs = $('#' + $app.table_ldap_users.dom_id + ' tbody').find('[data-check-box]');
         if (_objs.length === 0) {
             _all_checked = false;
         } else {
@@ -1788,8 +1806,8 @@ $app.create_dlg_ldap_import = function () {
                 if (ret.code === TPE_OK) {
                     // console.log(ret.data);
 
-                    var _d = [];
-                    for (var i = 0; i < ret.data.length; ++i) {
+                    let _d = [];
+                    for (let i = 0; i < ret.data.length; ++i) {
                         _d.push(ret.data[i]);
                     }
 
@@ -1808,7 +1826,7 @@ $app.create_dlg_ldap_import = function () {
     };
 
     dlg.do_import = function () {
-        var items = dlg.get_selected_user($app.table_ldap_users);
+        let items = dlg.get_selected_user($app.table_ldap_users);
         if (items.length === 0) {
             $tp.notify_error('请选择要导入的账号！');
             return;

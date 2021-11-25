@@ -25,11 +25,13 @@ body {
   &.page-header-fixed {
     padding-top: @header-height;
   }
+
   // 左侧功能导航栏
   &.page-sidebar-fixed {
     .page-sidebar {
       position: fixed;
     }
+
     .page-content {
       margin-left: @sidebar-width;
     }
@@ -88,6 +90,7 @@ body {
           & > li {
             font-size: @text-size-normal;
           }
+
           & > li + li:before {
             //content: "\f105";
             //font-family: 'FontAwesome';
@@ -188,6 +191,7 @@ body {
   .nav-menu li .menu-caret:after {
     content: '\f105';
   }
+
   .nav-menu li.expand .menu-caret:after {
     content: '\f107';
   }
@@ -277,6 +281,7 @@ body {
         color: #fff;
         background-color: transparent;
       }
+
       &:focus {
         background-color: transparent;
       }
@@ -306,6 +311,7 @@ body {
       padding-top: 3px;
       font-size: 14px;
     }
+
     .role {
       display: block;
       font-size: 12px;
@@ -315,9 +321,11 @@ body {
     &.active {
       background-color: @color-menu-bg-normal;
       color: #fff;
+
       .name, .role {
         color: #fff;
       }
+
       &:after {
         content: "\e251";
         font-family: 'Glyphicons Halflings';
@@ -462,6 +470,7 @@ body {
       & > li {
         padding-top: 8px;
       }
+
       & > li > a {
         margin-right: 5px;
         border-top-left-radius: 3px;
@@ -474,6 +483,7 @@ body {
         //border-top-color: transparent;
         border-bottom-color: transparent;
       }
+
       & > li.active > a {
         font-weight: bold;
         //border-radius: 0;
@@ -507,6 +517,7 @@ body {
 .box-btn-bar {
   //height: 30px;
   line-height: 30px;
+
   a.btn {
     margin-right: 20px;
   }
@@ -685,6 +696,7 @@ body {
       width: auto;
     }
   }
+
   &.tp-table-filter-center {
     .tp-table-filter-inner {
       margin: 0 auto;
@@ -703,6 +715,7 @@ body {
     width: 1px;
     text-align: left;
   }
+
   .search-input, .search-select {
     display: table-cell;
     text-align: left;
@@ -715,10 +728,12 @@ body {
       border: none;
       padding: 0 0 0 8px;
       border-radius: 0;
+
       &:active {
         box-shadow: none;
       }
     }
+
     //& > input[type="text"].form-control {
 
     .dropdown-menu {
@@ -755,6 +770,7 @@ body {
 
     }
   }
+
   .search-input {
     width: 100%;
     padding-left: 10px;
@@ -774,6 +790,7 @@ body {
         font-size: @text-size-normal;
         padding: 0 5px;
       }
+
       input.form-control {
         //margin-left:10px;
         font-size: @text-size-normal;
@@ -793,6 +810,7 @@ body {
   border: none;
   padding: 0 0 0 8px;
   border-radius: 0;
+
   &:active {
     box-shadow: none;
   }
@@ -800,6 +818,7 @@ body {
 
 .table > tbody > tr.table-footer-action {
   background-color: transparent;
+
   & > td {
     border-color: transparent;
     padding-top: 15px;
@@ -836,6 +855,7 @@ body {
 
     .pagination {
       margin: 0 0;
+
       & > li > span, a {
         padding: 3px 8px;
         font-size: 12px;
@@ -846,11 +866,13 @@ body {
     &.checkbox-select-all {
       width: 36px;
       text-align: center;
+
       input {
         position: relative;
         top: 3px;
       }
     }
+
     &.group-actions {
       & > .btn-group {
         .btn {
@@ -859,6 +881,7 @@ body {
         }
       }
     }
+
     &.table-item-counter {
       text-align: right;
 
@@ -869,6 +892,7 @@ body {
         border: none;
         background-color: transparent;
         color: #666;
+
         & > li {
           display: inline-block;
           padding-left: 10px;
@@ -877,6 +901,7 @@ body {
 
       .btn {
         margin-top: -3px;
+
         .caret {
           margin-top: -3px;
         }
@@ -888,6 +913,7 @@ body {
 
 .table-prefix-area {
   margin-bottom: 10px;
+
   .table-extend-cell {
     padding: 0;
   }
@@ -1039,9 +1065,11 @@ textarea.cert_pub {
   list-style: none;
   margin: 0 0 10px 0;
   padding: 0;
+
   li {
     padding: 3px 3px 3px 20px;
     margin-left: 10px;
+
     &:before {
       color: #999;
       position: absolute;
@@ -1051,6 +1079,7 @@ textarea.cert_pub {
       font-family: 'Font Awesome 5 Free';
       font-weight: 900;
     }
+
     em {
       color: #3374b0;
       font-style: normal;
@@ -1090,9 +1119,11 @@ textarea.cert_pub {
   &.tp-editable {
     cursor: pointer;
     color: #459dee;
+
     &:hover {
       color: #53af43;
     }
+
     &.tp-selected, &.tp-checked {
       color: #3374b0;
     }
@@ -1102,10 +1133,67 @@ textarea.cert_pub {
 i.upload-button {
   font-size: 128px;
   color: #b1b1b1;
+
   &:hover {
     cursor: pointer;
     color: #709cff;
   }
 }
+
+/* assist */
+
+.assist-config {
+  //margin: 20px 0 50px 0;
+
+  .cfg-title {
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .form-group {
+    margin-bottom: 5px;
+  }
+
+  .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11 {
+    padding-left: 3px;
+    padding-right: 3px;
+  }
+
+  .arg-detail {
+    ol, ul {
+      margin-bottom: 0;
+    }
+  }
+
+  .arg-detail-common {
+    //border:1px solid #f33;
+    background-color: #edfedf;
+    //color:#fff;
+    border-radius: 5px;
+    padding: 15px;
+    //margin-bottom:10px;
+  }
+
+  select, .input-args {
+    font-family: @font-family-mono;
+  }
+
+  .desc {
+    // display:inline-block;
+    margin-top: 5px;
+    color: rgb(107, 107, 107);
+  }
+
+  .arg-varb {
+    //color: #0a6aa1;
+    color: #393939;
+    font-weight: bold;
+    font-family: @font-family-mono;
+    display: inline-block;
+    width: 180px;
+    //margin-right:20px;
+  }
+}
+
 
 @import "_overwrite_gritter";

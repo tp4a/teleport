@@ -1,7 +1,7 @@
 "use strict";
 
 $app.on_init = function (cb_stack) {
-    var record_id = $app.options.record_id;
+    let record_id = $app.options.record_id;
 
     $app.record_hdr = null;
     $app.record_data = [];
@@ -78,7 +78,7 @@ $app.on_init = function (cb_stack) {
     $app.dom.btn_big_font.click(function () {
         if (_.isNull($app.dom.xterm_terminal))
             return;
-        var _size = parseInt($app.dom.xterm_terminal.css('font-size'));
+        let _size = parseInt($app.dom.xterm_terminal.css('font-size'));
         if (_size >= 24)
             return;
 
@@ -92,7 +92,7 @@ $app.on_init = function (cb_stack) {
         if (_.isNull($app.dom.xterm_terminal))
             return;
 
-        var _size = parseInt($app.dom.xterm_terminal.css('font-size'));
+        let _size = parseInt($app.dom.xterm_terminal.css('font-size'));
         if (_size <= 12)
             return;
 
@@ -110,7 +110,7 @@ $app.on_init = function (cb_stack) {
     });
 
     $app.dom.btn_skip.click(function () {
-        var obj = $('#btn-skip i');
+        let obj = $('#btn-skip i');
         if ($app.need_skip) {
             $app.need_skip = false;
             obj.removeClass('fa-check-square').addClass('fa-square');
@@ -129,7 +129,7 @@ $app.on_init = function (cb_stack) {
     $app.speed_offset = 0;
     $app.dom.btn_speed.text($app.speed_table[$app.speed_offset].name);
     $app.dom.btn_speed.click(function () {
-        var length = $app.speed_table.length;
+        let length = $app.speed_table.length;
         $app.speed_offset += 1;
         if ($app.speed_offset === length) {
             $app.speed_offset = 0;
@@ -204,7 +204,7 @@ $app.init_and_play = function () {
 
     if (_.isNull($app.canvas)) {
         // $app.canvas = $app.dom.canvas[0].getContext('2d');
-        var h = '<canvas id="canvas" width="' + $app.record_hdr.width + '" height="' + $app.record_hdr.height + '"></canvas>';
+        let h = '<canvas id="canvas" width="' + $app.record_hdr.width + '" height="' + $app.record_hdr.height + '"></canvas>';
         $app.dom.screen.append($(h));
         $app.canvas = document.getElementById('canvas').getContext('2d');
     } else {
@@ -212,8 +212,8 @@ $app.init_and_play = function () {
     }
 
     // $app._draw_cursor(100, 100);
-    var x = ($app.record_hdr.width - 500) / 2;
-    var y = ($app.record_hdr.height - 360) / 2;
+    let x = ($app.record_hdr.width - 500) / 2;
+    let y = ($app.record_hdr.height - 360) / 2;
     $app.canvas.drawImage($app.player_bg_img, x, y);
 
 
@@ -234,7 +234,7 @@ $app.init_and_play = function () {
 };
 
 $app.decompress = function (bitmap) {
-    var fName = null;
+    let fName = null;
     switch (bitmap.bit_per_pixel) {
         case 15:
             fName = 'bitmap_decompress_15';
@@ -252,25 +252,25 @@ $app.decompress = function (bitmap) {
             throw 'invalid bitmap data format';
     }
 
-    var input = new Uint8Array(bitmap.img_data);
-    var inputPtr = Module._malloc(input.length);
-    var inputHeap = new Uint8Array(Module.HEAPU8.buffer, inputPtr, input.length);
+    let input = new Uint8Array(bitmap.img_data);
+    let inputPtr = Module._malloc(input.length);
+    let inputHeap = new Uint8Array(Module.HEAPU8.buffer, inputPtr, input.length);
     inputHeap.set(input);
 
-    var output_width = bitmap.right - bitmap.left + 1;
-    var output_height = bitmap.bottom - bitmap.top + 1;
-    var ouputSize = output_width * output_height * 4;
-    var outputPtr = Module._malloc(ouputSize);
+    let output_width = bitmap.right - bitmap.left + 1;
+    let output_height = bitmap.bottom - bitmap.top + 1;
+    let ouputSize = output_width * output_height * 4;
+    let outputPtr = Module._malloc(ouputSize);
 
-    var outputHeap = new Uint8Array(Module.HEAPU8.buffer, outputPtr, ouputSize);
+    let outputHeap = new Uint8Array(Module.HEAPU8.buffer, outputPtr, ouputSize);
 
-    var res = Module.ccall(fName,
+    let res = Module.ccall(fName,
         'number',
         ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'],
         [outputHeap.byteOffset, output_width, output_height, bitmap.width, bitmap.height, inputHeap.byteOffset, input.length]
     );
 
-    var output = new Uint8ClampedArray(outputHeap.buffer, outputHeap.byteOffset, ouputSize);
+    let output = new Uint8ClampedArray(outputHeap.buffer, outputHeap.byteOffset, ouputSize);
 
     Module._free(inputPtr);
     Module._free(outputPtr);
@@ -293,13 +293,13 @@ $app.do_play = function () {
     $app.dom.status.text("正在播放");
     $app.player_current_time += $app.record_tick * $app.speed_table[$app.speed_offset].speed;
 
-    var _record_tick = $app.record_tick;
+    let _record_tick = $app.record_tick;
 
-    for (var i = $app.played_pkg_count; i < $app.record_data.length; i++) {
+    for (let i = $app.played_pkg_count; i < $app.record_data.length; i++) {
         if ($app.is_need_stop)
             break;
 
-        var play_data = $app.record_data[i];
+        let play_data = $app.record_data[i];
 
         if (play_data.t < $app.player_current_time) {
             if (play_data.a === 0x10) {
@@ -313,21 +313,21 @@ $app.do_play = function () {
             }
             else if(play_data.a === 0x12) {
                 //$app.player_console_term.write(tp_base64_decode(play_data.d));
-                var _data = tp_base64_to_binarray(play_data.d);
+                let _data = tp_base64_to_bin(play_data.d);
                 console.log('pkg size:', _data.length);
 
-                var s = Uint8Array.from(_data);
+                let s = Uint8Array.from(_data);
                 // console.log(s);
-                var offset = 0;
-                var update_type = s[offset + 1] * 256 + s[offset];
+                let offset = 0;
+                let update_type = s[offset + 1] * 256 + s[offset];
                 offset += 2;
-                var update_count = s[offset + 1] * 256 + s[offset];
+                let update_count = s[offset + 1] * 256 + s[offset];
                 offset += 2;
                 console.log('type:', update_type, 'count:', update_count)
 
-                var bc;
+                let bc;
                 for (bc = 0; bc < update_count; ++bc) {
-                    var bitmap = {};
+                    let bitmap = {};
 
                     bitmap.left = s[offset + 1] * 256 + s[offset];
                     offset += 2;
@@ -344,12 +344,12 @@ $app.do_play = function () {
                     bitmap.bit_per_pixel = s[offset + 1] * 256 + s[offset];
                     offset += 2;
 
-                    var _flag = s[offset + 1] * 256 + s[offset];
+                    let _flag = s[offset + 1] * 256 + s[offset];
                     offset += 2;
 
                     bitmap.isCompress = (_flag & 0x0001) === 0x0001;
 
-                    var _length = s[offset + 1] * 256 + s[offset];
+                    let _length = s[offset + 1] * 256 + s[offset];
                     offset += 2;
 
                     bitmap.img_data = s.subarray(offset, offset + _length);
@@ -357,14 +357,14 @@ $app.do_play = function () {
 
                     //console.log(dest_left, dest_top, dest_right, dest_bottom, dest_width, dest_height, dest_bit_per_pixel, dest_flag, dest_length);
                     // console.log(bitmap);
-                    var output = null;
+                    let output = null;
                     if(bitmap.isCompress)
                         output = $app.decompress(bitmap);
                     else
                         output = {width : bitmap.width, height : bitmap.height, data : new Uint8ClampedArray(bitmap.data)};
                     // console.log(output);
 
-                    var img = $app.canvas.createImageData(output.width, output.height);
+                    let img = $app.canvas.createImageData(output.width, output.height);
                     img.data.set(output.data);
                     $app.canvas.putImageData(img, bitmap.left, bitmap.top);
 
@@ -401,9 +401,9 @@ $app.do_play = function () {
     }
 
     // sync progress bar.
-    var _progress = parseInt($app.player_current_time * 100 / $app.record_hdr.time_used);
+    let _progress = parseInt($app.player_current_time * 100 / $app.record_hdr.time_used);
     $app.dom.progress.val(_progress);
-    var temp = parseInt($app.player_current_time / 1000);
+    let temp = parseInt($app.player_current_time / 1000);
     $app.dom.time.text(temp + '/' + parseInt($app.record_hdr.time_used / 1000) + '秒');
 
     // if all packages played

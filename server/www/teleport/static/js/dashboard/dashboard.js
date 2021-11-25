@@ -458,9 +458,9 @@ $app.init_ws = function () {
 
     var _sid = Cookies.get('_sid');
     if(location.protocol === 'http:') {
-        $app.ws = new WebSocket('ws://' + location.host + '/ws/' + _sid);
+        $app.ws = new WebSocket('ws://' + location.host + '/ws/dashboard/' + _sid);
     } else {
-        $app.ws = new WebSocket('wss://' + location.host + '/ws/' + _sid);
+        $app.ws = new WebSocket('wss://' + location.host + '/ws/dashboard/' + _sid);
     }
 
     $app.ws.onopen = function (e) {

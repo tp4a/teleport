@@ -14,6 +14,7 @@ from . import rpc
 from . import system
 from . import user
 from . import ws
+from . import assist
 from . import api_v1
 from . import api_v2
 
@@ -286,7 +287,14 @@ controllers = [
 
     # WebSocket for real-time information
     # ws-client call 'http://ip:7190/ws/action/'
-    (r'/ws/(.*)', ws.WebSocketHandler),
+    (r'/ws/dashboard/(.*)', ws.DashboardHandler),
+
+    # 助手相关
+    (r'/assist/config', assist.ConfigHandler),
+    (r'/assist/get-assist-info', assist.DoGetAssistInfoHandler),
+    (r'/ws/assist/(.*)', ws.AssistHandler),
+    # 下载助手
+    (r'/assist/download/(.*)', assist.DoDownloadAssistHandler),
 
     # api v1
     (r'/api/v1/get_host', api_v1.GetHostHandler),
