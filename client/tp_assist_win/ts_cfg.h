@@ -6,6 +6,14 @@
 
 #include <json/json.h>
 
+typedef struct APP_CONFIG {
+	ex_wstr name;
+	ex_wstr display;
+	ex_wstr application;
+	ex_wstr cmdline;
+	ex_wstrs description;
+}APP_CONFIG;
+
 class TsCfg
 {
 public:
@@ -17,19 +25,14 @@ public:
 
 	Json::Value& get_root() { return m_root; }
 
-	ex_wstr ssh_app;
-	ex_wstr ssh_cmdline;
-	ex_wstr scp_app;
-	ex_wstr scp_cmdline;
-	ex_wstr telnet_app;
-	ex_wstr telnet_cmdline;
-
-	ex_wstr rdp_name;
-	ex_wstr rdp_app;
-	ex_wstr rdp_cmdline;
+	APP_CONFIG ssh;
+	APP_CONFIG sftp;
+	APP_CONFIG telnet;
+	APP_CONFIG rdp;
 
 protected:
 	bool _load(const ex_astr& str_json);
+	bool _parse_app(const Json::Value& m_root, const ex_astr& str_app, APP_CONFIG& cfg);
 
 protected:
 	Json::Value m_root;

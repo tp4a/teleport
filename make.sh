@@ -7,7 +7,8 @@ PATH_ROOT=$(cd "$(dirname "$0")"; pwd)
 # environment if you want to build teleport components for such
 # platforms.
 # =================================================================
-PY_EXEC_WINDOWS="C:\\apps\\py37-x86\\python.exe"
+# PY_EXEC_WINDOWS="C:\\apps\\py37-x86\\python.exe"
+PY_EXEC_WINDOWS="C:\\apps\\py39-x64\\python.exe"
 PY_EXEC_MACOS="/usr/local/bin/python3"
 
 set -e
@@ -54,10 +55,10 @@ function build_win
 		on_error "Sorry, need x86 version of Python 3.7 or above."
 	fi
 	# and must be x86 version.
-	$("${pyexec}" -c "import platform;import sys;ret=0 if platform.architecture()[0]=='32bit' else 1;sys.exit(ret)")
-	if [ $? -ne 0 ]; then
-		on_error "Sorry, need x86 version of Python 3.7 or above."
-	fi
+	# ret=$("${pyexec}" -c "import platform;import sys;ret=0 if platform.architecture()[0]=='32bit' else 1;print(ret)")
+	# if [ $ret -ne 0 ]; then
+	# 	on_error "Sorry, need x86 version of Python 3.7 or above."
+	# fi
 
 	${pyexec} -B "${PATH_ROOT}/build/build.py" $@
 }
@@ -151,6 +152,7 @@ elif [ ${SYS_NAME} = "Darw" ] ; then
 	build_macos $@
 elif [ ${SYS_NAME} == "MSYS" ] ; then
     export CFG_FILE=config.windows.json
+	echo $CFG_FILE
 	build_win $@
 else
 	on_error_begin "Unsupported platform."

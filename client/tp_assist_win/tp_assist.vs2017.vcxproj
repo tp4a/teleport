@@ -15,19 +15,19 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>tp_assist</RootNamespace>
     <ProjectName>tp_assist</ProjectName>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -106,7 +106,6 @@
     <ClInclude Include="..\..\common\teleport\teleport_const.h" />
     <ClInclude Include="..\..\external\mongoose\mongoose.h" />
     <ClInclude Include="dlg_main.h" />
-    <ClInclude Include="msocketx.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -114,9 +113,9 @@
     <ClInclude Include="ts_cfg.h" />
     <ClInclude Include="ts_const.h" />
     <ClInclude Include="ts_env.h" />
-    <ClInclude Include="ts_http_rpc.h" />
-    <ClInclude Include="ts_network.h" />
+    <ClInclude Include="ts_utils.h" />
     <ClInclude Include="ts_ver.h" />
+    <ClInclude Include="ts_ws_client.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\common\libex\src\ex_ini.cpp">
@@ -160,7 +159,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="dlg_main.cpp" />
-    <ClCompile Include="msocketx.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -168,8 +166,14 @@
     <ClCompile Include="tp_assist.cpp" />
     <ClCompile Include="ts_cfg.cpp" />
     <ClCompile Include="ts_env.cpp" />
-    <ClCompile Include="ts_http_rpc.cpp" />
-    <ClCompile Include="ts_network.cpp" />
+    <ClCompile Include="ts_utils.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ts_ws_client.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="tp_assist.rc" />

@@ -10,15 +10,6 @@
     <ClCompile Include="tp_assist.cpp">
       <Filter>main app</Filter>
     </ClCompile>
-    <ClCompile Include="ts_http_rpc.cpp">
-      <Filter>main app</Filter>
-    </ClCompile>
-    <ClCompile Include="ts_network.cpp">
-      <Filter>main app</Filter>
-    </ClCompile>
-    <ClCompile Include="msocketx.cpp">
-      <Filter>main app</Filter>
-    </ClCompile>
     <ClCompile Include="ts_env.cpp">
       <Filter>main app</Filter>
     </ClCompile>
@@ -55,6 +46,12 @@
     <ClCompile Include="..\..\common\libex\src\ex_thread.cpp">
       <Filter>libex\src</Filter>
     </ClCompile>
+    <ClCompile Include="ts_ws_client.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_utils.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -72,12 +69,6 @@
     <ClInclude Include="tp_assist.h">
       <Filter>main app</Filter>
     </ClInclude>
-    <ClInclude Include="ts_http_rpc.h">
-      <Filter>main app</Filter>
-    </ClInclude>
-    <ClInclude Include="ts_network.h">
-      <Filter>main app</Filter>
-    </ClInclude>
     <ClInclude Include="ts_env.h">
       <Filter>main app</Filter>
     </ClInclude>
@@ -86,9 +77,6 @@
     </ClInclude>
     <ClInclude Include="..\..\external\mongoose\mongoose.h">
       <Filter>mongoose</Filter>
-    </ClInclude>
-    <ClInclude Include="msocketx.h">
-      <Filter>main app</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\libex\include\ex\ex_const.h">
       <Filter>libex\header</Filter>
@@ -128,6 +116,12 @@
     </ClInclude>
     <ClInclude Include="..\..\common\teleport\teleport_const.h">
       <Filter>teleport</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_ws_client.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_utils.h">
+      <Filter>main app</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -177,8 +177,8 @@ EX_BOOL ex_is_file_exists(const wchar_t* in_file)
 EX_BOOL ex_is_file_exists(const char* in_file)
 {
 #ifdef EX_OS_WIN32
-    ex_wstr _in_path;
-    ex_astr2wstr(in_path, _in_path);
+    ex_wstr _in_file;
+    ex_astr2wstr(in_file, _in_file);
     if (!PathFileExists(_in_file.c_str()))
         return EX_FALSE;
     if (PathIsDirectory(_in_file.c_str()))

@@ -90,7 +90,7 @@ $app.init_dom_event = function (cb_stack) {
         $app._on_type_change($app.cfg.rdp, $app.dom.rdp_type, $app.dom.rdp_app, $app.dom.rdp_cmdline, $app.dom.rdp_desc);
     });
     $app.dom.ssh_select_app.click(function () {
-        $assist.select_local_file('ssg');
+        $assist.select_local_file('ssh');
     });
     $app.dom.sftp_select_app.click(function () {
         $assist.select_local_file('sftp');

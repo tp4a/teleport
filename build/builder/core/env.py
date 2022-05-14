@@ -124,15 +124,13 @@ class Env(object):
                 if warn_miss_tool:
                     cc.w(' - can not locate `perl`, so I can not build openssl.')
 
-            self.visual_studio_path = self._get_visual_studio_path()
-            if self.visual_studio_path is None or not os.path.exists(self.visual_studio_path):
-                if warn_miss_tool:
-                    cc.w(' - can not locate Visual Studio installation, so I can build nothing.')
+            # self.visual_studio_path = self._get_visual_studio_path()
+            # if self.visual_studio_path is None or not os.path.exists(self.visual_studio_path):
+            #     if warn_miss_tool:
+            #         cc.w(' - can not locate Visual Studio installation, so I can build nothing.')
 
             if 'msbuild' in _tmp:
                 self.msbuild = _tmp['msbuild']
-            else:
-                self.msbuild = self._get_msbuild()
 
             if self.msbuild is None or not os.path.exists(self.msbuild):
                 if warn_miss_tool:
@@ -250,15 +248,15 @@ class Env(object):
 
     #     return p[0] if p is not None else None
 
-    def _get_visual_studio_path(self):
-        p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7', r'15.0')
-        return p[0] if p is not None else None
-
-    def _get_msbuild(self):
-        vs2017 = self._get_visual_studio_path()
-        if vs2017 is None:
-            return None
-        return os.path.join(vs2017, 'MSBuild', '15.0', 'Bin', 'MSBuild.exe')
+    # def _get_visual_studio_path(self):
+    #     p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7', r'15.0')
+    #     return p[0] if p is not None else None
+    #
+    # def _get_msbuild(self):
+    #     vs2017 = self._get_visual_studio_path()
+    #     if vs2017 is None:
+    #         return None
+    #     return os.path.join(vs2017, 'MSBuild', '15.0', 'Bin', 'MSBuild.exe')
 
     def _get_perl(self):
         p = self._winreg_read(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\perl', 'BinDir')

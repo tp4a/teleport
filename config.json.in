@@ -17,6 +17,7 @@
     "#.toolchain.example.windows": {
         "qt_path": "C:\\Qt\\Qt5.15.2\\5.15.2\\msvc2017",
         "cmake": "C:\\Program Files(x86)\\CMake\\bin\\cmake.exe",
+        "msbuild": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
         "wget": "",
         "7z": "",
 	"nsis": ""

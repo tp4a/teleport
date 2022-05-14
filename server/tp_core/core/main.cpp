@@ -190,7 +190,7 @@ int app_main_(int argc, wchar_t** argv)
 #ifdef EX_OS_WIN32
 
 #ifdef EX_DEBUG
-#include <vld.h>
+//#include <vld.h>
 #endif
 
 static SERVICE_STATUS g_ServiceStatus = { 0 };
@@ -210,7 +210,7 @@ int main()
 	int _argc = 0;
 	wchar_t** _argv = ::CommandLineToArgvW(szCmdLine, &_argc); //拆分命令行参数字符串；
 
-	ret = _app_main(_argc, _argv);
+	ret = app_main_(_argc, _argv);
 
 	LocalFree(_argv);
 	_argv = nullptr;
@@ -218,7 +218,7 @@ int main()
 	return ret;
 }
 
-static bool _run_daemon(void)
+static bool run_daemon_(void)
 {
 	SERVICE_TABLE_ENTRY DispatchTable[2];
 	DispatchTable[0].lpServiceName = EOM_CORE_SERVICE_NAME;
@@ -238,7 +238,7 @@ static bool _run_daemon(void)
 
 static DWORD WINAPI service_thread_func(LPVOID lpParam)
 {
-	int ret = _main_loop();
+	int ret = main_loop_();
 
 	// 更新服务状态（如果服务还在运行，将其设置为停止状态）
 	g_ServiceStatus.dwWin32ExitCode = 0;
