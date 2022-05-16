@@ -38,14 +38,8 @@ def _export_table(db, table_name):
     else:
         fields_count = len(fields)
         for i in range(len(d)):
-            # x = []
-            # for j in range(fields_count):
-            #     x.append(d[i][j].__str__())
-            # val = "','".join(x).replace('\n', '\\n')
             x = list()
             for j in range(fields_count):
-                # if j > 0:
-                #     x.append(',')
                 if s[j]:
                     if d[i][j] is None:
                         x.append('NULL')
@@ -54,12 +48,11 @@ def _export_table(db, table_name):
                 else:
                     x.append('{}'.format(d[i][j]))
             val = ','.join(x)
-            print('VAL:', val, '\n')
 
             sql = "INSERT INTO `{}` VALUES ({});".format(table_name, val)
             ret.append(sql)
 
-    return '\r\n'.join(ret)
+    return '\n'.join(ret)
 
 
 def export_database(db):
@@ -67,9 +60,9 @@ def export_database(db):
     now = time.localtime(time.time())
     ret.append('-- {:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d} '.format(now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec))
     if db.db_type == db.DB_TYPE_SQLITE:
-        ret.append('-- export from SQLite Database')
+        ret.append('-- export from Teleport SQLite Database')
     elif db.db_type == db.DB_TYPE_MYSQL:
-        ret.append('-- export from MySQL Database')
+        ret.append('-- export from Teleport MySQL Database')
     else:
         return '未知的数据库类型', False
 
@@ -77,24 +70,7 @@ def export_database(db):
     if db_ret is None or 0 == len(db_ret):
         return '无法获取数据库版本', False
     else:
-        ret.append('-- DATABASE VERSION {}'.format(db_ret[0][0]))
-
-    # _fields = ['account_id', 'account_type', 'account_name', 'account_pwd', 'account_status', 'account_lock', 'account_desc', 'oath_secret']
-    # ret.append(_export_table(db, 'account', _fields))
-    # _fields = ['auth_id', 'account_name', 'host_id', 'host_auth_id']
-    # ret.append(_export_table(db, 'auth', _fields))
-    # _fields = ['cert_id', 'cert_name', 'cert_pub', 'cert_pri', 'cert_desc']
-    # ret.append(_export_table(db, 'key', _fields))
-    # _fields = ['name', 'value']
-    # ret.append(_export_table(db, 'config', _fields))
-    # _fields = ['group_id', 'group_name']
-    # ret.append(_export_table(db, 'group', _fields))
-    # _fields = ['host_id', 'group_id', 'host_sys_type', 'host_ip', 'host_port', 'protocol', 'host_lock', 'host_desc']
-    # ret.append(_export_table(db, 'host_info', _fields))
-    # _fields = ['id', 'host_id', 'auth_mode', 'user_name', 'user_pswd', 'user_param', 'cert_id', 'encrypt', 'log_time']
-    # ret.append(_export_table(db, 'auth_info', _fields))
-    # _fields = ['id', 'session_id', 'account_name', 'host_ip', 'host_port', 'sys_type', 'auth_type', 'protocol', 'user_name', 'ret_code', 'begin_time', 'end_time', 'log_time']
-    # ret.append(_export_table(db, 'log', _fields))
+        ret.append('-- TELEPORT DATABASE VERSION {}'.format(db_ret[0][0]))
 
     ret.append(_export_table(db, 'config'))
     ret.append(_export_table(db, 'core_server'))
@@ -116,4 +92,4 @@ def export_database(db):
     ret.append(_export_table(db, 'record'))
     ret.append(_export_table(db, 'record_audit'))
 
-    return '\r\n'.join(ret), True
+    return '\n'.join(ret), True

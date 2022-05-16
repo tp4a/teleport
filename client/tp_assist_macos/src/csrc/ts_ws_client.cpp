@@ -307,6 +307,7 @@ void TsWsClient::_create_response(ex_astr& buf, const AssistMessage& msg_ret, in
 
 void TsWsClient::_on_message(const std::string& message, std::string& buf)
 {
+    // e.g.:
     // {
     //     "type":0,
     //     "method":"run",
@@ -317,6 +318,8 @@ void TsWsClient::_on_message(const std::string& message, std::string& buf)
     //     }
     // }
 
+    EXLOGV("on_message: %s\n", message.c_str());
+    
     AssistMessage msg_req;
 
     Json::CharReaderBuilder jrb;

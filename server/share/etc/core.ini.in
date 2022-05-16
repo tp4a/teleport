@@ -2,8 +2,8 @@
 
 [common]
 ; 'log-file' define the log file location. if not set, default locate
-; to $INSTDIR%/data/log/tpcore.log
-;log-file=/var/log/teleport/tpcore.log
+; to $TELEPORT_INSTDIR%/data/log/tpcore.log
+;log-file=/usr/local/teleport/data/log/tpcore.log
 
 ; log-level can be 0 ~ 4, default value is 2.
 ; LOG_LEVEL_DEBUG     0   log every-thing.
@@ -18,8 +18,8 @@ log-level=2
 debug-mode=0
 
 ; 'replay-path' define the replay file location. if not set, default locate
-; to `$INSTDIR%/data/replay`
-;replay-path=/var/lib/teleport/replay
+; to `$TELEPORT_INSTDIR/data/replay`
+;replay-path=/usr/local/teleport/data/replay
 
 ; `web-server-rpc` is the rpc interface of web server.
 ; default to `http://127.0.0.1:7190/rpc`.
