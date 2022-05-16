@@ -156,21 +156,21 @@ void TsWsClient::url_scheme_handler(const std::string& url)
 	std::string::size_type pos_protocol = url.find("://");
 	if (pos_protocol == std::string::npos)
 	{
-		EXLOGE("[ws] invalid url: %s\n", url.c_str());
+		EXLOGE("[url-schema] invalid url: %s\n", url.c_str());
 		return;
 	}
 
 	std::string::size_type pos_method = url.find('?');
 	if (pos_method == std::string::npos)
 	{
-		EXLOGE("[ws] invalid url: %s\n", url.c_str());
+		EXLOGE("[url-schema] invalid url: %s\n", url.c_str());
 		return;
 	}
 
 	protocol.assign(url, 0, pos_protocol);
 	if (protocol != "teleport")
 	{
-		EXLOGE("[ws] invalid protocol: %s\n", protocol.c_str());
+		EXLOGE("[url-schema] invalid protocol: %s\n", protocol.c_str());
 		return;
 	}
 
@@ -180,14 +180,14 @@ void TsWsClient::url_scheme_handler(const std::string& url)
 		method.erase(method.length() - 1, 1);
 	if (method != "register")
 	{
-		EXLOGE("[ws] unknown method: %s\n", method.c_str());
+		EXLOGE("[url-schema] unknown method: %s\n", method.c_str());
 		return;
 	}
 
 	param.assign(url, pos_method + 7);  // ?param=
 	if (param.empty())
 	{
-		EXLOGE("[ws] invalid protocol: %s\n", protocol.c_str());
+		EXLOGE("[url-schema] invalid protocol: %s\n", protocol.c_str());
 		return;
 	}
 
@@ -199,12 +199,12 @@ void TsWsClient::url_scheme_handler(const std::string& url)
 	memset(&sztmp[0], 0, len);
 	if (-1 == ts_url_decode(param.c_str(), (int)param.length(), &sztmp[0], (int)len, 0))
 	{
-		EXLOGE("[ws] url-decode param failed: %s\n", param.c_str());
+		EXLOGE("[url-schema] url-decode param failed: %s\n", param.c_str());
 		return;
 	}
 	param = &sztmp[0];
 
-	EXLOGV("[rpc] method=%s, json_param=%s\n", method.c_str(), param.c_str());
+	EXLOGV("[url-schema] method=%s, json_param=%s\n", method.c_str(), param.c_str());
 
 	Json::CharReaderBuilder jcrb;
 	std::unique_ptr<Json::CharReader> const jreader(jcrb.newCharReader());
@@ -214,12 +214,12 @@ void TsWsClient::url_scheme_handler(const std::string& url)
 	ex_astr err;
 	if (!jreader->parse(str_json_begin, str_json_begin + param.length(), &js_root, &err))
 	{
-		EXLOGE("[ws] param not in json format: %s\n", param.c_str());
+		EXLOGE("[url-schema] param not in json format: %s\n", param.c_str());
 		return;
 	}
 	if (!js_root.isObject())
 	{
-		EXLOGE("[ws] invalid param, need json object: %s\n", param.c_str());
+		EXLOGE("[url-schema] invalid param, need json object: %s\n", param.c_str());
 		return;
 	}
 
@@ -235,7 +235,7 @@ void TsWsClient::_process_register(const std::string& param, Json::Value& js_roo
 	// check param
 	if (!js_root["ws_url"].isString() || !js_root["assist_id"].isNumeric() || !js_root["session_id"].isString())
 	{
-		EXLOGE("[ws] invalid param: %s\n", param.c_str());
+		EXLOGE("[url-schema] invalid param: %s\n", param.c_str());
 		return;
 	}
 
@@ -247,15 +247,15 @@ void TsWsClient::_process_register(const std::string& param, Json::Value& js_roo
 	protocol.assign(ws_url, 0, 3);
 	if (protocol == "ws:")
 	{
-		g_ws_client._register(ws_url, assist_id, session_id);
+		g_ws_client._register(false, ws_url, assist_id, session_id);
 	}
 	else if (protocol == "wss")
 	{
-		g_wss_client._register(ws_url, assist_id, session_id);
+		g_wss_client._register(true, ws_url, assist_id, session_id);
 	}
 	else
 	{
-		EXLOGE("[ws] invalid ws_url: %s\n", ws_url.c_str());
+		EXLOGE("[url-schema] invalid ws_url: %s\n", ws_url.c_str());
 		return;
 	}
 }
@@ -286,7 +286,7 @@ void TsWsClient::_thread_loop(void)
 	EXLOGV("[ws] main loop end.\n");
 }
 
-void TsWsClient::_register(const std::string& ws_url, uint32_t assist_id, const std::string& session_id)
+void TsWsClient::_register(bool is_ssl, const std::string& ws_url, uint32_t assist_id, const std::string& session_id)
 {
 	if (m_assist_id == 0)
 		m_assist_id = assist_id;
@@ -307,7 +307,22 @@ void TsWsClient::_register(const std::string& ws_url, uint32_t assist_id, const 
 		std::string url = ws_url;
 		url += msg;
 
-		m_nc = mg_connect_ws(&m_mg_mgr, _mg_event_handler, url.c_str(), NULL, NULL);
+		EXLOGD("mg_connect_ws: %s\n", url.c_str());
+
+		if (is_ssl)
+		{
+			struct mg_connect_opts opts;
+			memset(&opts, 0, sizeof(opts));
+			opts.ssl_ca_cert = "*";
+			opts.ssl_server_name = "*";
+			m_nc = mg_connect_ws_opt(&m_mg_mgr, _mg_event_handler, opts, url.c_str(), "wss", NULL);
+		}
+		else
+		{
+			m_nc = mg_connect_ws(&m_mg_mgr, _mg_event_handler, url.c_str(), NULL, NULL);
+		}
+
+		// m_nc = mg_connect_ws(&m_mg_mgr, _mg_event_handler, url.c_str(), NULL, NULL);
 		if (!m_nc)
 		{
 			EXLOGE("[ws] TsWsClient::init failed: %s\n", url.c_str());

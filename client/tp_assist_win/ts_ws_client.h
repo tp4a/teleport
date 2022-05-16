@@ -44,7 +44,7 @@ protected:
     // bool _on_init();
 
 private:
-    void _register(const std::string& ws_url, uint32_t assist_id, const std::string& session_id);
+    void _register(bool is_ssl, const std::string& ws_url, uint32_t assist_id, const std::string& session_id);
 
     void _on_message(const std::string& message, std::string& buf);
 
