@@ -468,20 +468,7 @@ class AppConfig(BaseAppConfig):
         if conf_data is None:
             log.w('system default config info is empty.\n')
             # return True
-        
-        # =====================================
-        # 全局设置相关
-        # =====================================
-        try:
-            _glob = json.loads(conf_data['global'])
-        except:
-            log.w('password config not set or invalid, use default.\n')
-            _glob = {}
 
-        self.sys.glob = tp_convert_to_attr_dict(_glob)
-        if not self.sys.glob.is_exists('url_proto'):
-            self.sys.glob.url_proto = False
-        
         # =====================================
         # 密码策略相关
         # =====================================

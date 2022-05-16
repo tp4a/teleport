@@ -6,17 +6,18 @@
 #include "ts_web_rpc.h"
 #include "tp_tpp_mgr.h"
 
-extern TppManager g_tpp_mgr;
-
 #include <teleport_const.h>
 #include <sstream>
 
-
-#define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
+#if 0
+#define HEXTOI(x) (isdigit(x) ? (x) - '0' : (x) - 'W')
 
 int ts_url_decode(const char* src, int src_len, char* dst, int dst_len, int is_form_url_encoded)
 {
     int i, j, a, b;
+
+    if(src_len == 0 || dst == nullptr || dst_len == 0)
+        return 0;
 
     for (i = j = 0; i < src_len && j < dst_len - 1; i++, j++)
     {
@@ -49,6 +50,7 @@ int ts_url_decode(const char* src, int src_len, char* dst, int dst_len, int is_f
 
     return i >= src_len ? j : -1;
 }
+#endif
 
 TsHttpRpc::TsHttpRpc() :
         ExThreadBase("http-rpc-thread")
@@ -160,8 +162,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection* nc, int ev, void* ev_dat
         nc->flags |= MG_F_SEND_AND_CLOSE;
     }
         break;
-    default:
-        break;
+    default:break;
     }
 }
 
@@ -194,12 +195,16 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
 
     if (need_decode)
     {
+        if (0 == json_str.length())
+            return TPE_PARAM;
+
         // 将参数进行 url-decode 解码
-        int len = json_str.length() * 2;
+        auto len = json_str.length() * 2;
+
         ex_chars sztmp;
         sztmp.resize(len);
         memset(&sztmp[0], 0, len);
-        if (-1 == ts_url_decode(json_str.c_str(), json_str.length(), &sztmp[0], len, 0))
+        if (-1 == ex_url_decode(json_str.c_str(), json_str.length(), &sztmp[0], len, 0))
             return TPE_HTTP_URL_ENCODE;
 
         json_str = &sztmp[0];
@@ -291,7 +296,7 @@ void TsHttpRpc::_process_request(const ex_astr& func_cmd, const Json::Value& jso
     {
         _rpc_func_get_config(json_param, buf);
     }
-    else if (func_cmd == "set_config")
+    else if (func_cmd == "set_runtime_config")
     {
         _rpc_func_set_config(json_param, buf);
     }

@@ -41,15 +41,20 @@ class DoDownloadAssistHandler(TPBaseHandler):
     def get(self, os_type):
         cfg = tp_cfg()
         dl_path = os.path.join(cfg.data_path, 'assist')
+        if not os.path.exists(dl_path):
+            self.show_error_page(TPE_HTTP_404_NOT_FOUND)
+            return
         files = os.listdir(dl_path)
+        files.sort(reverse=True)
         name = None
         for f in files:
             if f.startswith('teleport-assist-{}-'.format(os_type)):
                 name = f
                 break
         if not name:
-            self.set_status(404)
+            self.show_error_page(TPE_HTTP_404_NOT_FOUND)
             return
+
         filename = os.path.join(dl_path, name)
         file_size = os.path.getsize(filename)
 

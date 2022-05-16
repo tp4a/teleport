@@ -133,7 +133,7 @@ class WebApp:
 
         try:
             # 将运行时配置发送给核心服务
-            req = {'method': 'set_config', 'param': {'noop_timeout': tp_cfg().sys.session.noop_timeout}}
+            req = {'method': 'set_runtime_config', 'param': {'noop_timeout': tp_cfg().sys.session.noop_timeout}}
             req_data = json.dumps(req)
             data = urllib.parse.quote(req_data).encode('utf-8')
             req = urllib.request.Request(url=cfg.common.core_server_rpc, data=data)

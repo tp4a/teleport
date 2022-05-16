@@ -17,13 +17,9 @@
 		7A7C6C9121973C24006869D9 /* StatusIconAlt@3X.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C8F21973C24006869D9 /* StatusIconAlt@3X.png */; };
 		7A7C6C9221973C24006869D9 /* StatusIcon@3X.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C9021973C24006869D9 /* StatusIcon@3X.png */; };
 		7A7C6C9621973C69006869D9 /* tpassist.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C9521973C69006869D9 /* tpassist.png */; };
-		7A7C6C9C21974094006869D9 /* cacert.cer in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C9921974094006869D9 /* cacert.cer */; };
-		7A7C6C9D21974094006869D9 /* localhost.key in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C9A21974094006869D9 /* localhost.key */; };
-		7A7C6C9E21974094006869D9 /* localhost.pem in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C9B21974094006869D9 /* localhost.pem */; };
 		7A7C6CA02197410B006869D9 /* tp-assist.macos.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C9F2197410B006869D9 /* tp-assist.macos.json */; };
 		7A7C6CAA21977F07006869D9 /* iterm2.scpt in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6CA821977F07006869D9 /* iterm2.scpt */; };
 		7A7C6CAB21977F07006869D9 /* terminal.scpt in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6CA921977F07006869D9 /* terminal.scpt */; };
-		7AA2CD381F6A92620074C92B /* ts_http_rpc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD371F6A92620074C92B /* ts_http_rpc.cpp */; };
 		7AA2CD3B1F6A955A0074C92B /* ts_cfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD391F6A955A0074C92B /* ts_cfg.cpp */; };
 		7AA2CD441F6AB9750074C92B /* ex_ini.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD3D1F6AB9750074C92B /* ex_ini.cpp */; };
 		7AA2CD451F6AB9750074C92B /* ex_log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD3E1F6AB9750074C92B /* ex_log.cpp */; };
@@ -36,12 +32,10 @@
 		7AA2CD521F6AB9F10074C92B /* json_value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD4E1F6AB9F10074C92B /* json_value.cpp */; };
 		7AA2CD541F6AB9F10074C92B /* json_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD501F6AB9F10074C92B /* json_writer.cpp */; };
 		7AA2CD571F6ABA2E0074C92B /* mongoose.c in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD561F6ABA2E0074C92B /* mongoose.c */; };
-		7AA2CD591F6AC0DA0074C92B /* site in Resources */ = {isa = PBXBuildFile; fileRef = 7AA2CD581F6AC0DA0074C92B /* site */; };
 		7AAE4B242390EE5C007EDDE7 /* libmbedtls.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF222199E32B00BE5DBC /* libmbedtls.a */; };
 		7AAE4B252390EE7D007EDDE7 /* libmbedcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF232199E32B00BE5DBC /* libmbedcrypto.a */; };
 		7AAE4B262390EE7D007EDDE7 /* libmbedx509.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF212199E32B00BE5DBC /* libmbedx509.a */; };
 		7AF6593E27398C7400057A00 /* ts_ws_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6593C27398C7400057A00 /* ts_ws_client.cpp */; };
-		7AF659412739939E00057A00 /* ts_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6593F2739939E00057A00 /* ts_utils.cpp */; };
 		A1B7B9DD1DB53ED200809327 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A1B7B9DF1DB53ED200809327 /* Localizable.strings */; };
 		A1D700071A5DCE8D003563E4 /* AboutWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1D700061A5DCE8D003563E4 /* AboutWindowController.m */; };
 		C149EBFE15D5214600B1F558 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C149EBFD15D5214600B1F558 /* Cocoa.framework */; };
@@ -85,15 +79,10 @@
 		7A7C6C8F21973C24006869D9 /* StatusIconAlt@3X.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusIconAlt@3X.png"; sourceTree = "<group>"; };
 		7A7C6C9021973C24006869D9 /* StatusIcon@3X.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusIcon@3X.png"; sourceTree = "<group>"; };
 		7A7C6C9521973C69006869D9 /* tpassist.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tpassist.png; sourceTree = "<group>"; };
-		7A7C6C9921974094006869D9 /* cacert.cer */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cacert.cer; path = ../cfg/cacert.cer; sourceTree = SOURCE_ROOT; };
-		7A7C6C9A21974094006869D9 /* localhost.key */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = localhost.key; path = ../cfg/localhost.key; sourceTree = SOURCE_ROOT; };
-		7A7C6C9B21974094006869D9 /* localhost.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = localhost.pem; path = ../cfg/localhost.pem; sourceTree = SOURCE_ROOT; };
 		7A7C6C9F2197410B006869D9 /* tp-assist.macos.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = "tp-assist.macos.json"; path = "../cfg/tp-assist.macos.json"; sourceTree = SOURCE_ROOT; };
 		7A7C6CA12197786B006869D9 /* ts_ver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ts_ver.h; sourceTree = "<group>"; };
 		7A7C6CA821977F07006869D9 /* iterm2.scpt */ = {isa = PBXFileReference; lastKnownFileType = file; path = iterm2.scpt; sourceTree = "<group>"; };
 		7A7C6CA921977F07006869D9 /* terminal.scpt */ = {isa = PBXFileReference; lastKnownFileType = file; path = terminal.scpt; sourceTree = "<group>"; };
-		7AA2CD361F6A92380074C92B /* ts_http_rpc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 2147486000; path = ts_http_rpc.h; sourceTree = "<group>"; };
-		7AA2CD371F6A92620074C92B /* ts_http_rpc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ts_http_rpc.cpp; sourceTree = "<group>"; };
 		7AA2CD391F6A955A0074C92B /* ts_cfg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ts_cfg.cpp; sourceTree = "<group>"; };
 		7AA2CD3A1F6A955A0074C92B /* ts_cfg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ts_cfg.h; sourceTree = "<group>"; };
 		7AA2CD3D1F6AB9750074C92B /* ex_ini.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ex_ini.cpp; path = ../../../../common/libex/src/ex_ini.cpp; sourceTree = "<group>"; };
@@ -109,12 +98,9 @@
 		7AA2CD4F1F6AB9F10074C92B /* json_valueiterator.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = json_valueiterator.inl; path = ../../../../external/jsoncpp/src/lib_json/json_valueiterator.inl; sourceTree = "<group>"; };
 		7AA2CD501F6AB9F10074C92B /* json_writer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = json_writer.cpp; path = ../../../../external/jsoncpp/src/lib_json/json_writer.cpp; sourceTree = "<group>"; };
 		7AA2CD561F6ABA2E0074C92B /* mongoose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mongoose.c; path = ../../../../external/mongoose/mongoose.c; sourceTree = "<group>"; };
-		7AA2CD581F6AC0DA0074C92B /* site */ = {isa = PBXFileReference; lastKnownFileType = folder; path = site; sourceTree = "<group>"; };
 		7AAE4B232390E642007EDDE7 /* mongoose.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mongoose.h; path = ../../../../external/mongoose/mongoose.h; sourceTree = "<group>"; };
 		7AF6593C27398C7400057A00 /* ts_ws_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ts_ws_client.cpp; sourceTree = "<group>"; };
 		7AF6593D27398C7400057A00 /* ts_ws_client.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ts_ws_client.h; sourceTree = "<group>"; };
-		7AF6593F2739939E00057A00 /* ts_utils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ts_utils.cpp; sourceTree = "<group>"; };
-		7AF659402739939E00057A00 /* ts_utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ts_utils.h; sourceTree = "<group>"; };
 		7AF9BF212199E32B00BE5DBC /* libmbedx509.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmbedx509.a; path = ../../external/macos/release/lib/libmbedx509.a; sourceTree = "<group>"; };
 		7AF9BF222199E32B00BE5DBC /* libmbedtls.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmbedtls.a; path = ../../external/macos/release/lib/libmbedtls.a; sourceTree = "<group>"; };
 		7AF9BF232199E32B00BE5DBC /* libmbedcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmbedcrypto.a; path = ../../external/macos/release/lib/libmbedcrypto.a; sourceTree = "<group>"; };
@@ -175,9 +161,6 @@
 		7A45423D2196E32800FEB5B4 /* cfg */ = {
 			isa = PBXGroup;
 			children = (
-				7A7C6C9921974094006869D9 /* cacert.cer */,
-				7A7C6C9A21974094006869D9 /* localhost.key */,
-				7A7C6C9B21974094006869D9 /* localhost.pem */,
 				7A7C6C9F2197410B006869D9 /* tp-assist.macos.json */,
 			);
 			name = cfg;
@@ -246,16 +229,12 @@
 				7AA2CD3C1F6AB9560074C92B /* libex */,
 				7AA2CD391F6A955A0074C92B /* ts_cfg.cpp */,
 				7AA2CD3A1F6A955A0074C92B /* ts_cfg.h */,
-				7AA2CD371F6A92620074C92B /* ts_http_rpc.cpp */,
-				7AA2CD361F6A92380074C92B /* ts_http_rpc.h */,
 				7A27E4A71F6A8EEC004FDE5D /* ts_env.cpp */,
 				7A27E4A81F6A8EEC004FDE5D /* ts_env.h */,
 				7A27E4A61F6A899B004FDE5D /* ts_const.h */,
 				7A7C6CA12197786B006869D9 /* ts_ver.h */,
 				7AF6593C27398C7400057A00 /* ts_ws_client.cpp */,
 				7AF6593D27398C7400057A00 /* ts_ws_client.h */,
-				7AF6593F2739939E00057A00 /* ts_utils.cpp */,
-				7AF659402739939E00057A00 /* ts_utils.h */,
 			);
 			path = csrc;
 			sourceTree = "<group>";
@@ -273,7 +252,6 @@
 			isa = PBXGroup;
 			children = (
 				7A1818951F8242E900F3C882 /* apple-scripts */,
-				7AA2CD581F6AC0DA0074C92B /* site */,
 				C149EBFC15D5214600B1F558 /* Frameworks */,
 				C149EBFA15D5214600B1F558 /* Products */,
 				C149EC0315D5214600B1F558 /* src */,
@@ -369,7 +347,7 @@
 		C149EBF015D5214600B1F558 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1120;
+				LastUpgradeCheck = 1330;
 				ORGANIZATIONNAME = TP4A;
 				TargetAttributes = {
 					C149EBF815D5214600B1F558 = {
@@ -405,15 +383,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7AA2CD591F6AC0DA0074C92B /* site in Resources */,
 				A1B7B9DD1DB53ED200809327 /* Localizable.strings in Resources */,
 				C149EC0815D5214600B1F558 /* InfoPlist.strings in Resources */,
 				7A7C6CA02197410B006869D9 /* tp-assist.macos.json in Resources */,
-				7A7C6C9E21974094006869D9 /* localhost.pem in Resources */,
 				7A7C6C9621973C69006869D9 /* tpassist.png in Resources */,
-				7A7C6C9C21974094006869D9 /* cacert.cer in Resources */,
 				C149EC1415D5214600B1F558 /* MainMenu.xib in Resources */,
-				7A7C6C9D21974094006869D9 /* localhost.key in Resources */,
 				C159DC2815D5DE8000F5DE24 /* teleport.icns in Resources */,
 				7A0C94AA1F68BD2900E04C3E /* AboutWindowController.xib in Resources */,
 				0ADB3B0D178EF8DB004E9BB9 /* StatusIcon.png in Resources */,
@@ -438,10 +412,8 @@
 				7AA2CD4A1F6AB9750074C92B /* ex_winsrv.cpp in Sources */,
 				7AA2CD3B1F6A955A0074C92B /* ts_cfg.cpp in Sources */,
 				A1D700071A5DCE8D003563E4 /* AboutWindowController.m in Sources */,
-				7AF659412739939E00057A00 /* ts_utils.cpp in Sources */,
 				7AA2CD521F6AB9F10074C92B /* json_value.cpp in Sources */,
 				C149EC0A15D5214600B1F558 /* main.m in Sources */,
-				7AA2CD381F6A92620074C92B /* ts_http_rpc.cpp in Sources */,
 				7AA2CD481F6AB9750074C92B /* ex_thread.cpp in Sources */,
 				7AA2CD471F6AB9750074C92B /* ex_str.cpp in Sources */,
 				7AA2CD571F6ABA2E0074C92B /* mongoose.c in Sources */,
@@ -521,6 +493,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -578,6 +551,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;

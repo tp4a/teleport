@@ -273,18 +273,6 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 else:
                     return self.write_json(err)            
             
-            # 增加 url-protocol 的配置
-            if 'global' in args:
-                processed = True
-                _cfg = args['global']
-                _url_proto = _cfg['url_proto']
-                
-                err = system_model.save_config(self, '更新全局设置', 'global', _cfg)
-                if err == TPE_OK:
-                    tp_cfg().sys.glob.url_proto = _url_proto
-                else:
-                    return self.write_json(err)
-
             if 'password' in args:
                 processed = True
                 _cfg = args['password']

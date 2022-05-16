@@ -24,7 +24,6 @@
 #import "AboutWindowController.h"
 
 #include "AppDelegate-C-Interface.h"
-// #include "csrc/ts_http_rpc.h"
 #include "csrc/ts_ws_client.h"
 
 @implementation AppDelegate
@@ -44,14 +43,35 @@ int AppDelegate_select_app (void *_self) {
 }
 
 - (void) awakeFromNib {
-	
-	// The path for the configuration file (by default: ~/.tp_assist.ini)
-	NSString *cfgFile = [NSHomeDirectory() stringByAppendingPathComponent:@".tp-assist.json"];
+    NSFileManager *fileManager= [NSFileManager defaultManager];
+
+    // create necessary directory to store config file and log file.
+    // The path for the log file (by default: ~/tp-assist/log)
+    NSString *logPath = [NSHomeDirectory() stringByAppendingPathComponent:@"tp-assist/log"];
+    
+    NSError *error = nil;
+    if(![fileManager createDirectoryAtPath:logPath withIntermediateDirectories:YES attributes:nil error:&error]) {
+        // An error has occurred, do something to handle it
+        NSLog(@"Failed to create directory \"%@\". Error: %@", logPath, error);
+        
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.icon = [NSImage imageNamed:@"tpassist"];
+        [alert addButtonWithTitle:@"确定"];
+        [alert setMessageText:@"无法启动Teleport助手"];
+        [alert setInformativeText:@"无法创建目录 ~/tp-assist 来存储配置文件及日志文件。"];
+        [alert runModal];
+        
+        [[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
+        [NSApp terminate:NSApp];
+    }
+
+	// The path for the configuration file (by default: ~/tp-assist/tp-assist.json)
+	NSString *cfgFile = [NSHomeDirectory() stringByAppendingPathComponent:@"tp-assist/tp-assist.json"];
 
 	// if the config file does not exist, create a default one
-	if ( ![[NSFileManager defaultManager] fileExistsAtPath:cfgFile] ) {
+	if ( ![fileManager fileExistsAtPath:cfgFile] ) {
 		NSString *cfgFileInResource = [[NSBundle mainBundle] pathForResource:@"tp-assist.macos" ofType:@"json"];
-		[[NSFileManager defaultManager] copyItemAtPath:cfgFileInResource toPath:cfgFile error:nil];
+		[fileManager copyItemAtPath:cfgFileInResource toPath:cfgFile error:nil];
 	}
 	
     // Define Icons
@@ -77,8 +97,9 @@ int AppDelegate_select_app (void *_self) {
     NSString *resPath = [[NSBundle mainBundle] resourcePath];
 	std::string cpp_res_path = [resPath cStringUsingEncoding:NSUTF8StringEncoding];
 	std::string cpp_cfg_file = [cfgFile cStringUsingEncoding:NSUTF8StringEncoding];
+    std::string cpp_log_path = [logPath cStringUsingEncoding:NSUTF8StringEncoding];
 	
-    int ret = cpp_main((__bridge void*)self, bundle_path.c_str(), cpp_cfg_file.c_str(), cpp_res_path.c_str());
+    int ret = cpp_main((__bridge void*)self, bundle_path.c_str(), cpp_cfg_file.c_str(), cpp_res_path.c_str(), cpp_log_path.c_str());
 	if(ret != 0) {
         // http_rpc_stop();
         TsWsClient::stop_all_client();
@@ -88,8 +109,6 @@ int AppDelegate_select_app (void *_self) {
 			msg = @"初始化运行环境失败！";
 		else if(ret == -2)
 			msg = @"加载配置文件失败！\n\n请删除 ~/.tp-assist.json 后重试！";
-		else if(ret == -3)
-			msg = @"启动本地通讯端口失败！\n\n请检查本地50022和50023端口是否被占用！";
 		else
 			msg = @"发生未知错误！";
 		
@@ -199,11 +218,6 @@ int AppDelegate_select_app (void *_self) {
 	[[NSWorkspace sharedWorkspace] openURL:url];
 }
 
-- (IBAction)configure:(id)sender {
-	NSURL *configURL = [NSURL URLWithString:@"http://127.0.0.1:50022/config"];
-	[[NSWorkspace sharedWorkspace] openURL:configURL];
-}
-
 - (IBAction)showAbout:(id)sender {
     
     //Call the windows controller
@@ -218,7 +232,6 @@ int AppDelegate_select_app (void *_self) {
 }
 
 - (IBAction)quit:(id)sender {
-	// http_rpc_stop();
     TsWsClient::stop_all_client();
 	
 	[[NSStatusBar systemStatusBar] removeStatusItem:statusItem];

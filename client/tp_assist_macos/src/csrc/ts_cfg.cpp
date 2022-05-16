@@ -140,8 +140,8 @@ bool TsCfg::_load(const ex_astr& str_json) {
         return false;
     if(!_parse_app(m_root, "sftp", sftp))
         return false;
-//    if(!_parse_app(m_root, "telnet", telnet))
-//        return false;
+    if(!_parse_app(m_root, "telnet", telnet))
+        return false;
     if(!_parse_app(m_root, "rdp", rdp))
         return false;
 

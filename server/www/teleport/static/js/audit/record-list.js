@@ -23,7 +23,7 @@ $app.create_controls = function (cb_stack) {
     //-------------------------------
     // 资产列表表格
     //-------------------------------
-    var table_record_options = {
+    let table_record_options = {
         dom_id: 'table-record',
         data_source: {
             type: 'ajax-post'
@@ -156,9 +156,9 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
         // 绑定系统选择框事件
         cell_obj.find('[data-action]').click(function () {
 
-            var row_data = tbl.get_row(row_id);
+            let row_data = tbl.get_row(row_id);
             // console.log('---', row_data);
-            var action = $(this).attr('data-action');
+            let action = $(this).attr('data-action');
 
             if (action === 'replay') {
                 if (row_data.protocol_type === TP_PROTOCOL_TYPE_RDP) {
@@ -257,7 +257,7 @@ $app.on_table_host_render_created = function (render) {
 
     render.time_cost = function (row_id, fields) {
         if (fields.state === TP_SESS_STAT_RUNNING || fields.state === TP_SESS_STAT_STARTED) {
-            var _style = 'info';
+            let _style = 'info';
             if (fields.state === TP_SESS_STAT_RUNNING)
                 _style = 'warning';
             else if (fields.state === TP_SESS_STAT_STARTED)
@@ -289,7 +289,7 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.state = function (row_id, fields) {
-        var msg = '';
+        let msg = '';
         switch (fields.state) {
             case TP_SESS_STAT_RUNNING:
                 return '<span class="label label-warning">正在连接</span>';
@@ -345,7 +345,7 @@ $app.on_table_host_render_created = function (render) {
         if (fields.state === TP_SESS_STAT_RUNNING || fields.state === TP_SESS_STAT_STARTED)
             return '';
 
-        var ret = [];
+        let ret = [];
 
         if (fields.state >= TP_SESS_STAT_STARTED || fields.state === TP_SESS_STAT_ERR_RESET) {
             if (fields.state === TP_SESS_STAT_STARTED) {

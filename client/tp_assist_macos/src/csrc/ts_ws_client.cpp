@@ -12,7 +12,6 @@
 #include "ts_ver.h"
 #include "ts_env.h"
 #include "ts_cfg.h"
-#include "ts_utils.h"
 
 TsWsClient g_ws_client;
 TsWsClient g_wss_client;
@@ -83,7 +82,7 @@ void TsWsClient::url_scheme_handler(const std::string& url)
     ex_chars sztmp;
     sztmp.resize(len);
     memset(&sztmp[0], 0, len);
-    if (-1 == ts_url_decode(param.c_str(), (int)param.length(), &sztmp[0], (int)len, 0))
+    if (-1 == ex_url_decode(param.c_str(), (int)param.length(), &sztmp[0], (int)len, 0))
     {
         EXLOGE("[ws] url-decode param failed: %s\n", param.c_str());
         return;
@@ -374,6 +373,10 @@ void TsWsClient::_on_message(const std::string& message, std::string& buf)
     {
         _rpc_func_run_client(buf, msg_req, js_root);
     }
+    else if(msg_req.method == "replay_rdp")
+    {
+        _rpc_func_replay_rdp(buf, msg_req, js_root);
+    }
     else if(msg_req.method == "get_config")
     {
         _rpc_func_get_config(buf, msg_req, js_root);
@@ -426,6 +429,102 @@ void TsWsClient::_rpc_func_select_file(ex_astr& buf, AssistMessage& msg_req, Jso
 {
     // AppDelegate_select_app(g_app);
     _create_response(buf, msg_req, TPE_FAILED, "尚不支持在macOS平台选择应用，请手动填写应用程序路径！");
+}
+
+void TsWsClient::_rpc_func_replay_rdp(ex_astr& buf, AssistMessage& msg_req, Json::Value& js_root)
+{
+    // {
+    //     "method":"replay_rdp",
+    //     "param":{
+    //         "rid":1234,
+    //         "web":"http://127.0.0.1:7190",
+    //         "sid":"tp_1622707094_1c8e4fd4006c6ad5"
+    //     }
+    // }
+
+    if (js_root["param"].isNull() || !js_root["param"].isObject())
+    {
+        _create_response(buf, msg_req, TPE_PARAM);
+        return;
+    }
+    Json::Value& js_param = js_root["param"];
+
+    // check param
+    if (!js_param["rid"].isNumeric()
+        || !js_param["web"].isString()
+        || !js_param["sid"].isString()
+            )
+    {
+        _create_response(buf, msg_req, TPE_PARAM);
+        return;
+    }
+
+    ex_astrs s_argv;
+
+    ex_wstr w_exec_file = g_env.m_bundle_path;
+    ex_path_join(w_exec_file, false, L"tp-player.app", L"Contents", L"MacOS", L"tp-player", nullptr);
+    ex_astr exec_file;
+    ex_wstr2astr(w_exec_file, exec_file);
+    
+    s_argv.push_back(exec_file);
+
+
+    int rid = js_param["rid"].asInt();
+    ex_astr a_url_base = js_param["web"].asCString();
+    ex_astr a_sid = js_param["sid"].asCString();
+
+    char cmd_args[1024] = { 0 };
+    ex_strformat(cmd_args, 1023, "%s/%s/%d", a_url_base.c_str(), a_sid.c_str(), rid);
+    s_argv.push_back(cmd_args);
+
+    ex_wstr w_cmd_args;
+    ex_astr2wstr(cmd_args, w_cmd_args);
+    
+    char total_cmd[1024] = {0};
+    ex_strformat(total_cmd, 1023, "%s %s", exec_file.c_str(), cmd_args);
+    
+    Json::Value js_ret;
+
+    ex_astr utf8_path;
+    //ex_wstr2astr(total_cmd, utf8_path, EX_CODEPAGE_UTF8);
+    js_ret["cmdline"] = total_cmd;
+
+    // EXLOGD(utf8_path.c_str());
+
+    // for macOS, Create Process should be fork()/exec()...
+    int ret_code = TPE_OK;
+    pid_t processId;
+    if ((processId = fork()) == 0) {
+
+        int i = 0;
+        char** _argv = (char**)calloc(s_argv.size()+1, sizeof(char*));
+        if (!_argv)
+            return;
+
+        for (i = 0; i < s_argv.size(); ++i)
+        {
+            _argv[i] = ex_strdup(s_argv[i].c_str());
+        }
+        _argv[i] = NULL;
+
+        execv(exec_file.c_str(), _argv);
+
+        for(i = 0; i < s_argv.size(); ++i) {
+            if(_argv[i] != NULL) {
+                free(_argv[i]);
+            }
+        }
+        free(_argv);
+
+    } else if (processId < 0) {
+        ret_code = TPE_FAILED;
+    } else {
+        ret_code = TPE_OK;
+    }
+
+    // _create_json_ret(buf, root_ret);
+    _create_response(buf, msg_req, ret_code, "", js_ret);
+
 }
 
 void TsWsClient::_rpc_func_run_client(ex_astr& buf, AssistMessage& msg_req, Json::Value& js_root)

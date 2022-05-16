@@ -10,7 +10,7 @@ $tp.assist = {
     assist_id: 0,
     version: '',
     ver_require: '0.0.0',
-    api_url: '',
+    // api_url: '',
     teleport_ip: window.location.hostname,
     url_scheme: '',
     ws_url: '',
@@ -41,10 +41,15 @@ $assist.init = function (cb_stack) {
     $assist._make_message_box();
     $('#dialog-need-assist-a').modal();
 
+    $('#btn-assist-reload-page').click(function () {
+        window.location.reload();
+    });
+
     $assist.ws_response_callback['start_assist'] = $assist._on_ret_start_assist;
     $assist.ws_response_callback['update_assist_info'] = $assist._on_ret_update_assist_info;
     $assist.ws_response_callback['assist_disconnected'] = $assist._on_ret_assist_disconnected;
     $assist.ws_response_callback['run'] = $assist._on_ret_run;
+    $assist.ws_response_callback['replay_rdp'] = $assist._on_ret_replay_rdp;
 
     $.ajax({
         url: '/assist/get-assist-info',
@@ -233,6 +238,18 @@ $assist._on_ret_run = function (code, message, ret) {
     $tp.notify_success('已启动本地客户端进行远程连接!');
 }
 
+$assist._on_ret_replay_rdp = function (code, message, ret) {
+    console.log('_on_ret_replay_rdp(), code=', code, 'message=', message, 'ret=', ret);
+
+    if (code !== TPE_OK) {
+        console.log('show error: code=', code, ', message=', message);
+        $tp.notify_error('发生错误：' + tp_error_msg(code, message));
+        return;
+    }
+
+    $tp.notify_success('已启动本地RDP录像播放器!');
+}
+
 $assist.check_assist = function () {
     console.log('check assist...');
     if (!$assist.running) {
@@ -416,33 +433,18 @@ $assist.do_teleport = function (args, func_success, func_error) {
 };
 
 $assist.do_rdp_replay = function (rid, func_success, func_error) {
-    // rid: (int) - record-id in database.
+    let data = {
+        rid: rid,
+        web: $tp.web_server,
+        sid: Cookies.get('_sid')
+    };
 
-    // now make the args.
-    let args = {rid: rid};
-    args.web = $tp.web_server; // (string) - teleport server base address, like "http://127.0.0.1:7190", without end-slash.
-    args.sid = Cookies.get('_sid'); // (string) - current login user's session-id.
+    console.log('---replay_rdp---', data);
+    let _exec = {type: ASSIST_WS_COMMAND_TYPE_REQUEST, method: 'replay_rdp', param: data};
 
-    console.log('do-rdp-replay:', args);
-
-    let args_ = encodeURIComponent(JSON.stringify(args));
-    $.ajax({
-        type: 'GET',
-        timeout: 6000,
-        url: $assist.api_url + '/rdp_play/' + args_,
-        jsonp: 'callback',
-        dataType: 'json',
-        success: function (ret) {
-            console.log('ret', ret);
-            if (ret.code === TPE_OK) {
-                func_success();
-            } else {
-                // func_error(ret.code, '查看远程桌面操作录像失败！');
-                func_error(ret.code, ret.message);
-            }
-        },
-        error: function () {
-            func_error(TPE_NO_ASSIST, '无法连接到teleport助手，可能尚未启动！');
-        }
-    });
-};
+    if (_.isNull($assist.ws) || !$assist.running) {
+        $assist._bind_assist_and_exec(_exec);
+    } else {
+        $assist.ws.send(JSON.stringify(_exec));
+    }
+}

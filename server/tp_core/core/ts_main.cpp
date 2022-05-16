@@ -127,15 +127,14 @@ int ts_main() {
             break;
         }
 
-        auto it = secs.begin();
-        for (; it != secs.end(); ++it) {
-            if (it->first.length() > 9 && 0 == wcsncmp(it->first.c_str(), L"protocol-", 9)) {
+        for (auto & sec : secs) {
+            if (sec.first.length() > 9 && 0 == wcsncmp(sec.first.c_str(), L"protocol-", 9)) {
                 ex_wstr libname;
-                if (!it->second->GetStr(L"lib", libname))
+                if (!sec.second->GetStr(L"lib", libname))
                     continue;
 
                 bool enabled = false;
-                it->second->GetBool(L"enabled", enabled, false);
+                sec.second->GetBool(L"enabled", enabled, false);
                 if (!enabled) {
                     EXLOGW(L"[core] `%ls` not enabled.\n", libname.c_str());
                     continue;

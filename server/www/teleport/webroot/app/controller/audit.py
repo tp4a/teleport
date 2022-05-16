@@ -650,7 +650,7 @@ class DoGetRecordDataHandler(TPBaseJsonHandler):
         elif protocol_type == TP_PROTOCOL_TYPE_TELNET:
             data_list, data_size, err = record.read_telnet_record_data(record_id, offset)
         else:
-            self.write_json(TPE_NOT_EXISTS)
+            return self.write_json(TPE_NOT_EXISTS)
         self.write_json(err, data={'data_list': data_list, 'data_size': data_size})
 
 

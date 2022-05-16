@@ -1,4 +1,4 @@
-﻿#include <ex/ex_platform.h>
+#include <ex/ex_platform.h>
 #include <ex/ex_util.h>
 #include <ex/ex_str.h>
 #include <ex/ex_log.h>
@@ -520,5 +520,43 @@ int ex_ip4_name(const struct sockaddr_in *src, char *dst, size_t size)
     if (nullptr == _inet_ntop_v4((const unsigned char *) &(src->sin_addr), dst, size))
         return -1;
     return 0;
+}
+
+int ex_url_decode(const char *src, unsigned long src_len, char *dst, unsigned long dst_len, int is_form_url_encoded)
+{
+    unsigned long i = 0, j = 0;
+
+    if(src_len == 0 || dst == nullptr || dst_len == 0)
+        return -1;
+
+    for (; i < src_len && j < dst_len - 1; i++, j++)
+    {
+        if (src[i] == '%')
+        {
+            if (i < src_len - 2 && isxdigit(*(const unsigned char *)(src + i + 1)) &&
+                isxdigit(*(const unsigned char *)(src + i + 2))) {
+                auto a = tolower(*(const unsigned char *)(src + i + 1));
+                auto b = tolower(*(const unsigned char *)(src + i + 2));
+                dst[j] = (char)((HEXTOI(a) << 4) | HEXTOI(b));
+                i += 2;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+        else if (is_form_url_encoded && src[i] == '+')
+        {
+            dst[j] = ' ';
+        }
+        else
+        {
+            dst[j] = src[i];
+        }
+    }
+
+    dst[j] = '\0'; /* Null-terminate the destination */
+
+    return i >= src_len ? 0 : -1;
 }
 

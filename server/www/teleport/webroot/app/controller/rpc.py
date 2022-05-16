@@ -141,7 +141,7 @@ class RpcHandler(TPBaseJsonHandler):
         tp_cfg().update_core(ret_data)
 
         # 将运行时配置发送给核心服务
-        req = {'method': 'set_config', 'param': {'noop_timeout': tp_cfg().sys.session.noop_timeout}}
+        req = {'method': 'set_runtime_config', 'param': {'noop_timeout': tp_cfg().sys.session.noop_timeout}}
         _yr = core_service_async_post_http(req)
         code, ret_data = yield _yr
         if code != TPE_OK:

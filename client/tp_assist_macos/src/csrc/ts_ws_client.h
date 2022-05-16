@@ -56,6 +56,8 @@ private:
 
     void _rpc_func_select_file(ex_astr& buf, AssistMessage& msg_req, Json::Value& js_root);
 
+    void _rpc_func_replay_rdp(ex_astr& buf, AssistMessage& msg_req, Json::Value& js_root);
+    
     void _send_result(int err_code, Json::Value& jr_root);
 
 
