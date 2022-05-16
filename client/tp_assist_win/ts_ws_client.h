@@ -56,18 +56,13 @@ private:
 
     void _rpc_func_select_file(ex_astr& buf, AssistMessage& msg_req, Json::Value& js_root);
 
+    void _rpc_func_replay_rdp(ex_astr& buf, AssistMessage& msg_req, Json::Value& js_root);
+
     void _create_response(ex_astr& buf, const AssistMessage& msg_ret, int err_code);
 
     void _create_response(ex_astr& buf, const AssistMessage& msg_ret, int err_code, const ex_wstr& message);
 
     void _create_response(ex_astr& buf, const AssistMessage& msg_ret, int err_code, const ex_wstr& message, Json::Value& data);
-
-    //    void _rpc_func_check(const ex_astr& func_args, ex_astr& buf);
-    //    void _rpc_func_rdp_play(const ex_astr& func_args, ex_astr& buf);
-    //    void _rpc_func_file_action(const ex_astr& func_args, ex_astr& buf);
-    //    void _rpc_func_get_version(const ex_astr& func_args, ex_astr& buf);
-
-
 
     static void _mg_event_handler(struct mg_connection* nc, int ev, void* ev_data);
 

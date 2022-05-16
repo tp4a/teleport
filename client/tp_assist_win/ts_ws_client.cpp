@@ -513,6 +513,10 @@ void TsWsClient::_on_message(const std::string& message, std::string& buf)
 	{
 		_rpc_func_run_client(buf, msg_req, js_root);
 	}
+	else if (msg_req.method == "replay_rdp")
+	{
+		_rpc_func_replay_rdp(buf, msg_req, js_root);
+	}
 	else if (msg_req.method == "get_config")
 	{
 		_rpc_func_get_config(buf, msg_req, js_root);
@@ -611,6 +615,82 @@ void TsWsClient::_rpc_func_select_file(ex_astr& buf, AssistMessage& msg_req, Jso
 	Json::Value js_ret;
 	js_ret["app_type"] = js_root["param"]["app_type"];
 	js_ret["app_path"] = utf8_path;
+
+	_create_response(buf, msg_req, TPE_OK, L"", js_ret);
+}
+
+void TsWsClient::_rpc_func_replay_rdp(ex_astr& buf, AssistMessage& msg_req, Json::Value& js_root)
+{
+	// {
+	//     "method":"replay_rdp",
+	//     "param":{
+	//         "rid":1234,
+	//         "web":"http://127.0.0.1:7190",
+	//         "sid":"tp_1622707094_1c8e4fd4006c6ad5"
+	//     }
+	// }
+
+	if (js_root["param"].isNull() || !js_root["param"].isObject())
+	{
+		_create_response(buf, msg_req, TPE_PARAM);
+		return;
+	}
+	Json::Value& js_param = js_root["param"];
+
+	// check param
+	if (!js_param["rid"].isNumeric()
+		|| !js_param["web"].isString()
+		|| !js_param["sid"].isString()
+		)
+	{
+		_create_response(buf, msg_req, TPE_PARAM);
+		return;
+	}
+
+	ex_astrs s_argv;
+
+	ex_wstr w_exec_file = g_env.m_exec_path;
+	ex_path_join(w_exec_file, false, L"tp-player.exe", nullptr);
+
+	int rid = js_param["rid"].asInt();
+	ex_astr a_url_base = js_param["web"].asCString();
+	ex_astr a_sid = js_param["sid"].asCString();
+
+	char cmd_args[1024] = { 0 };
+	ex_strformat(cmd_args, 1023, "%s/%s/%d", a_url_base.c_str(), a_sid.c_str(), rid);
+
+	ex_wstr w_cmd_args;
+	ex_astr2wstr(cmd_args, w_cmd_args);
+
+	// char total_cmd[1024] = { 0 };
+	// ex_strformat(total_cmd, 1023, "%s %s", exec_file.c_str(), cmd_args);
+
+	wchar_t cmd[1024] = { 0 };
+	ex_wcsformat(cmd, 1023, L"%s %s", w_exec_file.c_str(), w_cmd_args.c_str());
+
+	ex_astr total_cmd;
+	ex_wstr2astr(cmd, total_cmd);
+
+	Json::Value js_ret;
+
+	ex_astr utf8_path;
+	//ex_wstr2astr(total_cmd, utf8_path, EX_CODEPAGE_UTF8);
+	js_ret["cmdline"] = total_cmd;
+
+	// EXLOGD(utf8_path.c_str());
+
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+
+	if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+		EXLOGE(_T("CreateProcess() failed. Error=0x%08X.\n  %s\n"), GetLastError(), cmd);
+		_create_response(buf, msg_req, TPE_START_CLIENT);
+		return;
+	}
 
 	_create_response(buf, msg_req, TPE_OK, L"", js_ret);
 }
