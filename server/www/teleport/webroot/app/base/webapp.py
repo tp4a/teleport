@@ -25,6 +25,7 @@ from app.base.stats import tp_stats
 from app.base.host_alive import tp_host_alive
 from app.base.utils import tp_generate_random
 from app.app_ver import TP_SERVER_VER
+from app.base.assist_bridge import tp_assist_bridge
 
 
 class WebApp:
@@ -213,6 +214,8 @@ class WebApp:
             tornado.ioloop.IOLoop.instance().start()
         except:
             log.e('\n')
+
+        tp_assist_bridge().finalize()
 
         if tp_cfg().common.check_host_alive:
             tp_host_alive().stop()

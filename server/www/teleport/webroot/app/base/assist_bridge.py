@@ -4,7 +4,7 @@ from typing import Optional, Dict
 import json
 import threading
 
-import app.controller.ws
+# import app.controller.ws
 from app.const import *
 from app.base.utils import tp_unique_id, tp_timestamp_sec
 from app.base.logger import *
@@ -39,8 +39,10 @@ class AssistMessage(object):
         self.method: str = method
         # 命令发送给被调用端时的时间戳，错过一定时间未完结的命令，将会被扔掉
         self.start_time: int = tp_timestamp_sec()
-        self.caller: app.controller.ws.AssistHandler = caller
-        self.callee: Optional[app.controller.ws.AssistHandler] = None
+        # self.caller: app.controller.ws.AssistHandler = caller
+        # self.callee: Optional[app.controller.ws.AssistHandler] = None
+        self.caller = caller
+        self.callee = None
 
     def send_request(self, callee, param=None):
         self.callee = callee
@@ -91,6 +93,12 @@ class TPAssistBridge(object):
 
         # 未完结的命令
         self._commands: Dict[int, AssistMessage] = dict()
+
+    def finalize(self):
+        # stop all websocket when stop web-server.
+        with self._lock:
+            for caller in self._ws_web:
+                caller.close()
 
     def get_assist_bridge(self, s_id):
         with self._lock:
@@ -182,7 +190,7 @@ class TPAssistBridge(object):
                     caller.send_response(assist_msg, TPE_OK, data=param)
 
     def on_disconnect(self, caller):
-        print('assist-ws-disconnect:', caller)
+        log.d('assist-ws-disconnect:', caller.assist_id)
         with self._lock:
             if caller.client_type == AssistInfo.WS_CLIENT_WEB:
                 if caller in self._ws_web:
@@ -241,7 +249,7 @@ class TPAssistBridge(object):
                 msg_req.caller.send_response(msg_req, msg['code'], msg['message'], msg['data'])
 
                 # remove finished message
-                log.v('remove message, cmd_id={}\n'.format(msg_req.cmd_id))
+                log.d('remove message, cmd_id={}\n'.format(msg_req.cmd_id))
                 del self._commands[msg_req.cmd_id]
 
 

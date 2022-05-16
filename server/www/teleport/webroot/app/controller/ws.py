@@ -47,12 +47,11 @@ class AssistHandler(tornado.websocket.WebSocketHandler):
 
         self.client_type: int = AssistInfo.WS_CLIENT_UNKNOWN
         self.assist_id: int = 0
+        self.close()
 
     def check_origin(self, origin):  # 针对websocket处理类重写同源检查的方法
-        # print('ws-assist origin:', origin)
         return True
 
-    # todo: send_request()/send_response()...
     def send_request(self, msg: AssistMessage, param=None):
         if param is None:
             param = {}
@@ -82,27 +81,6 @@ class AssistHandler(tornado.websocket.WebSocketHandler):
     def set_assist_id(self, assist_id: int) -> None:
         self.assist_id = assist_id
 
-    # def write_json(self, code, message='', data=None):
-    #     if not isinstance(code, int):
-    #         raise RuntimeError('`code` must be a integer.')
-    #     if not isinstance(message, str):
-    #         raise RuntimeError('`msg` must be a string.')
-    #
-    #     if data is None:
-    #         data = dict()
-    #
-    #     _ret = {
-    #         'type': AssistMessage.MESSAGE_TYPE_RESPONSE,
-    #         'command_id': 0,
-    #         'method': '',
-    #         'code': code,
-    #         'message': message,
-    #         'data': data
-    #     }
-    #     log.w('send ws message: {}\n'.format(json_encode(_ret)))
-    #     self.write_message(json_encode(_ret))
-
-    # 接受websocket连接，保存连接实例
     def open(self, message):
         log.w('message on_open: {}\n'.format(message))
         self.on_message(message)
@@ -111,7 +89,7 @@ class AssistHandler(tornado.websocket.WebSocketHandler):
         tp_assist_bridge().on_disconnect(self)
 
     def on_message(self, message):
-        log.w('raw on_message: {}\n'.format(message))
+        log.d('raw on_message: {}\n'.format(message))
         msg_req = AssistMessage(self, 'UNKNOWN')
 
         try:
@@ -152,14 +130,13 @@ class AssistHandler(tornado.websocket.WebSocketHandler):
                     return self.send_response(msg_req, TPE_PARAM)
 
             else:
-                # return self.write_json(TPE_PARAM, message='未知的操作：{}'.format(param['method']))
                 tp_assist_bridge().on_request(msg_req, param)
 
         elif msg['type'] == AssistMessage.MESSAGE_TYPE_RESPONSE:
             if 'command_id' not in msg or msg['command_id'] == 0:
                 log.e('invalid response, need `command_id`: {}\n'.format(message))
                 return
-            log.v('forward: {}\n'.format(message))
+            log.d('forward: {}\n'.format(message))
             tp_assist_bridge().forward_response(self, msg)
         else:
             log.e('unknown `type` field in message: {}\n'.format(message))
@@ -168,14 +145,11 @@ class AssistHandler(tornado.websocket.WebSocketHandler):
     def _on_web_client_connected(self, msg_req, param):
         s_id = self.get_cookie('_sid')
         if s_id is None:
-            # return self.write_json(TPE_NEED_LOGIN, '需要登录')
             return self.send_response(msg_req, TPE_NEED_LOGIN, '需要登录')
 
         k = 'user-{}'.format(s_id)
         user_info = tp_session().get(k, None)
         if user_info is None or not user_info['_is_login']:
-            # return self.write_json(TPE_NEED_LOGIN, '需要登录')
             return self.send_response(msg_req, TPE_NEED_LOGIN, '需要登录')
 
-        # print('user-info:', user_info)
         tp_assist_bridge().on_web_client_connect(msg_req, s_id, param)
