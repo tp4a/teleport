@@ -75,6 +75,8 @@ __pycache__
 /server/share/db
 /server/share/log
 /server/share/replay
+/server/share/assist/*.exe
+/server/share/assist/*.dmg
 
 
 # for generated files.
@@ -85,9 +87,11 @@ __pycache__
 # for not finished code
 /common/libex/test
 /client/tp_rdp
-/server/tp_core/protocol/rdp
 /client/tools/tprdp
 /client/build-tp-player-*
+/client/tp_assist_macos/src/tp-player.app
+/server/tp_core/protocol/rdp
+/server/hot-fix
 /server/tools/tpr2mp4
 
 # for MacOS.

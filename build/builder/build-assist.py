@@ -179,7 +179,7 @@ class BuilderMacOS(BuilderBase):
         # copy all files of tp-player.
         configuration = ctx.target_path.capitalize()
         player_path = os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path)
-        assist_path = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'build', configuration, 'TP-Assist.app')
+        assist_path = os.path.join(env.root_path, 'client', 'tp_assist_macos', 'build', configuration, 'TP-Assist.app', 'Contents', 'Resources')
         utils.copy_ex(player_path, assist_path, 'tp-player.app')
 
         json_file = os.path.join(env.root_path, 'dist', 'client', 'macos', 'dmg.json')
@@ -189,42 +189,6 @@ class BuilderMacOS(BuilderBase):
 
         utils.make_dmg(json_file, dmg_file)
         utils.ensure_file_exists(dmg_file)
-
-    @staticmethod
-    def _build_installer():
-        return
-        # tmp_path = os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist')
-        # tmp_app_path = os.path.join(tmp_path, 'apps')
-        # tmp_cfg_path = os.path.join(tmp_app_path, 'cfg')
-        #
-        # if os.path.exists(tmp_app_path):
-        #     utils.remove(tmp_app_path)
-        #
-        # utils.makedirs(tmp_app_path)
-        # utils.makedirs(tmp_cfg_path)
-        #
-        # utils.copy_file(os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_app_path, 'tp_assist.exe')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'cfg'), tmp_cfg_path, ('tp-assist.default.json', 'tp-assist.json'))
-        #
-        # utils.copy_ex(os.path.join(env.root_path, 'client', 'tp_assist_win'), tmp_app_path, 'site')
-        #
-        # utils.makedirs(os.path.join(tmp_app_path, 'tools', 'putty'))
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'putty'), os.path.join(tmp_app_path, 'tools', 'putty'), 'putty.exe')
-        #
-        # utils.makedirs(os.path.join(tmp_app_path, 'tools', 'winscp'))
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'winscp'), os.path.join(tmp_app_path, 'tools', 'winscp'), 'WinSCP.exe')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'winscp'), os.path.join(tmp_app_path, 'tools', 'winscp'), 'license.txt')
-        #
-        # utils.makedirs(os.path.join(tmp_app_path, 'tools', 'tprdp'))
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'tprdp-client.exe')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'tprdp-replay.exe')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'libeay32.dll')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'ssleay32.dll')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'msvcr120.dll')
-        #
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools'), os.path.join(tmp_app_path, 'tools'), 'securecrt-telnet.vbs')
-        #
-        # utils.nsis_build(os.path.join(env.root_path, 'dist', 'client', 'windows', 'assist', 'installer.nsi'))
 
 
 class BuilderLinux(BuilderBase):

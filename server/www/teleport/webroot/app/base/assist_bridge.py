@@ -190,7 +190,7 @@ class TPAssistBridge(object):
                     caller.send_response(assist_msg, TPE_OK, data=param)
 
     def on_disconnect(self, caller):
-        log.d('assist-ws-disconnect:', caller.assist_id)
+        log.d('assist-ws {} disconnected\n'.format(caller.assist_id))
         with self._lock:
             if caller.client_type == AssistInfo.WS_CLIENT_WEB:
                 if caller in self._ws_web:
@@ -198,7 +198,7 @@ class TPAssistBridge(object):
                     return
             elif caller.client_type == AssistInfo.WS_CLIENT_ASSIST:
                 if caller not in self._ws_assist:
-                    log.e('assist-ws disconnected, but not in charge.\n')
+                    log.e('assist-ws {} disconnected, but not in charge.\n'.format(caller.assist_id))
                     return
                 assist_id = self._ws_assist[caller]
                 del self._ws_assist[caller]

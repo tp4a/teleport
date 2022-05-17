@@ -10,9 +10,9 @@ Minor: 次版本号。如果两个程序集的名称和主版本号相同，而�
 Revision: 修订号。主版本号和次版本号都相同但修订号不同的程序集应是完全可互换的。
           这适用于修复以前发布的程序集中的错误或安全漏洞。
 
-TP_SERVER 3.6.0           # 整个服务端打包的版本
-TP_TPCORE 3.6.0           # 核心服务 tp_core 的版本
+TP_SERVER 3.6.1           # 整个服务端打包的版本
+TP_TPCORE 3.6.1           # 核心服务 tp_core 的版本
 TP_TPWEB 3.1.0            # web服务 tp_web 的版本（一般除非升级Python，否则不会变化）
-TP_ASSIST 3.6.0           # 助手版本
-TP_ASSIST_REQUIRE 3.6.0   # 适配的助手最低版本
-TP_STATE a1               # 版本状态，可以是 beta1，rc2 等，用于打包文件名及部分界面。如果是 release 则界面上不显示。
+TP_ASSIST 3.6.1           # 助手版本
+TP_ASSIST_REQUIRE 3.6.1   # 适配的助手最低版本
+TP_STATE a2               # 版本状态，可以是 beta1，rc2 等，用于打包文件名及部分界面。如果是 release 则界面上不显示。

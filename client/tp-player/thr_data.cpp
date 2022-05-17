@@ -71,17 +71,21 @@ static QImage* _rdpimg2QImage(int w, int h, int bitsPerPixel, bool isCompressed,
     }
 }
 
-static QImage* _raw2QImage(int w, int h, const uint8_t* dat, uint32_t len) {
-    QImage* out;
-
+static QImage* _raw2QImage(int w, int h, const uint8_t* dat, uint32_t /*len*/) {
     // TODO: 这里需要进一步优化，直接操作QImage的buffer。
-    out = new QImage(w, h, QImage::Format_RGB16);
+
+    uint16_t a = 0;
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+
+    QImage* out = new QImage(w, h, QImage::Format_RGB16);
     for(int y = 0; y < h; y++) {
         for(int x = 0; x < w; x++) {
-            uint16 a = ((uint16*)dat)[y * w + x];
-            uint8 r = ((a & 0xf800) >> 11) * 255 / 31;
-            uint8 g = ((a & 0x07e0) >> 5) * 255 / 63;
-            uint8 b = (a & 0x001f) * 255 / 31;
+            a = ((uint16_t*)dat)[y * w + x];
+            r = ((a & 0xf800) >> 11) * 255 / 31;
+            g = ((a & 0x07e0) >> 5) * 255 / 63;
+            b = (a & 0x001f) * 255 / 31;
             out->setPixelColor(x, y, QColor(r,g,b));
         }
     }
@@ -375,7 +379,7 @@ void ThrData::_run() {
 
             // 拖动滚动条后，需要显示一次关键帧数据，然后跳过后续关键帧。
             if(pkg.type == TS_RECORD_TYPE_RDP_KEYFRAME) {
-                qDebug("----key frame: %ld, processed=%" PRId64 ", pkg.size=%d", pkg.time_ms, file_processed, pkg.size);
+                qDebug("----key frame: %u, processed=%" PRId64 ", pkg.size=%d", pkg.time_ms, file_processed, pkg.size);
                 if(m_need_show_kf) {
                     m_need_show_kf = false;
                     qDebug("++ show keyframe.");
@@ -511,7 +515,7 @@ UpdateData* ThrData::_parse(const TS_RECORD_PKG& pkg, const QByteArray& data) {
     }
     else if(pkg.type == TS_RECORD_TYPE_RDP_KEYFRAME) {
         UpdateData* ud = new UpdateData(TYPE_IMAGE, pkg.time_ms);
-        const TS_RECORD_RDP_KEYFRAME_INFO* info = reinterpret_cast<const TS_RECORD_RDP_KEYFRAME_INFO*>(data.data());
+        // const TS_RECORD_RDP_KEYFRAME_INFO* info = reinterpret_cast<const TS_RECORD_RDP_KEYFRAME_INFO*>(data.data());
         const uint8_t* data_buf = reinterpret_cast<const uint8_t*>(data.data() + sizeof(TS_RECORD_RDP_KEYFRAME_INFO));
         uint32_t data_len = data.size() - sizeof(TS_RECORD_RDP_KEYFRAME_INFO);
 
@@ -558,7 +562,7 @@ UpdateData* ThrData::_parse(const TS_RECORD_PKG& pkg, const QByteArray& data) {
 
 
 void ThrData::restart(uint32_t start_ms) {
-    qDebug("restart at %ld ms", start_ms);
+    qDebug("restart at %u ms", start_ms);
     // 让处理线程处理完当前循环，然后等待
     m_need_restart = true;
 
@@ -590,7 +594,7 @@ void ThrData::restart(uint32_t start_ms) {
         if(i > 0)
             i--;
 
-        qDebug("restart acturelly at %ld ms, kf: %d", m_kf[i].time_ms, i);
+        qDebug("restart acturelly at %u ms, kf: %ld", m_kf[i].time_ms, i);
 
         // 指定要播放的数据的开始位置
         m_offset = m_kf[i].offset;

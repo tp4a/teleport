@@ -465,7 +465,7 @@ void TsWsClient::_rpc_func_replay_rdp(ex_astr& buf, AssistMessage& msg_req, Json
     ex_astrs s_argv;
 
     ex_wstr w_exec_file = g_env.m_bundle_path;
-    ex_path_join(w_exec_file, false, L"tp-player.app", L"Contents", L"MacOS", L"tp-player", nullptr);
+    ex_path_join(w_exec_file, false, L"Contents", L"Resources", L"tp-player.app", L"Contents", L"MacOS", L"tp-player", nullptr);
     ex_astr exec_file;
     ex_wstr2astr(w_exec_file, exec_file);
     

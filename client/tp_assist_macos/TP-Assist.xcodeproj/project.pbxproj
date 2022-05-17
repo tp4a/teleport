@@ -13,6 +13,7 @@
 		7A18188F1F7D5D7F00F3C882 /* AppDelegate-C-Interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A18188E1F7D5D7F00F3C882 /* AppDelegate-C-Interface.cpp */; };
 		7A1F87B1215D5A1600B69F88 /* StatusIconAlt@2X.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1F87AF215D5A1600B69F88 /* StatusIconAlt@2X.png */; };
 		7A1F87B2215D5A1600B69F88 /* StatusIcon@2X.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1F87B0215D5A1600B69F88 /* StatusIcon@2X.png */; };
+		7A2034FB2833F355009E1491 /* tp-player.app in Resources */ = {isa = PBXBuildFile; fileRef = 7A2034FA2833F355009E1491 /* tp-player.app */; };
 		7A27E4A91F6A8EEC004FDE5D /* ts_env.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A27E4A71F6A8EEC004FDE5D /* ts_env.cpp */; };
 		7A7C6C9121973C24006869D9 /* StatusIconAlt@3X.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C8F21973C24006869D9 /* StatusIconAlt@3X.png */; };
 		7A7C6C9221973C24006869D9 /* StatusIcon@3X.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C9021973C24006869D9 /* StatusIcon@3X.png */; };
@@ -72,6 +73,7 @@
 		7A1F87AA215D574500B69F88 /* version.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = version.h; path = ../../../../external/jsoncpp/include/json/version.h; sourceTree = "<group>"; };
 		7A1F87AF215D5A1600B69F88 /* StatusIconAlt@2X.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusIconAlt@2X.png"; sourceTree = "<group>"; };
 		7A1F87B0215D5A1600B69F88 /* StatusIcon@2X.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusIcon@2X.png"; sourceTree = "<group>"; };
+		7A2034FA2833F355009E1491 /* tp-player.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; path = "tp-player.app"; sourceTree = "<group>"; };
 		7A27E4A61F6A899B004FDE5D /* ts_const.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ts_const.h; sourceTree = "<group>"; };
 		7A27E4A71F6A8EEC004FDE5D /* ts_env.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ts_env.cpp; sourceTree = "<group>"; };
 		7A27E4A81F6A8EEC004FDE5D /* ts_env.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ts_env.h; sourceTree = "<group>"; };
@@ -312,6 +314,7 @@
 		C149EC0415D5214600B1F558 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				7A2034FA2833F355009E1491 /* tp-player.app */,
 				C159DC2715D5DE7F00F5DE24 /* teleport.icns */,
 				C149EC0515D5214600B1F558 /* TP-Assist-Info.plist */,
 				C149EC0615D5214600B1F558 /* InfoPlist.strings */,
@@ -393,6 +396,7 @@
 				0ADB3B0D178EF8DB004E9BB9 /* StatusIcon.png in Resources */,
 				7A1F87B2215D5A1600B69F88 /* StatusIcon@2X.png in Resources */,
 				7A7C6C9221973C24006869D9 /* StatusIcon@3X.png in Resources */,
+				7A2034FB2833F355009E1491 /* tp-player.app in Resources */,
 				0ADB3B0C178EF8DB004E9BB9 /* StatusIconAlt.png in Resources */,
 				7A1F87B1215D5A1600B69F88 /* StatusIconAlt@2X.png in Resources */,
 				7A7C6C9121973C24006869D9 /* StatusIconAlt@3X.png in Resources */,
@@ -586,7 +590,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3.6.0;
+				CURRENT_PROJECT_VERSION = 3.6.1;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/TP-Assist-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -604,7 +608,7 @@
 				INFOPLIST_FILE = "src/TP-Assist-Info.plist";
 				LIBRARY_SEARCH_PATHS = ../../external/macos/release/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.0;
+				MARKETING_VERSION = 3.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "teleport.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VALID_ARCHS = x86_64;
@@ -617,7 +621,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3.6.0;
+				CURRENT_PROJECT_VERSION = 3.6.1;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/TP-Assist-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -634,7 +638,7 @@
 				INFOPLIST_FILE = "src/TP-Assist-Info.plist";
 				LIBRARY_SEARCH_PATHS = ../../external/macos/release/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.0;
+				MARKETING_VERSION = 3.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "teleport.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VALID_ARCHS = x86_64;
