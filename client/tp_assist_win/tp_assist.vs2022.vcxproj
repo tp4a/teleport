@@ -78,7 +78,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;MG_ENABLE_SSL;NDEBUG;_WINDOWS;_WINSOCK_DEPRECATED_NO_WARNINGS;MG_ENABLE_THREADS;MG_DISABLE_HTTP_DIGEST_AUTH;MG_DISABLE_MQTT;MG_DISABLE_SSI;MG_DISABLE_FILESYSTEM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WINSOCK_DEPRECATED_NO_WARNINGS;MG_ENABLE_SSL;MG_ENABLE_THREADS;MG_DISABLE_HTTP_DIGEST_AUTH;MG_DISABLE_MQTT;MG_DISABLE_SSI;MG_DISABLE_FILESYSTEM;MG_ENABLE_SYNC_RESOLVER;MG_ENABLE_GETADDRINFO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\common\teleport;..\..\common\libex\include;..\..\external\jsoncpp\include;..\..\external\openssl\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

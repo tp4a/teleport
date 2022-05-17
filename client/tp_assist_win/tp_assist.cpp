@@ -75,7 +75,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 #ifdef EX_DEBUG
 	EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
 #else
-	EXLOG_LEVEL(EX_LOG_LEVEL_INFO);
+	EXLOG_LEVEL(EX_LOG_LEVEL_VERBOSE);
 #endif
 
 	EXLOG_FILE(L"tp_assist.log", g_env.m_log_path.c_str(), EX_LOG_FILE_MAX_SIZE, EX_LOG_FILE_MAX_COUNT);
@@ -250,7 +250,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		break;
 	case WM_COMMAND:
 		if (IDM_MAIN == LOWORD(wParam)) {
-			CreateDialog(g_hInstance, MAKEINTRESOURCE(IDD_DLG_MAIN), hWnd, eomDlgMainProc);
+			CreateDialog(g_hInstance, MAKEINTRESOURCE(IDD_DLG_MAIN), hWnd, tpDlgMainProc);
 			ShowWindow(g_hDlgMain, SW_HIDE);
 		}
 		break;

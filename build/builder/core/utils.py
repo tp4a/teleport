@@ -322,7 +322,7 @@ def qt_build(prj_path, prj_name, bit_path, target_path):
         tmp_path = os.path.join(env.root_path, 'out', '_tmp_', prj_name, bit_path)
         makedirs(tmp_path)
         # C:\Windows\System32\cmd.exe /A /Q /K C:\Qt\Qt5.12.0\5.12.0\msvc2017\bin\qtenv2.bat
-        cmd = 'C:\\Windows\\System32\\cmd.exe /A /Q /C ""{}\\qt-helper.bat" "{}\\bin\\qtenv2.bat" "{}VC\\Auxiliary\\Build\\vcvarsall.bat" {} "{}" "{}" {}"'.format(env.build_path, env.qt, env.visual_studio_path, bit_path, tmp_path, prj_path, target_path)
+        cmd = 'C:\\Windows\\System32\\cmd.exe /A /Q /C ""{}\\qt-helper.bat" "{}\\bin\\qtenv2.bat" "{}\\VC\\Auxiliary\\Build\\vcvarsall.bat" {} "{}" "{}" {}"'.format(env.build_path, env.qt, env.visual_studio_path, bit_path, tmp_path, prj_path, target_path)
         ret, _ = sys_exec(cmd)
         if ret != 0:
             raise RuntimeError('build Qt project `{}` failed.'.format(prj_name))

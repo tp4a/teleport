@@ -1,5 +1,5 @@
-#ifndef __EOMASSIST_DLG_MAIN_H__
-#define __EOMASSIST_DLG_MAIN_H__
+#ifndef __TP_ASSIST_DLG_MAIN_H__
+#define __TP_ASSIST_DLG_MAIN_H__
 
 #include <windows.h>
 
@@ -7,6 +7,6 @@
 #define WMU_DLG_MAIN_EXIT		(WM_USER + 2)
 
 extern HWND g_hDlgMain;
-INT_PTR CALLBACK eomDlgMainProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK tpDlgMainProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-#endif // __EOMASSIST_DLG_MAIN_H__
+#endif // __TP_ASSIST_DLG_MAIN_H__

@@ -129,12 +129,18 @@ class Env(object):
             #     if warn_miss_tool:
             #         cc.w(' - can not locate Visual Studio installation, so I can build nothing.')
 
-            if 'msbuild' in _tmp:
-                self.msbuild = _tmp['msbuild']
+            if 'vs_path' in _tmp:
+                self.visual_studio_path = _tmp['vs_path']
 
-            if self.msbuild is None or not os.path.exists(self.msbuild):
+                self.msbuild = os.path.join(self.visual_studio_path, 'MSBuild', 'Current', 'Bin', 'MSBuild.exe')
+                if not os.path.exists(self.msbuild):
+                    self.msbuild = None
+                    if warn_miss_tool:
+                        cc.w(' - can not locate `MSBuild`, so I can build nothing.')
+            else:
+                self.visual_studio_path = None
                 if warn_miss_tool:
-                    cc.w(' - can not locate `MSBuild`, so I can build nothing.')
+                    cc.w(' - can not locate Visual Studio installation, so I can build nothing.')
 
             if 'nsis' in _tmp:
                 self.nsis = _tmp['nsis']

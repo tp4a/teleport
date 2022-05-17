@@ -15,9 +15,9 @@
         "cmake": "/opt/cmake/bin/cmake"
     },
     "#.toolchain.example.windows": {
-        "qt_path": "C:\\Qt\\Qt5.15.2\\5.15.2\\msvc2017",
+        "qt_path": "C:\\Qt\\5.15.2\\msvc2019",
         "cmake": "C:\\Program Files(x86)\\CMake\\bin\\cmake.exe",
-        "msbuild": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+        "vs_path": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community",
         "wget": "",
         "7z": "",
 	"nsis": ""

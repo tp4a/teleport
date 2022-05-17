@@ -33,7 +33,7 @@ static BOOL onInitDialog(HWND hwndDlg);
 
 static wchar_t g_wsz_url[1024] = {0};
 
-INT_PTR CALLBACK eomDlgMainProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK tpDlgMainProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	if (0 != message && g_dwTaskbarRecreateMessage == message)
 	{

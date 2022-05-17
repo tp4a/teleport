@@ -32,7 +32,7 @@ class BuilderWin(BuilderBase):
 
     def build_assist(self):
         cc.i('build tp_assist...')
-        sln_file = os.path.join(env.root_path, 'client', 'tp_assist_win', 'tp_assist.vs2017.sln')
+        sln_file = os.path.join(env.root_path, 'client', 'tp_assist_win', 'tp_assist.vs2022.sln')
         out_file = os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path, 'tp_assist.exe')
         if os.path.exists(out_file):
             utils.remove(out_file)
@@ -85,16 +85,8 @@ class BuilderWin(BuilderBase):
         utils.makedirs(tmp_cfg_path)
 
         utils.copy_file(os.path.join(env.root_path, 'out', 'client', ctx.bits_path, ctx.target_path), tmp_app_path, 'tp_assist.exe')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'runtime'), tmp_app_path, 'msvcp140.dll')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'tp_assist_win', 'runtime'), tmp_app_path, 'vcruntime140.dll')
 
         utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, ('tp-assist.windows.json', 'tp-assist.json'))
-        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, 'cacert.cer')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, 'localhost.key')
-        utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, 'localhost.pem')
-
-        # assist configuration web page
-        utils.copy_ex(os.path.join(env.root_path, 'client', 'tp_assist_win'), tmp_app_path, 'site')
 
         utils.makedirs(os.path.join(tmp_app_path, 'tools', 'putty'))
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'putty'), os.path.join(tmp_app_path, 'tools', 'putty'), 'putty.exe')
@@ -104,11 +96,6 @@ class BuilderWin(BuilderBase):
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'winscp'), os.path.join(tmp_app_path, 'tools', 'winscp'), 'license.txt')
 
         utils.makedirs(os.path.join(tmp_app_path, 'tools', 'tprdp'))
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'tprdp-client.exe')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'tprdp-replay.exe')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'libeay32.dll')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'ssleay32.dll')
-        # utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'msvcr120.dll')
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'tprdp'), os.path.join(tmp_app_path, 'tools', 'tprdp'), 'wfreerdp.exe')
 
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools'), os.path.join(tmp_app_path, 'tools'), 'securecrt-telnet.vbs')
@@ -137,11 +124,11 @@ class BuilderWin(BuilderBase):
         utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-string-l1-1-0.dll')
         utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-time-l1-1-0.dll')
         utils.copy_file(qt_redist_path, tmp_app_path, 'api-ms-win-crt-utility-l1-1-0.dll')
-
         utils.copy_file(qt_redist_path, tmp_app_path, 'Qt5Core.dll')
         utils.copy_file(qt_redist_path, tmp_app_path, 'Qt5Gui.dll')
         utils.copy_file(qt_redist_path, tmp_app_path, 'Qt5Network.dll')
         utils.copy_file(qt_redist_path, tmp_app_path, 'Qt5Widgets.dll')
+        utils.copy_file(qt_redist_path, tmp_app_path, 'msvcp140_1.dll')
         utils.copy_ex(os.path.join(qt_redist_path, 'platforms'), os.path.join(tmp_app_path, 'platforms'))
         utils.copy_ex(os.path.join(qt_redist_path, 'styles'), os.path.join(tmp_app_path, 'styles'))
         utils.copy_ex(os.path.join(qt_redist_path, 'translations'), os.path.join(tmp_app_path, 'translations'))
