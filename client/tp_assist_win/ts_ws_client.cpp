@@ -100,7 +100,6 @@ password 51:b:%s\n\
 //#endif
 
 TsWsClient g_ws_client;
-TsWsClient g_wss_client;
 
 void* g_app = NULL;
 
@@ -137,7 +136,6 @@ void TsWsClient::init_app(void* app)
 void TsWsClient::stop_all_client()
 {
 	g_ws_client.stop();
-	g_wss_client.stop();
 }
 
 // ============================================================================
@@ -174,15 +172,14 @@ void TsWsClient::url_scheme_handler(const std::string& url)
 		return;
 	}
 
-	// now we support 'register' method only.
 	method.assign(url, pos_protocol + 3, pos_method - pos_protocol - 3);
-	if (method[method.length() - 1] == '/')
-		method.erase(method.length() - 1, 1);
-	if (method != "register")
+	if (method.empty())
 	{
-		EXLOGE("[url-schema] unknown method: %s\n", method.c_str());
+		EXLOGE("[ws] no method, what should I do now?\n");
 		return;
 	}
+	if (method[method.length() - 1] == '/')
+		method.erase(method.length() - 1, 1);
 
 	param.assign(url, pos_method + 7);  // ?param=
 	if (param.empty())
@@ -223,8 +220,23 @@ void TsWsClient::url_scheme_handler(const std::string& url)
 		return;
 	}
 
-	// now we support 'register' method only.
-	_process_register(param, js_root);
+	if (method == "register")
+	{
+		_process_register(param, js_root);
+	}
+	else if (method == "run")
+	{
+		_process_run(param, js_root);
+	}
+	else if (method == "replay_rdp")
+	{
+		_process_replay_rdp(param, js_root);
+	}
+	else
+	{
+		EXLOGE("[ws] unknown method: %s\n", method.c_str());
+		return;
+	}
 }
 
 // static
@@ -244,20 +256,46 @@ void TsWsClient::_process_register(const std::string& param, Json::Value& js_roo
 	std::string session_id = js_root["session_id"].asCString();
 
 	std::string protocol;
-	protocol.assign(ws_url, 0, 3);
-	if (protocol == "ws:")
+	protocol.assign(ws_url, 0, 5);
+	if (protocol == "ws://")
 	{
 		g_ws_client._register(false, ws_url, assist_id, session_id);
 	}
-	else if (protocol == "wss")
+	else if (protocol == "wss:/")
 	{
-		g_wss_client._register(true, ws_url, assist_id, session_id);
+		g_ws_client._register(true, ws_url, assist_id, session_id);
 	}
 	else
 	{
 		EXLOGE("[url-schema] invalid ws_url: %s\n", ws_url.c_str());
 		return;
 	}
+}
+
+void TsWsClient::_process_run(const std::string& param, Json::Value& js_root)
+{
+	// wrapper for _rpc_func_run_client().
+
+	Json::Value js_param;
+	js_param["method"] = "run";
+	js_param["param"] = js_root;
+
+	AssistMessage msg_req;
+	std::string buf;
+	_rpc_func_run_client(buf, msg_req, js_param);
+}
+
+void TsWsClient::_process_replay_rdp(const std::string& param, Json::Value& js_root)
+{
+	// wrapper for _rpc_func_replay_rdp().
+
+	Json::Value js_param;
+	js_param["method"] = "replay_rdp";
+	js_param["param"] = js_root;
+
+	AssistMessage msg_req;
+	std::string buf;
+	_rpc_func_replay_rdp(buf, msg_req, js_param);
 }
 
 

@@ -243,7 +243,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
 		if (!g_url_protocol.empty())
 		{
-			TsWsClient::url_scheme_handler(g_url_protocol);
+			g_ws_client.url_scheme_handler(g_url_protocol);
 		}
 
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -255,7 +255,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		}
 		break;
 	case WM_DESTROY:
-		TsWsClient::stop_all_client();
+		g_ws_client.stop_all_client();
 		SendMessage(g_hDlgMain, WMU_DLG_MAIN_EXIT, NULL, NULL);
 		PostQuitMessage(0);
 		break;
@@ -264,7 +264,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		COPYDATASTRUCT* data = (COPYDATASTRUCT*)lParam;
 		ex_astr url_protocol((char*)data->lpData);
 		// MessageBoxA(hWnd, url_protocol.c_str(), "url-protocol", MB_OK);
-		TsWsClient::url_scheme_handler(url_protocol);
+		g_ws_client.url_scheme_handler(url_protocol);
 		break;
 	}
 	default:

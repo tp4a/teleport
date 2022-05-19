@@ -33,10 +33,10 @@ public:
 
     ~TsWsClient();
 
-    static void init_app(void* app);
-    static void stop_all_client();
+    void init_app(void* app);
+    void stop_all_client();
 
-    static void url_scheme_handler(const std::string& url);
+    void url_scheme_handler(const std::string& url);
 
 protected:
     void _thread_loop(void);
@@ -66,12 +66,17 @@ private:
 
     static void _mg_event_handler(struct mg_connection* nc, int ev, void* ev_data);
 
-    static void _process_register(const std::string& param, Json::Value& js_root);
+    void _process_register(const std::string& param, Json::Value& js_root);
+    void _process_run(const std::string& param, Json::Value& js_root);
+    void _process_replay_rdp(const std::string& param, Json::Value& js_root);
 
 private:
     struct mg_mgr m_mg_mgr;
     struct mg_connection* m_nc;
     uint32_t m_assist_id;
 };
+
+extern TsWsClient g_ws_client;
+
 
 #endif // __TS_WS_CLIENT_H__
