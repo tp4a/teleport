@@ -18,9 +18,4 @@ int AppDelegate_select_app (void *_self);
 // for cpp global object initialize.
 int cpp_main(void* _self, const char* bundle_path, const char* cfg_file, const char* res_path, const char* log_path);
 
-//unsigned long long cpp_getpid();
-
-void url_scheme_handler(const std::string& url);
-
-
 #endif /* wrap_c_objc_h */

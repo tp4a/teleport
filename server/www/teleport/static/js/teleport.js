@@ -64,7 +64,7 @@ let $tp = {
         options: {}
         , on_init: function (cb_stack) {
             cb_stack.exec();
-        }   // should be overwrite.
+        }   // should be overwritten.
     }
 
     , assist_checked: null

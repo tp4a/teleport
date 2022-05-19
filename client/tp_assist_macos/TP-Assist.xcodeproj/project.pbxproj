@@ -13,7 +13,6 @@
 		7A18188F1F7D5D7F00F3C882 /* AppDelegate-C-Interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A18188E1F7D5D7F00F3C882 /* AppDelegate-C-Interface.cpp */; };
 		7A1F87B1215D5A1600B69F88 /* StatusIconAlt@2X.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1F87AF215D5A1600B69F88 /* StatusIconAlt@2X.png */; };
 		7A1F87B2215D5A1600B69F88 /* StatusIcon@2X.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A1F87B0215D5A1600B69F88 /* StatusIcon@2X.png */; };
-		7A2034FB2833F355009E1491 /* tp-player.app in Resources */ = {isa = PBXBuildFile; fileRef = 7A2034FA2833F355009E1491 /* tp-player.app */; };
 		7A27E4A91F6A8EEC004FDE5D /* ts_env.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A27E4A71F6A8EEC004FDE5D /* ts_env.cpp */; };
 		7A7C6C9121973C24006869D9 /* StatusIconAlt@3X.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C8F21973C24006869D9 /* StatusIconAlt@3X.png */; };
 		7A7C6C9221973C24006869D9 /* StatusIcon@3X.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C9021973C24006869D9 /* StatusIcon@3X.png */; };
@@ -36,6 +35,7 @@
 		7AAE4B242390EE5C007EDDE7 /* libmbedtls.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF222199E32B00BE5DBC /* libmbedtls.a */; };
 		7AAE4B252390EE7D007EDDE7 /* libmbedcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF232199E32B00BE5DBC /* libmbedcrypto.a */; };
 		7AAE4B262390EE7D007EDDE7 /* libmbedx509.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF212199E32B00BE5DBC /* libmbedx509.a */; };
+		7AC630342835EB9A0080333D /* tp-player.app in Resources */ = {isa = PBXBuildFile; fileRef = 7AC630332835EB9A0080333D /* tp-player.app */; };
 		7AF6593E27398C7400057A00 /* ts_ws_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6593C27398C7400057A00 /* ts_ws_client.cpp */; };
 		A1B7B9DD1DB53ED200809327 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A1B7B9DF1DB53ED200809327 /* Localizable.strings */; };
 		A1D700071A5DCE8D003563E4 /* AboutWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1D700061A5DCE8D003563E4 /* AboutWindowController.m */; };
@@ -73,7 +73,6 @@
 		7A1F87AA215D574500B69F88 /* version.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = version.h; path = ../../../../external/jsoncpp/include/json/version.h; sourceTree = "<group>"; };
 		7A1F87AF215D5A1600B69F88 /* StatusIconAlt@2X.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusIconAlt@2X.png"; sourceTree = "<group>"; };
 		7A1F87B0215D5A1600B69F88 /* StatusIcon@2X.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusIcon@2X.png"; sourceTree = "<group>"; };
-		7A2034FA2833F355009E1491 /* tp-player.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; path = "tp-player.app"; sourceTree = "<group>"; };
 		7A27E4A61F6A899B004FDE5D /* ts_const.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ts_const.h; sourceTree = "<group>"; };
 		7A27E4A71F6A8EEC004FDE5D /* ts_env.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ts_env.cpp; sourceTree = "<group>"; };
 		7A27E4A81F6A8EEC004FDE5D /* ts_env.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ts_env.h; sourceTree = "<group>"; };
@@ -101,6 +100,7 @@
 		7AA2CD501F6AB9F10074C92B /* json_writer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = json_writer.cpp; path = ../../../../external/jsoncpp/src/lib_json/json_writer.cpp; sourceTree = "<group>"; };
 		7AA2CD561F6ABA2E0074C92B /* mongoose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mongoose.c; path = ../../../../external/mongoose/mongoose.c; sourceTree = "<group>"; };
 		7AAE4B232390E642007EDDE7 /* mongoose.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mongoose.h; path = ../../../../external/mongoose/mongoose.h; sourceTree = "<group>"; };
+		7AC630332835EB9A0080333D /* tp-player.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "tp-player.app"; path = "../../../out/client/x64/release/tp-player.app"; sourceTree = "<group>"; };
 		7AF6593C27398C7400057A00 /* ts_ws_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ts_ws_client.cpp; sourceTree = "<group>"; };
 		7AF6593D27398C7400057A00 /* ts_ws_client.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ts_ws_client.h; sourceTree = "<group>"; };
 		7AF9BF212199E32B00BE5DBC /* libmbedx509.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmbedx509.a; path = ../../external/macos/release/lib/libmbedx509.a; sourceTree = "<group>"; };
@@ -314,7 +314,7 @@
 		C149EC0415D5214600B1F558 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				7A2034FA2833F355009E1491 /* tp-player.app */,
+				7AC630332835EB9A0080333D /* tp-player.app */,
 				C159DC2715D5DE7F00F5DE24 /* teleport.icns */,
 				C149EC0515D5214600B1F558 /* TP-Assist-Info.plist */,
 				C149EC0615D5214600B1F558 /* InfoPlist.strings */,
@@ -396,7 +396,7 @@
 				0ADB3B0D178EF8DB004E9BB9 /* StatusIcon.png in Resources */,
 				7A1F87B2215D5A1600B69F88 /* StatusIcon@2X.png in Resources */,
 				7A7C6C9221973C24006869D9 /* StatusIcon@3X.png in Resources */,
-				7A2034FB2833F355009E1491 /* tp-player.app in Resources */,
+				7AC630342835EB9A0080333D /* tp-player.app in Resources */,
 				0ADB3B0C178EF8DB004E9BB9 /* StatusIconAlt.png in Resources */,
 				7A1F87B1215D5A1600B69F88 /* StatusIconAlt@2X.png in Resources */,
 				7A7C6C9121973C24006869D9 /* StatusIconAlt@3X.png in Resources */,

@@ -54,12 +54,14 @@ int AppDelegate_select_app (void *_self) {
         // An error has occurred, do something to handle it
         NSLog(@"Failed to create directory \"%@\". Error: %@", logPath, error);
         
-        NSAlert *alert = [[NSAlert alloc] init];
-        alert.icon = [NSImage imageNamed:@"tpassist"];
-        [alert addButtonWithTitle:@"确定"];
-        [alert setMessageText:@"无法启动Teleport助手"];
-        [alert setInformativeText:@"无法创建目录 ~/tp-assist 来存储配置文件及日志文件。"];
-        [alert runModal];
+//        NSAlert *alert = [[NSAlert alloc] init];
+//        alert.icon = [NSImage imageNamed:@"tpassist"];
+//        [alert addButtonWithTitle:@"确定"];
+//        [alert setMessageText:@"无法启动Teleport助手"];
+//        [alert setInformativeText:@"无法创建目录 ~/tp-assist 来存储配置文件及日志文件。"];
+//        [alert runModal];
+        
+        [self my_alert:@"无法启动Teleport助手" msg:@"无法创建目录 ~/tp-assist 来存储配置文件及日志文件。"];
         
         [[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
         [NSApp terminate:NSApp];
@@ -102,7 +104,7 @@ int AppDelegate_select_app (void *_self) {
     int ret = cpp_main((__bridge void*)self, bundle_path.c_str(), cpp_cfg_file.c_str(), cpp_res_path.c_str(), cpp_log_path.c_str());
 	if(ret != 0) {
         // http_rpc_stop();
-        TsWsClient::stop_all_client();
+        g_ws_client.stop_all_client();
 
         NSString *msg = Nil;
 		if(ret == -1)
@@ -112,12 +114,13 @@ int AppDelegate_select_app (void *_self) {
 		else
 			msg = @"发生未知错误！";
 		
-        NSAlert *alert = [[NSAlert alloc] init];
-        alert.icon = [NSImage imageNamed:@"tpassist"];
-        [alert addButtonWithTitle:@"确定"];
-        [alert setMessageText:@"无法启动Teleport助手"];
-        [alert setInformativeText:msg];
-        [alert runModal];
+//        NSAlert *alert = [[NSAlert alloc] init];
+//        alert.icon = [NSImage imageNamed:@"tpassist"];
+//        [alert addButtonWithTitle:@"确定"];
+//        [alert setMessageText:@"无法启动Teleport助手"];
+//        [alert setInformativeText:msg];
+//        [alert runModal];
+        [self my_alert:@"无法启动Teleport助手" msg:msg];
         
 		[[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
 		[NSApp terminate:NSApp];
@@ -232,13 +235,19 @@ int AppDelegate_select_app (void *_self) {
 }
 
 - (IBAction)quit:(id)sender {
-    TsWsClient::stop_all_client();
+    g_ws_client.stop_all_client();
 	
 	[[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
     [NSApp terminate:NSApp];
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)notification
+//- (void)applicationDidFinishLaunching:(NSNotification *)notification
+//{
+//    // once the program start, register URL scheme handler.
+//    [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self andSelector:@selector(handleURLEvent:withReplyEvent:) forEventClass:kInternetEventClass andEventID:kAEGetURL];
+//}
+
+- (void)applicationWillFinishLaunching:(NSNotification *)notification
 {
     // once the program start, register URL scheme handler.
     [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self andSelector:@selector(handleURLEvent:withReplyEvent:) forEventClass:kInternetEventClass andEventID:kAEGetURL];
@@ -258,7 +267,7 @@ int AppDelegate_select_app (void *_self) {
 //
 //    [self my_alert:@"URL Request" msg:url];
     std::string _url = [url cStringUsingEncoding:NSUTF8StringEncoding];
-    url_scheme_handler(_url);
+    g_ws_client.url_scheme_handler(_url);
 }
 
 - (void)my_alert:(NSString*) title msg:(NSString*)message {

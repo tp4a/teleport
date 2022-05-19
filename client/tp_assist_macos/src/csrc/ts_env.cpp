@@ -27,7 +27,7 @@ bool TsEnv::init(const char* bundle_path, const char* cfg_file, const char* res_
 
 #ifdef EX_DEBUG
     //m_site_path = L"/Users/apex/work/tp4a/teleport/client/tp_assist_macos/site";
-    m_bundle_path = L"/Users/apex/work/tp4a/teleport/out/client/x64/release";
+    //m_bundle_path = L"/Users/apex/work/tp4a/teleport/out/client/x64/release";
 #else
 	//m_site_path = m_res_path;
 	//ex_path_join(m_site_path, false, L"site", NULL);

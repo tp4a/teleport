@@ -302,6 +302,7 @@ controllers = [
 
     # api v2
     (r'/api/v2/request_session', api_v2.RequestSessionHandler),
+    (r'/api/v2/request_access_token', api_v2.RequestAccessTokenHandler),
 
     (r'/.*', index.CatchAllHandler),
 ]

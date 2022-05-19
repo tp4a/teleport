@@ -93,6 +93,7 @@ def _parse_api_args(handler):
         return False, handler.write_json(TPE_JSON_FORMAT)
 
     args['_srv_name_'] = sec_info['name']
+    args['_privilege'] = sec_info['privilege']
 
     return True, args
 
@@ -128,3 +129,34 @@ class RequestSessionHandler(TPBaseJsonHandler):
             return self.write_json(ret['code'], ret['message'])
 
         return self.write_json(TPE_OK, data=ret['data'])
+
+
+class RequestAccessTokenHandler(TPBaseJsonHandler):
+
+    @tornado.gen.coroutine
+    def post(self):
+        ok, args = yield _parse_api_args(self)
+        if not ok:
+            return
+
+        try:
+            operator = args['operator']
+            privilege = args['_privilege']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        operator_surname = '[{}] {}'.format(args['_srv_name_'], operator)
+
+        _user = {
+            'id': 0,
+            'username': operator,
+            'surname': operator_surname,
+            'role_id': 0,
+            'role': '',
+            'privilege': privilege,
+            '_is_login': True
+        }
+        self.set_session('user', _user, 60)
+
+        self._user = _user
+        return self.write_json(TPE_OK, data={'sid': self._s_id})

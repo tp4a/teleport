@@ -30,19 +30,7 @@ int cpp_main(void* _self, const char* bundle_path, const char* cfg_file, const c
     if(!g_cfg.init())
 		return -2;
 
-    TsWsClient::init_app(_self);
+    g_ws_client.init_app(_self);
     
 	return 0;
-}
-
-//uint64_t cpp_getpid()
-//{
-//    pid_t pid = getpid();
-//
-//    return static_cast<uint64_t>(pid);
-//}
-
-void url_scheme_handler(const std::string& url)
-{
-    TsWsClient::url_scheme_handler(url);
 }

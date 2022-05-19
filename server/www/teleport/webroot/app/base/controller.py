@@ -102,6 +102,10 @@ class TPBaseHandler(tornado.web.RequestHandler):
 
         self._s_id = self.get_cookie('_sid')
         if self._s_id is None:
+            print(self.request.headers)
+            if 'Teleport-Session-Id' in self.request.headers:
+                self._s_id = self.request.headers['Teleport-Session-Id']
+        if self._s_id is None:
             self._s_id = 'tp_{}_{}'.format(int(time.time()), binascii.b2a_hex(os.urandom(8)).decode())
             self.set_cookie('_sid', self._s_id)
 

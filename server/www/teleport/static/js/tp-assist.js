@@ -235,7 +235,7 @@ $assist._on_ret_run = function (code, message, ret) {
         return;
     }
 
-    $tp.notify_success('已启动本地客户端进行远程连接!');
+    $tp.notify_success('已通知助手启动本地客户端进行远程连接!');
 }
 
 $assist._on_ret_replay_rdp = function (code, message, ret) {
@@ -247,7 +247,7 @@ $assist._on_ret_replay_rdp = function (code, message, ret) {
         return;
     }
 
-    $tp.notify_success('已启动本地RDP录像播放器!');
+    $tp.notify_success('已通知助手启动本地RDP录像播放器!');
 }
 
 $assist.check_assist = function () {

@@ -14,11 +14,9 @@
 #include "ts_cfg.h"
 
 TsWsClient g_ws_client;
-TsWsClient g_wss_client;
 
 void* g_app = NULL;
 
-// static
 void TsWsClient::init_app(void* app)
 {
     g_app = app;
@@ -27,15 +25,17 @@ void TsWsClient::init_app(void* app)
 void TsWsClient::stop_all_client()
 {
     g_ws_client.stop();
-    g_wss_client.stop();
 }
 
 // ============================================================================
 // static
 void TsWsClient::url_scheme_handler(const std::string& url)
 {
+    // e.g.:
     // url: teleport://register?param={"ws_url":"ws://127.0.0.1:7190/ws/assist/","assist_id":1234,"session_id":"tp_5678"}
 
+    EXLOGV("url-schema: %s\n", url.c_str());
+    
     std::string protocol;
     std::string method;
     std::string param;
@@ -61,11 +61,10 @@ void TsWsClient::url_scheme_handler(const std::string& url)
         return;
     }
 
-    // now we support 'register' method only.
     method.assign(url, pos_protocol + 3, pos_method - pos_protocol - 3);
-    if (method != "register")
+    if(method.empty())
     {
-        EXLOGE("[ws] unknown method: %s\n", method.c_str());
+        EXLOGE("[ws] no method, what should I do now?\n");
         return;
     }
 
@@ -108,11 +107,25 @@ void TsWsClient::url_scheme_handler(const std::string& url)
         return;
     }
 
-    // now we support 'register' method only.
-    _process_register(param, js_root);
+    if (method == "register")
+    {
+        _process_register(param, js_root);
+    }
+    else if(method == "run")
+    {
+        _process_run(param, js_root);
+    }
+    else if(method == "replay_rdp")
+    {
+        _process_replay_rdp(param, js_root);
+    }
+    else
+    {
+        EXLOGE("[ws] unknown method: %s\n", method.c_str());
+        return;
+    }
 }
 
-// static
 void TsWsClient::_process_register(const std::string& param, Json::Value& js_root)
 {
     // {"ws_url":"ws://127.0.0.1:7190/ws/assist/","assist_id":1234,"session_id":"tp_5678"}
@@ -129,14 +142,10 @@ void TsWsClient::_process_register(const std::string& param, Json::Value& js_roo
     std::string session_id = js_root["session_id"].asCString();
 
     std::string protocol;
-    protocol.assign(ws_url, 0, 3);
-    if (protocol == "ws:")
+    protocol.assign(ws_url, 0, 5);
+    if (protocol == "ws://" || protocol == "wss:/")
     {
         g_ws_client._register(ws_url, assist_id, session_id);
-    }
-    else if (protocol == "wss")
-    {
-        g_wss_client._register(ws_url, assist_id, session_id);
     }
     else
     {
@@ -145,6 +154,31 @@ void TsWsClient::_process_register(const std::string& param, Json::Value& js_roo
     }
 }
 
+void TsWsClient::_process_run(const std::string& param, Json::Value& js_root)
+{
+    // wrapper for _rpc_func_run_client().
+
+    Json::Value js_param;
+    js_param["method"] = "run";
+    js_param["param"] = js_root;
+    
+    AssistMessage msg_req;
+    std::string buf;
+    _rpc_func_run_client(buf, msg_req, js_param);
+}
+
+void TsWsClient::_process_replay_rdp(const std::string& param, Json::Value& js_root)
+{
+    // wrapper for _rpc_func_replay_rdp().
+
+    Json::Value js_param;
+    js_param["method"] = "replay_rdp";
+    js_param["param"] = js_root;
+    
+    AssistMessage msg_req;
+    std::string buf;
+    _rpc_func_replay_rdp(buf, msg_req, js_param);
+}
 
 // ============================================================================
 
@@ -466,6 +500,7 @@ void TsWsClient::_rpc_func_replay_rdp(ex_astr& buf, AssistMessage& msg_req, Json
 
     ex_wstr w_exec_file = g_env.m_bundle_path;
     ex_path_join(w_exec_file, false, L"Contents", L"Resources", L"tp-player.app", L"Contents", L"MacOS", L"tp-player", nullptr);
+    // ex_path_join(w_exec_file, false, L"tp-player.app", L"Contents", L"MacOS", L"tp-player", nullptr);
     ex_astr exec_file;
     ex_wstr2astr(w_exec_file, exec_file);
     
