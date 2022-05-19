@@ -508,8 +508,8 @@ class InstallerLinux(InstallerBase):
                         x = l.split('=')
                         self._install_path = x[1]
                         break
-                        
-            
+
+
             # self._fix_path()
 
         if self._is_installed:
@@ -533,6 +533,14 @@ class InstallerLinux(InstallerBase):
 
         if not os.path.exists(self._config_path):
             utils.copy_ex(os.path.join(env.src_path, 'tmp', 'etc'), self._config_path)
+        else:
+            utils.copy_ex(os.path.join(env.src_path, 'tmp', 'etc'), self._config_path, 'core.ini', force=False)
+            utils.copy_ex(os.path.join(env.src_path, 'tmp', 'etc'), self._config_path, 'web.ini', force=False)
+            utils.copy_ex(os.path.join(env.src_path, 'tmp', 'etc'), self._config_path, 'tp_ssh_server.key', force=False)
+            utils.copy_ex(os.path.join(env.src_path, 'tmp', 'etc'), self._config_path, 'tp_rdp_ca.crt', force=False)
+            utils.copy_ex(os.path.join(env.src_path, 'tmp', 'etc'), self._config_path, 'tp_rdp_server.crt', force=False)
+            utils.copy_ex(os.path.join(env.src_path, 'tmp', 'etc'), self._config_path, 'tp_rdp_server.key', force=False)
+
 
     def _delete_files(self, del_settings):
         utils.remove(os.path.join(self._install_path, 'bin'))

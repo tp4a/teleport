@@ -107,6 +107,7 @@ ul.list {
   //list-style: none;
   margin: 0;
   padding: 3px 0 5px 0;
+
   li {
     margin: 3px 3px 5px 10px;
   }
@@ -114,11 +115,13 @@ ul.list {
 
 .btn-single-line {
   white-space: nowrap;
+
   .btn {
     &:first-child {
       border-top-left-radius: 3px;
       border-bottom-left-radius: 3px;
     }
+
     &:last-child {
       border-top-right-radius: 3px;
       border-bottom-right-radius: 3px;
@@ -191,11 +194,13 @@ hr.small {
         margin-top: 1px;
         cursor: pointer;
       }
+
       input[type=checkbox] {
         display: block;
         float: left;
         margin: 3px 5px 0 0;
       }
+
       //select {
       //	margin-top: -3px;
       //}
@@ -228,43 +233,48 @@ hr.small {
 // icons.
 //=============================================
 .os-icon-windows:after {
-  //color: #00bcf6;
-  font-style: normal;
   content: "\f17a";
-  //font-size: 18px;
-  //width: 24px;
-  //height: 24px;
-  //line-height: 24px;
+  //color: #00bcf6;
+
+  font-style: normal;
+  text-align: center;
+  width: 1.25em;
+  height: 1.25em;
+  line-height: 1.25em;
+  border-radius: 50%;
   display: inline-block;
-  font-family: 'Font Awesome 5 Brands';
+  font-family: "Font Awesome 5 Brands";
   font-weight: 400;
 }
 
 .os-icon-linux:after {
-  //color: #fff;
-  font-style: normal;
   content: "\f17c";
-  //font-size: 18px;
-  //width: 24px;
-  //height: 24px;
-  //line-height: 24px;
+  color: #fff;
   background-color: #333;
+
+  font-style: normal;
+  text-align: center;
+  width: 1.25em;
+  height: 1.25em;
+  line-height: 1.25em;
   border-radius: 50%;
   display: inline-block;
-  font-family: 'Font Awesome 5 Brands';
+  font-family: "Font Awesome 5 Brands";
   font-weight: 400;
 }
 
 .os-icon-macos:after {
-  //color: #a7a7a7;
-  font-style: normal;
   content: "\f179";
-  //font-size: 20px;
-  //width: 24px;
-  //height: 24px;
-  //line-height: 24px;
+  //color: #a7a7a7;
+
+  font-style: normal;
+  text-align: center;
+  width: 1.25em;
+  height: 1.25em;
+  line-height: 1.25em;
+  border-radius: 50%;
   display: inline-block;
-  font-family: 'Font Awesome 5 Brands';
+  font-family: "Font Awesome 5 Brands";
   font-weight: 400;
 }
 

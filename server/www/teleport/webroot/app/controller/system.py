@@ -314,7 +314,7 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                 err = system_model.save_config(self, '更新连接控制设置', 'session', _cfg)
                 if err == TPE_OK:
                     try:
-                        req = {'method': 'set_config', 'param': {'noop_timeout': _noop_timeout}}
+                        req = {'method': 'set_runtime_config', 'param': {'noop_timeout': _noop_timeout}}
                         _yr = core_service_async_post_http(req)
                         code, ret_data = yield _yr
                         if code != TPE_OK:

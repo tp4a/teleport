@@ -554,7 +554,8 @@ int SshSession::_do_auth(const char* user, const char* secret)
             m_auth_err_msg += m_sid;
             m_auth_err_msg += "'.";
             EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
-            return SSH_AUTH_SUCCESS;
+            // return SSH_AUTH_SUCCESS;
+            return SSH_AUTH_DENIED;
         }
 
         m_conn_ip = m_conn_info->conn_ip;
