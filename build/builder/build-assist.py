@@ -259,8 +259,8 @@ def main():
         builder = gen_builder(ctx.host_os)
 
     if 'exe' in argv:
-        builder.build_assist()
         builder.build_player()
+        builder.build_assist()
     # elif 'rdp' in argv:
     #     builder.build_rdp()
     elif 'installer' in argv:

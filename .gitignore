@@ -59,7 +59,7 @@ __pycache__
 /external/libuv
 /client/tools/putty
 /client/tools/winscp
-/server/**/test/
+/server/**/api_v2_demo/
 /server/**/tests/
 
 # for dist folder

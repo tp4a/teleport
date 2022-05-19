@@ -132,6 +132,8 @@ class BuilderLinux(BuilderBase):
         utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), 'tp_rdp_server.crt')
         utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'etc'), os.path.join(self.path_tmp_data, 'tmp', 'etc'), 'tp_rdp_server.key')
 
+        utils.copy_file(os.path.join(env.root_path, 'server', 'share', 'assist'), os.path.join(self.path_tmp_data, 'tmp', 'assist'), 'README.txt')
+
         # fix new line flag
         utils.fix_new_line_flag(os.path.join(self.path_tmp_data, 'tmp', 'etc', 'web.ini'))
         utils.fix_new_line_flag(os.path.join(self.path_tmp_data, 'tmp', 'etc', 'core.ini'))
