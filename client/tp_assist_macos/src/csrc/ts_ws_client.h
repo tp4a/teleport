@@ -33,7 +33,7 @@ public:
 
     ~TsWsClient();
 
-    void init_app(void* app);
+    void init();
     void stop_all_client();
 
     void url_scheme_handler(const std::string& url);

@@ -53,6 +53,15 @@
                         <action selector="showAbout:" target="494" id="lj3-p9-1cy"/>
                     </connections>
                 </menuItem>
+                <menuItem title="Settings" id="646">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="configure:" target="494" id="DVo-fI-7Ae"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="Lga-cg-zB5">
+                    <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                </menuItem>
                 <menuItem title="Visit TELEPORT Website" id="pkv-BD-W9b">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
@@ -72,14 +81,5 @@
             <point key="canvasLocation" x="121" y="-20"/>
         </menu>
         <arrayController id="620"/>
-        <menuItem title="Settings" id="646">
-            <modifierMask key="keyEquivalentModifierMask"/>
-            <connections>
-                <action selector="configure:" target="494" id="DVo-fI-7Ae"/>
-            </connections>
-        </menuItem>
-        <menuItem isSeparatorItem="YES" id="Lga-cg-zB5">
-            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
-        </menuItem>
     </objects>
 </document>

@@ -70,11 +70,12 @@ class SessionManager(object):
                 if self._session_dict[s_id]['e'] == 0:
                     return self._session_dict[s_id]['v']
                 else:
-                    if int(datetime.datetime.now().timestamp()) - self._session_dict[s_id]['t'] > self._session_dict[s_id]['e']:
+                    _now = int(datetime.datetime.now().timestamp())
+                    if _now - self._session_dict[s_id]['t'] > self._session_dict[s_id]['e']:
                         del self._session_dict[s_id]
                         return _default
                     else:
-                        self._session_dict[s_id]['t'] = int(datetime.datetime.now().timestamp())
+                        self._session_dict[s_id]['t'] = _now
                         return self._session_dict[s_id]['v']
 
             else:

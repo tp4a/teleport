@@ -89,7 +89,11 @@ class AssistHandler(tornado.websocket.WebSocketHandler):
         tp_assist_bridge().on_disconnect(self)
 
     def on_message(self, message):
+        if message == 'PING':
+            return self.write_message('PONG')
+
         log.d('raw on_message: {}\n'.format(message))
+
         msg_req = AssistMessage(self, 'UNKNOWN')
 
         try:

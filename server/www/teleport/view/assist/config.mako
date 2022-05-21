@@ -128,6 +128,7 @@
                 <label for="telnet-cmdline" class="col-sm-2 control-label"><strong>命令参数：</strong></label>
                 <div class="col-sm-9">
                     <input id="telnet-cmdline" type="text" class="form-control input-args" placeholder="客户端启动所需命令行参数"/>
+                    <div id="telnet-desc"></div>
                 </div>
             </div>
 

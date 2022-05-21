@@ -20,6 +20,7 @@
 		7A7C6CA02197410B006869D9 /* tp-assist.macos.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6C9F2197410B006869D9 /* tp-assist.macos.json */; };
 		7A7C6CAA21977F07006869D9 /* iterm2.scpt in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6CA821977F07006869D9 /* iterm2.scpt */; };
 		7A7C6CAB21977F07006869D9 /* terminal.scpt in Resources */ = {isa = PBXBuildFile; fileRef = 7A7C6CA921977F07006869D9 /* terminal.scpt */; };
+		7AA2CD381F6A92620074C92B /* ts_http_rpc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD371F6A92620074C92B /* ts_http_rpc.cpp */; };
 		7AA2CD3B1F6A955A0074C92B /* ts_cfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD391F6A955A0074C92B /* ts_cfg.cpp */; };
 		7AA2CD441F6AB9750074C92B /* ex_ini.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD3D1F6AB9750074C92B /* ex_ini.cpp */; };
 		7AA2CD451F6AB9750074C92B /* ex_log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD3E1F6AB9750074C92B /* ex_log.cpp */; };
@@ -32,6 +33,7 @@
 		7AA2CD521F6AB9F10074C92B /* json_value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD4E1F6AB9F10074C92B /* json_value.cpp */; };
 		7AA2CD541F6AB9F10074C92B /* json_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD501F6AB9F10074C92B /* json_writer.cpp */; };
 		7AA2CD571F6ABA2E0074C92B /* mongoose.c in Sources */ = {isa = PBXBuildFile; fileRef = 7AA2CD561F6ABA2E0074C92B /* mongoose.c */; };
+		7AA2CD591F6AC0DA0074C92B /* site in Resources */ = {isa = PBXBuildFile; fileRef = 7AA2CD581F6AC0DA0074C92B /* site */; };
 		7AAE4B242390EE5C007EDDE7 /* libmbedtls.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF222199E32B00BE5DBC /* libmbedtls.a */; };
 		7AAE4B252390EE7D007EDDE7 /* libmbedcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF232199E32B00BE5DBC /* libmbedcrypto.a */; };
 		7AAE4B262390EE7D007EDDE7 /* libmbedx509.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AF9BF212199E32B00BE5DBC /* libmbedx509.a */; };
@@ -84,6 +86,8 @@
 		7A7C6CA12197786B006869D9 /* ts_ver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ts_ver.h; sourceTree = "<group>"; };
 		7A7C6CA821977F07006869D9 /* iterm2.scpt */ = {isa = PBXFileReference; lastKnownFileType = file; path = iterm2.scpt; sourceTree = "<group>"; };
 		7A7C6CA921977F07006869D9 /* terminal.scpt */ = {isa = PBXFileReference; lastKnownFileType = file; path = terminal.scpt; sourceTree = "<group>"; };
+		7AA2CD361F6A92380074C92B /* ts_http_rpc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 2147486000; path = ts_http_rpc.h; sourceTree = "<group>"; };
+		7AA2CD371F6A92620074C92B /* ts_http_rpc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ts_http_rpc.cpp; sourceTree = "<group>"; };
 		7AA2CD391F6A955A0074C92B /* ts_cfg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ts_cfg.cpp; sourceTree = "<group>"; };
 		7AA2CD3A1F6A955A0074C92B /* ts_cfg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ts_cfg.h; sourceTree = "<group>"; };
 		7AA2CD3D1F6AB9750074C92B /* ex_ini.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ex_ini.cpp; path = ../../../../common/libex/src/ex_ini.cpp; sourceTree = "<group>"; };
@@ -99,6 +103,7 @@
 		7AA2CD4F1F6AB9F10074C92B /* json_valueiterator.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = json_valueiterator.inl; path = ../../../../external/jsoncpp/src/lib_json/json_valueiterator.inl; sourceTree = "<group>"; };
 		7AA2CD501F6AB9F10074C92B /* json_writer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = json_writer.cpp; path = ../../../../external/jsoncpp/src/lib_json/json_writer.cpp; sourceTree = "<group>"; };
 		7AA2CD561F6ABA2E0074C92B /* mongoose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mongoose.c; path = ../../../../external/mongoose/mongoose.c; sourceTree = "<group>"; };
+		7AA2CD581F6AC0DA0074C92B /* site */ = {isa = PBXFileReference; lastKnownFileType = folder; path = site; sourceTree = "<group>"; };
 		7AAE4B232390E642007EDDE7 /* mongoose.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mongoose.h; path = ../../../../external/mongoose/mongoose.h; sourceTree = "<group>"; };
 		7AC630332835EB9A0080333D /* tp-player.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "tp-player.app"; path = "../../../out/client/x64/release/tp-player.app"; sourceTree = "<group>"; };
 		7AF6593C27398C7400057A00 /* ts_ws_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ts_ws_client.cpp; sourceTree = "<group>"; };
@@ -231,6 +236,8 @@
 				7AA2CD3C1F6AB9560074C92B /* libex */,
 				7AA2CD391F6A955A0074C92B /* ts_cfg.cpp */,
 				7AA2CD3A1F6A955A0074C92B /* ts_cfg.h */,
+				7AA2CD371F6A92620074C92B /* ts_http_rpc.cpp */,
+				7AA2CD361F6A92380074C92B /* ts_http_rpc.h */,
 				7A27E4A71F6A8EEC004FDE5D /* ts_env.cpp */,
 				7A27E4A81F6A8EEC004FDE5D /* ts_env.h */,
 				7A27E4A61F6A899B004FDE5D /* ts_const.h */,
@@ -386,6 +393,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7AA2CD591F6AC0DA0074C92B /* site in Resources */,
 				A1B7B9DD1DB53ED200809327 /* Localizable.strings in Resources */,
 				C149EC0815D5214600B1F558 /* InfoPlist.strings in Resources */,
 				7A7C6CA02197410B006869D9 /* tp-assist.macos.json in Resources */,
@@ -418,6 +426,7 @@
 				A1D700071A5DCE8D003563E4 /* AboutWindowController.m in Sources */,
 				7AA2CD521F6AB9F10074C92B /* json_value.cpp in Sources */,
 				C149EC0A15D5214600B1F558 /* main.m in Sources */,
+				7AA2CD381F6A92620074C92B /* ts_http_rpc.cpp in Sources */,
 				7AA2CD481F6AB9750074C92B /* ex_thread.cpp in Sources */,
 				7AA2CD471F6AB9750074C92B /* ex_str.cpp in Sources */,
 				7AA2CD571F6ABA2E0074C92B /* mongoose.c in Sources */,

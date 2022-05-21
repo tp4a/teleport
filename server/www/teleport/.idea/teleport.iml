@@ -3,6 +3,8 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$/../../share">
       <excludeFolder url="file://$MODULE_DIR$/../../share/log" />
+      <excludeFolder url="file://$MODULE_DIR$/../../share/replay" />
+      <excludeFolder url="file://$MODULE_DIR$/../../share/tmp" />
     </content>
     <content url="file://$MODULE_DIR$/static" />
     <content url="file://$MODULE_DIR$/view" />

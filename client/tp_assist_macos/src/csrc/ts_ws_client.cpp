@@ -15,11 +15,9 @@
 
 TsWsClient g_ws_client;
 
-void* g_app = NULL;
 
-void TsWsClient::init_app(void* app)
+void TsWsClient::init()
 {
-    g_app = app;
 }
 
 void TsWsClient::stop_all_client()

@@ -8,11 +8,15 @@
 #include "AppDelegate-C-Interface.h"
 #include "csrc/ts_env.h"
 #include "csrc/ts_cfg.h"
+#include "csrc/ts_http_rpc.h"
 #include "csrc/ts_ws_client.h"
 
+void* g_app = NULL;
 static ExLogger g_ex_logger;
 
 int cpp_main(void* _self, const char* bundle_path, const char* cfg_file, const char* res_path, const char* log_path) {
+    g_app = _self;
+    
     EXLOG_USE_LOGGER(&g_ex_logger);
     
     if(!g_env.init(bundle_path, cfg_file, res_path, log_path))
@@ -30,7 +34,12 @@ int cpp_main(void* _self, const char* bundle_path, const char* cfg_file, const c
     if(!g_cfg.init())
 		return -2;
 
-    g_ws_client.init_app(_self);
+	if(!g_http_interface.init())
+		return -3;
+    if(!g_http_interface.start())
+        return -3;
+		
+    g_ws_client.init();
     
 	return 0;
 }

@@ -15,6 +15,7 @@ $tp.assist = {
     url_scheme: '',
     ws_url: '',
     ws: null,
+    ws_keep_alive_timer_id: 0,
 
     next_commands: [],
 
@@ -104,6 +105,13 @@ $assist.register_response_handler = function (method, fn) {
     $assist.ws_response_callback[method] = fn;
 };
 
+$assist.keep_alive = function () {
+    if ($assist.ws.readyState === $assist.ws.OPEN) {
+        $assist.ws.send('PING');
+    }
+    $assist.ws_keep_alive_timer_id = setTimeout($assist.keep_alive, 15000);
+};
+
 $assist._bind_assist_and_exec = function (cmd) {
     let msg_obj = {
         'type': ASSIST_WS_COMMAND_TYPE_REQUEST,
@@ -137,16 +145,25 @@ $assist._bind_assist_and_exec = function (cmd) {
 
         $assist.ws.onopen = function (e) {
             console.log('web-ws: connected.');
+
+            $assist.ws_keep_alive_timer_id = setTimeout($assist.keep_alive, 15000);
         };
 
         $assist.ws.onclose = function (e) {
             console.log('web-ws: disconnected.');
+            if ($assist.ws_keep_alive_timer_id) {
+                clearTimeout($assist.ws_keep_alive_timer_id);
+                $assist.ws_keep_alive_timer_id = 0;
+            }
             $assist.ws = null;
             $assist.assist_id = 0;
             $assist.assist_ver = '';
         };
 
         $assist.ws.onmessage = function (e) {
+            if (e.data === 'PONG')
+                return;
+
             let t = JSON.parse(e.data);
 
             if (_.isUndefined(t.type)) {
