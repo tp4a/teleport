@@ -88,6 +88,9 @@ class BuilderWin(BuilderBase):
 
         utils.copy_file(os.path.join(env.root_path, 'client', 'cfg'), tmp_cfg_path, ('tp-assist.windows.json', 'tp-assist.json'))
 
+        # assist configuration web page
+        utils.copy_ex(os.path.join(env.root_path, 'client', 'tp_assist_win'), tmp_app_path, 'site')
+
         utils.makedirs(os.path.join(tmp_app_path, 'tools', 'putty'))
         utils.copy_file(os.path.join(env.root_path, 'client', 'tools', 'putty'), os.path.join(tmp_app_path, 'tools', 'putty'), 'putty.exe')
 

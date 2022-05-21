@@ -52,6 +52,9 @@
     <ClCompile Include="ts_utils.cpp">
       <Filter>main app</Filter>
     </ClCompile>
+    <ClCompile Include="ts_http_rpc.cpp">
+      <Filter>main app</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -121,6 +124,9 @@
       <Filter>main app</Filter>
     </ClInclude>
     <ClInclude Include="ts_utils.h">
+      <Filter>main app</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_http_rpc.h">
       <Filter>main app</Filter>
     </ClInclude>
   </ItemGroup>

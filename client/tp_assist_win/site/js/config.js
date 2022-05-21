@@ -10,21 +10,25 @@ var dom = {
     ssh_type: $('#ssh-type'),
     ssh_app: $('#ssh-app'),
     ssh_cmdline: $('#ssh-cmdline'),
+    ssh_select_app: $('#ssh-select-app'),
     ssh_desc: $('#ssh-desc'),
 
     sftp_type: $('#sftp-type'),
     sftp_app: $('#sftp-app'),
     sftp_cmdline: $('#sftp-cmdline'),
+    sftp_select_app: $('#sftp-select-app'),
     sftp_desc: $('#sftp-desc'),
 
     telnet_type: $('#telnet-type'),
     telnet_app: $('#telnet-app'),
     telnet_cmdline: $('#telnet-cmdline'),
+    telnet_select_app: $('#telnet-select-app'),
     telnet_desc: $('#telnet-desc'),
 
     rdp_type: $('#rdp-type'),
     rdp_app: $('#rdp-app'),
     rdp_cmdline: $('#rdp-cmdline'),
+    rdp_select_app: $('#rdp-select-app'),
     rdp_desc: $('#rdp-desc'),
 
     btn_save: $('#btn-save')
@@ -346,6 +350,15 @@ $(document).ready(function () {
         }
         notify_error('所选的配置项不存在！');
     });
+    dom.ssh_select_app.click(function () {
+        select_local_file(function (code, path) {
+            if (code == 0) {
+                dom.ssh_app.val(path);
+            } else {
+                console.log("can not select file.");
+            }
+        });
+    });
 
 
     dom.sftp_type.change(function () {
@@ -365,6 +378,15 @@ $(document).ready(function () {
             }
         }
         notify_error('所选的配置项不存在！');
+    });
+    dom.sftp_select_app.click(function () {
+        select_local_file(function (code, path) {
+            if (code == 0) {
+                dom.sftp_app.val(path);
+            } else {
+                console.log("can not select file.");
+            }
+        });
     });
 
 
@@ -386,6 +408,15 @@ $(document).ready(function () {
         }
         notify_error('所选的配置项不存在！');
     });
+    dom.telnet_select_app.click(function () {
+        select_local_file(function (code, path) {
+            if (code == 0) {
+                dom.telnet_app.val(path);
+            } else {
+                console.log("can not select file.");
+            }
+        });
+    });
 
 
     dom.rdp_type.change(function () {
@@ -405,6 +436,15 @@ $(document).ready(function () {
             }
         }
         notify_error('所选的配置项不存在！');
+    });
+    dom.rdp_select_app.click(function () {
+        select_local_file(function (code, path) {
+            if (code == 0) {
+                dom.rdp_app.val(path);
+            } else {
+                console.log("can not select file.");
+            }
+        });
     });
 
 

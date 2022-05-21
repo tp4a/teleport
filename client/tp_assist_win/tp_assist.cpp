@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include "resource.h"
 #include "dlg_main.h"
-//#include "ts_http_rpc.h"
+#include "ts_http_rpc.h"
 #include "ts_ws_client.h"
 
 #ifdef _DEBUG
@@ -40,11 +40,23 @@ ex_astr g_url_protocol;
 #define TP_ASSIST_WIN_CLASS		_T("TS_ASSIST_WINDOW_CLASS")
 #define MAKEDWORD(low, high)	((DWORD)(((WORD)(((DWORD_PTR)(low)) & 0xffff)) | ((DWORD)((WORD)(((DWORD_PTR)(high)) & 0xffff))) << 16))
 
-//DWORD WINAPI HttpServerThreadProc(LPVOID lpParam) {
-//    http_rpc_main_loop(false);
-//    return 0;
-//}
-//
+DWORD WINAPI HttpServerThreadProc(LPVOID lpParam) {
+    // http_rpc_main_loop();
+
+	if (!g_http_interface.init()) {
+		EXLOGE("[ERROR] can not start HTTP-RPC listener, maybe port is already in use.\n");
+		return 0;
+	}
+
+	EXLOGW("======================================================\n");
+	EXLOGW("[rpc] TeleportAssist-HTTP-RPC ready on 127.0.0.1:%d\n", g_http_interface.get_port());
+
+	g_http_interface.run();
+
+	EXLOGW("[rpc] HTTP-Server main loop end.\n");
+    return 0;
+}
+
 //DWORD WINAPI HttpsServerThreadProc(LPVOID lpParam) {
 //    http_rpc_main_loop(true);
 //    return 0;
@@ -156,9 +168,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 		return FALSE;
 	}
 
-	//HANDLE hThreadHttpServer=NULL;
-	//DWORD dwThreadId=0;
-	//hThreadHttpServer=CreateThread(NULL, 0, HttpServerThreadProc, NULL, 0, &dwThreadId);
+    HANDLE hThreadHttpServer=NULL;
+    DWORD dwThreadId=0;
+    hThreadHttpServer=CreateThread(NULL, 0, HttpServerThreadProc, NULL, 0, &dwThreadId);
 
 	//HANDLE hThreadHttpsServer=NULL;
 	//dwThreadId=0;
@@ -170,8 +182,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 		DispatchMessage(&msg);
 	}
 
-	//http_rpc_stop(false);
-	//WaitForSingleObject(hThreadHttpServer, INFINITE);
+	g_http_interface.stop();
+    WaitForSingleObject(hThreadHttpServer, INFINITE);
 
 	//http_rpc_stop(true);
 	//WaitForSingleObject(hThreadHttpsServer, INFINITE);

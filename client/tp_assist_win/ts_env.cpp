@@ -37,10 +37,16 @@ bool TsEnv::init(void)
 	ex_wstr cfg_default;
 
 #ifdef _DEBUG
+	m_site_path = m_exec_path;
+	ex_path_join(m_site_path, true, L"..", L"..", L"..", L"..", L"client", L"tp_assist_win", L"site", NULL);
+
 	cfg_default = m_exec_path;
 	ex_path_join(cfg_default, true, L"..", L"..", L"..", L"..", L"client", L"tp_assist_win", L"cfg", L"tp-assist.default.json", NULL);
 
 #else
+	m_site_path = m_exec_path;
+	ex_path_join(m_site_path, false, L"site", NULL);
+
 	cfg_default = m_exec_path;
 	ex_path_join(cfg_default, false, L"tp-assist.default.json", NULL);
 #endif

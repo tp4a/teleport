@@ -16,6 +16,7 @@ public:
 	ex_wstr m_exec_path;
 	ex_wstr m_cfg_file;
 	ex_wstr m_log_path;
+	ex_wstr m_site_path;
 	ex_wstr m_tools_path;
 };
 

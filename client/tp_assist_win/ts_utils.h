@@ -3,6 +3,12 @@
 
 #include <ex.h>
 
-int ts_url_decode(const char *src, int src_len, char *dst, int dst_len, int is_form_url_encoded);
+extern std::string rdp_content;
+
+bool calc_psw51b(const char* password, std::string& ret);
+
+bool is_digital(std::string str);
+std::string strtolower(std::string str);
+void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c);
 
 #endif // __TS_UTILS_H__

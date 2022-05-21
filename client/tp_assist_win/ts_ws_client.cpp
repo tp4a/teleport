@@ -4,9 +4,9 @@
 
 #include <commdlg.h>
 #include <ShlObj.h>
-#include <WinCrypt.h>
-
-#pragma comment(lib, "Crypt32.lib")
+//#include <WinCrypt.h>
+//
+//#pragma comment(lib, "Crypt32.lib")
 
 #include <teleport_const.h>
 
@@ -27,61 +27,61 @@
 //connect to console:i:%d
 //compression:i:1
 //bitmapcachepersistenable:i:1
-
-std::string rdp_content = "\
-administrative session:i:%d\n\
-screen mode id:i:%d\n\
-use multimon:i:0\n\
-desktopwidth:i:%d\n\
-desktopheight:i:%d\n\
-session bpp:i:16\n\
-winposstr:s:0,1,%d,%d,%d,%d\n\
-bitmapcachepersistenable:i:1\n\
-bitmapcachesize:i:32000\n\
-compression:i:1\n\
-keyboardhook:i:2\n\
-audiocapturemode:i:0\n\
-videoplaybackmode:i:1\n\
-connection type:i:7\n\
-networkautodetect:i:1\n\
-bandwidthautodetect:i:1\n\
-disableclipboardredirection:i:0\n\
-displayconnectionbar:i:1\n\
-enableworkspacereconnect:i:0\n\
-disable wallpaper:i:1\n\
-allow font smoothing:i:0\n\
-allow desktop composition:i:0\n\
-disable full window drag:i:1\n\
-disable menu anims:i:1\n\
-disable themes:i:1\n\
-disable cursor setting:i:1\n\
-full address:s:%s:%d\n\
-audiomode:i:0\n\
-redirectprinters:i:0\n\
-redirectcomports:i:0\n\
-redirectsmartcards:i:0\n\
-redirectclipboard:i:%d\n\
-redirectposdevices:i:0\n\
-autoreconnection enabled:i:0\n\
-authentication level:i:2\n\
-prompt for credentials:i:0\n\
-negotiate security layer:i:1\n\
-remoteapplicationmode:i:0\n\
-alternate shell:s:\n\
-shell working directory:s:\n\
-gatewayhostname:s:\n\
-gatewayusagemethod:i:4\n\
-gatewaycredentialssource:i:4\n\
-gatewayprofileusagemethod:i:0\n\
-promptcredentialonce:i:0\n\
-gatewaybrokeringtype:i:0\n\
-use redirection server name:i:0\n\
-rdgiskdcproxy:i:0\n\
-kdcproxyname:s:\n\
-drivestoredirect:s:%s\n\
-username:s:%s\n\
-password 51:b:%s\n\
-";
+//
+//std::string rdp_content = "\
+//administrative session:i:%d\n\
+//screen mode id:i:%d\n\
+//use multimon:i:0\n\
+//desktopwidth:i:%d\n\
+//desktopheight:i:%d\n\
+//session bpp:i:16\n\
+//winposstr:s:0,1,%d,%d,%d,%d\n\
+//bitmapcachepersistenable:i:1\n\
+//bitmapcachesize:i:32000\n\
+//compression:i:1\n\
+//keyboardhook:i:2\n\
+//audiocapturemode:i:0\n\
+//videoplaybackmode:i:1\n\
+//connection type:i:7\n\
+//networkautodetect:i:1\n\
+//bandwidthautodetect:i:1\n\
+//disableclipboardredirection:i:0\n\
+//displayconnectionbar:i:1\n\
+//enableworkspacereconnect:i:0\n\
+//disable wallpaper:i:1\n\
+//allow font smoothing:i:0\n\
+//allow desktop composition:i:0\n\
+//disable full window drag:i:1\n\
+//disable menu anims:i:1\n\
+//disable themes:i:1\n\
+//disable cursor setting:i:1\n\
+//full address:s:%s:%d\n\
+//audiomode:i:0\n\
+//redirectprinters:i:0\n\
+//redirectcomports:i:0\n\
+//redirectsmartcards:i:0\n\
+//redirectclipboard:i:%d\n\
+//redirectposdevices:i:0\n\
+//autoreconnection enabled:i:0\n\
+//authentication level:i:2\n\
+//prompt for credentials:i:0\n\
+//negotiate security layer:i:1\n\
+//remoteapplicationmode:i:0\n\
+//alternate shell:s:\n\
+//shell working directory:s:\n\
+//gatewayhostname:s:\n\
+//gatewayusagemethod:i:4\n\
+//gatewaycredentialssource:i:4\n\
+//gatewayprofileusagemethod:i:0\n\
+//promptcredentialonce:i:0\n\
+//gatewaybrokeringtype:i:0\n\
+//use redirection server name:i:0\n\
+//rdgiskdcproxy:i:0\n\
+//kdcproxyname:s:\n\
+//drivestoredirect:s:%s\n\
+//username:s:%s\n\
+//password 51:b:%s\n\
+//";
 
 // https://www.donkz.nl/overview-rdp-file-settings/
 //
@@ -102,30 +102,30 @@ password 51:b:%s\n\
 TsWsClient g_ws_client;
 
 void* g_app = NULL;
-
-bool calc_psw51b(const char* password, std::string& ret) {
-	DATA_BLOB DataIn;
-	DATA_BLOB DataOut;
-
-	ex_wstr w_pswd;
-	ex_astr2wstr(password, w_pswd, EX_CODEPAGE_ACP);
-
-	DataIn.cbData = w_pswd.length() * sizeof(wchar_t);
-	DataIn.pbData = (BYTE*)w_pswd.c_str();
-
-
-	if (!CryptProtectData(&DataIn, L"psw", nullptr, nullptr, nullptr, 0, &DataOut))
-		return false;
-
-	char szRet[5] = { 0 };
-	for (DWORD i = 0; i < DataOut.cbData; ++i) {
-		sprintf_s(szRet, 5, "%02X", DataOut.pbData[i]);
-		ret += szRet;
-	}
-
-	LocalFree(DataOut.pbData);
-	return true;
-}
+//
+//bool calc_psw51b(const char* password, std::string& ret) {
+//	DATA_BLOB DataIn;
+//	DATA_BLOB DataOut;
+//
+//	ex_wstr w_pswd;
+//	ex_astr2wstr(password, w_pswd, EX_CODEPAGE_ACP);
+//
+//	DataIn.cbData = w_pswd.length() * sizeof(wchar_t);
+//	DataIn.pbData = (BYTE*)w_pswd.c_str();
+//
+//
+//	if (!CryptProtectData(&DataIn, L"psw", nullptr, nullptr, nullptr, 0, &DataOut))
+//		return false;
+//
+//	char szRet[5] = { 0 };
+//	for (DWORD i = 0; i < DataOut.cbData; ++i) {
+//		sprintf_s(szRet, 5, "%02X", DataOut.pbData[i]);
+//		ret += szRet;
+//	}
+//
+//	LocalFree(DataOut.pbData);
+//	return true;
+//}
 
 // static
 void TsWsClient::init_app(void* app)
@@ -194,7 +194,7 @@ void TsWsClient::url_scheme_handler(const std::string& url)
 	ex_chars sztmp;
 	sztmp.resize(len);
 	memset(&sztmp[0], 0, len);
-	if (-1 == ts_url_decode(param.c_str(), (int)param.length(), &sztmp[0], (int)len, 0))
+	if (-1 == ex_url_decode(param.c_str(), (int)param.length(), &sztmp[0], (int)len, 0))
 	{
 		EXLOGE("[url-schema] url-decode param failed: %s\n", param.c_str());
 		return;

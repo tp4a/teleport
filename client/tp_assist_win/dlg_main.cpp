@@ -3,6 +3,7 @@
 #include "dlg_main.h"
 #include "resource.h"
 #include "ts_ver.h"
+#include "ts_http_rpc.h"
 #include <shellapi.h>
 
 #pragma comment(lib, "comctl32.lib")
@@ -91,6 +92,16 @@ INT_PTR CALLBACK tpDlgMainProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM
 		case IDM_OPEN_WEB:
 		{
 			ShellExecute(nullptr, _T("open"), TS_WEB_URL, nullptr, nullptr, SW_SHOW);
+			return TRUE;
+		}break;
+
+		case IDM_OPEN_CONFIG:
+		{
+			wchar_t url[1024] = { 0 };
+			ex_wcsformat(url, 1023, L"http://127.0.0.1:%d/config", g_http_interface.get_port());
+
+			// ShellExecute(nullptr, _T("open"), _T("http://127.0.0.1:50022/config"), nullptr, nullptr, SW_SHOW);
+			ShellExecute(nullptr, _T("open"), url, nullptr, nullptr, SW_SHOW);
 			return TRUE;
 		}break;
 
