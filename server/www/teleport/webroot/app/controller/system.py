@@ -24,6 +24,7 @@ from app.base.core_server import core_service_async_post_http
 from app.base.session import tp_session
 from app.logic.auth.ldap import Ldap
 from app.base.utils import tp_timestamp_sec
+from ._sidebar_menu import tp_generate_sidebar
 
 
 class DoGetTimeHandler(TPBaseJsonHandler):
@@ -78,7 +79,7 @@ class ConfigHandler(TPBaseHandler):
             }
         }
 
-        self.render('system/config.mako', page_param=json.dumps(param))
+        self.render('system/config.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
 
 
 class RoleHandler(TPBaseHandler):
@@ -86,7 +87,7 @@ class RoleHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_SYS_ROLE)
         if ret != TPE_OK:
             return
-        self.render('system/role.mako')
+        self.render('system/role.html', sidebar_menu=tp_generate_sidebar(self))
 
 
 class DoExportDBHandler(TPBaseHandler):
@@ -167,7 +168,7 @@ class SysLogHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_SYS_LOG)
         if ret != TPE_OK:
             return
-        self.render('system/syslog.mako')
+        self.render('system/syslog.html', sidebar_menu=tp_generate_sidebar(self))
 
 
 class DoGetLogsHandler(TPBaseJsonHandler):

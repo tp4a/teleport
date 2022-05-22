@@ -11,6 +11,7 @@ from app.base.configs import tp_cfg
 from app.base.assist_bridge import tp_assist_bridge
 from app.const import *
 from tornado.escape import json_encode
+from ._sidebar_menu import tp_generate_sidebar
 
 
 class ConfigHandler(TPBaseHandler):
@@ -20,7 +21,7 @@ class ConfigHandler(TPBaseHandler):
             return
 
         param = {'username': self._user['username']}
-        self.render('assist/config.mako', page_param=json.dumps(param))
+        self.render('assist/config.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
 
 
 class DoGetAssistInfoHandler(TPBaseJsonHandler):

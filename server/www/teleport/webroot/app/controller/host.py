@@ -18,6 +18,7 @@ from app.model import group
 from app.base.core_server import core_service_async_enc
 from app.base.logger import *
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
+from ._sidebar_menu import tp_generate_sidebar
 
 
 class HostListHandler(TPBaseHandler):
@@ -29,10 +30,42 @@ class HostListHandler(TPBaseHandler):
         err, groups = group.get_host_groups_for_user(self.current_user['id'], self.current_user['privilege'])
         param = {
             'host_groups': groups,
-            '_check_host_alive': tp_cfg().common.check_host_alive
+            '_check_host_alive': tp_cfg().common.check_host_alive,
         }
 
-        self.render('asset/host-list.mako', page_param=json.dumps(param))
+        self.render('asset/host-list.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
+
+
+class HostGroupListHandler(TPBaseHandler):
+    def get(self):
+        ret = self.check_privilege(TP_PRIVILEGE_ASSET_GROUP)
+        if ret != TPE_OK:
+            return
+
+        self.render('asset/host-group-list.html', sidebar_menu=tp_generate_sidebar(self))
+
+
+class HostGroupInfoHandler(TPBaseHandler):
+    def get(self, gid):
+        ret = self.check_privilege(TP_PRIVILEGE_ASSET_GROUP)
+        if ret != TPE_OK:
+            return
+        gid = int(gid)
+        err, groups = group.get_by_id(TP_GROUP_HOST, gid)
+        if err == TPE_OK:
+            param = {
+                'group_id': gid,
+                'group_name': groups['name'],
+                'group_desc': groups['desc']
+            }
+        else:
+            param = {
+                'group_id': 0,
+                'group_name': '',
+                'group_desc': ''
+            }
+
+        self.render('asset/host-group-info.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
 
 
 class DoGetHostsHandler(TPBaseJsonHandler):
@@ -128,37 +161,6 @@ class DoGetHostsHandler(TPBaseJsonHandler):
         ret['data'] = row_data
 
         self.write_json(err, data=ret)
-
-
-class HostGroupListHandler(TPBaseHandler):
-    def get(self):
-        ret = self.check_privilege(TP_PRIVILEGE_ASSET_GROUP)
-        if ret != TPE_OK:
-            return
-        self.render('asset/host-group-list.mako')
-
-
-class HostGroupInfoHandler(TPBaseHandler):
-    def get(self, gid):
-        ret = self.check_privilege(TP_PRIVILEGE_ASSET_GROUP)
-        if ret != TPE_OK:
-            return
-        gid = int(gid)
-        err, groups = group.get_by_id(TP_GROUP_HOST, gid)
-        if err == TPE_OK:
-            param = {
-                'group_id': gid,
-                'group_name': groups['name'],
-                'group_desc': groups['desc']
-            }
-        else:
-            param = {
-                'group_id': 0,
-                'group_name': '',
-                'group_desc': ''
-            }
-
-        self.render('asset/host-group-info.mako', page_param=json.dumps(param))
 
 
 class DoImportHandler(TPBaseHandler):

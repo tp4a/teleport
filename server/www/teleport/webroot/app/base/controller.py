@@ -6,13 +6,17 @@ import os
 import time
 from urllib.parse import quote
 
-import mako.lookup
-import mako.template
+# import mako.lookup
+# import mako.template
+import tornado.template
 import tornado.web
+import jinja2
 from app.base.logger import log
 from app.base.session import tp_session
 from app.const import *
 from tornado.escape import json_encode
+import app.app_ver as app_ver
+# import app.const as app_const
 
 
 class TPBaseHandler(tornado.web.RequestHandler):
@@ -30,6 +34,8 @@ class TPBaseHandler(tornado.web.RequestHandler):
         self._mode = self.MODE_HTTP
         self._user = None
 
+        # self._template_env = None
+
     def initialize(self):
         self.set_header('Access-Control-Allow-Origin', '*')
         # self.set_header('Access-Control-Allow-Headers', 'X-Requested-With')
@@ -37,24 +43,46 @@ class TPBaseHandler(tornado.web.RequestHandler):
         self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
         # self.set_header('Content-Type', 'application/json; charset=UTF-8')
         # self.set_header('Access-Control-Allow-Headers', 'Content-Type')
+
+        # template_path = self.get_template_path()
+        # self.lookup = mako.lookup.TemplateLookup(directories=[template_path], input_encoding='utf-8', output_encoding='utf-8')
+
         template_path = self.get_template_path()
-        self.lookup = mako.lookup.TemplateLookup(directories=[template_path], input_encoding='utf-8', output_encoding='utf-8')
+        self._template_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_path))
 
     def options(self, *args, **kwargs):
         pass
 
-    def render_string(self, template_name, **kwargs):
-        template = self.lookup.get_template(template_name)
+    def _render_template(self, template_name, **kwargs):
+        # template = self.lookup.get_template(template_name)
         namespace = self.get_template_namespace()
         namespace.update(kwargs)
+        # return template.render(**namespace)
+
+        ext_param = {
+            'app_ver': app_ver,
+            # 'user': self._user,
+            # 'app_const': app_const
+        }
+        if 'page_param' not in kwargs:
+            ext_param['page_param'] = {}
+
+        namespace.update(ext_param)
+
+        try:
+            template = self._template_env.get_template(template_name)
+        except jinja2.TemplateNotFound:
+            errmsg = 'ERROR: can not found template: {}\n'.format(template_name)
+            log.e(errmsg)
+            return errmsg
         return template.render(**namespace)
 
-    def render(self, template_path, **kwargs):
+    def render(self, template_name, **kwargs):
         if self._mode != self.MODE_HTTP:
             log.w('request `{}`, should be web page request.\n'.format(self.request.uri))
             self.write_json(-1, 'should be web page request.')
             return
-        self.finish(self.render_string(template_path, **kwargs))
+        self.finish(self._render_template(template_name, **kwargs))
 
     def write_json(self, code, message='', data=None):
         if self._mode != self.MODE_JSON:
@@ -171,7 +199,7 @@ class TPBaseHandler(tornado.web.RequestHandler):
         return TPE_PRIVILEGE
 
     def show_error_page(self, err_code):
-        self.render('error/error.mako', page_param=json.dumps({'err_code': err_code}))
+        self.render('error/error.html', page_param=json.dumps({'err_code': err_code}))
 
 
 class TPBaseJsonHandler(TPBaseHandler):

@@ -16,6 +16,7 @@ from app.model import account
 from app.model import host
 from app.model import ops
 from app.model import group
+from ._sidebar_menu import tp_generate_sidebar
 
 # 连接信息ID的基数，每次使用时均递增
 tmp_conn_id_base = int(time.time())
@@ -27,7 +28,7 @@ class AuzListHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)
         if ret != TPE_OK:
             return
-        self.render('ops/auz-list.mako')
+        self.render('ops/auz-list.html', sidebar_menu=tp_generate_sidebar(self))
 
 
 class RemoteHandler(TPBaseHandler):
@@ -47,7 +48,7 @@ class RemoteHandler(TPBaseHandler):
         #     'core_cfg': tp_cfg().core
         # }
 
-        self.render('ops/remote-list.mako', page_param=json.dumps(param))
+        self.render('ops/remote-list.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
 
 
 class PolicyDetailHandler(TPBaseHandler):
@@ -79,7 +80,7 @@ class PolicyDetailHandler(TPBaseHandler):
                     'ssh': 0
                 }
             }
-        self.render('ops/auz-info.mako', page_param=json.dumps(param))
+        self.render('ops/auz-info.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
 
 
 class SessionListsHandler(TPBaseHandler):
@@ -87,7 +88,7 @@ class SessionListsHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_OPS_AUZ)
         if ret != TPE_OK:
             return
-        self.render('ops/sessions.mako')
+        self.render('ops/sessions.html', sidebar_menu=tp_generate_sidebar(self))
 
 
 @tornado.gen.coroutine

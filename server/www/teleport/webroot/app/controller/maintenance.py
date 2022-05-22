@@ -13,7 +13,7 @@ cfg = tp_cfg()
 
 class IndexHandler(TPBaseHandler):
     def get(self):
-        self.render('maintenance/index.mako')
+        self.render('maintenance/index.html')
 
 
 class InstallHandler(TPBaseHandler):
@@ -38,7 +38,7 @@ class InstallHandler(TPBaseHandler):
                 db['mysql_db'] = _db.mysql_db
 
             param = {'db': db}
-            self.render('maintenance/install.mako', page_param=json.dumps(param))
+            self.render('maintenance/install.html', page_param=json.dumps(param))
         elif get_db().need_upgrade:
             return self.redirect('/maintenance/upgrade')
         else:
@@ -54,7 +54,7 @@ class UpgradeHandler(TPBaseHandler):
         if get_db().need_create:
             return self.redirect('/maintenance/install')
         elif get_db().need_upgrade:
-            self.render('maintenance/upgrade.mako')
+            self.render('maintenance/upgrade.html')
         else:
             self.redirect('/')
 

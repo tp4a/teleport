@@ -11,6 +11,7 @@ from app.model import audit
 from app.model import record
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 import tornado.gen
+from ._sidebar_menu import tp_generate_sidebar
 
 
 def get_free_space_bytes(folder):
@@ -28,7 +29,7 @@ class AuzListHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_AUDIT_AUZ)
         if ret != TPE_OK:
             return
-        self.render('audit/auz-list.mako')
+        self.render('audit/auz-list.html', sidebar_menu=tp_generate_sidebar(self))
 
 
 class PolicyDetailHandler(TPBaseHandler):
@@ -50,7 +51,7 @@ class PolicyDetailHandler(TPBaseHandler):
                 'policy_name': '',
                 'policy_desc': ''
             }
-        self.render('audit/auz-info.mako', page_param=json.dumps(param))
+        self.render('audit/auz-info.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
 
 
 class DoGetPoliciesHandler(TPBaseJsonHandler):
@@ -424,7 +425,7 @@ class RecordHandler(TPBaseHandler):
             'free_size': free_size,
         }
 
-        self.render('audit/record.mako', page_param=json.dumps(param))
+        self.render('audit/record.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
 
 
 class DoGetRecordsHandler(TPBaseJsonHandler):
@@ -498,13 +499,13 @@ class ReplayHandler(TPBaseHandler):
         protocol = int(protocol)
         if protocol == TP_PROTOCOL_TYPE_RDP:
             param = {'record_id': record_id}
-            self.render('audit/replay-rdp.mako', page_param=json.dumps(param))
+            self.render('audit/replay-rdp.html', page_param=json.dumps(param))
         elif protocol == TP_PROTOCOL_TYPE_SSH:
             param = {'record_id': record_id}
-            self.render('audit/replay-ssh.mako', page_param=json.dumps(param))
+            self.render('audit/replay-ssh.html', page_param=json.dumps(param))
         elif protocol == TP_PROTOCOL_TYPE_TELNET:
             param = {'record_id': record_id}
-            self.render('audit/replay-telnet.mako', page_param=json.dumps(param))
+            self.render('audit/replay-telnet.html', page_param=json.dumps(param))
 
 
 # # class PlayRdpHandler(TPBaseAdminAuthHandler):
@@ -539,7 +540,7 @@ class ComandLogHandler(TPBaseHandler):
         if header is None:
             # return self.write('操作失败！[{}]'.format(err))
             param['code'] = err
-            return self.render('audit/record-ssh-cmd.mako', page_param=json.dumps(param))
+            return self.render('audit/record-ssh-cmd.html', page_param=json.dumps(param))
 
         # ret = dict()
         # ret['header'] = header
@@ -590,9 +591,9 @@ class ComandLogHandler(TPBaseHandler):
             # param['count'] = len(param['op'])
 
         if cmd_type == 0:
-            self.render('audit/record-ssh-cmd.mako', page_param=json.dumps(param))
+            self.render('audit/record-ssh-cmd.html', page_param=json.dumps(param))
         else:
-            self.render('audit/record-sftp-cmd.mako', page_param=json.dumps(param))
+            self.render('audit/record-sftp-cmd.html', page_param=json.dumps(param))
 
 
 class DoGetRecordHeaderHandler(TPBaseJsonHandler):

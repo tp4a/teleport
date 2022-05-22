@@ -20,6 +20,7 @@ from app.logic.auth.oath import tp_oath_generate_secret, tp_oath_generate_qrcode
 from app.logic.auth.password import tp_password_generate_secret, tp_password_verify
 from app.model import group
 from app.model import user
+from ._sidebar_menu import tp_generate_sidebar
 
 
 class UserListHandler(TPBaseHandler):
@@ -37,10 +38,10 @@ class UserListHandler(TPBaseHandler):
 
         param = {
             'sys_smtp': is_sys_smtp,
-            'sys_cfg': tp_cfg().sys
+            'sys_cfg': tp_cfg().sys,
         }
 
-        self.render('user/user-list.mako', page_param=json.dumps(param))
+        self.render('user/user-list.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
 
 
 class GroupListHandler(TPBaseHandler):
@@ -48,7 +49,8 @@ class GroupListHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_USER_GROUP)
         if ret != TPE_OK:
             return
-        self.render('user/user-group-list.mako')
+
+        self.render('user/user-group-list.html', sidebar_menu=tp_generate_sidebar(self))
 
 
 class GroupInfoHandler(TPBaseHandler):
@@ -70,7 +72,7 @@ class GroupInfoHandler(TPBaseHandler):
                 'group_name': '',
                 'group_desc': ''
             }
-        self.render('user/user-group-info.mako', page_param=json.dumps(param))
+        self.render('user/user-group-info.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
 
 
 class MeHandler(TPBaseHandler):
@@ -79,7 +81,7 @@ class MeHandler(TPBaseHandler):
         if ret != TPE_OK:
             return
 
-        self.render('user/me.mako')
+        self.render('user/me.html', sidebar_menu=tp_generate_sidebar(self))
 
 
 class ResetPasswordHandler(TPBaseHandler):
@@ -113,7 +115,7 @@ class ResetPasswordHandler(TPBaseHandler):
                 param['mode'] = 3  # mode=3, show 'set-new-password' page
                 param['force_strong'] = tp_cfg().sys.password.force_strong
 
-        self.render('user/reset-password.mako', page_param=json.dumps(param))
+        self.render('user/reset-password.html', page_param=json.dumps(param))
 
 
 class ChangeExpiredPasswordHandler(TPBaseHandler):
@@ -123,12 +125,12 @@ class ChangeExpiredPasswordHandler(TPBaseHandler):
             return self.redirect('/')
 
         param = {'username': _username, 'force_strong': tp_cfg().sys.password.force_strong}
-        self.render('user/change-expired-password.mako', page_param=json.dumps(param))
+        self.render('user/change-expired-password.html', page_param=json.dumps(param))
 
 
 class BindOathHandler(TPBaseHandler):
     def get(self):
-        self.render('user/bind-oath.mako')
+        self.render('user/bind-oath.html')
 
 
 class DoGenerateOathSecretHandler(TPBaseJsonHandler):

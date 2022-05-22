@@ -11,10 +11,11 @@ from app.base.logger import *
 from app.const import *
 from app.model import account
 from app.model import group
+from ._sidebar_menu import tp_generate_sidebar
 
 # 临时认证ID的基数，每次使用时均递减
-tmp_auth_id_base = -1
-tmp_auth_id_lock = threading.RLock()
+# tmp_auth_id_base = -1
+# tmp_auth_id_lock = threading.RLock()
 
 
 class AccGroupListHandler(TPBaseHandler):
@@ -22,7 +23,30 @@ class AccGroupListHandler(TPBaseHandler):
         ret = self.check_privilege(TP_PRIVILEGE_ACCOUNT_GROUP)
         if ret != TPE_OK:
             return
-        self.render('asset/account-group-list.mako')
+        self.render('asset/account-group-list.html', sidebar_menu=tp_generate_sidebar(self))
+
+
+class AccGroupInfoHandler(TPBaseHandler):
+    def get(self, gid):
+        ret = self.check_privilege(TP_PRIVILEGE_ACCOUNT_GROUP)
+        if ret != TPE_OK:
+            return
+        gid = int(gid)
+        err, groups = group.get_by_id(TP_GROUP_ACCOUNT, gid)
+        if err == TPE_OK:
+            param = {
+                'group_id': gid,
+                'group_name': groups['name'],
+                'group_desc': groups['desc']
+            }
+        else:
+            param = {
+                'group_id': 0,
+                'group_name': '',
+                'group_desc': ''
+            }
+
+        self.render('asset/account-group-info.html', page_param=json.dumps(param), sidebar_menu=tp_generate_sidebar(self))
 
 
 class DoGetAccountsHandler(TPBaseJsonHandler):
@@ -163,29 +187,6 @@ class DoGetAccountGroupWithMemberHandler(TPBaseJsonHandler):
         ret['total'] = total_count
         ret['data'] = row_data
         self.write_json(err, data=ret)
-
-
-class AccGroupInfoHandler(TPBaseHandler):
-    def get(self, gid):
-        ret = self.check_privilege(TP_PRIVILEGE_ACCOUNT_GROUP)
-        if ret != TPE_OK:
-            return
-        gid = int(gid)
-        err, groups = group.get_by_id(TP_GROUP_ACCOUNT, gid)
-        if err == TPE_OK:
-            param = {
-                'group_id': gid,
-                'group_name': groups['name'],
-                'group_desc': groups['desc']
-            }
-        else:
-            param = {
-                'group_id': 0,
-                'group_name': '',
-                'group_desc': ''
-            }
-
-        self.render('asset/account-group-info.mako', page_param=json.dumps(param))
 
 
 class DoUpdateAccountHandler(TPBaseJsonHandler):

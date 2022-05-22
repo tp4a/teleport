@@ -62,7 +62,8 @@ class LoginHandler(TPBaseHandler):
             'username': username,
             'default_auth': default_auth_type
         }
-        self.render('auth/login.mako', page_param=json.dumps(param))
+        # self.render('auth/login.html', page_param=json.dumps(param))
+        self.render('auth/login.html', page_param=json.dumps(param))
 
 
 class DoLoginHandler(TPBaseJsonHandler):
