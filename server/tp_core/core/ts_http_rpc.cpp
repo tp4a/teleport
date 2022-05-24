@@ -9,53 +9,9 @@
 #include <teleport_const.h>
 #include <sstream>
 
-#if 0
-#define HEXTOI(x) (isdigit(x) ? (x) - '0' : (x) - 'W')
-
-int ts_url_decode(const char* src, int src_len, char* dst, int dst_len, int is_form_url_encoded)
+TsHttpRpc::TsHttpRpc() : ExThreadBase("http-rpc-thread")
 {
-    int i, j, a, b;
-
-    if(src_len == 0 || dst == nullptr || dst_len == 0)
-        return 0;
-
-    for (i = j = 0; i < src_len && j < dst_len - 1; i++, j++)
-    {
-        if (src[i] == '%')
-        {
-            if (i < src_len - 2 && isxdigit(*(const unsigned char*)(src + i + 1)) &&
-                isxdigit(*(const unsigned char*)(src + i + 2)))
-            {
-                a = tolower(*(const unsigned char*)(src + i + 1));
-                b = tolower(*(const unsigned char*)(src + i + 2));
-                dst[j] = (char)((HEXTOI(a) << 4) | HEXTOI(b));
-                i += 2;
-            }
-            else
-            {
-                return -1;
-            }
-        }
-        else if (is_form_url_encoded && src[i] == '+')
-        {
-            dst[j] = ' ';
-        }
-        else
-        {
-            dst[j] = src[i];
-        }
-    }
-
-    dst[j] = '\0'; /* Null-terminate the destination */
-
-    return i >= src_len ? j : -1;
-}
-#endif
-
-TsHttpRpc::TsHttpRpc() :
-        ExThreadBase("http-rpc-thread")
-{
-    mg_mgr_init(&m_mg_mgr, NULL);
+    mg_mgr_init(&m_mg_mgr, nullptr);
 }
 
 TsHttpRpc::~TsHttpRpc()
@@ -63,7 +19,7 @@ TsHttpRpc::~TsHttpRpc()
     mg_mgr_free(&m_mg_mgr);
 }
 
-void TsHttpRpc::_thread_loop(void)
+void TsHttpRpc::_thread_loop()
 {
     EXLOGI("[core] TeleportServer-RPC ready on %s:%d\n", m_host_ip.c_str(), m_host_port);
 
@@ -76,25 +32,19 @@ void TsHttpRpc::_thread_loop(void)
 }
 
 
-bool TsHttpRpc::init(void)
+bool TsHttpRpc::init()
 {
-    struct mg_connection* nc = NULL;
-
     m_host_ip = g_env.rpc_bind_ip;
     m_host_port = g_env.rpc_bind_port;
 
     char addr[128] = {0};
-    // 	if (0 == strcmp(m_host_ip.c_str(), "127.0.0.1") || 0 == strcmp(m_host_ip.c_str(), "localhost"))
-    // 		ex_strformat(addr, 128, ":%d", m_host_port);
-    // 	else
-    // 		ex_strformat(addr, 128, "%s:%d", m_host_ip.c_str(), m_host_port);
     if (0 == strcmp(m_host_ip.c_str(), "0.0.0.0"))
         ex_strformat(addr, 128, ":%d", m_host_port);
     else
         ex_strformat(addr, 128, "%s:%d", m_host_ip.c_str(), m_host_port);
 
-    nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
-    if (NULL == nc)
+    auto* nc = mg_bind(&m_mg_mgr, addr, _mg_event_handler);
+    if (nc == nullptr)
     {
         EXLOGE("[core] rpc listener failed to bind at %s.\n", addr);
         return false;
@@ -115,10 +65,10 @@ bool TsHttpRpc::init(void)
 
 void TsHttpRpc::_mg_event_handler(struct mg_connection* nc, int ev, void* ev_data)
 {
-    struct http_message* hm = (struct http_message*)ev_data;
+    auto* hm = (struct http_message*)ev_data;
 
-    TsHttpRpc* _this = (TsHttpRpc*)nc->user_data;
-    if (NULL == _this)
+    auto* _this = (TsHttpRpc*)nc->user_data;
+    if (_this == nullptr)
     {
         EXLOGE("[core] rpc invalid http request.\n");
         return;
@@ -168,7 +118,7 @@ void TsHttpRpc::_mg_event_handler(struct mg_connection* nc, int ev, void* ev_dat
 
 ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Json::Value& json_param)
 {
-    if (NULL == req)
+    if (req == nullptr)
         return TPE_PARAM;
 
     bool is_get = true;
@@ -203,14 +153,14 @@ ex_rv TsHttpRpc::_parse_request(struct http_message* req, ex_astr& func_cmd, Jso
 
         ex_chars sztmp;
         sztmp.resize(len);
-        memset(&sztmp[0], 0, len);
-        if (-1 == ex_url_decode(json_str.c_str(), json_str.length(), &sztmp[0], len, 0))
+        memset(sztmp.data(), 0, len);
+        if (-1 == ex_url_decode(json_str.c_str(), json_str.length(), sztmp.data(), len, 0))
             return TPE_HTTP_URL_ENCODE;
 
-        json_str = &sztmp[0];
+        json_str = sztmp.data();
     }
 
-    if (0 == json_str.length())
+    if (json_str.empty())
         return TPE_PARAM;
 
     //Json::Reader jreader;
@@ -339,8 +289,7 @@ void TsHttpRpc::_rpc_func_get_config(const Json::Value& json_param, ex_astr& buf
 
     ExIniFile& ini = g_env.get_ini();
     ex_ini_sections& secs = ini.GetAllSections();
-    ex_ini_sections::iterator it = secs.begin();
-    for (; it != secs.end(); ++it)
+    for (auto it = secs.begin(); it != secs.end(); ++it)
     {
         if (it->first.length() > 9 && 0 == wcsncmp(it->first.c_str(), L"protocol-", 9))
         {
@@ -374,7 +323,6 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
 {
     // https://github.com/tp4a/teleport/wiki/TELEPORT-CORE-JSON-RPC#request_session
 
-    int conn_id = 0;
     ex_rv rv = TPE_OK;
 
     if (json_param["conn_id"].isNull())
@@ -388,14 +336,14 @@ void TsHttpRpc::_rpc_func_request_session(const Json::Value& json_param, ex_astr
         return;
     }
 
-    conn_id = json_param["conn_id"].asInt();
+    int conn_id = json_param["conn_id"].asInt();
     if (0 == conn_id)
     {
         _create_json_ret(buf, TPE_PARAM);
         return;
     }
 
-    TS_CONNECT_INFO* info = new TS_CONNECT_INFO;
+    auto* info = new TS_CONNECT_INFO;
     if ((rv = ts_web_rpc_get_conn_info(conn_id, *info)) != TPE_OK)
     {
         _create_json_ret(buf, rv);
@@ -444,7 +392,7 @@ void TsHttpRpc::_rpc_func_kill_sessions(const Json::Value& json_param, ex_astr& 
     }
 
     Json::Value s = json_param["sessions"];
-    int cnt = s.size();
+    int cnt = (int)s.size();
     for (int i = 0; i < cnt; ++i)
     {
         if (!s[i].isString())
@@ -452,7 +400,7 @@ void TsHttpRpc::_rpc_func_kill_sessions(const Json::Value& json_param, ex_astr& 
             _create_json_ret(buf, TPE_PARAM);
             return;
         }
-    }
+    };
 
     EXLOGV("[core] try to kill %d sessions.\n", cnt);
     ex_astr sp = s.toStyledString();
@@ -542,7 +490,7 @@ void TsHttpRpc::_rpc_func_set_config(const Json::Value& json_param, ex_astr& buf
         return;
     }
 
-    int noop_timeout = json_param["noop_timeout"].asUInt();
+    int noop_timeout = json_param["noop_timeout"].asInt();
     EXLOGV("[core] set run-time config:\n");
     EXLOGV("[core]   noop_timeout = %dm\n", noop_timeout);
 

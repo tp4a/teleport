@@ -6,7 +6,8 @@ TppManager g_tpp_mgr;
 
 extern ExLogger g_ex_logger;
 
-bool TppManager::load_tpp(const ex_wstr& libname) {
+bool TppManager::load_tpp(const ex_wstr& libname)
+{
     ex_wstr filename;
 #ifdef EX_OS_WIN32
     filename = libname + L".dll";
@@ -27,7 +28,8 @@ bool TppManager::load_tpp(const ex_wstr& libname) {
     auto lib = new TPP_LIB;
 
     lib->dylib = ex_dlopen(lib_file.c_str());
-    if (nullptr == lib->dylib) {
+    if (nullptr == lib->dylib)
+    {
         EXLOGE(L"[core] load dylib `%ls` failed.\n", lib_file.c_str());
         delete lib;
         return false;
@@ -40,11 +42,11 @@ bool TppManager::load_tpp(const ex_wstr& libname) {
     lib->timer = (TPP_TIMER_FUNC)GetProcAddress(lib->dylib, "tpp_timer");
     lib->command = (TPP_COMMAND_FUNC)GetProcAddress(lib->dylib, "tpp_command");
 #else
-    lib->init = (TPP_INIT_FUNC) dlsym(lib->dylib, "tpp_init");
-    lib->start = (TPP_START_FUNC) dlsym(lib->dylib, "tpp_start");
-    lib->stop = (TPP_STOP_FUNC) dlsym(lib->dylib, "tpp_stop");
-    lib->timer = (TPP_TIMER_FUNC) dlsym(lib->dylib, "tpp_timer");
-    lib->command = (TPP_COMMAND_FUNC) dlsym(lib->dylib, "tpp_command");
+    lib->init = (TPP_INIT_FUNC)dlsym(lib->dylib, "tpp_init");
+    lib->start = (TPP_START_FUNC)dlsym(lib->dylib, "tpp_start");
+    lib->stop = (TPP_STOP_FUNC)dlsym(lib->dylib, "tpp_stop");
+    lib->timer = (TPP_TIMER_FUNC)dlsym(lib->dylib, "tpp_timer");
+    lib->command = (TPP_COMMAND_FUNC)dlsym(lib->dylib, "tpp_command");
 #endif
 
     if (
@@ -53,7 +55,8 @@ bool TppManager::load_tpp(const ex_wstr& libname) {
             || lib->stop == nullptr
             || lib->timer == nullptr
             || lib->command == nullptr
-            ) {
+            )
+    {
         EXLOGE(L"[core] load dylib `%ls` failed, can not locate all functions.\n", lib_file.c_str());
         delete lib;
         return false;
@@ -71,12 +74,14 @@ bool TppManager::load_tpp(const ex_wstr& libname) {
     init_args.func_session_update = tpp_session_update;
     init_args.func_session_end = tpp_session_end;
 
-    if (EXRV_OK != lib->init(&init_args)) {
+    if (EXRV_OK != lib->init(&init_args))
+    {
         EXLOGE(L"[core] failed to init protocol `%ls`.\n", libname.c_str());
         delete lib;
         return false;
     }
-    if (EXRV_OK != lib->start()) {
+    if (EXRV_OK != lib->start())
+    {
         EXLOGE(L"[core] failed to start protocol `%ls`.\n", libname.c_str());
         delete lib;
         return false;
@@ -86,14 +91,18 @@ bool TppManager::load_tpp(const ex_wstr& libname) {
     return true;
 }
 
-void TppManager::stop_all() {
-    for (auto& lib : m_libs) {
+void TppManager::stop_all()
+{
+    for (auto& lib: m_libs)
+    {
         lib->stop();
     }
 }
 
-void TppManager::timer() {
-    for (auto& lib : m_libs) {
+void TppManager::timer()
+{
+    for (auto& lib: m_libs)
+    {
         lib->timer();
     }
 }
@@ -110,14 +119,18 @@ void TppManager::timer() {
 // 	}
 // }
 
-void TppManager::set_runtime_config(const ex_astr& sp) {
-    for (auto& lib : m_libs) {
+void TppManager::set_runtime_config(const ex_astr& sp)
+{
+    for (auto& lib: m_libs)
+    {
         lib->command(TPP_CMD_SET_RUNTIME_CFG, sp.c_str());
     }
 }
 
-void TppManager::kill_sessions(const ex_astr& sp) {
-    for (auto& lib : m_libs) {
+void TppManager::kill_sessions(const ex_astr& sp)
+{
+    for (auto& lib: m_libs)
+    {
         lib->command(TPP_CMD_KILL_SESSIONS, sp.c_str());
     }
 }

@@ -5,17 +5,20 @@
 
 #include <ex.h>
 
-typedef struct TPP_LIB {
+typedef struct TPP_LIB
+{
     TPP_LIB() :
             dylib(nullptr),
             init(nullptr),
             start(nullptr),
             stop(nullptr),
             timer(nullptr),
-            command(nullptr) {
+            command(nullptr)
+    {
     }
 
-    ~TPP_LIB() {
+    ~TPP_LIB()
+    {
         if (nullptr != dylib)
             ex_dlclose(dylib);
         dylib = nullptr;
@@ -31,12 +34,15 @@ typedef struct TPP_LIB {
 
 typedef std::list<TPP_LIB*> tpp_libs;
 
-class TppManager {
+class TppManager
+{
 public:
     TppManager() = default;
 
-    ~TppManager() {
-        for (auto lib : m_libs) {
+    ~TppManager()
+    {
+        for (auto lib: m_libs)
+        {
             delete lib;
         }
         m_libs.clear();
@@ -48,7 +54,8 @@ public:
 
     void timer(); // 大约1秒调用一次
 
-    int count() {
+    size_t count()
+    {
         return m_libs.size();
     }
 

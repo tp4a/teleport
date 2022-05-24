@@ -162,7 +162,7 @@ void SshProxy::_thread_loop() {
 
         uint32_t dbg_id = m_dbg_id++;
         auto session = new SshSession(this, rs_tp2cli, dbg_id, ip, addr->sin_port);
-        EXLOGW("[ssh] ------ NEW SSH SESSION [%s from %s:%d] ------\n", session->dbg_name().c_str(), ip, addr->sin_port);
+        EXLOGW("[ssh] ------ NEW SSH SESSION [%s from %s] ------\n", session->dbg_name().c_str(), session->dbg_client().c_str());
 
         {
             ExThreadSmartLock locker(m_lock);

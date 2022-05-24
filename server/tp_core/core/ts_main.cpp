@@ -3,6 +3,7 @@
 #include "ts_http_rpc.h"
 #include "ts_web_rpc.h"
 #include "ts_env.h"
+#include "ts_ver.h"
 #include "tp_tpp_mgr.h"
 
 #include <mbedtls/platform.h>
@@ -103,10 +104,10 @@ bool tpp_session_end(const char* sid, int db_id, int ret) {
 int ts_main() {
     ExIniFile& ini = g_env.get_ini();
 
-    EXLOGI("\n");
-    EXLOGI("###############################################################\n");
-    EXLOGI(L"Load config file: %ls.\n", ini.get_filename().c_str());
-    EXLOGI("Teleport Core Server starting ...\n");
+    EXLOGW("\n");
+    EXLOGW("###############################################################\n");
+    EXLOGW(L"Teleport Core Server v%ls starting ...\n", TP_SERVER_VER);
+    EXLOGW(L"Load config file: %ls.\n", ini.get_filename().c_str());
 
     ex_ini_sections& secs = ini.GetAllSections();
     TsHttpRpc rpc;

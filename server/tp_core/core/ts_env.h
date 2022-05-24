@@ -6,27 +6,28 @@
 class TsEnv
 {
 public:
-	TsEnv();
-	~TsEnv();
+    TsEnv();
 
-	bool init(bool load_config);
+    ~TsEnv();
 
-	ExIniFile& get_ini() { return m_ini; }
+    bool init(bool load_config);
+
+    ExIniFile& get_ini() { return m_ini; }
 
 public:
-	ex_wstr m_exec_file;
-	ex_wstr m_exec_path;
-	ex_wstr m_etc_path;
-	ex_wstr m_replay_path;
+    ex_wstr m_exec_file;
+    ex_wstr m_exec_path;
+    ex_wstr m_etc_path;
+    ex_wstr m_replay_path;
 
-	ex_astr rpc_bind_ip;
-	int rpc_bind_port;
+    ex_astr rpc_bind_ip;
+    int rpc_bind_port;
 
-	ex_astr web_server_rpc;
-	ex_astr core_server_rpc;
+    ex_astr web_server_rpc;
+    ex_astr core_server_rpc;
 
 private:
-	ExIniFile m_ini;
+    ExIniFile m_ini;
 };
 
 extern TsEnv g_env;

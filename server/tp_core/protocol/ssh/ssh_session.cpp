@@ -604,6 +604,13 @@ int SshSession::_do_auth(const char* user, const char* secret)
     }
     else
     {
+        // 如果第一次认证时没有确定目标远程主机IP和端口（例如session-id无效），则不再继续后面的操作
+        if(m_conn_ip.empty() || m_conn_port == 0)
+        {
+            EXLOGE("[%s] second auth, user: %s, no remote host info, can not connect.\n", m_dbg_name.c_str(), user);
+            return SSH_AUTH_DENIED;
+        }
+
         // 允许用户自行输入密码的情况下，第二次认证，参数secret就是用户自己输入的密码了。
         m_acc_secret = secret;
     }

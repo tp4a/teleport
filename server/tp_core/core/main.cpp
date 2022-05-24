@@ -19,172 +19,173 @@ ExLogger g_ex_logger;
 bool g_is_debug = false;
 extern bool g_exit_flag;
 
-#define RUN_UNKNOWN			0
-#define RUN_CORE			1
-#define RUN_INSTALL_SRV		2
-#define RUN_UNINST_SRV		3
-#define RUN_STOP			4
+#define RUN_UNKNOWN            0
+#define RUN_CORE            1
+#define RUN_INSTALL_SRV        2
+#define RUN_UNINST_SRV        3
+#define RUN_STOP            4
 static ex_u8 g_run_type = RUN_UNKNOWN;
 
-#define EOM_CORE_SERVICE_NAME	L"Teleport Core Service"
+#define EOM_CORE_SERVICE_NAME    L"Teleport Core Service"
 
 static bool run_daemon_();
 
 #ifdef EX_OS_WIN32
 static int service_install()
 {
-	ex_wstr exec_file(g_env.m_exec_file);
-	exec_file += L" start";
+    ex_wstr exec_file(g_env.m_exec_file);
+    exec_file += L" start";
 
-	if (EXRV_OK == ex_winsrv_install(EOM_CORE_SERVICE_NAME, EOM_CORE_SERVICE_NAME, exec_file))
-		return 0;
-	else
-		return 1;
+    if (EXRV_OK == ex_winsrv_install(EOM_CORE_SERVICE_NAME, EOM_CORE_SERVICE_NAME, exec_file))
+        return 0;
+    else
+        return 1;
 }
 
 static int service_uninstall()
 {
-	if (EXRV_OK != ex_winsrv_stop(EOM_CORE_SERVICE_NAME))
-		return 1;
+    if (EXRV_OK != ex_winsrv_stop(EOM_CORE_SERVICE_NAME))
+        return 1;
 
-	if (EXRV_OK != ex_winsrv_uninstall(EOM_CORE_SERVICE_NAME))
-		return 2;
+    if (EXRV_OK != ex_winsrv_uninstall(EOM_CORE_SERVICE_NAME))
+        return 2;
 
-	return 0;
+    return 0;
 }
 #endif
 
 static bool process_cmd_line_(int argc, wchar_t** argv)
 {
-	if (argc <= 1)
-	{
-		EXLOGE("nothing to do.\n\n");
-		return false;
-	}
+    if (argc <= 1)
+    {
+        EXLOGE("nothing to do.\n\n");
+        return false;
+    }
 
-	g_run_type = RUN_UNKNOWN;
+    g_run_type = RUN_UNKNOWN;
 
-	if (0 == wcscmp(argv[1], L"--version"))
-	{
-		EXLOGI("\nTeleport Server, version %ls.\n\n", TP_SERVER_VER);
-		return false;
-	}
-	else if (0 == wcscmp(argv[1], L"-i"))
-	{
-		g_run_type = RUN_INSTALL_SRV;
-	}
-	else if (0 == wcscmp(argv[1], L"-u"))
-	{
-		g_run_type = RUN_UNINST_SRV;
-	}
-	else
-	{
-		for (int i = 1; i < argc; ++i)
-		{
-			if (0 == wcscmp(argv[i], L"start"))
-			{
-				g_run_type = RUN_CORE;
-				continue;
-			}
-			else if (0 == wcscmp(argv[i], L"stop")) {
-				g_run_type = RUN_STOP;
-				continue;
-			}
+    if (0 == wcscmp(argv[1], L"--version"))
+    {
+        EXLOGI("\nTeleport Server, version %ls.\n\n", TP_SERVER_VER);
+        return false;
+    }
+    else if (0 == wcscmp(argv[1], L"-i"))
+    {
+        g_run_type = RUN_INSTALL_SRV;
+    }
+    else if (0 == wcscmp(argv[1], L"-u"))
+    {
+        g_run_type = RUN_UNINST_SRV;
+    }
+    else
+    {
+        for (int i = 1; i < argc; ++i)
+        {
+            if (0 == wcscmp(argv[i], L"start"))
+            {
+                g_run_type = RUN_CORE;
+                continue;
+            }
+            else if (0 == wcscmp(argv[i], L"stop"))
+            {
+                g_run_type = RUN_STOP;
+                continue;
+            }
 
-			if (0 == wcscmp(argv[i], L"-d"))
-			{
-				g_is_debug = true;
-				continue;
-			}
+            if (0 == wcscmp(argv[i], L"-d"))
+            {
+                g_is_debug = true;
+                continue;
+            }
 
-			EXLOGE(L"unknown option: %ls\n", argv[i]);
-			return false;
-		}
-	}
+            EXLOGE(L"unknown option: %ls\n", argv[i]);
+            return false;
+        }
+    }
 
-	if (g_run_type == RUN_UNKNOWN)
-	{
-		EXLOGE("nothing to do.\n\n");
-		return false;
-	}
+    if (g_run_type == RUN_UNKNOWN)
+    {
+        EXLOGE("nothing to do.\n\n");
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 
 static int main_loop_()
 {
-	if (g_run_type == RUN_CORE)
-		return ts_main();
-	else
-		return 1;
+    if (g_run_type == RUN_CORE)
+        return ts_main();
+    else
+        return 1;
 }
 
 int app_main_(int argc, wchar_t** argv)
 {
-	EXLOG_USE_LOGGER(&g_ex_logger);
+    EXLOG_USE_LOGGER(&g_ex_logger);
 
-	if (!process_cmd_line_(argc, argv))
-		return 1;
+    if (!process_cmd_line_(argc, argv))
+        return 1;
 
 #ifdef EX_DEBUG
-	EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
+    EXLOG_LEVEL(EX_LOG_LEVEL_DEBUG);
 #endif
 
 #ifdef EX_OS_WIN32
-	if (g_run_type == RUN_INSTALL_SRV)
-	{
-		if (!g_env.init(false))
-		{
-			EXLOGE("[core] env init failed.\n");
-			return 1;
-		}
+    if (g_run_type == RUN_INSTALL_SRV)
+    {
+        if (!g_env.init(false))
+        {
+            EXLOGE("[core] env init failed.\n");
+            return 1;
+        }
 
-		return service_install();
-	}
-	else if (g_run_type == RUN_UNINST_SRV)
-	{
-		if (!g_env.init(false))
-		{
-			EXLOGE("[core] env init failed.\n");
-			return 1;
-		}
+        return service_install();
+    }
+    else if (g_run_type == RUN_UNINST_SRV)
+    {
+        if (!g_env.init(false))
+        {
+            EXLOGE("[core] env init failed.\n");
+            return 1;
+        }
 
-		return service_uninstall();
-	}
+        return service_uninstall();
+    }
 #endif
 
-	if (!g_env.init(true))
-	{
-		EXLOGE("[core] env init failed.\n");
-		return 1;
-	}
+    if (!g_env.init(true))
+    {
+        EXLOGE("[core] env init failed.\n");
+        return 1;
+    }
 
-	if (g_run_type == RUN_STOP) {
-		char url[1024] = {0};
-		ex_strformat(url, 1023, R"(http://%s:%d/rpc?{"method":"exit"})", g_env.rpc_bind_ip.c_str(), g_env.rpc_bind_port);
-		ex_astr body;
-		ts_http_get(url, body);
-		ex_printf("%s\n", body.c_str());
-		return 0;
-	}
+    if (g_run_type == RUN_STOP)
+    {
+        char url[1024] = {0};
+        ex_strformat(url, 1023, R"(http://%s:%d/rpc?{"method":"exit"})", g_env.rpc_bind_ip.c_str(), g_env.rpc_bind_port);
+        ex_astr body;
+        ts_http_get(url, body);
+        ex_printf("%s\n", body.c_str());
+        return 0;
+    }
 
-	if (!g_is_debug)
-	{
-		if (!run_daemon_())
-		{
-			EXLOGE("[core] can not run in daemon mode.\n");
-			return 1;
-		}
+    if (!g_is_debug)
+    {
+        if (!run_daemon_())
+        {
+            EXLOGE("[core] can not run in daemon mode.\n");
+            return 1;
+        }
 
 #ifdef EX_OS_WIN32
-		return 0;
+        return 0;
 #endif
-	}
+    }
 
-	return main_loop_();
+    return main_loop_();
 }
-
 
 
 #ifdef EX_OS_WIN32
@@ -204,131 +205,131 @@ static DWORD WINAPI service_thread_func(LPVOID lpParam);
 
 int main()
 {
-	int ret = 0;
-	LPWSTR szCmdLine = (LPWSTR)::GetCommandLineW(); //获取命令行参数；
+    int ret = 0;
+    LPWSTR szCmdLine = (LPWSTR)::GetCommandLineW(); //获取命令行参数；
 
-	int _argc = 0;
-	wchar_t** _argv = ::CommandLineToArgvW(szCmdLine, &_argc); //拆分命令行参数字符串；
+    int _argc = 0;
+    wchar_t** _argv = ::CommandLineToArgvW(szCmdLine, &_argc); //拆分命令行参数字符串；
 
-	ret = app_main_(_argc, _argv);
+    ret = app_main_(_argc, _argv);
 
-	LocalFree(_argv);
-	_argv = nullptr;
+    LocalFree(_argv);
+    _argv = nullptr;
 
-	return ret;
+    return ret;
 }
 
 static bool run_daemon_(void)
 {
-	SERVICE_TABLE_ENTRY DispatchTable[2];
-	DispatchTable[0].lpServiceName = EOM_CORE_SERVICE_NAME;
-	DispatchTable[0].lpServiceProc = service_main;
-	DispatchTable[1].lpServiceName = nullptr;
-	DispatchTable[1].lpServiceProc = nullptr;
+    SERVICE_TABLE_ENTRY DispatchTable[2];
+    DispatchTable[0].lpServiceName = EOM_CORE_SERVICE_NAME;
+    DispatchTable[0].lpServiceProc = service_main;
+    DispatchTable[1].lpServiceName = nullptr;
+    DispatchTable[1].lpServiceProc = nullptr;
 
-	if (!StartServiceCtrlDispatcher(DispatchTable))
-	{
-		EXLOGE_WIN("StartServiceCtrlDispatcher()");
-		return false;
-	}
+    if (!StartServiceCtrlDispatcher(DispatchTable))
+    {
+        EXLOGE_WIN("StartServiceCtrlDispatcher()");
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 
 static DWORD WINAPI service_thread_func(LPVOID lpParam)
 {
-	int ret = main_loop_();
+    int ret = main_loop_();
 
-	// 更新服务状态（如果服务还在运行，将其设置为停止状态）
-	g_ServiceStatus.dwWin32ExitCode = 0;
-	g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-	g_ServiceStatus.dwCheckPoint = 0;
-	g_ServiceStatus.dwWaitHint = 0;
-	if (!SetServiceStatus(g_hServiceStatusHandle, &g_ServiceStatus))
-		EXLOGE_WIN("SetServiceStatus()");
+    // 更新服务状态（如果服务还在运行，将其设置为停止状态）
+    g_ServiceStatus.dwWin32ExitCode = 0;
+    g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+    g_ServiceStatus.dwCheckPoint = 0;
+    g_ServiceStatus.dwWaitHint = 0;
+    if (!SetServiceStatus(g_hServiceStatusHandle, &g_ServiceStatus))
+        EXLOGE_WIN("SetServiceStatus()");
 
-	return ret;
+    return ret;
 }
 
 static void WINAPI service_handler(DWORD fdwControl)
 {
-	switch (fdwControl)
-	{
-	case SERVICE_CONTROL_STOP:
-	case SERVICE_CONTROL_SHUTDOWN:
-	{
-		if (g_hWorkerThread)
-		{
-			// TerminateThread(g_hWorkerThread, 1);
-			// g_hWorkerThread = nullptr;
-			g_exit_flag = true;
+    switch (fdwControl)
+    {
+    case SERVICE_CONTROL_STOP:
+    case SERVICE_CONTROL_SHUTDOWN:
+    {
+        if (g_hWorkerThread)
+        {
+            // TerminateThread(g_hWorkerThread, 1);
+            // g_hWorkerThread = nullptr;
+            g_exit_flag = true;
 
-			g_ServiceStatus.dwWin32ExitCode = 0;
-			g_ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
-			g_ServiceStatus.dwCheckPoint = 0;
-			g_ServiceStatus.dwWaitHint = 0;
-		}
-		else {
-			g_ServiceStatus.dwWin32ExitCode = 0;
-			g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-			g_ServiceStatus.dwCheckPoint = 0;
-			g_ServiceStatus.dwWaitHint = 0;
-		}
+            g_ServiceStatus.dwWin32ExitCode = 0;
+            g_ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+            g_ServiceStatus.dwCheckPoint = 0;
+            g_ServiceStatus.dwWaitHint = 0;
+        }
+        else {
+            g_ServiceStatus.dwWin32ExitCode = 0;
+            g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+            g_ServiceStatus.dwCheckPoint = 0;
+            g_ServiceStatus.dwWaitHint = 0;
+        }
 
-	}break;
+    }break;
 
-	default:
-		return;
-	};
+    default:
+        return;
+    };
 
-	if (!SetServiceStatus(g_hServiceStatusHandle, &g_ServiceStatus))
-	{
-		EXLOGE_WIN("SetServiceStatus(STOP)");
-		return;
-	}
+    if (!SetServiceStatus(g_hServiceStatusHandle, &g_ServiceStatus))
+    {
+        EXLOGE_WIN("SetServiceStatus(STOP)");
+        return;
+    }
 }
 
 VOID WINAPI service_main(DWORD argc, wchar_t** argv)
 {
-	g_ServiceStatus.dwServiceType = SERVICE_WIN32;
-	g_ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
-	g_ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
-	g_ServiceStatus.dwWin32ExitCode = 0;
-	g_ServiceStatus.dwServiceSpecificExitCode = 0;
-	g_ServiceStatus.dwCheckPoint = 0;
-	g_ServiceStatus.dwWaitHint = 0;
-	g_hServiceStatusHandle = RegisterServiceCtrlHandler(EOM_CORE_SERVICE_NAME, service_handler);
-	if (g_hServiceStatusHandle == 0)
-	{
-		EXLOGE_WIN("RegisterServiceCtrlHandler()");
-		return;
-	}
+    g_ServiceStatus.dwServiceType = SERVICE_WIN32;
+    g_ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
+    g_ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+    g_ServiceStatus.dwWin32ExitCode = 0;
+    g_ServiceStatus.dwServiceSpecificExitCode = 0;
+    g_ServiceStatus.dwCheckPoint = 0;
+    g_ServiceStatus.dwWaitHint = 0;
+    g_hServiceStatusHandle = RegisterServiceCtrlHandler(EOM_CORE_SERVICE_NAME, service_handler);
+    if (g_hServiceStatusHandle == 0)
+    {
+        EXLOGE_WIN("RegisterServiceCtrlHandler()");
+        return;
+    }
 
-	DWORD tid = 0;
-	g_hWorkerThread = CreateThread(nullptr, 0, service_thread_func, nullptr, 0, &tid);
-	if (nullptr == g_hWorkerThread)
-	{
-		EXLOGE_WIN("CreateThread()");
+    DWORD tid = 0;
+    g_hWorkerThread = CreateThread(nullptr, 0, service_thread_func, nullptr, 0, &tid);
+    if (nullptr == g_hWorkerThread)
+    {
+        EXLOGE_WIN("CreateThread()");
 
-		g_ServiceStatus.dwWin32ExitCode = 0;
-		g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-		g_ServiceStatus.dwCheckPoint = 0;
-		g_ServiceStatus.dwWaitHint = 0;
-		if (!SetServiceStatus(g_hServiceStatusHandle, &g_ServiceStatus))
-			EXLOGE_WIN("SetServiceStatus()");
+        g_ServiceStatus.dwWin32ExitCode = 0;
+        g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+        g_ServiceStatus.dwCheckPoint = 0;
+        g_ServiceStatus.dwWaitHint = 0;
+        if (!SetServiceStatus(g_hServiceStatusHandle, &g_ServiceStatus))
+            EXLOGE_WIN("SetServiceStatus()");
 
-		return;
-	}
+        return;
+    }
 
-	g_ServiceStatus.dwCurrentState = SERVICE_RUNNING;
-	g_ServiceStatus.dwCheckPoint = 0;
-	g_ServiceStatus.dwWaitHint = 9000;
-	if (!SetServiceStatus(g_hServiceStatusHandle, &g_ServiceStatus))
-	{
-		EXLOGE_WIN("SetServiceStatus()");
-		return;
-	}
+    g_ServiceStatus.dwCurrentState = SERVICE_RUNNING;
+    g_ServiceStatus.dwCheckPoint = 0;
+    g_ServiceStatus.dwWaitHint = 9000;
+    if (!SetServiceStatus(g_hServiceStatusHandle, &g_ServiceStatus))
+    {
+        EXLOGE_WIN("SetServiceStatus()");
+        return;
+    }
 }
 
 #else
@@ -340,74 +341,74 @@ static void sig_handler_(int signum, siginfo_t* info, void* ptr);
 
 int main(int argc, char** argv)
 {
-	struct sigaction act{};
-	memset(&act, 0, sizeof(act));
-	act.sa_sigaction = sig_handler_;
-	act.sa_flags = SA_SIGINFO;
-	sigaction(SIGINT, &act, nullptr);
+    struct sigaction act{};
+    memset(&act, 0, sizeof(act));
+    act.sa_sigaction = sig_handler_;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGINT, &act, nullptr);
 
-	wchar_t** wargv = ex_make_wargv(argc, argv);
-	int ret = app_main_(argc, wargv);
+    wchar_t** wargv = ex_make_wargv(argc, argv);
+    int ret = app_main_(argc, wargv);
 
-	ex_free_wargv(argc, wargv);
+    ex_free_wargv(argc, wargv);
 
-	return ret;
+    return ret;
 }
 
 void sig_handler_(int signum, siginfo_t* info, void* ptr)
 {
-	if (signum == SIGINT || signum == SIGTERM)
-	{
-		EXLOGW("[core] received signal SIGINT, exit now.\n");
-		g_exit_flag = true;
-	}
+    if (signum == SIGINT || signum == SIGTERM)
+    {
+        EXLOGW("[core] received signal SIGINT, exit now.\n");
+        g_exit_flag = true;
+    }
 }
 
 static bool run_daemon_()
 {
-	pid_t pid = fork();
-	if (pid < 0)
-	{
-		EXLOGE("[core] can not fork daemon.\n");
-		exit(EXIT_FAILURE);
-	}
-	else if (pid > 0)
-	{
-		exit(EXIT_SUCCESS);	// parent exit.
-	}
+    pid_t pid = fork();
+    if (pid < 0)
+    {
+        EXLOGE("[core] can not fork daemon.\n");
+        exit(EXIT_FAILURE);
+    }
+    else if (pid > 0)
+    {
+        exit(EXIT_SUCCESS);    // parent exit.
+    }
 
-	// now I'm first children.
-	if (setsid() == -1)
-	{
-		EXLOGE("[core] setsid() failed.\n");
-		assert(0);
-		// exit(EXIT_FAILURE);
-	}
+    // now I'm first children.
+    if (setsid() == -1)
+    {
+        EXLOGE("[core] setsid() failed.\n");
+        assert(0);
+        // exit(EXIT_FAILURE);
+    }
 
-	umask(0);
+    umask(0);
 
-	pid = fork();
-	if (pid < 0)
-	{
-		EXLOGE("[core] can not fork daemon.\n");
-		exit(EXIT_FAILURE);
-	}
-	else if (pid > 0)
-	{
-		exit(0);	// first children exit.
-	}
+    pid = fork();
+    if (pid < 0)
+    {
+        EXLOGE("[core] can not fork daemon.\n");
+        exit(EXIT_FAILURE);
+    }
+    else if (pid > 0)
+    {
+        exit(0);    // first children exit.
+    }
 
-	// now I'm second children.
-	chdir("/");
-	close(STDIN_FILENO);
+    // now I'm second children.
+    chdir("/");
+    close(STDIN_FILENO);
 
-	int std_fd = open("/dev/null", O_RDWR);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
-	dup2(std_fd, STDOUT_FILENO);
-	dup2(std_fd, STDERR_FILENO);
+    int std_fd = open("/dev/null", O_RDWR);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+    dup2(std_fd, STDOUT_FILENO);
+    dup2(std_fd, STDERR_FILENO);
 
-	return true;
+    return true;
 }
 
 #endif
