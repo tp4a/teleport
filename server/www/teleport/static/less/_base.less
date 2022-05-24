@@ -28,10 +28,6 @@ html, body {
   height: 100%;
 }
 
-#page-container {
-  min-width: 1260px;
-}
-
 a {
   text-decoration: none;
 }
@@ -58,6 +54,37 @@ select {
 
 label {
   font-weight: normal;
+}
+
+hr.hr-sm {
+  //margin-top: 5px;
+  //margin-bottom: 5px;
+  padding: 1px 0;
+  margin: 5px 0;
+  border-top: 1px dashed #c4c4c4;
+}
+
+hr.small {
+  margin: 5px 0;
+}
+
+
+ul {
+  list-style: none;
+}
+
+ul.list {
+  //list-style: none;
+  margin: 0;
+  padding: 3px 0 5px 0;
+
+  li {
+    margin: 3px 3px 5px 10px;
+  }
+}
+
+button:focus {
+  outline: none;
 }
 
 .clear-float {
@@ -91,28 +118,6 @@ label {
   font-weight: bold;
 }
 
-hr.hr-sm {
-  //margin-top: 5px;
-  //margin-bottom: 5px;
-  padding: 1px 0;
-  margin: 5px 0;
-  border-top: 1px dashed #c4c4c4;
-}
-
-ul {
-  list-style: none;
-}
-
-ul.list {
-  //list-style: none;
-  margin: 0;
-  padding: 3px 0 5px 0;
-
-  li {
-    margin: 3px 3px 5px 10px;
-  }
-}
-
 .btn-single-line {
   white-space: nowrap;
 
@@ -127,10 +132,6 @@ ul.list {
       border-bottom-right-radius: 3px;
     }
   }
-}
-
-hr.small {
-  margin: 5px 0;
 }
 
 .dlg-protocol-group {
@@ -332,4 +333,8 @@ hr.small {
 
 .center {
   text-align: center;
+}
+
+#page-container {
+  min-width: 1260px;
 }

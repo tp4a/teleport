@@ -1,12 +1,42 @@
 "use strict";
 
+const FILTER_TIME_TYPE_ALL = 0;
+const FILTER_TIME_TYPE_TODAY = 1;
+const FILTER_TIME_TYPE_WEEK = 2;
+const FILTER_TIME_TYPE_MONTH = 3;
+const FILTER_TIME_TYPE_CUSTOMER = 4;
+
 $app.on_init = function (cb_stack) {
     $app.dom = {
         storage_info: $('#storage-info'),
-        btn_refresh_record: $('#btn-refresh-record')
+        btn_refresh_record: $('#btn-refresh-record'),
+        btn_toggle_filter: $('#btn-toggle-filter'),
+
+        filter_area: $('#filter-area'),
+        filter_time_customer_area: $('#filter-time-customer-area'),
+        filter_time_all: $('#filter-btn-time-all'),
+        filter_time_today: $('#filter-btn-time-today'),
+        filter_time_week: $('#filter-btn-time-week'),
+        filter_time_month: $('#filter-btn-time-month'),
+        filter_time_customer: $('#filter-btn-time-customer'),
+        filter_time_from: $('#filter-time-from'),
+        filter_time_to: $('#filter-time-to'),
+
+        filter_protocol: $('#filter-protocol-type'),
+        filter_session_id: $('#filter-session-id'),
+        filter_remote_host_addr: $('#filter-remote-host-addr'),
+        filter_remote_acc: $('#filter-remote-acc'),
+        filter_client_ip: $('#filter-client-ip'),
+        filter_tp_user: $('#filter-tp-user'),
+
+        btn_search: $('#btn-search'),
+        btn_reset_filter: $('#btn-reset-filter')
     };
 
     $app.dom.storage_info.html('总 ' + tp_size2str($app.options.total_size, 2) + '，' + '可用 ' + tp_size2str($app.options.free_size, 2));
+
+    $app.filter_shown = true;
+    $app.filter_time_type = FILTER_TIME_TYPE_ALL;
 
     cb_stack
         .add($app.create_controls)
@@ -14,6 +44,79 @@ $app.on_init = function (cb_stack) {
 
     cb_stack.exec();
 };
+
+$app.create_table_record_filter = function (tbl) {
+    let _tblf = {};
+    _tblf._table_ctrl = tbl;
+
+    _tblf._table_ctrl.add_filter_ctrl('record_filter', _tblf);
+
+    // _tblf.init = function (cb_stack) {
+    //     cb_stack.exec();
+    // };
+
+    _tblf.get_filter = function () {
+        let ret = {};
+        ret['time_type'] = $app.filter_time_type;
+
+        if ($app.filter_time_type === FILTER_TIME_TYPE_ALL) {
+            // no filter for time.
+        } else if ($app.filter_time_type === FILTER_TIME_TYPE_TODAY) {
+            ret['time_from'] = Math.floor(new Date((new Date().setHours(0, 0, 0, 0))).getTime() / 1000);
+            ret['time_to'] = Math.floor(new Date((new Date().setHours(23, 59, 59, 999))).getTime() / 1000);
+        } else if ($app.filter_time_type === FILTER_TIME_TYPE_WEEK) {
+            let now = new Date();
+            let thisYear = now.getFullYear();
+            let thisMonth = now.getMonth();
+            let thisDay = now.getDate();
+            let thisDayOfWeek = now.getDay();
+            let weekStart = new Date(thisYear, thisMonth, thisDay - thisDayOfWeek + 1);
+            let weekEnd = new Date(thisYear, thisMonth, thisDay + (7 - thisDayOfWeek), 23, 59, 59, 999);
+            ret['time_from'] = Math.floor(weekStart.getTime() / 1000);
+            ret['time_to'] = Math.floor(weekEnd.getTime() / 1000);
+        } else if ($app.filter_time_type === FILTER_TIME_TYPE_MONTH) {
+            let now = new Date();
+            let thisYear = now.getFullYear();
+            let thisMonth = now.getMonth();
+            let monthStart = new Date(thisYear, thisMonth, 1);
+            let nextMonthStart = new Date(thisYear, thisMonth + 1, 1);
+            let days = (nextMonthStart - monthStart) / (1000 * 60 * 60 * 24);
+            let monthEnd = new Date(thisYear, thisMonth, days, 23, 59, 59, 999);
+            ret['time_from'] = Math.floor(monthStart.getTime() / 1000);
+            ret['time_to'] = Math.floor(monthEnd.getTime() / 1000);
+        } else if ($app.filter_time_type === FILTER_TIME_TYPE_CUSTOMER) {
+            let start_time = $app.dom.filter_time_from.find('input').val();
+            let end_time = $app.dom.filter_time_to.find('input').val();
+            if (start_time.length > 0)
+                ret['time_from'] = Math.floor(new Date(start_time).getTime() / 1000);
+            if (end_time.length > 0)
+                ret['time_to'] = Math.floor(new Date(end_time).getTime() / 1000);
+        }
+
+        ret['protocol'] = parseInt($app.dom.filter_protocol.val());
+
+        let client_ip = $app.dom.filter_client_ip.val().trim();
+        let remote_addr = $app.dom.filter_remote_host_addr.val().trim();
+        let session_id = $app.dom.filter_session_id.val().trim();
+        let remote_acc = $app.dom.filter_remote_acc.val().trim();
+        let tp_user = $app.dom.filter_tp_user.val().trim();
+
+        if (client_ip.length > 0)
+            ret['client_ip'] = client_ip;
+        if (remote_addr.length > 0)
+            ret['remote_addr'] = remote_addr;
+        if (session_id.length > 0)
+            ret['sid'] = session_id;
+        if (remote_acc.length > 0)
+            ret['remote_acc'] = remote_acc;
+        if (tp_user.length > 0)
+            ret['user_name'] = tp_user;
+
+        console.log('get-filter:', ret);
+        return ret;
+    };
+};
+
 
 //===================================
 // 创建页面控件对象
@@ -126,6 +229,7 @@ $app.create_controls = function (cb_stack) {
     // });
     // $app.table_record_role_filter = $tp.create_table_filter_role($app.table_record, $app.role_list);
     // $tp.create_table_header_filter_state($app.table_record, 'state', $app.obj_states, [TP_STATE_LOCKED]);
+    $app.create_table_record_filter($app.table_record);
     // 从cookie中读取用户分页限制的选择
     $tp.create_table_paging($app.table_record, 'table-record-paging',
         {
@@ -141,6 +245,99 @@ $app.create_controls = function (cb_stack) {
     //-------------------------------
     $app.dom.btn_refresh_record.click(function () {
         $app.table_record.load_data();
+    });
+
+    // 切换过滤器显示
+    $app.dom.btn_toggle_filter.click(function () {
+        if ($app.filter_shown) {
+            $app.dom.filter_area.hide('fast', function () {
+                $app.filter_shown = false;
+                $app.dom.btn_toggle_filter.text('显示过滤器');
+            });
+        } else {
+            $app.dom.filter_area.show('fast', function () {
+                $app.filter_shown = true;
+                $app.dom.btn_toggle_filter.text('隐藏过滤器');
+            });
+        }
+    });
+
+    // 时间选择按钮
+    $app._switch_filter_time_type = function (dom, filter_type) {
+        console.log(dom, filter_type);
+        $app.dom.filter_time_all.removeClass('btn-info').addClass('btn-default');
+        $app.dom.filter_time_today.removeClass('btn-info').addClass('btn-default');
+        $app.dom.filter_time_week.removeClass('btn-info').addClass('btn-default');
+        $app.dom.filter_time_month.removeClass('btn-info').addClass('btn-default');
+        $app.dom.filter_time_customer.removeClass('btn-info').addClass('btn-default');
+
+        dom.removeClass('btn-default').addClass('btn-info');
+        $app.filter_time_type = filter_type;
+
+        if (filter_type === FILTER_TIME_TYPE_CUSTOMER)
+            $app.dom.filter_time_customer_area.show('fast');
+        else
+            $app.dom.filter_time_customer_area.hide('fast');
+    };
+    $app.dom.filter_time_all.click(function () {
+        $app._switch_filter_time_type($(this), FILTER_TIME_TYPE_ALL);
+    });
+    $app.dom.filter_time_today.click(function () {
+        $app._switch_filter_time_type($(this), FILTER_TIME_TYPE_TODAY);
+    });
+    $app.dom.filter_time_week.click(function () {
+        $app._switch_filter_time_type($(this), FILTER_TIME_TYPE_WEEK);
+    });
+    $app.dom.filter_time_month.click(function () {
+        $app._switch_filter_time_type($(this), FILTER_TIME_TYPE_MONTH);
+    });
+    $app.dom.filter_time_customer.click(function () {
+        $app._switch_filter_time_type($(this), FILTER_TIME_TYPE_CUSTOMER);
+    });
+
+    // 时间选择框
+    $app.dom.filter_time_from.datetimepicker({format: "yyyy-mm-dd hh:ii", autoclose: true, todayHighlight: true, todayBtn: true, language: "zh-CN"});
+    $app.dom.filter_time_to.datetimepicker({format: "yyyy-mm-dd hh:ii", autoclose: true, todayHighlight: true, todayBtn: true, language: "zh-CN"});
+    $app._on_filter_time_changed = function () {
+        let start_time = $app.dom.filter_time_from.find('input').val();
+        let end_time = $app.dom.filter_time_to.find('input').val();
+
+        if (start_time === '')
+            $app.dom.filter_time_to.datetimepicker('setStartDate', '1970-01-01 00:00');
+        else
+            $app.dom.filter_time_to.datetimepicker('setStartDate', start_time);
+
+        if (end_time === '')
+            $app.dom.filter_time_from.datetimepicker('setEndDate', '9999-12-30 23:59');
+        else
+            $app.dom.filter_time_from.datetimepicker('setEndDate', end_time);
+
+        // if (start_time !== '' && end_time !== '')
+        //     $app._switch_filter_time_type(null, FILTER_TIME_TYPE_CUSTOMER);
+
+    };
+    $app.dom.filter_time_from.on('changeDate', function (ev) {
+        $app._on_filter_time_changed();
+    });
+    $app.dom.filter_time_to.on('changeDate', function (ev) {
+        $app._on_filter_time_changed();
+    });
+
+    // 查询
+    $app.dom.btn_search.click(function () {
+        $app.table_record.load_data(CALLBACK_STACK.create(), {});
+    });
+    // 重置过滤器
+    $app.dom.btn_reset_filter.click(function () {
+        $app._switch_filter_time_type($app.dom.filter_time_all, FILTER_TIME_TYPE_ALL);
+        $app.dom.filter_protocol.val(0);
+        $app.dom.filter_client_ip.val('');
+        $app.dom.filter_remote_host_addr.val('');
+        $app.dom.filter_session_id.val('');
+        $app.dom.filter_remote_acc.val('');
+        $app.dom.filter_tp_user.val('');
+
+        $app.table_record.load_data(CALLBACK_STACK.create(), {});
     });
 
     cb_stack.exec();
@@ -266,8 +463,7 @@ $app.on_table_host_render_created = function (render) {
         } else {
             if (fields.time_end === 0) {
                 return '<span class="label label-danger"><i class="far fa-clock fa-fw"></i> 未知</span>';
-            }
-            else {
+            } else {
                 if (fields.state === TP_SESS_STAT_ERR_START_RESET) {
                     return '<span class="label label-info"><i class="fa fa-exclamation-circle fa-fw"></i> ' + tp_second2str(fields.time_end - fields.time_begin) + '</span>';
                 } else {
@@ -366,7 +562,7 @@ $app.on_table_host_render_created = function (render) {
 };
 
 $app.do_replay_rdp = function (record_id, user_username, acc_username, host_ip, time_begin) {
-    if(!$app.options.core_running) {
+    if (!$app.options.core_running) {
         $tp.notify_error(tp_error_msg(TPE_NO_CORE_SERVER), '无法播放。');
         return;
     }
@@ -382,8 +578,7 @@ $app.do_replay_rdp = function (record_id, user_username, acc_username, host_ip, 
         , function (code, message) {
             if (code === TPE_NO_ASSIST) {
                 $assist.alert_assist_not_found(code);
-            }
-            else
+            } else
                 $tp.notify_error('播放RDP操作录像失败：' + tp_error_msg(code, message));
         }
     );

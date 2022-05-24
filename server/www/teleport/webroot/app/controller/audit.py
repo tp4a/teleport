@@ -453,15 +453,18 @@ class DoGetRecordsHandler(TPBaseJsonHandler):
         sql_exclude = args['exclude'] if 'exclude' in args else {}
 
         try:
-            tmp = list()
             _filter = args['filter']
+            tmp = list()
             for i in _filter:
                 if i == 'user_id' and _filter[i] == 0:
                     tmp.append(i)
                     continue
-                if i == 'user_name':
-                    if len(_filter[i].strip()) == 0:
-                        tmp.append(i)
+                elif i == 'user_name' and len(_filter[i].strip()) == 0:
+                    tmp.append(i)
+                    continue
+                elif i == 'protocol' and _filter[i] == 0:
+                    tmp.append(i)
+                    continue
 
             for i in tmp:
                 del _filter[i]

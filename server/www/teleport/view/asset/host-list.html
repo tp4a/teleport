@@ -46,7 +46,7 @@
 
 {% block block_body %}
     <div class="page-content-inner">
-        ## 防止页面搜索框被自动填充
+{#        ## 防止页面搜索框被自动填充#}
         <label style="display:none;"><span></span><input type="text" name="hidden1"></label>
         <label style="display:none;"><span></span><input type="password" name="hidden2"></label>
 
@@ -136,17 +136,12 @@
 
                     <div class="form-horizontal">
 
-                        ##
-                        <div class="form-group form-group-sm">
-                            ## <label for="edit-host-type" class="col-sm-2 control-label require">主机类型：</label>
-                            ##
-                            <div class="col-sm-6">
-                                ##
-                                <div id="edit-host-type" class="btn-group btn-group-sm"></div>
-                                ##
-                            </div>
-                            ##
-                        </div>
+{#                        ##                        <div class="form-group form-group-sm">#}
+{#                            ## <label for="edit-host-type" class="col-sm-2 control-label require">主机类型：</label>#}
+{#                            ##                            <div class="col-sm-6">#}
+{#                                ##                                <div id="edit-host-type" class="btn-group btn-group-sm"></div>#}
+{#                                ##                            </div>#}
+{#                            ##                        </div>#}
 
                         <div class="form-group form-group-sm">
                             <label for="edit-host-os-type" class="col-sm-3 control-label require">远程主机系统：</label>
@@ -308,7 +303,7 @@
                             <label class="col-sm-3 control-label" for="account-protocol-port"><strong>端口：</strong></label>
                             <div class="col-sm-9">
                                 <input id="account-protocol-port" type="text" class="form-control" placeholder=""/>
-                                ## <p id="account-protocol-port-static" class="form-control-static mono" style="color:#0a6aa1;font-weight:bold;display:none;"></p>
+{#                                ## <p id="account-protocol-port-static" class="form-control-static mono" style="color:#0a6aa1;font-weight:bold;display:none;"></p>#}
                             </div>
                         </div>
 

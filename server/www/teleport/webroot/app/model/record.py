@@ -79,6 +79,23 @@ def get_records(handler, sql_filter, sql_order, sql_limit, sql_restrict, sql_exc
         for k in sql_filter:
             if k == 'state':
                 _where.append('r.state={}'.format(sql_filter[k]))
+            elif k == 'user_name':
+                _where.append('(r.user_username LIKE "%{k}%" OR r.user_surname LIKE "%{k}%")'.format(k=sql_filter[k]))
+            elif k == 'client_ip':
+                _where.append('r.client_ip LIKE "%{k}%"'.format(k=sql_filter[k]))
+            elif k == 'remote_addr':
+                _where.append('r.host_ip LIKE "%{k}%"'.format(k=sql_filter[k]))
+            elif k == 'sid':
+                _where.append('r.sid LIKE "%{k}%"'.format(k=sql_filter[k]))
+            elif k == 'remote_acc':
+                _where.append('r.acc_username LIKE "%{k}%"'.format(k=sql_filter[k]))
+            elif k == 'protocol':
+                _where.append('r.protocol_sub_type={k}'.format(k=sql_filter[k]))
+            elif k == 'time_from':
+                _where.append('r.time_begin>={k}'.format(k=sql_filter[k]))
+            elif k == 'time_to':
+                _where.append('r.time_end<={k}'.format(k=sql_filter[k]))
+
             # elif k == 'search_record':
             #     _where.append('(h.name LIKE "%{}%" OR h.ip LIKE "%{}%" OR h.router_addr LIKE "%{}%" OR h.desc LIKE "%{}%" OR h.cid LIKE "%{}%")'.format(sql_filter[k], sql_filter[k], sql_filter[k], sql_filter[k], sql_filter[k]))
 
