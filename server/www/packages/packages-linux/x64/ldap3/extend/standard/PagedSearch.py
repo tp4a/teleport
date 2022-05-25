@@ -67,11 +67,14 @@ def paged_search_generator(connection,
                                    paged_criticality,
                                    None if cookie is True else cookie)
 
-        if not isinstance(result, bool):
+        if not connection.strategy.sync:
             response, result = connection.get_response(result)
         else:
-            response = connection.response
-            result = connection.result
+            if connection.strategy.thread_safe:
+                _, result, response, _ = result
+            else:
+                response = connection.response
+                result = connection.result
 
         if result['referrals'] and original_auto_referrals:  # if rererrals are returned start over the loop with a new connection to the referral
             if not original_connection:

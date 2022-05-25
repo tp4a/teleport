@@ -47,7 +47,7 @@ class BuilderBase:
         for parent, dir_list, _ in os.walk(path):
             for d in dir_list:
                 d = d.lower()
-                if d == '__pycache__':
+                if d == '__pycache__' or d == '.DS_Store':
                     utils.remove(os.path.join(parent, d))
                     continue
                 self._remove_py_cache(os.path.join(parent, d))

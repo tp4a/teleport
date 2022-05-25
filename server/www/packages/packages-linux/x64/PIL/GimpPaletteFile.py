@@ -18,11 +18,9 @@ import re
 
 from ._binary import o8
 
-##
-# File handler for GIMP's palette format.
-
 
 class GimpPaletteFile:
+    """File handler for GIMP's palette format."""
 
     rawmode = "RGB"
 
@@ -40,7 +38,7 @@ class GimpPaletteFile:
                 break
 
             # skip fields and comment lines
-            if re.match(br"\w+:|#", s):
+            if re.match(rb"\w+:|#", s):
                 continue
             if len(s) > 100:
                 raise SyntaxError("bad palette file")

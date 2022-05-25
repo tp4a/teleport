@@ -52,10 +52,14 @@ class ExtendedOperation(object):
 
         resp = self.connection.extended(self.request_name, self.request_value, self.controls)
         if not self.connection.strategy.sync:
-            _, self.result = self.connection.get_response(resp)
+            _, result = self.connection.get_response(resp)
         else:
-            self.result = self.connection.result
-        self.decode_response()
+            if self.connection.strategy.thread_safe:
+                _, result, _, _ = resp
+            else:
+                result = self.connection.result
+        self.result = result
+        self.decode_response(result)
         self.populate_result()
         self.set_response()
         return self.response_value
@@ -63,29 +67,32 @@ class ExtendedOperation(object):
     def populate_result(self):
         pass
 
-    def decode_response(self):
-        if not self.result:
+    def decode_response(self, response=None):
+        if not response:
+            response = self.result
+        if not response:
             return None
-        if self.result['result'] not in [RESULT_SUCCESS]:
+        if response['result'] not in [RESULT_SUCCESS]:
             if self.connection.raise_exceptions:
-                raise LDAPExtensionError('extended operation error: ' + self.result['description'] + ' - ' + self.result['message'])
+                raise LDAPExtensionError('extended operation error: ' + response['description'] + ' - ' + response['message'])
             else:
                 return None
-        if not self.response_name or self.result['responseName'] == self.response_name:
-            if self.result['responseValue']:
+        if not self.response_name or response['responseName'] == self.response_name:
+            if response['responseValue']:
                 if self.asn1_spec is not None:
-                    decoded, unprocessed = decoder.decode(self.result['responseValue'], asn1Spec=self.asn1_spec)
+                    decoded, unprocessed = decoder.decode(response['responseValue'], asn1Spec=self.asn1_spec)
                     if unprocessed:
                         raise LDAPExtensionError('error decoding extended response value')
                     self.decoded_response = decoded
                 else:
-                    self.decoded_response = self.result['responseValue']
+                    self.decoded_response = response['responseValue']
         else:
             raise LDAPExtensionError('invalid response name received')
 
     def set_response(self):
         self.response_value = self.result[self.response_attribute] if self.result and self.response_attribute in self.result else None
-        self.connection.response = self.response_value
+        if not self.connection.strategy.thread_safe:
+            self.connection.response = self.response_value
 
     def config(self):
         pass

@@ -38,7 +38,6 @@ from ..operation.bind import referrals_to_list
 from ..protocol.convert import ava_to_dict, attributes_to_list, search_refs_to_list, validate_assertion_value, prepare_filter_for_sending, search_refs_to_list_fast
 from ..protocol.formatters.standard import format_attribute_values
 from ..utils.conv import to_unicode, to_raw
-from pyasn1.error import PyAsn1UnicodeDecodeError
 
 ROOT = 0
 AND = 1
@@ -381,7 +380,7 @@ def search_operation(search_base,
 def decode_vals(vals):
     try:
         return [str(val) for val in vals if val] if vals else None
-    except PyAsn1UnicodeDecodeError:
+    except UnicodeDecodeError:
         return decode_raw_vals(vals)
 
 def decode_vals_fast(vals):

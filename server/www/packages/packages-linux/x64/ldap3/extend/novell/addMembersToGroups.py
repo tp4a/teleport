@@ -74,7 +74,11 @@ def edir_add_members_to_groups(connection,
                 if not connection.strategy.sync:
                     response, result = connection.get_response(result)
                 else:
-                    response, result = connection.response, connection.result
+                    if connection.strategy.thread_safe:
+                        _, result, response, _ = result
+                    else:
+                        result = connection.result
+                        response = connection.response
 
                 if not result['description'] == 'success':
                     raise LDAPInvalidDnError(member + ' not found')
@@ -98,7 +102,10 @@ def edir_add_members_to_groups(connection,
                 if not connection.strategy.sync:
                     _, result = connection.get_response(result)
                 else:
-                    result = connection.result
+                    if connection.strategy.thread_safe:
+                        _, result, _, _ = result
+                    else:
+                        result = connection.result
                 if result['description'] != 'success':
                     error = True
                     break
@@ -111,7 +118,11 @@ def edir_add_members_to_groups(connection,
                 if not connection.strategy.sync:
                     response, result = connection.get_response(result)
                 else:
-                    response, result = connection.response, connection.result
+                    if connection.strategy.thread_safe:
+                        _, result, response, _ = result
+                    else:
+                        result = connection.result
+                        response = connection.response
 
                 if not result['description'] == 'success':
                     raise LDAPInvalidDnError(group + ' not found')
@@ -136,7 +147,10 @@ def edir_add_members_to_groups(connection,
                 if not connection.strategy.sync:
                     _, result = connection.get_response(result)
                 else:
-                    result = connection.result
+                    if connection.strategy.thread_safe:
+                        _, result, _, _ = result
+                    else:
+                        result = connection.result
                 if result['description'] != 'success':
                     error = True
                     break

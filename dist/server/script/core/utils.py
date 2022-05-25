@@ -87,7 +87,7 @@ def copy_ex(s_path, t_path, item_name=None, force=True):
         if force:
             remove(t)
         else:
-            cc.w(t, 'already exists, skip copy.')
+            cc.w(t, ' already exists, skip copy.')
             return
 
     if os.path.isdir(s):

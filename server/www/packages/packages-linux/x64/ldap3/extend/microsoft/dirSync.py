@@ -77,8 +77,11 @@ class DirSync(object):
         if not self.connection.strategy.sync:
             response, result = self.connection.get_response(result)
         else:
-            response = self.connection.response
-            result = self.connection.result
+            if self.connection.strategy.thread_safe:
+                _, result, response, _ = result
+            else:
+                response = self.connection.response
+                result = self.connection.result
 
         if result['description'] == 'success' and 'controls' in result and '1.2.840.113556.1.4.841' in result['controls']:
             self.more_results = result['controls']['1.2.840.113556.1.4.841']['value']['more_results']

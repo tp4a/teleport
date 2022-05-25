@@ -183,7 +183,7 @@ def json_hook(obj):
 
 
 # noinspection PyProtectedMember
-def format_json(obj):
+def format_json(obj, iso_format=False):
     if isinstance(obj, CaseInsensitiveDict):
         return obj._store
 
@@ -194,6 +194,8 @@ def format_json(obj):
         return obj
 
     if isinstance(obj, datetime.timedelta):
+        if iso_format:
+            return obj.isoformat()
         return str(obj)
 
     if str is bytes:  # Python 2

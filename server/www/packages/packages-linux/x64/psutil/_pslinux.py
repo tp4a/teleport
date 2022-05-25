@@ -25,30 +25,33 @@ from . import _common
 from . import _psposix
 from . import _psutil_linux as cext
 from . import _psutil_posix as cext_posix
+from ._common import NIC_DUPLEX_FULL
+from ._common import NIC_DUPLEX_HALF
+from ._common import NIC_DUPLEX_UNKNOWN
 from ._common import AccessDenied
+from ._common import NoSuchProcess
+from ._common import ZombieProcess
+from ._common import bcat
+from ._common import cat
 from ._common import debug
 from ._common import decode
 from ._common import get_procfs_path
 from ._common import isfile_strict
 from ._common import memoize
 from ._common import memoize_when_activated
-from ._common import NIC_DUPLEX_FULL
-from ._common import NIC_DUPLEX_HALF
-from ._common import NIC_DUPLEX_UNKNOWN
-from ._common import NoSuchProcess
 from ._common import open_binary
 from ._common import open_text
 from ._common import parse_environ_block
 from ._common import path_exists_strict
 from ._common import supports_ipv6
 from ._common import usage_percent
-from ._common import ZombieProcess
-from ._compat import b
-from ._compat import basestring
+from ._compat import PY3
 from ._compat import FileNotFoundError
 from ._compat import PermissionError
 from ._compat import ProcessLookupError
-from ._compat import PY3
+from ._compat import b
+from ._compat import basestring
+
 
 if sys.version_info >= (3, 4):
     import enum
@@ -74,26 +77,15 @@ __extra__all__ = [
 
 
 POWER_SUPPLY_PATH = "/sys/class/power_supply"
-HAS_SMAPS = os.path.exists('/proc/%s/smaps' % os.getpid())
-HAS_PRLIMIT = hasattr(cext, "linux_prlimit")
+HAS_PROC_SMAPS = os.path.exists('/proc/%s/smaps' % os.getpid())
+HAS_PROC_SMAPS_ROLLUP = os.path.exists('/proc/%s/smaps_rollup' % os.getpid())
 HAS_PROC_IO_PRIORITY = hasattr(cext, "proc_ioprio_get")
 HAS_CPU_AFFINITY = hasattr(cext, "proc_cpu_affinity_get")
-_DEFAULT = object()
-
-# RLIMIT_* constants, not guaranteed to be present on all kernels
-if HAS_PRLIMIT:
-    for name in dir(cext):
-        if name.startswith('RLIM'):
-            __extra__all__.append(name)
 
 # Number of clock ticks per second
 CLOCK_TICKS = os.sysconf("SC_CLK_TCK")
-PAGESIZE = os.sysconf("SC_PAGE_SIZE")
+PAGESIZE = cext_posix.getpagesize()
 BOOT_TIME = None  # set later
-# Used when reading "big" files, namely /proc/{pid}/smaps and /proc/net/*.
-# On Python 2, using a buffer with open() for such files may result in a
-# speedup, see: https://github.com/giampaolo/psutil/issues/708
-BIGFILE_BUFFERING = -1 if PY3 else 8192
 LITTLE_ENDIAN = sys.byteorder == 'little'
 
 # "man iostat" states that sectors are equivalent with blocks and have
@@ -289,28 +281,60 @@ def set_scputimes_ntuple(procfs_path):
     scputimes = namedtuple('scputimes', fields)
 
 
-def cat(fname, fallback=_DEFAULT, binary=True):
-    """Return file content.
-    fallback: the value returned in case the file does not exist or
-              cannot be read
-    binary: whether to open the file in binary or text mode.
-    """
-    try:
-        with open_binary(fname) if binary else open_text(fname) as f:
-            return f.read().strip()
-    except (IOError, OSError):
-        if fallback is not _DEFAULT:
-            return fallback
-        else:
-            raise
-
-
 try:
     set_scputimes_ntuple("/proc")
-except Exception:
+except Exception:  # pragma: no cover
     # Don't want to crash at import time.
     traceback.print_exc()
     scputimes = namedtuple('scputimes', 'user system idle')(0.0, 0.0, 0.0)
+
+
+# =====================================================================
+# --- prlimit
+# =====================================================================
+
+# Backport of resource.prlimit() for Python 2. Originally this was done
+# in C, but CentOS-6 which we use to create manylinux wheels is too old
+# and does not support prlimit() syscall. As such the resulting wheel
+# would not include prlimit(), even when installed on newer systems.
+# This is the only part of psutil using ctypes.
+
+prlimit = None
+try:
+    from resource import prlimit  # python >= 3.4
+except ImportError:
+    import ctypes
+
+    libc = ctypes.CDLL(None, use_errno=True)
+
+    if hasattr(libc, "prlimit"):
+
+        def prlimit(pid, resource_, limits=None):
+            class StructRlimit(ctypes.Structure):
+                _fields_ = [('rlim_cur', ctypes.c_longlong),
+                            ('rlim_max', ctypes.c_longlong)]
+
+            current = StructRlimit()
+            if limits is None:
+                # get
+                ret = libc.prlimit(pid, resource_, None, ctypes.byref(current))
+            else:
+                # set
+                new = StructRlimit()
+                new.rlim_cur = limits[0]
+                new.rlim_max = limits[1]
+                ret = libc.prlimit(
+                    pid, resource_, ctypes.byref(new), ctypes.byref(current))
+
+            if ret != 0:
+                errno = ctypes.get_errno()
+                raise OSError(errno, os.strerror(errno))
+            return (current.rlim_cur, current.rlim_max)
+
+
+if prlimit is not None:
+    __extra__all__.extend(
+        [x for x in dir(cext) if x.startswith('RLIM') and x.isupper()])
 
 
 # =====================================================================
@@ -361,7 +385,6 @@ def calculate_avail_vmem(mems):
             if line.startswith(b'low'):
                 watermark_low += int(line.split()[1])
     watermark_low *= PAGESIZE
-    watermark_low = watermark_low
 
     avail = free - watermark_low
     pagecache = lru_active_file + lru_inactive_file
@@ -616,15 +639,21 @@ def cpu_count_logical():
         return num
 
 
-def cpu_count_physical():
-    """Return the number of physical cores in the system."""
+def cpu_count_cores():
+    """Return the number of CPU cores in the system."""
     # Method #1
-    core_ids = set()
-    for path in glob.glob(
-            "/sys/devices/system/cpu/cpu[0-9]*/topology/core_id"):
+    ls = set()
+    # These 2 files are the same but */core_cpus_list is newer while
+    # */thread_siblings_list is deprecated and may disappear in the future.
+    # https://www.kernel.org/doc/Documentation/admin-guide/cputopology.rst
+    # https://github.com/giampaolo/psutil/pull/1727#issuecomment-707624964
+    # https://lkml.org/lkml/2019/2/26/41
+    p1 = "/sys/devices/system/cpu/cpu[0-9]*/topology/core_cpus_list"
+    p2 = "/sys/devices/system/cpu/cpu[0-9]*/topology/thread_siblings_list"
+    for path in glob.glob(p1) or glob.glob(p2):
         with open_binary(path) as f:
-            core_ids.add(int(f.read()))
-    result = len(core_ids)
+            ls.add(f.read().strip())
+    result = len(ls)
     if result != 0:
         return result
 
@@ -636,15 +665,15 @@ def cpu_count_physical():
             line = line.strip().lower()
             if not line:
                 # new section
-                if (b'physical id' in current_info and
-                        b'cpu cores' in current_info):
+                try:
                     mapping[current_info[b'physical id']] = \
                         current_info[b'cpu cores']
+                except KeyError:
+                    pass
                 current_info = {}
             else:
                 # ongoing section
-                if (line.startswith(b'physical id') or
-                        line.startswith(b'cpu cores')):
+                if line.startswith((b'physical id', b'cpu cores')):
                     key, value = line.split(b'\t:', 1)
                     current_info[key] = int(value)
 
@@ -673,6 +702,17 @@ def cpu_stats():
         ctx_switches, interrupts, soft_interrupts, syscalls)
 
 
+def _cpu_get_cpuinfo_freq():
+    """Return current CPU frequency from cpuinfo if available.
+    """
+    ret = []
+    with open_binary('%s/cpuinfo' % get_procfs_path()) as f:
+        for line in f:
+            if line.lower().startswith(b'cpu mhz'):
+                ret.append(float(line.split(b':', 1)[1]))
+    return ret
+
+
 if os.path.exists("/sys/devices/system/cpu/cpufreq/policy0") or \
         os.path.exists("/sys/devices/system/cpu/cpu0/cpufreq"):
     def cpu_freq():
@@ -680,51 +720,39 @@ if os.path.exists("/sys/devices/system/cpu/cpufreq/policy0") or \
         Contrarily to other OSes, Linux updates these values in
         real-time.
         """
-        def get_path(num):
-            for p in ("/sys/devices/system/cpu/cpufreq/policy%s" % num,
-                      "/sys/devices/system/cpu/cpu%s/cpufreq" % num):
-                if os.path.exists(p):
-                    return p
-
+        cpuinfo_freqs = _cpu_get_cpuinfo_freq()
+        paths = \
+            glob.glob("/sys/devices/system/cpu/cpufreq/policy[0-9]*") or \
+            glob.glob("/sys/devices/system/cpu/cpu[0-9]*/cpufreq")
+        paths.sort(key=lambda x: int(re.search(r"[0-9]+", x).group()))
         ret = []
-        for n in range(cpu_count_logical()):
-            path = get_path(n)
-            if not path:
-                continue
-
-            pjoin = os.path.join
-            curr = cat(pjoin(path, "scaling_cur_freq"), fallback=None)
+        pjoin = os.path.join
+        for i, path in enumerate(paths):
+            if len(paths) == len(cpuinfo_freqs):
+                # take cached value from cpuinfo if available, see:
+                # https://github.com/giampaolo/psutil/issues/1851
+                curr = cpuinfo_freqs[i] * 1000
+            else:
+                curr = bcat(pjoin(path, "scaling_cur_freq"), fallback=None)
             if curr is None:
                 # Likely an old RedHat, see:
                 # https://github.com/giampaolo/psutil/issues/1071
-                curr = cat(pjoin(path, "cpuinfo_cur_freq"), fallback=None)
+                curr = bcat(pjoin(path, "cpuinfo_cur_freq"), fallback=None)
                 if curr is None:
                     raise NotImplementedError(
                         "can't find current frequency file")
             curr = int(curr) / 1000
-            max_ = int(cat(pjoin(path, "scaling_max_freq"))) / 1000
-            min_ = int(cat(pjoin(path, "scaling_min_freq"))) / 1000
+            max_ = int(bcat(pjoin(path, "scaling_max_freq"))) / 1000
+            min_ = int(bcat(pjoin(path, "scaling_min_freq"))) / 1000
             ret.append(_common.scpufreq(curr, min_, max_))
-        return ret
-
-elif os.path.exists("/proc/cpuinfo"):
-    def cpu_freq():
-        """Alternate implementation using /proc/cpuinfo.
-        min and max frequencies are not available and are set to None.
-        """
-        ret = []
-        with open_binary('%s/cpuinfo' % get_procfs_path()) as f:
-            for line in f:
-                if line.lower().startswith(b'cpu mhz'):
-                    key, value = line.split(b'\t:', 1)
-                    ret.append(_common.scpufreq(float(value), 0., 0.))
         return ret
 
 else:
     def cpu_freq():
-        """Dummy implementation when none of the above files are present.
+        """Alternate implementation using /proc/cpuinfo.
+        min and max frequencies are not available and are set to None.
         """
-        return []
+        return [_common.scpufreq(x, 0., 0.) for x in _cpu_get_cpuinfo_freq()]
 
 
 # =====================================================================
@@ -788,6 +816,10 @@ class Connections:
                 if err.errno == errno.EINVAL:
                     # not a link
                     continue
+                if err.errno == errno.ENAMETOOLONG:
+                    # file name too long
+                    debug(err)
+                    continue
                 raise
             else:
                 if inode.startswith('socket:['):
@@ -844,10 +876,6 @@ class Connections:
             else:
                 ip = socket.inet_ntop(family, base64.b16decode(ip))
         else:  # IPv6
-            # old version - let's keep it, just in case...
-            # ip = ip.decode('hex')
-            # return socket.inet_ntop(socket.AF_INET6,
-            #          ''.join(ip[i:i+4][::-1] for i in xrange(0, 16, 4)))
             ip = base64.b16decode(ip)
             try:
                 # see: https://github.com/giampaolo/psutil/issues/201
@@ -873,7 +901,7 @@ class Connections:
         if file.endswith('6') and not os.path.exists(file):
             # IPv6 not supported
             return
-        with open_text(file, buffering=BIGFILE_BUFFERING) as f:
+        with open_text(file) as f:
             f.readline()  # skip the first line
             for lineno, line in enumerate(f, 1):
                 try:
@@ -910,7 +938,7 @@ class Connections:
     @staticmethod
     def process_unix(file, family, inodes, filter_pid=None):
         """Parse /proc/net/unix files."""
-        with open_text(file, buffering=BIGFILE_BUFFERING) as f:
+        with open_text(file) as f:
             f.readline()  # skip the first line
             for line in f:
                 tokens = line.split()
@@ -1032,12 +1060,14 @@ def net_if_stats():
     for name in names:
         try:
             mtu = cext_posix.net_if_mtu(name)
-            isup = cext_posix.net_if_flags(name)
+            isup = cext_posix.net_if_is_running(name)
             duplex, speed = cext.net_if_duplex_speed(name)
         except OSError as err:
             # https://github.com/giampaolo/psutil/issues/1279
             if err.errno != errno.ENODEV:
                 raise
+            else:
+                debug(err)
         else:
             ret[name] = _common.snicstats(isup, duplex_map[duplex], speed, mtu)
     return ret
@@ -1146,6 +1176,80 @@ def disk_io_counters(perdisk=False):
     return retdict
 
 
+class RootFsDeviceFinder:
+    """disk_partitions() may return partitions with device == "/dev/root"
+    or "rootfs". This container class uses different strategies to try to
+    obtain the real device path. Resources:
+    https://bootlin.com/blog/find-root-device/
+    https://www.systutorials.com/how-to-find-the-disk-where-root-is-on-in-bash-on-linux/
+    """
+    __slots__ = ['major', 'minor']
+
+    def __init__(self):
+        dev = os.stat("/").st_dev
+        self.major = os.major(dev)
+        self.minor = os.minor(dev)
+
+    def ask_proc_partitions(self):
+        with open_text("%s/partitions" % get_procfs_path()) as f:
+            for line in f.readlines()[2:]:
+                fields = line.split()
+                if len(fields) < 4:  # just for extra safety
+                    continue
+                major = int(fields[0]) if fields[0].isdigit() else None
+                minor = int(fields[1]) if fields[1].isdigit() else None
+                name = fields[3]
+                if major == self.major and minor == self.minor:
+                    if name:  # just for extra safety
+                        return "/dev/%s" % name
+
+    def ask_sys_dev_block(self):
+        path = "/sys/dev/block/%s:%s/uevent" % (self.major, self.minor)
+        with open_text(path) as f:
+            for line in f:
+                if line.startswith("DEVNAME="):
+                    name = line.strip().rpartition("DEVNAME=")[2]
+                    if name:  # just for extra safety
+                        return "/dev/%s" % name
+
+    def ask_sys_class_block(self):
+        needle = "%s:%s" % (self.major, self.minor)
+        files = glob.iglob("/sys/class/block/*/dev")
+        for file in files:
+            try:
+                f = open_text(file)
+            except FileNotFoundError:  # race condition
+                continue
+            else:
+                with f:
+                    data = f.read().strip()
+                    if data == needle:
+                        name = os.path.basename(os.path.dirname(file))
+                        return "/dev/%s" % name
+
+    def find(self):
+        path = None
+        if path is None:
+            try:
+                path = self.ask_proc_partitions()
+            except (IOError, OSError) as err:
+                debug(err)
+        if path is None:
+            try:
+                path = self.ask_sys_dev_block()
+            except (IOError, OSError) as err:
+                debug(err)
+        if path is None:
+            try:
+                path = self.ask_sys_class_block()
+            except (IOError, OSError) as err:
+                debug(err)
+        # We use exists() because the "/dev/*" part of the path is hard
+        # coded, so we want to be sure.
+        if path is not None and os.path.exists(path):
+            return path
+
+
 def disk_partitions(all=False):
     """Return mounted disk partitions as a list of namedtuples."""
     fstypes = set()
@@ -1173,10 +1277,14 @@ def disk_partitions(all=False):
         device, mountpoint, fstype, opts = partition
         if device == 'none':
             device = ''
+        if device in ("/dev/root", "rootfs"):
+            device = RootFsDeviceFinder().find() or device
         if not all:
             if device == '' or fstype not in fstypes:
                 continue
-        ntuple = _common.sdiskpart(device, mountpoint, fstype, opts)
+        maxfile = maxpath = None  # set later
+        ntuple = _common.sdiskpart(device, mountpoint, fstype, opts,
+                                   maxfile, maxpath)
         retlist.append(ntuple)
 
     return retlist
@@ -1206,16 +1314,26 @@ def sensors_temperatures():
     # https://github.com/giampaolo/psutil/issues/971
     # https://github.com/nicolargo/glances/issues/1060
     basenames.extend(glob.glob('/sys/class/hwmon/hwmon*/device/temp*_*'))
-    basenames.extend(glob.glob(
-        '/sys/devices/platform/coretemp.*/hwmon/hwmon*/temp*_*'))
     basenames = sorted(set([x.split('_')[0] for x in basenames]))
+
+    # Only add the coretemp hwmon entries if they're not already in
+    # /sys/class/hwmon/
+    # https://github.com/giampaolo/psutil/issues/1708
+    # https://github.com/giampaolo/psutil/pull/1648
+    basenames2 = glob.glob(
+        '/sys/devices/platform/coretemp.*/hwmon/hwmon*/temp*_*')
+    repl = re.compile('/sys/devices/platform/coretemp.*/hwmon/')
+    for name in basenames2:
+        altname = repl.sub('/sys/class/hwmon/', name)
+        if altname not in basenames:
+            basenames.append(name)
 
     for base in basenames:
         try:
             path = base + '_input'
-            current = float(cat(path)) / 1000.0
+            current = float(bcat(path)) / 1000.0
             path = os.path.join(os.path.dirname(base), 'name')
-            unit_name = cat(path, binary=False)
+            unit_name = cat(path).strip()
         except (IOError, OSError, ValueError):
             # A lot of things can go wrong here, so let's just skip the
             # whole entry. Sure thing is Linux's /sys/class/hwmon really
@@ -1227,9 +1345,9 @@ def sensors_temperatures():
             # https://github.com/giampaolo/psutil/issues/1323
             continue
 
-        high = cat(base + '_max', fallback=None)
-        critical = cat(base + '_crit', fallback=None)
-        label = cat(base + '_label', fallback='', binary=False)
+        high = bcat(base + '_max', fallback=None)
+        critical = bcat(base + '_crit', fallback=None)
+        label = cat(base + '_label', fallback='').strip()
 
         if high is not None:
             try:
@@ -1252,11 +1370,11 @@ def sensors_temperatures():
         for base in basenames:
             try:
                 path = os.path.join(base, 'temp')
-                current = float(cat(path)) / 1000.0
+                current = float(bcat(path)) / 1000.0
                 path = os.path.join(base, 'type')
-                unit_name = cat(path, binary=False)
+                unit_name = cat(path).strip()
             except (IOError, OSError, ValueError) as err:
-                debug("ignoring %r for file %r" % (err, path))
+                debug(err)
                 continue
 
             trip_paths = glob.glob(base + '/trip_point*')
@@ -1266,13 +1384,13 @@ def sensors_temperatures():
             high = None
             for trip_point in trip_points:
                 path = os.path.join(base, trip_point + "_type")
-                trip_type = cat(path, fallback='', binary=False)
+                trip_type = cat(path, fallback='').strip()
                 if trip_type == 'critical':
-                    critical = cat(os.path.join(base, trip_point + "_temp"),
-                                   fallback=None)
+                    critical = bcat(os.path.join(base, trip_point + "_temp"),
+                                    fallback=None)
                 elif trip_type == 'high':
-                    high = cat(os.path.join(base, trip_point + "_temp"),
-                               fallback=None)
+                    high = bcat(os.path.join(base, trip_point + "_temp"),
+                                fallback=None)
 
                 if high is not None:
                     try:
@@ -1310,13 +1428,12 @@ def sensors_fans():
     basenames = sorted(set([x.split('_')[0] for x in basenames]))
     for base in basenames:
         try:
-            current = int(cat(base + '_input'))
+            current = int(bcat(base + '_input'))
         except (IOError, OSError) as err:
-            warnings.warn("ignoring %r" % err, RuntimeWarning)
+            debug(err)
             continue
-        unit_name = cat(os.path.join(os.path.dirname(base), 'name'),
-                        binary=False)
-        label = cat(base + '_label', fallback='', binary=False)
+        unit_name = cat(os.path.join(os.path.dirname(base), 'name')).strip()
+        label = cat(base + '_label', fallback='').strip()
         ret[unit_name].append(_common.sfan(label, current))
 
     return dict(ret)
@@ -1331,17 +1448,21 @@ def sensors_battery():
     """
     null = object()
 
-    def multi_cat(*paths):
+    def multi_bcat(*paths):
         """Attempt to read the content of multiple files which may
         not exist. If none of them exist return None.
         """
         for path in paths:
-            ret = cat(path, fallback=null)
+            ret = bcat(path, fallback=null)
             if ret != null:
-                return int(ret) if ret.isdigit() else ret
+                try:
+                    return int(ret)
+                except ValueError:
+                    return ret.strip()
         return None
 
-    bats = [x for x in os.listdir(POWER_SUPPLY_PATH) if x.startswith('BAT')]
+    bats = [x for x in os.listdir(POWER_SUPPLY_PATH) if x.startswith('BAT') or
+            'battery' in x.lower()]
     if not bats:
         return None
     # Get the first available battery. Usually this is "BAT0", except
@@ -1350,21 +1471,20 @@ def sensors_battery():
     root = os.path.join(POWER_SUPPLY_PATH, sorted(bats)[0])
 
     # Base metrics.
-    energy_now = multi_cat(
+    energy_now = multi_bcat(
         root + "/energy_now",
         root + "/charge_now")
-    power_now = multi_cat(
+    power_now = multi_bcat(
         root + "/power_now",
         root + "/current_now")
-    energy_full = multi_cat(
+    energy_full = multi_bcat(
         root + "/energy_full",
         root + "/charge_full")
-    if energy_now is None or power_now is None:
-        return None
+    time_to_empty = multi_bcat(root + "/time_to_empty_now")
 
     # Percent. If we have energy_full the percentage will be more
     # accurate compared to reading /capacity file (float vs. int).
-    if energy_full is not None:
+    if energy_full is not None and energy_now is not None:
         try:
             percent = 100.0 * energy_now / energy_full
         except ZeroDivisionError:
@@ -1378,13 +1498,13 @@ def sensors_battery():
     # Note: AC0 is not always available and sometimes (e.g. CentOS7)
     # it's called "AC".
     power_plugged = None
-    online = multi_cat(
+    online = multi_bcat(
         os.path.join(POWER_SUPPLY_PATH, "AC0/online"),
         os.path.join(POWER_SUPPLY_PATH, "AC/online"))
     if online is not None:
         power_plugged = online == 1
     else:
-        status = cat(root + "/status", fallback="", binary=False).lower()
+        status = cat(root + "/status", fallback="").strip().lower()
         if status == "discharging":
             power_plugged = False
         elif status in ("charging", "full"):
@@ -1396,11 +1516,17 @@ def sensors_battery():
     #     013937745fd9050c30146290e8f963d65c0179e6/bin/battery.py#L55
     if power_plugged:
         secsleft = _common.POWER_TIME_UNLIMITED
-    else:
+    elif energy_now is not None and power_now is not None:
         try:
             secsleft = int(energy_now / power_now * 3600)
         except ZeroDivisionError:
             secsleft = _common.POWER_TIME_UNKNOWN
+    elif time_to_empty is not None:
+        secsleft = int(time_to_empty * 60)
+        if secsleft < 0:
+            secsleft = _common.POWER_TIME_UNKNOWN
+    else:
+        secsleft = _common.POWER_TIME_UNKNOWN
 
     return _common.sbattery(percent, secsleft, power_plugged)
 
@@ -1550,13 +1676,12 @@ class Process(object):
         """Parse /proc/{pid}/stat file and return a dict with various
         process info.
         Using "man proc" as a reference: where "man proc" refers to
-        position N always substract 3 (e.g ppid position 4 in
+        position N always subtract 3 (e.g ppid position 4 in
         'man proc' == position 1 in here).
         The return value is cached in case oneshot() ctx manager is
         in use.
         """
-        with open_binary("%s/%s/stat" % (self._procfs_path, self.pid)) as f:
-            data = f.read()
+        data = bcat("%s/%s/stat" % (self._procfs_path, self.pid))
         # Process name is between parentheses. It can contain spaces and
         # other parentheses. This is taken into account by looking for
         # the first occurrence of "(" and the last occurence of ")".
@@ -1592,8 +1717,7 @@ class Process(object):
     @wrap_exceptions
     @memoize_when_activated
     def _read_smaps_file(self):
-        with open_binary("%s/%s/smaps" % (self._procfs_path, self.pid),
-                         buffering=BIGFILE_BUFFERING) as f:
+        with open_binary("%s/%s/smaps" % (self._procfs_path, self.pid)) as f:
             return f.read().strip()
 
     def oneshot_enter(self):
@@ -1729,7 +1853,7 @@ class Process(object):
         # According to documentation, starttime is in field 21 and the
         # unit is jiffies (clock ticks).
         # We first divide it for clock ticks and then add uptime returning
-        # seconds since the epoch, in UTC.
+        # seconds since the epoch.
         # Also use cached value if available.
         bt = BOOT_TIME or boot_time()
         return (ctime / CLOCK_TICKS) + bt
@@ -1752,18 +1876,42 @@ class Process(object):
                 [int(x) * PAGESIZE for x in f.readline().split()[:7]]
         return pmem(rss, vms, shared, text, lib, data, dirty)
 
-    # /proc/pid/smaps does not exist on kernels < 2.6.14 or if
-    # CONFIG_MMU kernel configuration option is not enabled.
-    if HAS_SMAPS:
+    if HAS_PROC_SMAPS_ROLLUP or HAS_PROC_SMAPS:
 
         @wrap_exceptions
-        def memory_full_info(
+        def _parse_smaps_rollup(self):
+            # /proc/pid/smaps_rollup was added to Linux in 2017. Faster
+            # than /proc/pid/smaps. It reports higher PSS than */smaps
+            # (from 1k up to 200k higher; tested against all processes).
+            uss = pss = swap = 0
+            try:
+                with open_binary("{}/{}/smaps_rollup".format(
+                        self._procfs_path, self.pid)) as f:
+                    for line in f:
+                        if line.startswith(b"Private_"):
+                            # Private_Clean, Private_Dirty, Private_Hugetlb
+                            uss += int(line.split()[1]) * 1024
+                        elif line.startswith(b"Pss:"):
+                            pss = int(line.split()[1]) * 1024
+                        elif line.startswith(b"Swap:"):
+                            swap = int(line.split()[1]) * 1024
+            except ProcessLookupError:  # happens on readline()
+                if not pid_exists(self.pid):
+                    raise NoSuchProcess(self.pid, self._name)
+                else:
+                    raise ZombieProcess(self.pid, self._name, self._ppid)
+            return (uss, pss, swap)
+
+        @wrap_exceptions
+        def _parse_smaps(
                 self,
                 # Gets Private_Clean, Private_Dirty, Private_Hugetlb.
                 _private_re=re.compile(br"\nPrivate.*:\s+(\d+)"),
                 _pss_re=re.compile(br"\nPss\:\s+(\d+)"),
                 _swap_re=re.compile(br"\nSwap\:\s+(\d+)")):
-            basic_mem = self.memory_info()
+            # /proc/pid/smaps does not exist on kernels < 2.6.14 or if
+            # CONFIG_MMU kernel configuration option is not enabled.
+
             # Note: using 3 regexes is faster than reading the file
             # line by line.
             # XXX: on Python 3 the 2 regexes are 30% slower than on
@@ -1782,12 +1930,20 @@ class Process(object):
             uss = sum(map(int, _private_re.findall(smaps_data))) * 1024
             pss = sum(map(int, _pss_re.findall(smaps_data))) * 1024
             swap = sum(map(int, _swap_re.findall(smaps_data))) * 1024
+            return (uss, pss, swap)
+
+        def memory_full_info(self):
+            if HAS_PROC_SMAPS_ROLLUP:  # faster
+                uss, pss, swap = self._parse_smaps_rollup()
+            else:
+                uss, pss, swap = self._parse_smaps()
+            basic_mem = self.memory_info()
             return pfullmem(*basic_mem + (uss, pss, swap))
 
     else:
         memory_full_info = memory_info
 
-    if HAS_SMAPS:
+    if HAS_PROC_SMAPS:
 
         @wrap_exceptions
         def memory_maps(self):
@@ -1987,10 +2143,10 @@ class Process(object):
                 raise ValueError("value not in 0-7 range")
             return cext.proc_ioprio_set(self.pid, ioclass, value)
 
-    if HAS_PRLIMIT:
+    if prlimit is not None:
 
         @wrap_exceptions
-        def rlimit(self, resource, limits=None):
+        def rlimit(self, resource_, limits=None):
             # If pid is 0 prlimit() applies to the calling process and
             # we don't want that. We should never get here though as
             # PID 0 is not supported on Linux.
@@ -1999,15 +2155,14 @@ class Process(object):
             try:
                 if limits is None:
                     # get
-                    return cext.linux_prlimit(self.pid, resource)
+                    return prlimit(self.pid, resource_)
                 else:
                     # set
                     if len(limits) != 2:
                         raise ValueError(
                             "second argument must be a (soft, hard) tuple, "
                             "got %s" % repr(limits))
-                    soft, hard = limits
-                    cext.linux_prlimit(self.pid, resource, soft, hard)
+                    prlimit(self.pid, resource_, limits)
             except OSError as err:
                 if err.errno == errno.ENOSYS and pid_exists(self.pid):
                     # I saw this happening on Travis:
@@ -2040,6 +2195,10 @@ class Process(object):
             except OSError as err:
                 if err.errno == errno.EINVAL:
                     # not a link
+                    continue
+                if err.errno == errno.ENAMETOOLONG:
+                    # file name too long
+                    debug(err)
                     continue
                 raise
             else:

@@ -9,16 +9,15 @@
 # See the README file for information on usage and redistribution.
 #
 
-##
-# This module provides constants and clear-text names for various
-# well-known EXIF tags.
-##
+"""
+This module provides constants and clear-text names for various
+well-known EXIF tags.
+"""
 
-##
-# Maps EXIF tags to tag names.
 
 TAGS = {
     # possibly incomplete
+    0x0001: "InteropIndex",
     0x000B: "ProcessingSoftware",
     0x00FE: "NewSubfileType",
     0x00FF: "SubfileType",
@@ -123,9 +122,18 @@ TAGS = {
     0x8829: "Interlace",
     0x882A: "TimeZoneOffset",
     0x882B: "SelfTimerMode",
+    0x8830: "SensitivityType",
+    0x8831: "StandardOutputSensitivity",
+    0x8832: "RecommendedExposureIndex",
+    0x8833: "ISOSpeed",
+    0x8834: "ISOSpeedLatitudeyyy",
+    0x8835: "ISOSpeedLatitudezzz",
     0x9000: "ExifVersion",
     0x9003: "DateTimeOriginal",
     0x9004: "DateTimeDigitized",
+    0x9010: "OffsetTime",
+    0x9011: "OffsetTimeOriginal",
+    0x9012: "OffsetTimeDigitized",
     0x9101: "ComponentsConfiguration",
     0x9102: "CompressedBitsPerPixel",
     0x9201: "ShutterSpeedValue",
@@ -199,6 +207,9 @@ TAGS = {
     0xA433: "LensMake",
     0xA434: "LensModel",
     0xA435: "LensSerialNumber",
+    0xA460: "CompositeImage",
+    0xA461: "CompositeImageCount",
+    0xA462: "CompositeImageExposureTimes",
     0xA500: "Gamma",
     0xC4A5: "PrintImageMatching",
     0xC612: "DNGVersion",
@@ -280,9 +291,8 @@ TAGS = {
     0xC74E: "OpcodeList3",
     0xC761: "NoiseProfile",
 }
+"""Maps EXIF tags to tag names."""
 
-##
-# Maps EXIF GPS tags to tag names.
 
 GPSTAGS = {
     0: "GPSVersionID",
@@ -318,3 +328,4 @@ GPSTAGS = {
     30: "GPSDifferential",
     31: "GPSHPositioningError",
 }
+"""Maps EXIF GPS tags to tag names."""

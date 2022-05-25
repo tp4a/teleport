@@ -22,11 +22,15 @@
 # SOFTWARE.
 # ===================================================================
 
+"""A cryptographically strong version of Python's standard "random" module."""
+
+__revision__ = "$Id$"
 __all__ = ['StrongRandom', 'getrandbits', 'randrange', 'randint', 'choice', 'shuffle', 'sample']
 
 from Crypto import Random
-
-from Crypto.Util.py3compat import is_native_int
+import sys
+if sys.version_info[0] == 2 and sys.version_info[1] == 1:
+    from Crypto.Util.py21compat import *
 
 class StrongRandom(object):
     def __init__(self, rng=None, randfunc=None):
@@ -40,8 +44,7 @@ class StrongRandom(object):
             raise ValueError("Cannot specify both 'rng' and 'randfunc'")
 
     def getrandbits(self, k):
-        """Return an integer with k random bits."""
-
+        """Return a python long integer with k random bits."""
         if self._randfunc is None:
             self._randfunc = Random.new().read
         mask = (1 << k) - 1
@@ -61,8 +64,9 @@ class StrongRandom(object):
             step = 1
         else:
             raise TypeError("randrange expected at most 3 arguments, got %d" % (len(args),))
-        if (not is_native_int(start) or not is_native_int(stop) or not
-                is_native_int(step)):
+        if (not isinstance(start, int)
+                or not isinstance(stop, int)
+                or not isinstance(step, int)):
             raise TypeError("randrange requires integer arguments")
         if step == 0:
             raise ValueError("randrange step argument must not be zero")
@@ -82,7 +86,7 @@ class StrongRandom(object):
 
     def randint(self, a, b):
         """Return a random integer N such that a <= N <= b."""
-        if not is_native_int(a) or not is_native_int(b):
+        if not isinstance(a, int) or not isinstance(b, int):
             raise TypeError("randint requires integer arguments")
         N = self.randrange(a, b+1)
         assert a <= N <= b
@@ -99,13 +103,13 @@ class StrongRandom(object):
 
     def shuffle(self, x):
         """Shuffle the sequence in place."""
-        # Fisher-Yates shuffle.  O(n)
-        # See http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
-        # Working backwards from the end of the array, we choose a random item
-        # from the remaining items until all items have been chosen.
-        for i in range(len(x)-1, 0, -1):   # iterate from len(x)-1 downto 1
-            j = self.randrange(0, i+1)      # choose random j such that 0 <= j <= i
-            x[i], x[j] = x[j], x[i]         # exchange x[i] and x[j]
+        # Make a (copy) of the list of objects we want to shuffle
+        items = list(x)
+
+        # Choose a random item (without replacement) until all the items have been
+        # chosen.
+        for i in range(len(x)):
+            x[i] = items.pop(self.randrange(len(items)))
 
     def sample(self, population, k):
         """Return a k-length list of unique elements chosen from the population sequence."""

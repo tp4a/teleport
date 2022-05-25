@@ -77,7 +77,7 @@ _ABSTRACTION_OPERATIONAL_ATTRIBUTE_PREFIX = 'OA_'
 # communication
 _POOLING_LOOP_TIMEOUT = 10  # number of seconds to wait before restarting a cycle to find an active server in the pool
 _RESPONSE_SLEEPTIME = 0.05  # seconds to wait while waiting for a response in asynchronous strategies
-_RESPONSE_WAITING_TIMEOUT = 3  # waiting timeout for receiving a response in asynchronous strategies
+_RESPONSE_WAITING_TIMEOUT = 20  # waiting timeout for receiving a response in asynchronous strategies
 _SOCKET_SIZE = 4096  # socket byte size
 _CHECK_AVAILABILITY_TIMEOUT = 2.5  # default timeout for socket connect when checking availability
 _RESET_AVAILABILITY_TIMEOUT = 5  # default timeout for resetting the availability status when checking candidate addresses
@@ -91,6 +91,7 @@ _ADDITIONAL_SERVER_ENCODINGS = ['latin-1', 'koi8-r']  # some broken LDAP impleme
 _ADDITIONAL_CLIENT_ENCODINGS = ['utf-8']
 _IGNORE_MALFORMED_SCHEMA = False  # some flaky LDAP servers returns malformed schema. If True no expection is raised and schema is thrown away
 _DEFAULT_SERVER_ENCODING = 'utf-8'  # should always be utf-8
+_LDIF_LINE_LENGTH = 78  # as stated in RFC 2849
 
 if stdin and hasattr(stdin, 'encoding') and stdin.encoding:
     _DEFAULT_CLIENT_ENCODING = stdin.encoding
@@ -124,7 +125,8 @@ PARAMETERS = ['CASE_INSENSITIVE_ATTRIBUTE_NAMES',
               'ADDITIONAL_CLIENT_ENCODINGS',
               'IGNORE_MALFORMED_SCHEMA',
               'ATTRIBUTES_EXCLUDED_FROM_OBJECT_DEF',
-              'IGNORED_MANDATORY_ATTRIBUTES_IN_OBJECT_DEF'
+              'IGNORED_MANDATORY_ATTRIBUTES_IN_OBJECT_DEF',
+              'LDIF_LINE_LENGTH'
               ]
 
 
@@ -205,6 +207,8 @@ def get_config_parameter(parameter):
             return _IGNORED_MANDATORY_ATTRIBUTES_IN_OBJECT_DEF
         else:
             return [_IGNORED_MANDATORY_ATTRIBUTES_IN_OBJECT_DEF]
+    elif parameter == 'LDIF_LINE_LENGTH':  # Integer
+        return _LDIF_LINE_LENGTH
 
     raise LDAPConfigurationParameterError('configuration parameter %s not valid' % parameter)
 
@@ -288,5 +292,8 @@ def set_config_parameter(parameter, value):
     elif parameter == 'IGNORED_MANDATORY_ATTRIBUTES_IN_OBJECT_DEF':
         global _IGNORED_MANDATORY_ATTRIBUTES_IN_OBJECT_DEF
         _IGNORED_MANDATORY_ATTRIBUTES_IN_OBJECT_DEF = value
+    elif parameter == 'LDIF_LINE_LENGTH':
+        global _LDIF_LINE_LENGTH
+        _LDIF_LINE_LENGTH = value
     else:
         raise LDAPConfigurationParameterError('unable to set configuration parameter %s' % parameter)

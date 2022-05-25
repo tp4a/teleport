@@ -23,7 +23,7 @@
 # along with ldap3 in the COPYING and COPYING.LESSER files.
 # If not, see <http://www.gnu.org/licenses/>.
 
-from .exceptions import LDAPSSLNotSupportedError, LDAPSSLConfigurationError, LDAPStartTLSError, LDAPCertificateError, start_tls_exception_factory
+from .exceptions import LDAPSSLNotSupportedError, LDAPSSLConfigurationError, LDAPCertificateError, start_tls_exception_factory, LDAPStartTLSError
 from .. import SEQUENCE_TYPES
 from ..utils.log import log, log_enabled, ERROR, BASIC, NETWORK
 
@@ -286,7 +286,7 @@ class Tls(object):
             connection.last_error = 'wrap socket error: ' + str(e)
             if log_enabled(ERROR):
                 log(ERROR, 'error <%s> wrapping socket for TLS in <%s>', connection.last_error, connection)
-            raise start_tls_exception_factory(LDAPStartTLSError, e)(connection.last_error)
+            raise start_tls_exception_factory(e)(connection.last_error)
         finally:
             connection.starting_tls = False
 

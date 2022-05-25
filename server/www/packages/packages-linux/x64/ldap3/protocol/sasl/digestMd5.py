@@ -70,9 +70,9 @@ def md5_hmac(k, s):
 
 
 def sasl_digest_md5(connection, controls):
-    # sasl_credential must be a tuple made up of the following elements: (realm, user, password, authorization_id)
+    # sasl_credential must be a tuple made up of the following elements: (realm, user, password, authorization_id) or (realm, user, password, authorization_id, enable_signing)
     # if realm is None will be used the realm received from the server, if available
-    if not isinstance(connection.sasl_credentials, SEQUENCE_TYPES) or not len(connection.sasl_credentials) == 4:
+    if not isinstance(connection.sasl_credentials, SEQUENCE_TYPES) or not len(connection.sasl_credentials) in (4, 5):
         return None
 
     # step One of RFC2831
@@ -94,8 +94,11 @@ def sasl_digest_md5(connection, controls):
     authz_id = connection.sasl_credentials[3].encode(charset) if connection.sasl_credentials[3] else b''
     nonce = server_directives['nonce'].encode(charset)
     cnonce = random_hex_string(16).encode(charset)
-    uri = b'ldap/'
+    uri = b'ldap/' + connection.server.host.encode(charset)
     qop = b'auth'
+    if len(connection.sasl_credentials) == 5 and connection.sasl_credentials[4] == 'sign' and not connection.server.ssl:
+        qop = b'auth-int'
+        connection._digest_md5_sec_num = 0
 
     digest_response = b'username="' + user + b'",'
     digest_response += b'realm="' + realm + b'",'
@@ -110,7 +113,11 @@ def sasl_digest_md5(connection, controls):
 
     a0 = md5_h(b':'.join([user, realm, password]))
     a1 = b':'.join([a0, nonce, cnonce, authz_id]) if authz_id else b':'.join([a0, nonce, cnonce])
-    a2 = b'AUTHENTICATE:' + uri + (':00000000000000000000000000000000' if qop in [b'auth-int', b'auth-conf'] else b'')
+    a2 = b'AUTHENTICATE:' + uri + (b':00000000000000000000000000000000' if qop in [b'auth-int', b'auth-conf'] else b'')
+
+    if qop == b'auth-int':
+        connection._digest_md5_kis = md5_h(md5_h(a1) + b"Digest session key to server-to-client signing key magic constant")
+        connection._digest_md5_kic = md5_h(md5_h(a1) + b"Digest session key to client-to-server signing key magic constant")
 
     digest_response += b'response="' + md5_hex(md5_kd(md5_hex(md5_h(a1)), b':'.join([nonce, b'00000001', cnonce, qop, md5_hex(md5_h(a2))]))) + b'"'
 

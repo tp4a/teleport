@@ -2,66 +2,61 @@
 # 2.0, and the BSD License. See the LICENSE file in the root of this repository
 # for complete details.
 
-from __future__ import absolute_import, division, print_function
 
 from cryptography import utils
 from cryptography.hazmat.primitives.ciphers import (
-    BlockCipherAlgorithm, CipherAlgorithm
+    BlockCipherAlgorithm,
+    CipherAlgorithm,
 )
-from cryptography.hazmat.primitives.ciphers.modes import ModeWithNonce
 
 
-def _verify_key_size(algorithm, key):
+def _verify_key_size(algorithm: CipherAlgorithm, key: bytes) -> bytes:
     # Verify that the key is instance of bytes
     utils._check_byteslike("key", key)
 
     # Verify that the key size matches the expected key size
     if len(key) * 8 not in algorithm.key_sizes:
-        raise ValueError("Invalid key size ({}) for {}.".format(
-            len(key) * 8, algorithm.name
-        ))
+        raise ValueError(
+            "Invalid key size ({}) for {}.".format(
+                len(key) * 8, algorithm.name
+            )
+        )
     return key
 
 
-@utils.register_interface(BlockCipherAlgorithm)
-@utils.register_interface(CipherAlgorithm)
-class AES(object):
+class AES(CipherAlgorithm, BlockCipherAlgorithm):
     name = "AES"
     block_size = 128
     # 512 added to support AES-256-XTS, which uses 512-bit keys
     key_sizes = frozenset([128, 192, 256, 512])
 
-    def __init__(self, key):
+    def __init__(self, key: bytes):
         self.key = _verify_key_size(self, key)
 
     @property
-    def key_size(self):
+    def key_size(self) -> int:
         return len(self.key) * 8
 
 
-@utils.register_interface(BlockCipherAlgorithm)
-@utils.register_interface(CipherAlgorithm)
-class Camellia(object):
+class Camellia(CipherAlgorithm, BlockCipherAlgorithm):
     name = "camellia"
     block_size = 128
     key_sizes = frozenset([128, 192, 256])
 
-    def __init__(self, key):
+    def __init__(self, key: bytes):
         self.key = _verify_key_size(self, key)
 
     @property
-    def key_size(self):
+    def key_size(self) -> int:
         return len(self.key) * 8
 
 
-@utils.register_interface(BlockCipherAlgorithm)
-@utils.register_interface(CipherAlgorithm)
-class TripleDES(object):
+class TripleDES(CipherAlgorithm, BlockCipherAlgorithm):
     name = "3DES"
     block_size = 64
     key_sizes = frozenset([64, 128, 192])
 
-    def __init__(self, key):
+    def __init__(self, key: bytes):
         if len(key) == 8:
             key += key + key
         elif len(key) == 16:
@@ -69,89 +64,119 @@ class TripleDES(object):
         self.key = _verify_key_size(self, key)
 
     @property
-    def key_size(self):
+    def key_size(self) -> int:
         return len(self.key) * 8
 
 
-@utils.register_interface(BlockCipherAlgorithm)
-@utils.register_interface(CipherAlgorithm)
-class Blowfish(object):
+class Blowfish(CipherAlgorithm, BlockCipherAlgorithm):
     name = "Blowfish"
     block_size = 64
     key_sizes = frozenset(range(32, 449, 8))
 
-    def __init__(self, key):
+    def __init__(self, key: bytes):
         self.key = _verify_key_size(self, key)
 
     @property
-    def key_size(self):
+    def key_size(self) -> int:
         return len(self.key) * 8
 
 
-@utils.register_interface(BlockCipherAlgorithm)
-@utils.register_interface(CipherAlgorithm)
-class CAST5(object):
+_BlowfishInternal = Blowfish
+utils.deprecated(
+    Blowfish,
+    __name__,
+    "Blowfish has been deprecated",
+    utils.DeprecatedIn37,
+    name="Blowfish",
+)
+
+
+class CAST5(CipherAlgorithm, BlockCipherAlgorithm):
     name = "CAST5"
     block_size = 64
     key_sizes = frozenset(range(40, 129, 8))
 
-    def __init__(self, key):
+    def __init__(self, key: bytes):
         self.key = _verify_key_size(self, key)
 
     @property
-    def key_size(self):
+    def key_size(self) -> int:
         return len(self.key) * 8
 
 
-@utils.register_interface(CipherAlgorithm)
-class ARC4(object):
+_CAST5Internal = CAST5
+utils.deprecated(
+    CAST5,
+    __name__,
+    "CAST5 has been deprecated",
+    utils.DeprecatedIn37,
+    name="CAST5",
+)
+
+
+class ARC4(CipherAlgorithm):
     name = "RC4"
     key_sizes = frozenset([40, 56, 64, 80, 128, 160, 192, 256])
 
-    def __init__(self, key):
+    def __init__(self, key: bytes):
         self.key = _verify_key_size(self, key)
 
     @property
-    def key_size(self):
+    def key_size(self) -> int:
         return len(self.key) * 8
 
 
-@utils.register_interface(CipherAlgorithm)
-class IDEA(object):
+class IDEA(CipherAlgorithm, BlockCipherAlgorithm):
     name = "IDEA"
     block_size = 64
     key_sizes = frozenset([128])
 
-    def __init__(self, key):
+    def __init__(self, key: bytes):
         self.key = _verify_key_size(self, key)
 
     @property
-    def key_size(self):
+    def key_size(self) -> int:
         return len(self.key) * 8
 
 
-@utils.register_interface(BlockCipherAlgorithm)
-@utils.register_interface(CipherAlgorithm)
-class SEED(object):
+_IDEAInternal = IDEA
+utils.deprecated(
+    IDEA,
+    __name__,
+    "IDEA has been deprecated",
+    utils.DeprecatedIn37,
+    name="IDEA",
+)
+
+
+class SEED(CipherAlgorithm, BlockCipherAlgorithm):
     name = "SEED"
     block_size = 128
     key_sizes = frozenset([128])
 
-    def __init__(self, key):
+    def __init__(self, key: bytes):
         self.key = _verify_key_size(self, key)
 
     @property
-    def key_size(self):
+    def key_size(self) -> int:
         return len(self.key) * 8
 
 
-@utils.register_interface(CipherAlgorithm)
-@utils.register_interface(ModeWithNonce)
-class ChaCha20(object):
+_SEEDInternal = SEED
+utils.deprecated(
+    SEED,
+    __name__,
+    "SEED has been deprecated",
+    utils.DeprecatedIn37,
+    name="SEED",
+)
+
+
+class ChaCha20(CipherAlgorithm):
     name = "ChaCha20"
     key_sizes = frozenset([256])
 
-    def __init__(self, key, nonce):
+    def __init__(self, key: bytes, nonce: bytes):
         self.key = _verify_key_size(self, key)
         utils._check_byteslike("nonce", nonce)
 
@@ -160,8 +185,23 @@ class ChaCha20(object):
 
         self._nonce = nonce
 
-    nonce = utils.read_only_property("_nonce")
+    @property
+    def nonce(self) -> bytes:
+        return self._nonce
 
     @property
-    def key_size(self):
+    def key_size(self) -> int:
+        return len(self.key) * 8
+
+
+class SM4(CipherAlgorithm, BlockCipherAlgorithm):
+    name = "SM4"
+    block_size = 128
+    key_sizes = frozenset([128])
+
+    def __init__(self, key: bytes):
+        self.key = _verify_key_size(self, key)
+
+    @property
+    def key_size(self) -> int:
         return len(self.key) * 8

@@ -1,20 +1,8 @@
 """ ``comp`` module.
 """
 
-import sys
-
-
-PY3 = sys.version_info[0] >= 3
-
-
-if PY3:  # pragma: nocover
-    xrange = range
-else:  # pragma: nocover
-    xrange = xrange
-
 try:  # pragma: nocover
-    from PIL import Image
-    from PIL import ImageFilter
+    from PIL import Image, ImageFilter
     from PIL.ImageColor import getrgb
     from PIL.ImageDraw import Draw
     from PIL.ImageFont import truetype

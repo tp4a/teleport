@@ -183,8 +183,8 @@ class XrefTable:
                     this_deleted_object_id = deleted_keys.pop(0)
                     check_format_condition(
                         object_id == this_deleted_object_id,
-                        "expected the next deleted object ID to be %s, instead found %s"
-                        % (object_id, this_deleted_object_id),
+                        f"expected the next deleted object ID to be {object_id}, "
+                        f"instead found {this_deleted_object_id}",
                     )
                     try:
                         next_in_linked_list = deleted_keys[0]
@@ -218,7 +218,7 @@ class PdfName:
         return hash(self.name)
 
     def __repr__(self):
-        return "PdfName(%s)" % repr(self.name)
+        return f"PdfName({repr(self.name)})"
 
     @classmethod
     def from_pdf_stream(cls, data):
@@ -251,8 +251,8 @@ class PdfDict(collections.UserDict):
     def __getattr__(self, key):
         try:
             value = self[key.encode("us-ascii")]
-        except KeyError:
-            raise AttributeError(key)
+        except KeyError as e:
+            raise AttributeError(key) from e
         if isinstance(value, bytes):
             value = decode_text(value)
         if key.endswith("Date"):
@@ -315,7 +315,7 @@ class PdfStream:
             return zlib.decompress(self.buf, bufsize=int(expected_length))
         else:
             raise NotImplementedError(
-                "stream filter %s unknown/unsupported" % repr(self.dictionary.Filter)
+                f"stream filter {repr(self.dictionary.Filter)} unknown/unsupported"
             )
 
 
@@ -329,6 +329,8 @@ def pdf_repr(x):
     elif isinstance(x, (PdfName, PdfDict, PdfArray, PdfBinary)):
         return bytes(x)
     elif isinstance(x, int):
+        return str(x).encode("us-ascii")
+    elif isinstance(x, float):
         return str(x).encode("us-ascii")
     elif isinstance(x, time.struct_time):
         return b"(D:" + time.strftime("%Y%m%d%H%M%SZ", x).encode("us-ascii") + b")"
@@ -423,7 +425,7 @@ class PdfParser:
         self.f.write(b"%PDF-1.4\n")
 
     def write_comment(self, s):
-        self.f.write(("% {}\n".format(s)).encode("utf-8"))
+        self.f.write(f"% {s}\n".encode())
 
     def write_catalog(self):
         self.del_root()
@@ -574,40 +576,42 @@ class PdfParser:
             self.xref_table[reference.object_id] = (offset, 0)
         return reference
 
-    delimiter = br"[][()<>{}/%]"
-    delimiter_or_ws = br"[][()<>{}/%\000\011\012\014\015\040]"
-    whitespace = br"[\000\011\012\014\015\040]"
-    whitespace_or_hex = br"[\000\011\012\014\015\0400-9a-fA-F]"
+    delimiter = rb"[][()<>{}/%]"
+    delimiter_or_ws = rb"[][()<>{}/%\000\011\012\014\015\040]"
+    whitespace = rb"[\000\011\012\014\015\040]"
+    whitespace_or_hex = rb"[\000\011\012\014\015\0400-9a-fA-F]"
     whitespace_optional = whitespace + b"*"
     whitespace_mandatory = whitespace + b"+"
-    newline_only = br"[\r\n]+"
-    newline = whitespace_optional + newline_only + whitespace_optional
+    # No "\012" aka "\n" or "\015" aka "\r":
+    whitespace_optional_no_nl = rb"[\000\011\014\040]*"
+    newline_only = rb"[\r\n]+"
+    newline = whitespace_optional_no_nl + newline_only + whitespace_optional_no_nl
     re_trailer_end = re.compile(
         whitespace_mandatory
-        + br"trailer"
+        + rb"trailer"
         + whitespace_optional
-        + br"\<\<(.*\>\>)"
+        + rb"\<\<(.*\>\>)"
         + newline
-        + br"startxref"
+        + rb"startxref"
         + newline
-        + br"([0-9]+)"
+        + rb"([0-9]+)"
         + newline
-        + br"%%EOF"
+        + rb"%%EOF"
         + whitespace_optional
-        + br"$",
+        + rb"$",
         re.DOTALL,
     )
     re_trailer_prev = re.compile(
         whitespace_optional
-        + br"trailer"
+        + rb"trailer"
         + whitespace_optional
-        + br"\<\<(.*?\>\>)"
+        + rb"\<\<(.*?\>\>)"
         + newline
-        + br"startxref"
+        + rb"startxref"
         + newline
-        + br"([0-9]+)"
+        + rb"([0-9]+)"
         + newline
-        + br"%%EOF"
+        + rb"%%EOF"
         + whitespace_optional,
         re.DOTALL,
     )
@@ -651,12 +655,12 @@ class PdfParser:
     re_whitespace_optional = re.compile(whitespace_optional)
     re_name = re.compile(
         whitespace_optional
-        + br"/([!-$&'*-.0-;=?-Z\\^-z|~]+)(?="
+        + rb"/([!-$&'*-.0-;=?-Z\\^-z|~]+)(?="
         + delimiter_or_ws
-        + br")"
+        + rb")"
     )
-    re_dict_start = re.compile(whitespace_optional + br"\<\<")
-    re_dict_end = re.compile(whitespace_optional + br"\>\>" + whitespace_optional)
+    re_dict_start = re.compile(whitespace_optional + rb"\<\<")
+    re_dict_end = re.compile(whitespace_optional + rb"\>\>" + whitespace_optional)
 
     @classmethod
     def interpret_trailer(cls, trailer_data):
@@ -685,7 +689,7 @@ class PdfParser:
         )
         return trailer
 
-    re_hashes_in_name = re.compile(br"([^#]*)(#([0-9a-fA-F]{2}))?")
+    re_hashes_in_name = re.compile(rb"([^#]*)(#([0-9a-fA-F]{2}))?")
 
     @classmethod
     def interpret_name(cls, raw, as_text=False):
@@ -700,53 +704,53 @@ class PdfParser:
         else:
             return bytes(name)
 
-    re_null = re.compile(whitespace_optional + br"null(?=" + delimiter_or_ws + br")")
-    re_true = re.compile(whitespace_optional + br"true(?=" + delimiter_or_ws + br")")
-    re_false = re.compile(whitespace_optional + br"false(?=" + delimiter_or_ws + br")")
+    re_null = re.compile(whitespace_optional + rb"null(?=" + delimiter_or_ws + rb")")
+    re_true = re.compile(whitespace_optional + rb"true(?=" + delimiter_or_ws + rb")")
+    re_false = re.compile(whitespace_optional + rb"false(?=" + delimiter_or_ws + rb")")
     re_int = re.compile(
-        whitespace_optional + br"([-+]?[0-9]+)(?=" + delimiter_or_ws + br")"
+        whitespace_optional + rb"([-+]?[0-9]+)(?=" + delimiter_or_ws + rb")"
     )
     re_real = re.compile(
         whitespace_optional
-        + br"([-+]?([0-9]+\.[0-9]*|[0-9]*\.[0-9]+))(?="
+        + rb"([-+]?([0-9]+\.[0-9]*|[0-9]*\.[0-9]+))(?="
         + delimiter_or_ws
-        + br")"
+        + rb")"
     )
-    re_array_start = re.compile(whitespace_optional + br"\[")
-    re_array_end = re.compile(whitespace_optional + br"]")
+    re_array_start = re.compile(whitespace_optional + rb"\[")
+    re_array_end = re.compile(whitespace_optional + rb"]")
     re_string_hex = re.compile(
-        whitespace_optional + br"\<(" + whitespace_or_hex + br"*)\>"
+        whitespace_optional + rb"\<(" + whitespace_or_hex + rb"*)\>"
     )
-    re_string_lit = re.compile(whitespace_optional + br"\(")
+    re_string_lit = re.compile(whitespace_optional + rb"\(")
     re_indirect_reference = re.compile(
         whitespace_optional
-        + br"([-+]?[0-9]+)"
+        + rb"([-+]?[0-9]+)"
         + whitespace_mandatory
-        + br"([-+]?[0-9]+)"
+        + rb"([-+]?[0-9]+)"
         + whitespace_mandatory
-        + br"R(?="
+        + rb"R(?="
         + delimiter_or_ws
-        + br")"
+        + rb")"
     )
     re_indirect_def_start = re.compile(
         whitespace_optional
-        + br"([-+]?[0-9]+)"
+        + rb"([-+]?[0-9]+)"
         + whitespace_mandatory
-        + br"([-+]?[0-9]+)"
+        + rb"([-+]?[0-9]+)"
         + whitespace_mandatory
-        + br"obj(?="
+        + rb"obj(?="
         + delimiter_or_ws
-        + br")"
+        + rb")"
     )
     re_indirect_def_end = re.compile(
-        whitespace_optional + br"endobj(?=" + delimiter_or_ws + br")"
+        whitespace_optional + rb"endobj(?=" + delimiter_or_ws + rb")"
     )
     re_comment = re.compile(
-        br"(" + whitespace_optional + br"%[^\r\n]*" + newline + br")*"
+        rb"(" + whitespace_optional + rb"%[^\r\n]*" + newline + rb")*"
     )
-    re_stream_start = re.compile(whitespace_optional + br"stream\r?\n")
+    re_stream_start = re.compile(whitespace_optional + rb"stream\r?\n")
     re_stream_end = re.compile(
-        whitespace_optional + br"endstream(?=" + delimiter_or_ws + br")"
+        whitespace_optional + rb"endstream(?=" + delimiter_or_ws + rb")"
     )
 
     @classmethod
@@ -811,11 +815,11 @@ class PdfParser:
             if m:
                 try:
                     stream_len = int(result[b"Length"])
-                except (TypeError, KeyError, ValueError):
+                except (TypeError, KeyError, ValueError) as e:
                     raise PdfFormatError(
                         "bad or missing Length in stream dict (%r)"
                         % result.get(b"Length", None)
-                    )
+                    ) from e
                 stream_data = data[m.end() : m.end() + stream_len]
                 m = cls.re_stream_end.match(data, m.end() + stream_len)
                 check_format_condition(m, "stream end not found")
@@ -859,7 +863,7 @@ class PdfParser:
         if m:
             # filter out whitespace
             hex_string = bytearray(
-                [b for b in m.group(1) if b in b"0123456789abcdefABCDEF"]
+                b for b in m.group(1) if b in b"0123456789abcdefABCDEF"
             )
             if len(hex_string) % 2 == 1:
                 # append a 0 if the length is not even - yes, at the end
@@ -872,7 +876,7 @@ class PdfParser:
         raise PdfFormatError("unrecognized object: " + repr(data[offset : offset + 32]))
 
     re_lit_str_token = re.compile(
-        br"(\\[nrtbf()\\])|(\\[0-9]{1,3})|(\\(\r\n|\r|\n))|(\r\n|\r|\n)|(\()|(\))"
+        rb"(\\[nrtbf()\\])|(\\[0-9]{1,3})|(\\(\r\n|\r|\n))|(\r\n|\r|\n)|(\()|(\))"
     )
     escaped_chars = {
         b"n": b"\n",
@@ -918,16 +922,16 @@ class PdfParser:
             offset = m.end()
         raise PdfFormatError("unfinished literal string")
 
-    re_xref_section_start = re.compile(whitespace_optional + br"xref" + newline)
+    re_xref_section_start = re.compile(whitespace_optional + rb"xref" + newline)
     re_xref_subsection_start = re.compile(
         whitespace_optional
-        + br"([0-9]+)"
+        + rb"([0-9]+)"
         + whitespace_mandatory
-        + br"([0-9]+)"
+        + rb"([0-9]+)"
         + whitespace_optional
         + newline_only
     )
-    re_xref_entry = re.compile(br"([0-9]{10}) ([0-9]{5}) ([fn])( \r| \n|\r\n)")
+    re_xref_entry = re.compile(rb"([0-9]{10}) ([0-9]{5}) ([fn])( \r| \n|\r\n)")
 
     def read_xref_table(self, xref_section_offset):
         subsection_found = False
@@ -966,9 +970,8 @@ class PdfParser:
         offset, generation = self.xref_table[ref[0]]
         check_format_condition(
             generation == ref[1],
-            "expected to find generation %s for object ID %s in xref table, "
-            "instead found generation %s at offset %s"
-            % (ref[1], ref[0], generation, offset),
+            f"expected to find generation {ref[1]} for object ID {ref[0]} in xref "
+            f"table, instead found generation {generation} at offset {offset}",
         )
         value = self.get_value(
             self.buf,

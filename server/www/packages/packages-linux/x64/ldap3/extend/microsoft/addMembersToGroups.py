@@ -57,13 +57,15 @@ def ad_add_members_to_groups(connection,
     error = False
     for group in groups_dn:
         if fix:  # checks for existance of group and for already assigned members
-            result = connection.search(group, '(objectclass=*)', BASE, dereference_aliases=DEREF_NEVER,
-                                       attributes=['member'])
-
+            result = connection.search(group, '(objectclass=*)', BASE, dereference_aliases=DEREF_NEVER, attributes=['member'])
             if not connection.strategy.sync:
                 response, result = connection.get_response(result)
             else:
-                response, result = connection.response, connection.result
+                if connection.strategy.thread_safe:
+                    _, result, response, _ = result
+                else:
+                    response = connection.response
+                    result = connection.result
 
             if not result['description'] == 'success':
                 raise LDAPInvalidDnError(group + ' not found')
@@ -82,7 +84,10 @@ def ad_add_members_to_groups(connection,
             if not connection.strategy.sync:
                 _, result = connection.get_response(result)
             else:
-                result = connection.result
+                if connection.strategy.thread_safe:
+                    _, result, _, _ = result
+                else:
+                    result = connection.result
             if result['description'] != 'success':
                 error = True
                 result_error_params = ['result', 'description', 'dn', 'message']

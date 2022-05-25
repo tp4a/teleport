@@ -31,6 +31,16 @@ from ..utils.conv import to_raw, to_unicode, escape_filter_chars, is_filter_esca
 from ..protocol.formatters.standard import find_attribute_validator
 
 
+def to_str_or_normalized_unicode(val):
+    """ Attempt to convert value to a string. If that would error, convert it to normalized unicode.
+    Python 3 string conversion handles unicode -> str without issue, but python 2 doesn't.
+    """
+    try:
+        return str(val)
+    except:
+        return val.encode('ascii', 'backslashreplace')
+
+
 def attribute_to_dict(attribute):
     try:
         return {'type': str(attribute['type']), 'values': [str(val) for val in attribute['vals']]}
@@ -48,13 +58,13 @@ def attributes_to_dict(attributes):
 
 def referrals_to_list(referrals):
     if isinstance(referrals, list):
-        return [str(referral) for referral in referrals if referral] if referrals else None
+        return [to_str_or_normalized_unicode(referral) for referral in referrals if referral] if referrals else None
     else:
-        return [str(referral) for referral in referrals if referral] if referrals is not None and referrals.hasValue() else None
+        return [to_str_or_normalized_unicode(referral) for referral in referrals if referral] if referrals is not None and referrals.hasValue() else None
 
 
 def search_refs_to_list(search_refs):
-    return [str(search_ref) for search_ref in search_refs if search_ref] if search_refs else None
+    return [to_str_or_normalized_unicode(search_ref) for search_ref in search_refs if search_ref] if search_refs else None
 
 
 def search_refs_to_list_fast(search_refs):
@@ -85,7 +95,7 @@ def changes_to_list(changes):
 
 
 def attributes_to_list(attributes):
-    return [str(attribute) for attribute in attributes]
+    return [to_str_or_normalized_unicode(attribute) for attribute in attributes]
 
 
 def ava_to_dict(ava):

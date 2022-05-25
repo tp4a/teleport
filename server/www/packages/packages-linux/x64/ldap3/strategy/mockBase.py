@@ -45,7 +45,7 @@ from ..utils.conv import json_hook, to_unicode, to_raw
 from ..core.exceptions import LDAPDefinitionError, LDAPPasswordIsMandatoryError, LDAPInvalidValueError, LDAPSocketOpenError
 from ..core.results import RESULT_SUCCESS, RESULT_OPERATIONS_ERROR, RESULT_UNAVAILABLE_CRITICAL_EXTENSION, \
     RESULT_INVALID_CREDENTIALS, RESULT_NO_SUCH_OBJECT, RESULT_ENTRY_ALREADY_EXISTS, RESULT_COMPARE_TRUE, \
-    RESULT_COMPARE_FALSE, RESULT_NO_SUCH_ATTRIBUTE, RESULT_UNWILLING_TO_PERFORM
+    RESULT_COMPARE_FALSE, RESULT_NO_SUCH_ATTRIBUTE, RESULT_UNWILLING_TO_PERFORM, RESULT_PROTOCOL_ERROR, RESULT_CONSTRAINT_VIOLATION, RESULT_NOT_ALLOWED_ON_RDN
 from ..utils.ciDict import CaseInsensitiveDict
 from ..utils.dn import to_dn, safe_dn, safe_rdn
 from ..protocol.sasl.sasl import validate_simple_password
@@ -511,13 +511,13 @@ class MockBaseStrategy(object):
                 if operation == 0:  # add
                     if attribute not in entry and elements:  # attribute not present, creates the new attribute and add elements
                         if self.connection.server.schema and self.connection.server.schema.attribute_types and self.connection.server.schema.attribute_types[attribute].single_value and len(elements) > 1:  # multiple values in single-valued attribute
-                            result_code = 19
+                            result_code = RESULT_CONSTRAINT_VIOLATION
                             message = 'attribute is single-valued'
                         else:
                             entry[attribute] = [to_raw(element) for element in elements]
                     else:  # attribute present, adds elements to current values
                         if self.connection.server.schema and self.connection.server.schema.attribute_types and self.connection.server.schema.attribute_types[attribute].single_value:  # multiple values in single-valued attribute
-                            result_code = 19
+                            result_code = RESULT_CONSTRAINT_VIOLATION
                             message = 'attribute is single-valued'
                         else:
                             entry[attribute].extend([to_raw(element) for element in elements])
@@ -526,7 +526,7 @@ class MockBaseStrategy(object):
                         result_code = RESULT_NO_SUCH_ATTRIBUTE
                         message = 'attribute must exists for deleting its values'
                     elif attribute in rdns:  # attribute can't be used in dn
-                        result_code = 67
+                        result_code = RESULT_NOT_ALLOWED_ON_RDN
                         message = 'cannot delete an rdn'
                     else:
                         if not elements:  # deletes whole attribute if element list is empty
@@ -544,18 +544,32 @@ class MockBaseStrategy(object):
                 elif operation == 2:  # replace
                     if attribute not in entry and elements:  # attribute not present, creates the new attribute and add elements
                         if self.connection.server.schema and self.connection.server.schema.attribute_types and self.connection.server.schema.attribute_types[attribute].single_value and len(elements) > 1:  # multiple values in single-valued attribute
-                            result_code = 19
+                            result_code = RESULT_CONSTRAINT_VIOLATION
                             message = 'attribute is single-valued'
                         else:
                             entry[attribute] = [to_raw(element) for element in elements]
                     elif not elements and attribute in rdns:  # attribute can't be used in dn
-                        result_code = 67
+                        result_code = RESULT_NOT_ALLOWED_ON_RDN
                         message = 'cannot replace an rdn'
                     elif not elements:  # deletes whole attribute if element list is empty
                         if attribute in entry:
                             del entry[attribute]
                     else:  # substitutes elements
                         entry[attribute] = [to_raw(element) for element in elements]
+                elif operation == 3:  # increment
+                    if attribute not in entry:  # attribute must exist
+                        result_code = RESULT_NO_SUCH_ATTRIBUTE
+                        message = 'attribute must exists for incrementing its values'
+                    else:
+                        if len(elements) != 1:
+                            result_code = RESULT_PROTOCOL_ERROR
+                            message = 'only one increment value is allowed'
+                        else:
+                            try:
+                                entry[attribute] = [bytes(str(int(value) + int(elements[0])), encoding='utf-8') for value in entry[attribute]]
+                            except:
+                                result_code = RESULT_UNWILLING_TO_PERFORM
+                                message = 'unable to increment value'
 
             if result_code:  # an error has happened, restores the original dn
                 self.connection.server.dit[dn] = original_entry
@@ -689,6 +703,9 @@ class MockBaseStrategy(object):
                     })
                     if '+' not in attributes:  # remove operational attributes
                         for op_attr in self.operational_attributes:
+                            if op_attr.lower() in attributes:
+                                # if the op_attr was explicitly requested, then keep it
+                                continue
                             for i, attr in enumerate(responses[len(responses)-1]['attributes']):
                                 if attr['type'] == op_attr:
                                     del responses[len(responses)-1]['attributes'][i]

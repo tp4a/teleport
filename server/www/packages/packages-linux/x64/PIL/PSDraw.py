@@ -2,7 +2,7 @@
 # The Python Imaging Library
 # $Id$
 #
-# simple postscript graphics interface
+# Simple PostScript graphics interface
 #
 # History:
 # 1996-04-20 fl   Created
@@ -20,45 +20,42 @@ import sys
 from . import EpsImagePlugin
 
 ##
-# Simple Postscript graphics interface.
+# Simple PostScript graphics interface.
 
 
 class PSDraw:
     """
-    Sets up printing to the given file. If **fp** is omitted,
-    :py:attr:`sys.stdout` is assumed.
+    Sets up printing to the given file. If ``fp`` is omitted,
+    ``sys.stdout.buffer`` or ``sys.stdout`` is assumed.
     """
 
     def __init__(self, fp=None):
         if not fp:
-            fp = sys.stdout
+            try:
+                fp = sys.stdout.buffer
+            except AttributeError:
+                fp = sys.stdout
         self.fp = fp
 
-    def _fp_write(self, to_write):
-        if self.fp == sys.stdout:
-            self.fp.write(to_write)
-        else:
-            self.fp.write(bytes(to_write, "UTF-8"))
-
     def begin_document(self, id=None):
-        """Set up printing of a document. (Write Postscript DSC header.)"""
+        """Set up printing of a document. (Write PostScript DSC header.)"""
         # FIXME: incomplete
-        self._fp_write(
-            "%!PS-Adobe-3.0\n"
-            "save\n"
-            "/showpage { } def\n"
-            "%%EndComments\n"
-            "%%BeginDocument\n"
+        self.fp.write(
+            b"%!PS-Adobe-3.0\n"
+            b"save\n"
+            b"/showpage { } def\n"
+            b"%%EndComments\n"
+            b"%%BeginDocument\n"
         )
-        # self._fp_write(ERROR_PS)  # debugging!
-        self._fp_write(EDROFF_PS)
-        self._fp_write(VDI_PS)
-        self._fp_write("%%EndProlog\n")
+        # self.fp.write(ERROR_PS)  # debugging!
+        self.fp.write(EDROFF_PS)
+        self.fp.write(VDI_PS)
+        self.fp.write(b"%%EndProlog\n")
         self.isofont = {}
 
     def end_document(self):
-        """Ends printing. (Write Postscript DSC footer.)"""
-        self._fp_write("%%EndDocument\nrestore showpage\n%%End\n")
+        """Ends printing. (Write PostScript DSC footer.)"""
+        self.fp.write(b"%%EndDocument\nrestore showpage\n%%End\n")
         if hasattr(self.fp, "flush"):
             self.fp.flush()
 
@@ -66,24 +63,24 @@ class PSDraw:
         """
         Selects which font to use.
 
-        :param font: A Postscript font name
+        :param font: A PostScript font name
         :param size: Size in points.
         """
+        font = bytes(font, "UTF-8")
         if font not in self.isofont:
             # reencode font
-            self._fp_write("/PSDraw-{} ISOLatin1Encoding /{} E\n".format(font, font))
+            self.fp.write(b"/PSDraw-%s ISOLatin1Encoding /%s E\n" % (font, font))
             self.isofont[font] = 1
         # rough
-        self._fp_write("/F0 %d /PSDraw-%s F\n" % (size, font))
+        self.fp.write(b"/F0 %d /PSDraw-%s F\n" % (size, font))
 
     def line(self, xy0, xy1):
         """
         Draws a line between the two points. Coordinates are given in
-        Postscript point coordinates (72 points per inch, (0, 0) is the lower
+        PostScript point coordinates (72 points per inch, (0, 0) is the lower
         left corner of the page).
         """
-        xy = xy0 + xy1
-        self._fp_write("%d %d %d %d Vl\n" % xy)
+        self.fp.write(b"%d %d %d %d Vl\n" % (*xy0, *xy1))
 
     def rectangle(self, box):
         """
@@ -98,17 +95,18 @@ class PSDraw:
 
                         %d %d M %d %d 0 Vr\n
         """
-        self._fp_write("%d %d M %d %d 0 Vr\n" % box)
+        self.fp.write(b"%d %d M %d %d 0 Vr\n" % box)
 
     def text(self, xy, text):
         """
         Draws text at the given position. You must use
         :py:meth:`~PIL.PSDraw.PSDraw.setfont` before calling this method.
         """
-        text = "\\(".join(text.split("("))
-        text = "\\)".join(text.split(")"))
-        xy = xy + (text,)
-        self._fp_write("%d %d M (%s) S\n" % xy)
+        text = bytes(text, "UTF-8")
+        text = b"\\(".join(text.split(b"("))
+        text = b"\\)".join(text.split(b")"))
+        xy += (text,)
+        self.fp.write(b"%d %d M (%s) S\n" % xy)
 
     def image(self, box, im, dpi=None):
         """Draw a PIL image, centered in the given box."""
@@ -132,21 +130,21 @@ class PSDraw:
             y = ymax
         dx = (xmax - x) / 2 + box[0]
         dy = (ymax - y) / 2 + box[1]
-        self._fp_write("gsave\n{:f} {:f} translate\n".format(dx, dy))
+        self.fp.write(b"gsave\n%f %f translate\n" % (dx, dy))
         if (x, y) != im.size:
             # EpsImagePlugin._save prints the image at (0,0,xsize,ysize)
             sx = x / im.size[0]
             sy = y / im.size[1]
-            self._fp_write("{:f} {:f} scale\n".format(sx, sy))
+            self.fp.write(b"%f %f scale\n" % (sx, sy))
         EpsImagePlugin._save(im, self.fp, None, 0)
-        self._fp_write("\ngrestore\n")
+        self.fp.write(b"\ngrestore\n")
 
 
 # --------------------------------------------------------------------
-# Postscript driver
+# PostScript driver
 
 #
-# EDROFF.PS -- Postscript driver for Edroff 2
+# EDROFF.PS -- PostScript driver for Edroff 2
 #
 # History:
 # 94-01-25 fl: created (edroff 2.04)
@@ -155,7 +153,7 @@ class PSDraw:
 #
 
 
-EDROFF_PS = """\
+EDROFF_PS = b"""\
 /S { show } bind def
 /P { moveto show } bind def
 /M { moveto } bind def
@@ -176,7 +174,7 @@ EDROFF_PS = """\
 """
 
 #
-# VDI.PS -- Postscript driver for VDI meta commands
+# VDI.PS -- PostScript driver for VDI meta commands
 #
 # History:
 # 94-01-25 fl: created (edroff 2.04)
@@ -184,7 +182,7 @@ EDROFF_PS = """\
 # Copyright (c) Fredrik Lundh 1994.
 #
 
-VDI_PS = """\
+VDI_PS = b"""\
 /Vm { moveto } bind def
 /Va { newpath arcn stroke } bind def
 /Vl { moveto lineto stroke } bind def
@@ -209,7 +207,7 @@ VDI_PS = """\
 # 89-11-21 fl: created (pslist 1.10)
 #
 
-ERROR_PS = """\
+ERROR_PS = b"""\
 /landscape false def
 /errorBUF 200 string def
 /errorNL { currentpoint 10 sub exch pop 72 exch moveto } def

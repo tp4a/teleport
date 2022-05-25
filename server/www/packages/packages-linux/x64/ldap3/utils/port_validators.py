@@ -17,7 +17,7 @@ def check_port_and_port_list(port, port_list):
     Return an error message indicating what is invalid if something isn't valid.
     """
     if port is not None and port_list is not None:
-        return'Cannot specify both a source port and a source port list'
+        return 'Cannot specify both a source port and a source port list'
     elif port is not None:
         if isinstance(port, int):
             if port not in range(0, 65535):

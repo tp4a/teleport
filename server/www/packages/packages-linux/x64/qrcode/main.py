@@ -1,9 +1,11 @@
 from qrcode import constants, exceptions, util
 from qrcode.image.base import BaseImage
 
-import six
+import sys
 from bisect import bisect_left
 
+# Cache modules generated just based on the QR Code version
+precomputed_qr_blanks = {}
 
 def make(data=None, **kwargs):
     qr = QRCode(**kwargs)
@@ -11,16 +13,14 @@ def make(data=None, **kwargs):
     return qr.make_image()
 
 
-def _check_version(version):
-    if version < 1 or version > 40:
-        raise ValueError(
-            "Invalid version (was %s, expected 1 to 40)" % version)
-
-
 def _check_box_size(size):
     if int(size) <= 0:
         raise ValueError(
-            "Invalid box size (was %s, expected larger than 0)" % size)
+            f"Invalid box size (was {size}, expected larger than 0)")
+
+def _check_border(size):
+    if int(size) < 0:
+        raise ValueError("Invalid border value (was %s, expected 0 or larger than that)" % size)
 
 
 def _check_mask_pattern(mask_pattern):
@@ -28,11 +28,13 @@ def _check_mask_pattern(mask_pattern):
         return
     if not isinstance(mask_pattern, int):
         raise TypeError(
-            "Invalid mask pattern (was %s, expected int)" % type(mask_pattern))
+            f"Invalid mask pattern (was {type(mask_pattern)}, expected int)")
     if mask_pattern < 0 or mask_pattern > 7:
         raise ValueError(
-            "Mask pattern should be in range(8) (got %s)" % mask_pattern)
+            f"Mask pattern should be in range(8) (got {mask_pattern})")
 
+def copy_2d_array(x):
+    return [row[:] for row in x]
 
 class QRCode:
 
@@ -42,18 +44,27 @@ class QRCode:
                  image_factory=None,
                  mask_pattern=None):
         _check_box_size(box_size)
+        _check_border(border)
         self.version = version and int(version)
         self.error_correction = int(error_correction)
         self.box_size = int(box_size)
         # Spec says border should be at least four boxes wide, but allow for
         # any (e.g. for producing printable QR codes).
         self.border = int(border)
-        _check_mask_pattern(mask_pattern)
         self.mask_pattern = mask_pattern
         self.image_factory = image_factory
         if image_factory is not None:
             assert issubclass(image_factory, BaseImage)
         self.clear()
+
+    @property
+    def mask_pattern(self):
+        return self._mask_pattern
+
+    @mask_pattern.setter
+    def mask_pattern(self, pattern):
+        _check_mask_pattern(pattern)
+        self._mask_pattern = pattern
 
     def clear(self):
         """
@@ -74,12 +85,11 @@ class QRCode:
         """
         if isinstance(data, util.QRData):
             self.data_list.append(data)
+        elif optimize:
+            self.data_list.extend(
+                util.optimal_data_chunks(data, minimum=optimize))
         else:
-            if optimize:
-                self.data_list.extend(
-                    util.optimal_data_chunks(data, minimum=optimize))
-            else:
-                self.data_list.append(util.QRData(data))
+            self.data_list.append(util.QRData(data))
         self.data_cache = None
 
     def make(self, fit=True):
@@ -97,22 +107,25 @@ class QRCode:
             self.makeImpl(False, self.mask_pattern)
 
     def makeImpl(self, test, mask_pattern):
-        _check_version(self.version)
+        util.check_version(self.version)
         self.modules_count = self.version * 4 + 17
-        self.modules = [None] * self.modules_count
 
-        for row in range(self.modules_count):
+        if self.version in precomputed_qr_blanks:
+            self.modules = copy_2d_array(precomputed_qr_blanks[self.version])
+        else:
+            self.modules = [None] * self.modules_count
 
-            self.modules[row] = [None] * self.modules_count
+            for row in range(self.modules_count):
+                self.modules[row] = [None] * self.modules_count
 
-            for col in range(self.modules_count):
-                self.modules[row][col] = None   # (col + row) % 3
+            self.setup_position_probe_pattern(0, 0)
+            self.setup_position_probe_pattern(self.modules_count - 7, 0)
+            self.setup_position_probe_pattern(0, self.modules_count - 7)
+            self.setup_position_adjust_pattern()
+            self.setup_timing_pattern()
 
-        self.setup_position_probe_pattern(0, 0)
-        self.setup_position_probe_pattern(self.modules_count - 7, 0)
-        self.setup_position_probe_pattern(0, self.modules_count - 7)
-        self.setup_position_adjust_pattern()
-        self.setup_timing_pattern()
+            precomputed_qr_blanks[self.version] = copy_2d_array(self.modules)
+
         self.setup_type_info(test, mask_pattern)
 
         if self.version >= 7:
@@ -134,9 +147,11 @@ class QRCode:
                 if col + c <= -1 or self.modules_count <= col + c:
                     continue
 
-                if (0 <= r and r <= 6 and (c == 0 or c == 6)
-                        or (0 <= c and c <= 6 and (r == 0 or r == 6))
-                        or (2 <= r and r <= 4 and 2 <= c and c <= 4)):
+                if (
+                    (0 <= r <= 6 and c in {0, 6})
+                    or (0 <= c <= 6 and r in {0, 6})
+                    or (2 <= r <= 4 and 2 <= c <= 4)
+                ):
                     self.modules[row + r][col + c] = True
                 else:
                     self.modules[row + r][col + c] = False
@@ -147,7 +162,7 @@ class QRCode:
         """
         if start is None:
             start = 1
-        _check_version(start)
+        util.check_version(start)
 
         # Corresponds to the code in util.create_data, except we don't yet know
         # version, so optimistically assume start and check later
@@ -225,15 +240,7 @@ class QRCode:
         :param invert: invert the ASCII characters (solid <-> transparent)
         """
         if out is None:
-            import sys
-            if sys.version_info < (2, 7):
-                # On Python versions 2.6 and earlier, stdout tries to encode
-                # strings using ASCII rather than stdout.encoding, so use this
-                # workaround.
-                import codecs
-                out = codecs.getwriter(sys.stdout.encoding)(sys.stdout)
-            else:
-                out = sys.stdout
+            out = sys.stdout
 
         if tty and not out.isatty():
             raise OSError("Not a tty")
@@ -242,7 +249,7 @@ class QRCode:
             self.make()
 
         modcount = self.modules_count
-        codes = [six.int2byte(code).decode('cp437')
+        codes = [bytes((code,)).decode('cp437')
                  for code in (255, 223, 220, 219)]
         if tty:
             invert = True
@@ -291,11 +298,30 @@ class QRCode:
 
         im = image_factory(
             self.border, self.modules_count, self.box_size, **kwargs)
+
         for r in range(self.modules_count):
             for c in range(self.modules_count):
-                if self.modules[r][c]:
-                    im.drawrect(r, c)
+                if im.needs_context:
+                    im.drawrect_context(r, c, self.modules[r][c], self.get_module_context(r,c))
+                elif self.modules[r][c]:
+                    im.drawrect(r,c)
+        if im.needs_processing:
+            im.process()
+
         return im
+
+    # return true if and only if (row, col) is in the module
+    def is_constrained(self, row, col):
+        return row >= 0 and row < len(self.modules) and col >= 0 and col < len(self.modules[row])
+
+    def get_module_context(self, row, col):
+        context = []
+
+        for r in range(row-1,row + 2):
+            for c in range(col - 1, col + 2):
+                if r != row or c != col:
+                    context.append(self.is_constrained(r,c) and self.modules[r][c])
+        return context
 
     def setup_timing_pattern(self):
         for r in range(8, self.modules_count - 8):
@@ -313,9 +339,10 @@ class QRCode:
 
         for i in range(len(pos)):
 
+            row = pos[i]
+
             for j in range(len(pos)):
 
-                row = pos[i]
                 col = pos[j]
 
                 if self.modules[row][col] is not None:
@@ -383,7 +410,7 @@ class QRCode:
 
         data_len = len(data)
 
-        for col in six.moves.xrange(self.modules_count - 1, 0, -2):
+        for col in range(self.modules_count - 1, 0, -2):
 
             if col <= 6:
                 col -= 1
@@ -420,7 +447,7 @@ class QRCode:
 
     def get_matrix(self):
         """
-        Return the QR Code as a multidimensonal array, including the border.
+        Return the QR Code as a multidimensional array, including the border.
 
         To return the array without a border, set ``self.border`` to 0 first.
         """

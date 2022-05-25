@@ -45,8 +45,8 @@ _hide_sensitive_data = None
 DETAIL_LEVELS = [OFF, ERROR, BASIC, PROTOCOL, NETWORK, EXTENDED]
 
 _max_line_length = 4096
-_logging_level = None
-_detail_level = None
+_logging_level = 0
+_detail_level = 0
 _logging_encoding = 'ascii'
 
 try:
@@ -103,9 +103,14 @@ def log(detail, message, *args):
         if _hide_sensitive_data:
             args = tuple([_strip_sensitive_data_from_dict(arg) if isinstance(arg, dict) else arg for arg in args])
 
-        encoded_message = (get_detail_level_name(detail) + ':' + message % args).encode(_logging_encoding, 'backslashreplace')
         if str is not bytes:  # Python 3
+            encoded_message = (get_detail_level_name(detail) + ':' + message % args).encode(_logging_encoding, 'backslashreplace')
             encoded_message = encoded_message.decode()
+        else:
+            try:
+                encoded_message = (get_detail_level_name(detail) + ':' + message % args).encode(_logging_encoding, 'replace')
+            except Exception:
+                encoded_message = (get_detail_level_name(detail) + ':' + message % args).decode(_logging_encoding, 'replace')
 
         if len(encoded_message) > _max_line_length:
             logger.log(_logging_level, encoded_message[:_max_line_length] + ' <removed %d remaining bytes in this log line>' % (len(encoded_message) - _max_line_length, ))

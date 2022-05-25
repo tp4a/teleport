@@ -101,7 +101,7 @@ def parse_uri(uri):
         else:
             uri_components['port'] = int(uri_components['port'])
 
-    uri_components['attributes'] = parts[1].split(',') if len(parts) > 1 else None
+    uri_components['attributes'] = parts[1].split(',') if len(parts) > 1 and parts[1] else None
     uri_components['scope'] = parts[2] if len(parts) > 2 else None
     if uri_components['scope'] == 'base':
         uri_components['scope'] = BASE

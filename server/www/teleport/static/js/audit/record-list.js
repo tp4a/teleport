@@ -35,7 +35,7 @@ $app.on_init = function (cb_stack) {
 
     $app.dom.storage_info.html('总 ' + tp_size2str($app.options.total_size, 2) + '，' + '可用 ' + tp_size2str($app.options.free_size, 2));
 
-    $app.filter_shown = true;
+    $app.filter_shown = false;
     $app.filter_time_type = FILTER_TIME_TYPE_ALL;
 
     cb_stack

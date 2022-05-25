@@ -18,20 +18,20 @@ from . import _common
 from . import _psposix
 from . import _psutil_aix as cext
 from . import _psutil_posix as cext_posix
-from ._common import AccessDenied
-from ._common import conn_to_ntuple
-from ._common import get_procfs_path
-from ._common import memoize_when_activated
 from ._common import NIC_DUPLEX_FULL
 from ._common import NIC_DUPLEX_HALF
 from ._common import NIC_DUPLEX_UNKNOWN
+from ._common import AccessDenied
 from ._common import NoSuchProcess
-from ._common import usage_percent
 from ._common import ZombieProcess
+from ._common import conn_to_ntuple
+from ._common import get_procfs_path
+from ._common import memoize_when_activated
+from ._common import usage_percent
+from ._compat import PY3
 from ._compat import FileNotFoundError
 from ._compat import PermissionError
 from ._compat import ProcessLookupError
-from ._compat import PY3
 
 
 __extra__all__ = ["PROCFS_PATH"]
@@ -46,7 +46,7 @@ HAS_THREADS = hasattr(cext, "proc_threads")
 HAS_NET_IO_COUNTERS = hasattr(cext, "net_io_counters")
 HAS_PROC_IO_COUNTERS = hasattr(cext, "proc_io_counters")
 
-PAGE_SIZE = os.sysconf('SC_PAGE_SIZE')
+PAGE_SIZE = cext_posix.getpagesize()
 AF_LINK = cext_posix.AF_LINK
 
 PROC_STATUSES = {
@@ -143,7 +143,7 @@ def cpu_count_logical():
         return None
 
 
-def cpu_count_physical():
+def cpu_count_cores():
     cmd = "lsdev -Cc processor"
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
@@ -189,7 +189,9 @@ def disk_partitions(all=False):
             # filter by filesystem having a total size > 0.
             if not disk_usage(mountpoint).total:
                 continue
-        ntuple = _common.sdiskpart(device, mountpoint, fstype, opts)
+        maxfile = maxpath = None  # set later
+        ntuple = _common.sdiskpart(device, mountpoint, fstype, opts,
+                                   maxfile, maxpath)
         retlist.append(ntuple)
     return retlist
 

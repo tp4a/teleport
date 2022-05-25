@@ -493,5 +493,13 @@ class NtlmClient(object):
             # The specified password is an LM:NTLM hash
             password_digest = binascii.unhexlify(passparts[1])
         else:
-            password_digest = hashlib.new('MD4', self._password.encode('utf-16-le')).digest()
+            try:
+                password_digest = hashlib.new('MD4', self._password.encode('utf-16-le')).digest()
+            except ValueError as e:
+                try:
+                    from Crypto.Hash import MD4  # try with the Crypto library if present
+                    password_digest = MD4.new(self._password.encode('utf-16-le')).digest()
+                except ImportError:
+                    raise e  # raise original exception
+
         return hmac.new(password_digest, (self.user_name.upper() + self.user_domain).encode('utf-16-le'), digestmod=hashlib.md5).digest()

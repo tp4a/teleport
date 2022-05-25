@@ -31,42 +31,81 @@ import logging
 import math
 import numbers
 import os
+import re
 import struct
 import sys
 import tempfile
 import warnings
 from collections.abc import Callable, MutableMapping
+from enum import IntEnum
 from pathlib import Path
 
+try:
+    import defusedxml.ElementTree as ElementTree
+except ImportError:
+    ElementTree = None
+
 # VERSION was removed in Pillow 6.0.0.
-# PILLOW_VERSION is deprecated and will be removed in a future release.
+# PILLOW_VERSION was removed in Pillow 9.0.0.
 # Use __version__ instead.
-from . import (
-    ImageMode,
-    TiffTags,
-    UnidentifiedImageError,
-    __version__,
-    _plugins,
-    _raise_version_warning,
-)
-from ._binary import i8, i32le
+from . import ImageMode, TiffTags, UnidentifiedImageError, __version__, _plugins
+from ._binary import i32le, o32be, o32le
 from ._util import deferred_error, isPath
 
-if sys.version_info >= (3, 7):
 
-    def __getattr__(name):
-        if name == "PILLOW_VERSION":
-            _raise_version_warning()
-            return __version__
-        raise AttributeError("module '{}' has no attribute '{}'".format(__name__, name))
-
-
-else:
-
-    from . import PILLOW_VERSION
-
-    # Silence warning
-    assert PILLOW_VERSION
+def __getattr__(name):
+    deprecated = "deprecated and will be removed in Pillow 10 (2023-07-01). "
+    categories = {"NORMAL": 0, "SEQUENCE": 1, "CONTAINER": 2}
+    if name in categories:
+        warnings.warn(
+            "Image categories are " + deprecated + "Use is_animated instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return categories[name]
+    elif name in ("NEAREST", "NONE"):
+        warnings.warn(
+            name
+            + " is "
+            + deprecated
+            + "Use Resampling.NEAREST or Dither.NONE instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return 0
+    old_resampling = {
+        "LINEAR": "BILINEAR",
+        "CUBIC": "BICUBIC",
+        "ANTIALIAS": "LANCZOS",
+    }
+    if name in old_resampling:
+        warnings.warn(
+            name
+            + " is "
+            + deprecated
+            + "Use Resampling."
+            + old_resampling[name]
+            + " instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return Resampling[old_resampling[name]]
+    for enum in (Transpose, Transform, Resampling, Dither, Palette, Quantize):
+        if name in enum.__members__:
+            warnings.warn(
+                name
+                + " is "
+                + deprecated
+                + "Use "
+                + enum.__name__
+                + "."
+                + name
+                + " instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return enum[name]
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
 logger = logging.getLogger(__name__)
@@ -80,7 +119,7 @@ class DecompressionBombError(Exception):
     pass
 
 
-# Limit to around a quarter gigabyte for a 24 bit (3 bpp) image
+# Limit to around a quarter gigabyte for a 24-bit (3 bpp) image
 MAX_IMAGE_PIXELS = int(1024 * 1024 * 1024 // 4 // 3)
 
 
@@ -95,8 +134,8 @@ try:
     if __version__ != getattr(core, "PILLOW_VERSION", None):
         raise ImportError(
             "The _imaging extension was built for another version of Pillow or PIL:\n"
-            "Core version: %s\n"
-            "Pillow version: %s" % (getattr(core, "PILLOW_VERSION", None), __version__)
+            f"Core version: {getattr(core, 'PILLOW_VERSION', None)}\n"
+            f"Pillow version: {__version__}"
         )
 
 except ImportError as v:
@@ -142,54 +181,65 @@ def isImageType(t):
 #
 # Constants
 
-NONE = 0
-
 # transpose
-FLIP_LEFT_RIGHT = 0
-FLIP_TOP_BOTTOM = 1
-ROTATE_90 = 2
-ROTATE_180 = 3
-ROTATE_270 = 4
-TRANSPOSE = 5
-TRANSVERSE = 6
+class Transpose(IntEnum):
+    FLIP_LEFT_RIGHT = 0
+    FLIP_TOP_BOTTOM = 1
+    ROTATE_90 = 2
+    ROTATE_180 = 3
+    ROTATE_270 = 4
+    TRANSPOSE = 5
+    TRANSVERSE = 6
+
 
 # transforms (also defined in Imaging.h)
-AFFINE = 0
-EXTENT = 1
-PERSPECTIVE = 2
-QUAD = 3
-MESH = 4
+class Transform(IntEnum):
+    AFFINE = 0
+    EXTENT = 1
+    PERSPECTIVE = 2
+    QUAD = 3
+    MESH = 4
+
 
 # resampling filters (also defined in Imaging.h)
-NEAREST = NONE = 0
-BOX = 4
-BILINEAR = LINEAR = 2
-HAMMING = 5
-BICUBIC = CUBIC = 3
-LANCZOS = ANTIALIAS = 1
+class Resampling(IntEnum):
+    NEAREST = 0
+    BOX = 4
+    BILINEAR = 2
+    HAMMING = 5
+    BICUBIC = 3
+    LANCZOS = 1
 
-_filters_support = {BOX: 0.5, BILINEAR: 1.0, HAMMING: 1.0, BICUBIC: 2.0, LANCZOS: 3.0}
+
+_filters_support = {
+    Resampling.BOX: 0.5,
+    Resampling.BILINEAR: 1.0,
+    Resampling.HAMMING: 1.0,
+    Resampling.BICUBIC: 2.0,
+    Resampling.LANCZOS: 3.0,
+}
 
 
 # dithers
-NEAREST = NONE = 0
-ORDERED = 1  # Not yet implemented
-RASTERIZE = 2  # Not yet implemented
-FLOYDSTEINBERG = 3  # default
+class Dither(IntEnum):
+    NONE = 0
+    ORDERED = 1  # Not yet implemented
+    RASTERIZE = 2  # Not yet implemented
+    FLOYDSTEINBERG = 3  # default
+
 
 # palettes/quantizers
-WEB = 0
-ADAPTIVE = 1
+class Palette(IntEnum):
+    WEB = 0
+    ADAPTIVE = 1
 
-MEDIANCUT = 0
-MAXCOVERAGE = 1
-FASTOCTREE = 2
-LIBIMAGEQUANT = 3
 
-# categories
-NORMAL = 0
-SEQUENCE = 1
-CONTAINER = 2
+class Quantize(IntEnum):
+    MEDIANCUT = 0
+    MAXCOVERAGE = 1
+    FASTOCTREE = 2
+    LIBIMAGEQUANT = 3
+
 
 if hasattr(core, "DEFAULT_STRATEGY"):
     DEFAULT_STRATEGY = core.DEFAULT_STRATEGY
@@ -212,74 +262,21 @@ DECODERS = {}
 ENCODERS = {}
 
 # --------------------------------------------------------------------
-# Modes supported by this version
+# Modes
 
-_MODEINFO = {
-    # NOTE: this table will be removed in future versions.  use
-    # getmode* functions or ImageMode descriptors instead.
-    # official modes
-    "1": ("L", "L", ("1",)),
-    "L": ("L", "L", ("L",)),
-    "I": ("L", "I", ("I",)),
-    "F": ("L", "F", ("F",)),
-    "P": ("P", "L", ("P",)),
-    "RGB": ("RGB", "L", ("R", "G", "B")),
-    "RGBX": ("RGB", "L", ("R", "G", "B", "X")),
-    "RGBA": ("RGB", "L", ("R", "G", "B", "A")),
-    "CMYK": ("RGB", "L", ("C", "M", "Y", "K")),
-    "YCbCr": ("RGB", "L", ("Y", "Cb", "Cr")),
-    "LAB": ("RGB", "L", ("L", "A", "B")),
-    "HSV": ("RGB", "L", ("H", "S", "V")),
-    # Experimental modes include I;16, I;16L, I;16B, RGBa, BGR;15, and
-    # BGR;24.  Use these modes only if you know exactly what you're
-    # doing...
-}
-
-if sys.byteorder == "little":
-    _ENDIAN = "<"
-else:
-    _ENDIAN = ">"
-
-_MODE_CONV = {
-    # official modes
-    "1": ("|b1", None),  # Bits need to be extended to bytes
-    "L": ("|u1", None),
-    "LA": ("|u1", 2),
-    "I": (_ENDIAN + "i4", None),
-    "F": (_ENDIAN + "f4", None),
-    "P": ("|u1", None),
-    "RGB": ("|u1", 3),
-    "RGBX": ("|u1", 4),
-    "RGBA": ("|u1", 4),
-    "CMYK": ("|u1", 4),
-    "YCbCr": ("|u1", 3),
-    "LAB": ("|u1", 3),  # UNDONE - unsigned |u1i1i1
-    "HSV": ("|u1", 3),
-    # I;16 == I;16L, and I;32 == I;32L
-    "I;16": ("<u2", None),
-    "I;16B": (">u2", None),
-    "I;16L": ("<u2", None),
-    "I;16S": ("<i2", None),
-    "I;16BS": (">i2", None),
-    "I;16LS": ("<i2", None),
-    "I;32": ("<u4", None),
-    "I;32B": (">u4", None),
-    "I;32L": ("<u4", None),
-    "I;32S": ("<i4", None),
-    "I;32BS": (">i4", None),
-    "I;32LS": ("<i4", None),
-}
+_ENDIAN = "<" if sys.byteorder == "little" else ">"
 
 
 def _conv_type_shape(im):
-    typ, extra = _MODE_CONV[im.mode]
-    if extra is None:
-        return (im.size[1], im.size[0]), typ
-    else:
-        return (im.size[1], im.size[0], extra), typ
+    m = ImageMode.getmode(im.mode)
+    shape = (im.height, im.width)
+    extra = len(m.bands)
+    if extra != 1:
+        shape += (extra,)
+    return shape, m.typestr
 
 
-MODES = sorted(_MODEINFO)
+MODES = ["1", "CMYK", "F", "HSV", "I", "L", "LAB", "P", "RGB", "RGBA", "RGBX", "YCbCr"]
 
 # raw modes that may be memory mapped.  NOTE: if you change this, you
 # may have to modify the stride calculation in map.c too!
@@ -402,7 +399,7 @@ def init():
     for plugin in _plugins:
         try:
             logger.debug("Importing %s", plugin)
-            __import__("PIL.%s" % plugin, globals(), locals(), [])
+            __import__(f"PIL.{plugin}", globals(), locals(), [])
         except ImportError as e:
             logger.debug("Image: failed to import %s: %s", plugin, e)
 
@@ -433,8 +430,8 @@ def _getdecoder(mode, decoder_name, args, extra=()):
     try:
         # get decoder
         decoder = getattr(core, decoder_name + "_decoder")
-    except AttributeError:
-        raise OSError("decoder %s not available" % decoder_name)
+    except AttributeError as e:
+        raise OSError(f"decoder {decoder_name} not available") from e
     return decoder(mode, *args + extra)
 
 
@@ -456,8 +453,8 @@ def _getencoder(mode, encoder_name, args, extra=()):
     try:
         # get encoder
         encoder = getattr(core, encoder_name + "_encoder")
-    except AttributeError:
-        raise OSError("encoder %s not available" % encoder_name)
+    except AttributeError as e:
+        raise OSError(f"encoder {encoder_name} not available") from e
     return encoder(mode, *args + extra)
 
 
@@ -534,10 +531,21 @@ class Image:
         self._size = (0, 0)
         self.palette = None
         self.info = {}
-        self.category = NORMAL
+        self._category = 0
         self.readonly = 0
         self.pyaccess = None
         self._exif = None
+
+    def __getattr__(self, name):
+        if name == "category":
+            warnings.warn(
+                "Image categories are deprecated and will be removed in Pillow 10 "
+                "(2023-07-01). Use is_animated instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return self._category
+        raise AttributeError(name)
 
     @property
     def width(self):
@@ -585,15 +593,16 @@ class Image:
         This operation will destroy the image core and release its memory.
         The image data will be unusable afterward.
 
-        This function is only required to close images that have not
-        had their file read and closed by the
-        :py:meth:`~PIL.Image.Image.load` method. See
-        :ref:`file-handling` for more information.
+        This function is required to close images that have multiple frames or
+        have not had their file read and closed by the
+        :py:meth:`~PIL.Image.Image.load` method. See :ref:`file-handling` for
+        more information.
         """
         try:
             if hasattr(self, "_close__fp"):
                 self._close__fp()
-            self.fp.close()
+            if self.fp:
+                self.fp.close()
             self.fp = None
         except Exception as msg:
             logger.debug("Error closing: %s", msg)
@@ -646,8 +655,7 @@ class Image:
             and self.mode == other.mode
             and self.size == other.size
             and self.info == other.info
-            and self.category == other.category
-            and self.readonly == other.readonly
+            and self._category == other._category
             and self.getpalette() == other.getpalette()
             and self.tobytes() == other.tobytes()
         )
@@ -662,18 +670,42 @@ class Image:
             id(self),
         )
 
+    def _repr_pretty_(self, p, cycle):
+        """IPython plain text display support"""
+
+        # Same as __repr__ but without unpredicatable id(self),
+        # to keep Jupyter notebook `text/plain` output stable.
+        p.text(
+            "<%s.%s image mode=%s size=%dx%d>"
+            % (
+                self.__class__.__module__,
+                self.__class__.__name__,
+                self.mode,
+                self.size[0],
+                self.size[1],
+            )
+        )
+
     def _repr_png_(self):
-        """ iPython display hook support
+        """iPython display hook support
 
         :returns: png version of the image as bytes
         """
         b = io.BytesIO()
-        self.save(b, "PNG")
+        try:
+            self.save(b, "PNG")
+        except Exception as e:
+            raise ValueError("Could not save to PNG for display") from e
         return b.getvalue()
 
-    @property
-    def __array_interface__(self):
+    class _ArrayData:
+        def __init__(self, new):
+            self.__array_interface__ = new
+
+    def __array__(self, dtype=None):
         # numpy array interface support
+        import numpy as np
+
         new = {}
         shape, typestr = _conv_type_shape(self)
         new["shape"] = shape
@@ -685,7 +717,8 @@ class Image:
             new["data"] = self.tobytes("raw", "L")
         else:
             new["data"] = self.tobytes()
-        return new
+
+        return np.array(self._ArrayData(new), dtype)
 
     def __getstate__(self):
         return [self.info, self.mode, self.size, self.getpalette(), self.tobytes()]
@@ -716,7 +749,7 @@ class Image:
         :param encoder_name: What encoder to use.  The default is to
                              use the standard "raw" encoder.
         :param args: Extra arguments to the encoder.
-        :rtype: A bytes object.
+        :returns: A :py:class:`bytes` object.
         """
 
         # may pass tuple instead of argument list
@@ -727,6 +760,9 @@ class Image:
             args = self.mode
 
         self.load()
+
+        if self.width == 0 or self.height == 0:
+            return b""
 
         # unpack data
         e = _getencoder(self.mode, encoder_name, args)
@@ -741,14 +777,9 @@ class Image:
             if s:
                 break
         if s < 0:
-            raise RuntimeError("encoder error %d in tobytes" % s)
+            raise RuntimeError(f"encoder error {s} in tobytes")
 
         return b"".join(data)
-
-    def tostring(self, *args, **kw):
-        raise NotImplementedError(
-            "tostring() has been removed. Please call tobytes() instead."
-        )
 
     def tobitmap(self, name="image"):
         """
@@ -767,9 +798,9 @@ class Image:
         data = self.tobytes("xbm")
         return b"".join(
             [
-                ("#define %s_width %d\n" % (name, self.size[0])).encode("ascii"),
-                ("#define %s_height %d\n" % (name, self.size[1])).encode("ascii"),
-                ("static char %s_bits[] = {\n" % name).encode("ascii"),
+                f"#define {name}_width {self.size[0]}\n".encode("ascii"),
+                f"#define {name}_height {self.size[1]}\n".encode("ascii"),
+                f"static char {name}_bits[] = {{\n".encode("ascii"),
                 data,
                 b"};",
             ]
@@ -801,11 +832,6 @@ class Image:
         if s[1] != 0:
             raise ValueError("cannot decode image data")
 
-    def fromstring(self, *args, **kw):
-        raise NotImplementedError(
-            "fromstring() has been removed. Please call frombytes() instead."
-        )
-
     def load(self):
         """
         Allocates storage for the image and loads the pixel data.  In
@@ -821,20 +847,24 @@ class Image:
         :returns: An image access object.
         :rtype: :ref:`PixelAccess` or :py:class:`PIL.PyAccess`
         """
-        if self.im and self.palette and self.palette.dirty:
+        if self.im is not None and self.palette and self.palette.dirty:
             # realize palette
-            self.im.putpalette(*self.palette.getdata())
+            mode, arr = self.palette.getdata()
+            self.im.putpalette(mode, arr)
             self.palette.dirty = 0
-            self.palette.mode = "RGB"
             self.palette.rawmode = None
-            if "transparency" in self.info:
+            if "transparency" in self.info and mode in ("LA", "PA"):
                 if isinstance(self.info["transparency"], int):
                     self.im.putpalettealpha(self.info["transparency"], 0)
                 else:
                     self.im.putpalettealphas(self.info["transparency"])
                 self.palette.mode = "RGBA"
+            else:
+                palette_mode = "RGBA" if mode.startswith("RGBA") else "RGB"
+                self.palette.mode = palette_mode
+                self.palette.palette = self.im.getpalette(palette_mode, palette_mode)
 
-        if self.im:
+        if self.im is not None:
             if cffi and USE_CFFI_ACCESS:
                 if self.pyaccess:
                     return self.pyaccess
@@ -856,7 +886,9 @@ class Image:
         """
         pass
 
-    def convert(self, mode=None, matrix=None, dither=None, palette=WEB, colors=256):
+    def convert(
+        self, mode=None, matrix=None, dither=None, palette=Palette.WEB, colors=256
+    ):
         """
         Returns a converted copy of this image. For the "P" mode, this
         method translates pixels through the palette.  If mode is
@@ -864,7 +896,7 @@ class Image:
         and the palette can be represented without a palette.
 
         The current version supports all possible conversions between
-        "L", "RGB" and "CMYK." The **matrix** argument only supports "L"
+        "L", "RGB" and "CMYK." The ``matrix`` argument only supports "L"
         and "RGB".
 
         When translating a color image to greyscale (mode "L"),
@@ -875,41 +907,44 @@ class Image:
         The default method of converting a greyscale ("L") or "RGB"
         image into a bilevel (mode "1") image uses Floyd-Steinberg
         dither to approximate the original image luminosity levels. If
-        dither is NONE, all values larger than 128 are set to 255 (white),
+        dither is ``None``, all values larger than 127 are set to 255 (white),
         all other values to 0 (black). To use other thresholds, use the
         :py:meth:`~PIL.Image.Image.point` method.
 
-        When converting from "RGBA" to "P" without a **matrix** argument,
+        When converting from "RGBA" to "P" without a ``matrix`` argument,
         this passes the operation to :py:meth:`~PIL.Image.Image.quantize`,
-        and **dither** and **palette** are ignored.
+        and ``dither`` and ``palette`` are ignored.
 
         :param mode: The requested mode. See: :ref:`concept-modes`.
         :param matrix: An optional conversion matrix.  If given, this
            should be 4- or 12-tuple containing floating point values.
         :param dither: Dithering method, used when converting from
            mode "RGB" to "P" or from "RGB" or "L" to "1".
-           Available methods are NONE or FLOYDSTEINBERG (default).
-           Note that this is not used when **matrix** is supplied.
+           Available methods are :data:`Dither.NONE` or :data:`Dither.FLOYDSTEINBERG`
+           (default). Note that this is not used when ``matrix`` is supplied.
         :param palette: Palette to use when converting from mode "RGB"
-           to "P".  Available palettes are WEB or ADAPTIVE.
-        :param colors: Number of colors to use for the ADAPTIVE palette.
-           Defaults to 256.
+           to "P".  Available palettes are :data:`Palette.WEB` or
+           :data:`Palette.ADAPTIVE`.
+        :param colors: Number of colors to use for the :data:`Palette.ADAPTIVE`
+           palette. Defaults to 256.
         :rtype: :py:class:`~PIL.Image.Image`
         :returns: An :py:class:`~PIL.Image.Image` object.
         """
 
         self.load()
 
+        has_transparency = self.info.get("transparency") is not None
         if not mode and self.mode == "P":
             # determine default mode
             if self.palette:
                 mode = self.palette.mode
             else:
                 mode = "RGB"
+            if mode == "RGB" and has_transparency:
+                mode = "RGBA"
         if not mode or (mode == self.mode and not matrix):
             return self.copy()
 
-        has_transparency = self.info.get("transparency") is not None
         if matrix:
             # matrix conversion
             if mode not in ("L", "RGB"):
@@ -927,12 +962,8 @@ class Image:
                     transparency = convert_transparency(matrix, transparency)
                 elif len(mode) == 3:
                     transparency = tuple(
-                        [
-                            convert_transparency(
-                                matrix[i * 4 : i * 4 + 4], transparency
-                            )
-                            for i in range(0, len(transparency))
-                        ]
+                        convert_transparency(matrix[i * 4 : i * 4 + 4], transparency)
+                        for i in range(0, len(transparency))
                     )
                 new.info["transparency"] = transparency
             return new
@@ -944,7 +975,9 @@ class Image:
         delete_trns = False
         # transparency handling
         if has_transparency:
-            if self.mode in ("1", "L", "I", "RGB") and mode == "RGBA":
+            if (self.mode in ("1", "L", "I") and mode in ("LA", "RGBA")) or (
+                self.mode == "RGB" and mode == "RGBA"
+            ):
                 # Use transparent conversion to promote from transparent
                 # color to an alpha channel.
                 new_im = self._new(
@@ -968,23 +1001,30 @@ class Image:
                     if self.mode == "P":
                         trns_im.putpalette(self.palette)
                         if isinstance(t, tuple):
+                            err = "Couldn't allocate a palette color for transparency"
                             try:
-                                t = trns_im.palette.getcolor(t)
-                            except Exception:
-                                raise ValueError(
-                                    "Couldn't allocate a palette color for transparency"
-                                )
-                    trns_im.putpixel((0, 0), t)
-
-                    if mode in ("L", "RGB"):
-                        trns_im = trns_im.convert(mode)
+                                t = trns_im.palette.getcolor(t, self)
+                            except ValueError as e:
+                                if str(e) == "cannot allocate more than 256 colors":
+                                    # If all 256 colors are in use,
+                                    # then there is no need for transparency
+                                    t = None
+                                else:
+                                    raise ValueError(err) from e
+                    if t is None:
+                        trns = None
                     else:
-                        # can't just retrieve the palette number, got to do it
-                        # after quantization.
-                        trns_im = trns_im.convert("RGB")
-                    trns = trns_im.getpixel((0, 0))
+                        trns_im.putpixel((0, 0), t)
 
-            elif self.mode == "P" and mode == "RGBA":
+                        if mode in ("L", "RGB"):
+                            trns_im = trns_im.convert(mode)
+                        else:
+                            # can't just retrieve the palette number, got to do it
+                            # after quantization.
+                            trns_im = trns_im.convert("RGB")
+                        trns = trns_im.getpixel((0, 0))
+
+            elif self.mode == "P" and mode in ("LA", "PA", "RGBA"):
                 t = self.info["transparency"]
                 delete_trns = True
 
@@ -995,19 +1035,19 @@ class Image:
                 else:
                     raise ValueError("Transparency for P mode should be bytes or int")
 
-        if mode == "P" and palette == ADAPTIVE:
+        if mode == "P" and palette == Palette.ADAPTIVE:
             im = self.im.quantize(colors)
             new = self._new(im)
             from . import ImagePalette
 
-            new.palette = ImagePalette.raw("RGB", new.im.getpalette("RGB"))
+            new.palette = ImagePalette.ImagePalette("RGB", new.im.getpalette("RGB"))
             if delete_trns:
                 # This could possibly happen if we requantize to fewer colors.
                 # The transparency would be totally off in that case.
                 del new.info["transparency"]
             if trns is not None:
                 try:
-                    new.info["transparency"] = new.palette.getcolor(trns)
+                    new.info["transparency"] = new.palette.getcolor(trns, new)
                 except Exception:
                     # if we can't make a transparent color, don't leave the old
                     # transparency hanging around to mess us up.
@@ -1017,7 +1057,7 @@ class Image:
 
         # colorspace conversion
         if dither is None:
-            dither = FLOYDSTEINBERG
+            dither = Dither.FLOYDSTEINBERG
 
         try:
             im = self.im.convert(mode, dither)
@@ -1026,41 +1066,65 @@ class Image:
                 # normalize source image and try again
                 im = self.im.convert(getmodebase(self.mode))
                 im = im.convert(mode, dither)
-            except KeyError:
-                raise ValueError("illegal conversion")
+            except KeyError as e:
+                raise ValueError("illegal conversion") from e
 
         new_im = self._new(im)
+        if mode == "P" and palette != Palette.ADAPTIVE:
+            from . import ImagePalette
+
+            new_im.palette = ImagePalette.ImagePalette("RGB", list(range(256)) * 3)
         if delete_trns:
             # crash fail if we leave a bytes transparency in an rgb/l mode.
             del new_im.info["transparency"]
         if trns is not None:
             if new_im.mode == "P":
                 try:
-                    new_im.info["transparency"] = new_im.palette.getcolor(trns)
-                except Exception:
+                    new_im.info["transparency"] = new_im.palette.getcolor(trns, new_im)
+                except ValueError as e:
                     del new_im.info["transparency"]
-                    warnings.warn("Couldn't allocate palette entry for transparency")
+                    if str(e) != "cannot allocate more than 256 colors":
+                        # If all 256 colors are in use,
+                        # then there is no need for transparency
+                        warnings.warn(
+                            "Couldn't allocate palette entry for transparency"
+                        )
             else:
                 new_im.info["transparency"] = trns
         return new_im
 
-    def quantize(self, colors=256, method=None, kmeans=0, palette=None, dither=1):
+    def quantize(
+        self,
+        colors=256,
+        method=None,
+        kmeans=0,
+        palette=None,
+        dither=Dither.FLOYDSTEINBERG,
+    ):
         """
         Convert the image to 'P' mode with the specified number
         of colors.
 
         :param colors: The desired number of colors, <= 256
-        :param method: 0 = median cut
-                       1 = maximum coverage
-                       2 = fast octree
-                       3 = libimagequant
+        :param method: :data:`Quantize.MEDIANCUT` (median cut),
+                       :data:`Quantize.MAXCOVERAGE` (maximum coverage),
+                       :data:`Quantize.FASTOCTREE` (fast octree),
+                       :data:`Quantize.LIBIMAGEQUANT` (libimagequant; check support
+                       using :py:func:`PIL.features.check_feature` with
+                       ``feature="libimagequant"``).
+
+                       By default, :data:`Quantize.MEDIANCUT` will be used.
+
+                       The exception to this is RGBA images. :data:`Quantize.MEDIANCUT`
+                       and :data:`Quantize.MAXCOVERAGE` do not support RGBA images, so
+                       :data:`Quantize.FASTOCTREE` is used by default instead.
         :param kmeans: Integer
         :param palette: Quantize to the palette of given
                         :py:class:`PIL.Image.Image`.
         :param dither: Dithering method, used when converting from
            mode "RGB" to "P" or from "RGB" or "L" to "1".
-           Available methods are NONE or FLOYDSTEINBERG (default).
-           Default: 1 (legacy setting)
+           Available methods are :data:`Dither.NONE` or :data:`Dither.FLOYDSTEINBERG`
+           (default).
         :returns: A new image
 
         """
@@ -1069,11 +1133,14 @@ class Image:
 
         if method is None:
             # defaults:
-            method = 0
+            method = Quantize.MEDIANCUT
             if self.mode == "RGBA":
-                method = 2
+                method = Quantize.FASTOCTREE
 
-        if self.mode == "RGBA" and method not in (2, 3):
+        if self.mode == "RGBA" and method not in (
+            Quantize.FASTOCTREE,
+            Quantize.LIBIMAGEQUANT,
+        ):
             # Caller specified an invalid mode.
             raise ValueError(
                 "Fast Octree (method == 2) and libimagequant (method == 3) "
@@ -1090,14 +1157,17 @@ class Image:
                     "only RGB or L mode images can be quantized to a palette"
                 )
             im = self.im.convert("P", dither, palette.im)
-            return self._new(im)
+            new_im = self._new(im)
+            new_im.palette = palette.palette.copy()
+            return new_im
 
         im = self._new(self.im.quantize(colors, method, kmeans))
 
         from . import ImagePalette
 
         mode = im.im.getpalettemode()
-        im.palette = ImagePalette.ImagePalette(mode, im.im.getpalette(mode, mode))
+        palette = im.im.getpalette(mode, mode)[: colors * len(mode)]
+        im.palette = ImagePalette.ImagePalette(mode, palette)
 
         return im
 
@@ -1129,6 +1199,11 @@ class Image:
 
         if box is None:
             return self.copy()
+
+        if box[2] < box[0]:
+            raise ValueError("Coordinate 'right' is less than 'left'")
+        elif box[3] < box[1]:
+            raise ValueError("Coordinate 'lower' is less than 'upper'")
 
         self.load()
         return self._new(self._crop(self.im, box))
@@ -1187,7 +1262,7 @@ class Image:
         available filters, see the :py:mod:`~PIL.ImageFilter` module.
 
         :param filter: Filter kernel.
-        :returns: An :py:class:`~PIL.Image.Image` object.  """
+        :returns: An :py:class:`~PIL.Image.Image` object."""
 
         from . import ImageFilter
 
@@ -1212,7 +1287,7 @@ class Image:
     def getbands(self):
         """
         Returns a tuple containing the name of each band in this image.
-        For example, **getbands** on an RGB image returns ("R", "G", "B").
+        For example, ``getbands`` on an RGB image returns ("R", "G", "B").
 
         :returns: A tuple containing band names.
         :rtype: tuple
@@ -1237,6 +1312,10 @@ class Image:
     def getcolors(self, maxcolors=256):
         """
         Returns a list of colors used in this image.
+
+        The colors will be in the image's mode. For example, an RGB image will
+        return a tuple of (red, green, blue) color values, and a P image will
+        return the index of the color in the palette.
 
         :param maxcolors: Maximum number of colors.  If this number is
            exceeded, this method returns None.  The default limit is
@@ -1266,7 +1345,7 @@ class Image:
         Note that the sequence object returned by this method is an
         internal PIL data type, which only supports certain sequence
         operations.  To convert it to an ordinary sequence (e.g. for
-        printing), use **list(im.getdata())**.
+        printing), use ``list(im.getdata())``.
 
         :param band: What band to return.  The default is to return
            all bands.  To return a single band, pass in the index
@@ -1297,10 +1376,62 @@ class Image:
             return tuple(extrema)
         return self.im.getextrema()
 
+    def _getxmp(self, xmp_tags):
+        def get_name(tag):
+            return tag.split("}")[1]
+
+        def get_value(element):
+            value = {get_name(k): v for k, v in element.attrib.items()}
+            children = list(element)
+            if children:
+                for child in children:
+                    name = get_name(child.tag)
+                    child_value = get_value(child)
+                    if name in value:
+                        if not isinstance(value[name], list):
+                            value[name] = [value[name]]
+                        value[name].append(child_value)
+                    else:
+                        value[name] = child_value
+            elif value:
+                if element.text:
+                    value["text"] = element.text
+            else:
+                return element.text
+            return value
+
+        if ElementTree is None:
+            warnings.warn("XMP data cannot be read without defusedxml dependency")
+            return {}
+        else:
+            root = ElementTree.fromstring(xmp_tags)
+            return {get_name(root.tag): get_value(root)}
+
     def getexif(self):
         if self._exif is None:
             self._exif = Exif()
-        self._exif.load(self.info.get("exif"))
+
+        exif_info = self.info.get("exif")
+        if exif_info is None:
+            if "Raw profile type exif" in self.info:
+                exif_info = bytes.fromhex(
+                    "".join(self.info["Raw profile type exif"].split("\n")[3:])
+                )
+            elif hasattr(self, "tag_v2"):
+                self._exif.bigtiff = self.tag_v2._bigtiff
+                self._exif.endian = self.tag_v2._endian
+                self._exif.load_from_fp(self.fp, self.tag_v2._offset)
+        if exif_info is not None:
+            self._exif.load(exif_info)
+
+        # XMP tags
+        if 0x0112 not in self._exif:
+            xmp_tags = self.info.get("XML:com.adobe.xmp")
+            if xmp_tags:
+                match = re.search(r'tiff:Orientation="([0-9])"', xmp_tags)
+                if match:
+                    self._exif[0x0112] = int(match[1])
+
         return self._exif
 
     def getim(self):
@@ -1313,9 +1444,14 @@ class Image:
         self.load()
         return self.im.ptr
 
-    def getpalette(self):
+    def getpalette(self, rawmode="RGB"):
         """
         Returns the image palette as a list.
+
+        :param rawmode: The mode in which to return the palette. ``None`` will
+           return the palette in its current mode.
+
+           .. versionadded:: 9.1.0
 
         :returns: A list of color values [r, g, b, ...], or None if the
            image has no palette.
@@ -1323,9 +1459,12 @@ class Image:
 
         self.load()
         try:
-            return list(self.im.getpalette())
+            mode = self.im.getpalettemode()
         except ValueError:
             return None  # no palette
+        if rawmode is None:
+            rawmode = mode
+        return list(self.im.getpalette(mode, rawmode))
 
     def getpixel(self, xy):
         """
@@ -1352,15 +1491,16 @@ class Image:
 
         self.load()
         x, y = self.im.getprojection()
-        return [i8(c) for c in x], [i8(c) for c in y]
+        return list(x), list(y)
 
     def histogram(self, mask=None, extrema=None):
         """
-        Returns a histogram for the image. The histogram is returned as
-        a list of pixel counts, one for each pixel value in the source
-        image. If the image has more than one band, the histograms for
-        all bands are concatenated (for example, the histogram for an
-        "RGB" image contains 768 values).
+        Returns a histogram for the image. The histogram is returned as a
+        list of pixel counts, one for each pixel value in the source
+        image. Counts are grouped into 256 bins for each band, even if
+        the image has more than 8 bits per band. If the image has more
+        than one band, the histograms for all bands are concatenated (for
+        example, the histogram for an "RGB" image contains 768 values).
 
         A bilevel image (mode "1") is treated as a greyscale ("L") image
         by this method.
@@ -1410,11 +1550,6 @@ class Image:
             return self.im.entropy(extrema)
         return self.im.entropy()
 
-    def offset(self, xoffset, yoffset=None):
-        raise NotImplementedError(
-            "offset() has been removed. Please call ImageChops.offset() instead."
-        )
-
     def paste(self, im, box=None, mask=None):
         """
         Pastes another image into this image. The box argument is either
@@ -1433,8 +1568,8 @@ class Image:
         also use color strings as supported by the ImageColor module.
 
         If a mask is given, this method updates only the regions
-        indicated by the mask.  You can use either "1", "L" or "RGBA"
-        images (in the latter case, the alpha band is used as mask).
+        indicated by the mask. You can use either "1", "L", "LA", "RGBA"
+        or "RGBa" images (if present, the alpha band is used as mask).
         Where the mask is 255, the given image is copied as is.  Where
         the mask is 0, the current value is preserved.  Intermediate
         values will mix the two images together, including their alpha
@@ -1482,7 +1617,7 @@ class Image:
         elif isImageType(im):
             im.load()
             if self.mode != im.mode:
-                if self.mode != "RGB" or im.mode not in ("RGBA", "RGBa"):
+                if self.mode != "RGB" or im.mode not in ("LA", "RGBA", "RGBa"):
                     # should use an adapter for this!
                     im = im.convert(self.mode)
             im = im.im
@@ -1496,7 +1631,7 @@ class Image:
             self.im.paste(im, box)
 
     def alpha_composite(self, im, dest=(0, 0), source=(0, 0)):
-        """ 'In-place' analog of Image.alpha_composite. Composites an image
+        """'In-place' analog of Image.alpha_composite. Composites an image
         onto this image.
 
         :param im: image to composite over this one
@@ -1519,8 +1654,6 @@ class Image:
             raise ValueError("Destination must be a 2-tuple")
         if min(source) < 0:
             raise ValueError("Source must be non-negative")
-        if min(dest) < 0:
-            raise ValueError("Destination must be non-negative")
 
         if len(source) == 2:
             source = source + im.size
@@ -1553,6 +1686,13 @@ class Image:
            single argument. The function is called once for each
            possible pixel value, and the resulting table is applied to
            all bands of the image.
+
+           It may also be an :py:class:`~PIL.Image.ImagePointHandler`
+           object::
+
+               class Example(Image.ImagePointHandler):
+                 def point(self, data):
+                   # Return result
         :param mode: Output mode (default is same as input).  In the
            current version, this can only be used if the source image
            has mode "L" or "P", and the output has mode "1" or the
@@ -1601,16 +1741,16 @@ class Image:
                 mode = getmodebase(self.mode) + "A"
                 try:
                     self.im.setmode(mode)
-                except (AttributeError, ValueError):
+                except (AttributeError, ValueError) as e:
                     # do things the hard way
                     im = self.im.convert(mode)
                     if im.mode not in ("LA", "PA", "RGBA"):
-                        raise ValueError  # sanity check
+                        raise ValueError from e  # sanity check
                     self.im = im
                 self.pyaccess = None
                 self.mode = self.im.mode
-            except (KeyError, ValueError):
-                raise ValueError("illegal image mode")
+            except KeyError as e:
+                raise ValueError("illegal image mode") from e
 
         if self.mode in ("LA", "PA"):
             band = 1
@@ -1638,13 +1778,14 @@ class Image:
 
     def putdata(self, data, scale=1.0, offset=0.0):
         """
-        Copies pixel data to this image.  This method copies data from a
-        sequence object into the image, starting at the upper left
-        corner (0, 0), and continuing until either the image or the
-        sequence ends.  The scale and offset values are used to adjust
-        the sequence values: **pixel = value*scale + offset**.
+        Copies pixel data from a flattened sequence object into the image. The
+        values should start at the upper left corner (0, 0), continue to the
+        end of the line, followed directly by the first value of the second
+        line, and so on. Data will be read until either the image or the
+        sequence ends. The scale and offset values are used to adjust the
+        sequence values: **pixel = value*scale + offset**.
 
-        :param data: A sequence object.
+        :param data: A flattened sequence object.
         :param scale: An optional scale value.  The default is 1.0.
         :param offset: An optional offset value.  The default is 0.0.
         """
@@ -1655,21 +1796,27 @@ class Image:
 
     def putpalette(self, data, rawmode="RGB"):
         """
-        Attaches a palette to this image.  The image must be a "P",
-        "PA", "L" or "LA" image, and the palette sequence must contain
-        768 integer values, where each group of three values represent
-        the red, green, and blue values for the corresponding pixel
-        index. Instead of an integer sequence, you can use an 8-bit
-        string.
+        Attaches a palette to this image.  The image must be a "P", "PA", "L"
+        or "LA" image.
+
+        The palette sequence must contain at most 256 colors, made up of one
+        integer value for each channel in the raw mode.
+        For example, if the raw mode is "RGB", then it can contain at most 768
+        values, made up of red, green and blue values for the corresponding pixel
+        index in the 256 colors.
+        If the raw mode is "RGBA", then it can contain at most 1024 values,
+        containing red, green, blue and alpha values.
+
+        Alternatively, an 8-bit string may be used instead of an integer sequence.
 
         :param data: A palette sequence (either a list or a string).
-        :param rawmode: The raw mode of the palette.
+        :param rawmode: The raw mode of the palette. Either "RGB", "RGBA", or a mode
+           that can be transformed to "RGB" or "RGBA" (e.g. "R", "BGR;15", "RGBA;L").
         """
         from . import ImagePalette
 
         if self.mode not in ("L", "LA", "P", "PA"):
             raise ValueError("illegal image mode")
-        self.load()
         if isinstance(data, ImagePalette.ImagePalette):
             palette = ImagePalette.raw(data.rawmode, data.palette)
         else:
@@ -1716,7 +1863,7 @@ class Image:
             and len(value) in [3, 4]
         ):
             # RGB or RGBA value for a P image
-            value = self.palette.getcolor(value)
+            value = self.palette.getcolor(value, self)
         return self.im.putpixel(xy, value)
 
     def remap_palette(self, dest_map, source_palette=None):
@@ -1724,7 +1871,7 @@ class Image:
         Rewrites the image to reorder the palette.
 
         :param dest_map: A list of indexes into the original palette.
-           e.g. [1,0] would swap a two item palette, and list(range(256))
+           e.g. ``[1,0]`` would swap a two item palette, and ``list(range(256))``
            is the identity transform.
         :param source_palette: Bytes or None.
         :returns:  An :py:class:`~PIL.Image.Image` object.
@@ -1737,18 +1884,17 @@ class Image:
 
         if source_palette is None:
             if self.mode == "P":
-                real_source_palette = self.im.getpalette("RGB")[:768]
+                self.load()
+                source_palette = self.im.getpalette("RGB")[:768]
             else:  # L-mode
-                real_source_palette = bytearray(i // 3 for i in range(768))
-        else:
-            real_source_palette = source_palette
+                source_palette = bytearray(i // 3 for i in range(768))
 
         palette_bytes = b""
         new_positions = [0] * 256
 
         # pick only the used colors from the palette
         for i, oldPosition in enumerate(dest_map):
-            palette_bytes += real_source_palette[oldPosition * 3 : oldPosition * 3 + 3]
+            palette_bytes += source_palette[oldPosition * 3 : oldPosition * 3 + 3]
             new_positions[oldPosition] = i
 
         # replace the palette color id of all pixel with the new id
@@ -1774,23 +1920,19 @@ class Image:
         m_im = self.copy()
         m_im.mode = "P"
 
-        m_im.palette = ImagePalette.ImagePalette(
-            "RGB", palette=mapping_palette * 3, size=768
-        )
+        m_im.palette = ImagePalette.ImagePalette("RGB", palette=mapping_palette * 3)
         # possibly set palette dirty, then
         # m_im.putpalette(mapping_palette, 'L')  # converts to 'P'
         # or just force it.
         # UNDONE -- this is part of the general issue with palettes
-        m_im.im.putpalette(*m_im.palette.getdata())
+        m_im.im.putpalette("RGB;L", m_im.palette.tobytes())
 
         m_im = m_im.convert("L")
 
         # Internally, we require 768 bytes for a palette.
         new_palette_bytes = palette_bytes + (768 - len(palette_bytes)) * b"\x00"
         m_im.putpalette(new_palette_bytes)
-        m_im.palette = ImagePalette.ImagePalette(
-            "RGB", palette=palette_bytes, size=len(palette_bytes)
-        )
+        m_im.palette = ImagePalette.ImagePalette("RGB", palette=palette_bytes)
 
         return m_im
 
@@ -1811,20 +1953,25 @@ class Image:
             min(self.size[1], math.ceil(box[3] + support_y)),
         )
 
-    def resize(self, size, resample=BICUBIC, box=None, reducing_gap=None):
+    def resize(self, size, resample=None, box=None, reducing_gap=None):
         """
         Returns a resized copy of this image.
 
         :param size: The requested size in pixels, as a 2-tuple:
            (width, height).
         :param resample: An optional resampling filter.  This can be
-           one of :py:attr:`PIL.Image.NEAREST`, :py:attr:`PIL.Image.BOX`,
-           :py:attr:`PIL.Image.BILINEAR`, :py:attr:`PIL.Image.HAMMING`,
-           :py:attr:`PIL.Image.BICUBIC` or :py:attr:`PIL.Image.LANCZOS`.
-           Default filter is :py:attr:`PIL.Image.BICUBIC`.
-           If the image has mode "1" or "P", it is
-           always set to :py:attr:`PIL.Image.NEAREST`.
-           See: :ref:`concept-filters`.
+           one of :py:data:`PIL.Image.Resampling.NEAREST`,
+           :py:data:`PIL.Image.Resampling.BOX`,
+           :py:data:`PIL.Image.Resampling.BILINEAR`,
+           :py:data:`PIL.Image.Resampling.HAMMING`,
+           :py:data:`PIL.Image.Resampling.BICUBIC` or
+           :py:data:`PIL.Image.Resampling.LANCZOS`.
+           If the image has mode "1" or "P", it is always set to
+           :py:data:`PIL.Image.Resampling.NEAREST`.
+           If the image mode specifies a number of bits, such as "I;16", then the
+           default filter is :py:data:`PIL.Image.Resampling.NEAREST`.
+           Otherwise, the default filter is
+           :py:data:`PIL.Image.Resampling.BICUBIC`. See: :ref:`concept-filters`.
         :param box: An optional 4-tuple of floats providing
            the source image region to be scaled.
            The values must be within (0, 0, width, height) rectangle.
@@ -1844,18 +1991,28 @@ class Image:
         :returns: An :py:class:`~PIL.Image.Image` object.
         """
 
-        if resample not in (NEAREST, BILINEAR, BICUBIC, LANCZOS, BOX, HAMMING):
-            message = "Unknown resampling filter ({}).".format(resample)
+        if resample is None:
+            type_special = ";" in self.mode
+            resample = Resampling.NEAREST if type_special else Resampling.BICUBIC
+        elif resample not in (
+            Resampling.NEAREST,
+            Resampling.BILINEAR,
+            Resampling.BICUBIC,
+            Resampling.LANCZOS,
+            Resampling.BOX,
+            Resampling.HAMMING,
+        ):
+            message = f"Unknown resampling filter ({resample})."
 
             filters = [
-                "{} ({})".format(filter[1], filter[0])
+                f"{filter[1]} ({filter[0]})"
                 for filter in (
-                    (NEAREST, "Image.NEAREST"),
-                    (LANCZOS, "Image.LANCZOS"),
-                    (BILINEAR, "Image.BILINEAR"),
-                    (BICUBIC, "Image.BICUBIC"),
-                    (BOX, "Image.BOX"),
-                    (HAMMING, "Image.HAMMING"),
+                    (Resampling.NEAREST, "Image.Resampling.NEAREST"),
+                    (Resampling.LANCZOS, "Image.Resampling.LANCZOS"),
+                    (Resampling.BILINEAR, "Image.Resampling.BILINEAR"),
+                    (Resampling.BICUBIC, "Image.Resampling.BICUBIC"),
+                    (Resampling.BOX, "Image.Resampling.BOX"),
+                    (Resampling.HAMMING, "Image.Resampling.HAMMING"),
                 )
             ]
             raise ValueError(
@@ -1876,16 +2033,16 @@ class Image:
             return self.copy()
 
         if self.mode in ("1", "P"):
-            resample = NEAREST
+            resample = Resampling.NEAREST
 
-        if self.mode in ["LA", "RGBA"]:
-            im = self.convert(self.mode[:-1] + "a")
+        if self.mode in ["LA", "RGBA"] and resample != Resampling.NEAREST:
+            im = self.convert({"LA": "La", "RGBA": "RGBa"}[self.mode])
             im = im.resize(size, resample, box)
             return im.convert(self.mode)
 
         self.load()
 
-        if reducing_gap is not None and resample != NEAREST:
+        if reducing_gap is not None and resample != Resampling.NEAREST:
             factor_x = int((box[2] - box[0]) / size[0] / reducing_gap) or 1
             factor_y = int((box[3] - box[1]) / size[1] / reducing_gap) or 1
             if factor_x > 1 or factor_y > 1:
@@ -1906,16 +2063,16 @@ class Image:
 
     def reduce(self, factor, box=None):
         """
-        Returns a copy of the image reduced by `factor` times.
-        If the size of the image is not dividable by the `factor`,
+        Returns a copy of the image reduced ``factor`` times.
+        If the size of the image is not dividable by ``factor``,
         the resulting size will be rounded up.
 
         :param factor: A greater than 0 integer or tuple of two integers
            for width and height separately.
         :param box: An optional 4-tuple of ints providing
            the source image region to be reduced.
-           The values must be within (0, 0, width, height) rectangle.
-           If omitted or None, the entire source is used.
+           The values must be within ``(0, 0, width, height)`` rectangle.
+           If omitted or ``None``, the entire source is used.
         """
         if not isinstance(factor, (list, tuple)):
             factor = (factor, factor)
@@ -1929,7 +2086,7 @@ class Image:
             return self.copy()
 
         if self.mode in ["LA", "RGBA"]:
-            im = self.convert(self.mode[:-1] + "a")
+            im = self.convert({"LA": "La", "RGBA": "RGBa"}[self.mode])
             im = im.reduce(factor, box)
             return im.convert(self.mode)
 
@@ -1940,7 +2097,7 @@ class Image:
     def rotate(
         self,
         angle,
-        resample=NEAREST,
+        resample=Resampling.NEAREST,
         expand=0,
         center=None,
         translate=None,
@@ -1953,12 +2110,12 @@ class Image:
 
         :param angle: In degrees counter clockwise.
         :param resample: An optional resampling filter.  This can be
-           one of :py:attr:`PIL.Image.NEAREST` (use nearest neighbour),
-           :py:attr:`PIL.Image.BILINEAR` (linear interpolation in a 2x2
-           environment), or :py:attr:`PIL.Image.BICUBIC`
+           one of :py:data:`PIL.Image.Resampling.NEAREST` (use nearest neighbour),
+           :py:data:`PIL.Image.BILINEAR` (linear interpolation in a 2x2
+           environment), or :py:data:`PIL.Image.Resampling.BICUBIC`
            (cubic spline interpolation in a 4x4 environment).
            If omitted, or if the image has mode "1" or "P", it is
-           set to :py:attr:`PIL.Image.NEAREST`. See :ref:`concept-filters`.
+           set to :py:data:`PIL.Image.Resampling.NEAREST`. See :ref:`concept-filters`.
         :param expand: Optional expansion flag.  If true, expands the output
            image to make it large enough to hold the entire rotated image.
            If false or omitted, make the output image the same size as the
@@ -1979,11 +2136,11 @@ class Image:
             if angle == 0:
                 return self.copy()
             if angle == 180:
-                return self.transpose(ROTATE_180)
-            if angle == 90 and expand:
-                return self.transpose(ROTATE_90)
-            if angle == 270 and expand:
-                return self.transpose(ROTATE_270)
+                return self.transpose(Transpose.ROTATE_180)
+            if angle in (90, 270) and (expand or self.width == self.height):
+                return self.transpose(
+                    Transpose.ROTATE_90 if angle == 90 else Transpose.ROTATE_270
+                )
 
         # Calculate the affine matrix.  Note that this is the reverse
         # transformation (from destination image to source) because we
@@ -2052,7 +2209,9 @@ class Image:
             matrix[2], matrix[5] = transform(-(nw - w) / 2.0, -(nh - h) / 2.0, matrix)
             w, h = nw, nh
 
-        return self.transform((w, h), AFFINE, matrix, resample, fillcolor=fillcolor)
+        return self.transform(
+            (w, h), Transform.AFFINE, matrix, resample, fillcolor=fillcolor
+        )
 
     def save(self, fp, format=None, **params):
         """
@@ -2080,18 +2239,23 @@ class Image:
         :returns: None
         :exception ValueError: If the output format could not be determined
            from the file name.  Use the format option to solve this.
-        :exception IOError: If the file could not be written.  The file
+        :exception OSError: If the file could not be written.  The file
            may have been created, and may contain partial data.
         """
 
         filename = ""
         open_fp = False
-        if isPath(fp):
-            filename = fp
-            open_fp = True
-        elif isinstance(fp, Path):
+        if isinstance(fp, Path):
             filename = str(fp)
             open_fp = True
+        elif isPath(fp):
+            filename = fp
+            open_fp = True
+        elif fp == sys.stdout:
+            try:
+                fp = sys.stdout.buffer
+            except AttributeError:
+                pass
         if not filename and hasattr(fp, "name") and isPath(fp.name):
             # only set the name for metadata purposes
             filename = fp.name
@@ -2112,8 +2276,8 @@ class Image:
                 init()
             try:
                 format = EXTENSION[ext]
-            except KeyError:
-                raise ValueError("unknown file extension: {}".format(ext))
+            except KeyError as e:
+                raise ValueError(f"unknown file extension: {ext}") from e
 
         if format.upper() not in SAVE:
             init()
@@ -2122,7 +2286,9 @@ class Image:
         else:
             save_handler = SAVE[format.upper()]
 
+        created = False
         if open_fp:
+            created = not os.path.exists(filename)
             if params.get("append", False):
                 # Open also for reading ("+"), because TIFF save_all
                 # writer needs to go back and edit the written data.
@@ -2132,19 +2298,29 @@ class Image:
 
         try:
             save_handler(self, fp, filename)
-        finally:
-            # do what we can to clean up
+        except Exception:
             if open_fp:
                 fp.close()
+            if created:
+                try:
+                    os.remove(filename)
+                except PermissionError:
+                    pass
+            raise
+        if open_fp:
+            fp.close()
 
     def seek(self, frame):
         """
         Seeks to the given frame in this sequence file. If you seek
         beyond the end of the sequence, the method raises an
-        **EOFError** exception. When a sequence file is opened, the
+        ``EOFError`` exception. When a sequence file is opened, the
         library automatically seeks to frame 0.
 
         See :py:meth:`~PIL.Image.Image.tell`.
+
+        If defined, :attr:`~PIL.Image.Image.n_frames` refers to the
+        number of available frames.
 
         :param frame: Frame number, starting at 0.
         :exception EOFError: If the call attempts to seek beyond the end
@@ -2155,10 +2331,12 @@ class Image:
         if frame != 0:
             raise EOFError
 
-    def show(self, title=None, command=None):
+    def show(self, title=None):
         """
-        Displays this image. This method is mainly intended for
-        debugging purposes.
+        Displays this image. This method is mainly intended for debugging purposes.
+
+        This method calls :py:func:`PIL.ImageShow.show` internally. You can use
+        :py:func:`PIL.ImageShow.register` to override its default behaviour.
 
         The image is first saved to a temporary file. By default, it will be in
         PNG format.
@@ -2170,12 +2348,10 @@ class Image:
 
         On Windows, the image is opened with the standard PNG display utility.
 
-        :param title: Optional title to use for the image window,
-           where possible.
-        :param command: command used to show the image
+        :param title: Optional title to use for the image window, where possible.
         """
 
-        _show(self, title=title, command=command)
+        _show(self, title=title)
 
     def split(self):
         """
@@ -2214,8 +2390,8 @@ class Image:
         if isinstance(channel, str):
             try:
                 channel = self.getbands().index(channel)
-            except ValueError:
-                raise ValueError('The image has no channel "{}"'.format(channel))
+            except ValueError as e:
+                raise ValueError(f'The image has no channel "{channel}"') from e
 
         return self._new(self.im.getband(channel))
 
@@ -2223,11 +2399,14 @@ class Image:
         """
         Returns the current frame number. See :py:meth:`~PIL.Image.Image.seek`.
 
+        If defined, :attr:`~PIL.Image.Image.n_frames` refers to the
+        number of available frames.
+
         :returns: Frame number, starting with 0.
         """
         return 0
 
-    def thumbnail(self, size, resample=BICUBIC, reducing_gap=2.0):
+    def thumbnail(self, size, resample=Resampling.BICUBIC, reducing_gap=2.0):
         """
         Make this image into a thumbnail.  This method modifies the
         image to contain a thumbnail version of itself, no larger than
@@ -2243,10 +2422,15 @@ class Image:
 
         :param size: Requested size.
         :param resample: Optional resampling filter.  This can be one
-           of :py:attr:`PIL.Image.NEAREST`, :py:attr:`PIL.Image.BILINEAR`,
-           :py:attr:`PIL.Image.BICUBIC`, or :py:attr:`PIL.Image.LANCZOS`.
-           If omitted, it defaults to :py:attr:`PIL.Image.BICUBIC`.
-           (was :py:attr:`PIL.Image.NEAREST` prior to version 2.5.0).
+           of :py:data:`PIL.Image.Resampling.NEAREST`,
+           :py:data:`PIL.Image.Resampling.BOX`,
+           :py:data:`PIL.Image.Resampling.BILINEAR`,
+           :py:data:`PIL.Image.Resampling.HAMMING`,
+           :py:data:`PIL.Image.Resampling.BICUBIC` or
+           :py:data:`PIL.Image.Resampling.LANCZOS`.
+           If omitted, it defaults to :py:data:`PIL.Image.Resampling.BICUBIC`.
+           (was :py:data:`PIL.Image.Resampling.NEAREST` prior to version 2.5.0).
+           See: :ref:`concept-filters`.
         :param reducing_gap: Apply optimization by resizing the image
            in two steps. First, reducing the image by integer times
            using :py:meth:`~PIL.Image.Image.reduce` or
@@ -2276,7 +2460,9 @@ class Image:
         if x / y >= aspect:
             x = round_aspect(y * aspect, key=lambda n: abs(aspect - n / y))
         else:
-            y = round_aspect(x / aspect, key=lambda n: abs(aspect - x / n))
+            y = round_aspect(
+                x / aspect, key=lambda n: 0 if n == 0 else abs(aspect - x / n)
+            )
         size = (x, y)
 
         box = None
@@ -2298,7 +2484,13 @@ class Image:
     # FIXME: the different transform methods need further explanation
     # instead of bloating the method docs, add a separate chapter.
     def transform(
-        self, size, method, data=None, resample=NEAREST, fill=1, fillcolor=None
+        self,
+        size,
+        method,
+        data=None,
+        resample=Resampling.NEAREST,
+        fill=1,
+        fillcolor=None,
     ):
         """
         Transforms this image.  This method creates a new image with the
@@ -2307,36 +2499,37 @@ class Image:
 
         :param size: The output size.
         :param method: The transformation method.  This is one of
-          :py:attr:`PIL.Image.EXTENT` (cut out a rectangular subregion),
-          :py:attr:`PIL.Image.AFFINE` (affine transform),
-          :py:attr:`PIL.Image.PERSPECTIVE` (perspective transform),
-          :py:attr:`PIL.Image.QUAD` (map a quadrilateral to a rectangle), or
-          :py:attr:`PIL.Image.MESH` (map a number of source quadrilaterals
+          :py:data:`PIL.Image.Transform.EXTENT` (cut out a rectangular subregion),
+          :py:data:`PIL.Image.Transform.AFFINE` (affine transform),
+          :py:data:`PIL.Image.Transform.PERSPECTIVE` (perspective transform),
+          :py:data:`PIL.Image.Transform.QUAD` (map a quadrilateral to a rectangle), or
+          :py:data:`PIL.Image.Transform.MESH` (map a number of source quadrilaterals
           in one operation).
 
           It may also be an :py:class:`~PIL.Image.ImageTransformHandler`
           object::
 
             class Example(Image.ImageTransformHandler):
-                def transform(size, method, data, resample, fill=1):
+                def transform(self, size, data, resample, fill=1):
                     # Return result
 
-          It may also be an object with a :py:meth:`~method.getdata` method
-          that returns a tuple supplying new **method** and **data** values::
+          It may also be an object with a ``method.getdata`` method
+          that returns a tuple supplying new ``method`` and ``data`` values::
 
-            class Example(object):
+            class Example:
                 def getdata(self):
-                    method = Image.EXTENT
+                    method = Image.Transform.EXTENT
                     data = (0, 0, 100, 100)
                     return method, data
         :param data: Extra data to the transformation method.
         :param resample: Optional resampling filter.  It can be one of
-           :py:attr:`PIL.Image.NEAREST` (use nearest neighbour),
-           :py:attr:`PIL.Image.BILINEAR` (linear interpolation in a 2x2
-           environment), or :py:attr:`PIL.Image.BICUBIC` (cubic spline
+           :py:data:`PIL.Image.Resampling.NEAREST` (use nearest neighbour),
+           :py:data:`PIL.Image.Resampling.BILINEAR` (linear interpolation in a 2x2
+           environment), or :py:data:`PIL.Image.BICUBIC` (cubic spline
            interpolation in a 4x4 environment). If omitted, or if the image
-           has mode "1" or "P", it is set to :py:attr:`PIL.Image.NEAREST`.
-        :param fill: If **method** is an
+           has mode "1" or "P", it is set to :py:data:`PIL.Image.Resampling.NEAREST`.
+           See: :ref:`concept-filters`.
+        :param fill: If ``method`` is an
           :py:class:`~PIL.Image.ImageTransformHandler` object, this is one of
           the arguments passed to it. Otherwise, it is unused.
         :param fillcolor: Optional fill color for the area outside the
@@ -2344,18 +2537,11 @@ class Image:
         :returns: An :py:class:`~PIL.Image.Image` object.
         """
 
-        if self.mode == "LA":
+        if self.mode in ("LA", "RGBA") and resample != Resampling.NEAREST:
             return (
-                self.convert("La")
+                self.convert({"LA": "La", "RGBA": "RGBa"}[self.mode])
                 .transform(size, method, data, resample, fill, fillcolor)
-                .convert("LA")
-            )
-
-        if self.mode == "RGBA":
-            return (
-                self.convert("RGBa")
-                .transform(size, method, data, resample, fill, fillcolor)
-                .convert("RGBA")
+                .convert(self.mode)
             )
 
         if isinstance(method, ImageTransformHandler):
@@ -2369,11 +2555,15 @@ class Image:
             raise ValueError("missing method data")
 
         im = new(self.mode, size, fillcolor)
+        if self.mode == "P" and self.palette:
+            im.palette = self.palette.copy()
         im.info = self.info.copy()
-        if method == MESH:
+        if method == Transform.MESH:
             # list of quads
             for box, quad in data:
-                im.__transformer(box, self, QUAD, quad, resample, fillcolor is None)
+                im.__transformer(
+                    box, self, Transform.QUAD, quad, resample, fillcolor is None
+                )
         else:
             im.__transformer(
                 (0, 0) + size, self, method, data, resample, fillcolor is None
@@ -2381,25 +2571,27 @@ class Image:
 
         return im
 
-    def __transformer(self, box, image, method, data, resample=NEAREST, fill=1):
+    def __transformer(
+        self, box, image, method, data, resample=Resampling.NEAREST, fill=1
+    ):
         w = box[2] - box[0]
         h = box[3] - box[1]
 
-        if method == AFFINE:
+        if method == Transform.AFFINE:
             data = data[0:6]
 
-        elif method == EXTENT:
+        elif method == Transform.EXTENT:
             # convert extent to an affine transform
             x0, y0, x1, y1 = data
             xs = (x1 - x0) / w
             ys = (y1 - y0) / h
-            method = AFFINE
+            method = Transform.AFFINE
             data = (xs, 0, x0, 0, ys, y0)
 
-        elif method == PERSPECTIVE:
+        elif method == Transform.PERSPECTIVE:
             data = data[0:8]
 
-        elif method == QUAD:
+        elif method == Transform.QUAD:
             # quadrilateral warp.  data specifies the four corners
             # given as NW, SW, SE, and NE.
             nw = data[0:2]
@@ -2423,22 +2615,26 @@ class Image:
         else:
             raise ValueError("unknown transformation method")
 
-        if resample not in (NEAREST, BILINEAR, BICUBIC):
-            if resample in (BOX, HAMMING, LANCZOS):
+        if resample not in (
+            Resampling.NEAREST,
+            Resampling.BILINEAR,
+            Resampling.BICUBIC,
+        ):
+            if resample in (Resampling.BOX, Resampling.HAMMING, Resampling.LANCZOS):
                 message = {
-                    BOX: "Image.BOX",
-                    HAMMING: "Image.HAMMING",
-                    LANCZOS: "Image.LANCZOS/Image.ANTIALIAS",
-                }[resample] + " ({}) cannot be used.".format(resample)
+                    Resampling.BOX: "Image.Resampling.BOX",
+                    Resampling.HAMMING: "Image.Resampling.HAMMING",
+                    Resampling.LANCZOS: "Image.Resampling.LANCZOS",
+                }[resample] + f" ({resample}) cannot be used."
             else:
-                message = "Unknown resampling filter ({}).".format(resample)
+                message = f"Unknown resampling filter ({resample})."
 
             filters = [
-                "{} ({})".format(filter[1], filter[0])
+                f"{filter[1]} ({filter[0]})"
                 for filter in (
-                    (NEAREST, "Image.NEAREST"),
-                    (BILINEAR, "Image.BILINEAR"),
-                    (BICUBIC, "Image.BICUBIC"),
+                    (Resampling.NEAREST, "Image.Resampling.NEAREST"),
+                    (Resampling.BILINEAR, "Image.Resampling.BILINEAR"),
+                    (Resampling.BICUBIC, "Image.Resampling.BICUBIC"),
                 )
             ]
             raise ValueError(
@@ -2450,7 +2646,7 @@ class Image:
         self.load()
 
         if image.mode in ("1", "P"):
-            resample = NEAREST
+            resample = Resampling.NEAREST
 
         self.im.transform2(box, image.im, method, data, resample, fill)
 
@@ -2458,10 +2654,13 @@ class Image:
         """
         Transpose image (flip or rotate in 90 degree steps)
 
-        :param method: One of :py:attr:`PIL.Image.FLIP_LEFT_RIGHT`,
-          :py:attr:`PIL.Image.FLIP_TOP_BOTTOM`, :py:attr:`PIL.Image.ROTATE_90`,
-          :py:attr:`PIL.Image.ROTATE_180`, :py:attr:`PIL.Image.ROTATE_270`,
-          :py:attr:`PIL.Image.TRANSPOSE` or :py:attr:`PIL.Image.TRANSVERSE`.
+        :param method: One of :py:data:`PIL.Image.Transpose.FLIP_LEFT_RIGHT`,
+          :py:data:`PIL.Image.Transpose.FLIP_TOP_BOTTOM`,
+          :py:data:`PIL.Image.Transpose.ROTATE_90`,
+          :py:data:`PIL.Image.Transpose.ROTATE_180`,
+          :py:data:`PIL.Image.Transpose.ROTATE_270`,
+          :py:data:`PIL.Image.Transpose.TRANSPOSE` or
+          :py:data:`PIL.Image.Transpose.TRANSVERSE`.
         :returns: Returns a flipped or rotated copy of this image.
         """
 
@@ -2499,12 +2698,20 @@ class Image:
 
 
 class ImagePointHandler:
-    # used as a mixin by point transforms (for use with im.point)
+    """
+    Used as a mixin by point transforms
+    (for use with :py:meth:`~PIL.Image.Image.point`)
+    """
+
     pass
 
 
 class ImageTransformHandler:
-    # used as a mixin by geometry transforms (for use with im.transform)
+    """
+    Used as a mixin by geometry transforms
+    (for use with :py:meth:`~PIL.Image.Image.transform`)
+    """
+
     pass
 
 
@@ -2585,9 +2792,9 @@ def frombytes(mode, size, data, decoder_name="raw", *args):
     In its simplest form, this function takes three arguments
     (mode, size, and unpacked pixel data).
 
-    You can also use any pixel decoder supported by PIL.  For more
+    You can also use any pixel decoder supported by PIL. For more
     information on available decoders, see the section
-    :ref:`Writing Your Own File Decoder <file-decoders>`.
+    :ref:`Writing Your Own File Codec <file-codecs>`.
 
     Note that this function decodes pixel data only, not entire images.
     If you have an entire image in a string, wrap it in a
@@ -2616,12 +2823,6 @@ def frombytes(mode, size, data, decoder_name="raw", *args):
     return im
 
 
-def fromstring(*args, **kw):
-    raise NotImplementedError(
-        "fromstring() has been removed. Please call frombytes() instead."
-    )
-
-
 def frombuffer(mode, size, data, decoder_name="raw", *args):
     """
     Creates an image memory referencing pixel data in a byte buffer.
@@ -2633,7 +2834,7 @@ def frombuffer(mode, size, data, decoder_name="raw", *args):
 
     Note that this function decodes pixel data only, not entire images.
     If you have an entire image file in a string, wrap it in a
-    **BytesIO** object, and use :py:func:`~PIL.Image.open` to load it.
+    :py:class:`~io.BytesIO` object, and use :py:func:`~PIL.Image.open` to load it.
 
     In the current version, the default parameters used for the "raw" decoder
     differs from that used for :py:func:`~PIL.Image.frombytes`.  This is a
@@ -2680,14 +2881,14 @@ def fromarray(obj, mode=None):
     Creates an image memory from an object exporting the array interface
     (using the buffer protocol).
 
-    If **obj** is not contiguous, then the tobytes method is called
+    If ``obj`` is not contiguous, then the ``tobytes`` method is called
     and :py:func:`~PIL.Image.frombuffer` is used.
 
     If you have an image in NumPy::
 
       from PIL import Image
       import numpy as np
-      im = Image.open('hopper.jpg')
+      im = Image.open("hopper.jpg")
       a = np.asarray(im)
 
     Then this can be used to convert it to a Pillow image::
@@ -2695,8 +2896,21 @@ def fromarray(obj, mode=None):
       im = Image.fromarray(a)
 
     :param obj: Object with array interface
-    :param mode: Mode to use (will be determined from type if None)
-      See: :ref:`concept-modes`.
+    :param mode: Optional mode to use when reading ``obj``. Will be determined from
+      type if ``None``.
+
+      This will not be used to convert the data after reading, but will be used to
+      change how the data is read::
+
+        from PIL import Image
+        import numpy as np
+        a = np.full((1, 1), 300)
+        im = Image.fromarray(a, mode="L")
+        im.getpixel((0, 0))  # 44
+        im = Image.fromarray(a, mode="RGB")
+        im.getpixel((0, 0))  # (44, 1, 0)
+
+      See: :ref:`concept-modes` for general information about modes.
     :returns: An image object.
 
     .. versionadded:: 1.1.6
@@ -2708,12 +2922,12 @@ def fromarray(obj, mode=None):
     if mode is None:
         try:
             typekey = (1, 1) + shape[2:], arr["typestr"]
-        except KeyError:
-            raise TypeError("Cannot handle this data type")
+        except KeyError as e:
+            raise TypeError("Cannot handle this data type") from e
         try:
             mode, rawmode = _fromarray_typemap[typekey]
-        except KeyError:
-            raise TypeError("Cannot handle this data type: %s, %s" % typekey)
+        except KeyError as e:
+            raise TypeError("Cannot handle this data type: %s, %s" % typekey) from e
     else:
         rawmode = mode
     if mode in ["1", "L", "I", "P", "F"]:
@@ -2723,9 +2937,9 @@ def fromarray(obj, mode=None):
     else:
         ndmax = 4
     if ndim > ndmax:
-        raise ValueError("Too many dimensions: %d > %d." % (ndim, ndmax))
+        raise ValueError(f"Too many dimensions: {ndim} > {ndmax}.")
 
-    size = shape[1], shape[0]
+    size = 1 if ndim == 1 else shape[1], shape[0]
     if strides is not None:
         if hasattr(obj, "tobytes"):
             obj = obj.tobytes()
@@ -2789,19 +3003,19 @@ def _decompression_bomb_check(size):
 
     if pixels > 2 * MAX_IMAGE_PIXELS:
         raise DecompressionBombError(
-            "Image size (%d pixels) exceeds limit of %d pixels, "
-            "could be decompression bomb DOS attack." % (pixels, 2 * MAX_IMAGE_PIXELS)
+            f"Image size ({pixels} pixels) exceeds limit of {2 * MAX_IMAGE_PIXELS} "
+            "pixels, could be decompression bomb DOS attack."
         )
 
     if pixels > MAX_IMAGE_PIXELS:
         warnings.warn(
-            "Image size (%d pixels) exceeds limit of %d pixels, "
-            "could be decompression bomb DOS attack." % (pixels, MAX_IMAGE_PIXELS),
+            f"Image size ({pixels} pixels) exceeds limit of {MAX_IMAGE_PIXELS} pixels, "
+            "could be decompression bomb DOS attack.",
             DecompressionBombWarning,
         )
 
 
-def open(fp, mode="r"):
+def open(fp, mode="r", formats=None):
     """
     Opens and identifies the given image file.
 
@@ -2812,25 +3026,36 @@ def open(fp, mode="r"):
     :py:func:`~PIL.Image.new`. See :ref:`file-handling`.
 
     :param fp: A filename (string), pathlib.Path object or a file object.
-       The file object must implement :py:meth:`~file.read`,
-       :py:meth:`~file.seek`, and :py:meth:`~file.tell` methods,
+       The file object must implement ``file.read``,
+       ``file.seek``, and ``file.tell`` methods,
        and be opened in binary mode.
     :param mode: The mode.  If given, this argument must be "r".
+    :param formats: A list or tuple of formats to attempt to load the file in.
+       This can be used to restrict the set of formats checked.
+       Pass ``None`` to try all supported formats. You can print the set of
+       available formats by running ``python3 -m PIL`` or using
+       the :py:func:`PIL.features.pilinfo` function.
     :returns: An :py:class:`~PIL.Image.Image` object.
     :exception FileNotFoundError: If the file cannot be found.
     :exception PIL.UnidentifiedImageError: If the image cannot be opened and
        identified.
     :exception ValueError: If the ``mode`` is not "r", or if a ``StringIO``
        instance is used for ``fp``.
+    :exception TypeError: If ``formats`` is not ``None``, a list or a tuple.
     """
 
     if mode != "r":
-        raise ValueError("bad mode %r" % mode)
+        raise ValueError(f"bad mode {repr(mode)}")
     elif isinstance(fp, io.StringIO):
         raise ValueError(
             "StringIO cannot be used to open an image. "
             "Binary data must be used instead."
         )
+
+    if formats is None:
+        formats = ID
+    elif not isinstance(formats, (list, tuple)):
+        raise TypeError("formats must be a list or tuple")
 
     exclusive_fp = False
     filename = ""
@@ -2855,8 +3080,11 @@ def open(fp, mode="r"):
 
     accept_warnings = []
 
-    def _open_core(fp, filename, prefix):
-        for i in ID:
+    def _open_core(fp, filename, prefix, formats):
+        for i in formats:
+            i = i.upper()
+            if i not in OPEN:
+                init()
             try:
                 factory, accept = OPEN[i]
                 result = not accept or accept(prefix)
@@ -2878,11 +3106,11 @@ def open(fp, mode="r"):
                 raise
         return None
 
-    im = _open_core(fp, filename, prefix)
+    im = _open_core(fp, filename, prefix, formats)
 
     if im is None:
         if init():
-            im = _open_core(fp, filename, prefix)
+            im = _open_core(fp, filename, prefix, formats)
 
     if im:
         im._exclusive_fp = exclusive_fp
@@ -2919,7 +3147,7 @@ def alpha_composite(im1, im2):
 def blend(im1, im2, alpha):
     """
     Creates a new image by interpolating between two input images, using
-    a constant alpha.::
+    a constant alpha::
 
         out = image1 * (1.0 - alpha) + image2 * alpha
 
@@ -3111,18 +3339,13 @@ def register_encoder(name, encoder):
 
 
 # --------------------------------------------------------------------
-# Simple display support.  User code may override this.
+# Simple display support.
 
 
 def _show(image, **options):
-    # override me, as necessary
-    _showxv(image, **options)
-
-
-def _showxv(image, title=None, **options):
     from . import ImageShow
 
-    ImageShow.show(image, title, **options)
+    ImageShow.show(image, **options)
 
 
 # --------------------------------------------------------------------
@@ -3198,13 +3421,13 @@ def _apply_env_variables(env=None):
         try:
             var = int(var) * units
         except ValueError:
-            warnings.warn("{} is not int".format(var_name))
+            warnings.warn(f"{var_name} is not int")
             continue
 
         try:
             setter(var)
         except ValueError as e:
-            warnings.warn("{}: {}".format(var_name, e))
+            warnings.warn(f"{var_name}: {e}")
 
 
 _apply_env_variables()
@@ -3212,7 +3435,8 @@ atexit.register(core.clear_cache)
 
 
 class Exif(MutableMapping):
-    endian = "<"
+    endian = None
+    bigtiff = False
 
     def __init__(self):
         self._data = {}
@@ -3222,30 +3446,41 @@ class Exif(MutableMapping):
 
     def _fixup(self, value):
         try:
-            if len(value) == 1 and not isinstance(value, dict):
+            if len(value) == 1 and isinstance(value, tuple):
                 return value[0]
         except Exception:
             pass
         return value
 
     def _fixup_dict(self, src_dict):
-        # Helper function for _getexif()
+        # Helper function
         # returns a dict with any single item tuples/lists as individual values
         return {k: self._fixup(v) for k, v in src_dict.items()}
 
-    def _get_ifd_dict(self, tag):
+    def _get_ifd_dict(self, offset):
         try:
             # an offset pointer to the location of the nested embedded IFD.
             # It should be a long, but may be corrupted.
-            self.fp.seek(self[tag])
+            self.fp.seek(offset)
         except (KeyError, TypeError):
             pass
         else:
             from . import TiffImagePlugin
 
-            info = TiffImagePlugin.ImageFileDirectory_v1(self.head)
+            info = TiffImagePlugin.ImageFileDirectory_v2(self.head)
             info.load(self.fp)
             return self._fixup_dict(info)
+
+    def _get_head(self):
+        version = b"\x2B" if self.bigtiff else b"\x2A"
+        if self.endian == "<":
+            head = b"II" + version + b"\x00" + o32le(8)
+        else:
+            head = b"MM\x00" + version + o32be(8)
+        if self.bigtiff:
+            head += o32le(8) if self.endian == "<" else o32be(8)
+            head += b"\x00\x00\x00\x00"
+        return head
 
     def load(self, data):
         # Extract EXIF information.  This is highly experimental,
@@ -3259,120 +3494,166 @@ class Exif(MutableMapping):
         self._loaded_exif = data
         self._data.clear()
         self._ifds.clear()
-        self._info = None
+        if data and data.startswith(b"Exif\x00\x00"):
+            data = data[6:]
         if not data:
+            self._info = None
             return
 
-        self.fp = io.BytesIO(data[6:])
+        self.fp = io.BytesIO(data)
         self.head = self.fp.read(8)
         # process dictionary
         from . import TiffImagePlugin
 
-        self._info = TiffImagePlugin.ImageFileDirectory_v1(self.head)
+        self._info = TiffImagePlugin.ImageFileDirectory_v2(self.head)
         self.endian = self._info._endian
         self.fp.seek(self._info.next)
         self._info.load(self.fp)
 
-        # get EXIF extension
-        ifd = self._get_ifd_dict(0x8769)
-        if ifd:
-            self._data.update(ifd)
-            self._ifds[0x8769] = ifd
+    def load_from_fp(self, fp, offset=None):
+        self._loaded_exif = None
+        self._data.clear()
+        self._ifds.clear()
 
-    def tobytes(self, offset=0):
+        # process dictionary
         from . import TiffImagePlugin
 
-        if self.endian == "<":
-            head = b"II\x2A\x00\x08\x00\x00\x00"
+        self.fp = fp
+        if offset is not None:
+            self.head = self._get_head()
         else:
-            head = b"MM\x00\x2A\x00\x00\x00\x08"
+            self.head = self.fp.read(8)
+        self._info = TiffImagePlugin.ImageFileDirectory_v2(self.head)
+        if self.endian is None:
+            self.endian = self._info._endian
+        if offset is None:
+            offset = self._info.next
+        self.fp.seek(offset)
+        self._info.load(self.fp)
+
+    def _get_merged_dict(self):
+        merged_dict = dict(self)
+
+        # get EXIF extension
+        if 0x8769 in self:
+            ifd = self._get_ifd_dict(self[0x8769])
+            if ifd:
+                merged_dict.update(ifd)
+
+        # GPS
+        if 0x8825 in self:
+            merged_dict[0x8825] = self._get_ifd_dict(self[0x8825])
+
+        return merged_dict
+
+    def tobytes(self, offset=8):
+        from . import TiffImagePlugin
+
+        head = self._get_head()
         ifd = TiffImagePlugin.ImageFileDirectory_v2(ifh=head)
         for tag, value in self.items():
+            if tag in [0x8769, 0x8225, 0x8825] and not isinstance(value, dict):
+                value = self.get_ifd(tag)
+                if (
+                    tag == 0x8769
+                    and 0xA005 in value
+                    and not isinstance(value[0xA005], dict)
+                ):
+                    value = value.copy()
+                    value[0xA005] = self.get_ifd(0xA005)
             ifd[tag] = value
         return b"Exif\x00\x00" + head + ifd.tobytes(offset)
 
     def get_ifd(self, tag):
-        if tag not in self._ifds and tag in self:
-            if tag in [0x8825, 0xA005]:
-                # gpsinfo, interop
-                self._ifds[tag] = self._get_ifd_dict(tag)
-            elif tag == 0x927C:  # makernote
-                from .TiffImagePlugin import ImageFileDirectory_v2
+        if tag not in self._ifds:
+            if tag in [0x8769, 0x8825]:
+                # exif, gpsinfo
+                if tag in self:
+                    self._ifds[tag] = self._get_ifd_dict(self[tag])
+            elif tag in [0xA005, 0x927C]:
+                # interop, makernote
+                if 0x8769 not in self._ifds:
+                    self.get_ifd(0x8769)
+                tag_data = self._ifds[0x8769][tag]
+                if tag == 0x927C:
+                    # makernote
+                    from .TiffImagePlugin import ImageFileDirectory_v2
 
-                if self[0x927C][:8] == b"FUJIFILM":
-                    exif_data = self[0x927C]
-                    ifd_offset = i32le(exif_data[8:12])
-                    ifd_data = exif_data[ifd_offset:]
+                    if tag_data[:8] == b"FUJIFILM":
+                        ifd_offset = i32le(tag_data, 8)
+                        ifd_data = tag_data[ifd_offset:]
 
-                    makernote = {}
-                    for i in range(0, struct.unpack("<H", ifd_data[:2])[0]):
-                        ifd_tag, typ, count, data = struct.unpack(
-                            "<HHL4s", ifd_data[i * 12 + 2 : (i + 1) * 12 + 2]
-                        )
-                        try:
-                            unit_size, handler = ImageFileDirectory_v2._load_dispatch[
-                                typ
-                            ]
-                        except KeyError:
-                            continue
-                        size = count * unit_size
-                        if size > 4:
-                            (offset,) = struct.unpack("<L", data)
-                            data = ifd_data[offset - 12 : offset + size - 12]
-                        else:
-                            data = data[:size]
-
-                        if len(data) != size:
-                            warnings.warn(
-                                "Possibly corrupt EXIF MakerNote data.  "
-                                "Expecting to read %d bytes but only got %d."
-                                " Skipping tag %s" % (size, len(data), ifd_tag)
+                        makernote = {}
+                        for i in range(0, struct.unpack("<H", ifd_data[:2])[0]):
+                            ifd_tag, typ, count, data = struct.unpack(
+                                "<HHL4s", ifd_data[i * 12 + 2 : (i + 1) * 12 + 2]
                             )
-                            continue
+                            try:
+                                (
+                                    unit_size,
+                                    handler,
+                                ) = ImageFileDirectory_v2._load_dispatch[typ]
+                            except KeyError:
+                                continue
+                            size = count * unit_size
+                            if size > 4:
+                                (offset,) = struct.unpack("<L", data)
+                                data = ifd_data[offset - 12 : offset + size - 12]
+                            else:
+                                data = data[:size]
 
-                        if not data:
-                            continue
+                            if len(data) != size:
+                                warnings.warn(
+                                    "Possibly corrupt EXIF MakerNote data.  "
+                                    f"Expecting to read {size} bytes but only got "
+                                    f"{len(data)}. Skipping tag {ifd_tag}"
+                                )
+                                continue
 
-                        makernote[ifd_tag] = handler(
-                            ImageFileDirectory_v2(), data, False
-                        )
-                    self._ifds[0x927C] = dict(self._fixup_dict(makernote))
-                elif self.get(0x010F) == "Nintendo":
-                    ifd_data = self[0x927C]
+                            if not data:
+                                continue
 
-                    makernote = {}
-                    for i in range(0, struct.unpack(">H", ifd_data[:2])[0]):
-                        ifd_tag, typ, count, data = struct.unpack(
-                            ">HHL4s", ifd_data[i * 12 + 2 : (i + 1) * 12 + 2]
-                        )
-                        if ifd_tag == 0x1101:
-                            # CameraInfo
-                            (offset,) = struct.unpack(">L", data)
-                            self.fp.seek(offset)
-
-                            camerainfo = {"ModelID": self.fp.read(4)}
-
-                            self.fp.read(4)
-                            # Seconds since 2000
-                            camerainfo["TimeStamp"] = i32le(self.fp.read(12))
-
-                            self.fp.read(4)
-                            camerainfo["InternalSerialNumber"] = self.fp.read(4)
-
-                            self.fp.read(12)
-                            parallax = self.fp.read(4)
-                            handler = ImageFileDirectory_v2._load_dispatch[
-                                TiffTags.FLOAT
-                            ][1]
-                            camerainfo["Parallax"] = handler(
-                                ImageFileDirectory_v2(), parallax, False
+                            makernote[ifd_tag] = handler(
+                                ImageFileDirectory_v2(), data, False
                             )
+                        self._ifds[tag] = dict(self._fixup_dict(makernote))
+                    elif self.get(0x010F) == "Nintendo":
+                        makernote = {}
+                        for i in range(0, struct.unpack(">H", tag_data[:2])[0]):
+                            ifd_tag, typ, count, data = struct.unpack(
+                                ">HHL4s", tag_data[i * 12 + 2 : (i + 1) * 12 + 2]
+                            )
+                            if ifd_tag == 0x1101:
+                                # CameraInfo
+                                (offset,) = struct.unpack(">L", data)
+                                self.fp.seek(offset)
 
-                            self.fp.read(4)
-                            camerainfo["Category"] = self.fp.read(2)
+                                camerainfo = {"ModelID": self.fp.read(4)}
 
-                            makernote = {0x1101: dict(self._fixup_dict(camerainfo))}
-                    self._ifds[0x927C] = makernote
+                                self.fp.read(4)
+                                # Seconds since 2000
+                                camerainfo["TimeStamp"] = i32le(self.fp.read(12))
+
+                                self.fp.read(4)
+                                camerainfo["InternalSerialNumber"] = self.fp.read(4)
+
+                                self.fp.read(12)
+                                parallax = self.fp.read(4)
+                                handler = ImageFileDirectory_v2._load_dispatch[
+                                    TiffTags.FLOAT
+                                ][1]
+                                camerainfo["Parallax"] = handler(
+                                    ImageFileDirectory_v2(), parallax, False
+                                )
+
+                                self.fp.read(4)
+                                camerainfo["Category"] = self.fp.read(2)
+
+                                makernote = {0x1101: dict(self._fixup_dict(camerainfo))}
+                        self._ifds[tag] = makernote
+                else:
+                    # interop
+                    self._ifds[tag] = self._get_ifd_dict(tag_data)
         return self._ifds.get(tag, {})
 
     def __str__(self):
@@ -3392,8 +3673,6 @@ class Exif(MutableMapping):
     def __getitem__(self, tag):
         if self._info is not None and tag not in self._data and tag in self._info:
             self._data[tag] = self._fixup(self._info[tag])
-            if tag == 0x8825:
-                self._data[tag] = self.get_ifd(tag)
             del self._info[tag]
         return self._data[tag]
 
@@ -3408,7 +3687,8 @@ class Exif(MutableMapping):
     def __delitem__(self, tag):
         if self._info is not None and tag in self._info:
             del self._info[tag]
-        del self._data[tag]
+        else:
+            del self._data[tag]
 
     def __iter__(self):
         keys = set(self._data)

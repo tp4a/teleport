@@ -55,7 +55,11 @@ def _check_members_have_memberships(connection,
         if not connection.strategy.sync:
             response, result = connection.get_response(result)
         else:
-            response, result = connection.response, connection.result
+            if connection.strategy.thread_safe:
+                _, result, response, _ = result
+            else:
+                result = connection.result
+                response = connection.response
 
         if not result['description'] == 'success':  # member not found in DIT
             raise LDAPInvalidDnError(member + ' not found')
@@ -99,7 +103,11 @@ def _check_groups_contain_members(connection,
         if not connection.strategy.sync:
             response, result = connection.get_response(result)
         else:
-            response, result = connection.response, connection.result
+            if connection.strategy.thread_safe:
+                _, result, response, _ = result
+            else:
+                result = connection.result
+                response = connection.response
 
         if not result['description'] == 'success':
             raise LDAPInvalidDnError(group + ' not found')

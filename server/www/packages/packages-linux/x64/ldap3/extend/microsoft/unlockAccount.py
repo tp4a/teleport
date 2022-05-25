@@ -33,14 +33,15 @@ from ...utils.dn import safe_dn
 def ad_unlock_account(connection, user_dn, controls=None):
     if connection.check_names:
         user_dn = safe_dn(user_dn)
-    result = connection.modify(user_dn,
-                               {'lockoutTime': [(MODIFY_REPLACE, ['0'])]},
-                               controls)
+    result = connection.modify(user_dn, {'lockoutTime': [(MODIFY_REPLACE, ['0'])]}, controls)
 
     if not connection.strategy.sync:
         _, result = connection.get_response(result)
     else:
-        result = connection.result
+        if connection.strategy.thread_safe:
+            _, result, _, _ = result
+        else:
+            result = connection.result
 
     # change successful, returns True
     if result['result'] == RESULT_SUCCESS:

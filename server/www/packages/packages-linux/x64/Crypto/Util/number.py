@@ -24,72 +24,100 @@
 # ===================================================================
 #
 
+__revision__ = "$Id$"
+
+from Crypto.pct_warnings import GetRandomNumber_DeprecationWarning, PowmInsecureWarning
+from warnings import warn as _warn
 import math
 import sys
-import struct
-from Crypto import Random
-from Crypto.Util.py3compat import iter_range
+from Crypto.Util.py3compat import *
 
-# Backward compatibility
-_fastmath = None
+bignum = int
+try:
+    from Crypto.PublicKey import _fastmath
+except ImportError:
+    # For production, we are going to let import issues due to gmp/mpir shared
+    # libraries not loading slide silently and use slowmath. If you'd rather
+    # see an exception raised if _fastmath exists but cannot be imported,
+    # uncomment the below
+    #
+    # from distutils.sysconfig import get_config_var
+    # import inspect, os
+    # _fm_path = os.path.normpath(os.path.dirname(os.path.abspath(
+        # inspect.getfile(inspect.currentframe())))
+        # +"/../../PublicKey/_fastmath"+get_config_var("SO"))
+    # if os.path.exists(_fm_path):
+        # raise ImportError("While the _fastmath module exists, importing "+
+            # "it failed. This may point to the gmp or mpir shared library "+
+            # "not being in the path. _fastmath was found at "+_fm_path)
+    _fastmath = None
 
+# You need libgmp v5 or later to get mpz_powm_sec.  Warn if it's not available.
+if _fastmath is not None and not _fastmath.HAVE_DECL_MPZ_POWM_SEC:
+    _warn("Not using mpz_powm_sec.  You should rebuild using libgmp >= 5 to avoid timing attack vulnerability.", PowmInsecureWarning)
 
-def ceil_div(n, d):
-    """Return ceil(n/d), that is, the smallest integer r such that r*d >= n"""
+# New functions
+from ._number_new import *
 
-    if d == 0:
-        raise ZeroDivisionError()
-    if (n < 0) or (d < 0):
-        raise ValueError("Non positive values")
-    r, q = divmod(n, d)
-    if (n != 0) and (q != 0):
-        r += 1
-    return r
+# Commented out and replaced with faster versions below
+## def long2str(n):
+##     s=''
+##     while n>0:
+##         s=chr(n & 255)+s
+##         n=n>>8
+##     return s
 
+## import types
+## def str2long(s):
+##     if type(s)!=types.StringType: return s   # Integers will be left alone
+##     return reduce(lambda x,y : x*256+ord(y), s, 0L)
 
 def size (N):
-    """Returns the size of the number N in bits."""
-
-    if N < 0:
-        raise ValueError("Size in bits only avialable for non-negative numbers")
-
+    """size(N:long) : int
+    Returns the size of the number N in bits.
+    """
     bits = 0
     while N >> bits:
         bits += 1
     return bits
 
+def getRandomNumber(N, randfunc=None):
+    """Deprecated.  Use getRandomInteger or getRandomNBitInteger instead."""
+    warnings.warn("Crypto.Util.number.getRandomNumber has confusing semantics"+
+    "and has been deprecated.  Use getRandomInteger or getRandomNBitInteger instead.",
+        GetRandomNumber_DeprecationWarning)
+    return getRandomNBitInteger(N, randfunc)
 
 def getRandomInteger(N, randfunc=None):
-    """Return a random number at most N bits long.
+    """getRandomInteger(N:int, randfunc:callable):long
+    Return a random number with at most N bits.
 
-    If :data:`randfunc` is omitted, then :meth:`Random.get_random_bytes` is used.
+    If randfunc is omitted, then Random.new().read is used.
 
-    .. deprecated:: 3.0
-        This function is for internal use only and may be renamed or removed in
-        the future. Use :func:`Crypto.Random.random.getrandbits` instead.
+    This function is for internal use only and may be renamed or removed in
+    the future.
     """
-
     if randfunc is None:
-        randfunc = Random.get_random_bytes
+        _import_Random()
+        randfunc = Random.new().read
 
     S = randfunc(N>>3)
     odd_bits = N % 8
     if odd_bits != 0:
-        rand_bits = ord(randfunc(1)) >> (8-odd_bits)
-        S = struct.pack('B', rand_bits) + S
+        char = ord(randfunc(1)) >> (8-odd_bits)
+        S = bchr(char) + S
     value = bytes_to_long(S)
     return value
 
 def getRandomRange(a, b, randfunc=None):
-    """Return a random number *n* so that *a <= n < b*.
+    """getRandomRange(a:int, b:int, randfunc:callable):long
+    Return a random number n so that a <= n < b.
 
-    If :data:`randfunc` is omitted, then :meth:`Random.get_random_bytes` is used.
+    If randfunc is omitted, then Random.new().read is used.
 
-    .. deprecated:: 3.0
-        This function is for internal use only and may be renamed or removed in
-        the future. Use :func:`Crypto.Random.random.randrange` instead.
+    This function is for internal use only and may be renamed or removed in
+    the future.
     """
-
     range_ = b - a - 1
     bits = size(range_)
     value = getRandomInteger(bits, randfunc)
@@ -98,37 +126,37 @@ def getRandomRange(a, b, randfunc=None):
     return a + value
 
 def getRandomNBitInteger(N, randfunc=None):
-    """Return a random number with exactly N-bits,
-    i.e. a random number between 2**(N-1) and (2**N)-1.
+    """getRandomInteger(N:int, randfunc:callable):long
+    Return a random number with exactly N-bits, i.e. a random number
+    between 2**(N-1) and (2**N)-1.
 
-    If :data:`randfunc` is omitted, then :meth:`Random.get_random_bytes` is used.
+    If randfunc is omitted, then Random.new().read is used.
 
-    .. deprecated:: 3.0
-        This function is for internal use only and may be renamed or removed in
-        the future.
+    This function is for internal use only and may be renamed or removed in
+    the future.
     """
-
     value = getRandomInteger (N-1, randfunc)
     value |= 2 ** (N-1)                # Ensure high bit is set
     assert size(value) >= N
     return value
 
 def GCD(x,y):
-    """Greatest Common Denominator of :data:`x` and :data:`y`.
+    """GCD(x:long, y:long): long
+    Return the GCD of x and y.
     """
-
     x = abs(x) ; y = abs(y)
     while x > 0:
         x, y = y % x, x
     return y
 
 def inverse(u, v):
-    """The inverse of :data:`u` *mod* :data:`v`."""
-
-    u3, v3 = u, v
+    """inverse(u:long, v:long):long
+    Return the inverse of u mod v.
+    """
+    u3, v3 = int(u), int(v)
     u1, v1 = 1, 0
     while v3 > 0:
-        q = u3 // v3
+        q=divmod(u3, v3)[0]
         u1, v1 = v1, u1 - v1*q
         u3, v3 = v3, u3 - v3*q
     while u1<0:
@@ -139,12 +167,14 @@ def inverse(u, v):
 # find a prime number of the appropriate size.
 
 def getPrime(N, randfunc=None):
-    """Return a random N-bit prime number.
+    """getPrime(N:int, randfunc:callable):long
+    Return a random N-bit prime number.
 
-    If randfunc is omitted, then :meth:`Random.get_random_bytes` is used.
+    If randfunc is omitted, then Random.new().read is used.
     """
     if randfunc is None:
-        randfunc = Random.get_random_bytes
+        _import_Random()
+        randfunc = Random.new().read
 
     number=getRandomNBitInteger(N, randfunc) | 1
     while (not isPrime(number, randfunc=randfunc)):
@@ -155,9 +185,9 @@ def getPrime(N, randfunc=None):
 def _rabinMillerTest(n, rounds, randfunc=None):
     """_rabinMillerTest(n:long, rounds:int, randfunc:callable):int
     Tests if n is prime.
-    Returns 0 when n is definitely composite.
+    Returns 0 when n is definitly composite.
     Returns 1 when n is probably prime.
-    Returns 2 when n is definitely prime.
+    Returns 2 when n is definitly prime.
 
     If randfunc is omitted, then Random.new().read is used.
 
@@ -178,7 +208,7 @@ def _rabinMillerTest(n, rounds, randfunc=None):
 
     tested = []
     # we need to do at most n-2 rounds.
-    for i in iter_range (min (rounds, n-2)):
+    for i in range (min (rounds, n-2)):
         # randomly choose a < n and make sure it hasn't been tested yet
         a = getRandomRange (2, n, randfunc)
         while a in tested:
@@ -189,7 +219,7 @@ def _rabinMillerTest(n, rounds, randfunc=None):
         if z == 1 or z == n_1:
             continue
         composite = 1
-        for r in iter_range(b):
+        for r in range (b):
             z = (z * z) % n
             if z == 1:
                 return 0
@@ -201,34 +231,25 @@ def _rabinMillerTest(n, rounds, randfunc=None):
     return 1
 
 def getStrongPrime(N, e=0, false_positive_prob=1e-6, randfunc=None):
-    r"""
-    Return a random strong *N*-bit prime number.
-    In this context, *p* is a strong prime if *p-1* and *p+1* have at
+    """getStrongPrime(N:int, e:int, false_positive_prob:float, randfunc:callable):long
+    Return a random strong N-bit prime number.
+    In this context p is a strong prime if p-1 and p+1 have at
     least one large prime factor.
+    N should be a multiple of 128 and > 512.
 
-    Args:
-        N (integer): the exact length of the strong prime.
-          It must be a multiple of 128 and > 512.
-        e (integer): if provided, the returned prime (minus 1)
-          will be coprime to *e* and thus suitable for RSA where
-          *e* is the public exponent.
-        false_positive_prob (float):
-          The statistical probability for the result not to be actually a
-          prime. It defaults to 10\ :sup:`-6`.
-          Note that the real probability of a false-positive is far less. This is
-          just the mathematically provable limit.
-        randfunc (callable):
-          A function that takes a parameter *N* and that returns
-          a random byte string of such length.
-          If omitted, :func:`Crypto.Random.get_random_bytes` is used.
-    Return:
-        The new strong prime.
+    If e is provided the returned prime p-1 will be coprime to e
+    and thus suitable for RSA where e is the public exponent.
 
-    .. deprecated:: 3.0
-        This function is for internal use only and may be renamed or removed in
-        the future.
+    The optional false_positive_prob is the statistical probability
+    that true is returned even though it is not (pseudo-prime).
+    It defaults to 1e-6 (less than 1:1000000).
+    Note that the real probability of a false-positive is far less. This is
+    just the mathematically provable limit.
+
+    randfunc should take a single int parameter and return that
+    many random bytes as a string.
+    If randfunc is omitted, then Random.new().read is used.
     """
-
     # This function was implemented following the
     # instructions found in the paper:
     #   "FAST GENERATION OF RANDOM, STRONG RSA PRIMES"
@@ -238,12 +259,9 @@ def getStrongPrime(N, e=0, false_positive_prob=1e-6, randfunc=None):
     # which by the time of writing could be freely downloaded here:
     # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.17.2713&rep=rep1&type=pdf
 
-    if randfunc is None:
-        randfunc = Random.get_random_bytes
-
     # Use the accelerator if available
     if _fastmath is not None:
-        return _fastmath.getStrongPrime(long(N), long(e), false_positive_prob,
+        return _fastmath.getStrongPrime(int(N), int(e), false_positive_prob,
             randfunc)
 
     if (N < 512) or ((N % 128) != 0):
@@ -257,7 +275,8 @@ def getStrongPrime(N, e=0, false_positive_prob=1e-6, randfunc=None):
     x = (N - 512) >> 7;
     # We need to approximate the sqrt(2) in the lower_bound by an integer
     # expression because floating point math overflows with these numbers
-    lower_bound = (14142135623730950489 * (2 ** (511 + 128*x))) //  10000000000000000000
+    lower_bound = divmod(14142135623730950489 * (2 ** (511 + 128*x)),
+                         10000000000000000000)[0]
     upper_bound = (1 << (512 + 128*x)) - 1
     # Randomly choose X in calculated range
     X = getRandomRange (lower_bound, upper_bound, randfunc)
@@ -272,7 +291,7 @@ def getStrongPrime(N, e=0, false_positive_prob=1e-6, randfunc=None):
         # sieve the field
         for prime in sieve_base:
             offset = y % prime
-            for j in iter_range((prime - offset) % prime, len (field), prime):
+            for j in range ((prime - offset) % prime, len (field), prime):
                 field[j] = 1
 
         # look for suitable p[i] starting at y
@@ -314,10 +333,10 @@ def getStrongPrime(N, e=0, false_positive_prob=1e-6, randfunc=None):
         # the public exponent e
         if e and is_possible_prime:
             if e & 1:
-                if GCD(e, X-1) != 1:
+                if GCD (e, X-1) != 1:
                     is_possible_prime = 0
             else:
-                if GCD(e, (X-1) // 2) != 1:
+                if GCD (e, divmod((X-1),2)[0]) != 1:
                     is_possible_prime = 0
 
         # do some Rabin-Miller-Tests
@@ -334,28 +353,19 @@ def getStrongPrime(N, e=0, false_positive_prob=1e-6, randfunc=None):
     return X
 
 def isPrime(N, false_positive_prob=1e-6, randfunc=None):
-    r"""Test if a number *N* is a prime.
+    """isPrime(N:long, false_positive_prob:float, randfunc:callable):bool
+    Return true if N is prime.
 
-    Args:
-        false_positive_prob (float):
-          The statistical probability for the result not to be actually a
-          prime. It defaults to 10\ :sup:`-6`.
-          Note that the real probability of a false-positive is far less.
-          This is just the mathematically provable limit.
-        randfunc (callable):
-          A function that takes a parameter *N* and that returns
-          a random byte string of such length.
-          If omitted, :func:`Crypto.Random.get_random_bytes` is used.
+    The optional false_positive_prob is the statistical probability
+    that true is returned even though it is not (pseudo-prime).
+    It defaults to 1e-6 (less than 1:1000000).
+    Note that the real probability of a false-positive is far less. This is
+    just the mathematically provable limit.
 
-    Return:
-        `True` is the input is indeed prime.
+    If randfunc is omitted, then Random.new().read is used.
     """
-
-    if randfunc is None:
-        randfunc = Random.get_random_bytes
-
     if _fastmath is not None:
-        return _fastmath.isPrime(long(N), false_positive_prob, randfunc)
+        return _fastmath.isPrime(int(N), false_positive_prob, randfunc)
 
     if N < 3 or N & 1 == 0:
         return N == 2
@@ -375,108 +385,51 @@ def isPrime(N, false_positive_prob=1e-6, randfunc=None):
 import struct
 
 def long_to_bytes(n, blocksize=0):
-    """Convert a positive integer to a byte string using big endian encoding.
+    """long_to_bytes(n:long, blocksize:int) : string
+    Convert a long integer to a byte string.
 
-    If :data:`blocksize` is absent or zero, the byte string will
-    be of minimal length.
-
-    Otherwise, the length of the byte string is guaranteed to be a multiple
-    of :data:`blocksize`. If necessary, zeroes (``\\x00``) are added at the left.
-
-    .. note::
-        In Python 3, if you are sure that :data:`n` can fit into
-        :data:`blocksize` bytes, you can simply use the native method instead::
-
-            >>> n.to_bytes(blocksize, 'big')
-
-        For instance::
-
-            >>> n = 80
-            >>> n.to_bytes(2, 'big')
-            b'\\x00P'
-
-        However, and unlike this ``long_to_bytes()`` function,
-        an ``OverflowError`` exception is raised if :data:`n` does not fit.
+    If optional blocksize is given and greater than zero, pad the front of the
+    byte string with binary zeros so that the length is a multiple of
+    blocksize.
     """
-
-    if n < 0 or blocksize < 0:
-        raise ValueError("Values must be non-negative")
-
-    result = []
+    # after much testing, this algorithm was deemed to be the fastest
+    s = b('')
+    n = int(n)
     pack = struct.pack
-
-    # Fill the first block independently from the value of n
-    bsr = blocksize
-    while bsr >= 8:
-        result.insert(0, pack('>Q', n & 0xFFFFFFFFFFFFFFFF))
-        n = n >> 64
-        bsr -= 8
-
-    while bsr >= 4:
-        result.insert(0, pack('>I', n & 0xFFFFFFFF))
+    while n > 0:
+        s = pack('>I', n & 0xffffffff) + s
         n = n >> 32
-        bsr -= 4
-
-    while bsr > 0:
-        result.insert(0, pack('>B', n & 0xFF))
-        n = n >> 8
-        bsr -= 1
-
-    if n == 0:
-        if len(result) == 0:
-            bresult = b'\x00'
-        else:
-            bresult = b''.join(result)
+    # strip off leading zeros
+    for i in range(len(s)):
+        if s[i] != b('\000')[0]:
+            break
     else:
-        # The encoded number exceeds the block size
-        while n > 0:
-            result.insert(0, pack('>Q', n & 0xFFFFFFFFFFFFFFFF))
-            n = n >> 64
-        result[0] = result[0].lstrip(b'\x00')
-        bresult = b''.join(result)
-        # bresult has minimum length here
-        if blocksize > 0:
-            target_len = ((len(bresult) - 1) // blocksize + 1) * blocksize
-            bresult = b'\x00' * (target_len - len(bresult)) + bresult
-
-    return bresult
-
+        # only happens when n == 0
+        s = b('\000')
+        i = 0
+    s = s[i:]
+    # add back some pad bytes.  this could be done more efficiently w.r.t. the
+    # de-padding being done above, but sigh...
+    if blocksize > 0 and len(s) % blocksize:
+        s = (blocksize - len(s) % blocksize) * b('\000') + s
+    return s
 
 def bytes_to_long(s):
-    """Convert a byte string to a long integer (big endian).
+    """bytes_to_long(string) : long
+    Convert a byte string to a long integer.
 
-    In Python 3.2+, use the native method instead::
-
-        >>> int.from_bytes(s, 'big')
-
-    For instance::
-
-        >>> int.from_bytes(b'\x00P', 'big')
-        80
-
-    This is (essentially) the inverse of :func:`long_to_bytes`.
+    This is (essentially) the inverse of long_to_bytes().
     """
     acc = 0
-
     unpack = struct.unpack
-
-    # Up to Python 2.7.4, struct.unpack can't work with bytearrays nor
-    # memoryviews
-    if sys.version_info[0:3] < (2, 7, 4):
-        if isinstance(s, bytearray):
-            s = bytes(s)
-        elif isinstance(s, memoryview):
-            s = s.tobytes()
-
     length = len(s)
     if length % 4:
         extra = (4 - length % 4)
-        s = b'\x00' * extra + s
+        s = b('\000') * extra + s
         length = length + extra
     for i in range(0, length, 4):
         acc = (acc << 32) + unpack('>I', s[i:i+4])[0]
     return acc
-
 
 # For backwards compatibility...
 import warnings
@@ -486,6 +439,14 @@ def long2str(n, blocksize=0):
 def str2long(s):
     warnings.warn("str2long() has been replaced by bytes_to_long()")
     return bytes_to_long(s)
+
+def _import_Random():
+    # This is called in a function instead of at the module level in order to
+    # avoid problems with recursive imports
+    global Random, StrongRandom
+    from Crypto import Random
+    from Crypto.Random.random import StrongRandom
+
 
 
 # The first 10000 primes used for checking primality.

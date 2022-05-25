@@ -2,12 +2,18 @@
 # 2.0, and the BSD License. See the LICENSE file in the root of this repository
 # for complete details.
 
-from __future__ import absolute_import, division, print_function
 
-from enum import Enum
+import typing
+
+from cryptography import utils
+
+if typing.TYPE_CHECKING:
+    from cryptography.hazmat.bindings.openssl.binding import (
+        _OpenSSLErrorWithText,
+    )
 
 
-class _Reasons(Enum):
+class _Reasons(utils.Enum):
     BACKEND_MISSING_INTERFACE = 0
     UNSUPPORTED_HASH = 1
     UNSUPPORTED_CIPHER = 2
@@ -23,7 +29,9 @@ class _Reasons(Enum):
 
 
 class UnsupportedAlgorithm(Exception):
-    def __init__(self, message, reason=None):
+    def __init__(
+        self, message: str, reason: typing.Optional[_Reasons] = None
+    ) -> None:
         super(UnsupportedAlgorithm, self).__init__(message)
         self._reason = reason
 
@@ -49,7 +57,9 @@ class InvalidSignature(Exception):
 
 
 class InternalError(Exception):
-    def __init__(self, msg, err_code):
+    def __init__(
+        self, msg: str, err_code: typing.List["_OpenSSLErrorWithText"]
+    ) -> None:
         super(InternalError, self).__init__(msg)
         self.err_code = err_code
 

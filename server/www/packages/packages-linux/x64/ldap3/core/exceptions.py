@@ -397,6 +397,9 @@ class LDAPInvalidTlsSpecificationError(LDAPExceptionError):
 class LDAPInvalidHashAlgorithmError(LDAPExceptionError, ValueError):
     pass
 
+class LDAPSignatureVerificationFailedError(LDAPExceptionError):
+    pass
+
 
 # connection exceptions
 class LDAPBindError(LDAPExceptionError):
@@ -598,12 +601,8 @@ def communication_exception_factory(exc_to_raise, exc):
         raise LDAPExceptionError('unable to generate exception type ' + str(exc_to_raise))
 
 
-def start_tls_exception_factory(exc_to_raise, exc):
+def start_tls_exception_factory(exc):
     """
     Generates a new exception class of the requested type merged with the exception raised by the interpreter
     """
-
-    if exc_to_raise.__name__ == 'LDAPStartTLSError':
-        return type(exc_to_raise.__name__, (exc_to_raise, type(exc)), dict())
-    else:
-        raise LDAPExceptionError('unable to generate exception type ' + str(exc_to_raise))
+    return type(LDAPStartTLSError.__name__, (LDAPStartTLSError, type(exc)), dict())

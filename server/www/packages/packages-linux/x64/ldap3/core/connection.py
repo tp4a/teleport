@@ -22,17 +22,17 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with ldap3 in the COPYING and COPYING.LESSER files.
 # If not, see <http://www.gnu.org/licenses/>.
-from copy import deepcopy
+from copy import deepcopy, copy
 from os import linesep
-from threading import RLock, Lock
+from threading import RLock
 from functools import reduce
 import json
 
 from .. import ANONYMOUS, SIMPLE, SASL, MODIFY_ADD, MODIFY_DELETE, MODIFY_REPLACE, get_config_parameter, DEREF_ALWAYS, \
     SUBTREE, ASYNC, SYNC, NO_ATTRIBUTES, ALL_ATTRIBUTES, ALL_OPERATIONAL_ATTRIBUTES, MODIFY_INCREMENT, LDIF, ASYNC_STREAM, \
-    RESTARTABLE, ROUND_ROBIN, REUSABLE, AUTO_BIND_DEFAULT, AUTO_BIND_NONE, AUTO_BIND_TLS_BEFORE_BIND,\
+    RESTARTABLE, ROUND_ROBIN, REUSABLE, AUTO_BIND_DEFAULT, AUTO_BIND_NONE, AUTO_BIND_TLS_BEFORE_BIND, SAFE_SYNC, SAFE_RESTARTABLE, \
     AUTO_BIND_TLS_AFTER_BIND, AUTO_BIND_NO_TLS, STRING_TYPES, SEQUENCE_TYPES, MOCK_SYNC, MOCK_ASYNC, NTLM, EXTERNAL,\
-    DIGEST_MD5, GSSAPI, PLAIN
+    DIGEST_MD5, GSSAPI, PLAIN, DSA, SCHEMA, ALL
 
 from .results import RESULT_SUCCESS, RESULT_COMPARE_TRUE, RESULT_COMPARE_FALSE
 from ..extend import ExtendedOperationsRoot
@@ -52,6 +52,8 @@ from ..protocol.sasl.digestMd5 import sasl_digest_md5
 from ..protocol.sasl.external import sasl_external
 from ..protocol.sasl.plain import sasl_plain
 from ..strategy.sync import SyncStrategy
+from ..strategy.safeSync import SafeSyncStrategy
+from ..strategy.safeRestartable import SafeRestartableStrategy
 from ..strategy.mockAsync import MockAsyncStrategy
 from ..strategy.asynchronous import AsyncStrategy
 from ..strategy.reusable import ReusableStrategy
@@ -65,8 +67,7 @@ from .usage import ConnectionUsage
 from .tls import Tls
 from .exceptions import LDAPUnknownStrategyError, LDAPBindError, LDAPUnknownAuthenticationMethodError, \
     LDAPSASLMechanismNotSupportedError, LDAPObjectClassError, LDAPConnectionIsReadOnlyError, LDAPChangeError, LDAPExceptionError, \
-    LDAPObjectError, LDAPSocketReceiveError, LDAPAttributeError, LDAPInvalidValueError, LDAPConfigurationError, \
-    LDAPInvalidPortError
+    LDAPObjectError, LDAPSocketReceiveError, LDAPAttributeError, LDAPInvalidValueError, LDAPInvalidPortError, LDAPStartTLSError
 
 from ..utils.conv import escape_bytes, prepare_for_stream, check_json_dict, format_json, to_unicode
 from ..utils.log import log, log_enabled, ERROR, BASIC, PROTOCOL, EXTENDED, get_library_log_hide_sensitive_data
@@ -80,6 +81,8 @@ SASL_AVAILABLE_MECHANISMS = [EXTERNAL,
                              PLAIN]
 
 CLIENT_STRATEGIES = [SYNC,
+                     SAFE_SYNC,
+                     SAFE_RESTARTABLE,
                      ASYNC,
                      LDIF,
                      RESTARTABLE,
@@ -116,7 +119,6 @@ def _format_socket_endpoints(sock):
     return '<no socket>'
 
 
-# noinspection PyProtectedMember
 class Connection(object):
     """Main ldap connection class.
 
@@ -141,9 +143,9 @@ class Connection(object):
     :param version: LDAP version, default to 3
     :type version: int
     :param authentication: type of authentication
-    :type authentication: int, can be one of AUTH_ANONYMOUS, AUTH_SIMPLE or AUTH_SASL, as specified in ldap3
+    :type authentication: int, can be one of ANONYMOUS, SIMPLE or SASL, as specified in ldap3
     :param client_strategy: communication strategy used in the Connection
-    :type client_strategy: can be one of STRATEGY_SYNC, STRATEGY_ASYNC_THREADED, STRATEGY_LDIF_PRODUCER, STRATEGY_SYNC_RESTARTABLE, STRATEGY_REUSABLE_THREADED as specified in ldap3
+    :type client_strategy: can be one of SYNC, ASYNC, LDIF, RESTARTABLE, REUSABLE as specified in ldap3
     :param auto_referrals: specify if the connection object must automatically follow referrals
     :type auto_referrals: bool
     :param sasl_mechanism: mechanism for SASL authentication, can be one of 'EXTERNAL', 'DIGEST-MD5', 'GSSAPI', 'PLAIN'
@@ -181,7 +183,6 @@ class Connection(object):
     :param source_port_list: a list of source ports to choose from when opening the connection to the server. Cannot be specified with source_port
     :type source_port_list: list
     """
-
     def __init__(self,
                  server,
                  user=None,
@@ -285,6 +286,9 @@ class Connection(object):
             self.use_referral_cache = use_referral_cache
             self.auto_escape = auto_escape
             self.auto_encode = auto_encode
+            self._digest_md5_kic = None
+            self._digest_md5_kis = None
+            self._digest_md5_sec_num = 0
 
             port_err = check_port_and_port_list(source_port, source_port_list)
             if port_err:
@@ -323,6 +327,10 @@ class Connection(object):
 
             if self.strategy_type == SYNC:
                 self.strategy = SyncStrategy(self)
+            elif self.strategy_type == SAFE_SYNC:
+                self.strategy = SafeSyncStrategy(self)
+            elif self.strategy_type == SAFE_RESTARTABLE:
+                self.strategy = SafeRestartableStrategy(self)
             elif self.strategy_type == ASYNC:
                 self.strategy = AsyncStrategy(self)
             elif self.strategy_type == LDIF:
@@ -352,7 +360,7 @@ class Connection(object):
             self.post_send_search = self.strategy.post_send_search
 
             if not self.strategy.no_real_dsa:
-                self.do_auto_bind()
+                self._do_auto_bind()
             # else:  # for strategies with a fake server set get_info to NONE if server hasn't a schema
             #     if self.server and not self.server.schema:
             #         self.server.get_info = NONE
@@ -362,7 +370,16 @@ class Connection(object):
                 else:
                     log(BASIC, 'instantiated Connection: <%r>', self)
 
-    def do_auto_bind(self):
+    def _prepare_return_value(self, status, response=False):
+        if self.strategy.thread_safe:
+            temp_response = self.response
+            self.response = None
+            temp_request = self.request
+            self.request = None
+            return status, deepcopy(self.result), deepcopy(temp_response) if response else None, copy(temp_request)
+        return status
+
+    def _do_auto_bind(self):
         if self.auto_bind and self.auto_bind not in [AUTO_BIND_NONE, AUTO_BIND_DEFAULT]:
             if log_enabled(BASIC):
                 log(BASIC, 'performing automatic bind for <%s>', self)
@@ -371,17 +388,28 @@ class Connection(object):
             if self.auto_bind == AUTO_BIND_NO_TLS:
                 self.bind(read_server_info=True)
             elif self.auto_bind == AUTO_BIND_TLS_BEFORE_BIND:
-                self.start_tls(read_server_info=False)
-                self.bind(read_server_info=True)
+                if self.start_tls(read_server_info=False):
+                    self.bind(read_server_info=True)
+                else:
+                    error = 'automatic start_tls befored bind not successful' + (' - ' + self.last_error if self.last_error else '')
+                    if log_enabled(ERROR):
+                        log(ERROR, '%s for <%s>', error, self)
+                    self.unbind()  # unbind anyway to close connection
+                    raise LDAPStartTLSError(error)
             elif self.auto_bind == AUTO_BIND_TLS_AFTER_BIND:
                 self.bind(read_server_info=False)
-                self.start_tls(read_server_info=True)
+                if not self.start_tls(read_server_info=True):
+                    error = 'automatic start_tls after bind not successful' + (' - ' + self.last_error if self.last_error else '')
+                    if log_enabled(ERROR):
+                        log(ERROR, '%s for <%s>', error, self)
+                    self.unbind()
+                    raise LDAPStartTLSError(error)
             if not self.bound:
-                self.last_error = 'automatic bind not successful' + (' - ' + self.last_error if self.last_error else '')
+                error = 'automatic bind not successful' + (' - ' + self.last_error if self.last_error else '')
                 if log_enabled(ERROR):
-                    log(ERROR, '%s for <%s>', self.last_error, self)
+                    log(ERROR, '%s for <%s>', error, self)
                 self.unbind()
-                raise LDAPBindError(self.last_error)
+                raise LDAPBindError(error)
 
     def __str__(self):
         s = [
@@ -509,11 +537,11 @@ class Connection(object):
                 if self.closed:
                     self.open()
                 if not self.bound:
-                    self.bind()
+                    if not self.bind():
+                        raise LDAPBindError('unable to bind')
 
             return self
 
-    # noinspection PyUnusedLocal
     def __exit__(self, exc_type, exc_val, exc_tb):
         with self.connection_lock:
             context_bound, context_closed = self._context_state.pop()
@@ -646,7 +674,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done BIND operation, result <%s>', self.bound)
 
-            return self.bound
+            return self._prepare_return_value(self.bound, self.result)
 
     def rebind(self,
                user=None,
@@ -689,10 +717,13 @@ class Connection(object):
                 try:
                     return self.bind(read_server_info, controls)
                 except LDAPSocketReceiveError:
-                    raise LDAPBindError('Unable to rebind as a different user, furthermore the server abruptly closed the connection')
+                    self.last_error = 'Unable to rebind as a different user, furthermore the server abruptly closed the connection'
+                    if log_enabled(ERROR):
+                        log(ERROR, '%s for <%s>', self.last_error, self)
+                    raise LDAPBindError(self.last_error)
             else:
                 self.strategy.pool.rebind_pool()
-                return True
+                return self._prepare_return_value(True, self.result)
 
     def unbind(self,
                controls=None):
@@ -724,7 +755,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done UNBIND operation, result <%s>', True)
 
-            return True
+            return self._prepare_return_value(True)
 
     def search(self,
                search_base,
@@ -799,7 +830,10 @@ class Connection(object):
                     else:
                         attribute_name_to_check = attribute_name
                     if self.server.schema and attribute_name_to_check.lower() not in conf_attributes_excluded_from_check and attribute_name_to_check not in self.server.schema.attribute_types:
-                        raise LDAPAttributeError('invalid attribute type ' + attribute_name_to_check)
+                        self.last_error = 'invalid attribute type ' + attribute_name_to_check
+                        if log_enabled(ERROR):
+                            log(ERROR, '%s for <%s>', self.last_error, self)
+                        raise LDAPAttributeError(self.last_error)
 
             request = search_operation(search_base,
                                        search_filter,
@@ -838,7 +872,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done SEARCH operation, result <%s>', return_value)
 
-            return return_value
+            return self._prepare_return_value(return_value, response=True)
 
     def compare(self,
                 dn,
@@ -865,10 +899,16 @@ class Connection(object):
                 attribute_name_to_check = attribute
 
             if self.server.schema.attribute_types and attribute_name_to_check.lower() not in conf_attributes_excluded_from_check and attribute_name_to_check not in self.server.schema.attribute_types:
-                raise LDAPAttributeError('invalid attribute type ' + attribute_name_to_check)
+                self.last_error = 'invalid attribute type ' + attribute_name_to_check
+                if log_enabled(ERROR):
+                    log(ERROR, '%s for <%s>', self.last_error, self)
+                raise LDAPAttributeError(self.last_error)
 
         if isinstance(value, SEQUENCE_TYPES):  # value can't be a sequence
-            raise LDAPInvalidValueError('value cannot be a sequence')
+            self.last_error = 'value cannot be a sequence'
+            if log_enabled(ERROR):
+                log(ERROR, '%s for <%s>', self.last_error, self)
+            raise LDAPInvalidValueError(self.last_error)
 
         with self.connection_lock:
             self._fire_deferred()
@@ -892,7 +932,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done COMPARE operation, result <%s>', return_value)
 
-            return return_value
+            return self._prepare_return_value(return_value)
 
     def add(self,
             dn,
@@ -950,7 +990,10 @@ class Connection(object):
             if self.server and self.server.schema and self.check_names:
                 for object_class_name in _attributes[object_class_attr_name]:
                     if object_class_name.lower() not in conf_classes_excluded_from_check and object_class_name not in self.server.schema.object_classes:
-                        raise LDAPObjectClassError('invalid object class ' + str(object_class_name))
+                        self.last_error = 'invalid object class ' + str(object_class_name)
+                        if log_enabled(ERROR):
+                            log(ERROR, '%s for <%s>', self.last_error, self)
+                        raise LDAPObjectClassError(self.last_error)
 
                 for attribute_name in _attributes:
                     if ';' in attribute_name:  # remove tags for checking
@@ -959,7 +1002,10 @@ class Connection(object):
                         attribute_name_to_check = attribute_name
 
                     if attribute_name_to_check.lower() not in conf_attributes_excluded_from_check and attribute_name_to_check not in self.server.schema.attribute_types:
-                        raise LDAPAttributeError('invalid attribute type ' + attribute_name_to_check)
+                        self.last_error = 'invalid attribute type ' + attribute_name_to_check
+                        if log_enabled(ERROR):
+                            log(ERROR, '%s for <%s>', self.last_error, self)
+                        raise LDAPAttributeError(self.last_error)
 
             request = add_operation(dn, _attributes, self.auto_encode, self.server.schema if self.server else None, validator=self.server.custom_validator if self.server else None, check_names=self.check_names)
             if log_enabled(PROTOCOL):
@@ -981,7 +1027,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done ADD operation, result <%s>', return_value)
 
-            return return_value
+            return self._prepare_return_value(return_value)
 
     def delete(self,
                dn,
@@ -1025,7 +1071,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done DELETE operation, result <%s>', return_value)
 
-            return return_value
+            return self._prepare_return_value(return_value)
 
     def modify(self,
                dn,
@@ -1077,7 +1123,10 @@ class Connection(object):
                         attribute_name_to_check = attribute_name
 
                     if self.server.schema.attribute_types and attribute_name_to_check.lower() not in conf_attributes_excluded_from_check and attribute_name_to_check not in self.server.schema.attribute_types:
-                        raise LDAPAttributeError('invalid attribute type ' + attribute_name_to_check)
+                        self.last_error = 'invalid attribute type ' + attribute_name_to_check
+                        if log_enabled(ERROR):
+                            log(ERROR, '%s for <%s>', self.last_error, self)
+                        raise LDAPAttributeError(self.last_error)
                 change = changes[attribute_name]
                 if isinstance(change, SEQUENCE_TYPES) and change[0] in [MODIFY_ADD, MODIFY_DELETE, MODIFY_REPLACE, MODIFY_INCREMENT, 0, 1, 2, 3]:
                     if len(change) != 2:
@@ -1115,7 +1164,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done MODIFY operation, result <%s>', return_value)
 
-            return return_value
+            return self._prepare_return_value(return_value)
 
     def modify_dn(self,
                   dn,
@@ -1172,7 +1221,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done MODIFY DN operation, result <%s>', return_value)
 
-            return return_value
+            return self._prepare_return_value(return_value)
 
     def abandon(self,
                 message_id,
@@ -1205,7 +1254,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done ABANDON operation, result <%s>', return_value)
 
-            return return_value
+            return self._prepare_return_value(return_value)
 
     def extended(self,
                  request_name,
@@ -1239,15 +1288,16 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done EXTENDED operation, result <%s>', return_value)
 
-            return return_value
+            return self._prepare_return_value(return_value, response=True)
 
     def start_tls(self, read_server_info=True):  # as per RFC4511. Removal of TLS is defined as MAY in RFC4511 so the client can't implement a generic stop_tls method0
-
         if log_enabled(BASIC):
             log(BASIC, 'start START TLS operation via <%s>', self)
 
         with self.connection_lock:
             return_value = False
+            self.result = None
+
             if not self.server.tls:
                 self.server.tls = Tls()
 
@@ -1271,7 +1321,7 @@ class Connection(object):
             if log_enabled(BASIC):
                 log(BASIC, 'done START TLS operation, result <%s>', return_value)
 
-            return return_value
+            return self._prepare_return_value(return_value)
 
     def do_sasl_bind(self,
                      controls):
@@ -1307,7 +1357,6 @@ class Connection(object):
             log(BASIC, 'start NTLM BIND operation via <%s>', self)
         self.last_error = None
         with self.connection_lock:
-            result = None
             if not self.sasl_in_progress:
                 self.sasl_in_progress = True  # ntlm is same of sasl authentication
                 try:
@@ -1474,7 +1523,8 @@ class Connection(object):
                 target.writelines(self.response_to_json(raw=raw, indent=indent, sort=sort))
                 target.close()
 
-    def _fire_deferred(self, read_info=True):
+    def _fire_deferred(self, read_info=None):
+        # if read_info is None reads the schema and server info if not present, if False doesn't read server info, if True reads always server info
         with self.connection_lock:
             if self.lazy and not self._executing_deferred:
                 self._executing_deferred = True
@@ -1485,10 +1535,15 @@ class Connection(object):
                     if self._deferred_open:
                         self.open(read_server_info=False)
                     if self._deferred_start_tls:
-                        self.start_tls(read_server_info=False)
+                        if not self.start_tls(read_server_info=False):
+                            error = 'deferred start_tls not successful' + (' - ' + self.last_error if self.last_error else '')
+                            if log_enabled(ERROR):
+                                log(ERROR, '%s for <%s>', error, self)
+                            self.unbind()
+                            raise LDAPStartTLSError(error)
                     if self._deferred_bind:
                         self.bind(read_server_info=False, controls=self._bind_controls)
-                    if read_info:
+                    if (read_info is None and (not self.server.info and self.server.get_info in [DSA, ALL]) or (not self.server.schema and self.server.get_info in [SCHEMA, ALL])) or read_info:
                         self.refresh_server_info()
                 except LDAPExceptionError as e:
                     if log_enabled(ERROR):
@@ -1501,10 +1556,10 @@ class Connection(object):
     def entries(self):
         if self.response:
             if not self._entries:
-                self._entries = self._get_entries(self.response)
+                self._entries = self._get_entries(self.response, self.request)
         return self._entries
 
-    def _get_entries(self, search_response):
+    def _get_entries(self, search_response, search_request):
         with self.connection_lock:
             from .. import ObjectDef, Reader
 
@@ -1529,7 +1584,7 @@ class Connection(object):
                 object_def += list(attr_set)  # converts the set in a list to be added to the object definition
                 object_defs.append((attr_set,
                                     object_def,
-                                    Reader(self, object_def, self.request['base'], self.request['filter'], attributes=attr_set) if self.strategy.sync else Reader(self, object_def, '', '', attributes=attr_set))
+                                    Reader(self, object_def, search_request['base'], search_request['filter'], attributes=attr_set) if self.strategy.sync else Reader(self, object_def, '', '', attributes=attr_set))
                                    )  # objects_defs contains a tuple with the set, the ObjectDef and a cursor
 
             entries = []
@@ -1542,8 +1597,9 @@ class Connection(object):
                             entries.append(entry)
                             break
                     else:
+                        self.last_error = 'attribute set not found for ' + str(resp_attr_set)
                         if log_enabled(ERROR):
-                            log(ERROR, 'attribute set not found for %s in <%s>', resp_attr_set, self)
-                        raise LDAPObjectError('attribute set not found for ' + str(resp_attr_set))
+                            log(ERROR, self.last_error, self)
+                        raise LDAPObjectError(self.last_error)
 
         return entries

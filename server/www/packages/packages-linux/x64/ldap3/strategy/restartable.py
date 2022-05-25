@@ -28,7 +28,7 @@ import socket
 
 from .. import get_config_parameter
 from .sync import SyncStrategy
-from ..core.exceptions import LDAPSocketOpenError, LDAPOperationResult, LDAPMaximumRetriesError
+from ..core.exceptions import LDAPSocketOpenError, LDAPOperationResult, LDAPMaximumRetriesError, LDAPStartTLSError
 from ..utils.log import log, log_enabled, ERROR, BASIC
 
 
@@ -149,13 +149,18 @@ class RestartableStrategy(SyncStrategy):
                 try:  # reopening connection
                     self.connection.open(reset_usage=False, read_server_info=False)
                     if self._restart_tls:  # restart tls if start_tls was previously used
-                        self.connection.start_tls(read_server_info=False)
+                        if not self.connection.start_tls(read_server_info=False):
+                            error = 'restart tls in restartable not successful' + (' - ' + self.connection.last_error if self.connection.last_error else '')
+                            if log_enabled(ERROR):
+                                log(ERROR, '%s for <%s>', error, self)
+                            self.connection.unbind()
+                            raise LDAPStartTLSError(error)
                     if message_type != 'bindRequest':
                         self.connection.bind(read_server_info=False, controls=self._last_bind_controls)  # binds with previously used controls unless the request is already a bindRequest
                     if not self.connection.server.schema and not self.connection.server.info:
                         self.connection.refresh_server_info()
                     else:
-                        self.connection._fire_deferred(read_info=False)  # in case of lazy connection, not open by the refresh_server_info
+                        self.connection._fire_deferred(read_info=False)   # in case of lazy connection, not open by the refresh_server_info
                 except Exception as e:
                     if log_enabled(ERROR):
                         log(ERROR, '<%s> while restarting <%s>', e, self.connection)

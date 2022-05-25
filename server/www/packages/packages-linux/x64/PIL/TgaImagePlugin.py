@@ -20,7 +20,9 @@
 import warnings
 
 from . import Image, ImageFile, ImagePalette
-from ._binary import i8, i16le as i16, o8, o16le as o16
+from ._binary import i16le as i16
+from ._binary import o8
+from ._binary import o16le as o16
 
 #
 # --------------------------------------------------------------------
@@ -53,16 +55,16 @@ class TgaImageFile(ImageFile.ImageFile):
         # process header
         s = self.fp.read(18)
 
-        id_len = i8(s[0])
+        id_len = s[0]
 
-        colormaptype = i8(s[1])
-        imagetype = i8(s[2])
+        colormaptype = s[1]
+        imagetype = s[2]
 
-        depth = i8(s[16])
+        depth = s[16]
 
-        flags = i8(s[17])
+        flags = s[17]
 
-        self._size = i16(s[12:]), i16(s[14:])
+        self._size = i16(s, 12), i16(s, 14)
 
         # validate header fields
         if (
@@ -91,9 +93,10 @@ class TgaImageFile(ImageFile.ImageFile):
 
         # orientation
         orientation = flags & 0x30
-        if orientation == 0x20:
+        self._flip_horizontally = orientation in [0x10, 0x30]
+        if orientation in [0x20, 0x30]:
             orientation = 1
-        elif not orientation:
+        elif orientation in [0, 0x10]:
             orientation = -1
         else:
             raise SyntaxError("unknown TGA orientation")
@@ -108,10 +111,10 @@ class TgaImageFile(ImageFile.ImageFile):
 
         if colormaptype:
             # read palette
-            start, size, mapdepth = i16(s[3:]), i16(s[5:]), i16(s[7:])
+            start, size, mapdepth = i16(s, 3), i16(s, 5), s[7]
             if mapdepth == 16:
                 self.palette = ImagePalette.raw(
-                    "BGR;16", b"\0" * 2 * start + self.fp.read(2 * size)
+                    "BGR;15", b"\0" * 2 * start + self.fp.read(2 * size)
                 )
             elif mapdepth == 24:
                 self.palette = ImagePalette.raw(
@@ -147,6 +150,10 @@ class TgaImageFile(ImageFile.ImageFile):
         except KeyError:
             pass  # cannot decode
 
+    def load_end(self):
+        if self._flip_horizontally:
+            self.im = self.im.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+
 
 #
 # --------------------------------------------------------------------
@@ -167,8 +174,8 @@ def _save(im, fp, filename):
 
     try:
         rawmode, bits, colormaptype, imagetype = SAVE[im.mode]
-    except KeyError:
-        raise OSError("cannot write mode %s as TGA" % im.mode)
+    except KeyError as e:
+        raise OSError(f"cannot write mode {im.mode} as TGA") from e
 
     if "rle" in im.encoderinfo:
         rle = im.encoderinfo["rle"]

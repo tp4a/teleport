@@ -349,8 +349,11 @@ class Cursor(object):
             if not self.connection.strategy.sync:
                 response, result, request = self.connection.get_response(result, get_request=True)
             else:
-                response = self.connection.response
-                result = self.connection.result
+                if self.connection.strategy.thread_safe:
+                    _, result, response, _ = result
+                else:
+                    response = self.connection.response
+                    result = self.connection.result
                 request = self.connection.request
 
         self._store_operation_in_history(request, result, response)
@@ -820,9 +823,12 @@ class Writer(Cursor):
                 if not self.connection.strategy.sync:
                     response, result, request = self.connection.get_response(result, get_request=True)
                 else:
-                    response = self.connection.response
-                    result = self.connection.result
-                    request = self.connection.request
+                    if self.connection.strategy.thread_safe:
+                        _, result, response, request = result
+                    else:
+                        response = self.connection.response
+                        result = self.connection.result
+                        request = self.connection.request
 
                 if result['result'] in [RESULT_SUCCESS]:
                     break

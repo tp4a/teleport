@@ -31,6 +31,7 @@ except ImportError:
     from ..utils.ordDict import OrderedDict  # for Python 2.6
 
 from os import linesep
+from copy import deepcopy
 
 from .. import STRING_TYPES, SEQUENCE_TYPES, MODIFY_ADD, MODIFY_REPLACE
 from .attribute import WritableAttribute
@@ -304,7 +305,7 @@ class EntryBase(object):
 
     @property
     def entry_attributes_as_dict(self):
-        return dict((attribute_key, attribute_value.values) for (attribute_key, attribute_value) in self._state.attributes.items())
+        return dict((attribute_key, deepcopy(attribute_value.values)) for (attribute_key, attribute_value) in self._state.attributes.items())
 
     @property
     def entry_read_time(self):
@@ -535,9 +536,12 @@ class WritableEntry(EntryBase):
             if not self.entry_cursor.connection.strategy.sync:
                 response, result, request = self.entry_cursor.connection.get_response(result, get_request=True)
             else:
-                response = self.entry_cursor.connection.response
-                result = self.entry_cursor.connection.result
-                request = self.entry_cursor.connection.request
+                if self.entry_cursor.connection.strategy.thread_safe:
+                    _, result, response, request = result
+                else:
+                    response = self.entry_cursor.connection.response
+                    result = self.entry_cursor.connection.result
+                    request = self.entry_cursor.connection.request
             self.entry_cursor._store_operation_in_history(request, result, response)
             if result['result'] == RESULT_SUCCESS:
                 dn = self.entry_dn
@@ -557,9 +561,12 @@ class WritableEntry(EntryBase):
             if not self.entry_cursor.connection.strategy.sync:
                 response, result, request = self.entry_cursor.connection.get_response(result, get_request=True)
             else:
-                response = self.entry_cursor.connection.response
-                result = self.entry_cursor.connection.result
-                request = self.entry_cursor.connection.request
+                if self.entry_cursor.connection.strategy.thread_safe:
+                    _, result, response, request = result
+                else:
+                    response = self.entry_cursor.connection.response
+                    result = self.entry_cursor.connection.result
+                    request = self.entry_cursor.connection.request
             self.entry_cursor._store_operation_in_history(request, result, response)
             if result['result'] == RESULT_SUCCESS:
                 self._state.dn = safe_dn('+'.join(safe_rdn(self.entry_dn)) + ',' + self._state._to)
@@ -577,9 +584,12 @@ class WritableEntry(EntryBase):
             if not self.entry_cursor.connection.strategy.sync:
                 response, result, request = self.entry_cursor.connection.get_response(result, get_request=True)
             else:
-                response = self.entry_cursor.connection.response
-                result = self.entry_cursor.connection.result
-                request = self.entry_cursor.connection.request
+                if self.entry_cursor.connection.strategy.thread_safe:
+                    _, result, response, request = result
+                else:
+                    response = self.entry_cursor.connection.response
+                    result = self.entry_cursor.connection.result
+                    request = self.entry_cursor.connection.request
             self.entry_cursor._store_operation_in_history(request, result, response)
             if result['result'] == RESULT_SUCCESS:
                 self._state.dn = rdn + ',' + ','.join(to_dn(self.entry_dn)[1:])
@@ -628,9 +638,12 @@ class WritableEntry(EntryBase):
                 if not self.entry_cursor.connection.strategy.sync:  # asynchronous request
                     response, result, request = self.entry_cursor.connection.get_response(result, get_request=True)
                 else:
-                    response = self.entry_cursor.connection.response
-                    result = self.entry_cursor.connection.result
-                    request = self.entry_cursor.connection.request
+                    if self.entry_cursor.connection.strategy.thread_safe:
+                        _, result, response, request = result
+                    else:
+                        response = self.entry_cursor.connection.response
+                        result = self.entry_cursor.connection.result
+                        request = self.entry_cursor.connection.request
                 self.entry_cursor._store_operation_in_history(request, result, response)
 
                 if result['result'] == RESULT_SUCCESS:

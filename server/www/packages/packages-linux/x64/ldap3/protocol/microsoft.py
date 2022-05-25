@@ -137,3 +137,6 @@ def security_descriptor_control(criticality=False, sdflags=0x0F):
     sdcontrol = SdFlags()
     sdcontrol.setComponentByName('Flags', sdflags)
     return [build_control('1.2.840.113556.1.4.801', criticality, sdcontrol)]
+
+def persistent_search_control(criticality=False):
+    return build_control('1.2.840.113556.1.4.528', criticality, value=None)

@@ -19,7 +19,10 @@
 import io
 
 from . import Image, ImageFile, ImagePalette
-from ._binary import i8, i16be as i16, i32be as i32
+from ._binary import i8
+from ._binary import i16be as i16
+from ._binary import i32be as i32
+from ._binary import si16be as si16
 
 MODES = {
     # (photoshop mode, bits) -> (pil mode, required channels)
@@ -61,12 +64,12 @@ class PsdImageFile(ImageFile.ImageFile):
         # header
 
         s = read(26)
-        if s[:4] != b"8BPS" or i16(s[4:]) != 1:
+        if not _accept(s) or i16(s, 4) != 1:
             raise SyntaxError("not a PSD file")
 
-        psd_bits = i16(s[22:])
-        psd_channels = i16(s[12:])
-        psd_mode = i16(s[24:])
+        psd_bits = i16(s, 22)
+        psd_channels = i16(s, 12)
+        psd_mode = i16(s, 24)
 
         mode, channels = MODES[(psd_mode, psd_bits)]
 
@@ -74,7 +77,7 @@ class PsdImageFile(ImageFile.ImageFile):
             raise OSError("not enough channels")
 
         self.mode = mode
-        self._size = i32(s[18:]), i32(s[14:])
+        self._size = i32(s, 18), i32(s, 14)
 
         #
         # color mode data
@@ -117,8 +120,11 @@ class PsdImageFile(ImageFile.ImageFile):
             end = self.fp.tell() + size
             size = i32(read(4))
             if size:
-                self.layers = _layerinfo(self.fp)
+                _layer_data = io.BytesIO(ImageFile._safe_read(self.fp, size))
+                self.layers = _layerinfo(_layer_data, size)
             self.fp.seek(end)
+        self.n_frames = len(self.layers)
+        self.is_animated = self.n_frames > 1
 
         #
         # image descriptor
@@ -129,14 +135,6 @@ class PsdImageFile(ImageFile.ImageFile):
         self.__fp = self.fp
         self.frame = 1
         self._min_frame = 1
-
-    @property
-    def n_frames(self):
-        return len(self.layers)
-
-    @property
-    def is_animated(self):
-        return len(self.layers) > 1
 
     def seek(self, layer):
         if not self._seek_check(layer):
@@ -150,20 +148,12 @@ class PsdImageFile(ImageFile.ImageFile):
             self.frame = layer
             self.fp = self.__fp
             return name, bbox
-        except IndexError:
-            raise EOFError("no such layer")
+        except IndexError as e:
+            raise EOFError("no such layer") from e
 
     def tell(self):
         # return layer number (0=image, 1..max=layers)
         return self.frame
-
-    def load_prepare(self):
-        # create image memory if necessary
-        if not self.im or self.im.mode != self.mode or self.im.size != self.size:
-            self.im = Image.core.fill(self.mode, self.size, 0)
-        # create palette (optional)
-        if self.mode == "P":
-            Image.Image.load(self)
 
     def _close__fp(self):
         try:
@@ -175,11 +165,20 @@ class PsdImageFile(ImageFile.ImageFile):
             self.__fp = None
 
 
-def _layerinfo(file):
+def _layerinfo(fp, ct_bytes):
     # read layerinfo block
     layers = []
-    read = file.read
-    for i in range(abs(i16(read(2)))):
+
+    def read(size):
+        return ImageFile._safe_read(fp, size)
+
+    ct = si16(read(2))
+
+    # sanity check
+    if ct_bytes < (abs(ct) * 20):
+        raise SyntaxError("Layer block too short for number of layers requested")
+
+    for i in range(abs(ct)):
 
         # bounding box
         y0 = i32(read(4))
@@ -188,9 +187,9 @@ def _layerinfo(file):
         x1 = i32(read(4))
 
         # image info
-        info = []
         mode = []
-        types = list(range(i16(read(2))))
+        ct_types = i16(read(2))
+        types = list(range(ct_types))
         if len(types) > 4:
             continue
 
@@ -203,8 +202,7 @@ def _layerinfo(file):
                 m = "RGBA"[type]
 
             mode.append(m)
-            size = i32(read(4))
-            info.append((m, size))
+            read(4)  # size
 
         # figure out the image mode
         mode.sort()
@@ -221,28 +219,24 @@ def _layerinfo(file):
         read(12)  # filler
         name = ""
         size = i32(read(4))  # length of the extra data field
-        combined = 0
         if size:
-            data_end = file.tell() + size
+            data_end = fp.tell() + size
 
             length = i32(read(4))
             if length:
-                file.seek(length - 16, io.SEEK_CUR)
-            combined += length + 4
+                fp.seek(length - 16, io.SEEK_CUR)
 
             length = i32(read(4))
             if length:
-                file.seek(length, io.SEEK_CUR)
-            combined += length + 4
+                fp.seek(length, io.SEEK_CUR)
 
             length = i8(read(1))
             if length:
                 # Don't know the proper encoding,
                 # Latin-1 should be a good guess
                 name = read(length).decode("latin-1", "replace")
-            combined += length + 1
 
-            file.seek(data_end)
+            fp.seek(data_end)
         layers.append((name, mode, (x0, y0, x1, y1)))
 
     # get tiles
@@ -250,7 +244,7 @@ def _layerinfo(file):
     for name, mode, bbox in layers:
         tile = []
         for m in mode:
-            t = _maketile(file, m, bbox, 1)
+            t = _maketile(fp, m, bbox, 1)
             if t:
                 tile.extend(t)
         layers[i] = name, mode, bbox, tile
@@ -295,7 +289,7 @@ def _maketile(file, mode, bbox, channels):
                 layer += ";I"
             tile.append(("packbits", bbox, offset, layer))
             for y in range(ysize):
-                offset = offset + i16(bytecount[i : i + 2])
+                offset = offset + i16(bytecount, i)
                 i += 2
 
     file.seek(offset)
@@ -313,3 +307,5 @@ def _maketile(file, mode, bbox, channels):
 Image.register_open(PsdImageFile.format, PsdImageFile, _accept)
 
 Image.register_extension(PsdImageFile.format, ".psd")
+
+Image.register_mime(PsdImageFile.format, "image/vnd.adobe.photoshop")

@@ -296,9 +296,10 @@ def validate_guid(input_value):
             try:
                 valid_values.append(UUID(element).bytes)
                 changed = True
-            except ValueError: # try if the value is an escaped byte sequence
+            except ValueError: # try if the value is an escaped ldap byte sequence
                 try:
-                    valid_values.append(UUID(element.replace('\\', '')).bytes)
+                    x = ldap_escape_to_bytes(element)
+                    valid_values.append(UUID(bytes=x).bytes)
                     changed = True
                     continue
                 except ValueError:
@@ -314,7 +315,7 @@ def validate_guid(input_value):
             return False
 
     if changed:
-        valid_values = [check_backslash(value) for value in valid_values]
+        # valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:
@@ -358,7 +359,7 @@ def validate_uuid(input_value):
             return False
 
     if changed:
-        valid_values = [check_backslash(value) for value in valid_values]
+        # valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:
@@ -368,7 +369,7 @@ def validate_uuid(input_value):
 
 
 def validate_uuid_le(input_value):
-    """
+    r"""
     Active Directory stores objectGUID in uuid_le format, follows RFC4122 and MS-DTYP:
     "{07039e68-4373-264d-a0a7-07039e684373}": string representation big endian, converted to little endian (with or without brace curles)
     "689e030773434d26a7a007039e684373": packet representation, already in little endian
@@ -401,9 +402,7 @@ def validate_uuid_le(input_value):
                     error = True
             elif '\\' in element:
                 try:
-                    uuid = UUID(bytes_le=ldap_escape_to_bytes(element)).bytes_le
-                    uuid = escape_bytes(uuid)
-                    valid_values.append(uuid)  # byte representation, value in little endian
+                    valid_values.append(UUID(bytes_le=ldap_escape_to_bytes(element)).bytes_le)  # byte representation, value in little endian
                     changed = True
                 except ValueError:
                     error = True
@@ -413,7 +412,7 @@ def validate_uuid_le(input_value):
                     changed = True
                 except ValueError:
                     error = True
-            if error and str == bytes:  # python2 only assume value is bytes and valid
+            if error and (str is bytes):  # python2 only assume value is bytes and valid
                 valid_values.append(element)  # value is untouched, must be in little endian
         elif isinstance(element, (bytes, bytearray)):  # assumes bytes are valid uuid
             valid_values.append(element)  # value is untouched, must be in little endian
@@ -421,7 +420,7 @@ def validate_uuid_le(input_value):
             return False
 
     if changed:
-        valid_values = [check_backslash(value) for value in valid_values]
+        # valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:
@@ -494,7 +493,7 @@ def validate_sid(input_value):
                 changed = True
 
     if changed:
-        valid_values = [check_backslash(value) for value in valid_values]
+        # valid_values = [check_backslash(value) for value in valid_values]
         if sequence:
             return valid_values
         else:

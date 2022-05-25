@@ -419,11 +419,18 @@ class Server(object):
                                                    '+'],  # requests all remaining attributes (other),
                                        get_operational_attributes=True)
 
+            if connection.strategy.thread_safe:
+                status, result, response, _ = result
+            else:
+                status = result
+                result = connection.result
+                response = connection.response
+
             with self.dit_lock:
-                if isinstance(result, bool):  # sync request
-                    self._dsa_info = DsaInfo(connection.response[0]['attributes'], connection.response[0]['raw_attributes']) if result else self._dsa_info
-                elif result:  # asynchronous request, must check if attributes in response
-                    results, _ = connection.get_response(result)
+                if connection.strategy.sync:  # sync request
+                    self._dsa_info = DsaInfo(response[0]['attributes'], response[0]['raw_attributes']) if status else self._dsa_info
+                elif status:  # asynchronous request, must check if attributes in response
+                    results, _ = connection.get_response(status)
                     if len(results) == 1 and 'attributes' in results[0] and 'raw_attributes' in results[0]:
                         self._dsa_info = DsaInfo(results[0]['attributes'], results[0]['raw_attributes'])
 
@@ -446,12 +453,18 @@ class Server(object):
                 schema_entry = self._dsa_info.schema_entry if self._dsa_info.schema_entry else None
         else:
             result = connection.search(entry, '(objectClass=*)', BASE, attributes=['subschemaSubentry'], get_operational_attributes=True)
-            if isinstance(result, bool):  # sync request
-                if result and 'subschemaSubentry' in connection.response[0]['raw_attributes']:
-                    if len(connection.response[0]['raw_attributes']['subschemaSubentry']) > 0:
-                        schema_entry = connection.response[0]['raw_attributes']['subschemaSubentry'][0]
+            if connection.strategy.thread_safe:
+                status, result, response, _ = result
+            else:
+                status = result
+                result = connection.result
+                response = connection.response
+            if connection.strategy.sync:  # sync request
+                if status and 'subschemaSubentry' in response[0]['raw_attributes']:
+                    if len(response[0]['raw_attributes']['subschemaSubentry']) > 0:
+                        schema_entry = response[0]['raw_attributes']['subschemaSubentry'][0]
             else:  # asynchronous request, must check if subschemaSubentry in attributes
-                results, _ = connection.get_response(result)
+                results, _ = connection.get_response(status)
                 if len(results) == 1 and 'raw_attributes' in results[0] and 'subschemaSubentry' in results[0]['attributes']:
                     if len(results[0]['raw_attributes']['subschemaSubentry']) > 0:
                         schema_entry = results[0]['raw_attributes']['subschemaSubentry'][0]
@@ -475,13 +488,19 @@ class Server(object):
                                                    '*'],  # requests all remaining attributes (other)
                                        get_operational_attributes=True
                                        )
+            if connection.strategy.thread_safe:
+                status, result, response, _ = result
+            else:
+                status = result
+                result = connection.result
+                response = connection.response
             with self.dit_lock:
                 self._schema_info = None
-                if result:
-                    if isinstance(result, bool):  # sync request
-                        self._schema_info = SchemaInfo(schema_entry, connection.response[0]['attributes'], connection.response[0]['raw_attributes']) if result else None
+                if status:
+                    if connection.strategy.sync:  # sync request
+                        self._schema_info = SchemaInfo(schema_entry, response[0]['attributes'], response[0]['raw_attributes'])
                     else:  # asynchronous request, must check if attributes in response
-                        results, result = connection.get_response(result)
+                        results, result = connection.get_response(status)
                         if len(results) == 1 and 'attributes' in results[0] and 'raw_attributes' in results[0]:
                             self._schema_info = SchemaInfo(schema_entry, results[0]['attributes'], results[0]['raw_attributes'])
                     if self._schema_info and not self._schema_info.is_valid():  # flaky servers can return an empty schema, checks if it is so and set schema to None

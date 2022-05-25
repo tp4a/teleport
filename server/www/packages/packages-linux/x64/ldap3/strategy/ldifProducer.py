@@ -75,6 +75,7 @@ class LdifProducerStrategy(BaseStrategy):
     def _start_listen(self):
         self.connection.listening = True
         self.connection.closed = False
+        self.connection.bound = True
         self._header_added = False
         if not self.stream or (isinstance(self.stream, StringIO) and self.stream.closed):
             self.set_stream(StringIO())
@@ -82,6 +83,7 @@ class LdifProducerStrategy(BaseStrategy):
     def _stop_listen(self):
         self.stream.close()
         self.connection.listening = False
+        self.connection.bound = False
         self.connection.closed = True
 
     def receiving(self):

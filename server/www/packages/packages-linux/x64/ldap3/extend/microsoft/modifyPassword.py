@@ -56,7 +56,10 @@ def ad_modify_password(connection, user_dn, new_password, old_password, controls
     if not connection.strategy.sync:
         _, result = connection.get_response(result)
     else:
-        result = connection.result
+        if connection.strategy.thread_safe:
+            _, result, _, _ = result
+        else:
+            result = connection.result
 
     # change successful, returns True
     if result['result'] == RESULT_SUCCESS:

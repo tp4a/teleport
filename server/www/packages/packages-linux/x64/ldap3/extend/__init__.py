@@ -31,6 +31,7 @@ from .microsoft.modifyPassword import ad_modify_password
 from .microsoft.unlockAccount import ad_unlock_account
 from .microsoft.addMembersToGroups import ad_add_members_to_groups
 from .microsoft.removeMembersFromGroups import ad_remove_members_from_groups
+from .microsoft.persistentSearch import ADPersistentSearch
 from .novell.partition_entry_count import PartitionEntryCount
 from .novell.replicaInfo import ReplicaInfo
 from .novell.listReplicas import ListReplicas
@@ -306,6 +307,23 @@ class MicrosoftExtendedOperations(ExtendedOperationContainer):
                                              members_dn=members,
                                              groups_dn=groups,
                                              fix=fix)
+
+    def persistent_search(self,
+                          search_base='',
+                          search_scope=SUBTREE,
+                          attributes=ALL_ATTRIBUTES,
+                          streaming=True,
+                          callback=None
+                          ):
+
+        if callback:
+            streaming = False
+        return ADPersistentSearch(self._connection,
+                                  search_base,
+                                  search_scope,
+                                  attributes,
+                                  streaming,
+                                  callback)
 
 
 class ExtendedOperationsRoot(ExtendedOperationContainer):
