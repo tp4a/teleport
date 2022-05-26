@@ -155,7 +155,7 @@ class BuilderWin(BuilderBase):
         installer = os.path.join(PATH_DOWNLOAD, file_name)
 
         if not os.path.exists(installer):
-            if not utils.download_file('openssl installer', 'http://slproweb.com/download/{}'.format(filename), PATH_DOWNLOAD, file_name):
+            if not utils.download_file('openssl installer', 'http://slproweb.com/download/{}'.format(file_name), PATH_DOWNLOAD, file_name):
                 cc.e('can not download pre-built installer of OpenSSL.')
                 return
 

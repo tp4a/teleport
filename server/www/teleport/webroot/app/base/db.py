@@ -25,7 +25,8 @@ __all__ = ['get_db', 'SQL']
 class TPDatabase:
     # 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
     # 20190123: server-v3.2.2, db-v7
-    DB_VERSION = 7
+    # 20220526: server-v3.6.3, db-v8
+    DB_VERSION = 8
 
     DB_TYPE_UNKNOWN = 0
     DB_TYPE_SQLITE = 1

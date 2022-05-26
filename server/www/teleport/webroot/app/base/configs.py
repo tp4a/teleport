@@ -172,7 +172,7 @@ class BaseAppConfig(dict):
             os.rename(tmp_file, cfg_file)
             return True
         except Exception as e:
-            print(e.__str__())
+            log.e('{}\n'.format(e.__str__()))
             return False
 
     def _update_kvs(self, section, key, val):
@@ -223,7 +223,7 @@ class BaseAppConfig(dict):
         try:
             return int(self['_kvs'][_sec][_key]), True
         except ValueError as e:
-            print(e.__str__())
+            log.e('{}\n'.format(e.__str__()))
             return def_value, False
 
     def get_bool(self, key, def_value=False):

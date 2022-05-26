@@ -221,3 +221,64 @@ class DatabaseUpgrade:
             ' - 创建核心服务器表...',
             'CREATE TABLE `{}core_server` ({});'.format(self.db.table_prefix, ','.join(f))
         )
+
+    def _upgrade_to_v8(self):
+        _step = self.step_begin('准备升级到数据库版本 v8...')
+        self.step_end(_step, 0, '')
+
+        try:
+            # 1. 创建缺失的 integration_auth 表
+            _step = self.step_begin(' - 检查 integration_auth 数据表...')
+            ret = self.db.is_table_exists('{}integration_auth'.format(self.db.table_prefix))
+            if ret is None:
+                self.step_end(_step, -1, '无法连接到数据库')
+                return False
+            elif not ret:
+                _step = self.step_begin(' - 创建数据表 integration_auth...')
+                self._v8_integration_auth()
+                self.step_end(_step, 0)
+
+            _step = self.step_begin(' - 更新数据库版本号...')
+            if not self.db.exec('UPDATE `{}config` SET `value`="8" WHERE `name`="db_ver";'.format(self.db.table_prefix)):
+                self.step_end(_step, -1, '无法更新数据库版本号')
+                return False
+            self.step_end(_step, 0)
+
+            _step = self.step_begin('升级到 v8 完成')
+            self.step_end(_step, 0)
+
+            return True
+
+        except:
+            log.e('failed.\n')
+            self.step_end(_step, -1)
+            return False
+
+    def _v8_integration_auth(self):
+        """ 第三方服务集成认证信息
+        v8 新增
+        """
+
+        f = list()
+
+        # id: 自增主键
+        f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
+        # acc_key: 访问KEY
+        f.append('`acc_key` varchar(32) DEFAULT ""')
+        # acc_sec: 访问密钥
+        f.append('`acc_sec` varchar(64) DEFAULT ""')
+        # role_id: 此访问授权对应的角色ID, 关联到role表（也即对应的权限）
+        f.append('`role_id` int(11) DEFAULT 0')
+        # name: 第三方服务名称
+        f.append('`name` varchar(64) DEFAULT ""')
+        # comment: 描述
+        f.append('`comment` varchar(64) DEFAULT ""')
+        # creator_id: 创建者的id，0=系统默认创建
+        f.append('`creator_id` int(11) DEFAULT 0')
+        # create_time: 创建时间 timestamp
+        f.append('`create_time` int(11) DEFAULT 0')
+
+        self._db_exec(
+            ' - 创建第三方服务集成认证信息表...',
+            'CREATE TABLE `{}integration_auth` ({});'.format(self.db.table_prefix, ','.join(f))
+        )

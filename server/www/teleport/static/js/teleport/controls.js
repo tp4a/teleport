@@ -117,7 +117,7 @@ $tp.create_table = function (options) {
     // 整理传入的表格初始化参数
     _tbl._fix_options = function () {
         if (!_.isUndefined(_tbl.options.column_default)) {
-            for (var i = 0, cnt = _tbl.options.columns.length; i < cnt; ++i) {
+            for (let i = 0, cnt = _tbl.options.columns.length; i < cnt; ++i) {
                 if (!_.isUndefined(_tbl.options.columns[i]['align'])) {
                     if (_.isUndefined(_tbl.options.columns[i]['header_align'])) {
                         _tbl.options.columns[i]['header_align'] = _tbl.options.columns[i]['align'];
@@ -127,7 +127,7 @@ $tp.create_table = function (options) {
                     }
                 }
 
-                for (var k in _tbl.options.column_default) {
+                for (let k in _tbl.options.column_default) {
                     if (_tbl.options.column_default.hasOwnProperty(k)) {
                         if (k === 'align') {
                             if (_.isUndefined(_tbl.options.columns[i]['header_align'])) {
@@ -136,8 +136,7 @@ $tp.create_table = function (options) {
                             if (_.isUndefined(_tbl.options.columns[i]['cell_align'])) {
                                 _tbl.options.columns[i]['cell_align'] = _tbl.options.column_default[k];
                             }
-                        }
-                        else if (_.isUndefined(_tbl.options.columns[i][k])) {
+                        } else if (_.isUndefined(_tbl.options.columns[i][k])) {
                             _tbl.options.columns[i][k] = _tbl.options.column_default[k];
                         }
                     }
@@ -230,28 +229,28 @@ $tp.create_table = function (options) {
 
         _tbl.load_begin(1500);
 
-        var _filter = {};
+        let _filter = {};
         // 对每一个关联的过滤器，获取其设置
         $.each(_tbl.filter_ctrls, function (name, ctrl) {
             if (_.isUndefined(ctrl.get_filter)) {
                 console.error('filter', name, 'has have no get_filter() interface.');
             }
-            var _f = ctrl.get_filter();
+            let _f = ctrl.get_filter();
             $.each(_f, function (k, v) {
                 _filter[k] = v;
             });
         });
 
-        var _order = null;
+        let _order = null;
         if (_tbl.header_ctrl) {
             _order = _tbl.header_ctrl.get_order();
         }
 
-        var _limit = {};
+        let _limit = {};
         _limit.page_index = _tbl.page_index;
         _limit.per_page = _tbl.per_page;
 
-        var args = {filter: _filter, order: _order, limit: _limit};
+        let args = {filter: _filter, order: _order, limit: _limit};
         if (_tbl.options.data_source && _tbl.options.data_source.restrict)
             args.restrict = _tbl.options.data_source.restrict;
         if (_tbl.options.data_source && _tbl.options.data_source.exclude)
@@ -265,12 +264,14 @@ $tp.create_table = function (options) {
         if (_tbl.options.data_source) {
             if (_tbl.options.data_source.type === 'none') {
                 // 外部直接调用set_data()方法来设置数据，无需本控件主动获取
+                cb_stack.exec();
             } else if (_tbl.options.data_source.type === 'callback') {
                 // 调用一个函数来加载数据
                 args.table = _tbl;
                 _tbl.options.data_source.fn(cb_stack, args);
+                cb_stack.exec();
             } else if (_tbl.options.data_source.type === 'ajax-post') {
-                var _url = _tbl.options.data_source.url;
+                let _url = _tbl.options.data_source.url;
                 $tp.ajax_post_json(_url, args,
                     function (ret) {
                         // console.log('ajax-return:', ret);
@@ -281,27 +282,31 @@ $tp.create_table = function (options) {
                             cb_stack.add(_tbl.load_end);
                             _tbl.set_data(cb_stack, {}, {total: ret.data.total, page_index: ret.data.page_index, data: ret.data.data});
                         }
+                        cb_stack.exec();
                     },
                     function () {
                         _tbl.show_load_failed();
+                        cb_stack.exec();
                     }, 6000
                 );
             } else {
                 console.error('table-options [data-source] type [' + _tbl.options.data_source.type + '] known.');
+                cb_stack.exec();
             }
         } else {
             console.error('have no idea for load table data. need data_source.');
+            cb_stack.exec();
         }
     };
 
     _tbl._create_row_dom = function (row_data) {
-        var node = ['<tr data-row-id="' + row_data._row_id + '">'];
+        let node = ['<tr data-row-id="' + row_data._row_id + '">'];
 
-        for (var i = 0, cnt = _tbl.options.columns.length; i < cnt; ++i) {
-            var col = _tbl.options.columns[i];
+        for (let i = 0, cnt = _tbl.options.columns.length; i < cnt; ++i) {
+            let col = _tbl.options.columns[i];
             node.push('<td data-cell-id="' + row_data._row_id + '-' + i + '"');
 
-            var _style = '';
+            let _style = '';
             if (col.cell_align !== 'center') {
                 _style += 'text-align:' + col.cell_align + ';';
             }
@@ -314,12 +319,12 @@ $tp.create_table = function (options) {
 
             node.push('>');
 
-            var k;
+            let k;
             if (_.isUndefined(col.render)) {
                 if (_.isUndefined(col.fields) || _.isEmpty(col.fields)) {
                     node.push(row_data[col.key]);
                 } else {
-                    var _tmp = [];
+                    let _tmp = [];
                     for (k in col.fields) {
                         if (col.fields.hasOwnProperty(k))
                             _tmp.push(row_data[col.fields[k]]);
@@ -328,7 +333,7 @@ $tp.create_table = function (options) {
                 }
             } else {
                 if (_.isFunction(_tbl.render[col.render])) {
-                    var _args = {};
+                    let _args = {};
                     for (k in col.fields) {
                         if (col.fields.hasOwnProperty(k))
                             _args[k] = row_data[col.fields[k]];
@@ -345,10 +350,10 @@ $tp.create_table = function (options) {
 
     _tbl._render_row = function (row_data, pos_row_id) {
         // 0=插入到第一行，-1=插入到最后一行（默认），其他=插入到指定row_id的行之后，如果没有找到指定的行，则插入到最后
-        var _pos = !_.isUndefined(pos_row_id) ? pos_row_id : -1;
+        let _pos = !_.isUndefined(pos_row_id) ? pos_row_id : -1;
 
-        var dom_obj = $('#' + _tbl.dom_id + ' tbody');
-        var _tr = $(_tbl._create_row_dom(row_data));
+        let dom_obj = $('#' + _tbl.dom_id + ' tbody');
+        let _tr = $(_tbl._create_row_dom(row_data));
         _tr.data('data-row-data', row_data);
 
         if (_pos === -1) {
@@ -356,7 +361,7 @@ $tp.create_table = function (options) {
         } else if (_pos === 0) {
             dom_obj.prepend(_tr);
         } else {
-            var _pos_obj = $(dom_obj).find("[data-row-id='" + _pos + "']");
+            let _pos_obj = $(dom_obj).find("[data-row-id='" + _pos + "']");
             if (0 === _pos_obj[0]) {
                 // 没有找到指定行，则加入到最后
                 dom_obj.append(_tr);
@@ -368,40 +373,40 @@ $tp.create_table = function (options) {
 
         // callback for each cell.
         if (_.isFunction(_tbl.options.on_cell_created)) {
-            var _cell_objs = $('#' + _tbl.dom_id + " tr[data-row-id='" + row_data._row_id + "'] td");
-            for (var i = 0, cnt = _cell_objs.length; i < cnt; ++i) {
+            let _cell_objs = $('#' + _tbl.dom_id + " tr[data-row-id='" + row_data._row_id + "'] td");
+            for (let i = 0, cnt = _cell_objs.length; i < cnt; ++i) {
                 console.log('aaaa');
                 _tbl.options.on_cell_created(_tbl, row_data._row_id, _tbl.options.columns[i].key, $(_cell_objs[i]));
             }
         }
 
         if (_.isFunction(_tbl.options.on_row_created)) {
-            var _row_obj = $('#' + _tbl.dom_id + " [data-row-id='" + row_data._row_id + "']");
+            let _row_obj = $('#' + _tbl.dom_id + " [data-row-id='" + row_data._row_id + "']");
             _tbl.options.on_row_created(_tbl, row_data._row_id, _row_obj);
         }
     };
 
     _tbl._render_rows = function (rows_data, pos_row_id) {
         // 0=插入到第一行，-1=插入到最后一行（默认），其他=插入到指定row_id的行之后，如果没有找到指定的行，则插入到最后
-        var _pos = !_.isUndefined(pos_row_id) ? pos_row_id : -1;
+        let _pos = !_.isUndefined(pos_row_id) ? pos_row_id : -1;
 
-        var dom_obj = $('#' + _tbl.dom_id + ' tbody');
-        var node = [];
+        let dom_obj = $('#' + _tbl.dom_id + ' tbody');
+        let node = [];
 
-        var r;
-        var row_count = rows_data.length;
+        let r;
+        let row_count = rows_data.length;
         for (r = 0; r < row_count; ++r) {
             node.push(_tbl._create_row_dom(rows_data[r]));
         }
 
-        var _tr = $(node.join(''));
+        let _tr = $(node.join(''));
 
         if (_pos === -1) {
             dom_obj.append(_tr);
         } else if (_pos === 0) {
             dom_obj.prepend(_tr);
         } else {
-            var _pos_obj = $(dom_obj).find("[data-row-id='" + _pos + "']");
+            let _pos_obj = $(dom_obj).find("[data-row-id='" + _pos + "']");
             if (0 === _pos_obj[0]) {
                 // 没有找到指定行，则加入到最后
                 dom_obj.append(_tr);
@@ -411,15 +416,15 @@ $tp.create_table = function (options) {
             }
         }
 
-        var _have_cell_created = _.isFunction(_tbl.options.on_cell_created);
-        var _have_row_created = _.isFunction(_tbl.options.on_row_created);
+        let _have_cell_created = _.isFunction(_tbl.options.on_cell_created);
+        let _have_row_created = _.isFunction(_tbl.options.on_row_created);
 
         for (r = 0; r < row_count; ++r) {
-            var _row_obj = $('#' + _tbl.dom_id + ' tr[data-row-id="' + rows_data[r]._row_id + '"]');
+            let _row_obj = $('#' + _tbl.dom_id + ' tr[data-row-id="' + rows_data[r]._row_id + '"]');
             _row_obj.data('data-row-data', rows_data[r]);
 
             if (_have_cell_created) {
-                for (var i = 0, cnt = _tbl.options.columns.length; i < cnt; ++i) {
+                for (let i = 0, cnt = _tbl.options.columns.length; i < cnt; ++i) {
                     _tbl.options.on_cell_created(_tbl, rows_data[r]._row_id, _tbl.options.columns[i].key, $('#' + _tbl.dom_id + ' td[data-cell-id="' + rows_data[r]._row_id + '-' + i + '"]'));
                 }
             }
@@ -430,7 +435,7 @@ $tp.create_table = function (options) {
     };
 
     _tbl.render_table = function (cb_stack, cb_args) {
-        var dom_obj = $('#' + _tbl.dom_id + ' tbody');
+        let dom_obj = $('#' + _tbl.dom_id + ' tbody');
 
         if (_tbl.row_data.length === 0) {
             _tbl.show_empty_table();
@@ -452,7 +457,7 @@ $tp.create_table = function (options) {
         _tbl.page_total = Math.ceil(_tbl.total / _tbl.per_page);
 
         // 我们为表格的每一行数据加入我们自己的索引 _row_id
-        for (var i = 0, cnt = _tbl.row_data.length; i < cnt; ++i) {
+        for (let i = 0, cnt = _tbl.row_data.length; i < cnt; ++i) {
             if (_.isUndefined(_tbl.row_data[i]._row_id)) {
                 _tbl.row_data[i]._row_id = _.uniqueId();
             }
@@ -474,9 +479,9 @@ $tp.create_table = function (options) {
     // 2. 行本身的JQuery对象，或者行内任意一个JQuery对象
     // 3. 行的id（创建行时内部制定的，不一定是顺序号）
     _tbl.get_row = function (obj) {
-        var _tr = null;
+        let _tr = null;
         if (_.isElement(obj) || _.isObject(obj)) {
-            var _obj = _.isElement(obj) ? $(obj) : obj;
+            let _obj = _.isElement(obj) ? $(obj) : obj;
             if (_obj.prop('tagName') === 'TR') {
                 _tr = _obj;
             } else if (_obj.prop('tagName') === 'TD') {
@@ -486,8 +491,8 @@ $tp.create_table = function (options) {
             }
             return _tr.data('data-row-data');
         } else if (_.isString(obj) || _.isNumber(obj)) {
-            var _id = _.isString(obj) ? obj : '' + obj;
-            for (var i = 0, cnt = _tbl.row_data.length; i < cnt; ++i) {
+            let _id = _.isString(obj) ? obj : '' + obj;
+            for (let i = 0, cnt = _tbl.row_data.length; i < cnt; ++i) {
                 if (_tbl.row_data[i]._row_id === _id) {
                     return _tbl.row_data[i];
                 }
@@ -502,10 +507,10 @@ $tp.create_table = function (options) {
     // TODO: 更新一行数据，传入的kv有可能比原始数据内容的字段更多，需要能够保存下来备用
     // TODO: 此外，需要检查一下表格初始化时使用的字段，如果这些字段的内容并没有更新，则无需更新界面元素，以提升性能
     _tbl.update_row = function (row_id, kv) {
-        var _row_obj = $('#' + _tbl.dom_id + " tr[data-row-id='" + row_id + "']");
-        var _row_data = _row_obj.data('data-row-data');
-        var _changed_fields = [];
-        for (var k in kv) {
+        let _row_obj = $('#' + _tbl.dom_id + " tr[data-row-id='" + row_id + "']");
+        let _row_data = _row_obj.data('data-row-data');
+        let _changed_fields = [];
+        for (let k in kv) {
             if (kv.hasOwnProperty(k)) {
                 if (!_.isUndefined(_row_data[k])) {
                     if (_row_data[k] !== kv[k])
@@ -523,10 +528,10 @@ $tp.create_table = function (options) {
         console.log('-- update row ui --');
 
         // 根据columns的设置，更新界面元素
-        for (var i in _tbl.options.columns) {
+        for (let i in _tbl.options.columns) {
             if (!_tbl.options.columns.hasOwnProperty(i))
                 continue;
-            var col = _tbl.options.columns[i];
+            let col = _tbl.options.columns[i];
             for (k in kv) {
                 if (!kv.hasOwnProperty(k))
                     continue;
@@ -535,17 +540,17 @@ $tp.create_table = function (options) {
 
                 if (_.contains(col.fields, k)) {
 
-                    var _cell = $('#' + _tbl.dom_id + ' td[data-cell-id="' + row_id + '-' + i + '"]');
+                    let _cell = $('#' + _tbl.dom_id + ' td[data-cell-id="' + row_id + '-' + i + '"]');
 
                     if (col.recreate) {
                         if (_.isFunction(_tbl.options.on_cell_created)) {
-                            var node = '';
+                            let node = '';
                             if (_.isUndefined(col.render)) {
                                 node += _row_data[col.key];
                             } else {
                                 if (_.isFunction(_tbl.render[col.render])) {
-                                    var _args = {};
-                                    for (var f in col.fields) {
+                                    let _args = {};
+                                    for (let f in col.fields) {
                                         if (col.fields.hasOwnProperty(f))
                                             _args[f] = _row_data[col.fields[f]];
                                     }
@@ -579,13 +584,13 @@ $tp.create_table = function (options) {
 
     // 参数pos_row_id: 0=插入到第一行，-1=插入到最后一行（默认），其他=插入到指定row_id的行之后，如果没有找到指定的行，则插入到最后
     _tbl.add_row = function (rows, pos_row_id, fn_is_duplicated) {
-        var ret_row_id = [];
-        var _fn = _.isFunction(fn_is_duplicated) ? fn_is_duplicated : null;
-        var _new_count = rows.length;
-        for (var i = 0; i < _new_count; ++i) {
-            var _my_count = _tbl.row_data.length;
-            var _is_duplicated = false;
-            for (var j = 0; j < _my_count; ++j) {
+        let ret_row_id = [];
+        let _fn = _.isFunction(fn_is_duplicated) ? fn_is_duplicated : null;
+        let _new_count = rows.length;
+        for (let i = 0; i < _new_count; ++i) {
+            let _my_count = _tbl.row_data.length;
+            let _is_duplicated = false;
+            for (let j = 0; j < _my_count; ++j) {
                 if (_fn) {
                     if (_fn(rows[i], _tbl.row_data[j])) {
                         _is_duplicated = true;
@@ -617,8 +622,8 @@ $tp.create_table = function (options) {
     };
 
     _tbl.remove_row = function (row_id) {
-        var _index = -1;
-        for (var i = 0, cnt = _tbl.row_data.length; i < cnt; ++i) {
+        let _index = -1;
+        for (let i = 0, cnt = _tbl.row_data.length; i < cnt; ++i) {
             if (_tbl.row_data[i]['_row_id'] === row_id) {
                 _index = i;
                 break;
@@ -637,7 +642,7 @@ $tp.create_table = function (options) {
     _tbl.clear = function () {
         $('#' + _tbl.dom_id + ' tbody').empty();
         _tbl.row_data = [];
-        var cb_stack = CALLBACK_STACK.create();
+        let cb_stack = CALLBACK_STACK.create();
         cb_stack
             .add(_tbl.on_data_loaded)
             .add(_tbl.update_paging)
@@ -649,7 +654,7 @@ $tp.create_table = function (options) {
     };
 
     _tbl.load_begin = function (delay_) {
-        var _delay = delay_ || 1000;
+        let _delay = delay_ || 1000;
         _tbl.show_loading(_delay);
     };
 
@@ -663,7 +668,7 @@ $tp.create_table = function (options) {
     };
 
     _tbl.show_loading = function (delay_) {
-        var _delay = delay_ || 0;
+        let _delay = delay_ || 0;
         if (_delay > 0) {
             if (_tbl.loading_timer === null) {
                 _tbl.loading_timer = setTimeout(function () {
@@ -673,7 +678,7 @@ $tp.create_table = function (options) {
             }
         }
 
-        var msg_loading = '<tr role="row"><td class="loading" colspan="' + _tbl.column_count + '" style="text-align:center;"><i class="fa fa-circle-o-notch fa-spin"></i> 加载中，请稍候...</td></tr>';
+        let msg_loading = '<tr role="row"><td class="loading" colspan="' + _tbl.column_count + '" style="text-align:center;"><i class="fa fa-circle-o-notch fa-spin"></i> 加载中，请稍候...</td></tr>';
         $('#' + _tbl.dom_id + ' tbody').prepend($(msg_loading))
     };
 
@@ -683,7 +688,7 @@ $tp.create_table = function (options) {
             _tbl.loading_timer = null;
         }
 
-        var msg_loading = '<tr><td class="loading" colspan="' + _tbl.column_count + '" style="text-align:center;background-color:#f0d4d2;"><i class="fas fa-exclamation-triangle fa-fw"></i> 糟糕！加载失败了...</td></tr>';
+        let msg_loading = '<tr><td class="loading" colspan="' + _tbl.column_count + '" style="text-align:center;background-color:#f0d4d2;"><i class="fas fa-exclamation-triangle fa-fw"></i> 糟糕！加载失败了...</td></tr>';
         $('#' + _tbl.dom_id + ' tbody').empty().append($(msg_loading))
     };
 
@@ -693,11 +698,11 @@ $tp.create_table = function (options) {
             _tbl.loading_timer = null;
         }
 
-        // var msg = '哇哦，没有数据哦...';
+        // let msg = '哇哦，没有数据哦...';
         // if(_tbl.options.message_no_data)
-        var msg = _tbl.options.message_no_data || '哇哦，没有数据哦...';
+        let msg = _tbl.options.message_no_data || '哇哦，没有数据哦...';
 
-        var msg_loading = '<tr><td class="loading" colspan="' + _tbl.column_count + '" style="text-align:center;"><i class="fa fa-info-circle fa-fw"></i> ' + msg + '</td></tr>';
+        let msg_loading = '<tr><td class="loading" colspan="' + _tbl.column_count + '" style="text-align:center;"><i class="fa fa-info-circle fa-fw"></i> ' + msg + '</td></tr>';
         $('#' + _tbl.dom_id + ' tbody').empty().append($(msg_loading))
     };
 
@@ -728,7 +733,7 @@ $tp.create_table = function (options) {
 // TODO: to create fixed header (not scroll), see https://github.com/markmalek/Fixed-Header-Table
 
 $tp.create_table_header = function (tbl, on_created) {
-    var _tbl_header = {};
+    let _tbl_header = {};
 
     _tbl_header.dom_id = tbl.dom_id;
     _tbl_header._table_ctrl = tbl;
@@ -752,9 +757,9 @@ $tp.create_table_header = function (tbl, on_created) {
             _tbl_header.order_by = '';
         }
 
-        var _first_sort = '';
-        var _sort_asc = true;
-        var _found = false;
+        let _first_sort = '';
+        let _sort_asc = true;
+        let _found = false;
         $.each(_tbl_header._columns, function (i, col) {
             if (col.sort) {
                 if (_first_sort === '') {
@@ -778,10 +783,10 @@ $tp.create_table_header = function (tbl, on_created) {
         _tbl_header.order_asc = _sort_asc;
 
         // 创建表格头
-        var _dom = ['<thead><tr>'];
+        let _dom = ['<thead><tr>'];
         $.each(_tbl_header._columns, function (i, col) {
             _dom.push('<th');
-            var _style = '';
+            let _style = '';
             if (col.header_align !== 'center') {
                 _style += 'text-align:' + col.header_align + ';';
             }
@@ -793,7 +798,7 @@ $tp.create_table_header = function (tbl, on_created) {
 
             _dom.push('>');
 
-            var _title = ['<span data-col-key="' + col.key + '"'];
+            let _title = ['<span data-col-key="' + col.key + '"'];
             if (col.sort) {
                 _title.push(' class="');
                 if (_tbl_header.order_by === col.key) {
@@ -842,13 +847,13 @@ $tp.create_table_header = function (tbl, on_created) {
     };
 
     _tbl_header.click_header = function () {
-        var t = $(this).attr('data-col-key');
+        let t = $(this).attr('data-col-key');
         _tbl_header.on_head_click(t);
     };
 
     // 点击表格分栏，默认操作为按此栏进行升序/降序排序
     _tbl_header.on_head_click = function (col_key) {
-        var i = 0;
+        let i = 0;
 
         if (col_key === _tbl_header.order_by) {
             if (_tbl_header.order_asc) {
@@ -861,12 +866,12 @@ $tp.create_table_header = function (tbl, on_created) {
             $('#' + _tbl_header.dom_id + ' th .sorting_asc').removeClass('sorting_asc').addClass('sorting');
             $('#' + _tbl_header.dom_id + ' th .sorting_desc').removeClass('sorting_desc').addClass('sorting');
 
-            var sort_obj = $('#' + _tbl_header.dom_id + " [data-col-key='" + col_key + "']");
+            let sort_obj = $('#' + _tbl_header.dom_id + " [data-col-key='" + col_key + "']");
             sort_obj.removeClass('sorting').addClass('sorting_asc');
 
             _tbl_header.order_by = col_key;
 
-            var order_asc = true;
+            let order_asc = true;
 
             for (i = 0; i < _tbl_header._table_ctrl.column_count; ++i) {
                 if (_tbl_header._table_ctrl.options.columns[i].key === col_key) {
@@ -884,14 +889,14 @@ $tp.create_table_header = function (tbl, on_created) {
             _tbl_header.order_asc = order_asc;
         }
 
-        var cb_stack = CALLBACK_STACK.create();
+        let cb_stack = CALLBACK_STACK.create();
         if (_tbl_header._table_ctrl.options.sort === 'local') {
             console.log('sort-by:', col_key);
-            var data = _.sortBy(_tbl_header._table_ctrl.row_data, col_key);
+            let data = _.sortBy(_tbl_header._table_ctrl.row_data, col_key);
             if (_tbl_header.order_asc) {
                 _tbl_header._table_ctrl.set_data(cb_stack, {}, {data: data});
             } else {
-                var tmp = [];
+                let tmp = [];
                 for (i = data.length - 1; i >= 0; --i) {
                     tmp.push(data[i]);
                 }
@@ -910,7 +915,7 @@ $tp.create_table_header = function (tbl, on_created) {
 
 $tp.create_table_render = function (tbl, on_created) {
     // console.log('create_table_render', tbl, on_created);
-    var _tbl_render = {};
+    let _tbl_render = {};
 
     _tbl_render.fs_size = function (row_id, fields) {
         if (fields.type === 0 || fields.type === 2)
@@ -931,7 +936,7 @@ $tp.create_table_render = function (tbl, on_created) {
     };
 
     _tbl_render.host_id = function (row_id, fields) {
-        var ret = '';
+        let ret = '';
         ret = '<span class="host-id">' + fields.id + '</span>';
         ret += '<span class="host-desc">' + fields.desc + '</span>';
         return ret;
@@ -980,7 +985,7 @@ $tp.create_table_render = function (tbl, on_created) {
 };
 
 $tp.create_table_paging = function (tbl, dom_id, options) {
-    var _tblp = {};
+    let _tblp = {};
     _tblp._table_ctrl = tbl;
     tbl.paging_ctrl = _tblp;
     _tblp.dom_id = dom_id;
@@ -1000,8 +1005,8 @@ $tp.create_table_paging = function (tbl, dom_id, options) {
     };
 
     _tblp.init = function (cb_stack) {
-        var _def_per_page = -1;
-        var _per_page = -1;
+        let _def_per_page = -1;
+        let _per_page = -1;
         $.each(_tblp.options.paging_selector.selections, function (i, s) {
             if (s.name === _tblp.options.paging_selector.default_select)
                 _def_per_page = s.val;
@@ -1015,7 +1020,7 @@ $tp.create_table_paging = function (tbl, dom_id, options) {
         //------------------------------------------------
         // create DOM
         //------------------------------------------------
-        var dom = [];
+        let dom = [];
         dom.push('<li><i class="fa fa-list fa-fw"></i> 记录总数 <span data-field="recorder_total">0</span></li>');
         dom.push('<li>页数 <span data-field="page_current">1</span>/<span data-field="page_total">0</span></li>');
         dom.push('<li data-field="jump">跳转到第 <input data-field="jump-to-page" type="text" class="form-control form-control-sm" style="display:inline-block;width:3em;padding:1px 5px;" /> 页</li>');
@@ -1032,7 +1037,7 @@ $tp.create_table_paging = function (tbl, dom_id, options) {
         // 绑定事件（输入页码跳转）
         $('#' + _tblp.dom_id + ' [data-field="jump-to-page"]').keydown(function (event) {
             if (event.which === 13) {
-                var _val = parseInt($(this).val());
+                let _val = parseInt($(this).val());
                 if (_val === _tblp.page_current)
                     return;
 
@@ -1042,12 +1047,12 @@ $tp.create_table_paging = function (tbl, dom_id, options) {
 
         // 绑定事件（选择每页显示的记录数）
         $('#' + _tblp.dom_id + ' li a[data-tp-selector]').click(function () {
-            var select = parseInt($(this).attr('data-tp-selector'));
+            let select = parseInt($(this).attr('data-tp-selector'));
             if (_tblp.per_page === select)
                 return;
             _tblp.per_page = select;
 
-            var name = '';
+            let name = '';
             $.each(_tblp.options.paging_selector.selections, function (i, p) {
                 if (p.val === select) {
                     name = p.name;
@@ -1074,9 +1079,9 @@ $tp.create_table_paging = function (tbl, dom_id, options) {
     };
 
     _tblp.update = function (cb_stack) {
-        var _total = _tblp._table_ctrl.total || 0;
-        var _page_index = _tblp._table_ctrl.page_index || 0;
-        var _page_total = _tblp._table_ctrl.page_total || 0;
+        let _total = _tblp._table_ctrl.total || 0;
+        let _page_index = _tblp._table_ctrl.page_index || 0;
+        let _page_total = _tblp._table_ctrl.page_total || 0;
 
         if (_total > 0)
             _page_index += 1;
@@ -1101,7 +1106,7 @@ $tp.create_table_paging = function (tbl, dom_id, options) {
 };
 
 $tp.create_table_pagination = function (tbl, dom_id, options) {
-    var _tblp = {};
+    let _tblp = {};
     _tblp._table_ctrl = tbl;
     tbl.pagination_ctrl = _tblp;
     _tblp.dom_id = dom_id;
@@ -1114,8 +1119,8 @@ $tp.create_table_pagination = function (tbl, dom_id, options) {
     };
 
     _tblp.update = function (cb_stack) {
-        var _page_index = _tblp._table_ctrl.page_index || 0;
-        var _page_total = _tblp._table_ctrl.page_total || 0;
+        let _page_index = _tblp._table_ctrl.page_index || 0;
+        let _page_total = _tblp._table_ctrl.page_total || 0;
 
         // 如果只有一页，就没必要显示分页跳转器了。
         if (_page_total < 2) {
@@ -1124,17 +1129,17 @@ $tp.create_table_pagination = function (tbl, dom_id, options) {
             return;
         }
 
-        var node = [];
+        let node = [];
 
         // 分页显示规则：
         //   总页数小于等于9的，全部显示
         //   总页数大于9的，部分显示
         //      第一页  上一页  ...  x-4  x-3  x-2  x-1  x  x+1  x+2  x+3  x+4  ...  下一页  最后一页
 
-        var _start = _page_index - 4;
+        let _start = _page_index - 4;
         if (_start < 0)
             _start = 0;
-        var _end = _start + 9;
+        let _end = _start + 9;
         if (_end > _page_total)
             _end = _page_total;
 
@@ -1154,7 +1159,7 @@ $tp.create_table_pagination = function (tbl, dom_id, options) {
             node.push('<li class="disabled"><span><i class="fa fa-ellipsis-h fa-fw"></i></span></li>');
         }
 
-        for (var i = _start; i < _end; ++i) {
+        for (let i = _start; i < _end; ++i) {
             if (i === _page_index)
                 node.push('<li class="disabled"><span><strong>' + (i + 1) + '</strong></span></li>');
             else
@@ -1184,7 +1189,7 @@ $tp.create_table_pagination = function (tbl, dom_id, options) {
 
         // 事件绑定
         $('#' + _tblp.dom_id + " [data-jump-to]").click(function () {
-            var _page_index = parseInt($(this).attr('data-jump-to'));
+            let _page_index = parseInt($(this).attr('data-jump-to'));
             _tblp._table_ctrl.paging_jump(_page_index);
         });
 
@@ -1199,7 +1204,7 @@ $tp.create_table_pagination = function (tbl, dom_id, options) {
 //==============================================================
 
 $tp.create_table_filter_fixed_value = function (tbl, key_value_map) {
-    var _tblf = {};
+    let _tblf = {};
     _tblf._table_ctrl = tbl;
     _tblf.name = _.uniqueId('tbl_kv_filter_');
     _tblf.kvs = key_value_map;
@@ -1212,7 +1217,7 @@ $tp.create_table_filter_fixed_value = function (tbl, key_value_map) {
 };
 
 $tp.create_table_header_filter_search = function (tbl, options) {
-    var _tblf = {};
+    let _tblf = {};
     _tblf._table_ctrl = tbl;
     _tblf.options = options;
 
@@ -1229,8 +1234,8 @@ $tp.create_table_header_filter_search = function (tbl, options) {
     };
 
     _tblf.get_filter = function () {
-        var _ret = {};
-        var _val = $('#' + _tblf.dom_id).val();
+        let _ret = {};
+        let _val = $('#' + _tblf.dom_id).val();
         if (_.isUndefined(_val) || _val.length === 0)
             return _ret;
 
@@ -1244,7 +1249,7 @@ $tp.create_table_header_filter_search = function (tbl, options) {
     };
 
     _tblf.render = function () {
-        var _ret = [];
+        let _ret = [];
         _ret.push('<div class="search-input"><div class="input-group">');
         _ret.push('<span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span>');
         _ret.push('<input id="' + _tblf.dom_id + '" type="text" class="form-control" placeholder="' + _tblf.options.place_holder + '">');
@@ -1256,7 +1261,7 @@ $tp.create_table_header_filter_search = function (tbl, options) {
     _tblf.on_created = function () {
         $('#' + _tblf.dom_id).keydown(function (event) {
             if (event.which === 13) {
-                var _val = $(this).val();
+                let _val = $(this).val();
                 if (_val === _tblf.filter_value)
                     return;
 
@@ -1268,7 +1273,7 @@ $tp.create_table_header_filter_search = function (tbl, options) {
 };
 
 $tp.create_table_filter_role = function (tbl, roles) {
-    var _tblf = {};
+    let _tblf = {};
     _tblf._table_ctrl = tbl;
     _tblf.dom_id = tbl.dom_id + '-filter-role';
     _tblf.name = 'role';
@@ -1289,13 +1294,13 @@ $tp.create_table_filter_role = function (tbl, roles) {
 
     _tblf.reset = function (cb_stack) {
         _tblf.filter_value = _tblf.default_value;
-        var name = _tblf._id2name(_tblf.filter_value);
+        let name = _tblf._id2name(_tblf.filter_value);
         $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text(name);
         cb_stack.exec();
     };
 
     _tblf.render = function () {
-        var _ret = [];
+        let _ret = [];
         _ret.push('<div id="' + _tblf.dom_id + '" class="btn-group search-select">');
         _ret.push('<button type="button" class="btn dropdown-toggle" data-toggle="dropdown">');
         _ret.push('<span data-tp-select-result></span> <i class="fa fa-caret-right"></i></button>');
@@ -1317,7 +1322,7 @@ $tp.create_table_filter_role = function (tbl, roles) {
             return '所有';
         if (id_ === 0)
             return '尚未设置';
-        for (var i = 0; i < _tblf.roles.length; ++i) {
+        for (let i = 0; i < _tblf.roles.length; ++i) {
             if (_tblf.roles[i].id === id_)
                 return _tblf.roles[i].name;
         }
@@ -1328,12 +1333,12 @@ $tp.create_table_filter_role = function (tbl, roles) {
     _tblf.on_created = function () {
         $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text('所有');
         $('#' + _tblf.dom_id + ' li a[data-tp-selector]').click(function () {
-            var select = parseInt($(this).attr('data-tp-selector'));
+            let select = parseInt($(this).attr('data-tp-selector'));
             if (_tblf.filter_value === select)
                 return;
             _tblf.filter_value = select;
 
-            var name = _tblf._id2name(select);
+            let name = _tblf._id2name(select);
             $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text(name);
 
             // 刷新数据
@@ -1343,7 +1348,7 @@ $tp.create_table_filter_role = function (tbl, roles) {
 };
 
 // $tp.create_table_filter_user_state = function (tbl, states, on_created) {
-//     var _tblf = {};
+//     let _tblf = {};
 //     _tblf._table_ctrl = tbl;
 //     _tblf.dom_id = tbl.dom_id + '-filter-user-state';
 //     _tblf.name = 'user_state';
@@ -1364,13 +1369,13 @@ $tp.create_table_filter_role = function (tbl, roles) {
 //
 //     _tblf.reset = function (cb_stack) {
 //         _tblf.filter_value = _tblf.default_value;
-//         var name = _tblf._id2name(_tblf.filter_value);
+//         let name = _tblf._id2name(_tblf.filter_value);
 //         $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text(name);
 //         cb_stack.exec();
 //     };
 //
 //     _tblf.render = function () {
-//         var _ret = [];
+//         let _ret = [];
 //         _ret.push('<div id="' + _tblf.dom_id + '" class="btn-group search-select" role="group">');
 //         _ret.push('<button type="button" class="btn dropdown-toggle" data-toggle="dropdown">');
 //         _ret.push('<span data-tp-select-result></span> <i class="fa fa-caret-right"></i></button>');
@@ -1388,7 +1393,7 @@ $tp.create_table_filter_role = function (tbl, roles) {
 //     _tblf._id2name = function (id_) {
 //         if (id_ === 0)
 //             return '所有';
-//         for (var i = 0; i < _tblf.states.length; ++i) {
+//         for (let i = 0; i < _tblf.states.length; ++i) {
 //             if (_tblf.states[i].id === id_)
 //                 return _tblf.states[i].name;
 //         }
@@ -1399,12 +1404,12 @@ $tp.create_table_filter_role = function (tbl, roles) {
 //     _tblf.on_created = function () {
 //         $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text('所有');
 //         $('#' + _tblf.dom_id + ' li a[data-tp-selector]').click(function () {
-//             var select = parseInt($(this).attr('data-tp-selector'));
+//             let select = parseInt($(this).attr('data-tp-selector'));
 //             if (_tblf.filter_value === select)
 //                 return;
 //             _tblf.filter_value = select;
 //
-//             var name = _tblf._id2name(select);
+//             let name = _tblf._id2name(select);
 //             // console.log(select, name);
 //
 //             $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text(name);
@@ -1417,7 +1422,7 @@ $tp.create_table_filter_role = function (tbl, roles) {
 // };
 
 $tp.create_table_header_filter_state = function (tbl, name, states, exclude_ids) {
-    var _tblf = {};
+    let _tblf = {};
     _tblf._table_ctrl = tbl;
     _tblf.dom_id = tbl.dom_id + '-header-filter-' + name;
     _tblf.name = name;
@@ -1426,7 +1431,7 @@ $tp.create_table_header_filter_state = function (tbl, name, states, exclude_ids)
 
     _tblf.states = [];
     if (exclude_ids && exclude_ids.length > 0) {
-        for (var i = 0; i < states.length; ++i) {
+        for (let i = 0; i < states.length; ++i) {
             if (_.indexOf(exclude_ids, states[i].id) !== -1)
                 continue;
             _tblf.states.push(states[i]);
@@ -1443,7 +1448,7 @@ $tp.create_table_header_filter_state = function (tbl, name, states, exclude_ids)
     };
 
     _tblf.get_filter = function () {
-        var ret = {};
+        let ret = {};
         if (_tblf.default_value === _tblf.filter_value)
             return ret;
         ret[_tblf.name] = _tblf.filter_value;
@@ -1452,13 +1457,13 @@ $tp.create_table_header_filter_state = function (tbl, name, states, exclude_ids)
 
     _tblf.reset = function (cb_stack) {
         _tblf.filter_value = _tblf.default_value;
-        var name = _tblf._id2name(_tblf.filter_value);
+        let name = _tblf._id2name(_tblf.filter_value);
         $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text(name);
         cb_stack.exec();
     };
 
     _tblf.render = function () {
-        var _ret = [];
+        let _ret = [];
         _ret.push('<div id="' + _tblf.dom_id + '" class="btn-group search-select" role="group">');
         _ret.push('<button type="button" class="btn dropdown-toggle" data-toggle="dropdown">');
         _ret.push('<span data-tp-select-result></span> <i class="fa fa-caret-right"></i></button>');
@@ -1476,7 +1481,7 @@ $tp.create_table_header_filter_state = function (tbl, name, states, exclude_ids)
     _tblf._id2name = function (id_) {
         if (id_ === 0)
             return '所有';
-        for (var i = 0; i < _tblf.states.length; ++i) {
+        for (let i = 0; i < _tblf.states.length; ++i) {
             if (_tblf.states[i].id === id_)
                 return _tblf.states[i].name;
         }
@@ -1487,12 +1492,12 @@ $tp.create_table_header_filter_state = function (tbl, name, states, exclude_ids)
     _tblf.on_created = function () {
         $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text('所有');
         $('#' + _tblf.dom_id + ' li a[data-tp-selector]').click(function () {
-            var select = parseInt($(this).attr('data-tp-selector'));
+            let select = parseInt($(this).attr('data-tp-selector'));
             if (_tblf.filter_value === select)
                 return;
             _tblf.filter_value = select;
 
-            var name = _tblf._id2name(select);
+            let name = _tblf._id2name(select);
 
             $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text(name);
 
@@ -1503,7 +1508,7 @@ $tp.create_table_header_filter_state = function (tbl, name, states, exclude_ids)
 };
 
 $tp.create_table_header_filter_dropdown = function (tbl, name, states, exclude_ids) {
-    var _tblf = {};
+    let _tblf = {};
     _tblf._table_ctrl = tbl;
     _tblf.dom_id = tbl.dom_id + '-header-filter-' + name;
     _tblf.name = name;
@@ -1512,7 +1517,7 @@ $tp.create_table_header_filter_dropdown = function (tbl, name, states, exclude_i
 
     _tblf.states = [];
     if (exclude_ids && exclude_ids.length > 0) {
-        for (var i = 0; i < states.length; ++i) {
+        for (let i = 0; i < states.length; ++i) {
             if (_.indexOf(exclude_ids, states[i].id) !== -1)
                 continue;
             _tblf.states.push(states[i]);
@@ -1529,7 +1534,7 @@ $tp.create_table_header_filter_dropdown = function (tbl, name, states, exclude_i
     };
 
     _tblf.get_filter = function () {
-        var ret = {};
+        let ret = {};
         if (_tblf.default_value === _tblf.filter_value)
             return ret;
         ret[_tblf.name] = _tblf.filter_value;
@@ -1538,13 +1543,13 @@ $tp.create_table_header_filter_dropdown = function (tbl, name, states, exclude_i
 
     _tblf.reset = function (cb_stack) {
         _tblf.filter_value = _tblf.default_value;
-        var name = _tblf._id2name(_tblf.filter_value);
+        let name = _tblf._id2name(_tblf.filter_value);
         $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text(name);
         cb_stack.exec();
     };
 
     _tblf.render = function () {
-        var _ret = [];
+        let _ret = [];
         _ret.push('<div id="' + _tblf.dom_id + '" class="btn-group search-select" role="group">');
         _ret.push('<button type="button" class="btn dropdown-toggle" data-toggle="dropdown">');
         _ret.push('<span data-tp-select-result></span> <i class="fa fa-caret-right"></i></button>');
@@ -1562,7 +1567,7 @@ $tp.create_table_header_filter_dropdown = function (tbl, name, states, exclude_i
     _tblf._id2name = function (id_) {
         if (id_ === 0)
             return '所有';
-        for (var i = 0; i < _tblf.states.length; ++i) {
+        for (let i = 0; i < _tblf.states.length; ++i) {
             if (_tblf.states[i].id === id_)
                 return _tblf.states[i].name;
         }
@@ -1574,12 +1579,12 @@ $tp.create_table_header_filter_dropdown = function (tbl, name, states, exclude_i
         $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text('所有');
         $('#' + _tblf.dom_id + ' li a[data-tp-selector]').click(function () {
 
-            var select = parseInt($(this).attr('data-tp-selector'));
+            let select = parseInt($(this).attr('data-tp-selector'));
             if (_tblf.filter_value === select)
                 return;
             _tblf.filter_value = select;
 
-            var name = _tblf._id2name(select);
+            let name = _tblf._id2name(select);
 
             $('#' + _tblf.dom_id + ' span[data-tp-select-result]').text(name);
 
@@ -1590,7 +1595,7 @@ $tp.create_table_header_filter_dropdown = function (tbl, name, states, exclude_i
 };
 
 $tp.create_table_filter_group = function (tbl, name, dom_id, groups) {
-    var _tblf = {};
+    let _tblf = {};
     _tblf._table_ctrl = tbl;
     _tblf.dom_id = dom_id;
     _tblf.name = name;
@@ -1601,7 +1606,7 @@ $tp.create_table_filter_group = function (tbl, name, dom_id, groups) {
     _tblf._table_ctrl.add_filter_ctrl(_tblf.name, _tblf);
 
     _tblf.init = function (cb_stack) {
-        var html = [];
+        let html = [];
         html.push('<li><a href="javascript:;" data-tp-selector="-1" data-name="所有"><i class="fa fa-caret-right fa-fw"></i> 所有</a></li>');
         $.each(_tblf.groups, function (i, item) {
             html.push('<li><a href="javascript:;" data-tp-selector="' + item.id + '" data-name="' + item.name + '"><i class="fa fa-caret-right fa-fw"></i> ' + item.name + '</a></li>');
@@ -1610,12 +1615,12 @@ $tp.create_table_filter_group = function (tbl, name, dom_id, groups) {
 
 
         $(_tblf.dom_id + ' li a[data-tp-selector]').click(function () {
-            var select = parseInt($(this).attr('data-tp-selector'));
+            let select = parseInt($(this).attr('data-tp-selector'));
             if (_tblf.filter_value === select)
                 return;
             _tblf.filter_value = select;
 
-            var name = _tblf._id2name(select);
+            let name = _tblf._id2name(select);
             $(_tblf.dom_id + ' span[data-tp-select-result]').text(name);
 
             // 刷新数据
@@ -1627,7 +1632,7 @@ $tp.create_table_filter_group = function (tbl, name, dom_id, groups) {
     };
 
     _tblf.get_filter = function () {
-        var ret = {};
+        let ret = {};
         ret[_tblf.name] = _tblf.filter_value;
         return ret;
     };
@@ -1637,7 +1642,7 @@ $tp.create_table_filter_group = function (tbl, name, dom_id, groups) {
             return '所有';
         // if (id_ === 0)
         //     return '尚未设置';
-        for (var i = 0; i < _tblf.groups.length; ++i) {
+        for (let i = 0; i < _tblf.groups.length; ++i) {
             if (_tblf.groups[i].id === id_)
                 return _tblf.groups[i].name;
         }

@@ -33,6 +33,7 @@ class DatabaseInit:
             self._create_syslog()
             self._create_record()
             self._create_record_audit()
+            self._create_integration_auth()
             self._make_builtin_data(sysadmin, email, password)
         except:
             log.e('[db] can not create and initialize database.\n')
@@ -823,6 +824,32 @@ class DatabaseInit:
         self._db_exec(
             '创建运维审计操作表...',
             'CREATE TABLE `{}record_audit` ({});'.format(self.db.table_prefix, ','.join(f))
+        )
+
+    def _create_integration_auth(self):
+        """ 第三方服务集成认证信息 """
+        f = list()
+
+        # id: 自增主键
+        f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
+        # acc_key: 访问KEY
+        f.append('`acc_key` varchar(32) DEFAULT ""')
+        # acc_sec: 访问密钥
+        f.append('`acc_sec` varchar(64) DEFAULT ""')
+        # role_id: 此访问授权对应的角色ID, 关联到role表（也即对应的权限）
+        f.append('`role_id` int(11) DEFAULT 0')
+        # name: 第三方服务名称
+        f.append('`name` varchar(64) DEFAULT ""')
+        # comment: 描述
+        f.append('`comment` varchar(64) DEFAULT ""')
+        # creator_id: 创建者的id，0=系统默认创建
+        f.append('`creator_id` int(11) DEFAULT 0')
+        # create_time: 创建时间 timestamp
+        f.append('`create_time` int(11) DEFAULT 0')
+
+        self._db_exec(
+            '创建第三方服务集成认证信息表...',
+            'CREATE TABLE `{}integration_auth` ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
     def _make_builtin_data(self, sysadmin, email, password):

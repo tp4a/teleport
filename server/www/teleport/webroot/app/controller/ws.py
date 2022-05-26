@@ -13,7 +13,7 @@ from app.const import *
 
 class DashboardHandler(tornado.websocket.WebSocketHandler):
     def check_origin(self, origin):  # 针对websocket处理类重写同源检查的方法
-        print('ws-dashboard origin:', origin)
+        # print('ws-dashboard origin:', origin)
         return True
 
     # 接受websocket链接，保存链接实例

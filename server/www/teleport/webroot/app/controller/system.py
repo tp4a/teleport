@@ -23,7 +23,7 @@ from app.model import user
 from app.base.core_server import core_service_async_post_http
 from app.base.session import tp_session
 from app.logic.auth.ldap import Ldap
-from app.base.utils import tp_timestamp_sec
+from app.base.utils import tp_timestamp_sec, tp_gen_password
 from ._sidebar_menu import tp_generate_sidebar
 
 
@@ -272,8 +272,8 @@ class DoSaveCfgHandler(TPBaseJsonHandler):
                     # 特殊处理，防止前端拿到密码
                     tp_cfg().sys_smtp_password = _password
                 else:
-                    return self.write_json(err)            
-            
+                    return self.write_json(err)
+
             if 'password' in args:
                 processed = True
                 _cfg = args['password']
@@ -679,7 +679,6 @@ class DoLdapImportHandler(TPBaseJsonHandler):
 
                 user_list.append(u)
 
-            print(user_list)
             user.create_users(self, user_list, success, failed)
 
             # 对于创建成功的用户，发送密码邮件函
@@ -769,4 +768,84 @@ class DoRebuildAuditAuzMapHandler(TPBaseJsonHandler):
             return
 
         err = ops.build_auz_map()
+        self.write_json(err)
+
+
+class DoGetIntegrationHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
+        if ret != TPE_OK:
+            return
+
+        err, total_count, page_index, row_data = system_model.get_integration(with_acc_sec=False)
+        ret = dict()
+        ret['page_index'] = page_index
+        ret['total'] = total_count
+        ret['data'] = row_data
+        self.write_json(err, data=ret)
+
+
+class DoUpdateIntegrationHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            _id = int(args['id'])
+            _role_id = int(args['role_id'])
+            _name = args['name']
+            _comment = args['comment']
+            if _id != -1:
+                _acc_key = args['acc_key']
+                _regenerate = args['regenerate']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        ret = dict()
+        if _id == -1:
+            err, acc_key, acc_sec = system_model.create_integration(self, _role_id, _name, _comment)
+        else:
+            err, acc_key, acc_sec = system_model.update_integration(self, _id, _role_id, _name, _comment, _acc_key, _regenerate)
+
+        if err == TPE_OK:
+            ret['acc_key'] = acc_key
+            ret['acc_sec'] = acc_sec
+            self.write_json(TPE_OK, data=ret)
+        else:
+            self.write_json(err)
+
+
+class DoRemoveIntegrationHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_CONFIG)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            items = args['items']
+        except:
+            return self.write_json(TPE_PARAM)
+
+        err = system_model.remove_integration(self, items)
+
         self.write_json(err)

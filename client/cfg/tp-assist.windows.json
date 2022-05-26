@@ -24,6 +24,13 @@
                 "desc": []
             },
             {
+                "name": "mobaxterm",
+                "display": "MobaXterm",
+                "app": "",
+                "cmdline": "-newtab \"sshpass -p**** ssh {user_name}@{host_ip} -p {host_port}\"",
+                "desc": []
+            },
+            {
                 "name": "other",
                 "display": "自定义",
                 "app": "",

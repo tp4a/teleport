@@ -267,6 +267,12 @@ controllers = [
     (r'/system/do-ldap-import', system.DoLdapImportHandler),
     #  - [text] 导出数据库
     (r'/system/export-db', system.DoExportDBHandler),
+    #  - [json] 获取第三方服务集成使用的密钥列表
+    (r'/system/get-integration', system.DoGetIntegrationHandler),
+    #  - [json] 创建/更新第三方服务集成使用的密钥
+    (r'/system/update-integration', system.DoUpdateIntegrationHandler),
+    #  - [json] 移除第三方服务集成使用的密钥
+    (r'/system/remove-integration', system.DoRemoveIntegrationHandler),
 
     #
     #  - [json] 获取服务器时间
