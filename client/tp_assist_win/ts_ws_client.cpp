@@ -783,7 +783,7 @@ void TsWsClient::_rpc_func_run_client(ex_astr& buf, AssistMessage& msg_req, Json
 	ex_wstr w_real_host_ip;
 	ex_astr2wstr(real_host_ip, w_real_host_ip);
 	ex_wstr w_remote_host_name;
-	ex_astr2wstr(remote_host_name, w_remote_host_name);
+	ex_astr2wstr(remote_host_name, w_remote_host_name, EX_CODEPAGE_UTF8);
 	WCHAR w_port[32] = { 0 };
 	swprintf_s(w_port, _T("%d"), teleport_port);
 
