@@ -841,6 +841,8 @@ $app.create_config_integration = function () {
                     title: '权限角色',
                     key: 'role_name',
                     width: 120,
+                    render: 'role_name',
+                    fields: {role_name: 'role_name'}
                 },
                 {
                     title: '',
@@ -905,6 +907,13 @@ $app.create_config_integration = function () {
 
         render.acc_key = function (row_id, fields) {
             return '<span class="mono">' + fields.acc_key + '</span>';
+        };
+
+        render.role_name = function(row_id, fields) {
+            if(!_.isNull(fields.role_name) && fields.role_name.length > 0)
+                return fields.role_name;
+            else
+                return '<span class="label label-sm label-danger">尚未设置</span>';
         };
 
         render.make_action_btn = function (row_id, fields) {

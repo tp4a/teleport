@@ -11,7 +11,8 @@ from app.model import host
 from app.base.logger import *
 from app.base.controller import TPBaseJsonHandler
 from app.base.utils import tp_bin, tp_str, tp_timestamp_sec
-from app.base.extsrv import tp_ext_srv_cfg
+# from app.base.extsrv import tp_ext_srv_cfg
+from app.base.integration import tp_integration
 from .ops import api_request_session_id
 
 
@@ -43,7 +44,8 @@ def _parse_api_args(handler):
         return False, handler.write_json(TPE_PARAM)
 
     # 从数据库中根据access-key查找access-secret
-    sec_info = tp_ext_srv_cfg().get_secret_info(req_access_key)
+    # sec_info = tp_ext_srv_cfg().get_secret_info(req_access_key)
+    sec_info = tp_integration().get_secret(req_access_key)
     if sec_info is None:
         return False, handler.write_json(TPE_INVALID_API_KEY)
     access_secret = sec_info['secret']
@@ -67,6 +69,7 @@ def _parse_api_args(handler):
         return False, handler.write_json(TPE_JSON_FORMAT)
 
     args['_srv_name_'] = sec_info['name']
+    args['_privilege_'] = sec_info['privilege']
 
     # log.d('api:get_host, param=', args, '\n')
 
@@ -106,6 +109,7 @@ class RequestSessionHandler(TPBaseJsonHandler):
             acc_id = args['account_id']
             operator = args['operator']
             protocol_sub_type = args['protocol_sub_type']
+            privilege = args['_privilege_']
         except:
             return self.write_json(TPE_PARAM)
 
@@ -115,7 +119,8 @@ class RequestSessionHandler(TPBaseJsonHandler):
             acc_id,
             protocol_sub_type,
             self.request.remote_ip,
-            operator
+            operator,
+            privilege
         )
 
         if ret['code'] != TPE_OK:

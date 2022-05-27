@@ -13,6 +13,7 @@ from app.base import mail
 from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.logger import *
+from app.base.integration import tp_integration
 from app.const import *
 from app.base.db import get_db
 from app.model import syslog
@@ -132,6 +133,9 @@ class DoRoleUpdateHandler(TPBaseJsonHandler):
                 return self.write_json(TPE_FAILED, '禁止修改系统管理员角色！')
             err = system_model.update_role(self, role_id, role_name, privilege)
 
+            if err == TPE_OK:
+                tp_integration().update_by_role_id(role_id, privilege)
+
         return self.write_json(err, data=role_id)
 
 
@@ -159,6 +163,9 @@ class DoRoleRemoveHandler(TPBaseJsonHandler):
         if role_id == 1:
             return self.write_json(TPE_FAILED, '禁止删除系统管理员角色！')
         err = system_model.remove_role(self, role_id)
+
+        if err == TPE_OK:
+            tp_integration().update_by_role_id(role_id, 0)
 
         return self.write_json(err)
 
@@ -806,19 +813,19 @@ class DoUpdateIntegrationHandler(TPBaseJsonHandler):
             _role_id = int(args['role_id'])
             _name = args['name']
             _comment = args['comment']
-            if _id != -1:
-                _acc_key = args['acc_key']
-                _regenerate = args['regenerate']
+            _acc_key = None if _id == -1 else args['acc_key']
+            _regenerate = False if _id == -1 else args['regenerate']
         except:
             return self.write_json(TPE_PARAM)
 
         ret = dict()
         if _id == -1:
-            err, acc_key, acc_sec = system_model.create_integration(self, _role_id, _name, _comment)
+            err, _id, acc_key, acc_sec, privilege = system_model.create_integration(self, _role_id, _name, _comment)
         else:
-            err, acc_key, acc_sec = system_model.update_integration(self, _id, _role_id, _name, _comment, _acc_key, _regenerate)
+            err, acc_key, acc_sec, privilege = system_model.update_integration(self, _id, _role_id, _name, _comment, _acc_key, _regenerate)
 
         if err == TPE_OK:
+            tp_integration().update_by_id(_id, acc_key, acc_sec, _name, _role_id, privilege)
             ret['acc_key'] = acc_key
             ret['acc_sec'] = acc_sec
             self.write_json(TPE_OK, data=ret)
@@ -847,5 +854,7 @@ class DoRemoveIntegrationHandler(TPBaseJsonHandler):
             return self.write_json(TPE_PARAM)
 
         err = system_model.remove_integration(self, items)
+        if err == TPE_OK:
+            tp_integration().remove_by_id(items)
 
         self.write_json(err)

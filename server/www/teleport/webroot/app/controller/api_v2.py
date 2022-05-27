@@ -12,7 +12,8 @@ from app.model import host
 from app.base.logger import *
 from app.base.controller import TPBaseJsonHandler
 from app.base.utils import tp_bin, tp_str, tp_timestamp_sec
-from app.base.extsrv import tp_ext_srv_cfg
+# from app.base.extsrv import tp_ext_srv_cfg
+from app.base.integration import tp_integration
 from .ops import api_v2_request_session_id
 
 
@@ -53,7 +54,8 @@ def _parse_api_args(handler):
         return False, handler.write_json(TPE_PARAM)
 
     # 从数据库中根据access-key查找access-secret
-    sec_info = tp_ext_srv_cfg().get_secret_info(req_access_key)
+    # sec_info = tp_ext_srv_cfg().get_secret_info(req_access_key)
+    sec_info = tp_integration().get_secret(req_access_key)
     if sec_info is None:
         return False, handler.write_json(TPE_INVALID_API_KEY)
     access_secret = sec_info['secret']
@@ -93,7 +95,7 @@ def _parse_api_args(handler):
         return False, handler.write_json(TPE_JSON_FORMAT)
 
     args['_srv_name_'] = sec_info['name']
-    args['_privilege'] = sec_info['privilege']
+    args['_privilege_'] = sec_info['privilege']
 
     return True, args
 
@@ -115,6 +117,7 @@ class RequestSessionHandler(TPBaseJsonHandler):
             remote_secret = args['remote_secret']
             protocol_type = args['protocol_type']
             protocol_sub_type = args['protocol_sub_type']
+            privilege = args['_privilege_']
         except:
             return self.write_json(TPE_PARAM)
 
@@ -122,7 +125,7 @@ class RequestSessionHandler(TPBaseJsonHandler):
 
         ret = yield api_v2_request_session_id(
             remote_ip, remote_port, remote_auth_type, remote_user, remote_secret,
-            protocol_type, protocol_sub_type, self.request.remote_ip, operator
+            protocol_type, protocol_sub_type, self.request.remote_ip, operator, privilege
         )
 
         if ret['code'] != TPE_OK:
@@ -141,7 +144,7 @@ class RequestAccessTokenHandler(TPBaseJsonHandler):
 
         try:
             operator = args['operator']
-            privilege = args['_privilege']
+            privilege = args['_privilege_']
         except:
             return self.write_json(TPE_PARAM)
 

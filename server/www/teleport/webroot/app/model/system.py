@@ -134,24 +134,33 @@ def create_integration(handler, role_id, name, comment):
     acc_sec = tp_gen_password(32)
     for i in range(20):
         _acc_key = 'TP{}'.format(tp_gen_password(14))
-        sql = 'SELECT `id` FROM {dbtp}integration_auth WHERE `acc_key`="{acc_key}";'.format(dbtp=db.table_prefix, acc_key=_acc_key)
-        db_ret = db.query(sql)
+        sql = 'SELECT `id` FROM {dbtp}integration_auth WHERE `acc_key`={ph};'.format(dbtp=db.table_prefix, ph=db.place_holder)
+        db_ret = db.query(sql, (_acc_key, ))
         if db_ret is not None and len(db_ret) > 0:
             continue
         acc_key = _acc_key
         break
     if len(acc_key) == 0:
-        return TPE_FAILED, None, None
+        return TPE_FAILED
+
+    # 查询对应的角色的权限
+    sql = 'SELECT `privilege` FROM {tp}role WHERE `id`={ph}'.format(tp=db.table_prefix, ph=db.place_holder)
+    db_ret = db.query(sql, (role_id, ))
+    if db_ret is None or len(db_ret) != 1:
+        return TPE_DATABASE
+    privilege = db_ret[0][0]
 
     sql = 'INSERT INTO `{dbtp}integration_auth` (`acc_key`, `acc_sec`, `role_id`, `name`, `comment`, `creator_id`, `create_time`) VALUES ' \
           '("{acc_key}", "{acc_sec}", {role_id}, "{name}", "{comment}", {creator_id}, {create_time});' \
           ''.format(dbtp=db.table_prefix, acc_key=acc_key, acc_sec=acc_sec, role_id=role_id, name=name, comment=comment, creator_id=operator['id'], create_time=_time_now)
     db_ret = db.exec(sql)
     if not db_ret:
-        return TPE_DATABASE, None, None
+        return TPE_DATABASE
+
+    _id = db.last_insert_id()
 
     syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "创建外部密钥 {}".format(name))
-    return TPE_OK, acc_key, acc_sec
+    return TPE_OK, _id, acc_key, acc_sec, privilege
 
 
 def update_integration(handler, _id, role_id, name, comment, acc_key, regenerate):
@@ -167,6 +176,13 @@ def update_integration(handler, _id, role_id, name, comment, acc_key, regenerate
     if db_ret is None or len(db_ret) == 0:
         return TPE_NOT_EXISTS, None, None
 
+    # 查询对应的角色的权限
+    sql = 'SELECT `privilege` FROM {tp}role WHERE `id`={ph}'.format(tp=db.table_prefix, ph=db.place_holder)
+    db_ret = db.query(sql, (role_id, ))
+    if db_ret is None or len(db_ret) != 1:
+        return TPE_DATABASE
+    privilege = db_ret[0][0]
+
     if regenerate:
         acc_sec = tp_gen_password(32)
         sql = 'UPDATE `{dbtp}integration_auth` SET `name`={ph}, `comment`={ph}, `role_id`={ph}, `acc_sec`={ph} WHERE `id`={ph};' \
@@ -181,7 +197,7 @@ def update_integration(handler, _id, role_id, name, comment, acc_key, regenerate
         return TPE_DATABASE, None, None
 
     syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "更新外部密钥 {}{}".format(name, '，重新生成access-secret。' if regenerate else ''))
-    return TPE_OK, acc_key, acc_sec
+    return TPE_OK, acc_key, acc_sec, privilege
 
 
 def remove_integration(handler, items):

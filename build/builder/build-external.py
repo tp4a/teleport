@@ -942,6 +942,7 @@ def main():
     if command == 'ext-client':
         builder.build_jsoncpp()
         builder.build_mongoose()
+        builder.build_zlib()
         builder.build_openssl()
     elif command == 'ext-server':
         builder.prepare_python()

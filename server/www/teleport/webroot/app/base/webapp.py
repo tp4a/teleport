@@ -16,7 +16,6 @@ import tornado.web
 import tornado.platform.asyncio
 from app.const import *
 from app.base.configs import tp_cfg
-from app.base.extsrv import tp_ext_srv_cfg
 from app.base.db import get_db
 from app.base.logger import log
 from app.base.session import tp_session
@@ -26,6 +25,7 @@ from app.base.host_alive import tp_host_alive
 from app.base.utils import tp_generate_random
 from app.app_ver import TP_SERVER_VER
 from app.base.assist_bridge import tp_assist_bridge
+from app.base.integration import tp_integration
 
 
 class WebApp:
@@ -100,10 +100,6 @@ class WebApp:
         return 0
 
     def _run_loop(self):
-        ext_srv_cfg = tp_ext_srv_cfg()
-        if not ext_srv_cfg.init():
-            return 0
-
         log.i('Teleport Web Server starting ...\n')
 
         tp_cron().init()
@@ -155,6 +151,10 @@ class WebApp:
 
         if not tp_stats().init():
             log.e('can not initialize system status collector.\n')
+            return 0
+
+        if not tp_integration().init():
+            log.e('can not load integration config.\n')
             return 0
 
         if cfg.common.check_host_alive:

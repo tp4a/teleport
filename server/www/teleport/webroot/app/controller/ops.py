@@ -92,12 +92,18 @@ class SessionListsHandler(TPBaseHandler):
 
 
 @tornado.gen.coroutine
-def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator):
+def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator, privilege):
     ret = {
         'code': TPE_OK,
         'message': '',
         'data': {}
     }
+
+    # 检查权限
+    if (privilege & TP_PRIVILEGE_OPS) == 0:
+        ret['code'] = TPE_PRIVILEGE
+        ret['message'] = '权限不足'
+        return ret
 
     conn_info = dict()
     conn_info['_enc'] = 1
@@ -106,7 +112,6 @@ def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator):
     conn_info['user_id'] = 1
     conn_info['user_username'] = operator
 
-    # 直接连接（无需授权，第三方服务操作，已经经过授权检查了）
     err, acc_info = account.get_account_info(acc_id)
     if err != TPE_OK:
         ret['code'] = err
@@ -198,19 +203,24 @@ def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator):
 @tornado.gen.coroutine
 def api_v2_request_session_id(
         remote_ip, remote_port, remote_auth_type, remote_user, remote_secret,
-        protocol_type, protocol_sub_type, client_ip, operator):
+        protocol_type, protocol_sub_type, client_ip, operator, privilege):
     ret = {
         'code': TPE_OK,
         'message': '',
         'data': {}
     }
 
-    # 直接连接（无需授权，第三方服务操作，已经经过授权检查了）
+    # 检查权限
+    if (privilege & TP_PRIVILEGE_OPS) == 0:
+        ret['code'] = TPE_PRIVILEGE
+        ret['message'] = '权限不足'
+        return ret
+
     conn_info = dict()
     conn_info['_enc'] = 0
-    conn_info['host_id'] = 1
+    conn_info['host_id'] = 0
     conn_info['client_ip'] = client_ip
-    conn_info['user_id'] = 1
+    conn_info['user_id'] = 0
     conn_info['user_username'] = operator
 
     conn_info['host_ip'] = remote_ip
