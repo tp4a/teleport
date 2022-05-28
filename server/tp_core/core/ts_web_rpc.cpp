@@ -60,7 +60,7 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
         EXLOGE("[core] get conn info from web-server failed: can not connect to web-server.\n");
         return TPE_NETWORK;
     }
-    if (body.length() == 0)
+    if (body.empty())
     {
         EXLOGE("[core] get conn info from web-server failed: got nothing.\n");
         return TPE_NETWORK;
@@ -191,10 +191,10 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
     // 注意，account_id可以为-1，表示这是一次测试连接。
     // if (user_id <= 0 || host_id <= 0
     // 	||
-    if (user_username.length() == 0
-        || host_ip.length() == 0 || conn_ip.length() == 0 || client_ip.length() == 0
+    if (user_username.empty()
+        || host_ip.empty() || conn_ip.empty() || client_ip.empty()
         || conn_port <= 0 || conn_port >= 65535
-        || acc_username.length() == 0
+        || acc_username.empty()
         || !(protocol_type == TP_PROTOCOL_TYPE_RDP || protocol_type == TP_PROTOCOL_TYPE_SSH || protocol_type == TP_PROTOCOL_TYPE_TELNET)
         || !(auth_type == TP_AUTH_TYPE_NONE || auth_type == TP_AUTH_TYPE_PASSWORD || auth_type == TP_AUTH_TYPE_PRIVATE_KEY)
             )
@@ -202,10 +202,14 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
         return TPE_PARAM;
     }
 
-    if (auth_type != TP_AUTH_TYPE_NONE && acc_secret.length() == 0)
-    {
+    // 认证方式为密码时，允许不设置密码，而是连接时由用户手动输入
+    if(acc_secret.empty() && !(auth_type == TP_AUTH_TYPE_NONE || auth_type == TP_AUTH_TYPE_PASSWORD))
         return TPE_PARAM;
-    }
+
+    // if (auth_type != TP_AUTH_TYPE_NONE && acc_secret.length() == 0)
+    // {
+    //     return TPE_PARAM;
+    // }
 
     if (_enc && !acc_secret.empty())
     {

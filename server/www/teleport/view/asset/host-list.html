@@ -46,7 +46,7 @@
 
 {% block block_body %}
     <div class="page-content-inner">
-{#        ## 防止页面搜索框被自动填充#}
+        {#        ## 防止页面搜索框被自动填充#}
         <label style="display:none;"><span></span><input type="text" name="hidden1"></label>
         <label style="display:none;"><span></span><input type="password" name="hidden2"></label>
 
@@ -136,12 +136,12 @@
 
                     <div class="form-horizontal">
 
-{#                        ##                        <div class="form-group form-group-sm">#}
-{#                            ## <label for="edit-host-type" class="col-sm-2 control-label require">主机类型：</label>#}
-{#                            ##                            <div class="col-sm-6">#}
-{#                                ##                                <div id="edit-host-type" class="btn-group btn-group-sm"></div>#}
-{#                                ##                            </div>#}
-{#                            ##                        </div>#}
+                        {#                        ##                        <div class="form-group form-group-sm">#}
+                        {#                            ## <label for="edit-host-type" class="col-sm-2 control-label require">主机类型：</label>#}
+                        {#                            ##                            <div class="col-sm-6">#}
+                        {#                                ##                                <div id="edit-host-type" class="btn-group btn-group-sm"></div>#}
+                        {#                                ##                            </div>#}
+                        {#                            ##                        </div>#}
 
                         <div class="form-group form-group-sm">
                             <label for="edit-host-os-type" class="col-sm-3 control-label require">远程主机系统：</label>
@@ -303,18 +303,13 @@
                             <label class="col-sm-3 control-label" for="account-protocol-port"><strong>端口：</strong></label>
                             <div class="col-sm-9">
                                 <input id="account-protocol-port" type="text" class="form-control" placeholder=""/>
-{#                                ## <p id="account-protocol-port-static" class="form-control-static mono" style="color:#0a6aa1;font-weight:bold;display:none;"></p>#}
                             </div>
                         </div>
 
                         <div class="form-group form-group-sm">
                             <label class="col-sm-3 control-label" for="account-auth-type"><strong>认证方式：</strong></label>
                             <div class="col-sm-9">
-                                <select id="account-auth-type" class="form-control">
-                                    <option value="1">用户名/密码 认证</option>
-                                    <option value="2">SSH私钥 认证</option>
-                                    <option value="0">无需认证</option>
-                                </select>
+                                <select id="account-auth-type" class="form-control"></select>
                             </div>
                         </div>
 
@@ -358,8 +353,13 @@
                                         <input id="account-password" type="password" class="form-control" placeholder="登录远程主机的密码">
                                         <span class="input-group-btn"><button class="btn btn-sm btn-default" type="button" id="btn-show-account-password"><i class="fa fa-eye fa-fw"></i></button></span>
                                     </div>
+                                    <div class="control-desc-sm-input">
+                                        <span>如不填写密码，则会在远程连接时要求用户手动输入。</span>
+                                        <span id="block-clear-password">如果已设置了密码，可<a href="javascript:" id="btn-clear-password">点击此处清除</a>。</span>
+                                    </div>
                                 </div>
                             </div>
+
                         </div>
 
                         <div id="block-sshkey" style="display:none;">

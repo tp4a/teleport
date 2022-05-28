@@ -532,7 +532,7 @@ $tp.create_table = function (options) {
             if (!_tbl.options.columns.hasOwnProperty(i))
                 continue;
             let col = _tbl.options.columns[i];
-            for (k in kv) {
+            for (let k in kv) {
                 if (!kv.hasOwnProperty(k))
                     continue;
 

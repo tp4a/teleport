@@ -12,7 +12,7 @@
 
 extern void* g_app;
 
-int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char* term_type, const char* term_theme, const char* term_title);
+int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char* term_type, const char* term_theme, const char* term_title, const char* interactive_mode);
 int AppDelegate_select_app (void *_self);
 
 // for cpp global object initialize.

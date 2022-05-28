@@ -6,28 +6,28 @@
                 "name": "putty",
                 "display": "PuTTY（内置）",
                 "app": "{assist_tools_path}\\putty\\putty.exe",
-                "cmdline": "-ssh -pw **** -P {host_port} -l {user_name} {host_ip}",
+                "cmdline": "-ssh {password:-pw ****} -P {host_port} -l {user_name} {host_ip}",
                 "desc": []
             },
             {
                 "name": "crt",
                 "display": "SecureCRT",
                 "app": "",
-                "cmdline": "/T /N \"TP#ssh://{real_ip}\" /SSH2 /P {host_port} /PASSWORD **** {user_name}@{host_ip}",
+                "cmdline": "/T /N \"TP#ssh://{real_ip}\" /SSH2 /P {host_port} {password:/PASSWORD ****} {user_name}@{host_ip}",
                 "desc": []
             },
             {
                 "name": "xshell",
                 "display": "Xshell",
                 "app": "",
-                "cmdline": "-newtab \"TP#ssh://{real_ip}\" -url ssh://{user_name}:****@{host_ip}:{host_port}",
+                "cmdline": "-newtab \"TP#ssh://{real_ip}\" -url ssh://{user_name}{password::****}@{host_ip}:{host_port}",
                 "desc": []
             },
             {
                 "name": "mobaxterm",
                 "display": "MobaXterm",
                 "app": "",
-                "cmdline": "-newtab \"sshpass -p**** ssh {user_name}@{host_ip} -p {host_port}\"",
+                "cmdline": "-newtab \"sshpass {password:-p****} ssh {user_name}@{host_ip} -p {host_port}\"",
                 "desc": []
             },
             {
@@ -45,7 +45,7 @@
                 "name": "winscp",
                 "display": "WinSCP（内置）",
                 "app": "{assist_tools_path}\\winscp\\winscp.exe",
-                "cmdline": "/sessionname=\"TP#{real_ip}\" {user_name}:****@{host_ip}:{host_port}",
+                "cmdline": "/sessionname=\"TP#{real_ip}\" {user_name}{password::****}@{host_ip}:{host_port}",
                 "desc": []
             },
             {

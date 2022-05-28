@@ -296,6 +296,32 @@ def add_account(handler, host_id, args):
     return TPE_OK, _id
 
 
+def clear_account_password(handler, host_id, acc_id):
+    db = get_db()
+    sql = 'UPDATE `{tp}acc` SET `password`="" WHERE `id`={ph} AND `host_id`={ph}'.format(tp=db.table_prefix, ph=db.place_holder)
+    db_ret = db.exec(sql, (acc_id, host_id))
+    if not db_ret:
+        return TPE_DATABASE
+
+    return TPE_OK
+
+
+def get_account_password(acc_id):
+    db = get_db()
+    s = SQL(db)
+    s.select_from('acc', ['password'], alt_name='a')
+    s.where('a.id={ph}'.format(ph=db.place_holder))
+    err = s.query((acc_id, ))
+    if err != TPE_OK:
+        return err, None
+    if len(s.recorder) != 1:
+        return TPE_DATABASE, None
+
+    # s.recorder[0]['_host'] = sh.recorder[0]
+
+    return TPE_OK, s.recorder[0]['password']
+
+
 def update_account(handler, host_id, acc_id, args):
     """
     更新一个远程账号

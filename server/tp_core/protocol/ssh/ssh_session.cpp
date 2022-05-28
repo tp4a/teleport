@@ -15,8 +15,8 @@ SshSession::SshSession(SshProxy* proxy, ssh_session rs_tp2cli, uint32_t dbg_id, 
         m_conn_info(nullptr),
         m_conn_port(0),
         m_flags(0),
-        m_auth_type(TP_AUTH_TYPE_NONE),
-        m_allow_user_input_password(false)
+        m_auth_type(TP_AUTH_TYPE_NONE)
+        // , m_allow_user_input_password(false)
 {
     ex_strformat(m_dbg_name, 128, "ssh-%d", dbg_id);
     ex_strformat(m_dbg_client, 128, "%s:%d", client_ip, client_port);
@@ -455,6 +455,7 @@ int SshSession::_on_auth_password_request(ssh_session /*session*/, const char* u
 int SshSession::_do_auth(const char* user, const char* secret)
 {
     EXLOGD("[%s] authenticating, user: %s\n", m_dbg_name.c_str(), user);
+    // EXLOGD("[%s] authenticating, user: %s, secret: %s\n", m_dbg_name.c_str(), user, secret);
 
     // v3.6.0
     // 场景
@@ -591,12 +592,12 @@ int SshSession::_do_auth(const char* user, const char* secret)
         if (m_acc_secret.empty())
         {
             // 如果TP中未设置远程账号密码，表示允许用户自行输入密码
-            m_allow_user_input_password = true;
+            // m_allow_user_input_password = true;
 
-            // 如果传入的password为特定值，应该是由助手调用客户端，填写的密码
-            // 直接返回认证失败，这样客户端会让用户输入密码
-            if (0 == strcmp(secret, "INTERACTIVE_USER"))
-                return SSH_AUTH_DENIED;
+            // // 如果传入的password为特定值，应该是由助手调用客户端，填写的密码
+            // // 直接返回认证失败，这样客户端会让用户输入密码
+            // if (0 == strcmp(secret, "INTERACTIVE_USER"))
+            //     return SSH_AUTH_DENIED;
 
             // 用户脱离TP-WEB，直接使用客户端输入的密码
             m_acc_secret = secret;
@@ -761,7 +762,7 @@ int SshSession::_do_auth(const char* user, const char* secret)
 
                     // about 'echo':
                     // This is an optional variable. You can obtain a boolean if the user input should be echoed or
-                    // hidden. For passwords it is usually hidden.
+                    // hidden. For password it is usually hidden.
 
                     EXLOGV("[%s] interactive login prompt(%s): %s\n", m_dbg_name.c_str(), echo ? "hidden" : "not hidden", prompt);
                     if (echo)

@@ -1,11 +1,11 @@
-on scriptRun(argsCmd, argsProfile, argsTitle)
+on scriptRun(argsCmd, argsProfile, argsTitle, argsInteractiveMode)
 	set theCmd to (argsCmd)
 	set theProfile to (argsProfile)
 	set theTitle to (argsTitle)
-	CommandRun(theCmd, theProfile, theTitle)
+	CommandRun(theCmd, theProfile, theTitle, argsInteractiveMode)
 end scriptRun
 
-on CommandRun(theCmd, theProfile, theTitle)
+on CommandRun(theCmd, theProfile, theTitle, theInteractiveMode)
 	try
 		tell application "iTerm"
 			if it is not running then
@@ -29,8 +29,10 @@ on CommandRun(theCmd, theProfile, theTitle)
 							set name to theTitle
 							set profile to theProfile
 							write text theCmd
-							delay 0.5
-							write text ""
+                            if theInteractiveMode = "no" then
+                                delay 0.5
+                                write text ""
+                            end if
 						end tell
 					end tell
 				end tell
@@ -50,8 +52,10 @@ on CommandRun(theCmd, theProfile, theTitle)
 									delay 0.5
 									set name to theTitle
 									write text theCmd
-									delay 0.5
-									write text ""
+                                    if theInteractiveMode = "no" then
+                                        delay 0.5
+                                        write text ""
+                                    end if
 								end tell
 							end tell
 						end tell
@@ -70,8 +74,10 @@ on CommandRun(theCmd, theProfile, theTitle)
 								delay 0.5
 								set name to theTitle
 								write text theCmd
-								delay 0.5
-								write text ""
+                                if theInteractiveMode = "no" then
+                                    delay 0.5
+                                    write text ""
+                                end if
 							end tell
 						end tell
 					end tell

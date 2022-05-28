@@ -109,7 +109,7 @@ class TPAssistBridge(object):
             return assist_info
 
     def handle_assist_message(self, msg_req: AssistMessage):
-        log.v('add message, cmd_id={}\n'.format(msg_req.cmd_id))
+        # log.v('add message, cmd_id={}\n'.format(msg_req.cmd_id))
         self._commands[msg_req.cmd_id] = msg_req
 
     def on_web_client_connect(self, msg_req: AssistMessage, s_id: str, param: dict) -> None:

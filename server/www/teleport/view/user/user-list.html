@@ -172,7 +172,7 @@
                                        placeholder="用户账号，也就是用户登录名"/>
                             </div>
                             <div class="col-sm-5">
-                                <div class="control-desc">英文字符和数字，最大32字符</div>
+                                <div class="control-desc-sm">英文字符和数字，最大32字符</div>
                             </div>
                         </div>
 
@@ -189,7 +189,7 @@
                                 <input id="edit-user-email" type="text" class="form-control" placeholder="电子邮箱地址"/>
                             </div>
                             <div class="col-sm-5">
-                                <div class="control-desc">用于激活账号、重置密码。</div>
+                                <div class="control-desc-sm">用于激活账号、重置密码。</div>
                             </div>
                         </div>
 
@@ -224,7 +224,7 @@
                                 </div>
                             </div>
                             <div class="col-sm-5">
-                                <div class="control-desc">开始</div>
+                                <div class="control-desc-sm">开始时间</div>
                             </div>
                         </div>
                         <div class="form-group form-group-sm">
@@ -237,7 +237,7 @@
                                 </div>
                             </div>
                             <div class="col-sm-5">
-                                <div class="control-desc">结束</div>
+                                <div class="control-desc-sm">结束时间</div>
                             </div>
                         </div>
 
@@ -444,7 +444,7 @@
                                        placeholder="LDAP服务器IP或域名"/>
                             </div>
                             <div class="col-sm-6">
-                                <label class="form-check-label"><input id="edit-ldap-ssl" type="checkbox" class="form-check-input"/> 使用 SSL</label>
+                                <label class="control-label"><input id="edit-ldap-ssl" type="checkbox"/> 使用 SSL</label>
                             </div>
                         </div>
 
@@ -503,7 +503,7 @@
                             <label for="edit-ldap-base-dn" class="col-sm-2 control-label require">用户基准DN：</label>
                             <div class="col-sm-9">
                                 <input id="edit-ldap-base-dn" type="text" class="form-control" placeholder=""/>
-                                <div class="control-desc-sm">限制用户DN的范围，例如 <span class="important">ou=dev,ou=company,ou=com</span>。
+                                <div class="control-desc-sm-input">限制用户DN的范围，例如 <span class="important">ou=dev,ou=company,ou=com</span>。
                                 </div>
                             </div>
                         </div>
@@ -513,7 +513,7 @@
                             <div class="col-sm-9">
                                 <input id="edit-ldap-filter" type="text" class="form-control" placeholder=""
                                        value="(&(objectClass=person))"/>
-                                <div class="control-desc-sm">列举用户时的过滤器，例如 <span class="important">(&(objectClass=person))</span>。
+                                <div class="control-desc-sm-input">列举用户时的过滤器，例如 <span class="important">(&(objectClass=person))</span>。
                                 </div>
                             </div>
                         </div>

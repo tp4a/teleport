@@ -421,9 +421,9 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
             conn_info['_enc'] = 0
 
             if acc_id == -1:
-                if auth_type == TP_AUTH_TYPE_PASSWORD and len(password) == 0:
-                    return self.write_json(TPE_PARAM)
-                elif auth_type == TP_AUTH_TYPE_PRIVATE_KEY and len(pri_key) == 0:
+                # if auth_type == TP_AUTH_TYPE_PASSWORD and len(password) == 0:
+                #     return self.write_json(TPE_PARAM)
+                if auth_type == TP_AUTH_TYPE_PRIVATE_KEY and len(pri_key) == 0:
                     return self.write_json(TPE_PARAM)
             else:
                 if (auth_type == TP_AUTH_TYPE_PASSWORD and len(password) == 0) or (auth_type == TP_AUTH_TYPE_PRIVATE_KEY and len(pri_key) == 0):

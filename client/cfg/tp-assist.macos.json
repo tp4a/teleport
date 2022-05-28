@@ -21,7 +21,7 @@
                 "name": "securecrt",
                 "display": "SecureCRT",
                 "app": "/Applications/SecureCRT.app/Contents/MacOS/SecureCRT",
-                "cmdline": "/T /N \"TP#ssh://{real_ip}\" /SSH2 /L {user_name} /PASSWORD **** {host_ip}:{host_port}",
+                "cmdline": "/T /N \"TP#ssh://{real_ip}\" /SSH2 /L {user_name} {password:/PASSWORD ****} {host_ip}:{host_port}",
                 "desc": []
             },
             {
@@ -41,14 +41,14 @@
                 "name": "securefx",
                 "display": "SecureFX",
                 "app": "/Applications/SecureFX.app/Contents/MacOS/SecureFX",
-                "cmdline": "sftp://{user_name}:****@{host_ip}:{host_port}",
+                "cmdline": "sftp://{user_name}{password::****}@{host_ip}:{host_port}",
                 "desc": []
             },
             {
                 "name": "filezilla",
                 "display": "FileZilla",
                 "app": "/Applications/FileZilla.app/Contents/MacOS/filezilla",
-                "cmdline": "sftp://{user_name}:****@{host_ip}:{host_port}",
+                "cmdline": "{interactive:-l ask} sftp://{user_name}{password::****}@{host_ip}:{host_port}",
                 "desc": []
             },
             {

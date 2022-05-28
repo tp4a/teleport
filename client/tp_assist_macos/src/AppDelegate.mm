@@ -29,13 +29,14 @@
 
 @implementation AppDelegate
 
-int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char* term_type, const char* term_theme, const char* term_title) {
+int AppDelegate_start_ssh_client (void *_self, const char* cmd_line, const char* term_type, const char* term_theme, const char* term_title, const char* interactive_mode) {
 	NSString* cmdLine = [NSString stringWithUTF8String:cmd_line];
 	NSString* termType = [NSString stringWithUTF8String:term_type];
 	NSString* termTheme = [NSString stringWithUTF8String:term_theme];
 	NSString* termTitle = [NSString stringWithUTF8String:term_title];
+    NSString* interactiveMode = [NSString stringWithUTF8String:interactive_mode];
 
-	return [(__bridge id)_self start_ssh_client:cmdLine termType:termType termTheme:termTheme termTitle:termTitle];
+	return [(__bridge id)_self start_ssh_client:cmdLine termType:termType termTheme:termTheme termTitle:termTitle interactiveMode:interactiveMode];
 }
 
 int AppDelegate_select_app (void *_self) {
@@ -118,14 +119,14 @@ int AppDelegate_select_app (void *_self) {
     }
 }
 
-- (int) start_ssh_client:(NSString*)cmd_line termType:(NSString*)term_type termTheme:(NSString*)term_theme termTitle:(NSString*)term_title {
+- (int) start_ssh_client:(NSString*)cmd_line termType:(NSString*)term_type termTheme:(NSString*)term_theme termTitle:(NSString*)term_title interactiveMode:(NSString*)interactive_mode {
 	NSString *term = [[NSBundle mainBundle] pathForResource:term_type ofType:@"scpt"];
 	
 	if(!term)
 		return 1;
 	
 	NSString *handlerName = @"scriptRun";
-	NSArray *passParameters = @[cmd_line, term_theme, term_title];
+	NSArray *passParameters = @[cmd_line, term_theme, term_title, interactive_mode];
 	[self runScript:term handler:handlerName parameters:passParameters];
 	
 	return 0;

@@ -233,15 +233,15 @@ class DoUpdateAccountHandler(TPBaseJsonHandler):
 
         if acc_id == -1:
             # 新增账号
-            if param['auth_type'] == TP_AUTH_TYPE_PASSWORD and len(param['password']) == 0:
-                return self.write_json(TPE_PARAM)
-            elif param['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY and len(param['pri_key']) == 0:
+            # if param['auth_type'] == TP_AUTH_TYPE_PASSWORD and len(param['password']) == 0:
+            #     return self.write_json(TPE_PARAM)
+            if param['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY and len(param['pri_key']) == 0:
                 return self.write_json(TPE_PARAM)
 
         if param['auth_type'] == TP_AUTH_TYPE_PASSWORD and len(param['password']) > 0:
             code, ret_data = yield core_service_async_enc(param['password'])
             if code != TPE_OK:
-                return self.write_json(code)
+                return self.write_json(code, '无法加密存储密码！')
             else:
                 param['password'] = ret_data
         elif param['auth_type'] == TP_AUTH_TYPE_PRIVATE_KEY and len(param['pri_key']) > 0:
@@ -258,6 +258,60 @@ class DoUpdateAccountHandler(TPBaseJsonHandler):
             info = {}
 
         self.write_json(err, data=info)
+
+
+class DoClearAccountPasswordHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_ACCOUNT)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            host_id = int(args['host_id'])
+            acc_id = int(args['acc_id'])
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        err = account.clear_account_password(self, host_id, acc_id)
+        self.write_json(err)
+
+
+class DoGetAccountInteractiveModeHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            acc_id = int(args['acc_id'])
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        err, password = account.get_account_password(acc_id)
+        if err != TPE_OK:
+            return self.write_json(err)
+
+        self.write_json(TPE_OK, data={'is_interactive': True if len(password) == 0 else False})
 
 
 class DoUpdateAccountsHandler(TPBaseJsonHandler):

@@ -822,7 +822,7 @@ $app.create_config_integration = function () {
                     fields: {id: 'id'}
                 },
                 {
-                    title: '服务名称',
+                    title: '外部服务名称',
                     key: 'name',
                     width: 120,
                 },
@@ -848,7 +848,7 @@ $app.create_config_integration = function () {
                     title: '',
                     key: 'action',
                     align: 'center',
-                    width: 200,
+                    width: 150,
                     render: 'make_action_btn',
                     fields: {id: 'id'}
                 }
@@ -920,7 +920,7 @@ $app.create_config_integration = function () {
             let ret = [];
             ret.push('<div class="btn-group btn-group-sm" role="group">');
             ret.push('<btn class="btn btn-primary" data-btn-edit="edit"><i class="fa fa-edit"></i> 编辑</btn>');
-            ret.push('<btn class="btn btn-danger" data-btn-remove="' + fields.id + '"><i class="fas fa-trash-alt"></i> 删除</btn>');
+            ret.push('<btn class="btn btn-danger" data-btn-remove="remove"><i class="fas fa-trash-alt"></i> 删除</btn>');
             ret.push('</div>');
             return ret.join('');
         };

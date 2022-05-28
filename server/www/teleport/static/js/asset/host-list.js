@@ -33,7 +33,7 @@ $app.create_controls = function (cb_stack) {
     //-------------------------------
     // 主机列表表格
     //-------------------------------
-    var table_host_options = {
+    let table_host_options = {
         dom_id: 'table-host',
         data_source: {
             type: 'ajax-post',
@@ -190,7 +190,7 @@ $app.create_controls = function (cb_stack) {
         $app.dom.dlg_import_asset.modal({backdrop: 'static'});
     });
     $app.dom.chkbox_host_select_all.click(function () {
-        var _objects = $('#' + $app.table_host.dom_id + ' tbody').find('[data-check-box]');
+        let _objects = $('#' + $app.table_host.dom_id + ' tbody').find('[data-check-box]');
         if ($(this).is(':checked')) {
             $.each(_objects, function (i, _obj) {
                 $(_obj).prop('checked', true);
@@ -227,8 +227,8 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
     } else if (col_key === 'action') {
         // 绑定系统选择框事件
         cell_obj.find('[data-action]').click(function () {
-            var host = $app.table_host.get_row(row_id);
-            var action = $(this).attr('data-action');
+            let host = $app.table_host.get_row(row_id);
+            let action = $(this).attr('data-action');
             if (action === 'edit') {
                 $app.dlg_edit_host.show_edit(row_id);
             } else if (action === 'account') {
@@ -265,12 +265,12 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
 $app.on_table_host_render_created = function (render) {
 
     render.filter_state = function (header, title, col) {
-        var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+        let _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
         _ret.push('<div class="tp-table-filter-inner">');
         _ret.push('<div class="search-title">' + title + '</div>');
 
         // 表格内嵌过滤器的DOM实体在这时生成
-        var filter_ctrl = header._table_ctrl.get_filter_ctrl('state');
+        let filter_ctrl = header._table_ctrl.get_filter_ctrl('state');
         _ret.push(filter_ctrl.render());
 
         _ret.push('</div></div>');
@@ -279,12 +279,12 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.filter_search = function (header, title, col) {
-        var _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
+        let _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
         _ret.push('<div class="tp-table-filter-inner">');
         _ret.push('<div class="search-title">' + title + '</div>');
 
         // 表格内嵌过滤器的DOM实体在这时生成
-        var filter_ctrl = header._table_ctrl.get_filter_ctrl('search');
+        let filter_ctrl = header._table_ctrl.get_filter_ctrl('search');
         _ret.push(filter_ctrl.render());
 
         _ret.push('</div></div>');
@@ -297,7 +297,7 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.host_info = function (row_id, fields) {
-        var title, sub_title;
+        let title, sub_title;
 
         title = fields.name;
         sub_title = fields.ip;
@@ -306,7 +306,7 @@ $app.on_table_host_render_created = function (render) {
             title = fields.ip;
         }
 
-        var desc = [];
+        let desc = [];
         if (fields.desc.length > 0) {
             desc.push(fields.desc.replace(/\r/ig, "").replace(/\n/ig, "<br/>"));
         }
@@ -314,7 +314,7 @@ $app.on_table_host_render_created = function (render) {
             sub_title += '，由 ' + fields.router_ip + ':' + fields.router_port + ' 路由';
         }
 
-        var ret = [];
+        let ret = [];
         // ret.push('<div><span class="host-name" href="javascript:;">' + title + '</span>');
         // if (desc.length > 0) {
         //     ret.push('<a class="host-id-desc" data-toggle="popover" data-placement="right"');
@@ -347,9 +347,9 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.host_state = function (row_id, fields) {
-        var _style, _state;
+        let i, _style, _state;
 
-        for (var i = 0; i < $app.obj_states.length; ++i) {
+        for (i = 0; i < $app.obj_states.length; ++i) {
             if ($app.obj_states[i].id === fields.state) {
                 _style = $app.obj_states[i].style;
                 _state = $app.obj_states[i].name;
@@ -365,7 +365,7 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.host_alive = function (row_id, fields) {
-        var _style, _alive;
+        let _style, _alive;
 
         if (fields.alive === -1) {
             _style = 'alive-unknown';
@@ -391,7 +391,7 @@ $app.on_table_host_render_created = function (render) {
             _alive = '正在检测';
         }
 
-        var ret = [];
+        let ret = [];
 
         ret.push('<div><a class="alive ' + _style + '" data-toggle="popover" data-placement="left"');
         ret.push(' data-html="true"');
@@ -403,7 +403,7 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.make_host_action_btn = function (row_id, fields) {
-        var h = [];
+        let h = [];
         h.push('<div class="btn-group btn-group-sm">');
         h.push('<button type="button" class="btn btn-no-border dropdown-toggle" data-toggle="dropdown">');
         h.push('<span data-selected-action>操作</span> <i class="fa fa-caret-right"></i></button>');
@@ -433,7 +433,7 @@ $app.on_table_host_header_created = function (header) {
     });
 
     // TODO: 当过滤器不是默认值时，让“重置过滤器按钮”有呼吸效果，避免用户混淆 - 实验性质
-    // var t1 = function(){
+    // let t1 = function(){
     //     $app.dom.btn_table_host_reset_filter.fadeTo(1000, 1.0, function(){
     //         $app.dom.btn_table_host_reset_filter.fadeTo(1000, 0.2, t1);
     //     });
@@ -447,8 +447,8 @@ $app.on_table_host_header_created = function (header) {
 };
 
 $app.check_host_all_selected = function (cb_stack) {
-    var _all_checked = true;
-    var _objs = $('#' + $app.table_host.dom_id + ' tbody').find('[data-check-box]');
+    let _all_checked = true;
+    let _objs = $('#' + $app.table_host.dom_id + ' tbody').find('[data-check-box]');
     if (_objs.length === 0) {
         _all_checked = false;
     } else {
@@ -472,15 +472,15 @@ $app.check_host_all_selected = function (cb_stack) {
 
 $app.on_btn_select_file_click = function () {
 
-    var html = '<input id="file-selector" type="file" name="csvfile" accept=".csv,text/csv,text/comma-separated-values" class="hidden" value="" style="display: none;"/>';
+    let html = '<input id="file-selector" type="file" name="csvfile" accept=".csv,text/csv,text/comma-separated-values" class="hidden" value="" style="display: none;"/>';
     $('body').after($(html));
-    var btn_file_selector = $("#file-selector");
+    let btn_file_selector = $("#file-selector");
 
     btn_file_selector.change(function () {
         $app.dom.upload_file_message.hide();
-        // var dom_file_name = $('#upload-file-name');
+        // let dom_file_name = $('#upload-file-name');
 
-        var file = null;
+        let file = null;
         if (btn_file_selector[0].files && btn_file_selector[0].files[0]) {
             file = btn_file_selector[0].files[0];
         } else if (btn_file_selector[0].files && btn_file_selector[0].files.item(0)) {
@@ -492,7 +492,7 @@ $app.on_btn_select_file_click = function () {
             return;
         }
 
-        var _ext = file.name.substring(file.name.lastIndexOf('.')).toLocaleLowerCase();
+        let _ext = file.name.substring(file.name.lastIndexOf('.')).toLocaleLowerCase();
         if (_ext !== '.csv') {
             $app.dom.upload_file_info.html('抱歉，仅支持导入 csv 格式的文件！');
             return;
@@ -503,7 +503,7 @@ $app.on_btn_select_file_click = function () {
             return;
         }
 
-        var fileInfo = '';
+        let fileInfo = '';
         fileInfo += file.name;
         fileInfo += '<br/>';
         fileInfo += tp_size2str(file.size, 2);
@@ -526,7 +526,7 @@ $app.on_btn_do_upload_click = function () {
         .show();
 
 
-    var param = {};
+    let param = {};
     $.ajaxFileUpload({
         url: "/asset/upload-import",// 需要链接到服务器地址
         fileElementId: "file-selector", // 文件选择框的id属性
@@ -538,7 +538,7 @@ $app.on_btn_do_upload_click = function () {
             console.log(data);
             $('#file-selector').remove();
 
-            var ret = JSON.parse(data);
+            let ret = JSON.parse(data);
             console.log(ret);
 
             if (ret.code === TPE_OK) {
@@ -549,10 +549,10 @@ $app.on_btn_do_upload_click = function () {
 
                 $app.table_host.load_data();
             } else {
-                var err_msg = ['<i class="far fa-times-circle fa-fw"></i> 资产导入失败：' + ret.message];
+                let err_msg = ['<i class="far fa-times-circle fa-fw"></i> 资产导入失败：' + ret.message];
                 if (!_.isUndefined(ret.data)) {
                     err_msg.push('<div style="max-height:280px;overflow:auto;margin-left:20px;">');
-                    var err_lines = [];
+                    let err_lines = [];
                     $.each(ret.data, function (i, item) {
                         err_lines.push('第' + item.line + '行：' + item.error);
                     });
@@ -580,11 +580,11 @@ $app.show_user_info = function (row_id) {
 };
 
 $app.get_selected_host = function (tbl) {
-    var items = [];
-    var _objs = $('#' + $app.table_host.dom_id + ' tbody tr td input[data-check-box]');
+    let items = [];
+    let _objs = $('#' + $app.table_host.dom_id + ' tbody tr td input[data-check-box]');
     $.each(_objs, function (i, _obj) {
         if ($(_obj).is(':checked')) {
-            var _row_data = tbl.get_row(_obj);
+            let _row_data = tbl.get_row(_obj);
             // _all_checked = false;
             items.push(_row_data.id);
         }
@@ -609,7 +609,7 @@ $app._lock_hosts = function (host_ids) {
 };
 
 $app.on_btn_lock_host_click = function () {
-    var items = $app.get_selected_host($app.table_host);
+    let items = $app.get_selected_host($app.table_host);
     if (items.length === 0) {
         $tp.notify_error('请选择要禁用的主机！');
         return;
@@ -635,7 +635,7 @@ $app._unlock_hosts = function (host_ids) {
 };
 
 $app.on_btn_unlock_host_click = function () {
-    var items = $app.get_selected_host($app.table_host);
+    let items = $app.get_selected_host($app.table_host);
     if (items.length === 0) {
         $tp.notify_error('请选择要解禁的主机！');
         return;
@@ -645,7 +645,7 @@ $app.on_btn_unlock_host_click = function () {
 };
 
 $app._remove_hosts = function (host_ids) {
-    var _fn_sure = function (cb_stack) {
+    let _fn_sure = function (cb_stack) {
         $tp.ajax_post_json('/asset/update-hosts', {action: 'remove', hosts: host_ids},
             function (ret) {
                 if (ret.code === TPE_OK) {
@@ -665,7 +665,7 @@ $app._remove_hosts = function (host_ids) {
         );
     };
 
-    var cb_stack = CALLBACK_STACK.create();
+    let cb_stack = CALLBACK_STACK.create();
     $tp.dlg_confirm(cb_stack, {
         msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除主机将同时删除与之相关的账号，并将主机和账号从所在分组中移除，同时删除所有相关授权！</p></div><p>如果您希望临时禁止登录指定主机，可将其“禁用”！</p><p>您确定要移除选定的' + host_ids.length + '个主机吗？</p>',
         fn_yes: _fn_sure
@@ -673,7 +673,7 @@ $app._remove_hosts = function (host_ids) {
 };
 
 $app.on_btn_remove_host_click = function () {
-    var items = $app.get_selected_host($app.table_host);
+    let items = $app.get_selected_host($app.table_host);
     if (items.length === 0) {
         $tp.notify_error('请选择要删除的主机！');
         return;
@@ -683,7 +683,7 @@ $app.on_btn_remove_host_click = function () {
 };
 
 $app.create_dlg_edit_host = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-edit-host';
     dlg.field_id = -1;  // 主机id（仅编辑模式）
     // dlg.field_type = -1;
@@ -716,7 +716,7 @@ $app.create_dlg_edit_host = function () {
     };
 
     dlg.init = function (cb_stack) {
-        var html = [];
+        let html = [];
         // // 创建类型选择框
         // html.push('<button type="button" class="btn btn-sm dropdown-toggle" data-toggle="dropdown">');
         // html.push('<span data-selected-type>选择主机类型</span> <i class="fa fa-caret-right"></i></button>');
@@ -730,10 +730,10 @@ $app.create_dlg_edit_host = function () {
         //
         // // 绑定类型选择框事件
         // $('#' + dlg.dom_id + ' li a[data-type-selector]').click(function () {
-        //     var select = parseInt($(this).attr('data-type-selector'));
+        //     let select = parseInt($(this).attr('data-type-selector'));
         //     if (dlg.field_type === select)
         //         return;
-        //     var name = $app.id2name($app.host_types, select);
+        //     let name = $app.id2name($app.host_types, select);
         //     if (_.isUndefined(name)) {
         //         name = '选择主机类型角色';
         //         dlg.field_type = -1;
@@ -772,9 +772,9 @@ $app.create_dlg_edit_host = function () {
     };
 
     dlg.init_fields = function (host) {
-        // var type_name = '选择主机类型';
+        // let type_name = '选择主机类型';
         // dlg.field_type = -1;
-        // var os_name = '选择操作系统';
+        // let os_name = '选择操作系统';
         dlg.field_id = -1;
         dlg.field_os_type = -1;
 
@@ -792,7 +792,7 @@ $app.create_dlg_edit_host = function () {
             dlg.field_id = host.id;
             dlg.dom.dlg_title.html('编辑主机：');
 
-            var _name = $app.id2name($app.host_os_type, host.os_type);
+            let _name = $app.id2name($app.host_os_type, host.os_type);
             if (!_.isUndefined(_name)) {
                 // os_name = _name;
             }
@@ -831,7 +831,7 @@ $app.create_dlg_edit_host = function () {
     };
 
     dlg.show_edit = function (row_id) {
-        var host = $app.table_host.get_row(row_id);
+        let host = $app.table_host.get_row(row_id);
         dlg.init_fields(host);
         dlg.dom.dialog.modal({backdrop: 'static'});
     };
@@ -909,14 +909,14 @@ $app.create_dlg_edit_host = function () {
         if (!dlg.check_input())
             return;
 
-        var action = (dlg.field_id === -1) ? '添加' : '更新';
+        let action = (dlg.field_id === -1) ? '添加' : '更新';
 
-        // var router_addr = '';
+        // let router_addr = '';
         // if (dlg.field_conn_mode === 1) {
         //     router_addr = dlg.field_router_ip + ':' + dlg.field_router_port;
         // }
 
-        var args = {
+        let args = {
             id: dlg.field_id,
             os_type: dlg.field_os_type,
             ip: dlg.field_ip,
@@ -948,7 +948,7 @@ $app.create_dlg_edit_host = function () {
 };
 
 $app.create_dlg_accounts = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-accounts';
     dlg.host_row_id = -1;
     dlg.host = null;
@@ -977,7 +977,7 @@ $app.create_dlg_accounts = function () {
         // 账号列表表格
         //-------------------------------
 
-        var table_acc_options = {
+        let table_acc_options = {
             dom_id: 'table-acc',
             data_source: {
                 type: 'none'
@@ -1069,7 +1069,7 @@ $app.create_dlg_accounts = function () {
         });
 
         dlg.dom.chkbox_acc_select_all.click(function () {
-            var _objects = $('#' + $app.table_acc.dom_id + ' tbody').find('[data-check-box]');
+            let _objects = $('#' + $app.table_acc.dom_id + ' tbody').find('[data-check-box]');
             if ($(this).is(':checked')) {
                 $.each(_objects, function (i, _obj) {
                     $(_obj).prop('checked', true);
@@ -1085,11 +1085,11 @@ $app.create_dlg_accounts = function () {
     };
 
     dlg.get_selected_acc = function (tbl) {
-        var items = [];
-        var _objs = $('#' + tbl.dom_id + ' tbody tr td input[data-check-box]');
+        let items = [];
+        let _objs = $('#' + tbl.dom_id + ' tbody tr td input[data-check-box]');
         $.each(_objs, function (i, _obj) {
             if ($(_obj).is(':checked')) {
-                var _row_data = tbl.get_row(_obj);
+                let _row_data = tbl.get_row(_obj);
                 items.push(_row_data.id);
             }
         });
@@ -1116,7 +1116,7 @@ $app.create_dlg_accounts = function () {
     };
 
     dlg.on_btn_lock_acc_click = function () {
-        var items = dlg.get_selected_acc($app.table_acc);
+        let items = dlg.get_selected_acc($app.table_acc);
         if (items.length === 0) {
             $tp.notify_error('请选择要禁用的账号！');
             return;
@@ -1146,7 +1146,7 @@ $app.create_dlg_accounts = function () {
     };
 
     dlg.on_btn_unlock_acc_click = function () {
-        var items = dlg.get_selected_acc($app.table_acc);
+        let items = dlg.get_selected_acc($app.table_acc);
         if (items.length === 0) {
             $tp.notify_error('请选择要解禁的账号！');
             return;
@@ -1156,7 +1156,7 @@ $app.create_dlg_accounts = function () {
     };
 
     dlg._remove_acc = function (acc_ids) {
-        var _fn_sure = function (cb_stack) {
+        let _fn_sure = function (cb_stack) {
             $tp.ajax_post_json('/asset/update-accounts', {action: 'remove', host_id: dlg.host.id, accounts: acc_ids},
                 function (ret) {
                     if (ret.code === TPE_OK) {
@@ -1166,7 +1166,7 @@ $app.create_dlg_accounts = function () {
                             .exec();
                         $tp.notify_success('删除主机操作成功！');
 
-                        var update_args = {
+                        let update_args = {
                             acc_count: dlg.host.acc_count - acc_ids.length
                         };
                         $app.table_host.update_row(dlg.host_row_id, update_args);
@@ -1184,7 +1184,7 @@ $app.create_dlg_accounts = function () {
             );
         };
 
-        var cb_stack = CALLBACK_STACK.create();
+        let cb_stack = CALLBACK_STACK.create();
         $tp.dlg_confirm(cb_stack, {
             msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p></div><p>如果您希望临时禁止以指定账号登录远程主机，可将其“禁用”！</p><p>您确定要移除选定的' + acc_ids.length + '个账号吗？</p>',
             fn_yes: _fn_sure
@@ -1192,7 +1192,7 @@ $app.create_dlg_accounts = function () {
     };
 
     dlg.on_btn_remove_acc_click = function () {
-        var items = dlg.get_selected_acc($app.table_acc);
+        let items = dlg.get_selected_acc($app.table_acc);
         if (items.length === 0) {
             $tp.notify_error('请选择要删除的账号！');
             return;
@@ -1241,9 +1241,9 @@ $app.create_dlg_accounts = function () {
             // 绑定系统选择框事件
             cell_obj.find('[data-action]').click(function () {
 
-                var action = $(this).attr('data-action');
-                var acc_id = $(this).attr('data-id');
-                var acc = tbl.get_row(row_id);
+                let action = $(this).attr('data-action');
+                let acc_id = $(this).attr('data-id');
+                let acc = tbl.get_row(row_id);
 
                 if (action === 'edit') {
                     $app.dlg_edit_account.show_edit(dlg.host_row_id, acc);
@@ -1261,12 +1261,12 @@ $app.create_dlg_accounts = function () {
     dlg.on_table_acc_render_created = function (render) {
 
         // render.filter_state = function (header, title, col) {
-        //     var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+        //     let _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
         //     _ret.push('<div class="tp-table-filter-inner">');
         //     _ret.push('<div class="search-title">' + title + '</div>');
         //
         //     // 表格内嵌过滤器的DOM实体在这时生成
-        //     var filter_ctrl = header._table_ctrl.get_filter_ctrl('state');
+        //     let filter_ctrl = header._table_ctrl.get_filter_ctrl('state');
         //     _ret.push(filter_ctrl.render());
         //
         //     _ret.push('</div></div>');
@@ -1275,12 +1275,12 @@ $app.create_dlg_accounts = function () {
         // };
         //
         // render.filter_search = function (header, title, col) {
-        //     var _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
+        //     let _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
         //     _ret.push('<div class="tp-table-filter-inner">');
         //     _ret.push('<div class="search-title">' + title + '</div>');
         //
         //     // 表格内嵌过滤器的DOM实体在这时生成
-        //     var filter_ctrl = header._table_ctrl.get_filter_ctrl('search');
+        //     let filter_ctrl = header._table_ctrl.get_filter_ctrl('search');
         //     _ret.push(filter_ctrl.render());
         //
         //     _ret.push('</div></div>');
@@ -1294,7 +1294,7 @@ $app.create_dlg_accounts = function () {
 
         render.acc_info = function (row_id, fields) {
             return fields.username;
-            // var ret = [];
+            // let ret = [];
             //
             // ret.push('<span class="user-surname">' + fields.username + '@' + fields.host_ip + '</span>');
             // if (fields.router_ip.length > 0)
@@ -1330,9 +1330,9 @@ $app.create_dlg_accounts = function () {
         };
 
         render.acc_state = function (row_id, fields) {
-            var _style, _state;
+            let i, _style, _state;
 
-            for (var i = 0; i < $app.obj_states.length; ++i) {
+            for (i = 0; i < $app.obj_states.length; ++i) {
                 if ($app.obj_states[i].id === fields.state) {
                     _style = $app.obj_states[i].style;
                     _state = $app.obj_states[i].name;
@@ -1348,7 +1348,7 @@ $app.create_dlg_accounts = function () {
         };
 
         render.make_host_action_btn = function (row_id, fields) {
-            // var h = [];
+            // let h = [];
             // h.push('<div class="btn-group btn-group-sm">');
             // h.push('<button type="button" class="btn btn-no-border dropdown-toggle" data-toggle="dropdown">');
             // h.push('<span data-selected-action>操作</span> <i class="fa fa-caret-right"></i></button>');
@@ -1367,7 +1367,7 @@ $app.create_dlg_accounts = function () {
             // return h.join('');
 
 
-            var ret = [];
+            let ret = [];
             ret.push('<div class="btn-group btn-group-sm" role="group">');
             ret.push('<btn class="btn btn-primary" data-action="edit" data-id="' + fields.id + '"><i class="fa fa-edit"></i> 编辑</btn>');
 
@@ -1398,8 +1398,8 @@ $app.create_dlg_accounts = function () {
     };
 
     dlg.check_acc_all_selected = function (cb_stack) {
-        var _all_checked = true;
-        var _objs = $('#' + $app.table_acc.dom_id + ' tbody').find('[data-check-box]');
+        let _all_checked = true;
+        let _objs = $('#' + $app.table_acc.dom_id + ' tbody').find('[data-check-box]');
         if (_objs.length === 0) {
             _all_checked = false;
         } else {
@@ -1426,7 +1426,7 @@ $app.create_dlg_accounts = function () {
 };
 
 $app.create_dlg_edit_account = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-edit-account';
     dlg.host_row_id = -1;
     dlg.host = null;
@@ -1460,6 +1460,8 @@ $app.create_dlg_edit_account = function () {
         prompt_password: $('#account-password-prompt'),
         btn_show_password: $('#btn-show-account-password'),
         btn_show_password_icon: $('#btn-show-account-password i'),
+        btn_clear_password: $('#btn-clear-password'),
+        block_clear_password: $('#block-clear-password'),
         btn_test: $('#btn-edit-account-test'),
         btn_save: $('#btn-edit-account-save')
     };
@@ -1481,6 +1483,24 @@ $app.create_dlg_edit_account = function () {
             }
         });
 
+        dlg.dom.btn_clear_password.click(function () {
+            $tp.ajax_post_json('/asset/clear-account-password', {
+                    host_id: dlg.host.id,
+                    acc_id: dlg.field_id
+                },
+                function (ret) {
+                    if (ret.code === TPE_OK) {
+                        $tp.notify_success('远程账号预设密码清除成功！');
+                    } else {
+                        $tp.notify_error('远程账号预设密码清除失败：' + tp_error_msg(ret.code, ret.message));
+                    }
+                },
+                function () {
+                    $tp.notify_error('网络故障，远程账号预设密码清除失败！');
+                }
+            );
+        });
+
         cb_stack.exec();
     };
 
@@ -1492,6 +1512,7 @@ $app.create_dlg_edit_account = function () {
             dlg.account = null;
             dlg.field_id = -1;
             dlg.dom.dlg_title.html('添加远程账号');
+            dlg.dom.block_clear_password.hide();
 
             if (dlg.host.os_type === TP_OS_TYPE_LINUX) {
                 dlg.dom.protocol_type.val(TP_PROTOCOL_TYPE_SSH);
@@ -1506,6 +1527,7 @@ $app.create_dlg_edit_account = function () {
             dlg.account = account;
             dlg.field_id = account.id;
             dlg.dom.dlg_title.html('编辑：' + account.username);
+            dlg.dom.block_clear_password.show();
 
             dlg.dom.username.val(account.username);
 
@@ -1525,7 +1547,7 @@ $app.create_dlg_edit_account = function () {
     dlg.on_protocol_change = function () {
         dlg.field_protocol = parseInt(dlg.dom.protocol_type.val());
 
-        var html = [];
+        let html = [];
         if (dlg.field_protocol === TP_PROTOCOL_TYPE_RDP) {
             dlg.dom.block_rdp_param.show();
             dlg.dom.block_ssh_param.hide();
@@ -1673,11 +1695,12 @@ $app.create_dlg_edit_account = function () {
         }
 
         if (dlg.field_auth_type === TP_AUTH_TYPE_PASSWORD) {
-            if (dlg.field_id === -1 && dlg.field_password.length === 0) {
-                dlg.dom.password.focus();
-                $tp.notify_error('请填写登录远程主机的密码！');
-                return false;
-            }
+            // 可以不用设置密码，在远程登录时用户再手动填写。
+            // if (dlg.field_id === -1 && dlg.field_password.length === 0) {
+            //     dlg.dom.password.focus();
+            //     $tp.notify_error('请填写登录远程主机的密码！');
+            //     return false;
+            // }
             dlg.field_pri_key = '';
         } else if (dlg.field_auth_type === TP_AUTH_TYPE_PRIVATE_KEY) {
             if (dlg.field_id === -1 && dlg.field_pri_key.length === 0) {
@@ -1700,7 +1723,7 @@ $app.create_dlg_edit_account = function () {
         if (!dlg.check_input())
             return;
 
-        var action = (dlg.field_id === -1) ? '添加' : '更新';
+        let action = (dlg.field_id === -1) ? '添加' : '更新';
 
         // 如果id为-1表示创建，否则表示更新
         $tp.ajax_post_json('/asset/update-account', {
@@ -1726,7 +1749,7 @@ $app.create_dlg_edit_account = function () {
 
                     if (dlg.field_id === -1) {
                         // 新建账号成功了，更新界面上对应主机的账号数
-                        var update_args = {
+                        let update_args = {
                             acc_count: dlg.host.acc_count + 1
                         };
                         $app.table_host.update_row(dlg.host_row_id, update_args);
@@ -1750,6 +1773,8 @@ $app.create_dlg_edit_account = function () {
         if (!dlg.check_input())
             return;
 
+        let is_interactive = (dlg.field_password.length === 0);
+
         $assist.do_teleport(
             {
                 mode: 0,
@@ -1764,7 +1789,8 @@ $app.create_dlg_edit_account = function () {
                 password: dlg.field_password,
                 pri_key: dlg.field_pri_key,
                 username_prompt: dlg.field_prompt_username,
-                password_prompt: dlg.field_prompt_password
+                password_prompt: dlg.field_prompt_password,
+                is_interactive: is_interactive
             },
             function () {
                 // func_success

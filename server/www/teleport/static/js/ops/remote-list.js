@@ -4,12 +4,10 @@ $app.on_init = function (cb_stack) {
     $app.dom = {
         btn_sel_group: $('#btn-sel-group button')
         , btn_refresh_host: $('#btn-refresh-host')
-        // , group_list_for_sel: $('#btn-sel-group ul')
-        // , group_selected: $('#group-selected')
     };
 
     // console.log($app.options);
-    if(!$app.options.core_cfg.detected) {
+    if (!$app.options.core_cfg.detected) {
         $tp.notify_error('核心服务未启动，无法进行远程连接！');
         cb_stack.exec();
         return;
@@ -27,17 +25,10 @@ $app.on_init = function (cb_stack) {
 //===================================
 $app.create_controls = function (cb_stack) {
 
-    // var html = [];
-    // $.each($app.options.host_groups, function (i, item) {
-    //     html.push('<li><a href="javascript:;" data-tp-selector="' + item.id + '" data-name="' + item.name + '"><i class="fa fa-caret-right fa-fw"></i> ' + item.name + '</a></li>');
-    // });
-    // $app.dom.group_list_for_sel.append($(html.join('')));
-    //
-
     //-------------------------------
     // 资产列表表格
     //-------------------------------
-    var table_host_options = {
+    let table_host_options = {
         dom_id: 'table-host',
         data_source: {
             type: 'ajax-post',
@@ -130,13 +121,14 @@ $app.create_controls = function (cb_stack) {
 $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
 
     if (col_key === 'action') {
+
         // 绑定系统选择框事件
         cell_obj.find('[data-action]').click(function (e) {
-            var action = $(this).attr('data-action');
-            var protocol_sub_type = $(this).attr('data-sub-protocol');
-            var uni_id = $(this).attr('data-id');
-            var acc_id = parseInt($(this).attr('data-acc-id'));
-            var host_id = parseInt($(this).attr('data-host-id'));
+            let action = $(this).attr('data-action');
+            let protocol_sub_type = $(this).attr('data-sub-protocol');
+            let uni_id = $(this).attr('data-id');
+            let acc_id = parseInt($(this).attr('data-acc-id'));
+            let host_id = parseInt($(this).attr('data-host-id'));
 
             if (action === 'rdp') {
                 $app.connect_remote(uni_id, acc_id, host_id, TP_PROTOCOL_TYPE_RDP, TP_PROTOCOL_TYPE_RDP_DESKTOP);
@@ -146,6 +138,8 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
                 $app.connect_remote(uni_id, acc_id, host_id, TP_PROTOCOL_TYPE_SSH, protocol_sub_type);
             } else if (action === 'telnet') {
                 $app.connect_remote(uni_id, acc_id, host_id, TP_PROTOCOL_TYPE_TELNET, TP_PROTOCOL_TYPE_TELNET_SHELL);
+            } else if (action === 'get_config') {
+                $app.get_remote_connection_config(acc_id, host_id);
             }
         });
     }
@@ -154,12 +148,12 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
 $app.on_table_host_render_created = function (render) {
 
     render.filter_state = function (header, title, col) {
-        var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+        let _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
         _ret.push('<div class="tp-table-filter-inner">');
         _ret.push('<div class="search-title">' + title + '</div>');
 
         // 表格内嵌过滤器的DOM实体在这时生成
-        var filter_ctrl = header._table_ctrl.get_filter_ctrl('state');
+        let filter_ctrl = header._table_ctrl.get_filter_ctrl('state');
         _ret.push(filter_ctrl.render());
 
         _ret.push('</div></div>');
@@ -168,12 +162,12 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.filter_search = function (header, title, col) {
-        var _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
+        let _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
         _ret.push('<div class="tp-table-filter-inner">');
         _ret.push('<div class="search-title">' + title + '</div>');
 
         // 表格内嵌过滤器的DOM实体在这时生成
-        var filter_ctrl = header._table_ctrl.get_filter_ctrl('search');
+        let filter_ctrl = header._table_ctrl.get_filter_ctrl('search');
         _ret.push(filter_ctrl.render());
 
         _ret.push('</div></div>');
@@ -182,7 +176,7 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.host_info = function (row_id, fields) {
-        var title, sub_title;
+        let title, sub_title;
 
         title = fields.h_name;
         sub_title = fields.ip;
@@ -193,77 +187,112 @@ $app.on_table_host_render_created = function (render) {
 
         // title = fields.a_name + '@' + title;
 
-        var desc = [];
+        // let desc = [];
         if (fields.router_ip.length > 0) {
             sub_title += '，由 ' + fields.router_ip + ':' + fields.router_port + ' 路由';
         }
 
-        var ret = [];
-        if (desc.length > 0) {
-            ret.push('<div><a class="host-name host-name-desc" data-toggle="popover" data-placement="right"');
-            ret.push(' data-html="true"');
-            ret.push(' data-content="' + desc.join('') + '"');
-            ret.push('>' + title + '</a>');
-        } else {
-            ret.push('<div><span class="host-name">' + title + '</span>');
-        }
+        let ret = [];
+        // if (desc.length > 0) {
+        //     ret.push('<div><a class="host-name host-name-desc" data-toggle="popover" data-placement="right"');
+        //     ret.push(' data-html="true"');
+        //     ret.push(' data-content="' + desc.join('') + '"');
+        //     ret.push('>' + title + '</a>');
+        // } else {
+        //     ret.push('<div><span class="host-name">' + title + '</span>');
+        // }
 
+        ret.push('<div><span class="host-name">' + title + '</span>');
         ret.push('</div><div class="host-ip" href="javascript:;" data-host-desc="' + sub_title + '">' + sub_title + '</div>');
         return ret.join('');
     };
 
     render.account = function (row_id, fields) {
-        var h = [];
-        for (var i = 0; i < fields.accs.length; ++i) {
-            var acc = fields.accs[i];
-            h.push('<div class="remote-info-group" id =' + "account-id-" + acc.id + '"><ul>');
+        let h = [];
+
+        // console.log('acc', fields);
+        if (fields.h_state !== TP_STATE_NORMAL || (fields.gh_state !== TP_STATE_NORMAL && fields.gh_state !== 0)) {
+            // 1. 主机已经被禁用，不显示相关账号。
+            // 2. 主机所在分组已经被禁用，不显示相关账号。
+            return;
+        }
+
+        for (let i = 0; i < fields.accs.length; ++i) {
+            let acc = fields.accs[i];
+            h.push('<div class="remote-info-group"><ul>');
             h.push('<li>' + acc.a_name + '</li>');
             h.push('</ul></div>');
         }
+
         return h.join('');
     };
     render.action = function (row_id, fields) {
-        // console.log(fields);
-        var h = [];
-        for (var i = 0; i < fields.accs.length; ++i) {
-            var acc = fields.accs[i];
-            var act_btn = [];
+        // console.log('action', fields);
 
-            var disabled = '';
+        let is_disabled = false;
+        let disable_msg = '';
+
+        if (fields.h_state !== TP_STATE_NORMAL) {
+            is_disabled = true;
+            disable_msg = '无可用远程连接，主机已被禁用';
+        }
+        if (fields.gh_state !== TP_STATE_NORMAL && fields.gh_state !== 0) {
+            is_disabled = true;
+            disable_msg = '无可用远程连接，主机所在分组已被禁用';
+        }
+        if (is_disabled) {
+            let h = [];
+            h.push('<div><div class="remote-action-group"><div class="btn-group btn-group-sm">');
+            h.push('<button type="button" class="btn btn-disabled" disabled><i class="fa fa-ban fa-fw"></i> ');
+            h.push(disable_msg);
+            h.push('</button></div></div>');
+            return h.join('');
+        }
+
+
+        let h = [];
+        for (let i = 0; i < fields.accs.length; ++i) {
+            let acc = fields.accs[i];
+            let act_btn = [];
+
+            is_disabled = false;
+            disable_msg = '';
+
             if (acc.a_state !== TP_STATE_NORMAL)
-                disabled = '账号已禁用';
-            if (disabled.length === 0 && (acc.policy_auth_type === TP_POLICY_AUTH_USER_gACC || acc.policy_auth_type === TP_POLICY_AUTH_gUSER_gACC) && acc.ga_state !== TP_STATE_NORMAL)
-                disabled = '账号所在组已禁用';
-            if (disabled.length === 0 && fields.h_state !== TP_STATE_NORMAL)
-                disabled = '主机已禁用';
-            if (disabled.length === 0 && (acc.policy_auth_type === TP_POLICY_AUTH_USER_gHOST || acc.policy_auth_type === TP_POLICY_AUTH_gUSER_gHOST) && fields.gh_state !== TP_STATE_NORMAL)
-                disabled = '主机所在组已禁用';
+                disable_msg = '账号已被禁用';
+            if (disable_msg.length === 0 && (acc.policy_auth_type === TP_POLICY_AUTH_USER_gACC || acc.policy_auth_type === TP_POLICY_AUTH_gUSER_gACC) && acc.ga_state !== TP_STATE_NORMAL)
+                disable_msg = '账号所在分组已被禁用';
+            // if (disable_msg.length === 0 && fields.h_state !== TP_STATE_NORMAL)
+            //     disable_msg = '主机已被禁用';
+            // if (disable_msg.length === 0 && (acc.policy_auth_type === TP_POLICY_AUTH_USER_gHOST || acc.policy_auth_type === TP_POLICY_AUTH_gUSER_gHOST) && fields.gh_state !== TP_STATE_NORMAL)
+            //     disable_msg = '主机所在组已被禁用';
 
-            if (disabled.length > 0) {
-                act_btn.push('<li class="remote-action-state state-disabled">');
-                act_btn.push('<i class="fa fa-ban fa-fw"></i> ' + disabled);
-                act_btn.push('</li>');
-            } else {
-                if (acc.protocol_type === TP_PROTOCOL_TYPE_RDP) {
+            if (disable_msg.length > 0)
+                is_disabled = true;
+
+            if (acc.protocol_type === TP_PROTOCOL_TYPE_RDP) {
+                if (!is_disabled) {
                     if (!$app.options.core_cfg.rdp.enable) {
-                        act_btn.push('<li class="remote-action-state state-disabled">');
-                        act_btn.push('<i class="fa fa-ban fa-fw"></i> RDP协议未启用');
-                        act_btn.push('</li>');
+                        is_disabled = true;
+                        disable_msg = 'RDP协议未启用';
                     } else {
                         if ((acc.policy_.flag_rdp & TP_FLAG_RDP_DESKTOP) !== 0) {
                             act_btn.push('<div class="btn-group btn-group-sm">');
                             act_btn.push('<button type="button" class="btn btn-primary" data-action="rdp" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_RDP_DESKTOP + '"><i class="fa fa-desktop fa-fw"></i> RDP</button>');
-                            act_btn.push('<a href="javascript:;" class="btn btn-primary dropdown-toggle" data-action="rdp-option" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_RDP_DESKTOP + '">');
+                            act_btn.push('<button type="button" class="btn btn-primary dropdown-toggle" data-action="rdp-option" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_RDP_DESKTOP + '">');
                             act_btn.push('<i class="fa fa-cog"></i>');
-                            act_btn.push('</a>');
+                            act_btn.push('</button>');
                             act_btn.push('</div>');
                         }
                     }
-                } else if (acc.protocol_type === TP_PROTOCOL_TYPE_SSH) {
+                } else {
+                    disable_msg = 'RPD' + disable_msg;
+                }
+            } else if (acc.protocol_type === TP_PROTOCOL_TYPE_SSH) {
+                if (!is_disabled) {
                     if (!$app.options.core_cfg.ssh.enable) {
-                        act_btn.push('<li class="remote-action-state state-disabled">');
-                        act_btn.push('<i class="fa fa-ban fa-fw"></i> SSH协议未启用');
-                        act_btn.push('</li>');
+                        is_disabled = true;
+                        disable_msg = 'SSH协议未启用';
                     } else {
                         act_btn.push('<div class="btn-group btn-group-sm">');
                         if ((acc.policy_.flag_ssh & TP_FLAG_SSH_SHELL) !== 0) {
@@ -275,23 +304,49 @@ $app.on_table_host_render_created = function (render) {
                         }
                         act_btn.push('</div>');
                     }
-                } else if (acc.protocol_type === TP_PROTOCOL_TYPE_TELNET) {
+                } else {
+                    disable_msg = 'SSH' + disable_msg;
+                }
+            } else if (acc.protocol_type === TP_PROTOCOL_TYPE_TELNET) {
+                if (!is_disabled) {
                     if (!$app.options.core_cfg.telnet.enable) {
-                        act_btn.push('<li class="remote-action-state state-disabled">');
-                        act_btn.push('<i class="fa fa-ban fa-fw"></i> TELNET协议未启用');
-                        act_btn.push('</li>');
+                        is_disabled = true;
+                        disable_msg = 'TELNET协议未启用';
                     } else {
                         act_btn.push('<div class="btn-group btn-group-sm">');
                         act_btn.push('<button type="button" class="btn btn-warning" data-action="telnet" data-id="' + acc.uni_id + '" data-acc-id="' + acc.a_id + '" data-host-id="' + acc.h_id + '" data-sub-protocol="' + TP_PROTOCOL_TYPE_TELNET_SHELL + '"><i class="far fa-keyboard fa-fw"></i> TELNET</button>');
                         act_btn.push('</div>');
                     }
+                } else {
+                    disable_msg = 'TELNET' + disable_msg;
                 }
             }
 
-            h.push('<div class="remote-action-group" id =' + "account-id-" + acc.id + '">');
+            if (disable_msg.length > 0) {
+                is_disabled = true;
+                act_btn.push('<div class="btn-group btn-group-sm">');
+                act_btn.push('<button type="button" class="btn btn-disabled" disabled><i class="fa fa-ban fa-fw"></i> ');
+                act_btn.push(disable_msg);
+                act_btn.push('</button>');
+                act_btn.push('</div>');
+            }
+
+
+            h.push('<div>');
+            h.push('<div class="remote-action-group">');
             h.push(act_btn.join(''));
             h.push('</div>');
+
+            if (!is_disabled) {
+                h.push('<div class="remote-config">');
+                h.push('<button type="button" class="btn btn-default" data-action="get_config" data-acc-id=' + acc.a_id + ' data-host-id=' + acc.h_id + '><i class="fa fa-key fa-fw"></i> 获取远程连接配置</button>');
+                h.push('</div>');
+            }
+
+            h.push('</div>');
         }
+
+
         return h.join('');
     };
 };
@@ -310,7 +365,7 @@ $app.on_table_host_header_created = function (header) {
 };
 
 $app.create_dlg_rdp_options = function () {
-    var dlg = {};
+    let dlg = {};
     dlg.dom_id = 'dlg-rdp-options';
     dlg.uni_id = '';
     dlg.acc_id = 0;
@@ -345,10 +400,10 @@ $app.create_dlg_rdp_options = function () {
         dlg.dom.btn_connect.click(function () {
             dlg.hide();
 
-            var _size_obj = $('#' + dlg.dom_id + ' input[name="screen-size"]:checked');
-            var _console = dlg.dom.console_mode.is(':checked');
-            var _w = parseInt(_size_obj.attr('data-w'));
-            var _h = parseInt(_size_obj.attr('data-h'));
+            let _size_obj = $('#' + dlg.dom_id + ' input[name="screen-size"]:checked');
+            let _console = dlg.dom.console_mode.is(':checked');
+            let _w = parseInt(_size_obj.attr('data-w'));
+            let _h = parseInt(_size_obj.attr('data-h'));
 
             dlg.rdp_w = _w;
             dlg.rdp_h = _h;
@@ -358,7 +413,7 @@ $app.create_dlg_rdp_options = function () {
             $app.connect_remote(dlg.uni_id, dlg.acc_id, dlg.host_id, dlg.protocol_type, dlg.protocol_sub_type);
         });
 
-        var ops = Cookies.getJSON('rdp_options');
+        let ops = Cookies.getJSON('rdp_options');
         dlg.rdp_w = 0;
         dlg.rdp_h = 0;
         dlg.rdp_console = false;
@@ -374,7 +429,7 @@ $app.create_dlg_rdp_options = function () {
         if (_.isUndefined(dlg.rdp_console))
             dlg.rdp_console = false;
 
-        var ss = [
+        let ss = [
             {w: 800, h: 600},
             {w: 1024, h: 768},
             {w: 1280, h: 1024},
@@ -382,16 +437,16 @@ $app.create_dlg_rdp_options = function () {
             {w: 1440, h: 900}
         ];
 
-        var h = [];
+        let h = [];
         h.push('<div class="radio">');
         h.push('<div><label><input type="radio" name="screen-size" data-w="0" data-h="0"');
         if (dlg.rdp_w === 0 && dlg.rdp_h === 0)
             h.push(' checked');
         h.push('> 全屏</label></div>');
 
-        for (var i = 0; i < ss.length; ++i) {
-            var _w = ss[i].w;
-            var _h = ss[i].h;
+        for (let i = 0; i < ss.length; ++i) {
+            let _w = ss[i].w;
+            let _h = ss[i].h;
             h.push('<div><label><input type="radio" name="screen-size" data-w="' + _w + '" data-h="' + _h + '"');
             if (dlg.rdp_w === _w && dlg.rdp_h === _h)
                 h.push(' checked');
@@ -418,7 +473,7 @@ $app.create_dlg_rdp_options = function () {
         dlg.protocol_type = protocol_type;
         dlg.protocol_sub_type = protocol_sub_type;
 
-        var w = dlg.dom.dialog.width();
+        let w = dlg.dom.dialog.width();
         x -= w / 3;
         y -= 12;
         dlg.dom.dialog.css({left: x, top: y});
@@ -432,36 +487,61 @@ $app.create_dlg_rdp_options = function () {
     return dlg;
 };
 
+$app.get_remote_connection_config = function (acc_id, host_id) {
+    console.log(acc_id, host_id);
+}
+
 $app.connect_remote = function (uni_id, acc_id, host_id, protocol_type, protocol_sub_type) {
 
-    var args = {
+    let args = {
         mode: 1,
         auth_id: uni_id,
         acc_id: acc_id,
         host_id: host_id,
         protocol_type: protocol_type,
         protocol_sub_type: protocol_sub_type,
-        rdp_width: $app.dlg_rdp_options.rdp_w,
-        rdp_height: $app.dlg_rdp_options.rdp_h,
-        rdp_console: $app.dlg_rdp_options.rdp_console
+        is_interactive: false,
     };
-
-    console.log('--s--', args);
+    if (protocol_type === TP_PROTOCOL_TYPE_RDP) {
+        args.extends({
+            rdp_width: $app.dlg_rdp_options.rdp_w,
+            rdp_height: $app.dlg_rdp_options.rdp_h,
+            rdp_console: $app.dlg_rdp_options.rdp_console
+        });
+    }
 
     if (uni_id === 'none')
         args.mode = 2;
 
-    $assist.do_teleport(
-        args,
-        function () {
-            // func_success
-            //$tp.notify_success('远程连接测试通过！');
+    // 根据acc_id判断此远程账号是否有预设密码，如果没有，则需要设置interactive模式。
+    $tp.ajax_post_json('/asset/get-account-interactive-mode',
+        {acc_id: acc_id},
+        function (ret) {
+            console.log('ajax: /asset/get-account-interactive-mode', ret);
+            if (ret.code === TPE_OK) {
+                args.is_interactive = ret.data.is_interactive;
+                console.log('--s--', args);
+
+                $assist.do_teleport(
+                    args,
+                    function () {
+                        // func_success
+                        //$tp.notify_success('远程连接测试通过！');
+                    },
+                    function (code, message) {
+                        if (code === TPE_NO_ASSIST)
+                            $assist.alert_assist_not_found(code);
+                        else
+                            $tp.notify_error('远程连接失败：' + tp_error_msg(code, message));
+                    }
+                );
+
+            } else {
+                $tp.notify_error('无法获取远程账号信息：' + tp_error_msg(ret.code, ret.message));
+            }
         },
-        function (code, message) {
-            if (code === TPE_NO_ASSIST)
-                $assist.alert_assist_not_found(code);
-            else
-                $tp.notify_error('远程连接失败：' + tp_error_msg(code, message));
+        function () {
+            $tp.notify_error('网络故障，无法获取远程账号信息！');
         }
     );
 };

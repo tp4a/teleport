@@ -61,7 +61,7 @@ class AssistHandler(tornado.websocket.WebSocketHandler):
             'method': msg.method,
             'param': param
         }
-        log.w('send ws request: {}\n'.format(json_encode(data)))
+        log.d('send ws request: {}\n'.format(json_encode(data)))
         self.write_message(json_encode(data))
 
     def send_response(self, msg: AssistMessage, code, message='', data=None):
@@ -75,7 +75,7 @@ class AssistHandler(tornado.websocket.WebSocketHandler):
             'message': message,
             'data': data
         }
-        log.w('send ws response: {}\n'.format(json_encode(ret)))
+        log.d('send ws response: {}\n'.format(json_encode(ret)))
         self.write_message(json_encode(ret))
 
     def set_assist_id(self, assist_id: int) -> None:

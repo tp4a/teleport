@@ -126,6 +126,10 @@ controllers = [
     (r'/asset/account-group/(.*)', account.AccGroupInfoHandler),
     #  - [json] 添加/更新 远程账号
     (r'/asset/update-account', account.DoUpdateAccountHandler),
+    #  - [json] 清除 远程账号的预设密码
+    (r'/asset/clear-account-password', account.DoClearAccountPasswordHandler),
+    #  - [json] 查询 远程账号是否有预设密码
+    (r'/asset/get-account-interactive-mode', account.DoGetAccountInteractiveModeHandler),
     #  - [json] 禁用/解禁/删除 远程账号
     (r'/asset/update-accounts', account.DoUpdateAccountsHandler),
     #  - [json] 获取账号列表

@@ -440,7 +440,7 @@ void TsHttpRpc::_rpc_func_enc(const Json::Value& json_param, ex_astr& buf)
         is_enc = false;
 
     plain_text = json_param["p"].asCString();
-    if (plain_text.length() == 0)
+    if (plain_text.empty())
     {
         _create_json_ret(buf, TPE_PARAM);
         return;

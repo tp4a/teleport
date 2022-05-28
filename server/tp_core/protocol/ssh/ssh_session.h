@@ -151,7 +151,7 @@ private:
     std::string m_acc_secret;
     uint32_t m_flags;
     int m_auth_type;
-    bool m_allow_user_input_password;
+    // bool m_allow_user_input_password;
 
     bool m_first_auth;
     // 远程主机认证是否通过

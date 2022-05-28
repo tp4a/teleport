@@ -4,6 +4,9 @@
 #include <mbedtls/sha1.h>
 #include <teleport_const.h>
 
+// 临时会话ID有效期，毫秒
+#define TEMP_SESSION_ID_VALID_TIME   60000
+
 TsSessionManager g_session_mgr;
 
 TsSessionManager::TsSessionManager() :
@@ -44,7 +47,7 @@ void TsSessionManager::_remove_expired_connect_info()
     for (; it != m_connections.end();)
     {
         //EXLOGD("[core] check expired connect info: [%s] %d, %d %d %d\n", it->first.c_str(), it->second->ref_count, int(_now), int(it->second->ticket_start), int(_now - it->second->ticket_start));
-        if (it->second->ref_count == 0 && _now - 15000 > it->second->ticket_start)
+        if (it->second->ref_count == 0 && _now - TEMP_SESSION_ID_VALID_TIME > it->second->ticket_start)
         {
             EXLOGD("[core] remove connection info, because timeout: %s\n", it->first.c_str());
             delete it->second;
@@ -100,7 +103,8 @@ bool TsSessionManager::free_connect_info(const ex_astr& sid)
 
     it->second->ref_count--;
 
-    // 对于RDP来说，此时不要移除连接信息，系统自带RDP客户端在第一次连接时进行协议协商，然后马上会断开，之后立即重新连接一次（第二次连接之前可能会提示证书信息，如果用户长时间不操作，可能会导致超时）。
+    // 对于RDP来说，此时不要移除连接信息，系统自带RDP客户端在第一次连接时进行协议协商，然后马上会断开，之后立即重新连接
+    // 一次（第二次连接之前可能会提示证书信息，如果用户长时间不操作，可能会导致超时）。
     // 因此，我们将其引用计数减低，并更新一下最后访问时间，让定时器来移除它。
     if (it->second->protocol_type != TP_PROTOCOL_TYPE_RDP)
     {
@@ -116,9 +120,9 @@ bool TsSessionManager::free_connect_info(const ex_astr& sid)
     {
         if (it->second->ref_count == 1)
             it->second->ref_count = 0;
-        it->second->ticket_start = ex_get_tick_count() + 45000; // 我们将时间向后移动45秒，这样如果没有发生RDP的第二次连接，这个连接信息就会在一分钟后被清除。
+        // 我们将启动时间向后一段，这样如果没有发生RDP的第二次连接，这个连接信息过一会儿就会被清除。
+        it->second->ticket_start = ex_get_tick_count() + TEMP_SESSION_ID_VALID_TIME;
     }
-
 
     return true;
 }
