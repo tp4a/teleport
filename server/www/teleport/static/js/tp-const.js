@@ -181,6 +181,8 @@ const TP_PRIVILEGES = [
     TP_PRIVILEGE_SYS_LOG
 ];
 
+const TP_OPS_TOKEN_USER = 0;
+const TP_OPS_TOKEN_TEMP = 1;
 
 // ==========================================================================
 // 数据库类型

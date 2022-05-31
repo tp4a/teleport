@@ -7,7 +7,7 @@ from app.base.logger import log
 from app.base.db import get_db, SQL
 from app.model import syslog
 from app.model import policy
-from app.base.utils import AttrDict, tp_timestamp_sec
+from app.base.utils import AttrDict, tp_timestamp_sec, tp_generate_random, tp_gen_password, tp_format_timestamp
 
 
 def get_by_id(pid):
@@ -136,13 +136,13 @@ def update_policies_state(handler, p_ids, state):
     sql_list = []
 
     sql = 'UPDATE `{tp}ops_policy` SET `state`={ph} WHERE `id` IN ({p_ids});'.format(tp=db.table_prefix, ph=db.place_holder, p_ids=p_ids)
-    sql_list.append({'s': sql, 'v': (state, )})
+    sql_list.append({'s': sql, 'v': (state,)})
 
     sql = 'UPDATE `{tp}ops_auz` SET `state`={ph} WHERE `policy_id` IN ({p_ids});'.format(tp=db.table_prefix, ph=db.place_holder, p_ids=p_ids)
-    sql_list.append({'s': sql, 'v': (state, )})
+    sql_list.append({'s': sql, 'v': (state,)})
 
     sql = 'UPDATE `{tp}ops_map` SET `p_state`={ph} WHERE `p_id` IN ({p_ids});'.format(tp=db.table_prefix, ph=db.place_holder, p_ids=p_ids)
-    sql_list.append({'s': sql, 'v': (state, )})
+    sql_list.append({'s': sql, 'v': (state,)})
 
     if db.transaction(sql_list):
         return TPE_OK
@@ -552,7 +552,7 @@ def get_all_remotes(handler, sql_filter, sql_order, sql_limit):
                 'id': a.id,
                 'a_id': a.id,
                 'policy_auth_type': TP_POLICY_AUTH_USER_ACC,
-                'uni_id': 'none',
+                'uni_id': '',
                 'a_state': TP_STATE_NORMAL,
                 'ga_state': TP_STATE_NORMAL,
                 'protocol_type': a.protocol_type,
@@ -1042,3 +1042,194 @@ def build_auz_map():
         return TPE_DATABASE
 
     return TPE_OK
+
+
+def get_ops_token_by_token(token):
+    db = get_db()
+    s = SQL(db)
+    s.select_from('ops_token', ['id', 'mode', 'token', 'uni_id', 'u_id', 'acc_id', 'valid_from', 'valid_to'], alt_name='t')
+    s.where('t.token={ph}'.format(ph=db.place_holder))
+    err = s.query((token,))
+    if err != TPE_OK:
+        return err, None
+
+    if len(s.recorder) == 0:
+        return TPE_NOT_EXISTS, None
+    # if len(s.recorder) != 1:
+    #     return TPE_DATABASE, None
+
+    return TPE_OK, s.recorder[0]
+
+
+def get_ops_tokens_by_user_and_acc(uni_id, user_id, acc_id):
+    db = get_db()
+    s = SQL(db)
+    s.select_from('ops_token', ['id', 'mode', 'token', 'uni_id', 'u_id', 'acc_id', 'valid_from', 'valid_to'], alt_name='t')
+    s.where('t.uni_id={ph} AND t.u_id={ph} AND t.acc_id={ph}'.format(ph=db.place_holder))
+    err = s.query((uni_id, user_id, acc_id))
+    if err != TPE_OK or len(s.recorder) == 0:
+        return TPE_NOT_EXISTS, None
+
+    return TPE_OK, s.recorder
+
+
+def create_ops_token(handler, mode, uni_id, acc_id, valid_from, valid_to):
+    # mode=TP_OPS_TOKEN_USER, 创建一个用户使用的授权码（远程连接时需要知道用户的密码）
+    # mode=TP_OPS_TOKEN_TEMP, 创建一个临时使用的授权码（同时会创建授权码对应的认证密码，远程连接时使用此认证密码，无需知道用户的密码）
+    operator = handler.get_current_user()
+    token_name = '授权码' if mode == TP_OPS_TOKEN_USER else '临时授权码'
+    token = ''
+    for i in range(10):
+        token = 'tp{}'.format(tp_gen_password(10))
+        err, _ = get_ops_token_by_token(token)
+        if err != TPE_OK:
+            break
+        if i == 9:
+            log.e('can not generate unique token.')
+            return TPE_FAILED
+
+    db = get_db()
+
+    s = SQL(db)
+    s.select_from('ops_token', ['id', 'mode', 'token', 'uni_id', 'u_id', 'acc_id', 'valid_from', 'valid_to'], alt_name='t')
+    s.where('t.mode={ph} AND t.u_id={ph} AND t.acc_id={ph}'.format(ph=db.place_holder))
+    err = s.query((mode, operator['id'], acc_id))
+    if err == TPE_OK and len(s.recorder) > 0:
+        return TPE_EXISTS
+
+    sql = 'INSERT INTO `{tp}ops_token` (`mode`, `token`, `uni_id`, `u_id`, `acc_id`, `valid_from`, `valid_to`) VALUES ' \
+          '({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder)
+    db_ret = db.exec(sql, (mode, token, uni_id, operator['id'], acc_id, valid_from, valid_to))
+    if not db_ret:
+        return TPE_DATABASE
+
+    token_id = db.last_insert_id()
+
+    # 如果是临时授权码，则需要为其设置密码用于认证
+    password = ''
+    if mode == TP_OPS_TOKEN_TEMP:
+        password = tp_gen_password(16)
+        sql = 'INSERT INTO `{tp}ops_token_key` (`ops_token_id`, `password`) VALUES ({ph}, {ph});' \
+              ''.format(tp=db.table_prefix, ph=db.place_holder)
+        db_ret = db.exec(sql, (token_id, password))
+        if not db_ret:
+            return TPE_DATABASE
+
+    syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "创建{token_name} {token}，有效期至 {valid_to}".format(token_name=token_name, token=token, valid_to=tp_format_timestamp(valid_to)))
+
+    err, token_info = get_ops_token_by_token(token)
+    if err != TPE_OK:
+        return err
+
+    return TPE_OK, token_info, password
+
+
+def remove_ops_token(handler, token):
+    db = get_db()
+
+    operator = handler.get_current_user()
+    err, token_info = get_ops_token_by_token(token)
+    if err != TPE_OK:
+        return err
+    token_name = '授权码' if token_info['mode'] == TP_OPS_TOKEN_USER else '临时授权码'
+
+    sql_list = list()
+
+    sql = 'DELETE FROM `{tp}ops_token_key` WHERE `ops_token_id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (token_info['id'],)})
+    sql = 'DELETE FROM `{tp}ops_token` WHERE `id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql_list.append({'s': sql, 'v': (token_info['id'],)})
+
+    if not db.transaction(sql_list):
+        return TPE_DATABASE
+
+    syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "删除{token_name} {token}".format(token_name=token_name, token=token))
+
+    return TPE_OK
+
+
+def renew_ops_token(handler, mode, token, acc_id, valid_to):
+    db = get_db()
+    operator = handler.get_current_user()
+
+    err, token_info = get_ops_token_by_token(token)
+    if err != TPE_OK:
+        return err
+    if mode != token_info['mode'] or acc_id != token_info['acc_id'] or operator['id'] != token_info['u_id']:
+        return TPE_NOT_EXISTS
+    token_name = '授权码' if mode == TP_OPS_TOKEN_USER else '临时授权码'
+
+    sql = 'UPDATE `{tp}ops_token` SET `valid_to`={ph} WHERE `id`={ph};' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder)
+    db_ret = db.exec(sql, (valid_to, token_info['id']))
+    if not db_ret:
+        return TPE_DATABASE
+
+    syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "更新{token_name} {token} 的有效期至 {valid_to}".format(token_name=token_name, token=token, valid_to=tp_format_timestamp(valid_to)))
+
+    token_info['valid_to'] = valid_to
+    return TPE_OK, token_info
+
+
+def create_ops_token_temp_password(handler, token, acc_id):
+    db = get_db()
+    operator = handler.get_current_user()
+
+    err, token_info = get_ops_token_by_token(token)
+    if err != TPE_OK:
+        return err
+    if token_info['mode'] != TP_OPS_TOKEN_TEMP or acc_id != token_info['acc_id'] or operator['id'] != token_info['u_id']:
+        return TPE_NOT_EXISTS
+
+    password = tp_gen_password(16)
+    sql = 'INSERT INTO `{tp}ops_token_key` (`ops_token_id`, `password`) VALUES ({ph}, {ph});' \
+          ''.format(tp=db.table_prefix, ph=db.place_holder)
+    db_ret = db.exec(sql, (token_info['id'], password))
+    if not db_ret:
+        return TPE_DATABASE
+
+    syslog.sys_log(operator, handler.request.remote_ip, TPE_OK, "为临时授权码 {token} 生成新的临时密码".format(token=token))
+
+    return TPE_OK, token_info, password
+
+
+def verify_ops_token_temp_password(token_id, password):
+    db = get_db()
+    s = SQL(db)
+    s.select_from('ops_token_key', ['id'], alt_name='k')
+    s.where('k.ops_token_id={ph} AND k.password={ph}'.format(ph=db.place_holder))
+    err = s.query((token_id, password))
+    if err != TPE_OK or len(s.recorder) == 0:
+        return False
+
+    return True
+
+
+def clean_expired_ops_token():
+    """ 清理过期的远程连接授权码，由定时任务自动执行，每小时调用一次 """
+    now = tp_timestamp_sec()
+    db = get_db()
+
+    s = SQL(db)
+    s.select_from('ops_token', ['id'], alt_name='t')
+    s.where('t.valid_to!=0 AND t.valid_to<{ph}'.format(ph=db.place_holder))
+    err = s.query((now, ))
+    if err != TPE_OK or len(s.recorder) == 0:
+        # nothing to clean.
+        return True
+
+    token_ids = ','.join([str(t['id']) for t in s.recorder])
+
+    sql_list = list()
+
+    sql = 'DELETE FROM `{tp}ops_token_key` WHERE `ops_token_id` IN ({token_ids});'.format(tp=db.table_prefix, token_ids=token_ids)
+    sql_list.append({'s': sql, 'v': None})
+    sql = 'DELETE FROM `{tp}ops_token` WHERE `id` IN ({token_ids});'.format(tp=db.table_prefix, token_ids=token_ids)
+    sql_list.append({'s': sql, 'v': None})
+
+    if not db.transaction(sql_list):
+        log.e('can not clean expired ops token.')
+        return False
+
+    return True

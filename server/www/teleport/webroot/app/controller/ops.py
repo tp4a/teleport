@@ -3,6 +3,7 @@
 import json
 import threading
 import time
+from copy import deepcopy
 
 import tornado.httpclient
 import tornado.gen
@@ -11,16 +12,13 @@ from app.base.configs import tp_cfg
 from app.base.controller import TPBaseHandler, TPBaseJsonHandler
 from app.base.core_server import *
 from app.base.session import tp_session
+from app.base.utils import tp_unique_id, tp_timestamp_sec
 from app.const import *
 from app.model import account
 from app.model import host
 from app.model import ops
 from app.model import group
 from ._sidebar_menu import tp_generate_sidebar
-
-# 连接信息ID的基数，每次使用时均递增
-tmp_conn_id_base = int(time.time())
-tmp_conn_id_lock = threading.RLock()
 
 
 class AuzListHandler(TPBaseHandler):
@@ -37,11 +35,14 @@ class RemoteHandler(TPBaseHandler):
         if ret != TPE_OK:
             return
 
+        core_cfg = deepcopy(tp_cfg().core)
+        del core_cfg['replay_path']
+        del core_cfg['web_server_rpc']
+
         err, groups = group.get_host_groups_for_user(self.current_user['id'], self.current_user['privilege'])
-        _cfg = tp_cfg()
         param = {
             'host_groups': groups,
-            'core_cfg': _cfg.core
+            'core_cfg': core_cfg
         }
 
         # param = {
@@ -156,10 +157,7 @@ def api_request_session_id(acc_id, protocol_sub_type, client_ip, operator, privi
     else:
         conn_info['acc_secret'] = ''
 
-    with tmp_conn_id_lock:
-        global tmp_conn_id_base
-        tmp_conn_id_base += 1
-        conn_id = tmp_conn_id_base
+    conn_id = tp_unique_id()
 
     # log.v('CONN-INFO:', conn_info)
     tp_session().set('tmp-conn-info-{}'.format(conn_id), conn_info, 10)
@@ -240,10 +238,7 @@ def api_v2_request_session_id(
     conn_info['auth_type'] = remote_auth_type
     conn_info['acc_secret'] = remote_secret
 
-    with tmp_conn_id_lock:
-        global tmp_conn_id_base
-        tmp_conn_id_base += 1
-        conn_id = tmp_conn_id_base
+    conn_id = tp_unique_id()
 
     # log.v('CONN-INFO:', conn_info)
     tp_session().set('tmp-conn-info-{}'.format(conn_id), conn_info, 10)
@@ -470,10 +465,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         else:
             conn_info['acc_secret'] = ''
 
-        with tmp_conn_id_lock:
-            global tmp_conn_id_base
-            tmp_conn_id_base += 1
-            conn_id = tmp_conn_id_base
+        conn_id = tp_unique_id()
 
         # log.v('CONN-INFO:', conn_info)
         tp_session().set('tmp-conn-info-{}'.format(conn_id), conn_info, 10)
@@ -502,7 +494,7 @@ class DoGetSessionIDHandler(TPBaseJsonHandler):
         elif conn_info['protocol_type'] == TP_PROTOCOL_TYPE_TELNET:
             data['teleport_port'] = tp_cfg().core.telnet.port
 
-        return self.write_json(0, data=data)
+        return self.write_json(TPE_OK, data=data)
 
 
 class DoGetPoliciesHandler(TPBaseJsonHandler):
@@ -986,3 +978,188 @@ class DoBuildAuzMapHandler(TPBaseJsonHandler):
 
         err = ops.build_auz_map()
         self.write_json(err)
+
+
+class DoGetOpsTokensHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            uni_id = args['uni_id']
+            acc_id = int(args['acc_id'])
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        user_id = self.current_user['id']
+
+        err, password = account.get_account_password(acc_id)
+        if err != TPE_OK:
+            return self.write_json(err)
+        is_interactive = True if len(password) == 0 else False
+
+        err, ret = ops.get_ops_tokens_by_user_and_acc(uni_id, user_id, acc_id)
+        if err != TPE_OK:
+            return self.write_json(err)
+
+        for item in ret:
+            item['_interactive'] = is_interactive
+        self.write_json(TPE_OK, data=ret)
+
+
+class DoCreateOpsTokenHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            mode = args['mode']
+            uni_id = args['uni_id']
+            acc_id = int(args['acc_id'])
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        # mode=TP_OPS_TOKEN_USER, 创建一个用户使用的授权码（远程连接时需要知道用户的密码）
+        # mode=TP_OPS_TOKEN_TEMP, 创建一个临时使用的授权码（会返回授权码对应的认证密码，无需知道用户的密码）
+        valid_from = tp_timestamp_sec()
+        if mode == TP_OPS_TOKEN_USER:
+            valid_to = valid_from + 90 * 24 * 60 * 60
+        elif mode == TP_OPS_TOKEN_TEMP:
+            valid_to = valid_from + 24 * 60 * 60
+        else:
+            return self.write_json(TPE_PARAM)
+
+        err, password = account.get_account_password(acc_id)
+        if err != TPE_OK:
+            return self.write_json(err)
+        is_interactive = True if len(password) == 0 else False
+
+        err, token_info, temp_password = ops.create_ops_token(self, mode, uni_id, acc_id, valid_from, valid_to)
+        if err != TPE_OK:
+            return self.write_json(err)
+
+        token_info['_interactive'] = is_interactive
+        if mode == TP_OPS_TOKEN_TEMP:
+            token_info['_password'] = temp_password
+        self.write_json(TPE_OK, data=token_info)
+
+
+class DoRemoveOpsTokenHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            token = args['token']
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        err = ops.remove_ops_token(self, token)
+        self.write_json(err)
+
+
+class DoRenewOpsTokenHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            mode = args['mode']
+            token = args['token']
+            acc_id = int(args['acc_id'])
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        now = tp_timestamp_sec()
+        if mode == TP_OPS_TOKEN_USER:
+            valid_to = now + 90 * 24 * 60 * 60
+        elif mode == TP_OPS_TOKEN_TEMP:
+            valid_to = now + 24 * 60 * 60
+        else:
+            return self.write_json(TPE_PARAM)
+
+        err, password = account.get_account_password(acc_id)
+        if err != TPE_OK:
+            return self.write_json(err)
+        is_interactive = True if len(password) == 0 else False
+
+        err, token_info = ops.renew_ops_token(self, mode, token, acc_id, valid_to)
+        token_info['_interactive'] = is_interactive
+        self.write_json(err, data=token_info)
+
+
+class DoCreateOpsTokenTempPasswordHandler(TPBaseJsonHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        ret = self.check_privilege(TP_PRIVILEGE_OPS)
+        if ret != TPE_OK:
+            return
+
+        args = self.get_argument('args', None)
+        if args is None:
+            return self.write_json(TPE_PARAM)
+        try:
+            args = json.loads(args)
+        except:
+            return self.write_json(TPE_JSON_FORMAT)
+
+        try:
+            token = args['token']
+            acc_id = int(args['acc_id'])
+        except:
+            log.e('\n')
+            return self.write_json(TPE_PARAM)
+
+        err, password = account.get_account_password(acc_id)
+        if err != TPE_OK:
+            return self.write_json(err)
+        is_interactive = True if len(password) == 0 else False
+
+        err, token_info, temp_password = ops.create_ops_token_temp_password(self, token, acc_id)
+        token_info['_interactive'] = is_interactive
+        token_info['_password'] = temp_password
+        self.write_json(err, data=token_info)

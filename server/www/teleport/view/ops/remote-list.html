@@ -7,6 +7,23 @@
     <script type="text/javascript" src="{{ static_url('js/ops/remote-list.js') }}"></script>
 {% endblock %}
 
+{% block block_embed_css %}
+    <style>
+        .ops-token .name {
+            text-align: right;
+        }
+
+        .ops-token .value {
+            font-weight: bold;
+            font-family: Monaco, Lucida Console, Consolas, Courier, 'Courier New', monospace;
+        }
+
+        hr {
+            margin: 3px 0 15px;
+        }
+    </style>
+{% endblock %}
+
 {% block block_body %}
     <div class="page-content-inner">
 
@@ -55,34 +72,16 @@
 {% endblock %}
 
 {% block block_extend_content %}
+    {#  RDP连接属性设置  #}
     <div id="dlg-rdp-options" class="rdp-options">
         <div class="title">RDP连接选项</div>
-        <div class="item" data-field="screen-size">
-            {#            ##             屏幕尺寸：#}
-            {#            ##             <select data-field="screen-size">#}
-            {#            ##                 <option value="0">全屏</option>#}
-            {#            ##                 <option value="800x600">800x600</option>#}
-            {#            ##                 <option value="1024x768">1024x768</option>#}
-            {#            ##                 <option value="1280x1024">1280x1024</option>#}
-            {#            ##                 <option value="1366x768">1366x768</option>#}
-            {#            ##                 <option value="1440x900">1440x900</option>#}
-            {#            ##                 <option value="1600x1024">1600x1024</option>#}
-            {#            ##             </select>#}
+        <div class="item" data-field="screen-size"></div>
 
-            <div class="radio">
-                <div><label><input type="radio" name="screen-size" id="ss-800x600" checked> 800 x 600</label></div>
-                <div><label><input type="radio" name="screen-size" id="ss-1024x768"> 1024 x 768</label></div>
-            </div>
-        </div>
-
-
-        {#        ##         <div class="item"><a href="javascript:;" data-field="allow-clipboard" class="tp-checkbox tp-editable">允许映射剪贴板</a></div>#}
-        {#        ##         <div class="item"><a href="javascript:;" class="tp-checkbox tp-editable">允许映射本地磁盘</a></div>#}
+        {# <div class="item"><a href="javascript:;" data-field="allow-clipboard" class="tp-checkbox tp-editable">允许映射剪贴板</a></div>#}
+        {# <div class="item"><a href="javascript:;" class="tp-checkbox tp-editable">允许映射本地磁盘</a></div>#}
 
         <hr/>
         <div class="item">
-            {#            ##             <a href="javascript:;" data-field="console-mode" class="tp-checkbox tp-editable">Console模式</a>#}
-
             <div class="checkbox">
                 <label><input type="checkbox" data-field="console-mode"> Console模式</label>
             </div>
@@ -94,4 +93,160 @@
             </div>
         </div>
     </div>
+
+    {#  远程连接配置对话框  #}
+    <div class="modal fade" id="dlg-ops-token" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times-circle fa-fw"></i></button>
+                    <h3 class="modal-title">远程连接配置信息</h3>
+                </div>
+                <div class="modal-body">
+
+                    <div class="alert alert-info"><i class="fa fa-exclamation-circle fa-fw"></i>
+                        远程连接配置信息可用于在您喜好的客户端软件中设置远程主机的地址、端口、用户名及密码，配置之后可以在客户端软件中直接进行远程连接。
+                    </div>
+
+                    <div class="ops-token">
+
+                        <div class="row">
+                            <div class="col-sm-12 bold">目标远程主机信息</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-3 name">目标主机名称：</div>
+                            <div class="col-sm-9 value" data-field="target-name"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 name">目标主机账号：</div>
+                            <div class="col-sm-9 value" data-field="target-acc"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 name">远程连接协议：</div>
+                            <div class="col-sm-9 value" data-field="target-protocol"></div>
+                        </div>
+
+                        {# user token #}
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm-12 bold"><span class="bold">客户端软件配置信息</span>
+                                <div style="display: inline-block;padding-left: 5px;">
+                                    <span class="badge" data-field="user-token-state" style="display: none;"><i class="fa fa-spinner fa-spin fa-fw"></i></span>
+                                    <button type="button" class="btn btn-xs btn-primary" id="btn-user-token-action" style="display: none;"></button>
+                                    <button type="button" class="btn btn-xs btn-danger" id="btn-remove-user-token" style="display: none;"><i class="fa fa-times fa-fw"></i> 删除此配置</button>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div id="block-user-token" style="display: none;">
+
+                            <div class="row">
+                                <div class="col-sm-3 name">主机地址：</div>
+                                <div class="col-sm-9 value" data-field="remote-addr"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-3 name">主机端口：</div>
+                                <div class="col-sm-9 value" data-field="remote-port"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-3 name">账号：</div>
+                                <div class="col-sm-9"><span class="value" data-field="user-acc"></span></div>
+                            </div>
+{#                            <div id="block-user-token-password" style="display: none;">#}
+                                <div class="row">
+                                    <div class="col-sm-3 name">密码：</div>
+                                    <div class="col-sm-9 value" data-field="user-password"></div>
+                                </div>
+                                <div id="block-user-token-password-desc" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-sm-9 col-sm-offset-3">
+                                            <div class="alert alert-warning">
+                                                <i class="fa fa-exclamation-circle fa-fw"></i> 注意：填写密码时，<span class="bold">目标主机账号的密码</span>前面有两个减号--用于分隔，不可省略，不可有多余空格。
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+{#                            </div>#}
+                        </div>
+
+                        {# temp token #}
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm-12 bold"><span class="bold">临时配置信息</span>
+                                <div style="display: inline-block;padding-left: 5px;">
+                                    <span class="badge" data-field="temp-token-state" style="display: none;"><i class="fa fa-spinner fa-spin fa-fw"></i></span>
+                                    <button type="button" class="btn btn-xs btn-primary" id="btn-temp-token-action" style="display: none;"></button>
+                                    <button type="button" class="btn btn-xs btn-danger" id="btn-remove-temp-token" style="display: none;"><i class="fa fa-times fa-fw"></i> 删除此配置</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="block-temp-token" style="display: none;">
+
+                            <div class="row">
+                                <div class="col-sm-3 name">主机地址：</div>
+                                <div class="col-sm-9 value" data-field="remote-addr"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-3 name">主机端口：</div>
+                                <div class="col-sm-9 value" data-field="remote-port"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-3 name">临时账号：</div>
+                                <div class="col-sm-9"><span class="value" data-field="temp-acc"></span></div>
+                            </div>
+{#                            <div id="block-temp-token-password" style="display: none;">#}
+                                <div class="row">
+                                    <div class="col-sm-3 name">临时密码：</div>
+                                    <div class="col-sm-9 value">
+                                        <span class="value" data-field="temp-password"></span>
+                                        <div style="display: inline-block;">
+                                            <button type="button" class="btn btn-xs btn-primary" id="btn-regenerate-temp-password" style="display: none;"><i class="fa fa-key fa-fw"></i> 获取临时密码</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="block-temp-token-password-state" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-sm-9 col-sm-offset-3">
+                                            <div class="alert alert-warning">
+                                                <i class="fa fa-exclamation-triangle fa-fw"></i> 注意：此临时密码仅显示一次，请注意保存。
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="block-temp-token-password-desc" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-sm-9 col-sm-offset-3">
+                                            <div class="alert alert-warning">
+                                                <i class="fa fa-exclamation-circle fa-fw"></i> 注意：填写密码时，<span class="bold">目标主机账号的密码</span>前面有两个减号--用于分隔，不可省略，不可有多余空格。
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+{#                            </div>#}
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="fa fa-check fa-fw"></i> 确定</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}

@@ -178,6 +178,12 @@ def tp_timestamp_from_str(t, fmt='%Y-%m-%d %H:%M:%S'):
     return int(d.timestamp())
 
 
+def tp_format_timestamp(t, fmt='%Y-%m-%d %H:%M:%S'):
+    _fmt = '%Y-%m-%d %H:%M:%S' if fmt is None else fmt
+    d = time.localtime(t)
+    return time.strftime(_fmt, d)
+
+
 def tp_timestamp_sec():
     return int(datetime.datetime.now().timestamp())
 

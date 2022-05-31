@@ -15,8 +15,10 @@ SshSession::SshSession(SshProxy* proxy, ssh_session rs_tp2cli, uint32_t dbg_id, 
         m_conn_info(nullptr),
         m_conn_port(0),
         m_flags(0),
-        m_auth_type(TP_AUTH_TYPE_NONE)
-        // , m_allow_user_input_password(false)
+        m_auth_type(TP_AUTH_TYPE_NONE),
+        m_client_ip(client_ip),
+        m_client_port(client_port)
+// , m_allow_user_input_password(false)
 {
     ex_strformat(m_dbg_name, 128, "ssh-%d", dbg_id);
     ex_strformat(m_dbg_client, 128, "%s:%d", client_ip, client_port);
@@ -107,7 +109,7 @@ void SshSession::_close_channels()
 {
     ExThreadSmartLock locker(m_lock);
 
-    for (auto& pair : m_pairs)
+    for (auto& pair: m_pairs)
     {
         pair->need_close = true;
     }
@@ -332,7 +334,7 @@ void SshSession::save_record()
 {
     ExThreadSmartLock locker(m_lock);
 
-    for (auto& pair : m_pairs)
+    for (auto& pair: m_pairs)
     {
         pair->rec.save_record();
     }
@@ -342,7 +344,7 @@ void SshSession::check_noop_timeout(ex_u32 t_now, ex_u32 timeout)
 {
     ExThreadSmartLock locker(m_lock);
 
-    for (auto& pair : m_pairs)
+    for (auto& pair: m_pairs)
     {
         if (pair->need_close)
             continue;
@@ -445,7 +447,7 @@ void SshSession::keep_alive()
 
 int SshSession::_on_auth_password_request(ssh_session /*session*/, const char* user, const char* password, void* userdata)
 {
-    auto* _this = (SshSession*) userdata;
+    auto* _this = (SshSession*)userdata;
 
     int ret = _this->_do_auth(user, password);
     _this->m_first_auth = false;
@@ -461,23 +463,28 @@ int SshSession::_do_auth(const char* user, const char* secret)
     // 场景
     //  1. 标准方式：在web界面上登记远程账号的用户名和密码，远程连接时由TP负责填写；
     //  2. 手动输入密码：web界面上仅登记远程账号的用户名，不填写密码，每次远程连接时由操作者输入密码；
-    //  3. 手动输入用户名和密码：web界面上选择连接时输入用户名密码，每次远程时，web界面上先提示操作者输入远程用户名，然后开始连接，
-    //                        在连接过程中要求输入密码；
-    //     注意，这种方式，在数据库中的远程账号用户名字段，填写的是"INTERACTIVE_USER"。
-    //  4. 脱离web进行远程连接：这种方式类似于手动输入用户名和密码，需要配合授权码使用，操作者需要使用 远程用户名--授权码  组合形式
-    //                       作为ssh连接的用户名来连接到TP的SSH核心服务。
+    //  3. 脱离web和助手进行远程连接：用户在客户端软件中配置远程主机，地址为tp核心服务地址+端口，用户名为 tp用户名--授权码，
+    //                            密码为 tp登录密码--远程账号密码，可以不用登录tp就直接在客户端软件中进行远程连接。
     // 用户名的格式：
-    //    username--CODE   用两个减号分隔第一部分和第二部分。第一部分为用户名，第二部分为会话ID或者授权码
+    //    SID_OR_TOKEN     6个字符的是SID，12个字符的是TOKEN
     // 范例：
-    //    TP--03ad57            // 最简单的形式，省略了远程用户名(用大写TP代替)，核心服务从会话的连接信息中取得远程用户名。
-    //    03ad57                // 就是 TP--03ad57 的简略形式(用于保证向下兼容)
-    //    apex.liu--25c308      // 总是从最后两个减号开始分解，这是操作者手动输入用户名的情况
-    //    apex-liu--7769b2e3    // 8字节为授权码，可以脱离web页面和助手使用
+    //    03ad57           // 6个字符的是临时会话ID，即SID，核心服务从会话的连接信息中取得远程用户名。
+    //    tp7769b2e3Dw     // 12字节，为授权码，可以脱离web页面和助手使用
     //
-    // 如果第一部分为大写 TP，则从连接信息中获取远程用户名，如果此时连接信息中的远程用户名是大写的 INTERACTIVE_USER，则报错。
-    // 如果第二部分是授权码，这可能是脱离web使用，核心服务需要通过web接口获取响应的连接信息，并临时生成一个会话ID来使用。
+    // 密码的格式：
+    //    ****                    如果管理员已经这个远程账号设置了密码，则密码可以随便填写。
+    //    tp账号密码--远程账号密码    用两个减号分隔第一部分和第二部分。第一部分为用户登录TP的密码，第二部分为远程账号的密码
+    //
+    // 使用授权码方式时，需要使用传入的密码进行额外验证。有三种情况：
+    //  1. 8字符token，使用tp用户账号对应的密码
+    //  2. 12字符token，使用tp_ops_token表中的对应的临时密码
+    //  3. 如果管理员未对远程账号设置密码，则需要在上述密码后面加上  --远程账号密码
+    //
+    //
+    // 如果是SID，则从连接信息中获取远程用户名，如果此时连接信息中的远程用户名是大写的 INTERACTIVE_USER，则报错。
+    // 如果是TOKEN，这可能是脱离web使用，核心服务需要通过web接口获取相应的连接信息，并临时生成一个会话ID来使用。
     // 授权码具有有效期，在此有效期期间可以进行任意数量的连接，可用于如下场景：
-    //   1. 操作者将 远程用户名--授权码 和对应的密码添加到ssh客户端如SecureCRT或者xShell中，以后可以脱离web使用；
+    //   1. 操作者将 授权码 和对应的密码添加到ssh客户端如SecureCRT或者xShell中，以后可以脱离web使用；
     //   2. 邀请第三方运维人员临时参与某项运维工作，可以生成一个相对短有效期的授权码发给第三方运维人员。
     // 授权码到期时，已经连接的会话会被强行中断。
     // 授权码可以绑定到主机，也可绑定到具体远程用户。前者需要操作者自己填写真实的远程用户名，后者则无需填写，可以直接登录。
@@ -489,25 +496,25 @@ int SshSession::_do_auth(const char* user, const char* secret)
 
     if (m_first_auth)
     {
-        std::string _name;
-        std::string _sid;
-        std::string tmp(user);
-
-        std::string::size_type tmp_pos = tmp.rfind("--");
-        if (tmp_pos == std::string::npos)
-        {
-            // 向下兼容
-            _name = "TP";
-            m_sid = tmp;
-        }
-        else
-        {
-            _name.assign(tmp, 0, tmp_pos);
-            m_sid.assign(tmp, tmp_pos + 2, tmp.length() - tmp_pos - 2);
-        }
-
-        if (_name != "TP")
-            m_acc_name = _name;
+        // std::string _name;
+        // std::string _sid;
+        // std::string tmp(user);
+        //
+        // std::string::size_type tmp_pos = tmp.rfind("--");
+        // if (tmp_pos == std::string::npos)
+        // {
+        //     // 向下兼容
+        //     _name = "TP";
+        //     m_sid = tmp;
+        // }
+        // else
+        // {
+        //     _name.assign(tmp, 0, tmp_pos);
+        //     m_sid.assign(tmp, tmp_pos + 2, tmp.length() - tmp_pos - 2);
+        // }
+        //
+        // if (_name != "TP")
+        //     m_acc_name = _name;
 
         EXLOGD("[%s] first auth, user: %s\n", m_dbg_name.c_str(), user);
 
@@ -545,7 +552,36 @@ int SshSession::_do_auth(const char* user, const char* secret)
             m_conn_info->acc_secret = "********";
         }
 #else
-        m_conn_info = g_ssh_env.get_connect_info(m_sid.c_str());
+        std::string tp_password;
+        std::string remote_password;
+
+        m_sid = user;
+        if (m_sid.length() == 6)
+        {
+            m_conn_info = g_ssh_env.get_connect_info(m_sid.c_str(), nullptr, nullptr);
+        }
+        else if (m_sid.length() == 12)
+        {
+            std::string tmp(secret);
+
+            std::string::size_type tmp_pos = tmp.find("--");
+            if (tmp_pos == std::string::npos)
+            {
+                tp_password = secret;
+            }
+            else
+            {
+                tp_password.assign(tmp, 0, tmp_pos);
+                remote_password.assign(tmp, tmp_pos + 2, tmp.length() - tmp_pos - 2);
+            }
+
+            m_conn_info = g_ssh_env.get_connect_info(m_sid.c_str(), tp_password.c_str(), m_client_ip.c_str());
+            if (m_conn_info) {
+                // m_conn_info->client_ip = m_client_ip;
+                m_sid = m_conn_info->sid;
+            }
+        }
+
 #endif
 
         if (!m_conn_info)
@@ -562,9 +598,12 @@ int SshSession::_do_auth(const char* user, const char* secret)
         m_conn_ip = m_conn_info->conn_ip;
         m_conn_port = m_conn_info->conn_port;
         m_auth_type = m_conn_info->auth_type;
-        // m_acc_name = m_conn_info->acc_username;
+        m_acc_name = m_conn_info->acc_username;
         m_acc_secret = m_conn_info->acc_secret;
         m_flags = m_conn_info->protocol_flag;
+
+        if (!remote_password.empty())
+            m_acc_secret = remote_password;
 
         if (m_conn_info->protocol_type != TP_PROTOCOL_TYPE_SSH)
         {
@@ -576,18 +615,25 @@ int SshSession::_do_auth(const char* user, const char* secret)
             return SSH_AUTH_SUCCESS;
         }
 
-        _name = m_conn_info->acc_username;
-        if ((m_acc_name.empty() && _name == "INTERACTIVE_USER")
-            || (!m_acc_name.empty() && _name != "INTERACTIVE_USER"))
+        // _name = m_conn_info->acc_username;
+        // if ((m_acc_name.empty() && _name == "INTERACTIVE_USER")
+        //     || (!m_acc_name.empty() && _name != "INTERACTIVE_USER"))
+        // {
+        //     _set_last_error(TP_SESS_STAT_ERR_SESSION);
+        //     m_auth_err_msg = "account name of remote host should not be 'INTERACTIVE_USER'.";
+        //     EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
+        //
+        //     return SSH_AUTH_SUCCESS;
+        // }
+        // if (m_acc_name.empty())
+        //     m_acc_name = _name;
+        if (m_acc_name.empty())
         {
             _set_last_error(TP_SESS_STAT_ERR_SESSION);
-            m_auth_err_msg = "account name of remote host should not be 'INTERACTIVE_USER'.";
+            m_auth_err_msg = "account name of remote host not set.";
             EXLOGE("[%s] %s\n", m_dbg_name.c_str(), m_auth_err_msg.c_str());
-
             return SSH_AUTH_SUCCESS;
         }
-        if (m_acc_name.empty())
-            m_acc_name = _name;
 
         if (m_acc_secret.empty())
         {
@@ -600,13 +646,14 @@ int SshSession::_do_auth(const char* user, const char* secret)
             //     return SSH_AUTH_DENIED;
 
             // 用户脱离TP-WEB，直接使用客户端输入的密码
-            m_acc_secret = secret;
+            // m_acc_secret = secret;
+            m_acc_secret = remote_password;
         }
     }
     else
     {
         // 如果第一次认证时没有确定目标远程主机IP和端口（例如session-id无效），则不再继续后面的操作
-        if(m_conn_ip.empty() || m_conn_port == 0)
+        if (m_conn_ip.empty() || m_conn_port == 0)
         {
             EXLOGE("[%s] second auth, user: %s, no remote host info, can not connect.\n", m_dbg_name.c_str(), user);
             return SSH_AUTH_DENIED;
@@ -629,7 +676,7 @@ int SshSession::_do_auth(const char* user, const char* secret)
     m_rs_tp2srv = ssh_new();
 
     ssh_options_set(m_rs_tp2srv, SSH_OPTIONS_HOST, m_conn_ip.c_str());
-    int port = (int) m_conn_port;
+    int port = (int)m_conn_port;
     ssh_options_set(m_rs_tp2srv, SSH_OPTIONS_PORT, &port);
     int val = 0;
     ssh_options_set(m_rs_tp2srv, SSH_OPTIONS_STRICTHOSTKEYCHECK, &val);
@@ -913,7 +960,7 @@ int SshSession::_do_auth(const char* user, const char* secret)
 ssh_channel SshSession::_on_new_channel_request(ssh_session session, void* userdata)
 {
     // 客户端尝试打开一个通道（然后才能通过这个通道发控制命令或者收发数据）
-    auto _this = (SshSession*) userdata;
+    auto _this = (SshSession*)userdata;
     EXLOGV("[%s] client open channel.\n", _this->m_dbg_name.c_str());
 
     if (_this->m_state == SSH_SESSION_STATE_AUTHING)
@@ -986,7 +1033,7 @@ ssh_channel SshSession::_on_new_channel_request(ssh_session session, void* userd
 
 int SshSession::_on_client_pty_request(ssh_session /*session*/, ssh_channel channel, const char* term, int x, int y, int px, int py, void* userdata)
 {
-    auto _this = (SshSession*) userdata;
+    auto _this = (SshSession*)userdata;
     EXLOGD("[%s] client request pty: %s, (%d, %d) / (%d, %d)\n", _this->m_dbg_name.c_str(), term, x, y, px, py);
 
     auto cp = _this->get_channel_pair(channel);
@@ -1021,7 +1068,7 @@ int SshSession::_on_client_pty_request(ssh_session /*session*/, ssh_channel chan
 
 int SshSession::_on_client_shell_request(ssh_session /*session*/, ssh_channel channel, void* userdata)
 {
-    auto _this = (SshSession*) userdata;
+    auto _this = (SshSession*)userdata;
     EXLOGD("[%s] client request shell\n", _this->m_dbg_name.c_str());
 
     auto cp = _this->get_channel_pair(channel);
@@ -1036,7 +1083,7 @@ int SshSession::_on_client_shell_request(ssh_session /*session*/, ssh_channel ch
         std::string msg = "ERROR: ";
         msg += _this->m_auth_err_msg;
         msg += "\r\n\r\n";
-        _this->_send(cp->rsc_tp2cli, 0, (void*) msg.c_str(), msg.length());
+        _this->_send(cp->rsc_tp2cli, 0, (void*)msg.c_str(), msg.length());
 
         cp->need_close = true;
 
@@ -1077,7 +1124,7 @@ int SshSession::_on_client_shell_request(ssh_session /*session*/, ssh_channel ch
         EXLOGE("[%s] ssh-shell disabled by ops-policy.\n", _this->m_dbg_name.c_str());
         //return SSH_ERROR;
         std::string msg = "ERROR: ssh-shell disabled by ops-policy.\r\n\r\n";
-        _this->_send(cp->rsc_tp2cli, 0, (void*) msg.c_str(), msg.length());
+        _this->_send(cp->rsc_tp2cli, 0, (void*)msg.c_str(), msg.length());
 
         cp->need_close = true;
 
@@ -1103,7 +1150,7 @@ int SshSession::_on_client_shell_request(ssh_session /*session*/, ssh_channel ch
         std::string msg = "ERROR: request shell from remote host ";
         msg += _this->m_dbg_server;
         msg += " failed.\r\n\r\n";
-        _this->_send(cp->rsc_tp2cli, 0, (void*) msg.c_str(), msg.length());
+        _this->_send(cp->rsc_tp2cli, 0, (void*)msg.c_str(), msg.length());
 
         cp->need_close = true;
 
@@ -1116,13 +1163,13 @@ int SshSession::_on_client_shell_request(ssh_session /*session*/, ssh_channel ch
 
 void SshSession::_on_client_channel_close(ssh_session /*session*/, ssh_channel /*channel*/, void* userdata)
 {
-    auto _this = (SshSession*) userdata;
+    auto _this = (SshSession*)userdata;
     EXLOGV("[%s] client channel (from %s) closed.\n", _this->m_dbg_name.c_str(), _this->m_dbg_client.c_str());
 }
 
 int SshSession::_on_client_pty_win_change(ssh_session /*session*/, ssh_channel channel, int width, int height, int /*px_width*/, int /*pw_height*/, void* userdata)
 {
-    auto _this = (SshSession*) userdata;
+    auto _this = (SshSession*)userdata;
     EXLOGD("[%s] client pty win size change to: (%d, %d)\n", _this->m_dbg_name.c_str(), width, height);
 
     auto cp = _this->get_channel_pair(channel);
@@ -1156,7 +1203,7 @@ int SshSession::_on_client_pty_win_change(ssh_session /*session*/, ssh_channel c
 
 int SshSession::_on_client_channel_subsystem_request(ssh_session /*session*/, ssh_channel channel, const char* subsystem, void* userdata)
 {
-    auto _this = (SshSession*) userdata;
+    auto _this = (SshSession*)userdata;
     EXLOGD("[%s] on_client_channel_subsystem_request(): %s\n", _this->m_dbg_name.c_str(), subsystem);
 
     auto cp = _this->get_channel_pair(channel);
@@ -1206,14 +1253,14 @@ int SshSession::_on_client_channel_subsystem_request(ssh_session /*session*/, ss
 
 int SshSession::_on_client_channel_exec_request(ssh_session /*session*/, ssh_channel /*channel*/, const char* command, void* userdata)
 {
-    auto _this = (SshSession*) userdata;
+    auto _this = (SshSession*)userdata;
     EXLOGW("[%s] ssh exec not supported. command: %s\n", _this->m_dbg_name.c_str(), command);
     return SSH_ERROR;
 }
 
 void SshSession::_on_server_channel_close(ssh_session /*session*/, ssh_channel /*channel*/, void* userdata)
 {
-    auto _this = (SshSession*) userdata;
+    auto _this = (SshSession*)userdata;
     EXLOGV("[%s] server channel (to %s) closed.\n", _this->m_dbg_name.c_str(), _this->m_dbg_server.c_str());
 }
 
@@ -1259,7 +1306,7 @@ int SshSession::_on_client_channel_data(ssh_session /*session*/, ssh_channel cha
     // EXLOG_BIN((ex_u8 *) data, len, " ---> on_client_channel_data [is_stderr=%d]:", is_stderr);
     // EXLOGD(" ---> recv from client %d B\n", len);
 
-    auto _this = (SshSession*) userdata;
+    auto _this = (SshSession*)userdata;
 
     auto cp = _this->get_channel_pair(channel);
     if (!cp)
@@ -1282,7 +1329,7 @@ int SshSession::_on_client_channel_data(ssh_session /*session*/, ssh_channel cha
         }
         else
         {
-            cp->process_sftp_command(channel, (ex_u8*) data, len);
+            cp->process_sftp_command(channel, (ex_u8*)data, len);
         }
     }
 
@@ -1300,7 +1347,7 @@ int SshSession::_on_server_channel_data(ssh_session /*session*/, ssh_channel cha
     // EXLOG_BIN((ex_u8 *) data, len, " <--- on_server_channel_data [is_stderr=%d]:", is_stderr);
     // EXLOGD(" <--- recv from server %d B\n", len);
 
-    auto _this = (SshSession*) userdata;
+    auto _this = (SshSession*)userdata;
 
     auto cp = _this->get_channel_pair(channel);
     if (!cp)

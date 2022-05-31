@@ -5,6 +5,7 @@
     <file url="file://$PROJECT_DIR$/client/tp_assist_win/dlg_main.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/client/tp_assist_win/msocketx.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/client/tp_assist_win/tp_assist.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/client/tp_assist_win/ts_const.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_log.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_path.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/common/libex/include/ex/ex_thread.h" charset="GBK" />

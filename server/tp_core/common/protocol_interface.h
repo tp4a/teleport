@@ -45,7 +45,7 @@ typedef struct TPP_CONNECT_INFO {
     int auth_type;
 } TPP_CONNECT_INFO;
 
-typedef TPP_CONNECT_INFO* (* TPP_GET_CONNECT_INFO_FUNC)(const char* sid);
+typedef TPP_CONNECT_INFO* (* TPP_GET_CONNECT_INFO_FUNC)(const char* sid_or_token, const char* password, const char* client_ip);
 
 typedef void(* TPP_FREE_CONNECT_INFO_FUNC)(TPP_CONNECT_INFO* info);
 
@@ -88,11 +88,11 @@ TPP_API ex_rv tpp_command(ex_u32 cmd, const char* param);
 
 typedef ex_rv (* TPP_INIT_FUNC)(TPP_INIT_ARGS* init_args);
 
-typedef ex_rv (* TPP_START_FUNC)(void);
+typedef ex_rv (* TPP_START_FUNC)();
 
-typedef ex_rv(* TPP_STOP_FUNC)(void);
+typedef ex_rv(* TPP_STOP_FUNC)();
 
-typedef void(* TPP_TIMER_FUNC)(void);
+typedef void(* TPP_TIMER_FUNC)();
 
 // param: a JSON formatted string.
 typedef ex_rv(* TPP_COMMAND_FUNC)(ex_u32 cmd, const char* param);

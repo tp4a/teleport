@@ -20,6 +20,7 @@ from app.base.db import get_db
 from app.base.logger import log
 from app.base.session import tp_session
 from app.base.cron import tp_cron
+from app.base.cron_job import tp_init_jobs
 from app.base.stats import tp_stats
 from app.base.host_alive import tp_host_alive
 from app.base.utils import tp_generate_random
@@ -155,6 +156,10 @@ class WebApp:
 
         if not tp_integration().init():
             log.e('can not load integration config.\n')
+            return 0
+
+        if not tp_init_jobs():
+            log.e('can not init corn jobs.\n')
             return 0
 
         if cfg.common.check_host_alive:

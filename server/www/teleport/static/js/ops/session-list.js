@@ -19,7 +19,7 @@ $app.create_controls = function (cb_stack) {
     //-------------------------------
     // 资产列表表格
     //-------------------------------
-    var table_session_options = {
+    let table_session_options = {
         dom_id: 'table-session',
         data_source: {
             type: 'ajax-post',
@@ -158,7 +158,7 @@ $app.create_controls = function (cb_stack) {
         $app.table_session.load_data();
     });
     $app.dom.chkbox_session_select_all.click(function () {
-        var _objects = $('#' + $app.table_session.dom_id + ' tbody').find('[data-check-box]');
+        let _objects = $('#' + $app.table_session.dom_id + ' tbody').find('[data-check-box]');
         if ($(this).is(':checked')) {
             $.each(_objects, function (i, _obj) {
                 $(_obj).prop('checked', true);
@@ -178,12 +178,12 @@ $app.on_table_session_cell_created = function (tbl, row_id, col_key, cell_obj) {
     if (col_key === 'chkbox') {
         cell_obj.find('[data-check-box]').click(function () {
             // 同步相同会话ID的选中状态
-            var _obj = $(this);
-            var checked = _obj.is(':checked');
-            var _row_data = tbl.get_row(_obj);
-            var _objs = $('#' + $app.table_session.dom_id + ' tbody').find('[data-check-box]');
+            let _obj = $(this);
+            let checked = _obj.is(':checked');
+            let _row_data = tbl.get_row(_obj);
+            let _objs = $('#' + $app.table_session.dom_id + ' tbody').find('[data-check-box]');
             $.each(_objs, function (i, _o) {
-                var _rd = tbl.get_row(_o);
+                let _rd = tbl.get_row(_o);
                 if (_row_data.sid === _rd.sid) {
                     $(_o).prop('checked', checked);
                 }
@@ -196,8 +196,8 @@ $app.on_table_session_cell_created = function (tbl, row_id, col_key, cell_obj) {
 };
 
 $app.check_host_all_selected = function (cb_stack) {
-    var _all_checked = true;
-    var _objs = $('#' + $app.table_session.dom_id + ' tbody').find('[data-check-box]');
+    let _all_checked = true;
+    let _objs = $('#' + $app.table_session.dom_id + ' tbody').find('[data-check-box]');
     if (_objs.length === 0) {
         _all_checked = false;
     } else {
@@ -221,12 +221,12 @@ $app.check_host_all_selected = function (cb_stack) {
 
 $app.on_table_session_render_created = function (render) {
     // render.filter_host_state = function (header, title, col) {
-    //     var _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
+    //     let _ret = ['<div class="tp-table-filter tp-table-filter-' + col.cell_align + '">'];
     //     _ret.push('<div class="tp-table-filter-inner">');
     //     _ret.push('<div class="search-title">' + title + '</div>');
     //
     //     // 表格内嵌过滤器的DOM实体在这时生成
-    //     var filter_ctrl = header._table_ctrl.get_filter_ctrl('host_state');
+    //     let filter_ctrl = header._table_ctrl.get_filter_ctrl('host_state');
     //     _ret.push(filter_ctrl.render());
     //
     //     _ret.push('</div></div>');
@@ -235,12 +235,12 @@ $app.on_table_session_render_created = function (render) {
     // };
     //
     // render.filter_search_host = function (header, title, col) {
-    //     var _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
+    //     let _ret = ['<div class="tp-table-filter tp-table-filter-input">'];
     //     _ret.push('<div class="tp-table-filter-inner">');
     //     _ret.push('<div class="search-title">' + title + '</div>');
     //
     //     // 表格内嵌过滤器的DOM实体在这时生成
-    //     var filter_ctrl = header._table_ctrl.get_filter_ctrl('search_host');
+    //     let filter_ctrl = header._table_ctrl.get_filter_ctrl('search_host');
     //     _ret.push(filter_ctrl.render());
     //
     //     _ret.push('</div></div>');
@@ -288,7 +288,7 @@ $app.on_table_session_render_created = function (render) {
 
     render.time_cost = function (row_id, fields) {
         if (fields.time_end === 0) {
-            var _style = 'info';
+            let _style = 'info';
             if (fields.state === TP_SESS_STAT_RUNNING)
                 _style = 'warning';
             else if (fields.state === TP_SESS_STAT_STARTED)
@@ -300,7 +300,7 @@ $app.on_table_session_render_created = function (render) {
     };
 
     render.state = function (row_id, fields) {
-        var msg = '';
+        let msg = '';
         switch (fields.state) {
             case TP_SESS_STAT_RUNNING:
                 return '<span class="label label-warning">正在连接</span>';
@@ -351,7 +351,7 @@ $app.on_table_session_render_created = function (render) {
 
     render.record_action = function (row_id, fields) {
         return '';
-        // var ret = [];
+        // let ret = [];
         //
         // if (fields.state >= TP_SESS_STAT_STARTED) {
         //     if (fields.time_end === 0) {
@@ -378,7 +378,7 @@ $app.on_table_session_header_created = function (header) {
     // });
 
     // TODO: 当过滤器不是默认值时，让“重置过滤器按钮”有呼吸效果，避免用户混淆 - 实验性质
-    // var t1 = function(){
+    // let t1 = function(){
     //     $app.dom.btn_table_host_reset_filter.fadeTo(1000, 1.0, function(){
     //         $app.dom.btn_table_host_reset_filter.fadeTo(1000, 0.2, t1);
     //     });
@@ -392,11 +392,11 @@ $app.on_table_session_header_created = function (header) {
 };
 
 $app.get_selected_sessions = function (tbl) {
-    var records = [];
-    var _objs = $('#' + $app.table_session.dom_id + ' tbody tr td input[data-check-box]');
+    let records = [];
+    let _objs = $('#' + $app.table_session.dom_id + ' tbody tr td input[data-check-box]');
     $.each(_objs, function (i, _obj) {
         if ($(_obj).is(':checked')) {
-            var _row_data = tbl.get_row(_obj);
+            let _row_data = tbl.get_row(_obj);
             records.push(_row_data.sid);
         }
     });
@@ -404,19 +404,18 @@ $app.get_selected_sessions = function (tbl) {
 };
 
 $app.on_btn_kill_sessions_click = function () {
-    var sessions = $app.get_selected_sessions($app.table_session);
-    // console.log(sessions);
+    let sessions = $app.get_selected_sessions($app.table_session);
     if (sessions.length === 0) {
         $tp.notify_error('请选择要强行终止的会话！');
         return;
     }
 
-    var _fn_sure = function (cb_stack, cb_args) {
+    let _fn_sure = function (cb_stack, cb_args) {
         $tp.ajax_post_json('/ops/kill', {sessions: sessions},
             function (ret) {
                 if (ret.code === TPE_OK) {
                     setTimeout(function () {
-                        var _cb = CALLBACK_STACK.create();
+                        let _cb = CALLBACK_STACK.create();
                         _cb.add($app.check_host_all_selected)
                             .add($app.table_session.load_data)
                             .exec();
@@ -436,7 +435,7 @@ $app.on_btn_kill_sessions_click = function () {
         );
     };
 
-    var cb_stack = CALLBACK_STACK.create();
+    let cb_stack = CALLBACK_STACK.create();
     $tp.dlg_confirm(cb_stack, {
         msg: '您确定要强行终止这些会话吗？',
         fn_yes: _fn_sure

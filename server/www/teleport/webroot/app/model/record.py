@@ -511,7 +511,7 @@ def session_fix():
 def session_begin(sid, user_id, host_id, acc_id, user_username, acc_username, host_ip, conn_ip, conn_port, client_ip, auth_type, protocol_type, protocol_sub_type):
     db = get_db()
 
-    sql = 'SELECT surname FROM `{tp}user` WHERE id={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
+    sql = 'SELECT `surname` FROM `{tp}user` WHERE `id`={ph};'.format(tp=db.table_prefix, ph=db.place_holder)
     db_ret = db.query(sql, (user_id, ))
     if db_ret is None or len(db_ret) == 0:
         user_surname = user_username

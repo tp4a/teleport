@@ -32,7 +32,7 @@ bool ts_web_rpc_register_core()
     return ts_http_get(url, body);
 }
 
-int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
+uint32_t ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
 {
     //Json::FastWriter json_writer;
     Json::Value jreq;
@@ -80,6 +80,19 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
         return TPE_PARAM;
     if (!jret.isObject())
         return TPE_PARAM;
+
+    if (!jret["code"].isUInt())
+    {
+        EXLOGE("[core] response of web-rpc has no `code` field.\n");
+        return TPE_FAILED;
+    }
+    ex_rv rv = jret["code"].asUInt();
+    if (rv != TPE_OK)
+    {
+        EXLOGE("[core] response of web-rpc got error code: %ld.\n", rv);
+        return rv;
+    }
+
     if (!jret["data"].isObject())
         return TPE_PARAM;
 
@@ -203,7 +216,7 @@ int ts_web_rpc_get_conn_info(int conn_id, TS_CONNECT_INFO& info)
     }
 
     // 认证方式为密码时，允许不设置密码，而是连接时由用户手动输入
-    if(acc_secret.empty() && !(auth_type == TP_AUTH_TYPE_NONE || auth_type == TP_AUTH_TYPE_PASSWORD))
+    if (acc_secret.empty() && !(auth_type == TP_AUTH_TYPE_NONE || auth_type == TP_AUTH_TYPE_PASSWORD))
         return TPE_PARAM;
 
     // if (auth_type != TP_AUTH_TYPE_NONE && acc_secret.length() == 0)
@@ -334,7 +347,6 @@ bool ts_web_rpc_session_update(int record_id, int protocol_sub_type, int state)
     return ts_http_get(url, body);
 }
 
-
 //session 结束
 bool ts_web_rpc_session_end(const char* sid, int record_id, int ret_code)
 {
@@ -363,4 +375,75 @@ bool ts_web_rpc_session_end(const char* sid, int record_id, int ret_code)
 
     ex_astr body;
     return ts_http_get(url, body);
+}
+
+uint32_t ts_web_rpc_get_connection_config(const char* token, const char* password, const char* client_ip, std::string& sid)
+{
+    Json::Value j_req;
+    j_req["method"] = "get_conn_info";
+    j_req["param"]["token"] = token;
+    j_req["param"]["password"] = password;
+    j_req["param"]["client_ip"] = client_ip;
+
+    ex_astr json_param;
+    Json::StreamWriterBuilder jwb;
+    std::unique_ptr<Json::StreamWriter> j_writer(jwb.newStreamWriter());
+    ex_aoss os;
+    j_writer->write(j_req, &os);
+    json_param = os.str();
+
+    ex_astr param;
+    ts_url_encode(json_param.c_str(), param);
+
+    ex_astr url = g_env.web_server_rpc;
+    url += "?";
+    url += param;
+
+    ex_astr body;
+    if (!ts_http_get(url, body))
+    {
+        EXLOGE("[core] get conn info from web-server failed: can not connect to web-server.\n");
+        return TPE_NETWORK;
+    }
+    if (body.empty())
+    {
+        EXLOGE("[core] get conn info from web-server failed: got nothing.\n");
+        return TPE_NETWORK;
+    }
+
+    Json::Value j_ret;
+
+    Json::CharReaderBuilder j_crb;
+    std::unique_ptr<Json::CharReader> const j_reader(j_crb.newCharReader());
+    const char* str_json_begin = body.c_str();
+    ex_astr err;
+
+    if (!j_reader->parse(str_json_begin, str_json_begin + body.length(), &j_ret, &err))
+        return TPE_PARAM;
+    if (!j_ret.isObject())
+        return TPE_PARAM;
+    if (!j_ret["code"].isUInt())
+    {
+        EXLOGE("[core] response of web-rpc has no `code` field.\n");
+        return TPE_FAILED;
+    }
+    ex_rv rv = j_ret["code"].asUInt();
+    if (rv != TPE_OK)
+    {
+        EXLOGE("[core] response of web-rpc got error code: %ld.\n", rv);
+        return rv;
+    }
+    if (!j_ret["data"].isObject())
+        return TPE_PARAM;
+
+    Json::Value& j_data = j_ret["data"];
+
+    if (!j_data["sid"].isString())
+    {
+        EXLOGE("connection info: need `sid`.\n");
+        return TPE_PARAM;
+    }
+    sid = j_data["sid"].asString();
+
+    return TPE_OK;
 }

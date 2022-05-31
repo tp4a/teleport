@@ -201,21 +201,13 @@ class DatabaseUpgrade:
         v7 新增
         特别注意：分布式部署时，核心服务的RPC通讯端口仅允许来自web服务的IP访问
         """
-
         f = list()
-
-        # id: 自增主键
         f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
-        # sn: 核心服务主机编号（4位数字构成的字符串，全0表示运行在与web服务同一台主机上）
         f.append('`sn` varchar(5) NOT NULL')
-        # desc: 核心服务主机描述
         f.append('`desc` varchar(255) DEFAULT ""')
-        # secret: 核心服务主机密钥（核心服务主机需要配置此密钥才能连接web服务）
         f.append('`secret` varchar(64) DEFAULT ""')
-        # ip: 核心服务主机的RPC服务IP和端口，用于合成RPC访问地址，例如 http://127.0.0.1:52080/rpc
         f.append('`ip` varchar(128) NOT NULL')
         f.append('`port` int(11) DEFAULT 0')
-        # state: 状态，1=正常，2=禁用，3=离线，4=重启中，5=版本不匹配
         f.append('`state` int(3) DEFAULT 1')
         self._db_exec(
             ' - 创建核心服务器表...',
@@ -227,7 +219,7 @@ class DatabaseUpgrade:
         self.step_end(_step, 0, '')
 
         try:
-            # 1. 创建缺失的 integration_auth 表
+            # 1. 创建新增的 integration_auth 表
             _step = self.step_begin(' - 检查 integration_auth 数据表...')
             ret = self.db.is_table_exists('{}integration_auth'.format(self.db.table_prefix))
             if ret is None:
@@ -238,7 +230,30 @@ class DatabaseUpgrade:
                 self._v8_integration_auth()
                 self.step_end(_step, 0)
 
-            _step = self.step_begin(' - 更新数据库版本号...')
+            # 2. 创建新增的 ops_token 表
+            _step = self.step_begin(' - 检查 ops_token 数据表...')
+            ret = self.db.is_table_exists('{}ops_token'.format(self.db.table_prefix))
+            if ret is None:
+                self.step_end(_step, -1, '无法连接到数据库')
+                return False
+            elif not ret:
+                _step = self.step_begin(' - 创建数据表 ops_token...')
+                self._v8_ops_token()
+                self.step_end(_step, 0)
+
+            # 3. 创建新增的 ops_token 表
+            _step = self.step_begin(' - 检查 ops_token_key 数据表...')
+            ret = self.db.is_table_exists('{}ops_token_key'.format(self.db.table_prefix))
+            if ret is None:
+                self.step_end(_step, -1, '无法连接到数据库')
+                return False
+            elif not ret:
+                _step = self.step_begin(' - 创建数据表 ops_token_key...')
+                self._v8_ops_token_key()
+                self.step_end(_step, 0)
+
+            # 4. 更新数据库版本号
+            _step = self.step_begin('更新数据库版本号...')
             if not self.db.exec('UPDATE `{}config` SET `value`="8" WHERE `name`="db_ver";'.format(self.db.table_prefix)):
                 self.step_end(_step, -1, '无法更新数据库版本号')
                 return False
@@ -255,30 +270,44 @@ class DatabaseUpgrade:
             return False
 
     def _v8_integration_auth(self):
-        """ 第三方服务集成认证信息
-        v8 新增
-        """
-
+        """ 第三方服务集成认证信息（v8版新增）"""
         f = list()
-
-        # id: 自增主键
         f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
-        # acc_key: 访问KEY
         f.append('`acc_key` varchar(32) DEFAULT ""')
-        # acc_sec: 访问密钥
         f.append('`acc_sec` varchar(64) DEFAULT ""')
-        # role_id: 此访问授权对应的角色ID, 关联到role表（也即对应的权限）
         f.append('`role_id` int(11) DEFAULT 0')
-        # name: 第三方服务名称
         f.append('`name` varchar(64) DEFAULT ""')
-        # comment: 描述
         f.append('`comment` varchar(64) DEFAULT ""')
-        # creator_id: 创建者的id，0=系统默认创建
         f.append('`creator_id` int(11) DEFAULT 0')
-        # create_time: 创建时间 timestamp
         f.append('`create_time` int(11) DEFAULT 0')
-
         self._db_exec(
             ' - 创建第三方服务集成认证信息表...',
             'CREATE TABLE `{}integration_auth` ({});'.format(self.db.table_prefix, ','.join(f))
+        )
+
+    def _v8_ops_token(self):
+        """ 远程连接授权码（用于客户端软件配置，无需登录TP-WEB，可直接进行远程）（v8版新增） """
+        f = list()
+        f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
+        f.append('`mode` int(5) DEFAULT 0')
+        f.append('`token` varchar(32) NOT NULL')
+        f.append('`uni_id` varchar(128) DEFAULT ""')
+        f.append('`u_id` int(11) DEFAULT 0')
+        f.append('`acc_id` int(11) DEFAULT 0')
+        f.append('`valid_from` int(11) DEFAULT 0')
+        f.append('`valid_to` int(11) DEFAULT 0')
+        self._db_exec(
+            ' - 创建远程连接授权码表...',
+            'CREATE TABLE `{}ops_token` ({});'.format(self.db.table_prefix, ','.join(f))
+        )
+
+    def _v8_ops_token_key(self):
+        """ 远程连接临时授权码对应Key（v8版新增） """
+        f = list()
+        f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
+        f.append('`ops_token_id` int(11) DEFAULT 0')
+        f.append('`password` varchar(32) DEFAULT ""')
+        self._db_exec(
+            ' - 创建远程连接授权码表...',
+            'CREATE TABLE `{}ops_token_key` ({});'.format(self.db.table_prefix, ','.join(f))
         )

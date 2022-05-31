@@ -153,6 +153,9 @@ private:
     int m_auth_type;
     // bool m_allow_user_input_password;
 
+    std::string m_client_ip;
+    uint16_t m_client_port;
+
     bool m_first_auth;
     // 远程主机认证是否通过
     bool m_auth_passed;

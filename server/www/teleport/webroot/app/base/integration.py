@@ -42,7 +42,6 @@ class IntegrationManager(object):
                 'privilege': i['privilege']
             }
 
-        # tp_cron().add_job('session_expire', self._check_expire, first_interval_seconds=None, interval_seconds=60)
         return True
 
     def get_secret(self, acc_key):

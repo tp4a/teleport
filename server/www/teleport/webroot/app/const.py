@@ -191,6 +191,10 @@ TP_PRIVILEGE_SYS_CONFIG = 0x00080000  # 系统配置维护
 # TP_PRIVILEGE_SYS_OPS_HISTORY = 0x00100000  # 历史会话管理（例如删除历史会话、设定多长时间之前的历史会话自动删除等）
 TP_PRIVILEGE_SYS_LOG = 0x00200000  # 查看系统日志
 
+
+TP_OPS_TOKEN_USER = 0
+TP_OPS_TOKEN_TEMP = 1
+
 # ===================================================================
 # error code
 #   see $source-root$/common/teleport/teleport_const.h

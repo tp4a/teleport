@@ -30,6 +30,7 @@ class DatabaseInit:
             self._create_audit_policy()
             self._create_audit_auz()
             self._create_audit_map()
+            self._create_ops_token()
             self._create_syslog()
             self._create_record()
             self._create_record_audit()
@@ -586,6 +587,57 @@ class DatabaseInit:
             'CREATE TABLE `{}ops_map` ({});'.format(self.db.table_prefix, ','.join(f))
         )
 
+    def _create_ops_token(self):
+        """ 远程连接授权码（用于客户端软件配置，无需登录TP-WEB，可直接进行远程）（v8版新增） """
+        f = list()
+
+        # id: 自增主键
+        f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
+
+        # mode: token类型
+        #  0，用户使用的，需要使用 tp_user.password 进行验证
+        #  1，临时授权码，需要使用 tp_ops_token_key.password 进行验证
+        f.append('`mode` int(5) DEFAULT 0')
+
+        # token: 用作远程连接用户名一部分的认证信息，目前使用10个随机字符
+        f.append('`token` varchar(32) NOT NULL')
+
+        # uni_id: 快速定位的索引 "pid-guid-uid-ghid-hid-gaid-aid"，对应 tp_ops_map.uni_id
+        #   如果为空，则可能是管理员生成的授权码
+        f.append('`uni_id` varchar(128) DEFAULT ""')
+        # u_id: 用户ID
+        f.append('`u_id` int(11) DEFAULT 0')
+        # acc_id: 远程账号ID
+        f.append('`acc_id` int(11) DEFAULT 0')
+
+        # valid_from: 有效期起始时间，为0则不限
+        f.append('`valid_from` int(11) DEFAULT 0')
+        # valid_to: 有效期终止时间，为0则不限
+        f.append('`valid_to` int(11) DEFAULT 0')
+
+        self._db_exec(
+            '创建远程连接授权码表...',
+            'CREATE TABLE `{}ops_token` ({});'.format(self.db.table_prefix, ','.join(f))
+        )
+
+    def _create_ops_token_key(self):
+        """ 远程连接临时授权码对应Key（v8版新增） """
+        f = list()
+
+        # id: 自增主键
+        f.append('`id` integer PRIMARY KEY {}'.format(self.db.auto_increment))
+
+        # ops_token_id: 对应tp_ops_token.id
+        f.append('`ops_token_id` int(11) DEFAULT 0')
+
+        # password: 临时密码（16字节随机密码），临时开放给外部运维人员远程时需要使用此密码进行验证
+        f.append('`password` varchar(32) DEFAULT ""')
+
+        self._db_exec(
+            '创建远程连接授权码表...',
+            'CREATE TABLE `{}ops_token_key` ({});'.format(self.db.table_prefix, ','.join(f))
+        )
+
     def _create_audit_policy(self):
         """ 审计授权策略 """
         f = list()
@@ -827,7 +879,7 @@ class DatabaseInit:
         )
 
     def _create_integration_auth(self):
-        """ 第三方服务集成认证信息 """
+        """ 第三方服务集成认证信息（v8版新增）"""
         f = list()
 
         # id: 自增主键

@@ -137,7 +137,6 @@ controllers = [
     #  - [json] 获取账号组列表（包括不超过5个组内成员）
     (r'/asset/get-account-groups-with-member', account.DoGetAccountGroupWithMemberHandler),
 
-
     # ====================================================
     # 远程运维相关
     # ====================================================
@@ -175,6 +174,16 @@ controllers = [
     (r'/ops/build-auz-map', ops.DoBuildAuzMapHandler),
     #  - [json] 强行终止指定会话
     (r'/ops/kill', ops.DoKillSessionsHandler),
+    #  - [json] 获取当前登录用户对于指定账号的授权码，用于脱离TP-WEB进行远程连接
+    (r'/ops/get-ops-tokens', ops.DoGetOpsTokensHandler),
+    #  - [json] 创建一个授权码，用于脱离TP-WEB进行远程连接
+    (r'/ops/create-ops-token', ops.DoCreateOpsTokenHandler),
+    #  - [json] 删除一个授权码
+    (r'/ops/remove-ops-token', ops.DoRemoveOpsTokenHandler),
+    #  - [json] 更新一个授权码（如：有效期）
+    (r'/ops/renew-ops-token', ops.DoRenewOpsTokenHandler),
+    #  - [json] 为一个临时授权码创建一个新的临时密码
+    (r'/ops/create-ops-token-temp-password', ops.DoCreateOpsTokenTempPasswordHandler),
 
     # ====================================================
     # 审计相关

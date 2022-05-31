@@ -13,6 +13,9 @@ $app.on_init = function (cb_stack) {
         return;
     }
 
+    // $('#dlg-ops-token').modal({backdrop: 'static'});
+    $app.dlg_ops_token = $app.create_dlg_ops_token();
+
     cb_stack
         .add($app.create_controls)
         .add($app.load_role_list);
@@ -138,8 +141,10 @@ $app.on_table_host_cell_created = function (tbl, row_id, col_key, cell_obj) {
                 $app.connect_remote(uni_id, acc_id, host_id, TP_PROTOCOL_TYPE_SSH, protocol_sub_type);
             } else if (action === 'telnet') {
                 $app.connect_remote(uni_id, acc_id, host_id, TP_PROTOCOL_TYPE_TELNET, TP_PROTOCOL_TYPE_TELNET_SHELL);
-            } else if (action === 'get_config') {
-                $app.get_remote_connection_config(acc_id, host_id);
+            } else if (action === 'ops_token') {
+                let _row_data = $app.table_host.get_row(row_id);
+                let _index = parseInt($(this).attr('data-index'));
+                $app.dlg_ops_token.show(uni_id, _row_data.h_name, _row_data.ip, _row_data.accounts_[_index]);
             }
         });
     }
@@ -210,7 +215,6 @@ $app.on_table_host_render_created = function (render) {
     render.account = function (row_id, fields) {
         let h = [];
 
-        // console.log('acc', fields);
         if (fields.h_state !== TP_STATE_NORMAL || (fields.gh_state !== TP_STATE_NORMAL && fields.gh_state !== 0)) {
             // 1. 主机已经被禁用，不显示相关账号。
             // 2. 主机所在分组已经被禁用，不显示相关账号。
@@ -227,8 +231,6 @@ $app.on_table_host_render_created = function (render) {
         return h.join('');
     };
     render.action = function (row_id, fields) {
-        // console.log('action', fields);
-
         let is_disabled = false;
         let disable_msg = '';
 
@@ -339,7 +341,7 @@ $app.on_table_host_render_created = function (render) {
 
             if (!is_disabled) {
                 h.push('<div class="remote-config">');
-                h.push('<button type="button" class="btn btn-default" data-action="get_config" data-acc-id=' + acc.a_id + ' data-host-id=' + acc.h_id + '><i class="fa fa-key fa-fw"></i> 获取远程连接配置</button>');
+                h.push('<button type="button" class="btn btn-default" data-action="ops_token" data-index="' + i + '" data-id="' + acc.uni_id + '" data-acc-id=' + acc.a_id + ' data-host-id=' + acc.h_id + '><i class="fa fa-key fa-fw"></i> 获取远程连接配置</button>');
                 h.push('</div>');
             }
 
@@ -487,8 +489,21 @@ $app.create_dlg_rdp_options = function () {
     return dlg;
 };
 
-$app.get_remote_connection_config = function (acc_id, host_id) {
-    console.log(acc_id, host_id);
+$app.get_ops_token = function (uni_id, acc_id) {
+    uni_id = uni_id || "";
+    $tp.ajax_post_json('/ops/get-ops-token',
+        {uni_id: uni_id, acc_id: acc_id},
+        function (ret) {
+            if (ret.code === TPE_OK) {
+
+            } else {
+                $tp.notify_error('无法获取远程连接配置：' + tp_error_msg(ret.code, ret.message));
+            }
+        },
+        function () {
+            $tp.notify_error('网络故障，无法获取远程连接配置！');
+        }
+    );
 }
 
 $app.connect_remote = function (uni_id, acc_id, host_id, protocol_type, protocol_sub_type) {
@@ -517,16 +532,13 @@ $app.connect_remote = function (uni_id, acc_id, host_id, protocol_type, protocol
     $tp.ajax_post_json('/asset/get-account-interactive-mode',
         {acc_id: acc_id},
         function (ret) {
-            console.log('ajax: /asset/get-account-interactive-mode', ret);
             if (ret.code === TPE_OK) {
                 args.is_interactive = ret.data.is_interactive;
-                console.log('--s--', args);
 
                 $assist.do_teleport(
                     args,
                     function () {
                         // func_success
-                        //$tp.notify_success('远程连接测试通过！');
                     },
                     function (code, message) {
                         if (code === TPE_NO_ASSIST)
@@ -544,4 +556,357 @@ $app.connect_remote = function (uni_id, acc_id, host_id, protocol_type, protocol
             $tp.notify_error('网络故障，无法获取远程账号信息！');
         }
     );
+};
+
+$app.create_dlg_ops_token = function () {
+    let dlg = {};
+    dlg.dom_id = 'dlg-ops-token';
+    dlg.uni_id = '';
+    dlg.acc_id = 0;
+    dlg.user_token = '';
+    dlg.temp_token = '';
+    dlg.user_token_action = 'none';
+    dlg.temp_token_action = 'none';
+    dlg.user_token_info = null;
+    dlg.temp_token_info = null;
+
+    dlg.dom = {
+        dialog: $('#' + dlg.dom_id),
+
+        target_name: $('#' + dlg.dom_id + ' [data-field="target-name"]'),
+        target_acc: $('#' + dlg.dom_id + ' [data-field="target-acc"]'),
+        target_protocol: $('#' + dlg.dom_id + ' [data-field="target-protocol"]'),
+        remote_addr: $('#' + dlg.dom_id + ' [data-field="remote-addr"]'),
+        remote_port: $('#' + dlg.dom_id + ' [data-field="remote-port"]'),
+
+        user_token_state: $('#' + dlg.dom_id + ' [data-field="user-token-state"]'),
+        btn_user_token_action: $('#btn-user-token-action'),
+        btn_remove_user_token: $('#btn-remove-user-token'),
+        block_user_token: $('#block-user-token'),
+        user_acc: $('#' + dlg.dom_id + ' [data-field="user-acc"]'),
+
+        // block_user_token_password: $('#block-user-token-password'),
+        block_user_token_password_desc: $('#block-user-token-password-desc'),
+        user_password: $('#' + dlg.dom_id + ' [data-field="user-password"]'),
+
+        temp_token_state: $('#' + dlg.dom_id + ' [data-field="temp-token-state"]'),
+        btn_temp_token_action: $('#btn-temp-token-action'),
+        btn_remove_temp_token: $('#btn-remove-temp-token'),
+        block_temp_token: $('#block-temp-token'),
+        temp_acc: $('#' + dlg.dom_id + ' [data-field="temp-acc"]'),
+
+        // block_temp_token_password: $('#block-temp-token-password'),
+        block_temp_token_password_desc: $('#block-temp-token-password-desc'),
+        block_temp_token_password_state: $('#block-temp-token-password-state'),
+        btn_regenerate_temp_password: $('#btn-regenerate-temp-password'),
+        temp_password: $('#' + dlg.dom_id + ' [data-field="temp-password"]'),
+    };
+
+
+    dlg.show = function (uni_id, target_name, target_addr, target_acc) {
+        uni_id = uni_id || "";
+        dlg.uni_id = uni_id;
+        dlg.acc_id = target_acc.a_id;
+        dlg.user_token = '';
+        dlg.temp_token = '';
+        dlg.user_token_action = 'none';
+        dlg.temp_token_action = 'none';
+
+        let _name = target_addr;
+        if (target_name.length !== 0)
+            _name += ' (' + target_name + ')';
+        dlg.dom.target_name.text(_name);
+        dlg.dom.target_acc.text(target_acc.a_name);
+
+        dlg.dom.remote_addr.text(window.location.hostname);
+
+        if (target_acc.protocol_type === TP_PROTOCOL_TYPE_RDP) {
+            dlg.dom.target_protocol.text('RDP远程桌面');
+            dlg.dom.remote_port.text($app.options.core_cfg.rdp.port);
+        } else if (target_acc.protocol_type === TP_PROTOCOL_TYPE_SSH) {
+            dlg.dom.target_protocol.text('SSH');
+            dlg.dom.remote_port.text($app.options.core_cfg.ssh.port);
+        } else if (target_acc.protocol_type === TP_PROTOCOL_TYPE_TELNET) {
+            dlg.dom.target_protocol.text('TELNET');
+            dlg.dom.remote_port.text($app.options.core_cfg.telnet.port);
+        } else {
+            dlg.dom.target_protocol.text('未知协议');
+            $tp.notify_error('未知的远程协议，无法获取远程连接配置！');
+            return;
+        }
+
+        dlg.dom.block_user_token.hide();
+        dlg.dom.user_token_state.hide();
+        dlg.dom.btn_user_token_action.hide();
+        dlg.dom.btn_remove_user_token.hide();
+        dlg.dom.block_temp_token.hide();
+        dlg.dom.temp_token_state.hide();
+        dlg.dom.btn_temp_token_action.hide();
+        dlg.dom.btn_remove_temp_token.hide();
+
+        dlg.dom.dialog.modal({backdrop: 'static'});
+
+        $tp.ajax_post_json('/ops/get-ops-tokens',
+            {uni_id: uni_id, acc_id: target_acc.a_id},
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    dlg._update_token_info(ret.data);
+                } else if (ret.code === TPE_NOT_EXISTS) {
+                    dlg._update_token_info(null);
+                } else {
+                    $tp.notify_error('获取远程连接配置时发生错误：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                $tp.notify_error('网络故障，无法获取远程连接配置！');
+            }
+        );
+
+    };
+
+    dlg._update_token_info = function (tokens) {
+        if (!tokens) {
+            dlg._update_user_token_info(null);
+            dlg._update_temp_token_info(null);
+            return;
+        }
+
+        for (let i in tokens) {
+            if (tokens[i].mode === TP_OPS_TOKEN_USER)
+                dlg._update_user_token_info(tokens[i]);
+            else if (tokens[i].mode === TP_OPS_TOKEN_TEMP)
+                dlg._update_temp_token_info(tokens[i]);
+            else
+                $tp.notify_error('服务端返回了错误数据！');
+        }
+        if (!dlg.user_token_info)
+            dlg._update_user_token_info(null);
+        if (!dlg.temp_token_info)
+            dlg._update_temp_token_info(null);
+    };
+
+    dlg._update_user_token_info = function (token_info) {
+        if (!token_info) {
+            dlg.user_token = '';
+            dlg.user_token_info = null;
+            dlg.user_token_action = 'create';
+
+            // 尚未设置远程连接配置token
+            dlg.dom.user_token_state.hide();
+            dlg.dom.block_user_token.hide();
+            dlg.dom.btn_user_token_action.html('<i class="fa fa-cog fa-fw"></i> 立即创建配置项');
+            dlg.dom.btn_user_token_action.show();
+            dlg.dom.btn_remove_user_token.hide();
+        } else {
+            dlg.user_token = token_info.token;
+            dlg.user_token_info = token_info;
+            dlg.user_token_action = 'renew_valid';
+
+            // dlg.dom.block_remove.show();
+            dlg.dom.user_acc.html(token_info.token);
+
+            let now = tp_timestamp_sec();
+            if (token_info.valid_to === 0 || now <= token_info.valid_to) {
+                dlg.dom.user_token_state.html('有效期至 ' + tp_format_datetime(token_info.valid_to));
+                dlg.dom.user_token_state.removeClass('badge-warning').addClass('badge-info');
+                dlg.dom.btn_user_token_action.html('<i class="fa fa-clock fa-fw"></i> 延长有效期');
+            } else {
+                dlg.dom.user_token_state.html('已过期，有效期至 ' + tp_format_datetime(token_info.valid_to));
+                dlg.dom.user_token_state.removeClass('badge-info').addClass('badge-warning');
+                dlg.dom.btn_user_token_action.html('<i class="fa fa-redo fa-fw"></i> 重设有效期');
+            }
+            dlg.dom.user_token_state.show();
+            dlg.dom.btn_user_token_action.show();
+            dlg.dom.btn_remove_user_token.show();
+
+            if (token_info._interactive) {
+                dlg.dom.user_password.text('您的teleport密码--目标主机账号的密码');
+                dlg.dom.block_user_token_password_desc.show();
+            } else {
+                dlg.dom.user_password.text('您的teleport密码');
+                dlg.dom.block_user_token_password_desc.hide();
+            }
+
+            // dlg.dom.block_user_token_password.show();
+            dlg.dom.block_user_token.show();
+        }
+    };
+
+    dlg._update_temp_token_info = function (token_info) {
+        if (!token_info) {
+            dlg.temp_token = '';
+            dlg.temp_token_info = null;
+            dlg.temp_token_action = 'create';
+
+            // 尚未设置远程连接配置token
+            dlg.dom.temp_token_state.hide();
+            dlg.dom.block_temp_token.hide();
+            dlg.dom.btn_temp_token_action.html('<i class="fa fa-cog fa-fw"></i> 立即创建配置项');
+            dlg.dom.btn_temp_token_action.show();
+            dlg.dom.btn_remove_temp_token.hide();
+        } else {
+            dlg.temp_token = token_info.token;
+            dlg.temp_token_info = token_info;
+            dlg.temp_token_action = 'renew_valid';
+
+            // dlg.dom.block_remove.show();
+            dlg.dom.temp_acc.html(token_info.token);
+
+            let now = tp_timestamp_sec();
+            if (token_info.valid_to === 0 || now <= token_info.valid_to) {
+                dlg.dom.temp_token_state.html('有效期至 ' + tp_format_datetime(token_info.valid_to));
+                dlg.dom.temp_token_state.removeClass('badge-warning').addClass('badge-info');
+                dlg.dom.btn_temp_token_action.html('<i class="fa fa-clock fa-fw"></i> 延长有效期');
+            } else {
+                dlg.dom.temp_token_state.html('已过期，有效期至 ' + tp_format_datetime(token_info.valid_to));
+                dlg.dom.temp_token_state.removeClass('badge-info').addClass('badge-warning');
+                dlg.dom.btn_temp_token_action.html('<i class="fa fa-redo fa-fw"></i> 重设有效期');
+            }
+            dlg.dom.temp_token_state.show();
+            dlg.dom.btn_temp_token_action.show();
+            dlg.dom.btn_remove_temp_token.show();
+
+            dlg.dom.temp_password.text('');
+            if (token_info._interactive) {
+                if (!_.isUndefined(token_info._password)) {
+                    dlg.dom.temp_password.text(token_info._password + '--目标主机账号的密码');
+                    dlg.dom.btn_regenerate_temp_password.hide();
+                    dlg.dom.block_temp_token_password_state.show();
+                } else {
+                    dlg.dom.btn_regenerate_temp_password.show();
+                    dlg.dom.block_temp_token_password_state.hide();
+                }
+                dlg.dom.block_temp_token_password_desc.show();
+            } else {
+                if (!_.isUndefined(token_info._password)) {
+                    dlg.dom.temp_password.text(token_info._password);
+                    dlg.dom.btn_regenerate_temp_password.hide();
+                    dlg.dom.block_temp_token_password_state.show();
+                } else {
+                    dlg.dom.btn_regenerate_temp_password.show();
+                    dlg.dom.block_temp_token_password_state.hide();
+                }
+                dlg.dom.block_temp_token_password_desc.hide();
+            }
+
+            // dlg.dom.block_temp_token_password.show();
+            dlg.dom.block_temp_token.show();
+        }
+    };
+
+    dlg._on_create_token = function (mode) {
+        $tp.ajax_post_json('/ops/create-ops-token',
+            // mode: TP_OPS_TOKEN_USER=长期有效，例如一个月； TP_OPS_TOKEN_TEMP=临时有效，一般不超过7天。
+            {mode: mode, uni_id: dlg.uni_id, acc_id: dlg.acc_id},
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    if (mode === TP_OPS_TOKEN_USER)
+                        dlg._update_user_token_info(ret.data);
+                    else if (mode === TP_OPS_TOKEN_TEMP)
+                        dlg._update_temp_token_info(ret.data);
+                } else {
+                    $tp.notify_error('创建远程连接配置时发生错误：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                $tp.notify_error('网络故障，无法创建远程连接配置！');
+            }
+        );
+    };
+
+    dlg._on_renew_token = function (mode, token) {
+        $tp.ajax_post_json('/ops/renew-ops-token',
+            // mode: TP_OPS_TOKEN_USER=长期有效，例如一个月； TP_OPS_TOKEN_TEMP=临时有效，一般不超过7天。
+            {mode: mode, token: token, 'acc_id': dlg.acc_id},
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    if (mode === TP_OPS_TOKEN_USER)
+                        dlg._update_user_token_info(ret.data);
+                    else if (mode === TP_OPS_TOKEN_TEMP)
+                        dlg._update_temp_token_info(ret.data);
+                } else {
+                    $tp.notify_error('创建远程连接配置时发生错误：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                $tp.notify_error('网络故障，无法创建远程连接配置！');
+            }
+        );
+    };
+
+    dlg._on_remove_token = function (mode, token) {
+        let _fn_sure = function (cb_stack, cb_args) {
+            $tp.ajax_post_json('/ops/remove-ops-token',
+                // mode: TP_OPS_TOKEN_USER=长期有效，例如一个月； TP_OPS_TOKEN_TEMP=临时有效，一般不超过7天。
+                {token: token},
+                function (ret) {
+                    if (ret.code === TPE_OK) {
+                        if (mode === TP_OPS_TOKEN_USER)
+                            dlg._update_user_token_info(null);
+                        else if (mode === TP_OPS_TOKEN_TEMP)
+                            dlg._update_temp_token_info(null);
+                    } else {
+                        $tp.notify_error('创建删除远程连接配置时发生错误：' + tp_error_msg(ret.code, ret.message));
+                    }
+
+                    cb_stack.exec();
+                },
+                function () {
+                    $tp.notify_error('网络故障，无法删除远程连接配置！');
+                    cb_stack.exec();
+                }
+            );
+        };
+
+        let cb_stack = CALLBACK_STACK.create();
+        let _msg_remove = '您确定要删除此项配置吗？';
+        $tp.dlg_confirm(cb_stack, {
+            msg: '<div class="alert alert-danger"><p><strong>注意：删除操作不可恢复！！</strong></p><p>删除远程连接配置后，使用此项配置的客户端将无法直接进行远程连接！但不影响通过页面进行远程连接。</p></div><p>' + _msg_remove + '</p>',
+            fn_yes: _fn_sure
+        });
+
+    };
+
+    dlg.dom.btn_user_token_action.click(function () {
+        if (dlg.user_token_action === 'create') {
+            dlg._on_create_token(TP_OPS_TOKEN_USER);
+        } else if (dlg.user_token_action === 'renew_valid') {
+            dlg._on_renew_token(TP_OPS_TOKEN_USER, dlg.user_token);
+        }
+    });
+
+    dlg.dom.btn_remove_user_token.click(function () {
+        dlg._on_remove_token(TP_OPS_TOKEN_USER, dlg.user_token);
+    });
+
+    dlg.dom.btn_temp_token_action.click(function () {
+        if (dlg.temp_token_action === 'create') {
+            dlg._on_create_token(TP_OPS_TOKEN_TEMP);
+        } else if (dlg.temp_token_action === 'renew_valid') {
+            dlg._on_renew_token(TP_OPS_TOKEN_TEMP, dlg.temp_token);
+        }
+    });
+
+    dlg.dom.btn_remove_temp_token.click(function () {
+        dlg._on_remove_token(TP_OPS_TOKEN_TEMP, dlg.temp_token);
+    });
+
+    dlg.dom.btn_regenerate_temp_password.click(function () {
+        $tp.ajax_post_json('/ops/create-ops-token-temp-password',
+            // mode: TP_OPS_TOKEN_USER=长期有效，例如一个月； TP_OPS_TOKEN_TEMP=临时有效，一般不超过7天。
+            {token: dlg.temp_token, 'acc_id': dlg.acc_id},
+            function (ret) {
+                if (ret.code === TPE_OK) {
+                    dlg._update_temp_token_info(ret.data);
+                } else {
+                    $tp.notify_error('生成临时密码时发生错误：' + tp_error_msg(ret.code, ret.message));
+                }
+            },
+            function () {
+                $tp.notify_error('网络故障，无法生成临时密码！');
+            }
+        );
+    });
+
+    return dlg;
 };

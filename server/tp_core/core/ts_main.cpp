@@ -8,35 +8,73 @@
 
 #include <mbedtls/platform.h>
 // #include <mbedtls/debug.h>
+#include <teleport_const.h>
 
 bool g_exit_flag = false;
 
-TPP_CONNECT_INFO* tpp_get_connect_info(const char* sid) {
-    TS_CONNECT_INFO connect_info;
+TPP_CONNECT_INFO* tpp_get_connect_info(const char* sid_or_token, const char* password, const char* client_ip)
+{
+    std::string sid;
+    size_t len = strlen(sid_or_token);
+    if (len == 6)
+    {
+        // 临时会话ID
+        sid = sid_or_token;
+        // bool ret = g_session_mgr.get_connect_info(sid, connect_info);
+        // if (!ret)
+        //     return nullptr;
+    }
+    else if (len == 12)
+    {
+        // 长期授权码，需要用password进行验证，并生成临时会话ID
+        ex_rv rv = ts_web_rpc_get_connection_config(sid_or_token, password, client_ip, sid);
+        if (rv != TPE_OK)
+        {
+            EXLOGE("can not get connection config by ops-token, code=%ld\n", rv);
+            return nullptr;
+        }
+        //
+        // // 生成一个session-id（内部会避免重复）
+        // if (!g_session_mgr.request_session(sid, info))
+        // {
+        //     EXLOGE("can not request session.\n");
+        //     delete info;
+        //     return nullptr;
+        // }
+    }
+    else
+    {
+        EXLOGE("invalid sid or ops-token: %s\n", sid_or_token);
+        return nullptr;
+    }
 
+    TS_CONNECT_INFO connect_info;
     bool ret = g_session_mgr.get_connect_info(sid, connect_info);
     if (!ret)
+    {
+        EXLOGE("can not get connect info from session manager, sid=%s\n", sid.c_str());
         return nullptr;
+    }
 
-    auto info = (TPP_CONNECT_INFO*) calloc(1, sizeof(TPP_CONNECT_INFO));
+    auto info = (TPP_CONNECT_INFO*)calloc(1, sizeof(TPP_CONNECT_INFO));
 
-    info->sid = (char*) calloc(1, connect_info.sid.length() + 1);
+    info->sid = (char*)calloc(1, connect_info.sid.length() + 1);
     ex_strcpy(info->sid, connect_info.sid.length() + 1, connect_info.sid.c_str());
-    info->user_username = (char*) calloc(1, connect_info.user_username.length() + 1);
+    info->user_username = (char*)calloc(1, connect_info.user_username.length() + 1);
     ex_strcpy(info->user_username, connect_info.user_username.length() + 1, connect_info.user_username.c_str());
-    info->host_ip = (char*) calloc(1, connect_info.host_ip.length() + 1);
+    info->host_ip = (char*)calloc(1, connect_info.host_ip.length() + 1);
     ex_strcpy(info->host_ip, connect_info.host_ip.length() + 1, connect_info.host_ip.c_str());
-    info->conn_ip = (char*) calloc(1, connect_info.conn_ip.length() + 1);
+    info->conn_ip = (char*)calloc(1, connect_info.conn_ip.length() + 1);
     ex_strcpy(info->conn_ip, connect_info.conn_ip.length() + 1, connect_info.conn_ip.c_str());
-    info->client_ip = (char*) calloc(1, connect_info.client_ip.length() + 1);
+    info->client_ip = (char*)calloc(1, connect_info.client_ip.length() + 1);
     ex_strcpy(info->client_ip, connect_info.client_ip.length() + 1, connect_info.client_ip.c_str());
-    info->acc_username = (char*) calloc(1, connect_info.acc_username.length() + 1);
+    info->acc_username = (char*)calloc(1, connect_info.acc_username.length() + 1);
     ex_strcpy(info->acc_username, connect_info.acc_username.length() + 1, connect_info.acc_username.c_str());
-    info->acc_secret = (char*) calloc(1, connect_info.acc_secret.length() + 1);
+    info->acc_secret = (char*)calloc(1, connect_info.acc_secret.length() + 1);
     ex_strcpy(info->acc_secret, connect_info.acc_secret.length() + 1, connect_info.acc_secret.c_str());
-    info->username_prompt = (char*) calloc(1, connect_info.username_prompt.length() + 1);
+    info->username_prompt = (char*)calloc(1, connect_info.username_prompt.length() + 1);
     ex_strcpy(info->username_prompt, connect_info.username_prompt.length() + 1, connect_info.username_prompt.c_str());
-    info->password_prompt = (char*) calloc(1, connect_info.password_prompt.length() + 1);
+    info->password_prompt = (char*)calloc(1, connect_info.password_prompt.length() + 1);
     ex_strcpy(info->password_prompt, connect_info.password_prompt.length() + 1, connect_info.password_prompt.c_str());
 
     info->user_id = connect_info.user_id;
@@ -52,7 +90,8 @@ TPP_CONNECT_INFO* tpp_get_connect_info(const char* sid) {
     return info;
 }
 
-void tpp_free_connect_info(TPP_CONNECT_INFO* info) {
+void tpp_free_connect_info(TPP_CONNECT_INFO* info)
+{
     if (nullptr == info)
         return;
 
@@ -70,7 +109,8 @@ void tpp_free_connect_info(TPP_CONNECT_INFO* info) {
     free(info);
 }
 
-bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id) {
+bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id)
+{
     if (nullptr == info || nullptr == db_id)
         return false;
 
@@ -93,15 +133,18 @@ bool tpp_session_begin(const TPP_CONNECT_INFO* info, int* db_id) {
     return ts_web_rpc_session_begin(connect_info, *db_id);
 }
 
-bool tpp_session_update(int db_id, int protocol_sub_type, int state) {
+bool tpp_session_update(int db_id, int protocol_sub_type, int state)
+{
     return ts_web_rpc_session_update(db_id, protocol_sub_type, state);
 }
 
-bool tpp_session_end(const char* sid, int db_id, int ret) {
+bool tpp_session_end(const char* sid, int db_id, int ret)
+{
     return ts_web_rpc_session_end(sid, db_id, ret);
 }
 
-int ts_main() {
+int ts_main()
+{
     ExIniFile& ini = g_env.get_ini();
 
     EXLOGW("\n");
@@ -115,33 +158,40 @@ int ts_main() {
     // 枚举配置文件中的[protocol-xxx]小节，加载对应的协议动态库
     bool all_ok = true;
 
-    do {
-        if (!g_session_mgr.start()) {
+    do
+    {
+        if (!g_session_mgr.start())
+        {
             EXLOGE("[core] failed to start session-id manager.\n");
             all_ok = false;
             break;
         }
 
-        if (!rpc.init() || !rpc.start()) {
+        if (!rpc.init() || !rpc.start())
+        {
             EXLOGE("[core] rpc init/start failed.\n");
             all_ok = false;
             break;
         }
 
-        for (auto & sec : secs) {
-            if (sec.first.length() > 9 && 0 == wcsncmp(sec.first.c_str(), L"protocol-", 9)) {
+        for (auto& sec: secs)
+        {
+            if (sec.first.length() > 9 && 0 == wcsncmp(sec.first.c_str(), L"protocol-", 9))
+            {
                 ex_wstr libname;
                 if (!sec.second->GetStr(L"lib", libname))
                     continue;
 
                 bool enabled = false;
                 sec.second->GetBool(L"enabled", enabled, false);
-                if (!enabled) {
+                if (!enabled)
+                {
                     EXLOGW(L"[core] `%ls` not enabled.\n", libname.c_str());
                     continue;
                 }
 
-                if (!g_tpp_mgr.load_tpp(libname)) {
+                if (!g_tpp_mgr.load_tpp(libname))
+                {
                     all_ok = false;
                     break;
                 }
@@ -150,19 +200,23 @@ int ts_main() {
 
     } while (false);
 
-    if (0 == g_tpp_mgr.count()) {
+    if (0 == g_tpp_mgr.count())
+    {
         all_ok = false;
     }
 
-    if (!all_ok) {
+    if (!all_ok)
+    {
         g_exit_flag = true;
     }
 
-    if (!g_exit_flag) {
+    if (!g_exit_flag)
+    {
         ts_web_rpc_register_core();
 
         EXLOGI("[core] ---- initialized, ready for service ----\n");
-        while (!g_exit_flag) {
+        while (!g_exit_flag)
+        {
             ex_sleep_ms(1000);
             g_tpp_mgr.timer();
         }
