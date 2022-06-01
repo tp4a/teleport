@@ -490,6 +490,8 @@ void TsWsClient::_on_message(const std::string& message, std::string& buf)
 	//     }
 	// }
 
+	EXLOGW("on-message:\n", message.c_str());
+
 	AssistMessage msg_req;
 
 	Json::CharReaderBuilder jrb;
@@ -761,6 +763,22 @@ void TsWsClient::_rpc_func_run_client(ex_astr& buf, AssistMessage& msg_req, Json
 		return;
 	}
 
+	const char* interactive_mode = "no";
+	bool is_interactive_mode = false;
+	if (!js_param["is_interactive"].isNull())
+	{
+		if (!js_param["is_interactive"].isBool())
+		{
+			_create_response(buf, msg_req, TPE_PARAM);
+			return;
+		}
+		if (js_param["is_interactive"].asBool())
+		{
+			interactive_mode = "yes";
+			is_interactive_mode = true;
+		}
+	}
+
 	int pro_type = js_param["protocol_type"].asUInt();
 	int pro_sub = js_param["protocol_sub_type"].asInt();
 	ex_u32 protocol_flag = js_param["protocol_flag"].asUInt();
@@ -836,18 +854,18 @@ void TsWsClient::_rpc_func_run_client(ex_astr& buf, AssistMessage& msg_req, Json
 			rdp_console = false;
 
 
-		int split_pos = sid.length() - 2;
-		ex_astr real_sid = sid.substr(0, split_pos);
-		ex_astr str_pwd_len = sid.substr(split_pos, sid.length());
-		int n_pwd_len = strtol(str_pwd_len.c_str(), nullptr, 16);
-		n_pwd_len -= real_sid.length();
-		n_pwd_len -= 2;
-		char szPwd[256] = { 0 };
-		for (int i = 0; i < n_pwd_len; i++) {
-			szPwd[i] = '*';
-		}
+		//int split_pos = sid.length() - 2;
+		//ex_astr real_sid = sid.substr(0, split_pos);
+		//ex_astr str_pwd_len = sid.substr(split_pos, sid.length());
+		//int n_pwd_len = strtol(str_pwd_len.c_str(), nullptr, 16);
+		//n_pwd_len -= real_sid.length();
+		//n_pwd_len -= 2;
+		//char szPwd[256] = { 0 };
+		//for (int i = 0; i < n_pwd_len; i++) {
+		//	szPwd[i] = '*';
+		//}
 
-		ex_astr2wstr(real_sid, w_sid);
+		//ex_astr2wstr(real_sid, w_sid);
 
 		w_exe_path = _T("\"");
 		w_exe_path += g_cfg.rdp.application + _T("\" ");
@@ -891,13 +909,14 @@ void TsWsClient::_rpc_func_run_client(ex_astr& buf, AssistMessage& msg_req, Json
 			// 				console_mode = 1;
 
 			std::string psw51b;
-			if (!calc_psw51b(szPwd, psw51b)) {
+			// if (!calc_psw51b(szPwd, psw51b))
+			if (!calc_psw51b("******", psw51b)) {
 				EXLOGE("calc password failed.\n");
 				_create_response(buf, msg_req, TPE_PARAM);
 				return;
 			}
 
-			real_sid = "01" + real_sid;
+			//real_sid = "01" + real_sid;
 
 			char sz_rdp_file_content[4096] = { 0 };
 			sprintf_s(sz_rdp_file_content, 4096, rdp_content.c_str()
@@ -907,7 +926,8 @@ void TsWsClient::_rpc_func_run_client(ex_astr& buf, AssistMessage& msg_req, Json
 				, teleport_ip.c_str(), teleport_port
 				, flag_clipboard ? 1 : 0
 				, flag_disk ? "*" : ""
-				, real_sid.c_str()
+				//, real_sid.c_str()
+				, sid.c_str()
 				, psw51b.c_str()
 			);
 
@@ -967,8 +987,9 @@ void TsWsClient::_rpc_func_run_client(ex_astr& buf, AssistMessage& msg_req, Json
 			// 			}
 
 			ex_wstr w_password;
-			ex_astr2wstr(szPwd, w_password);
-			w_exe_path += L" /p:";
+			//ex_astr2wstr(szPwd, w_password);
+			//w_exe_path += L" /p:";
+			w_exe_path += L" /p:******";
 			w_exe_path += w_password;
 
 			w_sid = L"02" + w_sid;
@@ -1025,6 +1046,75 @@ void TsWsClient::_rpc_func_run_client(ex_astr& buf, AssistMessage& msg_req, Json
 		w_exe_path += g_cfg.telnet.application + _T("\" ");
 		w_exe_path += g_cfg.telnet.cmdline;
 	}
+
+	//---- split s_arg and push to s_argv ---
+	ex_wstr::size_type p1 = 0;
+	ex_wstr::size_type p2 = 0;
+
+	int i = 0;
+
+	// 防止死循环，替换10个应该够了
+
+	for (i = 0; i < 10; ++i)
+	{
+		p1 = w_exe_path.find(L"{password:");
+		if (p1 != ex_wstr::npos)
+		{
+			p2 = w_exe_path.find(L'}', p1 + 10);
+			if (p2 == ex_wstr::npos)
+			{
+				_create_response(buf, msg_req, TPE_PARAM);
+				return;
+			}
+
+			if (is_interactive_mode)
+			{
+				// 如果需要用户自己输入密码，则客户端命令行就不能带密码字段，需要抹去这个参数
+
+				w_exe_path.erase(p1, p2 - p1 + 1);
+			}
+			else
+			{
+				w_exe_path.erase(p2, 1);
+				w_exe_path.erase(p1, 10);
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	for (i = 0; i < 10; ++i)
+	{
+		p1 = w_exe_path.find(L"{interactive:");
+		if (p1 != ex_wstr::npos)
+		{
+			p2 = w_exe_path.find('}', p1 + 13);
+			if (p2 == ex_wstr::npos)
+			{
+				_create_response(buf, msg_req, TPE_PARAM);
+				return;
+			}
+
+			if (!is_interactive_mode)
+			{
+				// 如果无需用户自己输入密码，则需要抹去这个参数
+
+				w_exe_path.erase(p1, p2 - p1 + 1);
+			}
+			else
+			{
+				w_exe_path.erase(p2, 1);
+				w_exe_path.erase(p1, 13);
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+
 
 	ex_replace_all(w_exe_path, _T("{host_ip}"), w_teleport_ip.c_str());
 	ex_replace_all(w_exe_path, _T("{host_port}"), w_port);
