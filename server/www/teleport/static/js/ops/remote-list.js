@@ -518,11 +518,9 @@ $app.connect_remote = function (uni_id, acc_id, host_id, protocol_type, protocol
         is_interactive: false,
     };
     if (protocol_type === TP_PROTOCOL_TYPE_RDP) {
-        args.extends({
-            rdp_width: $app.dlg_rdp_options.rdp_w,
-            rdp_height: $app.dlg_rdp_options.rdp_h,
-            rdp_console: $app.dlg_rdp_options.rdp_console
-        });
+        args.rdp_width = $app.dlg_rdp_options.rdp_w;
+        args.rdp_height = $app.dlg_rdp_options.rdp_h;
+        args.rdp_console = $app.dlg_rdp_options.rdp_console;
     }
 
     if (uni_id === 'none')

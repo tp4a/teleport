@@ -34,6 +34,7 @@ public:
     ~TsWsClient();
 
     void init();
+
     void stop_all_client();
 
     void url_scheme_handler(const std::string& url);
@@ -57,7 +58,7 @@ private:
     void _rpc_func_select_file(ex_astr& buf, AssistMessage& msg_req, Json::Value& js_root);
 
     void _rpc_func_replay_rdp(ex_astr& buf, AssistMessage& msg_req, Json::Value& js_root);
-    
+
     void _send_result(int err_code, Json::Value& jr_root);
 
     void _create_response(ex_astr& buf, const AssistMessage& msg_ret, int err_code);
@@ -69,8 +70,9 @@ private:
     static void _mg_event_handler(struct mg_connection* nc, int ev, void* ev_data);
 
     void _process_register(const std::string& param, Json::Value& js_root);
-    
+
     void _process_run(const std::string& param, Json::Value& js_root);
+
     void _process_replay_rdp(const std::string& param, Json::Value& js_root);
 
 private:

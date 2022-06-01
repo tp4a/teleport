@@ -692,8 +692,8 @@ class BuilderMacOS(BuilderBase):
             cc.w('already exists, skip.')
 
     def _build_openssl(self, file_name):
-        cc.w('skip build openssl again.')
-        return
+        # cc.w('skip build openssl again.')
+        # return
 
         if not self._download_openssl(file_name):
             return
@@ -943,6 +943,7 @@ def main():
         builder.build_jsoncpp()
         builder.build_mongoose()
         builder.build_zlib()
+        builder.build_mbedtls()
         builder.build_openssl()
     elif command == 'ext-server':
         builder.prepare_python()
