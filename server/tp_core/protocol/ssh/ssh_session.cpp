@@ -559,6 +559,7 @@ int SshSession::_do_auth(const char* user, const char* secret)
         if (m_sid.length() == 6)
         {
             m_conn_info = g_ssh_env.get_connect_info(m_sid.c_str(), nullptr, nullptr);
+            remote_password = secret;
         }
         else if (m_sid.length() == 12)
         {
@@ -602,8 +603,8 @@ int SshSession::_do_auth(const char* user, const char* secret)
         m_acc_secret = m_conn_info->acc_secret;
         m_flags = m_conn_info->protocol_flag;
 
-        if (!remote_password.empty())
-            m_acc_secret = remote_password;
+        // if (!remote_password.empty())
+        //     m_acc_secret = remote_password;
 
         if (m_conn_info->protocol_type != TP_PROTOCOL_TYPE_SSH)
         {
@@ -639,14 +640,6 @@ int SshSession::_do_auth(const char* user, const char* secret)
         {
             // 如果TP中未设置远程账号密码，表示允许用户自行输入密码
             // m_allow_user_input_password = true;
-
-            // // 如果传入的password为特定值，应该是由助手调用客户端，填写的密码
-            // // 直接返回认证失败，这样客户端会让用户输入密码
-            // if (0 == strcmp(secret, "INTERACTIVE_USER"))
-            //     return SSH_AUTH_DENIED;
-
-            // 用户脱离TP-WEB，直接使用客户端输入的密码
-            // m_acc_secret = secret;
             m_acc_secret = remote_password;
         }
     }
