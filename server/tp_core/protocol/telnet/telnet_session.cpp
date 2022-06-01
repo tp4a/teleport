@@ -394,7 +394,7 @@ sess_state TelnetSession::_do_connect_server() {
 
     EXLOGW("[telnet] session-id: [%s]\n", m_sid.c_str());
 
-    m_conn_info = g_telnet_env.get_connect_info(m_sid.c_str());
+    m_conn_info = g_telnet_env.get_connect_info(m_sid.c_str(), nullptr, nullptr);
 
     if (nullptr == m_conn_info) {
         EXLOGE("[telnet] no such session: %s\n", m_sid.c_str());
