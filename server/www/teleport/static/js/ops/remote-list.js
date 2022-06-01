@@ -339,7 +339,8 @@ $app.on_table_host_render_created = function (render) {
             h.push(act_btn.join(''));
             h.push('</div>');
 
-            if (!is_disabled) {
+            // 目前仅支持SSH可以使用远程连接授权码
+            if (!is_disabled && acc.protocol_type === TP_PROTOCOL_TYPE_SSH) {
                 h.push('<div class="remote-config">');
                 h.push('<button type="button" class="btn btn-default" data-action="ops_token" data-index="' + i + '" data-id="' + acc.uni_id + '" data-acc-id=' + acc.a_id + ' data-host-id=' + acc.h_id + '><i class="fa fa-key fa-fw"></i> 获取远程连接配置</button>');
                 h.push('</div>');
@@ -347,7 +348,6 @@ $app.on_table_host_render_created = function (render) {
 
             h.push('</div>');
         }
-
 
         return h.join('');
     };
@@ -523,7 +523,7 @@ $app.connect_remote = function (uni_id, acc_id, host_id, protocol_type, protocol
         args.rdp_console = $app.dlg_rdp_options.rdp_console;
     }
 
-    if (uni_id === 'none')
+    if (uni_id === 'none' || uni_id === '')
         args.mode = 2;
 
     // 根据acc_id判断此远程账号是否有预设密码，如果没有，则需要设置interactive模式。
