@@ -22,6 +22,9 @@ __all__ = ['get_db', 'SQL']
 # https://www.jianshu.com/p/0d234e14b5d3
 
 
+# DEBUG_LOG_SQL = False
+
+
 class TPDatabase:
     # 注意，每次调整数据库结构，必须增加版本号，并且在升级接口中编写对应的升级操作
     # 20190123: server-v3.2.2, db-v7
@@ -441,6 +444,8 @@ class TPSqlitePool(TPDatabasePool):
         cursor = conn.cursor()
         try:
             cursor.execute(sql, args)
+            # if DEBUG_LOG_SQL:
+            #     log.d('SQL:', sql, args, '\n')
             db_ret = cursor.fetchall()
             return db_ret
         except Exception as e:
@@ -450,6 +455,8 @@ class TPSqlitePool(TPDatabasePool):
             cursor.close()
 
     def _do_exec(self, conn, sql, args):
+        # if DEBUG_LOG_SQL:
+        #     log.d('SQL:', sql, args, '\n')
         try:
             with conn:
                 conn.execute(sql, args)
@@ -469,8 +476,12 @@ class TPSqlitePool(TPDatabasePool):
                     # s = item['s']
                     # v = item['v']
                     if item['v'] is None:
+                        # if DEBUG_LOG_SQL:
+                        #     log.d('SQL:', item['s'], '\n')
                         conn.execute(item['s'])
                     else:
+                        # if DEBUG_LOG_SQL:
+                        #     log.d('SQL:', item['s'], item['v'], '\n')
                         conn.execute(item['s'], item['v'])
             return True
         except Exception as e:

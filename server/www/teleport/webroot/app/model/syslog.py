@@ -26,16 +26,19 @@ def sys_log(operator, client_ip, code, message=""):
 
 
 def get_logs(sql_filter, sql_order, sql_limit):
-    s = SQL(get_db())
+    db = get_db()
+    s = SQL(db)
     s.select_from('syslog', ['id', 'user_name', 'user_surname', 'client_ip', 'code', 'log_time', 'message'], alt_name='l')
 
     str_where = ''
     _where = list()
+    sql_vars = list()
 
     if len(sql_filter) > 0:
         for k in sql_filter:
             if k == 'log_user_name':
-                _where.append('l.user_name="{}"'.format(sql_filter[k]))
+                _where.append('l.user_name={ph}'.format(ph=db.place_holder))
+                sql_vars.append(sql_filter[k])
             # elif k == 'search_record':
             #     _where.append('(h.name LIKE "%{}%" OR h.ip LIKE "%{}%" OR h.router_addr LIKE "%{}%" OR h.desc LIKE "%{}%" OR h.cid LIKE "%{}%")'.format(sql_filter[k], sql_filter[k], sql_filter[k], sql_filter[k], sql_filter[k]))
 
@@ -63,5 +66,5 @@ def get_logs(sql_filter, sql_order, sql_limit):
     if len(sql_limit) > 0:
         s.limit(sql_limit['page_index'], sql_limit['per_page'])
 
-    err = s.query()
+    err = s.query(sql_vars)
     return err, s.total_count, s.recorder

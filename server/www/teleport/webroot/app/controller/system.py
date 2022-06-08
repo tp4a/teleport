@@ -180,7 +180,9 @@ class SysLogHandler(TPBaseHandler):
 
 class DoGetLogsHandler(TPBaseJsonHandler):
     def post(self):
-        # return self.write_json(0, data=[])
+        ret = self.check_privilege(TP_PRIVILEGE_SYS_LOG)
+        if ret != TPE_OK:
+            return
 
         filter = dict()
         order = dict()

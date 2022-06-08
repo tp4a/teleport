@@ -36,8 +36,9 @@ class RemoteHandler(TPBaseHandler):
             return
 
         core_cfg = deepcopy(tp_cfg().core)
-        del core_cfg['replay_path']
-        del core_cfg['web_server_rpc']
+        if core_cfg.detected:
+            del core_cfg['replay_path']
+            del core_cfg['web_server_rpc']
 
         err, groups = group.get_host_groups_for_user(self.current_user['id'], self.current_user['privilege'])
         param = {

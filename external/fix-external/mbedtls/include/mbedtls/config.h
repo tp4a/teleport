@@ -2306,7 +2306,7 @@
  *            it, and considering stronger message digests instead.
  *
  */
-//#define MBEDTLS_MD4_C
+#define MBEDTLS_MD4_C
 
 /**
  * \def MBEDTLS_MD5_C

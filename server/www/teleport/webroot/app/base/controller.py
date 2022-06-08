@@ -42,7 +42,7 @@ class TPBaseHandler(tornado.web.RequestHandler):
         self.set_header('Access-Control-Allow-Headers', '*')
         self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
         # self.set_header('Content-Type', 'application/json; charset=UTF-8')
-        # self.set_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.set_header('Access-Control-Allow-Headers', 'Content-Type')
 
         # template_path = self.get_template_path()
         # self.lookup = mako.lookup.TemplateLookup(directories=[template_path], input_encoding='utf-8', output_encoding='utf-8')
