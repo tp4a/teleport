@@ -94,7 +94,8 @@ __pycache__
 /client/cfg/tp-assist.linux.json
 /client/tp-player/res/cursor1.png
 /server/tp_core/protocol/rdp
-/server/hot-fix
+# /server/hot-fix
+/server/hot-fix/*/tp-hotfix-*
 /server/tools/tpr2mp4
 
 # for MacOS.
