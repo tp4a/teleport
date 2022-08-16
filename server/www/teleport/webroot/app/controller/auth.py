@@ -109,6 +109,7 @@ class DoLoginHandler(TPBaseJsonHandler):
                 return self.write_json(TPE_CAPTCHA_EXPIRED, '验证码已失效')
             if code.lower() != captcha.lower():
                 return self.write_json(TPE_CAPTCHA_MISMATCH, '验证码错误')
+
         if login_type in [TP_LOGIN_AUTH_USERNAME_OATH, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
             if oath is None or len(oath) == 0:
                 return self.write_json(TPE_PARAM, '未提供身份验证器动态验证码')
