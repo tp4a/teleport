@@ -90,6 +90,9 @@ __pycache__
 /client/tools/tprdp
 /client/build-tp-player-*
 /client/tp_assist_macos/src/tp-player.app
+/client/tp_assist_linux
+/client/cfg/tp-assist.linux.json
+/client/tp-player/res/cursor1.png
 /server/tp_core/protocol/rdp
 /server/hot-fix
 /server/tools/tpr2mp4
@@ -113,6 +116,7 @@ xcuserdata
 profile
 *.moved-aside
 /server/share/tmp
+*.pbxproj.backup.*
 
 /server/tp_core/testssh/Debug
 /server/tp_core/testssh/Release
