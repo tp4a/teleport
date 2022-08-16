@@ -679,6 +679,11 @@ class DoGetFileHandler(TPBaseHandler):
             self.set_status(400)  # 400=错误请求
             return self.write('invalid param, `rid` and `f` must present.')
 
+        # 限制仅允许读取录像文件
+        if not filename.startswith('tp-'):
+            self.set_status(403)  # 403=禁止
+            return self.write('you have no such privilege.')
+
         if act not in ['size', 'read']:
             self.set_status(400)
             return self.write('invalid param, `act` should be `size` or `read`.')

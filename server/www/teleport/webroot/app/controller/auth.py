@@ -95,21 +95,25 @@ class DoLoginHandler(TPBaseJsonHandler):
                               ]:
             return self.write_json(TPE_PARAM, '未知的认证方式')
 
+        if len(username) == 0:
+            return self.write_json(TPE_PARAM, '未提供登录用户名')
+
+        if login_type in [TP_LOGIN_AUTH_USERNAME_PASSWORD, TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
+            if password is None or len(password) == 0:
+                return self.write_json(TPE_PARAM, '未提供用户密码')
+
         if login_type == TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA:
             oath = None
             code = self.get_session('captcha')
-            if code is None:
+            if code is None or len(code) == 0:
                 return self.write_json(TPE_CAPTCHA_EXPIRED, '验证码已失效')
             if code.lower() != captcha.lower():
                 return self.write_json(TPE_CAPTCHA_MISMATCH, '验证码错误')
         elif login_type in [TP_LOGIN_AUTH_USERNAME_OATH, TP_LOGIN_AUTH_USERNAME_PASSWORD_OATH]:
-            if len(oath) == 0:
+            if oath is None or len(oath) == 0:
                 return self.write_json(TPE_OATH_MISMATCH, '未提供身份验证器动态验证码')
 
         self.del_session('captcha')
-
-        if len(username) == 0:
-            return self.write_json(TPE_PARAM, '未提供登录用户名')
 
         if login_type not in [TP_LOGIN_AUTH_USERNAME_PASSWORD,
                               TP_LOGIN_AUTH_USERNAME_PASSWORD_CAPTCHA,
