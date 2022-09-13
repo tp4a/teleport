@@ -7,7 +7,7 @@
 tornado
 PyMySQL
 psutil
-jinja2
+Jinja2
 MarkupSafe
 Pillow
 wheezy.captcha
@@ -15,7 +15,7 @@ qrcode
 ldap3
 cffi
 
-# for Windows
+# for Windows/macOS
 pycryptodome
 # for Linux
 pycrypto

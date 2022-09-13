@@ -16,6 +16,8 @@ from app.base.session import tp_session
 from app.const import *
 from tornado.escape import json_encode
 import app.app_ver as app_ver
+
+
 # import app.const as app_const
 
 
@@ -201,6 +203,13 @@ class TPBaseHandler(tornado.web.RequestHandler):
     def show_error_page(self, err_code):
         self.render('error/error.html', page_param=json.dumps({'err_code': err_code}))
 
+    @staticmethod
+    def escaped_argument(val):
+        if val is None:
+            return None
+        else:
+            return tornado.escape.xhtml_escape(val)
+
 
 class TPBaseJsonHandler(TPBaseHandler):
     """
@@ -213,3 +222,16 @@ class TPBaseJsonHandler(TPBaseHandler):
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
         self._mode = self.MODE_JSON
+
+    def check_group_operation_privilege(self, group_type):
+        if group_type == TP_GROUP_USER:
+            require_privilege = TP_PRIVILEGE_USER_GROUP
+        elif group_type == TP_GROUP_ACCOUNT:
+            require_privilege = TP_PRIVILEGE_ACCOUNT_GROUP
+        elif group_type == TP_GROUP_HOST:
+            require_privilege = TP_PRIVILEGE_ASSET_GROUP
+        else:
+            self.write_json(TPE_PARAM)
+            return TPE_PARAM
+
+        return self.check_privilege(require_privilege)

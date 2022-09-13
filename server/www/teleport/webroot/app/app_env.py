@@ -24,6 +24,12 @@ if PLATFORM not in ['windows', 'linux', 'darwin']:
 
 PATH_DATA = ''
 
+PATH_APP_ROOT = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
+
+BITS = 'x64'
+if '32bit' == platform.architecture()[0]:
+    BITS = 'x86'
+
 # 将Python安装的扩展库移除，避免开发调试与正式发布所依赖的库文件不一致导致发布的版本无法运行
 # if PLATFORM != 'darwin':
 if PLATFORM not in ['windows', 'darwin']:
@@ -34,16 +40,10 @@ if PLATFORM not in ['windows', 'darwin']:
     for p in x:
         sys.path.remove(p)
 
-PATH_APP_ROOT = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
-
-BITS = 'x64'
-if '32bit' == platform.architecture()[0]:
-    BITS = 'x86'
-
-# 引入必要的扩展库
-_ext_path = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', 'packages', 'packages-{}'.format(PLATFORM), BITS))
-if _ext_path not in sys.path:
-    sys.path.append(_ext_path)
+    # 引入必要的扩展库
+    _ext_path = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', 'packages', 'packages-{}'.format(PLATFORM), BITS))
+    if _ext_path not in sys.path:
+        sys.path.append(_ext_path)
 
 # 确定一些路径
 PATH_DATA = os.path.abspath(os.path.join(PATH_APP_ROOT, '..', '..', 'share'))

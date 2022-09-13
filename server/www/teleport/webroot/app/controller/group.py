@@ -19,10 +19,14 @@ class DoUpdateGroupHandler(TPBaseJsonHandler):
         try:
             gtype = int(args['gtype'])
             gid = int(args['gid'])
-            name = args['name']
-            desc = args['desc']
+            name = self.escaped_argument(args['name'])
+            desc = self.escaped_argument(args['desc'])
         except:
             return self.write_json(TPE_PARAM)
+
+        # 权限检查
+        if self.check_group_operation_privilege(gtype) != TPE_OK:
+            return
 
         if gid == -1:
             err, _ = group.create(self, gtype, name, desc)
@@ -48,6 +52,10 @@ class DoLockGroupHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
+        # 权限检查
+        if self.check_group_operation_privilege(gtype) != TPE_OK:
+            return
+
         err = group.update_groups_state(self, gtype, glist, TP_STATE_DISABLED)
 
         self.write_json(err)
@@ -69,6 +77,10 @@ class DoUnlockGroupHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
+        # 权限检查
+        if self.check_group_operation_privilege(gtype) != TPE_OK:
+            return
+
         err = group.update_groups_state(self, gtype, glist, TP_STATE_NORMAL)
 
         self.write_json(err)
@@ -89,6 +101,10 @@ class DoRemoveGroupHandler(TPBaseJsonHandler):
             glist = args['glist']
         except:
             return self.write_json(TPE_PARAM)
+
+        # 权限检查
+        if self.check_group_operation_privilege(gtype) != TPE_OK:
+            return
 
         err = group.remove(self, gtype, glist)
 
@@ -112,6 +128,10 @@ class DoAddMembersHandler(TPBaseJsonHandler):
         except:
             return self.write_json(TPE_PARAM)
 
+        # 权限检查
+        if self.check_group_operation_privilege(gtype) != TPE_OK:
+            return
+
         err = group.add_members(gtype, gid, members)
         self.write_json(err)
 
@@ -132,6 +152,10 @@ class DoRemoveMembersHandler(TPBaseJsonHandler):
             members = args['members']
         except:
             return self.write_json(TPE_PARAM)
+
+        # 权限检查
+        if self.check_group_operation_privilege(gtype) != TPE_OK:
+            return
 
         err = group.remove_members(gtype, gid, members)
         self.write_json(err)

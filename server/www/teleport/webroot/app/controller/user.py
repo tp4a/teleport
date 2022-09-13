@@ -140,6 +140,7 @@ class DoGenerateOathSecretHandler(TPBaseJsonHandler):
         return self.write_json(TPE_OK, data={"tmp_oath_secret": oath_secret})
 
 
+# 用于进行身份验证器绑定时验证用户身份，必须提供用户名/密码
 class DoVerifyUserHandler(TPBaseJsonHandler):
     def post(self):
         args = self.get_argument('args', None)
@@ -155,6 +156,12 @@ class DoVerifyUserHandler(TPBaseJsonHandler):
             password = args['password']
         except:
             return self.write_json(TPE_PARAM)
+
+        # Oath 绑定时必须进行密码验证
+        if username is None or len(username) == 0:
+            return self.write_json(TPE_PARAM, '未提供用户名')
+        if password is None or len(password) == 0:
+            return self.write_json(TPE_PARAM, '未提供密码')
 
         try:
             check_bind_oath = args['check_bind_oath']
@@ -186,6 +193,12 @@ class DoBindOathHandler(TPBaseJsonHandler):
             oath_code = args['oath_code']
         except:
             return self.write_json(TPE_PARAM)
+
+        # Oath 绑定时必须进行密码验证
+        if username is None or len(username) == 0:
+            return self.write_json(TPE_PARAM, '未提供用户名')
+        if password is None or len(password) == 0:
+            return self.write_json(TPE_PARAM, '未提供密码')
 
         err, user_info, msg = user.login(self, username, password=password)
         if err != TPE_OK:

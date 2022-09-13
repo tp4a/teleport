@@ -462,13 +462,13 @@ class Builder:
                 if len(ver_array) != 2:
                     raise RuntimeError('Invalid .pbxproj file.')
 
-                _ver = ver_array[1].strip()[:-1].strip()
-                v = _ver.split(".")
-                if len(v) < 3:
-                    raise RuntimeError('Invalid .pbxproj file.')
-                old_ver = '.'.join(v)
-                if old_ver == ver:
-                    continue
+                # _ver = ver_array[1].strip()[:-1].strip()
+                # v = _ver.split(".")
+                # if len(v) < 3:
+                #     raise RuntimeError('Invalid .pbxproj file.')
+                # old_ver = '.'.join(v)
+                # if old_ver == ver:
+                #     continue
                 lines[x] = '{flag} = {ver};\n'.format(flag=ver_array[0], ver=ver)
                 bOK = True
 

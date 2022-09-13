@@ -449,7 +449,7 @@ $app.on_table_host_render_created = function (render) {
     };
 
     render.time_begin = function (row_id, fields) {
-        return tp_format_datetime(fields.time_begin, 'MM-dd HH:mm:ss');
+        return tp_format_datetime(fields.time_begin);
     };
 
     render.time_cost = function (row_id, fields) {
