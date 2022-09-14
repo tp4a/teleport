@@ -550,7 +550,10 @@ def session_end(record_id, ret_code):
 
 @tornado.gen.coroutine
 def cleanup_storage(handler):
-    # storage config
+    return cleanup_log_and_record()
+
+
+def cleanup_log_and_record():
     sto = tp_cfg().sys.storage
 
     db = get_db()
@@ -562,7 +565,7 @@ def cleanup_storage(handler):
     chk_time = _now - sto.keep_log * 24 * 60 * 60
 
     if sto.keep_log > 0:
-        # find out all sys-log to be remove
+        # find out all sys-log to be removed
         s.select_from('syslog', ['id'], alt_name='s')
         s.where('s.log_time<{chk_time}'.format(chk_time=chk_time))
         err = s.query()
@@ -583,6 +586,7 @@ def cleanup_storage(handler):
                 else:
                     msg.append('{} 条系统日志已清除！'.format(removed_log))
 
+    chk_time = _now - sto.keep_record * 24 * 60 * 60
     if sto.keep_record > 0:
         core_cfg = tp_cfg().core
         if not core_cfg.detected:
@@ -594,7 +598,7 @@ def cleanup_storage(handler):
                 have_error = True
                 msg.append('清除指定会话录像失败：会话录像路径不存在（{}）！'.format(replay_path))
             else:
-                # find out all record to be remove
+                # find out all record to be removed
                 s.reset().select_from('record', ['id', 'protocol_type'], alt_name='r')
                 s.where('r.time_begin<{chk_time}'.format(chk_time=chk_time))
                 err = s.query()
