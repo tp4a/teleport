@@ -574,19 +574,19 @@ PyObject* _py_log_output(PyObject* self, PyObject* args)
 	switch (level)
 	{
 	case EX_LOG_LEVEL_DEBUG:
-		ex_printf_d(tmp.c_str());
+		ex_printf_d(L"%ls", tmp.c_str());
 		break;
 	case EX_LOG_LEVEL_VERBOSE:
-		ex_printf_v(tmp.c_str());
+		ex_printf_v(L"%ls", tmp.c_str());
 		break;
 	case EX_LOG_LEVEL_INFO:
-		ex_printf_i(tmp.c_str());
+		ex_printf_i(L"%ls", tmp.c_str());
 		break;
 	case EX_LOG_LEVEL_WARN:
-		ex_printf_w(tmp.c_str());
+		ex_printf_w(L"%ls", tmp.c_str());
 		break;
 	case EX_LOG_LEVEL_ERROR:
-		ex_printf_e(tmp.c_str());
+		ex_printf_e(L"%ls", tmp.c_str());
 		break;
 	default:
 		PYLIB_RETURN_FALSE;
