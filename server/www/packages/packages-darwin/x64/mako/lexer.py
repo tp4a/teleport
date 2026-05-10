@@ -271,21 +271,26 @@ class Lexer(object):
         return self.template
 
     def match_tag_start(self):
-        match = self.match(r'''
+        reg = r"""
             \<%     # opening tag
 
             ([\w\.\:]+)   # keyword
 
-            ((?:\s+\w+|\s*=\s*|".*?"|'.*?')*)  # attrname, = \
+            ((?:\s+\w+|\s*=\s*|"[^"]*?"|'[^']*?'|\s*,\s*)*)  # attrname, = \
                                                #        sign, string expression
+                                               # comma is for backwards compat
+                                               # identified in #366
 
             \s*     # more whitespace
 
             (/)?>   # closing
 
-            ''',
+        """
 
-                           re.I | re.S | re.X)
+        match = self.match(
+            reg,
+            re.I | re.S | re.X,
+        )
 
         if match:
             keyword, attr, isend = match.groups()
