@@ -470,6 +470,7 @@ class FreeTypeFont:
         """
         size, offset = self.font.getsize(text, direction, features, language)
         size = size[0] + stroke_width * 2, size[1] + stroke_width * 2
+        Image._decompression_bomb_check(size)
         im = fill("L", size, 0)
         self.font.render(
             text, im.id, mode == "1", direction, features, language, stroke_width
